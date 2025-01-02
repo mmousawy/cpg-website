@@ -15,8 +15,6 @@ const attendees = [
 export default async function Events() {
   const supabase = await createClient();
   const { data: events } = await supabase.from("events").select();
-  const emailHash = crypto.createHash('md5').update('murtada.al.mousawy@gmail.com').digest("hex");
-  const emailHash2 = crypto.createHash('md5').update('kaleigh.rawr@gmail.com').digest("hex");
 
   return (
     <section
@@ -37,7 +35,7 @@ export default async function Events() {
                 <div className='flex items-center gap-2'>
                   <div className='flex flex-row-reverse'>
                     {/* Avatar list of attendees */}
-                    {attendees.reverse().map((attendee, attendeeIndex) => (
+                    {attendees.reverse().map((attendee) => (
                       <img
                         key={attendee.email}
                         className="z-10 -mr-2 size-8 rounded-full shadow"
