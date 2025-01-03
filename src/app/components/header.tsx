@@ -26,7 +26,7 @@ const socialLinks = [
 export default function Header() {
   return (
     <header
-      className="flex justify-center border-b-[0.0625rem] border-t-4 border-b-border-color border-t-primary bg-background-light p-6 text-foreground sm:p-12"
+      className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-4 border-b-border-color border-t-primary bg-background-light p-6 text-foreground shadow-md shadow-[#00000005] sm:p-12"
     >
       <div
         className="flex w-full max-w-screen-md flex-col items-center gap-4 sm:gap-6 md:flex-row"
@@ -46,10 +46,10 @@ export default function Header() {
               <a
                 key={name}
                 href={url}
-                className="flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:bg-primary-alt hover:fill-background hover:text-background sm:px-3  sm:py-1"
+                className="flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:bg-primary-alt hover:fill-background hover:text-background sm:px-3 sm:py-1"
                 target="_blank"
               >
-                <Icon className="inline-block sm:mr-2" />
+                <Icon className="transition- inline-block sm:mr-2" />
                 <span className="hidden sm:inline-block">{name}</span>
               </a>
             )) }

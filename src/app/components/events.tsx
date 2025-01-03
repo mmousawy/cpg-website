@@ -18,7 +18,7 @@ export default async function Events({ events }: { events: ExtendedEvent[] }) {
         <div className="grid gap-4">
 
           {events && events.map((event) => (
-            <div key={event.id} className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 max-sm:p-4">
+            <div key={event.id} className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
               <div>
                 <Image
                   width={320}
