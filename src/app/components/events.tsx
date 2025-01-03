@@ -14,7 +14,7 @@ export default async function Events({ events }: { events: ExtendedEvent[] }) {
       className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12"
     >
       <div className="w-full max-w-screen-md">
-        <h2 className="mb-4 font-[family-name:var(--font-geist-mono)] text-lg font-bold leading-tight opacity-70">Upcoming meetups</h2>
+        <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Upcoming meetups</h2>
         <div className="grid gap-4">
 
           {events && events.map((event) => (

@@ -26,7 +26,7 @@ const socialLinks = [
 export default function Header() {
   return (
     <header
-      className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-4 border-b-border-color border-t-primary bg-background-light p-6 text-foreground shadow-md shadow-[#00000005] sm:p-12"
+      className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-8 border-b-border-color border-t-primary bg-background-light p-6 text-foreground shadow-md shadow-[#00000005] sm:p-12"
     >
       <div
         className="flex w-full max-w-screen-md flex-col items-center gap-4 sm:gap-6 md:flex-row"
