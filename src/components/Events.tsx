@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import crypto from 'crypto';
 
-import { ExtendedEvent } from '../page';
+import { ExtendedEvent } from '../app/page';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';

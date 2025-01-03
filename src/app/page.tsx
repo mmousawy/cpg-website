@@ -1,10 +1,10 @@
 import { createClient } from '@/utils/supabase/server';
 import { Database } from '../../database.types';
 
-import About from "./components/About";
-import Events from "./components/Events";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import About from "@/components/About";
+import Events from "@/components/Events";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export type ExtendedEvent = Database['public']['Tables']['events']['Row'] & {
   attendees?: Database['public']['Tables']['events_rsvps']['Row'][];
