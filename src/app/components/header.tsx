@@ -46,7 +46,7 @@ export default function Header() {
               <a
                 key={name}
                 href={url}
-                className="flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:bg-primary-alt hover:fill-background hover:text-background sm:px-3 sm:py-1"
+                className="flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950 sm:px-3 sm:py-1"
                 target="_blank"
               >
                 <Icon className="transition- inline-block sm:mr-2" />
