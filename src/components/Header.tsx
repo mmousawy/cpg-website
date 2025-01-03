@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import LogoSVG from "public/cpg-logo.svg";
 
 // Import social icons
@@ -26,7 +27,7 @@ const socialLinks = [
 export default function Header() {
   return (
     <header
-      className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-8 border-b-border-color border-t-primary bg-background-light p-6 text-foreground shadow-md shadow-[#00000005] sm:p-12"
+      className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-8 border-b-border-color border-t-primary bg-background-light p-6 text-foreground shadow-md shadow-[#00000005]  sm:p-12"
     >
       <div
         className="flex w-full max-w-screen-md flex-col items-center gap-4 sm:gap-6 md:flex-row"
@@ -46,7 +47,10 @@ export default function Header() {
               <a
                 key={name}
                 href={url}
-                className="flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950 sm:px-3 sm:py-1"
+                className={clsx(
+                  "flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950 sm:px-3 sm:py-1",
+                  ""
+                )}
                 target="_blank"
               >
                 <Icon className="transition- inline-block sm:mr-2" />

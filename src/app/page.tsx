@@ -26,13 +26,13 @@ export default async function Home() {
   await Promise.all(promises!);
 
   return (
-    <div className="bg-background font-[family-name:var(--font-inter)]">
-      <main>
-        <Header />
+    <div className="flex min-h-full flex-col font-[family-name:var(--font-inter)]">
+      <Header />
+      <main className="flex grow flex-col">
         <Events events={events}/>
         <About />
-        <Footer />
       </main>
+      <Footer />
     </div>
   );
 }

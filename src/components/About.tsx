@@ -1,6 +1,6 @@
 export default function About() {
   return (
-    <section className="flex justify-center border-t-[0.0625rem] border-t-border-color bg-background-light px-6 py-7 text-foreground sm:p-12">
+    <section className="mt-auto flex justify-center border-t-[0.0625rem] border-t-border-color bg-background-light px-6 py-7 text-foreground  sm:p-12">
       <div className="max-w-screen-sm">
         <h2 className="mb-4 text-2xl font-bold leading-tight">What&apos;s Creative Photography Group?</h2>
         <p className="mb-5">
