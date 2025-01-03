@@ -1,6 +1,6 @@
 export default function About() {
   return (
-    <section className="flex justify-center bg-primary p-6 text-white sm:p-12">
+    <section className="flex justify-center border-t-[0.0625rem] border-t-border-color bg-background-light p-6 text-foreground sm:p-12">
       <div className="max-w-[440px]">
         <h2 className="mb-4 font-bold leading-tight max-sm:text-xl sm:text-2xl">What&apos;s Creative Photography Group?</h2>
         <p className="mb-5">

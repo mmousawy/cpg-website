@@ -4,7 +4,7 @@ import Header from "./components/header";
 
 export default function Home() {
   return (
-    <div className="font-[family-name:var(--font-geist-sans)]">
+    <div className="bg-background font-[family-name:var(--font-inter)]">
       <main>
         <Header />
         <Events />

@@ -18,6 +18,7 @@ export type Database = {
           id: number
           location: string | null
           rsvp_count: number | null
+          time: string | null
           title: string | null
         }
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           id?: number
           location?: string | null
           rsvp_count?: number | null
+          time?: string | null
           title?: string | null
         }
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           id?: number
           location?: string | null
           rsvp_count?: number | null
+          time?: string | null
           title?: string | null
         }
         Relationships: []
