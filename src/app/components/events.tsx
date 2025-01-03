@@ -33,15 +33,15 @@ export default async function Events({ events }: { events: ExtendedEvent[] }) {
                 </div>
                 <div className='flex gap-6'>
                   <div>
-                    <span className='mb-2 flex gap-4 font-semibold leading-6 max-sm:mb-2 max-sm:flex-col max-sm:gap-2'>
-                      <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground max-sm:mt-1" />{new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'})}</span>
-                      <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground max-sm:mt-1" />{event.time}</span>
+                    <span className='mb-2 flex gap-4 font-semibold leading-6 max-sm:mb-2 sm:text-[15px]'>
+                      <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground" />{new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'})}</span>
+                      <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground" />{event.time?.substring(0, 5)}</span>
                     </span>
-                    <span className='mb-4 flex items-start gap-2 whitespace-pre-wrap font-semibold leading-6 max-sm:hidden'>
-                      <LocationSVG className="shrink-0 fill-foreground max-sm:mt-1" /> {event.location?.replace(/\r\n/gm, ' • ')}
+                    <span className='mb-4 flex items-start gap-2 whitespace-pre-wrap font-semibold leading-6 max-sm:hidden sm:text-[15px]'>
+                      <LocationSVG className="shrink-0 fill-foreground" /> {event.location?.replace(/\r\n/gm, ' • ')}
                     </span>
-                    <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap font-semibold leading-6 max-sm:mb-4 sm:hidden'>
-                      <LocationSVG className="shrink-0 fill-foreground max-sm:mt-1" /> {event.location}
+                    <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap font-semibold max-sm:mb-4 sm:hidden'>
+                      <LocationSVG className="shrink-0 fill-foreground" /> {event.location}
                     </span>
                     <p className='whitespace-pre-line'>{event.description}</p>
                   </div>
