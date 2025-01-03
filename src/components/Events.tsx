@@ -11,7 +11,7 @@ import SignupButton from './SignupButton';
 export default async function Events({ events }: { events: ExtendedEvent[] }) {
   return (
     <section
-      className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12"
+      className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12 sm:pb-14"
     >
       <div className="w-full max-w-screen-md">
         <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Upcoming meetups</h2>
@@ -33,15 +33,15 @@ export default async function Events({ events }: { events: ExtendedEvent[] }) {
                 </div>
                 <div className='flex gap-6'>
                   <div>
-                    <span className='mb-2 flex gap-4 font-semibold leading-6 max-sm:mb-2 sm:text-[15px]'>
+                    <span className='mb-2 flex gap-4 text-[15px] font-semibold leading-6 max-sm:mb-2'>
                       <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground" />{new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'})}</span>
                       <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground" />{event.time?.substring(0, 5)}</span>
                     </span>
-                    <span className='mb-4 flex items-start gap-2 whitespace-pre-wrap font-semibold leading-6 max-sm:hidden sm:text-[15px]'>
-                      <LocationSVG className="shrink-0 fill-foreground" /> {event.location?.replace(/\r\n/gm, ' • ')}
+                    <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'>
+                      <LocationSVG className="shrink-0 fill-foreground" />{event.location?.replace(/\r\n/gm, ' • ')}
                     </span>
-                    <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap font-semibold max-sm:mb-4 sm:hidden'>
-                      <LocationSVG className="shrink-0 fill-foreground" /> {event.location}
+                    <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold max-sm:mb-6 sm:hidden'>
+                      <LocationSVG className="shrink-0 fill-foreground" />{event.location}
                     </span>
                     <p className='whitespace-pre-line'>{event.description}</p>
                   </div>
@@ -53,7 +53,7 @@ export default async function Events({ events }: { events: ExtendedEvent[] }) {
                     src={event.cover_image!}
                   />
                 </div>
-                <div className='mt-6 flex items-center justify-between max-sm:mt-4'>
+                <div className='mt-8 flex items-center justify-between'>
                   <div className='flex items-center gap-2 max-sm:text-sm'>
                     <div className='mr-3 flex flex-row-reverse max-sm:mr-2'>
                       {/* Avatar list of attendees */}
