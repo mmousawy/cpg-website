@@ -17,7 +17,7 @@ type Props = {
 export default function SignupForm({ event }: Props) {
   const modalContext = useContext(ModalContext);
 
-  const [error, setError] = useState<string | null>('Test error');
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
 

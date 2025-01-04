@@ -12,6 +12,7 @@ import CloseSVG from 'public/icons/close.svg';
 import CheckAddSVG from 'public/icons/check-add.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
+import CancelSVG from 'public/icons/cancel.svg';
 import TimeSVG from 'public/icons/time.svg';
 import Link from 'next/link';
 
@@ -23,23 +24,7 @@ type Props = {
 
 export default function ConfirmBlock({ event, email, rsvp }: Props) {
   const [signupSuccess, setSignupSuccess] = useState(false);
-
-  const cancelSignup = async () => {
-    const result = await fetch('/api/cancel', {
-      method: 'POST',
-      body: JSON.stringify({
-        event_id: event.id,
-        email: email,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (result.status === 200) {
-      setSignupSuccess(true);
-    }
-  };
+  const [cancelSuccess, setCancelSuccess] = useState(false);
 
   const confirmSignup = async () => {
     const result = await fetch('/api/confirm', {
@@ -55,6 +40,23 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
 
     if (result.status === 200) {
       setSignupSuccess(true);
+    }
+  };
+
+  const cancelSignup = async () => {
+    const result = await fetch('/api/cancel', {
+      method: 'POST',
+      body: JSON.stringify({
+        event_id: event.id,
+        email: email,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (result.status === 200) {
+      setCancelSuccess(true);
     }
   };
 
@@ -80,10 +82,9 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
             </span>
           </div>
 
-          {!signupSuccess && (
+          {(!signupSuccess && !cancelSuccess) && (
             <>
-
-                {!rsvp.confirmed_at && (
+                {(!rsvp.confirmed_at && !rsvp.canceled_at) && (
                   <>
                     <p className='mb-6'>You are confirming your attendance for the above mentioned meeting. You can always change your RSVP later.</p>
                     <div className="flex items-center gap-4 max-sm:justify-between">
@@ -124,6 +125,15 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
                     </span>
                   </div>
                 )}
+
+                {rsvp.canceled_at && (
+                  <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
+                    <CancelSVG className="shrink-0 fill-foreground" />
+                    <span>
+                      You&apos;ve already canceled your attendance. <br />If you&apos;ve changed your mind, you can always sign up again!
+                    </span>
+                  </div>
+                )}
             </>
           )}
 
@@ -131,6 +141,13 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
             <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
               <CheckAddSVG className="shrink-0 fill-foreground" />
               <span>Thank you for confirming your attendance. We look forward to seeing you at the event!</span>
+            </div>
+          )}
+
+          {cancelSuccess && (
+            <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
+              <CancelSVG className="shrink-0 fill-foreground" />
+              <span>You&apos;ve successfully canceled your RSVP.<br />If you change your mind, you can always sign up again!</span>
             </div>
           )}
 

@@ -28,6 +28,18 @@ export async function POST(request: Request) {
   const encryptedEmail = encrypt(email);
   const confirmLink = `${process.env.NEXT_PUBLIC_SITE_URL}/confirm?email=${encryptedEmail}&event_id=${event_id}`;
 
+  // Check if the user has already signed up for the event
+  // RSVP cannot be canceled
+  // RSVP must be confirmed or not confirmed
+  const { data: existingRSVP } = await supabase.from('events_rsvps').select().eq('event_id', event_id).eq('email', email)
+    .is("canceled_at", null)
+    .or("confirmed_at.is.null, confirmed_at.not.is.null")
+    .single();
+
+  if (existingRSVP) {
+    return NextResponse.json({ message: "You have already signed up for this event" }, { status: 400 });
+  }
+
   // Insert the RSVP into the database
   const result = await supabase.from('events_rsvps').insert({
     event_id: event_id,
@@ -51,7 +63,7 @@ export async function POST(request: Request) {
     subject: `Sign up for: ${event.title}`,
     html: `
       <p>Confirm that you want to sign up for the event ${event.title}.</p>
-      <p><a href="${confirmLink}">Confirm</a></p>
+      <p><a href="${confirmLink}">Confirm sign up</a></p>
     `
   });
 

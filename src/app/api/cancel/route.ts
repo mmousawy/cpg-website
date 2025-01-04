@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     from: config.email.from,
     to: decryptedEmail,
     replyTo: config.email.replyTo,
-    subject: `RSVP cancelled: ${event.title}`,
+    subject: `Cancelled RSVP: ${event.title}`,
     html: `
       <p>You've successfully cancelled your RSVP. We'll miss you!</p>
       <p>If you change your mind, you can always sign up again.</p>

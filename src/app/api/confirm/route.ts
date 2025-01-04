@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     from: config.email.from,
     to: decryptedEmail,
     replyTo: config.email.replyTo,
-    subject: `Confirmed: ${event.title}`,
+    subject: `Confirmed RSVP: ${event.title}`,
     html: `
       <p>Awesome! You've signed up for ${event.title}.</p>
       <p>We look forward to seeing you there!</p>
