@@ -49,7 +49,6 @@ export default function Header() {
                 href={url}
                 className={clsx(
                   "flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950 sm:px-3 sm:py-1",
-                  ""
                 )}
                 target="_blank"
               >

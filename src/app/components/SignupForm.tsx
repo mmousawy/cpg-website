@@ -17,7 +17,7 @@ type Props = {
 export default function SignupForm({ event }: Props) {
   const modalContext = useContext(ModalContext);
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>('Test error');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
 
@@ -94,6 +94,7 @@ export default function SignupForm({ event }: Props) {
           className='flex flex-col gap-4'
         >
           <div className='flex flex-col gap-2'>
+            <p className='mb-4'>Awesome! You&apos;re signing up for the meetup. We just need a few details. An email will be sent to you to confirm your signup.</p>
             <label className='text-[15px] font-semibold' htmlFor="name">
               Full name
             </label>

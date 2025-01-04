@@ -48,6 +48,7 @@ export type Database = {
       events_rsvps: {
         Row: {
           canceled_at: string | null
+          confirmed_at: string | null
           created_at: string
           email: string | null
           event_id: number | null
@@ -56,6 +57,7 @@ export type Database = {
         }
         Insert: {
           canceled_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           email?: string | null
           event_id?: number | null
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           canceled_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           email?: string | null
           event_id?: number | null

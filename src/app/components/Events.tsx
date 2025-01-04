@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import crypto from 'crypto';
+import clsx from 'clsx';
 
 import { Database } from '../../../database.types';
 
@@ -26,6 +27,7 @@ export default async function Events() {
       .from("events_rsvps")
       .select()
       .is("canceled_at", null)
+      .not("confirmed_at", "is", null)
       .eq("event_id", event.id);
 
     event.attendees = attendees!;
@@ -39,7 +41,7 @@ export default async function Events() {
     >
       <div className="w-full max-w-screen-md">
         <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Upcoming meetups</h2>
-        <div className="grid gap-4">
+        <div className="grid gap-6">
 
           {events && events.map((event) => (
             <div key={event.id} className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
@@ -51,7 +53,7 @@ export default async function Events() {
                   className='mb-4 h-28 w-full rounded-md object-cover max-sm:block sm:hidden'
                   src={event.cover_image!}
                 />
-                <div className='mb-6 flex justify-between max-sm:mb-4'>
+                <div className='mb-6 flex justify-between'>
                   <h3 className="text-2xl font-bold">{event.title}</h3>
                   <SignupButton event={event} className="ml-2 max-sm:hidden" />
                 </div>
@@ -80,34 +82,42 @@ export default async function Events() {
                   />
                 </div>
                 <div className='mt-8 flex items-center justify-between gap-4'>
-                  <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
-                    <div className='max-xs:max-w-50 relative flex max-w-96 flex-row-reverse overflow-hidden pr-2' dir="rtl">
-                      {/* Avatar list of attendees */}
-                      {event.attendees?.map((attendee) => (
-                        <Image
-                          key={attendee.email}
-                          width={32}
-                          height={32}
-                          className="-mr-2 size-8 rounded-full shadow"
-                          src={`https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`} alt="Gravatar"
-                        />
-                      ))}
-                      {(event.attendees?.length || 0) > 8 && (
-                        <div
-                          // Fade to background-light color
-                          className="absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light xs:hidden"
-                        />
-                      )}
+                  { !event.attendees || event.attendees?.length === 0 && (
+                    <div className='text-[15px] font-semibold leading-6'>No attendees yet &mdash; join and be the first!</div>
+                  )}
+                  { !!event.attendees?.length && (
+                    <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
+                      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 max-xs:max-w-52' dir="rtl">
+                        {/* Avatar list of attendees */}
+                        {event.attendees?.map((attendee) => (
+                          <Image
+                            key={attendee.email}
+                            width={32}
+                            height={32}
+                            className={clsx([
+                              (event.attendees?.length || 0) > 1 && "-mr-2",
+                              "size-8 rounded-full shadow"
+                            ])}
+                            src={`https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`} alt="Gravatar"
+                          />
+                        ))}
+                        {(event.attendees?.length || 0) > 8 && (
+                          <div
+                            // Fade to background-light color
+                            className="absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light xs:hidden"
+                          />
+                        )}
 
-                      {(event.attendees?.length || 0) > 12 && (
-                        <div
-                          // Fade to background-light color
-                          className="absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light max-sm:hidden"
-                        />
-                      )}
+                        {(event.attendees?.length || 0) > 12 && (
+                          <div
+                            // Fade to background-light color
+                            className="absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light max-sm:hidden"
+                          />
+                        )}
+                      </div>
+                      {event.attendees?.length} attendee{event.attendees?.length === 1 ? '' : 's'}
                     </div>
-                    {event.attendees?.length} attendee{event.attendees?.length === 1 ? '' : 's'}
-                  </div>
+                    )}
                   <SignupButton event={event} className="ml-2 self-end sm:hidden" />
                 </div>
               </div>

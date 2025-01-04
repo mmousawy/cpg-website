@@ -12,7 +12,7 @@
   --background-light: #ffffff;
   --foreground: #171717;
   --border-color: #E5E7EA;
-  --error-red: #680d21;
+  --error-red: #f75074;
 }
 
 :root.dark {
