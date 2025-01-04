@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import ThemeProviderWrapper from "@/providers/ThemeProvider";
+import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
+import ModalProvider from "@/app/providers/ModalProvider";
+import SupabaseProvider from "./providers/SupabaseProvider";
 
 const geistSans = Inter({
   variable: "--font-inter",
@@ -30,11 +32,15 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Creative Photography Group" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-inter)] text-foreground antialiased`}
       >
-        <ThemeProviderWrapper>
-          {children}
-        </ThemeProviderWrapper>
+        <SupabaseProvider>
+          <ThemeProvider>
+            <ModalProvider>
+              {children}
+            </ModalProvider>
+          </ThemeProvider>
+        </SupabaseProvider>
       </body>
     </html>
   );
