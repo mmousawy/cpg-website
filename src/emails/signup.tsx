@@ -27,7 +27,7 @@ export const SignupEmail = ({
   event,
   confirmLink,
 }: {
-  preview: boolean;
+  preview?: boolean;
   fullName: string,
   event: Database['public']['Tables']['events']['Row'],
   confirmLink: string,
