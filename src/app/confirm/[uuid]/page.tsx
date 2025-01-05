@@ -7,8 +7,13 @@ import ConfirmBlock from "./ConfirmBlock";
 
 import ErrorSVG from 'public/icons/error.svg';
 
-export default async function Confirm({ params: { uuid } }: { params: { uuid: string } }) {
+export default async function Confirm({
+  params,
+}: {
+  params: Promise<{ uuid: string }>
+}) {
   const supabase = await createClient();
+  const { uuid } = await params;
 
   const { data: rsvp } = await supabase.from("events_rsvps")
     .select()
