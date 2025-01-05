@@ -17,7 +17,7 @@ import * as React from "react";
 
 import { Database } from "../../database.types";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
 export const SignupEmail = ({
   fullName,
@@ -35,13 +35,13 @@ export const SignupEmail = ({
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="m-auto bg-[#f7f7f7] p-6 font-sans">
+        <Body className="m-auto bg-[#f7f7f7] p-8 font-sans">
           <Container className="mx-auto max-w-[465px] border-separate rounded border border-solid border-[#e5e7ea] bg-white p-[20px]">
             <Section className="">
               <Img
                 src={`${baseUrl}/cpg-logo-small.png`}
-                width="40"
-                height="37"
+                width="50"
+                height="50"
                 alt="Creative Photography Group"
                 className="mx-auto my-0"
               />
@@ -65,7 +65,7 @@ export const SignupEmail = ({
 
             <Section className="my-[20px]">
               <Button
-                className="rounded-full bg-[#38785f] px-5 py-3 text-center text-[12px] font-semibold text-white no-underline"
+                className="rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
                 href={confirmLink}
               >
                 Confirm sign up
