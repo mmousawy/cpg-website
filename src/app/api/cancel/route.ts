@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { render } from "@react-email/render";
 
 import { createClient } from "@/utils/supabase/server";
+import { CancelEmail } from "../../../emails/cancel";
 
 import config from "@/app/api/config";
 
@@ -44,11 +46,8 @@ export async function POST(request: NextRequest) {
     from: config.email.from,
     to: rsvp.email,
     replyTo: config.email.replyTo,
-    subject: `Cancelled RSVP: ${event.title}`,
-    html: `
-      <p>You've successfully cancelled your RSVP. We'll miss you!</p>
-      <p>If you change your mind, you can always sign up again.</p>
-    `
+    subject: `Canceled RSVP: ${event.title}`,
+    html: await render(CancelEmail({ fullName: rsvp.name!, event })),
   });
 
   return NextResponse.json({}, { status: 200 });

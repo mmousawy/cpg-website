@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -8,7 +7,6 @@ import {
   Html,
   Link,
   Preview,
-  Section,
   Text,
   Tailwind,
 } from "@react-email/components";
@@ -21,16 +19,16 @@ import EmailHeader from "./components/Header";
 import EventDetails from "./components/EventDetails";
 import Footer from "./components/Footer";
 
-export const SignupEmail = ({
+export const ConfirmEmail = ({
   preview,
   fullName,
   event,
-  confirmLink,
+  cancellationLink,
 }: {
   preview?: boolean;
   fullName: string,
   event: Database['public']['Tables']['events']['Row'],
-  confirmLink: string,
+  cancellationLink: string,
 }) => {
   if (preview) {
     fullName = "John Doe";
@@ -44,10 +42,10 @@ export const SignupEmail = ({
       cover_image: `https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/Murtada-al-Mousawy-20241214-DC4A4303.jpg`,
     } as Database['public']['Tables']['events']['Row'];
 
-    confirmLink = `${baseUrl}/confirm/123456`;
+    cancellationLink = `${baseUrl}/cancel/123456`;
   }
 
-  const previewText = `Sign up for: ${event?.title}`;
+  const previewText = `Confirmed RSVP for: ${event?.title}`;
 
   return (
     <Html>
@@ -59,35 +57,25 @@ export const SignupEmail = ({
             <EmailHeader />
 
             <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]">
-              Sign up for: {event?.title}
+              Confirmed RSVP: {event?.title}
             </Heading>
 
             <Text className="text-[14px] leading-[24px] text-[#171717]">
               Hi {fullName},
             </Text>
             <Text className="text-[14px] leading-[24px] text-[#171717]">
-              Someone recently signed up for a meetup with your email address.
-              If this was you, you can confirm or cancel your sign up here:
+              Awesome, You&apos;re signed up for the event!<br />
+              We look forward to seeing you there.
             </Text>
 
-            <Section className="my-[20px]">
-              <Button
-                className="rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-                href={confirmLink}
-              >
-                Confirm sign up
-              </Button>
-            </Section>
             <Text className="text-[14px] leading-[24px] text-[#171717]">
-              or copy and paste this URL into your browser:{" "}
-              <Link href={confirmLink} className="text-blue-600 no-underline">
-                {confirmLink}
-              </Link>
+              Need to cancel your RSVP? You can do that by clicking here:<br />
+              <Link href={cancellationLink} className="text-blue-600 no-underline">Cancel RSVP</Link>
             </Text>
 
             <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />
 
-            <EventDetails event={event} />
+            <EventDetails event={event} noDescription />
 
             <Footer fullName={fullName} />
           </Container>
@@ -97,4 +85,4 @@ export const SignupEmail = ({
   );
 };
 
-export default SignupEmail;
+export default ConfirmEmail;

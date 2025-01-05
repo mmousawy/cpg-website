@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { render } from "@react-email/render";
 
 import { createClient } from "@/utils/supabase/server";
 import { SignupEmail } from "../../../emails/signup";
 
 import config from "@/app/api/config";
-import { render } from "@react-email/render";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
