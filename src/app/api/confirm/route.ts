@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Prepare the cancellation email link
-  const cancellationLink = `${process.env.NEXT_PUBLIC_SITE_URL}/cancel?uuid=${uuid}`;
+  const cancellationLink = `${process.env.NEXT_PUBLIC_SITE_URL}/cancel/${uuid}`;
 
   // Send the confirmation email
   resend.emails.send({

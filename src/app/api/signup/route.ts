@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Prepare the confirmation email link
-  const confirmLink = `${process.env.NEXT_PUBLIC_SITE_URL}/confirm?uuid=${result.data.uuid}`;
+  const confirmLink = `${process.env.NEXT_PUBLIC_SITE_URL}/confirm/${result.data.uuid}`;
 
   // Send the confirmation email
   resend.emails.send({

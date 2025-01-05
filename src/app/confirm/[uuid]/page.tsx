@@ -3,19 +3,12 @@ import Footer from "@/app/components/Footer";
 
 import { createClient } from '@/utils/supabase/server';
 
-import CancelBlock from "./CancelBlock";
+import ConfirmBlock from "./ConfirmBlock";
 
 import ErrorSVG from 'public/icons/error.svg';
 
-export default async function Cancel({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
+export default async function Confirm({ params: { uuid } }: { params: { uuid: string } }) {
   const supabase = await createClient();
-  const params = await searchParams;
-
-  const uuid = params.uuid as string;
 
   const { data: rsvp } = await supabase.from("events_rsvps")
     .select()
@@ -36,7 +29,7 @@ export default async function Cancel({
             className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12 sm:pb-14"
           >
             <div className="w-full max-w-screen-md">
-              <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Cancel your RSVP</h2>
+              <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Confirm your sign up</h2>
               <div className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
                 {(!event || !rsvp || !rsvp.email) && (
                   <div className='flex gap-2 rounded-md bg-[#c5012c20] p-2 text-[15px] font-semibold leading-6 text-error-red'>
@@ -47,7 +40,7 @@ export default async function Cancel({
                   </div>
                 )}
                 { event && rsvp?.email && (
-                  <CancelBlock
+                  <ConfirmBlock
                     event={event}
                     rsvp={rsvp}
                   />
