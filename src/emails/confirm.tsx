@@ -53,7 +53,7 @@ export const ConfirmEmail = ({
       <Preview>{previewText}</Preview>
       <Tailwind>
         <Body className="m-auto bg-[#f7f7f7] p-8 font-sans">
-          <Container className="mx-auto max-w-[465px] border-separate rounded border border-solid border-[#e5e7ea] bg-white p-[20px]">
+          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-[20px]">
             <EmailHeader />
 
             <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]">
