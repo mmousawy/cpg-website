@@ -10,7 +10,7 @@ export default async function Email({
   // Get dynamic component based on template
   const EmailComponent = (await import(`../../../emails/${template}`)).default;
 
-  const renderedTemplate = await render(<EmailComponent />)
+  const renderedTemplate = await render(<EmailComponent preview />)
 
   return (
     <iframe

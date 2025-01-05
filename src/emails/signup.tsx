@@ -6,29 +6,48 @@ import {
   Heading,
   Hr,
   Html,
-  Img,
   Link,
   Preview,
   Section,
   Text,
   Tailwind,
 } from "@react-email/components";
-import * as React from "react";
 
 import { Database } from "../../database.types";
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
+import EmailHeader from "./components/Header";
+import EventDetails from "./components/EventDetails";
+import Footer from "./components/Footer";
+
 export const SignupEmail = ({
+  preview,
   fullName,
   event,
   confirmLink,
 }: {
+  preview: boolean;
   fullName: string,
   event: Database['public']['Tables']['events']['Row'],
   confirmLink: string,
 }) => {
   const previewText = `Sign up for: ${event?.title}`;
+
+  if (preview) {
+    fullName = "John Doe";
+
+    event = {
+      title: "Contours, compositions and cropping",
+      description: `Let's kick off the new year with inspiration and creativity at our first meetup of 2025! Join us as Murtada hosts and delivers an engaging short talk on "Contours, Compositions, and Cropping," exploring essential techniques to refine your photography. \r\n\r\nLet's make 2025 the year of stunning shots and creative growth—see you there!`,
+      date: new Date('2025-01-25').toString(),
+      time: "13:00:00",
+      location: "The Tea Lab\r\nNieuwe Binnenweg 178 A\r\nRotterdam",
+      cover_image: `https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/Murtada-al-Mousawy-20241214-DC4A4303.jpg`,
+    } as Database['public']['Tables']['events']['Row'];
+
+    confirmLink = `${baseUrl}/confirm/123456`;
+  }
 
   return (
     <Html>
@@ -37,22 +56,10 @@ export const SignupEmail = ({
       <Tailwind>
         <Body className="m-auto bg-[#f7f7f7] p-8 font-sans">
           <Container className="mx-auto max-w-[465px] border-separate rounded border border-solid border-[#e5e7ea] bg-white p-[20px]">
-            <Section className="">
-              <Img
-                src={`${baseUrl}/cpg-logo-small.png`}
-                width="50"
-                height="50"
-                alt="Creative Photography Group"
-                className="mx-auto my-0"
-              />
-            </Section>
-            <Text className="mx-0 my-[30px] p-0 text-center text-[18px] font-semibold text-[#171717]">
-              Creative Photography Group
-            </Text>
-            <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />
+            <EmailHeader />
 
-            <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-normal text-[#171717]">
-              Sign up for <strong>{event?.title}</strong>
+            <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]">
+              Sign up for: {event?.title}
             </Heading>
 
             <Text className="text-[14px] leading-[24px] text-[#171717]">
@@ -60,7 +67,7 @@ export const SignupEmail = ({
             </Text>
             <Text className="text-[14px] leading-[24px] text-[#171717]">
               Someone recently signed up for a meetup with your email address.
-              If this was you, you can confirm your sign up here:
+              If this was you, you can confirm or cancel your sign up here:
             </Text>
 
             <Section className="my-[20px]">
@@ -78,17 +85,11 @@ export const SignupEmail = ({
               </Link>
             </Text>
 
-            <Text className="mt-8 text-[14px] leading-[24px] text-[#171717]">
-              The Creative Photography Group team
-            </Text>
             <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />
-            <Text className="!mb-0 text-[12px] leading-[24px] text-[#666666]">
-              This invitation was intended for{" "}
-              <span className="text-[#171717]">{fullName}</span>. If you
-              were not expecting this email, you can ignore this email. If
-              you are concerned about your safety, please reply to
-              this email to get in touch with us.
-            </Text>
+
+            <EventDetails event={event} />
+
+            <Footer fullName={fullName} />
           </Container>
         </Body>
       </Tailwind>
