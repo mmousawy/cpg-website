@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 import { createClient } from "@/utils/supabase/server";
-import { decrypt } from "@/utils/encrypt";
 
 import config from "@/app/api/config";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
   const { uuid } = await request.json();
@@ -19,9 +18,9 @@ export async function POST(request: Request) {
 
   // Get the RSVP
   const { data: rsvp } = await supabase.from('events_rsvps')
-  .select()
-  .eq('uuid', uuid)
-  .single();
+    .select()
+    .eq('uuid', uuid)
+    .single();
 
   // Get the event and check if it exists
   const { data: event } = await supabase.from('events')

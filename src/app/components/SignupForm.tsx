@@ -18,7 +18,7 @@ export default function SignupForm({ event }: Props) {
   const modalContext = useContext(ModalContext);
 
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
 
   // Close the success message after the modal is closed
@@ -34,7 +34,7 @@ export default function SignupForm({ event }: Props) {
     e.preventDefault();
 
     setError(null);
-    setSubmitting(true);
+    setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name');
@@ -53,7 +53,7 @@ export default function SignupForm({ event }: Props) {
       },
     });
 
-    setSubmitting(false);
+    setIsSubmitting(false);
 
     if (result.status === 200) {
       setError(null);
@@ -91,10 +91,13 @@ export default function SignupForm({ event }: Props) {
       {!success && (
         <form
           onSubmit={submitForm}
-          className='flex flex-col gap-4'
+          className={clsx([
+            "flex flex-col gap-4 transition-opacity",
+            isSubmitting && "pointer-events-none opacity-50"
+          ])}
         >
           <div className='flex flex-col gap-2'>
-            <p className='mb-4'>Awesome! You&apos;re signing up for the meetup. We just need a few details. An email will be sent to you to confirm your signup.</p>
+            <p className='mb-4'>Awesome! You&apos;re signing up for the meetup. We just need a few details. An email will be sent to you to confirm your RSVP.</p>
             <label className='text-[15px] font-semibold' htmlFor="name">
               Full name
             </label>
@@ -134,7 +137,7 @@ export default function SignupForm({ event }: Props) {
               "hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950"
             ])}
             type="submit"
-            disabled={submitting}
+            disabled={isSubmitting}
           >
             <CheckAddSVG className="mr-2 inline-block" />
             <span className="text-nowrap">Sign up</span>

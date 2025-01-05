@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 import { createClient } from "@/utils/supabase/server";
@@ -7,7 +7,7 @@ import config from "@/app/api/config";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
   const { uuid } = await request.json();

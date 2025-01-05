@@ -8,7 +8,6 @@ import { Database } from '../../../database.types';
 import { ExtendedEvent } from '@/app/components/Events';
 
 import CloseSVG from 'public/icons/close.svg';
-import CheckAddSVG from 'public/icons/check-add.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import CancelSVG from 'public/icons/cancel.svg';
@@ -85,7 +84,7 @@ export default function CancelBlock({ event, rsvp }: Props) {
                   <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
                     <CancelSVG className="shrink-0 fill-foreground" />
                     <span>
-                      You&apos;ve already canceled your attendance. <br />If you&apos;ve changed your mind, you can always sign up again!
+                      You&apos;ve already canceled your RSVP. <br />If you&apos;ve changed your mind, you can always sign up again!
                     </span>
                   </div>
                 )}

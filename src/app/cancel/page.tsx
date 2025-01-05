@@ -30,13 +30,13 @@ export default async function Cancel({
   return (
     <>
       <div className="flex min-h-full flex-col">
-        <Header />
+        <Header variant="small" />
         <main className="flex grow flex-col">
           <section
             className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12 sm:pb-14"
           >
             <div className="w-full max-w-screen-md">
-              <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Confirm your sign up</h2>
+              <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Cancel your RSVP</h2>
               <div className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
                 {(!event || !rsvp || !rsvp.email) && (
                   <div className='flex gap-2 rounded-md bg-[#c5012c20] p-2 text-[15px] font-semibold leading-6 text-error-red'>

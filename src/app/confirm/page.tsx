@@ -30,7 +30,7 @@ export default async function Confirm({
   return (
     <>
       <div className="flex min-h-full flex-col">
-        <Header />
+        <Header variant="small" />
         <main className="flex grow flex-col">
           <section
             className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12 sm:pb-14"

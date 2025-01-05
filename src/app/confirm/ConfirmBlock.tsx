@@ -83,7 +83,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
             <>
                 {(!rsvp.confirmed_at && !rsvp.canceled_at) && (
                   <>
-                    <p className='mb-6'>Hi {rsvp.name}!<br/><br/>You are confirming your attendance for the above mentioned meeting. You can always change your RSVP later.</p>
+                    <p className='mb-6'>Hi {rsvp.name}!<br/><br/>You are confirming your RSVP for the above mentioned meeting. You can always change your RSVP later.</p>
                     <div className="flex items-center gap-4 max-sm:justify-between">
                       <button
                         className={clsx([
@@ -112,11 +112,11 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
                   </>
                 )}
 
-                {rsvp.confirmed_at && (
+                {(rsvp.confirmed_at && !rsvp.canceled_at) && (
                   <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
                     <CheckAddSVG className="shrink-0 fill-foreground" />
                     <span>
-                      You&apos;ve already confirmed your attendance. <br />If you&apos;d like to change your response, you can{' '}<br />
+                      You&apos;ve already confirmed your RSVP. <br />If you&apos;d like to change your response, you can{' '}<br />
                       <Link href={`/cancel?uuid=${rsvp.uuid}`} className='underline'>cancel your sign up</Link>
                       .
                     </span>
@@ -127,7 +127,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
                   <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
                     <CancelSVG className="shrink-0 fill-foreground" />
                     <span>
-                      You&apos;ve already canceled your attendance. <br />If you&apos;ve changed your mind, you can always sign up again!
+                      You&apos;ve already canceled your RSVP. <br />If you&apos;ve changed your mind, you can always sign up again!
                     </span>
                   </div>
                 )}
@@ -137,7 +137,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
           {signupSuccess && (
             <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
               <CheckAddSVG className="shrink-0 fill-foreground" />
-              <span>Thank you for confirming your attendance.<br />We look forward to seeing you at the meetup!</span>
+              <span>Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!</span>
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 import { createClient } from "@/utils/supabase/server";
@@ -7,7 +7,7 @@ import config from "@/app/api/config";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
   const { event_id, name, email } = await request.json();
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     .single();
 
   if (existingRSVP) {
-    return NextResponse.json({ message: "You have already signed up for this event" }, { status: 400 });
+    return NextResponse.json({ message: "You have already signed up for this event. Check your email inbox for a confirmation." }, { status: 400 });
   }
 
   // Insert the RSVP into the database
@@ -46,10 +46,6 @@ export async function POST(request: Request) {
     .single();
 
   if (result.error) {
-    if (result.error.message.includes('duplicate key value violates unique constraint')) {
-      return NextResponse.json({ message: "You have already signed up for this event" }, { status: 400 });
-    }
-
     return NextResponse.json({ message: result.error.message }, { status: 500 });
   }
 
