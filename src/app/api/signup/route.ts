@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
 
   const { event_id, name, email } = await request.json();
 
+  const ipAddress = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for");
+
   if (!event_id || !name || !email) {
     return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
   }
@@ -41,6 +43,7 @@ export async function POST(request: NextRequest) {
       event_id: event_id,
       name: name,
       email: email,
+      ip_address: ipAddress,
     })
     .select()
     .single();

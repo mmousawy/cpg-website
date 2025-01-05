@@ -53,6 +53,7 @@ export type Database = {
           email: string | null
           event_id: number | null
           id: number
+          ip_address: string | null
           name: string | null
           uuid: string | null
         }
@@ -63,6 +64,7 @@ export type Database = {
           email?: string | null
           event_id?: number | null
           id?: number
+          ip_address?: string | null
           name?: string | null
           uuid?: string | null
         }
@@ -73,6 +75,7 @@ export type Database = {
           email?: string | null
           event_id?: number | null
           id?: number
+          ip_address?: string | null
           name?: string | null
           uuid?: string | null
         }
