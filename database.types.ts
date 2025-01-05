@@ -54,6 +54,7 @@ export type Database = {
           event_id: number | null
           id: number
           name: string | null
+          uuid: string | null
         }
         Insert: {
           canceled_at?: string | null
@@ -63,6 +64,7 @@ export type Database = {
           event_id?: number | null
           id?: number
           name?: string | null
+          uuid?: string | null
         }
         Update: {
           canceled_at?: string | null
@@ -72,6 +74,7 @@ export type Database = {
           event_id?: number | null
           id?: number
           name?: string | null
+          uuid?: string | null
         }
         Relationships: [
           {

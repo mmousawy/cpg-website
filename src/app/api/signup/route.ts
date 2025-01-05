@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 import { createClient } from "@/utils/supabase/server";
-import { encrypt } from "@/utils/encrypt";
 
 import config from "@/app/api/config";
 
@@ -24,10 +23,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Event not found" }, { status: 404 });
   }
 
-  // Prepare the confirmation email link
-  const encryptedEmail = encrypt(email);
-  const confirmLink = `${process.env.NEXT_PUBLIC_SITE_URL}/confirm?email=${encryptedEmail}&event_id=${event_id}`;
-
   // Check if the user has already signed up for the event
   // RSVP cannot be canceled
   // RSVP must be confirmed or not confirmed
@@ -41,11 +36,14 @@ export async function POST(request: Request) {
   }
 
   // Insert the RSVP into the database
-  const result = await supabase.from('events_rsvps').insert({
-    event_id: event_id,
-    name: name,
-    email: email,
-  });
+  const result = await supabase.from('events_rsvps')
+    .insert({
+      event_id: event_id,
+      name: name,
+      email: email,
+    })
+    .select()
+    .single();
 
   if (result.error) {
     if (result.error.message.includes('duplicate key value violates unique constraint')) {
@@ -54,6 +52,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: result.error.message }, { status: 500 });
   }
+
+  // Prepare the confirmation email link
+  const confirmLink = `${process.env.NEXT_PUBLIC_SITE_URL}/confirm?uuid=${result.data.uuid}`;
 
   // Send the confirmation email
   resend.emails.send({

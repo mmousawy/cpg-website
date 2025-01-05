@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 import { createClient } from "@/utils/supabase/server";
-import { decrypt } from "@/utils/encrypt";
 
 import config from "@/app/api/config";
 
@@ -11,41 +10,34 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 export async function POST(request: Request) {
   const supabase = await createClient();
 
-  const { event_id, email } = await request.json();
+  const { uuid } = await request.json();
 
-  if (!event_id || !email) {
+  if (!uuid) {
     return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
   }
 
+  // Get the RSVP
+  const { data: rsvp } = await supabase.from('events_rsvps')
+    .select()
+    .eq('uuid', uuid)
+    .single();
+
   // Get the event and check if it exists
-  const { data: event } = await supabase.from('events').select().eq('id', event_id).single();
+  const { data: event } = await supabase.from('events')
+    .select()
+    .eq('id', rsvp?.event_id || '')
+    .single();
 
-  if (!event) {
-    return NextResponse.json({ message: "Event not found" }, { status: 404 });
-  }
-
-  let decryptedEmail;
-
-  try {
-    decryptedEmail = decrypt(email) as string;
-  } catch (error: unknown) {
-    console.error(error);
-
-    let errorMessage;
-
-    if (typeof error === "string") {
-      errorMessage = error;
-    } else if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-
-    return NextResponse.json({ message: errorMessage }, { status: 500 });
+  if (!rsvp || !event || !rsvp.email) {
+    return NextResponse.json({ message: "RSVP or event not found" }, { status: 404 });
   }
 
   // Confirm the RSVP into the database
-  const result = await supabase.from('events_rsvps').update({
-    confirmed_at: new Date().toISOString()
-  }).eq('event_id', event_id).eq('email', decryptedEmail);
+  const result = await supabase.from('events_rsvps')
+    .update({
+      confirmed_at: new Date().toISOString()
+    })
+    .eq('uuid', uuid);
 
   if (result.error) {
     console.error(result.error);
@@ -54,12 +46,12 @@ export async function POST(request: Request) {
   }
 
   // Prepare the cancellation email link
-  const cancellationLink = `${process.env.NEXT_PUBLIC_SITE_URL}/cancel?email=${email}&event_id=${event_id}`;
+  const cancellationLink = `${process.env.NEXT_PUBLIC_SITE_URL}/cancel?uuid=${uuid}`;
 
   // Send the confirmation email
   resend.emails.send({
     from: config.email.from,
-    to: decryptedEmail,
+    to: rsvp.email,
     replyTo: config.email.replyTo,
     subject: `Confirmed RSVP: ${event.title}`,
     html: `

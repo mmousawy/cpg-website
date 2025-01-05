@@ -114,7 +114,7 @@ export default function SignupForm({ event }: Props) {
               id="email"
               className='rounded-md border-[0.0625rem] border-border-color p-2 font-[family-name:var(--font-geist-mono)]'
               type="email" name="email" placeholder="Enter your e-mail address"
-              pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$'
+              pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}'
               required
             />
           </div>

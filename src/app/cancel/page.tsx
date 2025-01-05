@@ -3,11 +3,11 @@ import Footer from "@/app/components/Footer";
 
 import { createClient } from '@/utils/supabase/server';
 
-import ConfirmBlock from "./ConfirmBlock";
+import CancelBlock from "./CancelBlock";
 
 import ErrorSVG from 'public/icons/error.svg';
 
-export default async function Confirm({
+export default async function Cancel({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -47,7 +47,7 @@ export default async function Confirm({
                   </div>
                 )}
                 { event && rsvp?.email && (
-                  <ConfirmBlock
+                  <CancelBlock
                     event={event}
                     rsvp={rsvp}
                   />

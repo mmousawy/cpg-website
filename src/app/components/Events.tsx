@@ -82,10 +82,10 @@ export default async function Events() {
                   />
                 </div>
                 <div className='mt-8 flex items-center justify-between gap-4'>
-                  { !event.attendees || event.attendees?.length === 0 && (
+                  {!event.attendees || event.attendees?.length === 0 && (
                     <div className='text-[15px] font-semibold leading-6'>No attendees yet &mdash; join and be the first!</div>
                   )}
-                  { !!event.attendees?.length && (
+                  {!!event.attendees?.length && (
                     <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
                       <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 max-xs:max-w-52' dir="rtl">
                         {/* Avatar list of attendees */}
@@ -101,6 +101,7 @@ export default async function Events() {
                             src={`https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`} alt="Gravatar"
                           />
                         ))}
+
                         {(event.attendees?.length || 0) > 8 && (
                           <div
                             // Fade to background-light color
@@ -117,7 +118,7 @@ export default async function Events() {
                       </div>
                       {event.attendees?.length} attendee{event.attendees?.length === 1 ? '' : 's'}
                     </div>
-                    )}
+                  )}
                   <SignupButton event={event} className="ml-2 self-end sm:hidden" />
                 </div>
               </div>

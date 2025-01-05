@@ -18,11 +18,10 @@ import Link from 'next/link';
 
 type Props = {
   event: ExtendedEvent;
-  email: string;
   rsvp: Database['public']['Tables']['events_rsvps']['Row'];
 }
 
-export default function ConfirmBlock({ event, email, rsvp }: Props) {
+export default function ConfirmBlock({ event, rsvp }: Props) {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
 
@@ -30,8 +29,7 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
     const result = await fetch('/api/confirm', {
       method: 'POST',
       body: JSON.stringify({
-        event_id: event.id,
-        email: email,
+        uuid: rsvp.uuid,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -47,8 +45,7 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
     const result = await fetch('/api/cancel', {
       method: 'POST',
       body: JSON.stringify({
-        event_id: event.id,
-        email: email,
+        uuid: rsvp.uuid,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -86,7 +83,7 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
             <>
                 {(!rsvp.confirmed_at && !rsvp.canceled_at) && (
                   <>
-                    <p className='mb-6'>You are confirming your attendance for the above mentioned meeting. You can always change your RSVP later.</p>
+                    <p className='mb-6'>Hi {rsvp.name}!<br/><br/>You are confirming your attendance for the above mentioned meeting. You can always change your RSVP later.</p>
                     <div className="flex items-center gap-4 max-sm:justify-between">
                       <button
                         className={clsx([
@@ -120,7 +117,7 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
                     <CheckAddSVG className="shrink-0 fill-foreground" />
                     <span>
                       You&apos;ve already confirmed your attendance. <br />If you&apos;d like to change your response, you can{' '}<br />
-                      <Link href={`/cancel?email=${email}&event_id=${event.id}`} className='underline'>cancel your sign up</Link>
+                      <Link href={`/cancel?uuid=${rsvp.uuid}`} className='underline'>cancel your sign up</Link>
                       .
                     </span>
                   </div>
@@ -140,7 +137,7 @@ export default function ConfirmBlock({ event, email, rsvp }: Props) {
           {signupSuccess && (
             <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
               <CheckAddSVG className="shrink-0 fill-foreground" />
-              <span>Thank you for confirming your attendance. We look forward to seeing you at the event!</span>
+              <span>Thank you for confirming your attendance.<br />We look forward to seeing you at the meetup!</span>
             </div>
           )}
 
