@@ -87,34 +87,31 @@ export default async function Events() {
                   )}
                   {!!event.attendees?.length && (
                     <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
-                      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 max-xs:max-w-52' dir="rtl">
+                      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
                         {/* Avatar list of attendees */}
-                        {event.attendees?.map((attendee) => (
+                        {event.attendees?.map((attendee, attendeeIndex) => (
                           <Image
-                            key={attendee.email}
+                            key={`${attendee.uuid}_${attendeeIndex}` }
                             width={32}
                             height={32}
                             className={clsx([
                               (event.attendees?.length || 0) > 1 && "-mr-2",
-                              "size-8 rounded-full shadow"
+                              "size-8 rounded-full"
                             ])}
                             src={`https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`} alt="Gravatar"
                           />
                         ))}
 
-                        {(event.attendees?.length || 0) > 8 && (
-                          <div
-                            // Fade to background-light color
-                            className="absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light xs:hidden"
-                          />
-                        )}
-
-                        {(event.attendees?.length || 0) > 12 && (
-                          <div
-                            // Fade to background-light color
-                            className="absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light max-sm:hidden"
-                          />
-                        )}
+                        <div
+                          // Fade to background-light color
+                          className={clsx([
+                            "absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light",
+                            event.attendees?.length < 20 && "invisible",
+                            event.attendees?.length > 7 && "max-xs:visible",
+                            event.attendees?.length > 12 && "max-md:visible",
+                            event.attendees?.length > 16 && "!visible",
+                          ])}
+                        />
                       </div>
                       {event.attendees?.length} attendee{event.attendees?.length === 1 ? '' : 's'}
                     </div>
