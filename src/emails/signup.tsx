@@ -35,8 +35,8 @@ export const SignupEmail = ({
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="m-auto bg-[#f7f7f7] px-2 font-sans">
-          <Container className="mx-auto my-[40px] max-w-[465px] border-separate rounded border border-solid border-[#e5e7ea] bg-white p-[20px]">
+        <Body className="m-auto bg-[#f7f7f7] p-6 font-sans">
+          <Container className="mx-auto max-w-[465px] border-separate rounded border border-solid border-[#e5e7ea] bg-white p-[20px]">
             <Section className="">
               <Img
                 src={`${baseUrl}/cpg-logo-small.png`}
