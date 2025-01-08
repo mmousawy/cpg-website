@@ -28,9 +28,11 @@ export async function POST(request: NextRequest) {
   // Check if the user has already signed up for the event
   // RSVP cannot be canceled
   // RSVP must be confirmed or not confirmed
-  const { data: existingRSVP } = await supabase.from('events_rsvps').select().eq('event_id', event_id).eq('email', email)
+  const { data: existingRSVP } = await supabase.from('events_rsvps')
+    .select()
+    .eq('event_id', event_id)
+    .eq('email', email)
     .is("canceled_at", null)
-    .or("confirmed_at.is.null, confirmed_at.not.is.null")
     .single();
 
   if (existingRSVP) {
