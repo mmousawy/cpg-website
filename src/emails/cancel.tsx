@@ -36,7 +36,7 @@ export const CancelEmail = ({
     } as Database['public']['Tables']['events']['Row'];
   }
 
-  const previewText = `Canceled RSVP for: ${event?.title}`;
+  const previewText = `You've canceled your RSVP`;
 
   return (
     <Html>

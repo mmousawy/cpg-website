@@ -45,7 +45,7 @@ export const ConfirmEmail = ({
     cancellationLink = `${baseUrl}/cancel/123456`;
   }
 
-  const previewText = `Confirmed RSVP for: ${event?.title}`;
+  const previewText = `You've confirmed your RSVP`;
 
   return (
     <Html>

@@ -47,7 +47,7 @@ export const SignupEmail = ({
     confirmLink = `${baseUrl}/confirm/123456`;
   }
 
-  const previewText = `Sign up for: ${event?.title}`;
+  const previewText = `Confirm your sign up for the meetup`;
 
   return (
     <Html>
