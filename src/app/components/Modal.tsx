@@ -29,6 +29,27 @@ export default function Modal() {
     }
   }, [isOpen]);
 
+  // This effect is used to add an event listener to the dialog element
+  useEffect(() => {
+    const modal = modalRef.current;
+
+    if (modal && !modal.dataset.isMounted) {
+      modal.dataset.isMounted = "true";
+      modal.addEventListener("close", () => {
+        setIsOpen(false);
+      });
+    }
+
+    // Cleanup the event listener
+    return () => {
+      if (modal) {
+        modal.removeEventListener("close", () => {
+          setIsOpen(false);
+        });
+      }
+    }
+  });
+
   return (
     <dialog
       ref={modalRef}
