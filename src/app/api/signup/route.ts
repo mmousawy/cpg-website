@@ -5,8 +5,6 @@ import { render } from "@react-email/render";
 import { createClient } from "@/utils/supabase/server";
 import { SignupEmail } from "../../../emails/signup";
 
-import config from "@/app/api/config";
-
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
@@ -58,13 +56,20 @@ export async function POST(request: NextRequest) {
   const confirmLink = `${process.env.NEXT_PUBLIC_SITE_URL}/confirm/${result.data.uuid}`;
 
   // Send the confirmation email
-  resend.emails.send({
-    from: config.email.from,
+  const emailResult = await resend.emails.send({
+    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
     to: email,
-    replyTo: config.email.replyTo,
+    replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
     subject: `Sign up for: ${event.title}`,
     html: await render(SignupEmail({fullName: name, event, confirmLink})),
   });
+
+  if (emailResult.error) {
+    return NextResponse.json({ message: emailResult.error.message }, { status: 500 });
+  }
+
+  // Log the email sending
+  console.log(`📨 Email "signup" sent with UUID: ${result.data.uuid}`);
 
   return NextResponse.json({}, { status: 200 });
 }
