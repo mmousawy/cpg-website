@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react"
 import { Inter, Geist_Mono } from "next/font/google";
-import "./globals.css";
 
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import ModalProvider from "@/app/providers/ModalProvider";
 import SupabaseProvider from "./providers/SupabaseProvider";
+
+import "./globals.css";
 
 const geistSans = Inter({
   variable: "--font-inter",
@@ -41,6 +43,7 @@ export default function RootLayout({
             </ModalProvider>
           </ThemeProvider>
         </SupabaseProvider>
+        <Analytics />
       </body>
     </html>
   );
