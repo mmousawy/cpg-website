@@ -1,8 +1,8 @@
-import About from "@/app/components/About";
-import Events from "@/app/components/Events";
-import Header from "@/app/components/Header";
-import Footer from "@/app/components/Footer";
-import Modal from '@/app/components/Modal';
+import About from "@/components/About";
+import Events from "@/components/Events";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import Modal from '@/components/Modal';
 
 export default async function Home() {
   return (

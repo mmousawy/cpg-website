@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import clsx from 'clsx';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { ExtendedEvent } from '@/app/components/Events';
+import { ExtendedEvent } from '@/components/Events';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';

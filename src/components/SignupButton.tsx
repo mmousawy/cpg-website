@@ -6,7 +6,7 @@ import { useContext } from 'react';
 import SignupForm from './SignupForm';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { ExtendedEvent } from '@/app/components/Events';
+import { ExtendedEvent } from '@/components/Events';
 
 import CheckSVG from 'public/icons/check.svg';
 

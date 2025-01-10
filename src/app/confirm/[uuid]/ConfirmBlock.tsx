@@ -5,7 +5,7 @@ import Image from 'next/image';
 import clsx from 'clsx';
 
 import { Database } from '../../../../database.types';
-import { ExtendedEvent } from '@/app/components/Events';
+import { ExtendedEvent } from '@/components/Events';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
