@@ -5,7 +5,7 @@ import Image from 'next/image';
 import clsx from 'clsx';
 
 import { Database } from '@/database.types';
-import { ExtendedEvent } from '@/components/Events';
+import { CPGEvent } from '@/components/Events';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
@@ -17,7 +17,7 @@ import TimeSVG from 'public/icons/time.svg';
 import Link from 'next/link';
 
 type Props = {
-  event: ExtendedEvent;
+  event: CPGEvent;
   rsvp: Database['public']['Tables']['events_rsvps']['Row'];
 }
 
