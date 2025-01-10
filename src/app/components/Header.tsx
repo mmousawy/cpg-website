@@ -41,7 +41,7 @@ export default function Header({ variant }: HeaderProps) {
       <div
         className="flex w-full max-w-screen-md flex-col items-center gap-4 sm:gap-6 md:flex-row"
       >
-        <Link href="/">
+        <Link href="/" aria-label="Creative Photography Group Home">
           <LogoSVG
             className={clsx([
               "block",
