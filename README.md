@@ -38,5 +38,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Generate Supabase Typescript types
 
 ```bash
-npx supabase gen types typescript --project-id "lpdjlhlslqtdswhnchmv" --schema public > database.types.ts
+npx supabase gen types typescript --project-id "lpdjlhlslqtdswhnchmv" --schema public > ./src/database.types.ts
 ```

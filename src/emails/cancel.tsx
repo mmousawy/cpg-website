@@ -9,7 +9,7 @@ import {
   Tailwind,
 } from "@react-email/components";
 
-import { Database } from "../../database.types";
+import { Database } from '@/database.types';
 
 import EmailHeader from "./components/Header";
 import Footer from "./components/Footer";

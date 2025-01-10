@@ -70,7 +70,7 @@ export default function Header({ variant }: HeaderProps) {
                   )}
                   target="_blank"
                 >
-                  <Icon className="transition- inline-block sm:mr-2" />
+                  <Icon className="inline-block sm:mr-2" />
                   <span className="hidden sm:inline-block">{name}</span>
                 </a>
               )) }

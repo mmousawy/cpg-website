@@ -13,7 +13,7 @@ import {
   Tailwind,
 } from "@react-email/components";
 
-import { Database } from "../../database.types";
+import { Database } from '@/database.types';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import clsx from 'clsx';
 
-import { Database } from '../../../../database.types';
+import { Database } from '@/database.types';
 import { ExtendedEvent } from '@/components/Events';
 
 import CloseSVG from 'public/icons/close.svg';

@@ -2,7 +2,7 @@ import Image from 'next/image';
 import crypto from 'crypto';
 import clsx from 'clsx';
 
-import { Database } from '../../../database.types';
+import { Database } from '@/database.types';
 
 import { createClient } from '@/utils/supabase/server';
 
