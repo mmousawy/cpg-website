@@ -57,6 +57,6 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
 
 export function AttendeesLoading() {
   return (
-    <div className="min-h-8 max-w-[30%] animate-pulse rounded bg-border-color" />
+    <div className="h-8 w-[30%] animate-pulse rounded bg-border-color" />
   )
 }
