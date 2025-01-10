@@ -1,39 +1,24 @@
 import Image from 'next/image';
-import crypto from 'crypto';
-import clsx from 'clsx';
 
 import { Database } from '@/database.types';
 
 import { createClient } from '@/utils/supabase/server';
 
+import Attendees, { AttendeesLoading } from './Attendees';
+
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 import SignupButton from './SignupButton';
+import { Suspense } from 'react';
 
-export type ExtendedEvent = Database['public']['Tables']['events']['Row'] & {
-  attendees?: Database['public']['Tables']['events_rsvps']['Row'][];
-};
+export type CPGEvent = Database['public']['Tables']['events']['Row'];
 
 export default async function Events() {
   const supabase = await createClient();
 
   const response = await supabase.from("events").select();
-  const events = response.data as ExtendedEvent[];
-
-  const promises = events.map(async (event) => {
-    // Get the attendees for each event
-    const { data: attendees } = await supabase
-      .from("events_rsvps")
-      .select()
-      .is("canceled_at", null)
-      .not("confirmed_at", "is", null)
-      .eq("event_id", event.id);
-
-    event.attendees = attendees!;
-  });
-
-  await Promise.all(promises!);
+  const events = response.data;
 
   return (
     <section
@@ -82,40 +67,9 @@ export default async function Events() {
                   />
                 </div>
                 <div className='mt-8 flex items-center justify-between gap-4'>
-                  {!event.attendees || event.attendees?.length === 0 && (
-                    <div className='text-[15px] font-semibold leading-6'>No attendees yet &mdash; join and be the first!</div>
-                  )}
-                  {!!event.attendees?.length && (
-                    <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
-                      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
-                        {/* Avatar list of attendees */}
-                        {event.attendees?.map((attendee, attendeeIndex) => (
-                          <Image
-                            key={`${attendee.uuid}_${attendeeIndex}` }
-                            width={32}
-                            height={32}
-                            className={clsx([
-                              (event.attendees?.length || 0) > 1 && "-mr-2",
-                              "size-8 rounded-full"
-                            ])}
-                            src={`https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`} alt="Gravatar"
-                          />
-                        ))}
-
-                        <div
-                          // Fade to background-light color
-                          className={clsx([
-                            "absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light",
-                            event.attendees?.length < 20 && "invisible",
-                            event.attendees?.length > 7 && "max-xs:visible",
-                            event.attendees?.length > 12 && "max-md:visible",
-                            event.attendees?.length > 16 && "!visible",
-                          ])}
-                        />
-                      </div>
-                      {event.attendees?.length} attendee{event.attendees?.length === 1 ? '' : 's'}
-                    </div>
-                  )}
+                  <Suspense fallback={<AttendeesLoading />}>
+                    <Attendees event={event} supabase={supabase} />
+                  </Suspense>
                   <SignupButton event={event} className="ml-2 self-end sm:hidden" />
                 </div>
               </div>
@@ -126,4 +80,24 @@ export default async function Events() {
       </div>
     </section>
   );
+}
+
+export function EventsLoading() {
+  return (
+    <section
+      className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12 sm:pb-14"
+    >
+      <div className="w-full max-w-screen-md">
+        <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Upcoming meetups</h2>
+
+        <div className="min-h-80 rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
+          <div className="h-8 animate-pulse rounded bg-border-color" />
+          <div className="mt-6 h-6 max-w-[60%] animate-pulse rounded bg-border-color" />
+          <div className="mt-2 h-6 max-w-[60%] animate-pulse rounded bg-border-color" />
+          <div className="mt-6 min-h-40 animate-pulse rounded bg-border-color" />
+          <div className="mt-8 min-h-8 max-w-[30%] animate-pulse rounded bg-border-color" />
+        </div>
+      </div>
+    </section>
+  )
 }

@@ -6,13 +6,13 @@ import { useContext } from 'react';
 import SignupForm from './SignupForm';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { ExtendedEvent } from '@/components/Events';
+import { CPGEvent } from '@/components/Events';
 
 import CheckSVG from 'public/icons/check.svg';
 
 type Props = {
   className?: string;
-  event?: ExtendedEvent;
+  event?: CPGEvent;
 }
 
 export default function SignupButton({ className, event }: Props) {
