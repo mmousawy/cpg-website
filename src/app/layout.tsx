@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Inter, Geist_Mono } from "next/font/google";
 
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
@@ -44,6 +45,7 @@ export default function RootLayout({
           </ThemeProvider>
         </SupabaseProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
