@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 
 import { createClient } from "@/utils/supabase/server";
+import { validateRecaptcha } from "@/utils/validateRecaptcha";
 import { SignupEmail } from "../../../emails/signup";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -10,12 +11,19 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
-  const { event_id, name, email } = await request.json();
+  const { event_id, name, email, recaptchaToken } = await request.json();
 
   const ipAddress = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for");
 
-  if (!event_id || !name || !email) {
+  if (!event_id || !name || !email || !recaptchaToken) {
     return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+  }
+
+  // Validate the reCAPTCHA token
+  const recaptchaResponse = await validateRecaptcha(recaptchaToken);
+
+  if (recaptchaResponse.status !== 200) {
+    return recaptchaResponse;
   }
 
   // Get the event and check if it exists

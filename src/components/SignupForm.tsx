@@ -1,4 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import ReCAPTCHA from "react-google-recaptcha";
 import clsx from 'clsx';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
@@ -21,6 +22,8 @@ export default function SignupForm({ event }: Props) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
 
+  const captchaRef = useRef<ReCAPTCHA>(null);
+
   // Close the success message after the modal is closed
   useEffect(() => {
     if (!modalContext.isOpen) {
@@ -30,7 +33,7 @@ export default function SignupForm({ event }: Props) {
     }
   }, [modalContext.isOpen]);
 
-  const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
+  const submitForm = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setError(null);
@@ -39,6 +42,7 @@ export default function SignupForm({ event }: Props) {
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name');
     const email = formData.get('email');
+    const recaptchaToken = await captchaRef.current?.executeAsync();
 
     // Call next api route to sign up the user
     const result = await fetch('/api/signup', {
@@ -46,7 +50,8 @@ export default function SignupForm({ event }: Props) {
       body: JSON.stringify({
         name,
         email,
-        event_id: event?.id
+        event_id: event?.id,
+        recaptchaToken,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +72,7 @@ export default function SignupForm({ event }: Props) {
     if (data.message) {
       setError(data.message);
     }
-  };
+  }, [event]);
 
   if (!event) {
     return null;
@@ -117,7 +122,7 @@ export default function SignupForm({ event }: Props) {
               id="email"
               className='rounded-md border-[0.0625rem] border-border-color p-2 font-[family-name:var(--font-geist-mono)]'
               type="email" name="email" placeholder="Enter your e-mail address"
-              pattern='[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}'
+              pattern='[a-z0-9\._\%\+\-]+@[a-z0-9\.\-]+\.[a-z]{2,4}'
               required
             />
           </div>
@@ -142,6 +147,15 @@ export default function SignupForm({ event }: Props) {
             <CheckAddSVG className="mr-2 inline-block" />
             <span className="text-nowrap">Sign up</span>
           </button>
+
+          {modalContext.isOpen && (
+            <ReCAPTCHA
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+              ref={captchaRef}
+              size='invisible'
+              badge='bottomleft'
+            />
+          )}
         </form>
       )}
 
