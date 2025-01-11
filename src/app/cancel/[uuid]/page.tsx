@@ -22,7 +22,7 @@ export default async function Cancel({
 
   const { data: event } = await supabase.from("events")
     .select()
-    .eq("id", rsvp?.event_id || '')
+    .eq("id", rsvp?.event_id || -1)
     .single();
 
   return (

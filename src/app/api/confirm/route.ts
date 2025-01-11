@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   // Get the event and check if it exists
   const { data: event } = await supabase.from('events')
     .select()
-    .eq('id', rsvp?.event_id || '')
+    .eq('id', rsvp?.event_id || -1)
     .single();
 
   if (!rsvp || !event || !rsvp.email) {
