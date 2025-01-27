@@ -71,7 +71,7 @@ export const ConfirmEmail = ({
 
             <Text className="text-[14px] leading-[24px] text-[#171717]">
               Need to cancel your RSVP? You can do that by clicking here:<br />
-              <Link href={cancellationLink} className="text-blue-600 no-underline">Cancel RSVP</Link>
+              <Link href={cancellationLink} className="mt-2 inline-block rounded-full border-[0.0625rem] border-[#e5e7ea] bg-[#f7f7f7] px-4 py-2 font-mono text-[14px] font-semibold leading-none text-[#171717] no-underline">Cancel RSVP</Link>
             </Text>
 
             <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />

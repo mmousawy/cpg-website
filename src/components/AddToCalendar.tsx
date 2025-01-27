@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 
 import {
   Button,
+  Section,
   Text,
 } from "@react-email/components";
 
@@ -34,16 +35,18 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
     apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${encDetails.title}%0D%0ADTSTART:${encDetails.startDate}%0D%0ADTEND:${encDetails.endDate}%0D%0ADESCRIPTION:${encDetails.description}%0D%0ALOCATION:${encDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
   };
 
+  const buttonStyle = 'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-2 font-mono text-[14px] font-semibold no-underline';
+
   if (render === 'email') {
     return (
-      <div>
-         <Text className="text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
+      <Section className="mt-[30px]">
+         <Text className="!mt-0 text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
   
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex flex-col items-start gap-2">
           {/* Google */}
           <Button
             href={calendarLinks.google}
-            className="rounded-full bg-[#38785f] px-4 py-2 text-center font-mono text-[14px] font-semibold text-white no-underline"
+            className={buttonStyle}
           >
             Google Calendar
           </Button>
@@ -51,7 +54,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           {/* Outlook */}
           <Button
             href={calendarLinks.outlook}
-            className="rounded-full bg-[#38785f] px-4 py-2 text-center font-mono text-[14px] font-semibold text-white no-underline"
+            className={buttonStyle}
           >
             Outlook Calendar
           </Button>
@@ -60,12 +63,12 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           <Button
             href={calendarLinks.apple}
             download={`${event.title}.ics`}
-            className="rounded-full bg-[#38785f] px-4 py-2 text-center font-mono text-[14px] font-semibold text-white no-underline"
+            className={buttonStyle}
           >
             Apple Calendar
           </Button>
         </div>
-      </div>
+      </Section>
     )
   }
 
@@ -79,7 +82,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           href={calendarLinks.google}
           target='_blank'
           rel='noopener noreferrer'
-          className='flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-primary bg-primary fill-white px-3 py-1 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-white hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950'
+          className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
           Google Calendar
         </a>
@@ -89,7 +92,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           href={calendarLinks.outlook}
           target='_blank'
           rel='noopener noreferrer'
-          className='flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-primary bg-primary fill-white px-3 py-1 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-white hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950'
+          className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
           Outlook Calendar
         </a>
@@ -98,7 +101,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
         <a
           href={calendarLinks.apple}
           download={`${event.title}.ics`}
-          className='flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-primary bg-primary fill-white px-3 py-1 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-white hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950'
+          className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
           Apple Calendar
         </a>
