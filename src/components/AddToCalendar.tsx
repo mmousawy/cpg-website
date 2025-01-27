@@ -7,10 +7,10 @@ import {
   Text,
 } from "@react-email/components";
 
+import AddSVG from "public/icons/add.svg";
+
 export default function AddToCalendar({ event, render, }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = dayjs(`${event.date}T${event.time}`);
-
-  console.log(event.date, event.time);
 
   const calendarDetails = {
     title: `${event.title} - Creative Photography Group`,
@@ -35,18 +35,19 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
     apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${encDetails.title}%0D%0ADTSTART:${encDetails.startDate}%0D%0ADTEND:${encDetails.endDate}%0D%0ADESCRIPTION:${encDetails.description}%0D%0ALOCATION:${encDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
   };
 
-  const buttonStyle = 'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-2 font-mono text-[14px] font-semibold no-underline';
+  const buttonStyle = 'flex gap-2 whitespace-nowrap items-center rounded-full bg-background text-foreground border-[0.0625rem] border-border-color px-3 py-1 font-mono text-[14px] font-semibold fill-foreground no-underline hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950';
+  const emailButtonStyle = 'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-1 font-mono text-[14px] font-semibold no-underline';
 
   if (render === 'email') {
     return (
       <Section className="mt-[30px]">
-         <Text className="!mt-0 text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
+        <Text className="!mt-0 text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
   
         <div className="flex flex-col items-start gap-2">
           {/* Google */}
           <Button
             href={calendarLinks.google}
-            className={buttonStyle}
+            className={emailButtonStyle}
           >
             Google Calendar
           </Button>
@@ -54,7 +55,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           {/* Outlook */}
           <Button
             href={calendarLinks.outlook}
-            className={buttonStyle}
+            className={emailButtonStyle}
           >
             Outlook Calendar
           </Button>
@@ -63,7 +64,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           <Button
             href={calendarLinks.apple}
             download={`${event.title}.ics`}
-            className={buttonStyle}
+            className={emailButtonStyle}
           >
             Apple Calendar
           </Button>
@@ -84,6 +85,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           rel='noopener noreferrer'
           className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
+          <AddSVG className="shrink-0" />
           Google Calendar
         </a>
 
@@ -94,6 +96,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           rel='noopener noreferrer'
           className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
+          <AddSVG className="shrink-0" />
           Outlook Calendar
         </a>
 
@@ -103,6 +106,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           download={`${event.title}.ics`}
           className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
+          <AddSVG className="shrink-0" />
           Apple Calendar
         </a>
       </div>
