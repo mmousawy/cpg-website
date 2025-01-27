@@ -1,8 +1,15 @@
 import { CPGEvent } from "@/types/events";
 import dayjs from "dayjs";
 
-export default function AddToCalendar({ event }: { event: CPGEvent }) {
+import {
+  Button,
+  Text,
+} from "@react-email/components";
+
+export default function AddToCalendar({ event, render, }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = dayjs(`${event.date}T${event.time}`);
+
+  console.log(event.date, event.time);
 
   const calendarDetails = {
     title: `${event.title} - Creative Photography Group`,
@@ -26,6 +33,41 @@ export default function AddToCalendar({ event }: { event: CPGEvent }) {
     outlook: `https://outlook.live.com/calendar/action/compose/?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${encDetails.title}&startdt=${encDetails.outlookStartDate}&enddt=${encDetails.outlookEndDate}&body=${encDetails.description}&location=${encDetails.location}`,
     apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${encDetails.title}%0D%0ADTSTART:${encDetails.startDate}%0D%0ADTEND:${encDetails.endDate}%0D%0ADESCRIPTION:${encDetails.description}%0D%0ALOCATION:${encDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
   };
+
+  if (render === 'email') {
+    return (
+      <div>
+         <Text className="text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
+  
+        <div className="flex flex-col items-start gap-3">
+          {/* Google */}
+          <Button
+            href={calendarLinks.google}
+            className="rounded-full bg-[#38785f] px-4 py-2 text-center font-mono text-[14px] font-semibold text-white no-underline"
+          >
+            Google Calendar
+          </Button>
+  
+          {/* Outlook */}
+          <Button
+            href={calendarLinks.outlook}
+            className="rounded-full bg-[#38785f] px-4 py-2 text-center font-mono text-[14px] font-semibold text-white no-underline"
+          >
+            Outlook Calendar
+          </Button>
+  
+          {/* Apple */}
+          <Button
+            href={calendarLinks.apple}
+            download={`${event.title}.ics`}
+            className="rounded-full bg-[#38785f] px-4 py-2 text-center font-mono text-[14px] font-semibold text-white no-underline"
+          >
+            Apple Calendar
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-2 max-sm:gap-4">

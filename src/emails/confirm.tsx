@@ -18,6 +18,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 import EmailHeader from "./components/Header";
 import EventDetails from "./components/EventDetails";
 import Footer from "./components/Footer";
+import AddToCalendar from "@/components/AddToCalendar";
 
 export const ConfirmEmail = ({
   preview,
@@ -36,7 +37,7 @@ export const ConfirmEmail = ({
     event = {
       title: "Contours, compositions and cropping",
       description: `Let's kick off the new year with inspiration and creativity at our first meetup of 2025! Join us as Murtada hosts and delivers an engaging short talk on "Contours, Compositions, and Cropping," exploring essential techniques to refine your photography. \r\n\r\nLet's make 2025 the year of stunning shots and creative growth—see you there!`,
-      date: new Date('2025-01-25').toString(),
+      date: "2025-01-25",
       time: "13:00:00",
       location: "The Tea Lab\r\nNieuwe Binnenweg 178 A\r\nRotterdam",
       cover_image: `https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/Murtada-al-Mousawy-20241214-DC4A4303.jpg`,
@@ -76,6 +77,8 @@ export const ConfirmEmail = ({
             <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />
 
             <EventDetails event={event} noDescription />
+
+            <AddToCalendar event={event} render="email" />
 
             <Footer fullName={fullName} />
           </Container>
