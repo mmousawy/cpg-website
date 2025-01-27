@@ -40,3 +40,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ```bash
 npx supabase gen types typescript --project-id "lpdjlhlslqtdswhnchmv" --schema public > ./src/database.types.ts
 ```
+
+## Things to add
+
+| Status | Description |
+|-|-|
+| <input type="checkbox" disabled /> | Add to calendar button in success screen and email |
+| <input type="checkbox" disabled checked /> | Custom 404 page
