@@ -45,5 +45,5 @@ npx supabase gen types typescript --project-id "lpdjlhlslqtdswhnchmv" --schema p
 
 | Status | Description |
 |-|-|
-| <input type="checkbox" disabled /> | Add to calendar button in success screen and email |
+| <input type="checkbox" disabled checked /> | Add to calendar button in success screen and email |
 | <input type="checkbox" disabled checked /> | Custom 404 page

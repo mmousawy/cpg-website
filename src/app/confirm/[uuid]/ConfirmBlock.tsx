@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import clsx from 'clsx';
+import Link from 'next/link';
+
+import AddToCalendar from '@/components/AddToCalendar';
 
 import { Database } from '@/database.types';
-import { CPGEvent } from '@/components/Events';
+import { CPGEvent } from '@/types/events';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
@@ -14,7 +17,6 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import TimeSVG from 'public/icons/time.svg';
-import Link from 'next/link';
 
 type Props = {
   event: CPGEvent;
@@ -135,10 +137,16 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
           )}
 
           {signupSuccess && (
-            <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
-              <CheckAddSVG className="shrink-0 fill-foreground" />
-              <span>Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!</span>
-            </div>
+            <>
+              <div className='flex flex-col gap-4 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
+                <div className='flex gap-2'>
+                  <CheckAddSVG className="shrink-0 fill-foreground" />
+                  <span>Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!</span>
+                </div>
+              </div>
+
+              <AddToCalendar event={event} />
+            </>
           )}
 
           {cancelSuccess && (
