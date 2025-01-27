@@ -24,7 +24,7 @@ type Props = {
 }
 
 export default function ConfirmBlock({ event, rsvp }: Props) {
-  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(true);
   const [cancelSuccess, setCancelSuccess] = useState(false);
 
   const confirmSignup = async () => {
@@ -138,7 +138,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
 
           {signupSuccess && (
             <>
-              <div className='flex flex-col gap-4 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
+              <div className='mb-6 flex flex-col gap-4 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
                 <div className='flex gap-2'>
                   <CheckAddSVG className="shrink-0 fill-foreground" />
                   <span>Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!</span>

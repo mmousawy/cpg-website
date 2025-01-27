@@ -14,44 +14,53 @@ export default function AddToCalendar({ event }: { event: CPGEvent }) {
     location: event.location?.replace(/\r\n/gm, ', '),
   };
 
+  // Use encodeURIComponent to encode all the details in the calendar links
+  const encDetails = calendarDetails;
+
+  for (const [key, value] of Object.entries(calendarDetails)) {
+    encDetails[key as keyof typeof calendarDetails] = encodeURIComponent(value!);
+  }
+
   const calendarLinks = {
-    google: encodeURIComponent(`https://www.google.com/calendar/render?action=TEMPLATE&text=${calendarDetails.title}&dates=${calendarDetails.startDate}/${calendarDetails.endDate}&details=${calendarDetails.description}&location=${calendarDetails.location}`),
-    outlook: encodeURIComponent(`https://outlook.live.com/calendar/action/compose/?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${calendarDetails.title}&startdt=${calendarDetails.outlookStartDate}&enddt=${calendarDetails.outlookEndDate}&body=${calendarDetails.description}&location=${calendarDetails.location}`),
-    apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${calendarDetails.title}%0D%0ADTSTART:${calendarDetails.startDate}%0D%0ADTEND:${calendarDetails.endDate}%0D%0ADESCRIPTION:${calendarDetails.description}%0D%0ALOCATION:${calendarDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
+    google: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encDetails.title}&dates=${encDetails.startDate}/${encDetails.endDate}&details=${encDetails.description}&location=${encDetails.location}`,
+    outlook: `https://outlook.live.com/calendar/action/compose/?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${encDetails.title}&startdt=${encDetails.outlookStartDate}&enddt=${encDetails.outlookEndDate}&body=${encDetails.description}&location=${encDetails.location}`,
+    apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${encDetails.title}%0D%0ADTSTART:${encDetails.startDate}%0D%0ADTEND:${encDetails.endDate}%0D%0ADESCRIPTION:${encDetails.description}%0D%0ALOCATION:${encDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
   };
 
   return (
-    <>
-      Add this event to your calendar:
+    <div className="flex flex-col gap-2 max-sm:gap-4">
+      <span>Add this event to your calendar:</span>
 
-      {/* Google */}
-      <a
-        href={calendarLinks.google}
-        target='_blank'
-        rel='noopener noreferrer'
-        className='underline'
-      >
-        Google Calendar
-      </a>
+      <div className="flex items-start gap-2 max-sm:flex-col max-sm:gap-4">
+        {/* Google */}
+        <a
+          href={calendarLinks.google}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-primary bg-primary fill-white px-3 py-1 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-white hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950'
+        >
+          Google Calendar
+        </a>
 
-      {/* Outlook */}
-      <a
-        href={calendarLinks.outlook}
-        target='_blank'
-        rel='noopener noreferrer'
-        className='underline'
-      >
-        Outlook Calendar
-      </a>
+        {/* Outlook */}
+        <a
+          href={calendarLinks.outlook}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-primary bg-primary fill-white px-3 py-1 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-white hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950'
+        >
+          Outlook Calendar
+        </a>
 
-      {/* Apple */}
-      <a
-        href={calendarLinks.apple}
-        download={`${event.title}.ics`}
-        className='underline'
-      >
-        Apple Calendar
-      </a>
-    </>
+        {/* Apple */}
+        <a
+          href={calendarLinks.apple}
+          download={`${event.title}.ics`}
+          className='flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-primary bg-primary fill-white px-3 py-1 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-white hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950'
+        >
+          Apple Calendar
+        </a>
+      </div>
+    </div>
   )
 }
