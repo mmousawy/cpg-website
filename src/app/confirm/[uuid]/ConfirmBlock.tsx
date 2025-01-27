@@ -24,7 +24,7 @@ type Props = {
 }
 
 export default function ConfirmBlock({ event, rsvp }: Props) {
-  const [signupSuccess, setSignupSuccess] = useState(true);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
 
   const confirmSignup = async () => {
