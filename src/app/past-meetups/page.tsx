@@ -10,7 +10,7 @@ export default async function Home() {
       <div className="flex min-h-full flex-col">
         <Header />
         <main className="flex grow flex-col">
-          <EventsSection />
+          <EventsSection filter='past' />
           <About />
           </main>
         <Footer />

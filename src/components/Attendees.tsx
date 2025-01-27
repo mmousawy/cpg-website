@@ -5,7 +5,7 @@ import clsx from 'clsx';
 
 import { SupabaseClient } from '@supabase/supabase-js';
 
-import { CPGEvent } from './Events';
+import { CPGEvent } from '@/types/events';
 
 export default async function Attendees({ event, supabase }: Readonly<{ event: CPGEvent, supabase: SupabaseClient }>) {
   const { data: attendees } = await supabase

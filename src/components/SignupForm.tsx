@@ -3,7 +3,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import clsx from 'clsx';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { CPGEvent } from '@/components/Events';
+import { CPGEvent } from '@/types/events';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
