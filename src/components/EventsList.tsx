@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import { createClient } from '@/utils/supabase/server';
 
 import Attendees, { AttendeesLoading } from './Attendees';
@@ -10,6 +8,8 @@ import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 import SignupButton from './SignupButton';
 import { Suspense } from 'react';
+import getImgDimensions from '@/utils/utils';
+import EventImage from './EventImage';
 
 export default async function Events({filter}: {filter: 'upcoming' | 'past'}) {
   const supabase = await createClient();
@@ -25,23 +25,28 @@ export default async function Events({filter}: {filter: 'upcoming' | 'past'}) {
     return filter === 'upcoming' ? eventDate >= now : eventDate < now;
   });
 
+  const enrichedEvents = await Promise.all(
+    filteredEvents?.map(async (event) => {
+      const dimensions = await getImgDimensions(event.cover_image!);
+
+      return {
+        ...event,
+        dimensions,
+      };
+    }) ?? []
+  );
+
   return (
     <>
-      {!filteredEvents || filteredEvents.length === 0 && (
+      {!enrichedEvents || enrichedEvents.length === 0 && (
         <div className="flex min-h-28 justify-center rounded-lg border-[0.0625rem] border-border-color bg-background-light fill-foreground p-6 text-foreground shadow-lg shadow-[#00000007] max-sm:p-4">
           <p className='flex items-center justify-center gap-2'><SadSVG /> No events found</p>
         </div>
       )}
-      {filteredEvents && filteredEvents.map((event) => (
-        <div key={event.id} className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
+      {enrichedEvents && enrichedEvents.map((event) => (
+        <div id={`gallery-${event.id}`} key={event.id} className="rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-lg shadow-[#00000007] max-sm:p-4">
           <div>
-            <Image
-              width={320}
-              height={240}
-              alt='Event cover image'
-              className='mb-4 h-28 w-full rounded-md object-cover max-sm:block sm:hidden'
-              src={event.cover_image!}
-            />
+            <EventImage event={event} size='small' />
             <div className='mb-6 flex justify-between'>
               <h3 className="text-2xl font-bold">{event.title}</h3>
               <SignupButton event={event} className="ml-2 max-sm:hidden" />
@@ -62,13 +67,7 @@ export default async function Events({filter}: {filter: 'upcoming' | 'past'}) {
                 </span>
                 <p className='whitespace-pre-line'>{event.description}</p>
               </div>
-              <Image
-                width={640}
-                height={640}
-                alt='Event cover image'
-                className='size-60 rounded-md object-cover max-sm:hidden'
-                src={event.cover_image!}
-              />
+              <EventImage event={event} />
             </div>
             <div className='mt-8 flex items-center justify-between gap-4'>
               <Suspense fallback={<AttendeesLoading />}>
