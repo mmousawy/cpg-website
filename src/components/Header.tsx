@@ -15,7 +15,7 @@ const socialLinks = [
   },
   {
     name: "Instagram",
-    url: "https://www.instagram.com/creative.photography.group",
+    url: "https://www.instagram.com/creativephotography.group",
     icon: InstagramSVG,
   },
   {
