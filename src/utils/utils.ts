@@ -23,7 +23,7 @@ export default async function getImgDimensions(url: string): Promise<ISizeCalcul
     https.get(url, (response) => {
       const chunks: Uint8Array[] = [];
       let receivedBytes = 0;
-      const MAX_BYTES = 1000;
+      const MAX_BYTES = 80000;
 
       response.on('data', (chunk) => {
         if (receivedBytes >= MAX_BYTES) return; // Stop processing new data
@@ -37,6 +37,8 @@ export default async function getImgDimensions(url: string): Promise<ISizeCalcul
           
           try {
             const buffer = Buffer.concat(chunks);
+
+            console.log('buffer', buffer);
             const dimensions = sizeOf(buffer);
             resolve(dimensions); // Resolve immediately after getting enough data
           } catch (error) {
