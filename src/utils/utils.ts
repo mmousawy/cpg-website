@@ -22,25 +22,41 @@ export default async function getImgDimensions(url: string): Promise<ISizeCalcul
   return new Promise((resolve, reject) => {
     https.get(url, (response) => {
       const chunks: Uint8Array[] = [];
+      let receivedBytes = 0;
+      const MAX_BYTES = 1000;
 
-      response
-        .on('data', (chunk) => {
-          chunks.push(chunk);
-        })
-        .on('end', () => {
+      response.on('data', (chunk) => {
+        if (receivedBytes >= MAX_BYTES) return; // Stop processing new data
+        
+        const remainingBytes = MAX_BYTES - receivedBytes;
+        chunks.push(chunk.slice(0, remainingBytes)); // Only take what’s needed
+        receivedBytes += chunk.length;
+
+        if (receivedBytes >= MAX_BYTES) {
+          response.destroy(); // Stop receiving further data
+          
           try {
             const buffer = Buffer.concat(chunks);
             const dimensions = sizeOf(buffer);
-            resolve(dimensions); // Resolves with the dimensions
+            resolve(dimensions); // Resolve immediately after getting enough data
           } catch (error) {
-            reject(error); // Rejects if there's an error in sizeOf
+            reject(error);
           }
-        })
-        .on('error', (err) => {
-          reject(err); // Rejects if there's an error in the response
-        });
-    }).on('error', (err) => {
-      reject(err); // Rejects if there's an error in the https request
-    });
+        }
+      });
+
+      response.on('error', (err) => reject(err));
+      response.on('end', () => {
+        if (receivedBytes < MAX_BYTES) {
+          try {
+            const buffer = Buffer.concat(chunks);
+            const dimensions = sizeOf(buffer);
+            resolve(dimensions);
+          } catch (error) {
+            reject(error);
+          }
+        }
+      });
+    }).on('error', (err) => reject(err));
   });
 }
