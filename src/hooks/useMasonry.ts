@@ -10,8 +10,11 @@ const useMasonry = () => {
 
       setTimeout(() => {
         const masonryItem = Array.from(container.children);
+        masonryItem.forEach((el) => {
+          el.classList.add("opacity-100");
+        });
         setItems(masonryItem);
-      }, 100);
+      }, 300);
     }
   }, []);
 

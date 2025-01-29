@@ -37,8 +37,6 @@ export default async function getImgDimensions(url: string): Promise<ISizeCalcul
           
           try {
             const buffer = Buffer.concat(chunks);
-
-            console.log('buffer', buffer);
             const dimensions = sizeOf(buffer);
             resolve(dimensions); // Resolve immediately after getting enough data
           } catch (error) {

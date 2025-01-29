@@ -40,7 +40,7 @@ export default function Gallery({ images }: { images: ImagesList }) {
         </p>
       </div>
       {images.map((image, index) => (
-        <div key={index} className="relative w-full overflow-hidden rounded-md">
+        <div key={index} data-image className="relative w-full overflow-hidden rounded-md opacity-0 transition-opacity duration-200">
           <a
             href={image.src}
             className="block size-full"
