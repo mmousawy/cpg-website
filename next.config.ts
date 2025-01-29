@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     turbo: {
+      outputFileTracingIncludes: {
+        'public/': ['./public/**/*'],
+      },
       rules: {
         '*.svg': {
           loaders: ['@svgr/webpack'],

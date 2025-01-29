@@ -15,10 +15,9 @@ const images: ImagesList = [
   { src: '/gallery/Murtada-al-Mousawy-20250125-DC4A4738.jpg' },
 ];
 
-const cwd = process.env.NODE_ENV === 'production' ? `${process.cwd()}/` : '';
-
 images.forEach(image => {
-  const dimensions = sizeOf(`${cwd}public${image.src}`);
+  const dimensions = sizeOf(`public/${image.src}`);
+
   image.width = dimensions.width;
   image.height = dimensions.height;
 });
