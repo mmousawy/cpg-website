@@ -83,7 +83,7 @@ export default function Modal() {
             isOpen ? "scale-100" : "scale-95",
             "w-full max-w-[30rem]",
             "relative m-auto",
-            "rounded-lg border-[0.0625rem] border-border-color bg-background-light p-6 shadow-xl shadow-black/25",
+            "rounded-2xl border-[0.0625rem] border-border-color bg-background-light p-6 shadow-xl shadow-black/25",
             "transition-transform duration-300",
           ])}
         >

@@ -10,30 +10,53 @@ import { CPGEvent } from '@/types/events';
 export default async function Attendees({ event, supabase }: Readonly<{ event: CPGEvent, supabase: SupabaseClient }>) {
   const { data: attendees } = await supabase
     .from("events_rsvps")
-    .select()
+    .select(`
+      *,
+      profiles (
+        avatar_url
+      )
+    `)
     .is("canceled_at", null)
     .not("confirmed_at", "is", null)
     .eq("event_id", event.id);
 
+  if (!attendees || attendees.length === 0) {
+    return (
+      <div className='text-[15px] font-semibold leading-6'>No attendees yet &mdash; join and be the first!</div>
+    );
+  }
+
+  // Get avatar URL for each attendee, prioritizing custom avatar from profile
+  const attendeesWithAvatars = attendees.map((attendee) => {
+    // First try custom avatar from profile
+    const customAvatar = (attendee.profiles as any)?.avatar_url;
+
+    // Fall back to Gravatar
+    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`;
+
+    return {
+      ...attendee,
+      avatarUrl: customAvatar || gravatarUrl
+    };
+  });
+
   return (
     <>
-      {!attendees || attendees?.length === 0 && (
-        <div className='text-[15px] font-semibold leading-6'>No attendees yet &mdash; join and be the first!</div>
-      )}
-      {!!attendees?.length && (
+      {!!attendeesWithAvatars?.length && (
         <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
           <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
             {/* Avatar list of attendees */}
-            {attendees?.map((attendee, attendeeIndex) => (
+            {attendeesWithAvatars?.map((attendee, attendeeIndex) => (
               <Image
-                key={`${attendee.uuid}_${attendeeIndex}` }
+                key={`${attendee.uuid}_${attendeeIndex}`}
                 width={32}
                 height={32}
                 className={clsx([
-                  (attendees?.length || 0) > 1 && "-mr-2",
-                  "size-8 rounded-full"
+                  (attendeesWithAvatars?.length || 0) > 1 && "-mr-2",
+                  "size-8 rounded-full object-cover"
                 ])}
-                src={`https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`} alt="Gravatar"
+                src={attendee.avatarUrl}
+                alt="Avatar"
               />
             ))}
 
@@ -41,14 +64,14 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
               // Fade to background-light color
               className={clsx([
                 "absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light",
-                attendees?.length < 20 && "invisible",
-                attendees?.length > 7 && "max-xs:visible",
-                attendees?.length > 12 && "max-md:visible",
-                attendees?.length > 16 && "!visible",
+                attendeesWithAvatars?.length < 20 && "invisible",
+                attendeesWithAvatars?.length > 7 && "max-xs:visible",
+                attendeesWithAvatars?.length > 12 && "max-md:visible",
+                attendeesWithAvatars?.length > 16 && "!visible",
               ])}
             />
           </div>
-          {attendees?.length} attendee{attendees?.length === 1 ? '' : 's'}
+          {attendeesWithAvatars?.length} attendee{attendeesWithAvatars?.length === 1 ? '' : 's'}
         </div>
       )}
     </>

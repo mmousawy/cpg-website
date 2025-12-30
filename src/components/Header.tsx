@@ -1,81 +1,98 @@
-import clsx from "clsx";
-import Link from "next/link";
-import LogoSVG from "public/cpg-logo.svg";
+'use client'
 
-// Import social icons
-import DiscordSVG from "public/icons/discord2.svg";
-import InstagramSVG from "public/icons/instagram.svg";
-import WhatsAppSVG from "public/icons/whatsapp.svg";
+import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
+import LogoSVG from 'public/cpg-logo.svg'
 
-const socialLinks = [
-  {
-    name: "Discord",
-    url: "https://discord.gg/cWQK8udb6p",
-    icon: DiscordSVG,
-  },
-  {
-    name: "Instagram",
-    url: "https://www.instagram.com/creativephotography.group",
-    icon: InstagramSVG,
-  },
-  {
-    name: "WhatsApp",
-    url: "https://chat.whatsapp.com/Fg6az5H2NTP9unlhqoxQEf",
-    icon: WhatsAppSVG,
-  },
-];
+import UserMenu from './UserMenu'
+import Avatar from './Avatar'
+import MobileMenu from './MobileMenu'
+import { routes } from '@/config/routes'
 
-type HeaderProps = {
-  variant?: "small",
-}
+export default function Header() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-export default function Header({ variant }: HeaderProps) {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [mobileMenuOpen])
+
   return (
-    <header
-      className={clsx([
-        "relative z-10 flex justify-center border-b-[0.0625rem] border-t-8 border-b-border-color border-t-primary",
-        "bg-background-light text-foreground shadow-md shadow-[#00000005]",
-        variant === "small" ? "p-6 sm:p-6" : "p-6 sm:p-12",
-      ])}
-    >
-      <div
-        className="flex w-full max-w-screen-md flex-col items-center gap-4 sm:gap-6 md:flex-row"
-      >
-        <Link href="/" aria-label="Creative Photography Group Home">
-          <LogoSVG
-            className={clsx([
-              "block",
-              variant === "small" ? "size-16 max-sm:size-14" : "size-24 max-sm:size-20",
-            ])}
-          />
-        </Link>
-        <div className="flex flex-col justify-center gap-5">
-          <h1
-            className={clsx([
-              "font-bold leading-tight max-sm:text-center",
-              variant === "small" ? "text-3xl max-sm:text-2xl" : "text-4xl max-sm:text-3xl",
-            ])}
-          >
-            Creative Photography Group
-          </h1>
-          { variant !== "small" && (
-            <div className="flex items-center gap-4 max-md:justify-center">
-              {/* Social links */}
-              { socialLinks.map(({ name, url, icon: Icon }) => (
-                <a
-                  key={name}
-                  href={url}
-                  className={clsx(
-                    "flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950 sm:px-3 sm:py-1",
+    <header className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-3 text-foreground shadow-md shadow-[#00000005] sm:p-4">
+      <div className="flex w-full max-w-screen-md items-center justify-between gap-4">
+        {/* Left: Logo + Desktop Nav */}
+        <div className="flex items-center gap-6">
+          <Link href="/" aria-label="Creative Photography Group Home">
+            <LogoSVG className="block size-14 max-sm:size-10" />
+          </Link>
+
+          <nav className="hidden items-center gap-6 sm:flex">
+            <Link href={routes.home.url} className="font-medium text-foreground transition-colors hover:text-primary">
+              {routes.home.label}
+            </Link>
+            <Link href={routes.galleries.url} className="font-medium text-foreground transition-colors hover:text-primary">
+              {routes.galleries.label}
+            </Link>
+            <Link href={routes.about.url} className="font-medium text-foreground transition-colors hover:text-primary">
+              {routes.about.label}
+            </Link>
+          </nav>
+        </div>
+
+        {/* Right: User Menu (Desktop) / Mobile Menu Button (Mobile) */}
+        <div className="flex items-center gap-3">
+          {/* Desktop Only: UserMenu */}
+          <div className="hidden sm:block">
+            <UserMenu />
+          </div>
+
+          {/* Mobile Only: Avatar + Menu Button */}
+          <div className="flex items-center gap-3 sm:hidden">
+            {/* Mobile Avatar - opens mobile menu */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-border-color transition-colors hover:border-primary"
+              aria-label="Open menu"
+            >
+              <Avatar />
+            </button>
+
+            {/* Mobile Menu Button */}
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${mobileMenuOpen ? 'border-primary' : 'border-border-color hover:border-primary'
+                  }`}
+                aria-label="Toggle menu"
+              >
+                <svg className="h-5 w-5 fill-foreground" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  ) : (
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
                   )}
-                  target="_blank"
-                >
-                  <Icon className="inline-block sm:mr-2" />
-                  <span className="hidden sm:inline-block">{name}</span>
-                </a>
-              )) }
+                </svg>
+              </button>
+
+              <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} mounted={mounted} />
             </div>
-          )}
+          </div>
         </div>
       </div>
     </header>

@@ -28,11 +28,24 @@ export async function POST(request: NextRequest) {
     .eq('id', rsvp?.event_id || -1)
     .single();
 
-  if (!rsvp || !event || !rsvp.email) {
+  if (!rsvp || !event) {
     return NextResponse.json({ message: "RSVP or event not found" }, { status: 404 });
   }
 
-  // Confirm the RSVP into the database
+  // Check if already confirmed
+  if (rsvp.confirmed_at) {
+    return NextResponse.json({ message: "RSVP already confirmed" }, { status: 200 });
+  }
+
+  // Get email recipient
+  const recipientEmail = rsvp.email;
+  const recipientName = rsvp.name || 'Guest';
+
+  if (!recipientEmail) {
+    return NextResponse.json({ message: "No email associated with this RSVP" }, { status: 400 });
+  }
+
+  // Confirm the RSVP in the database
   const result = await supabase.from('events_rsvps')
     .update({
       confirmed_at: new Date().toISOString()
@@ -41,7 +54,6 @@ export async function POST(request: NextRequest) {
 
   if (result.error) {
     console.error(result.error);
-
     return NextResponse.json({ message: result.error.message }, { status: 500 });
   }
 
@@ -51,14 +63,15 @@ export async function POST(request: NextRequest) {
   // Send the confirmation email
   const emailResult = await resend.emails.send({
     from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-    to: rsvp.email,
+    to: recipientEmail,
     replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
     subject: `Confirmed RSVP: ${event.title}`,
-    html: await render(ConfirmEmail({fullName: rsvp.name!, event, cancellationLink})),
+    html: await render(ConfirmEmail({ fullName: recipientName, event, cancellationLink })),
   });
 
   if (emailResult.error) {
-    return NextResponse.json({ message: emailResult.error.message }, { status: 500 });
+    console.error('Email error:', emailResult.error);
+    // Don't fail - RSVP is already confirmed
   }
 
   // Log the email sending

@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 :root {
   --primary: #38785f;
@@ -8,14 +7,18 @@
 }
 
 :root.light {
+  --primary: #38785f;
+  --primary-alt: #a6db93;
   --background: #f7f7f7;
   --background-light: #ffffff;
   --foreground: #171717;
-  --border-color: #E5E7EA;
+  --border-color: #e5e7ea;
   --error-red: #f75074;
 }
 
 :root.dark {
+  --primary: #4a9478;
+  --primary-alt: #58c287;
   --background: #171718;
   --background-light: #2b2b2b;
   --foreground: #ededed;
@@ -24,8 +27,24 @@
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
+}
+
+/* Make all clickable elements show pointer cursor */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="file"] + label,
+label[for] {
+  cursor: pointer;
+}
+
+/* Disable pointer for disabled buttons */
+button:disabled,
+[role="button"]:disabled {
+  cursor: not-allowed;
 }
 
 .grecaptcha-badge {

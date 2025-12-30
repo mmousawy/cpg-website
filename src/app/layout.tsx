@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react"
-import { Inter, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import ModalProvider from "@/app/providers/ModalProvider";
 import SupabaseProvider from "./providers/SupabaseProvider";
+import Layout from "@/components/Layout";
+import Modal from "@/components/Modal";
 
 import "./globals.css";
 
-const geistSans = Inter({
-  variable: "--font-inter",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
@@ -34,12 +36,15 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Creative Photography Group" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-inter)] text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-geist-sans)] text-foreground antialiased`}
       >
         <SupabaseProvider>
           <ThemeProvider>
             <ModalProvider>
-              {children}
+              <Layout>
+                {children}
+              </Layout>
+              <Modal />
             </ModalProvider>
           </ThemeProvider>
         </SupabaseProvider>

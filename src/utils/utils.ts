@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
 import https from 'https';
 import sizeOf from 'image-size';
-import { ISizeCalculationResult } from "image-size/dist/types/interface";
+
+export type ImageDimensions = {
+  width: number;
+  height: number;
+  orientation?: number;
+  type?: string;
+};
 
 /**
  * Redirects to a specified path with an encoded message as a query parameter.
@@ -18,7 +24,7 @@ export function encodedRedirect(
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
 
-export default async function getImgDimensions(url: string): Promise<ISizeCalculationResult> {
+export default async function getImgDimensions(url: string): Promise<ImageDimensions> {
   return new Promise((resolve, reject) => {
     https.get(url, (response) => {
       const chunks: Uint8Array[] = [];

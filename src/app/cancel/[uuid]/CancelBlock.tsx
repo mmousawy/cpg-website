@@ -47,7 +47,7 @@ export default function CancelBlock({ event, rsvp }: Props) {
           <div>
             <span className='mb-2 flex gap-4 text-[15px] font-semibold leading-6 max-sm:mb-2'>
               <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground" />
-                {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'})}
+                {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
               <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground " />{event.time?.substring(0, 5)}</span>
             </span>
@@ -61,33 +61,31 @@ export default function CancelBlock({ event, rsvp }: Props) {
 
           {(!cancelSuccess) && (
             <>
-                {(!rsvp.canceled_at) && (
-                  <>
-                    <p className='mb-6'>Hi {rsvp.name},<br/><br/>You are canceling your RSVP for the above mentioned meeting.</p>
-                    <div className="flex items-center gap-4 max-sm:justify-between">
-                      <button
-                        className={clsx([
-                          "font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground",
-                          "flex items-center justify-center justify-self-start rounded-full border-[0.0625rem] border-error-red bg-background-light fill-foreground px-3 py-1",
-                          "hover:border-error-red hover:bg-error-red hover:fill-slate-950 hover:text-slate-950"
-                        ])}
-                        onClick={cancelSignup}
-                      >
-                        <CloseSVG className="mr-2 inline-block" />
-                        <span className="text-nowrap">Cancel RSVP</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                {rsvp.canceled_at && (
-                  <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
-                    <CancelSVG className="shrink-0 fill-foreground" />
-                    <span>
-                      You&apos;ve already canceled your RSVP. <br />If you&apos;ve changed your mind, you can always sign up again!
-                    </span>
+              {(!rsvp.canceled_at) && (
+                <>
+                  <p className='mb-6'>Hi {rsvp.name},<br /><br />You are canceling your RSVP for the above mentioned meeting.</p>
+                  <div className="flex items-center gap-4 max-sm:justify-between">
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={<CloseSVG />}
+                      onClick={cancelSignup}
+                      className="rounded-full"
+                    >
+                      Cancel RSVP
+                    </Button>
                   </div>
-                )}
+                </>
+              )}
+
+              {rsvp.canceled_at && (
+                <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
+                  <CancelSVG className="shrink-0 fill-foreground" />
+                  <span>
+                    You&apos;ve already canceled your RSVP. <br />If you&apos;ve changed your mind, you can always sign up again!
+                  </span>
+                </div>
+              )}
             </>
           )}
 

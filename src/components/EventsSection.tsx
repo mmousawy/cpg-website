@@ -14,7 +14,7 @@ export default function EventsSection({ filter }: { filter?: EventDateFilterType
 
   return (
     <section
-      className="flex justify-center bg-background px-6 pb-10 pt-8 text-foreground sm:p-12 sm:pb-14"
+      className="flex justify-center bg-background px-4 pb-8 pt-6 text-foreground sm:p-12 sm:pb-14"
     >
       <div className="w-full max-w-screen-md">
         <div className="mb-4 flex items-center justify-between">

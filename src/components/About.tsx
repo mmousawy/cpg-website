@@ -1,7 +1,7 @@
 import Gallery from "./Gallery";
 import getImgDimensions from '@/utils/utils';
 
-export type ImagesList = Array<{src: string, width?: number, height?: number }>;
+export type ImagesList = Array<{ src: string, width?: number, height?: number }>;
 
 const images: ImagesList = [
   { src: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/gallery/Murtada-al-Mousawy-20241214-DC4A4299.jpg' },
@@ -28,7 +28,7 @@ const enrichedImages = await Promise.all(
 
 export default function About() {
   return (
-    <section className="mt-auto flex justify-center border-t-[0.0625rem] border-t-border-color bg-background-light px-6 py-7 text-foreground sm:p-12">
+    <section className="mt-auto flex justify-center bg-background-light px-6 py-7 text-foreground sm:p-12">
       <div className="w-full max-w-screen-md gap-6">
         <Gallery images={enrichedImages} />
       </div>
