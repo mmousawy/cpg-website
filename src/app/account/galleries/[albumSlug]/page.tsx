@@ -202,8 +202,8 @@ export default function AlbumDetailPage() {
           throw new Error(`Invalid file type: ${file.name}`)
         }
 
-        // Validate file size (max 10MB)
-        const maxSize = 10 * 1024 * 1024
+        // Validate file size (max 5 MB)
+        const maxSize = 5 * 1024 * 1024
         if (file.size > maxSize) {
           throw new Error(`File too large: ${file.name}`)
         }

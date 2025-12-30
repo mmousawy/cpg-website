@@ -1,15 +1,18 @@
 # Photo Albums Feature
 
 ## Overview
+
 This feature allows users to create and manage their own photo albums. Albums can be made public (visible to everyone) or private (visible only to the owner).
 
 ## Routes
 
 ### Public Routes
+
 - `/galleries` - Browse all public albums created by community members
 - `/galleries/[nickname]/[albumSlug]` - View a specific public album with all its photos
 
 ### Protected Routes (Requires Authentication)
+
 - `/account/galleries` - Manage your own albums
 - `/account/galleries/new` - Create a new album
 - `/account/galleries/[albumSlug]` - Edit an existing album and manage photos
@@ -29,6 +32,7 @@ Nicknames are used as user identifiers in gallery URLs instead of user IDs for b
 ### Tables
 
 #### `albums`
+
 - `id` (UUID) - Primary key
 - `user_id` (UUID) - Foreign key to profiles table
 - `title` (TEXT) - Album title
@@ -40,6 +44,7 @@ Nicknames are used as user identifiers in gallery URLs instead of user IDs for b
 - `updated_at` (TIMESTAMPTZ) - Last update timestamp
 
 #### `album_photos`
+
 - `id` (UUID) - Primary key
 - `album_id` (UUID) - Foreign key to albums table
 - `photo_url` (TEXT) - Photo URL in storage
@@ -53,6 +58,7 @@ Nicknames are used as user identifiers in gallery URLs instead of user IDs for b
 ## Storage Structure
 
 Photos are stored in the `user-albums` Supabase Storage bucket with the following structure:
+
 ```
 user-albums/
   ├── [user-id]/
@@ -65,7 +71,9 @@ user-albums/
 ## Setup Instructions
 
 ### 1. Database Migration
+
 Run the SQL migration file to create the necessary tables:
+
 ```bash
 # In Supabase Dashboard -> SQL Editor, run:
 supabase/migrations/create_albums.sql
@@ -74,6 +82,7 @@ supabase/migrations/create_albums.sql
 This will also add a unique constraint on the `nickname` field in the profiles table.
 
 ### 2. Storage Bucket Setup
+
 Create the `user-albums` storage bucket in Supabase:
 
 1. Go to Storage in Supabase Dashboard
@@ -82,7 +91,9 @@ Create the `user-albums` storage bucket in Supabase:
 4. Configure storage policies (see storage-policies.sql)
 
 ### 3. Update Database Types
+
 After running migrations, regenerate the TypeScript types:
+
 ```bash
 npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.types.ts
 ```
@@ -90,6 +101,7 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.ty
 ## Features
 
 ### Album Management
+
 - Create new albums with title, slug, description
 - Toggle public/private visibility
 - Edit album details
@@ -97,6 +109,7 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.ty
 - Auto-generated slugs from titles
 
 ### Photo Management
+
 - Upload multiple photos at once
 - Automatic image dimension detection
 - Photo reordering with sort_order
@@ -104,6 +117,7 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.ty
 - Drag-and-drop support (future enhancement)
 
 ### Photo Gallery
+
 - Masonry grid layout
 - PhotoSwipe lightbox for viewing
 - Responsive design
@@ -112,35 +126,37 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.ty
 ## Components
 
 ### AlbumCard
+
 Displays album preview with cover image, title, description, and photo count. Used in gallery listings.
 
 ### AlbumGallery
+
 Renders album photos in a masonry grid with PhotoSwipe lightbox integration. Includes image metadata (width/height) for optimal display.
 
 ## Security
 
 ### Row Level Security (RLS)
+
 - Public albums are viewable by everyone
 - Private albums are only viewable by their owner
 - Only album owners can modify or delete their albums
 - Only album owners can add/edit/delete photos in their albums
 
 ### Storage Security
+
 - Photos are organized by user ID and album ID
 - Storage policies ensure users can only upload to their own folders
 - Public bucket allows viewing public album photos
 
 ## File Validation
+
 - Accepted formats: JPEG, PNG, GIF, WebP
 - Maximum file size: 10MB per photo
 - Avatar maximum: 5MB
 
 ## Future Enhancements
+
 - Drag-and-drop photo reordering
-- Bulk photo operations
-- Album sharing with specific users
 - Album categories/tags
 - Photo captions and metadata
-- Album templates
-- Social sharing integration
 - Comments on photos/albums
