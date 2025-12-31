@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import clsx from 'clsx'
 
 import type { AlbumWithPhotos } from '@/types/albums'
-import Button from './Button'
 
 import TrashSVG from 'public/icons/trash.svg'
 
@@ -58,20 +56,7 @@ export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCar
         </div>
       </Link>
 
-      {isOwner && onDelete && (
-        <div className="border-t border-border-color p-3">
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              onDelete()
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-          >
-            <TrashSVG className="size-4" />
-            Delete Album
-          </button>
-        </div>
-      )}
+      {/* Delete button removed. Album deletion is now handled in the warning section on the edit gallery page. */}
     </div>
   )
 }

@@ -29,10 +29,16 @@ export default function AccountGalleriesPage() {
       return
     }
 
+    // Only fetch if not already loaded
     if (user) {
-      fetchAlbums()
+      if (albums.length === 0) {
+        fetchAlbums()
+      } else {
+        setIsLoading(false)
+      }
     }
-  }, [user, authLoading, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading])
 
   const fetchAlbums = async () => {
     if (!user) return

@@ -98,7 +98,15 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
       is_public,
       created_at,
       profile:profiles(full_name, avatar_url, nickname),
-      photos:album_photos(id, photo_url, title, width, height, sort_order)
+      photos:album_photos(
+        id,
+        photo_url,
+        title,
+        width,
+        height,
+        sort_order,
+        image:images(exif_data)
+      )
     `)
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
@@ -106,7 +114,10 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .single()
 
   if (error || !album) {
-    notFound()
+    // Debug log for troubleshooting 404s
+    console.error('Album fetch error:', error);
+    console.error('Album fetch result:', album);
+    notFound();
   }
 
   const albumWithPhotos = album as unknown as AlbumWithPhotos

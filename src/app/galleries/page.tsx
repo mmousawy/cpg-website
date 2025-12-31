@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import AlbumCard from '@/components/AlbumCard'
+import AlbumCard from '@/components/album/AlbumCard'
 import type { AlbumWithPhotos } from '@/types/albums'
 
 export const metadata = {

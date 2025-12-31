@@ -246,15 +246,22 @@ export default function AlbumDetailPage() {
       return
     }
 
+    // Only fetch if not already loaded
     if (user) {
       fetchProfile()
       if (!isNewAlbum) {
-        fetchAlbum()
+        // Only fetch album if not already loaded
+        if (!album || album.slug !== albumSlug) {
+          fetchAlbum()
+        } else {
+          setIsLoading(false)
+        }
       } else {
         setIsLoading(false)
       }
     }
-  }, [user, authLoading, albumSlug, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, albumSlug])
 
   const fetchProfile = async () => {
     if (!user) return
@@ -1042,6 +1049,50 @@ export default function AlbumDetailPage() {
             )
           )}
         </Container>
+
+        {/* Danger zone: Album deletion warning section */}
+        {!isNewAlbum && album && (
+          <Container>
+            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+              <h3 className="mb-2 font-semibold text-red-600">Danger Zone</h3>
+              <p className="mb-4 text-sm text-foreground/70">
+                Once you delete an album, there is no going back. This will permanently delete the album and all associated photos and tags.
+              </p>
+              <Button
+                onClick={async () => {
+                  if (!confirm('Are you sure you want to delete this album? This action cannot be undone and will remove all photos.')) return;
+                  setIsSaving(true);
+                  setError(null);
+                  try {
+                    await supabase.from('album_photos').delete().eq('album_id', album.id);
+                    await supabase.from('album_tags').delete().eq('album_id', album.id);
+                    const { error: deleteError } = await supabase.from('albums').delete().eq('id', album.id);
+                    if (deleteError) {
+                      setError(deleteError.message || 'Failed to delete album');
+                      setIsSaving(false);
+                      return;
+                    }
+                    setSuccess(true);
+                    setTimeout(() => {
+                      router.push('/account/galleries');
+                    }, 1000);
+                  } catch (err) {
+                    setError('An unexpected error occurred');
+                    setIsSaving(false);
+                  }
+                }}
+                variant="danger"
+                icon={<TrashSVG className="h-4 w-4" />}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Deleting...' : 'Delete Album'}
+              </Button>
+              {error && (
+                <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">{error}</div>
+              )}
+            </div>
+          </Container>
+        )}
       </div>
     </PageContainer>
   )
