@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "title": "Contours, compositions and cropping",
+    "description": "Let's kick off the new year with inspiration and creativity at our first meetup of 2025! Join us as Murtada hosts and delivers an engaging short talk on \"Contours, Compositions, and Cropping,\" exploring essential techniques to refine your photography. \r\n\r\nLet's make 2025 the year of stunning shots and creative growth—see you there!",
+    "cover_image": "https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/Murtada-al-Mousawy-20241214-DC4A4303.jpg",
+    "date": "2025-01-25",
+    "location": "The Tea Lab\r\nNieuwe Binnenweg 178 A\r\nRotterdam",
+    "rsvp_count": null,
+    "created_at": "2025-01-02T00:00:22.211317+00:00",
+    "time": "13:00:00"
+  },
+  {
+    "id": 3,
+    "title": "Experimental and manipulated analog photography",
+    "description": "Discover the captivating world of experimental and manipulated analog photography with Kaleigh (@litli_hrafn). In this session, she'll take you through her creative process—from capturing the initial shots to experimenting with techniques that transform them into abstract and surreal pieces.\n\nWhether you're an analog photography enthusiast or simply curious about pushing artistic boundaries, come get inspired by her approach to reimagining film photography!",
+    "cover_image": "https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket//454191968_869606008423525_8936690228240390089_n%20(3).jpg",
+    "date": "2025-02-22",
+    "location": "To be decided",
+    "rsvp_count": null,
+    "created_at": "2025-01-27T15:59:44.662486+00:00",
+    "time": "13:00:00"
+  }
+]

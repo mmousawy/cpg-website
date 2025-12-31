@@ -1,4 +1,4 @@
-import Events, { EventsLoading } from "@/components/EventsList";
+import Events, { EventsLoading } from "@/components/events/EventsList";
 import { eventDateFilter, EventDateFilterType } from "@/types/events";
 import Link from "next/link";
 

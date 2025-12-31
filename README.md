@@ -38,12 +38,12 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Generate Supabase Typescript types
 
 ```bash
-npx supabase gen types typescript --project-id "lpdjlhlslqtdswhnchmv" --schema public > ./src/database.types.ts
+ssh user@domain "npx supabase gen types typescript --db-url 'postgresql://postgres:[password]@localhost:5432/postgres' --schema public" > ./src/database.types.ts
 ```
 
 ## Things to add
 
-| Status | Description |
-|-|-|
+| Status                                     | Description                                        |
+| ------------------------------------------ | -------------------------------------------------- |
 | <input type="checkbox" disabled checked /> | Add to calendar button in success screen and email |
-| <input type="checkbox" disabled checked /> | Custom 404 page
+| <input type="checkbox" disabled checked /> | Custom 404 page                                    |

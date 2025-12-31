@@ -1,4 +1,4 @@
-import About from "@/components/About";
+import About from "@/components/shared/About";
 
 export default async function AboutPage() {
   return <About />;

@@ -5,51 +5,69 @@ import Link from 'next/link'
 import clsx from 'clsx'
 
 import { useAdmin } from '@/hooks/useAdmin'
-import { createClient } from '@/utils/supabase/client'
-import Container from '@/components/Container'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import PageContainer from '@/components/PageContainer'
-import SadSVG from 'public/icons/sad.svg'
+import Container from '@/components/layout/Container'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import PageContainer from '@/components/layout/PageContainer'
 
 import CalendarSVG from 'public/icons/calendar2.svg'
-import LocationSVG from 'public/icons/location.svg'
-import TimeSVG from 'public/icons/time.svg'
-import ArrowRightSVG from 'public/icons/arrow-right.svg'
-import ArrowRightSVG from 'public/icons/arrow-right.svg'
+import EditSVG from 'public/icons/edit.svg'
 
-type Event = {
-  id: number
-  title: string | null
-  date: string | null
-  time: string | null
-  location: string | null
+type AdminCard = {
+  title: string
+  description: string
+  icon: React.ReactNode
+  href: string
+  enabled: boolean
 }
 
 export default function AdminDashboardPage() {
   const { isAdmin, isLoading: adminLoading } = useAdmin()
-  const supabase = createClient()
 
-  const [events, setEvents] = useState<Event[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const adminCards: AdminCard[] = [
+    {
+      title: 'Manage Events',
+      description: 'Create, edit, and manage events',
+      icon: <CalendarSVG className="h-8 w-8" />,
+      href: '/admin/events',
+      enabled: true,
+    },
+    {
+      title: 'Manage Members',
+      description: 'View and manage community members',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+      href: '#',
+      enabled: false,
+    },
+    {
+      title: 'View Statistics',
+      description: 'Analytics and attendance reports',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      href: '#',
+      enabled: false,
+    },
+    {
+      title: 'Tools',
+      description: 'Admin utilities and settings',
+      icon: (
+        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      href: '#',
+      enabled: false,
+    },
+  ]
 
-  useEffect(() => {
-    if (!adminLoading) {
-      loadEvents()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminLoading])
-
-  const loadEvents = async () => {
-    const { data } = await supabase
-      .from('events')
-      .select('id, title, date, time, location')
-      .order('date', { ascending: false })
-
-    setEvents(data || [])
-    setIsLoading(false)
-  }
-
-  if (adminLoading || isLoading) {
+  if (adminLoading) {
     return (
       <PageContainer className="items-center justify-center">
         <div className="flex justify-center">
@@ -63,122 +81,61 @@ export default function AdminDashboardPage() {
     return (
       <PageContainer className="items-center justify-center">
         <Container>
-          <h1 className="mb-4 text-2xl font-bold">Access denied</h1>
+          <h1 className="mb-4 text-3xl font-bold">Access denied</h1>
           <p className="text-foreground/70">You don't have permission to access this page.</p>
         </Container>
       </PageContainer>
     )
   }
 
-  const upcomingEvents = events.filter(e => e.date && new Date(e.date) >= new Date())
-  const pastEvents = events.filter(e => e.date && new Date(e.date) < new Date())
-
   return (
     <PageContainer>
-      <h1 className="mb-8 text-3xl font-bold">Admin dashboard</h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+      </div>
 
-      <div className="space-y-8">
-        {/* Upcoming Events */}
-        {upcomingEvents.length > 0 && (
-          <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming Events</h2>
-            <Container>
-              <div className="space-y-3">
-                {upcomingEvents.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/admin/events/${event.id}`}
-                    className="block rounded-lg border border-border-color p-4 transition-colors hover:border-primary hover:bg-primary/5"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{event.title}</h3>
-                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
-                          <span className="flex items-center gap-1">
-                            <CalendarSVG className="h-4 w-4 fill-foreground/70" />
-                            {event.date ? new Date(event.date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            }) : 'TBD'}
-                          </span>
-                          {event.time && (
-                            <span className="flex items-center gap-1">
-                              <TimeSVG className="h-4 w-4 fill-foreground/70" />
-                              {event.time.substring(0, 5)}
-                            </span>
-                          )}
-                          {event.location && (
-                            <span className="flex items-center gap-1">
-                              <LocationSVG className="h-4 w-4 fill-foreground/70" />
-                              {event.location}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-sm text-primary">Manage →</span>
-                    </div>
-                  </Link>
-                ))}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {adminCards.map((card) => {
+          const cardContent = (
+            <>
+              <div className={clsx(
+                'mb-4 inline-flex rounded-lg p-3',
+                card.enabled ? 'bg-primary/10 text-primary' : 'bg-foreground/10 text-foreground/50'
+              )}>
+                {card.icon}
               </div>
-            </Container>
-          </div>
-        )}
+              <h3 className="mb-2 text-lg font-semibold">{card.title}</h3>
+              <p className="text-sm text-foreground/70">{card.description}</p>
+              {!card.enabled && (
+                <p className="mt-3 text-xs font-medium text-foreground/50">Coming soon</p>
+              )}
+            </>
+          )
 
-        {/* Past Events */}
-        {pastEvents.length > 0 && (
-          <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Past Events</h2>
-            <Container>
-              <div className="space-y-3">
-                {pastEvents.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/admin/events/${event.id}`}
-                    className="block rounded-lg border border-border-color p-4 transition-colors hover:border-primary hover:bg-primary/5 opacity-75"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{event.title}</h3>
-                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
-                          <span className="flex items-center gap-1">
-                            <CalendarSVG className="h-4 w-4 fill-foreground/70" />
-                            {event.date ? new Date(event.date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            }) : 'TBD'}
-                          </span>
-                          {event.time && (
-                            <span className="flex items-center gap-1">
-                              <TimeSVG className="h-4 w-4 fill-foreground/70" />
-                              {event.time.substring(0, 5)}
-                            </span>
-                          )}
-                          {event.location && (
-                            <span className="flex items-center gap-1">
-                              <LocationSVG className="h-4 w-4 fill-foreground/70" />
-                              {event.location}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-sm text-primary">Manage →</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </Container>
-          </div>
-        )}
+          const cardClassName = clsx(
+            'rounded-lg border border-border-color bg-background-light p-6 transition-all',
+            card.enabled
+              ? 'cursor-pointer hover:border-primary hover:shadow-lg'
+              : 'cursor-not-allowed opacity-50'
+          )
 
-        {events.length === 0 && (
-          <Container className="text-center">
-            <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No events found</p>
-          </Container>
-        )}
+          return card.enabled ? (
+            <Link
+              key={card.title}
+              href={card.href}
+              className={cardClassName}
+            >
+              {cardContent}
+            </Link>
+          ) : (
+            <div
+              key={card.title}
+              className={cardClassName}
+            >
+              {cardContent}
+            </div>
+          )
+        })}
       </div>
     </PageContainer>
   )

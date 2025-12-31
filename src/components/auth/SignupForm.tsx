@@ -8,8 +8,8 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { routes } from '@/config/routes';
 import { CPGEvent } from '@/types/events';
-import Button from './Button';
-import LoadingSpinner from './LoadingSpinner';
+import Button from '../shared/Button';
+import LoadingSpinner from '../shared/LoadingSpinner';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';

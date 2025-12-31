@@ -11,14 +11,17 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
   const { data: attendees } = await supabase
     .from("events_rsvps")
     .select(`
-      *,
+      id,
+      email,
+      confirmed_at,
       profiles (
         avatar_url
       )
     `)
     .is("canceled_at", null)
     .not("confirmed_at", "is", null)
-    .eq("event_id", event.id);
+    .eq("event_id", event.id)
+    .limit(100);
 
   if (!attendees || attendees.length === 0) {
     return (

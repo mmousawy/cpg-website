@@ -5,9 +5,9 @@ import Link from 'next/link'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
-import Button from '@/components/Button'
-import Container from '@/components/Container'
-import PageContainer from '@/components/PageContainer'
+import Button from '@/components/shared/Button'
+import Container from '@/components/layout/Container'
+import PageContainer from '@/components/layout/PageContainer'
 import { routes } from '@/config/routes'
 
 import CheckSVG from 'public/icons/check.svg'
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
             <CheckSVG className="h-8 w-8 fill-green-500" />
           </div>
-          <h1 className="mb-2 text-2xl font-bold">Check your email</h1>
+          <h1 className="mb-2 text-3xl font-bold">Check your email</h1>
           <p className="text-foreground/70">
             We&apos;ve sent a password reset link to <strong>{email}</strong>.
             Click the link in the email to reset your password.
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
   return (
     <PageContainer className="items-center justify-center">
       <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-2xl font-bold">Forgot password?</h1>
+        <h1 className="mb-2 text-center text-3xl font-bold">Forgot password?</h1>
         <p className="mb-8 text-center text-sm text-foreground/70">
           No worries, we&apos;ll send you reset instructions.
         </p>

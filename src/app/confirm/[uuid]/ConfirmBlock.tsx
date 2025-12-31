@@ -5,7 +5,8 @@ import Image from 'next/image';
 import clsx from 'clsx';
 import Link from 'next/link';
 
-import AddToCalendar from '@/components/AddToCalendar';
+import AddToCalendar from '@/components/events/AddToCalendar';
+import Button from '@/components/shared/Button';
 
 import { Database } from '@/database.types';
 import { CPGEvent } from '@/types/events';

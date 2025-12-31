@@ -21,26 +21,72 @@ export function useAuth() {
     let mounted = true
     const supabase = createClient()
 
-    // Get initial session
-    supabase.auth.getSession()
-      .then(({ data: { session }, error }) => {
+    // Get initial session and refresh if needed
+    const initializeAuth = async () => {
+      try {
+        // Get the current session
+        const { data: { session }, error } = await supabase.auth.getSession()
+
         if (!mounted) return
 
         if (error) {
           console.error('Error getting session:', error)
+          setAuthState({
+            user: null,
+            session: null,
+            isLoading: false,
+          })
+          return
         }
 
+        // Only refresh if we have a session and it expires within 60 seconds
+        if (session) {
+          const expiresAt = session.expires_at || 0
+          const now = Math.floor(Date.now() / 1000)
+          const shouldRefresh = expiresAt - now < 60 // Less than 60 seconds until expiry
+
+          if (shouldRefresh) {
+            const { data: { session: refreshedSession }, error: refreshError } =
+              await supabase.auth.refreshSession()
+
+            if (!mounted) return
+
+            if (refreshError) {
+              console.error('Error refreshing session:', refreshError)
+            }
+
+            setAuthState({
+              user: refreshedSession?.user ?? session.user ?? null,
+              session: refreshedSession ?? session,
+              isLoading: false,
+            })
+          } else {
+            // Session is still valid, use it as-is
+            setAuthState({
+              user: session.user,
+              session: session,
+              isLoading: false,
+            })
+          }
+        } else {
+          setAuthState({
+            user: null,
+            session: null,
+            isLoading: false,
+          })
+        }
+      } catch (err) {
+        if (!mounted) return
+        console.error('Unexpected error initializing auth:', err)
         setAuthState({
-          user: session?.user ?? null,
-          session,
+          user: null,
+          session: null,
           isLoading: false,
         })
-      })
-      .catch((err) => {
-        if (!mounted) return
-        console.error('Unexpected error getting session:', err)
-        setAuthState(prev => ({ ...prev, isLoading: false }))
-      })
+      }
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const {
@@ -56,14 +102,14 @@ export function useAuth() {
 
       // Update last logged in when user signs in
       if (session?.user && _event === 'SIGNED_IN') {
-        await supabase
-          .from('profiles')
-          .update({ last_logged_in: new Date().toISOString() })
-          .eq('id', session.user.id)
-          .then(() => {
-            // Silently fail if profiles table doesn't exist yet
-          })
-          .catch(() => { })
+        try {
+          await supabase
+            .from('profiles')
+            .update({ last_logged_in: new Date().toISOString() })
+            .eq('id', session.user.id)
+        } catch {
+          // Silently fail if profiles table doesn't exist or column doesn't exist
+        }
       }
     })
 

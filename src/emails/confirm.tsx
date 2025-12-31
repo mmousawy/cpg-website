@@ -15,10 +15,10 @@ import { Database } from '@/database.types';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
-import EmailHeader from "./components/Header";
+import EmailHeader from "./components/layout/Header";
 import EventDetails from "./components/EventDetails";
-import Footer from "./components/Footer";
-import AddToCalendar from "@/components/AddToCalendar";
+import Footer from "./components/layout/Footer";
+import AddToCalendar from "@/components/events/AddToCalendar";
 
 export const ConfirmEmail = ({
   preview,

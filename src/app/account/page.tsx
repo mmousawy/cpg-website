@@ -6,10 +6,10 @@ import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/Button'
-import Container from '@/components/Container'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import PageContainer from '@/components/PageContainer'
+import Button from '@/components/shared/Button'
+import Container from '@/components/layout/Container'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import PageContainer from '@/components/layout/PageContainer'
 
 import CheckSVG from 'public/icons/check.svg'
 
@@ -95,7 +95,7 @@ export default function AccountPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select()
+        .select('id, email, full_name, nickname, avatar_url, bio, website, created_at, last_logged_in, is_admin')
         .eq('id', user.id)
         .single()
 
@@ -367,7 +367,12 @@ export default function AccountPage() {
 
   return (
     <PageContainer>
-      <h1 className="mb-8 text-3xl font-bold">Account settings</h1>
+      <div className="mb-8">
+        <h1 className="mb-2 text-3xl font-bold">Account settings</h1>
+        <p className="text-lg opacity-70">
+          Manage your profile information and preferences
+        </p>
+      </div>
 
       {isLoading ? (
         <LoadingSpinner centered />
@@ -493,7 +498,7 @@ export default function AccountPage() {
                       disabled
                       className="rounded-lg border border-border-color bg-background/50 px-3 py-2 text-sm text-foreground/50"
                     />
-                    <p className="text-xs text-foreground/50">Your nickname is used in your gallery URLs and cannot be changed. URL: /galleries/{nickname || 'your-nickname'}</p>
+                    <p className="text-xs text-foreground/50">Your nickname is used in your gallery URLs and cannot be changed. URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{nickname || 'your-nickname'}</p>
                   </div>
 
                   <div className="flex flex-col gap-2">

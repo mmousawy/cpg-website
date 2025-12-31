@@ -5,33 +5,44 @@ import { createClient } from '@/utils/supabase/client'
 import { useAuth } from './useAuth'
 
 export function useAdmin() {
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const supabase = createClient()
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    if (!user) {
-      setIsAdmin(false)
-      setIsLoading(false)
+    // If auth is still loading, keep checking state true
+    if (authLoading) {
+      setIsChecking(true)
       return
     }
 
-    supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
+    // If no user, we're done checking
+    if (!user) {
+      setIsAdmin(false)
+      setIsChecking(false)
+      return
+    }
+
+    const checkAdmin = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
+
         setIsAdmin(data?.is_admin === true)
-        setIsLoading(false)
-      })
-      .catch(() => {
+      } catch {
         setIsAdmin(false)
-        setIsLoading(false)
-      })
-  }, [user, supabase])
+      } finally {
+        setIsChecking(false)
+      }
+    }
 
-  return { isAdmin, isLoading }
+    checkAdmin()
+  }, [user, authLoading, supabase])
+
+  // isLoading should be true if either auth is loading OR we're checking admin status
+  return { isAdmin, isLoading: authLoading || isChecking }
 }
-

@@ -12,7 +12,7 @@ type ImageDimensions = {
   height: number;
 };
 
-export default function EventImage({ event, size, excludeFromGallery }: { event: CPGEvent & { dimensions: ImageDimensions }, size?: 'small', excludeFromGallery?: boolean }) {
+export default function EventImage({ event, size }: { event: CPGEvent & { dimensions: ImageDimensions }, size?: 'small' }) {
   useEffect(() => {
     let lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
       gallery: `#gallery-${event.id}`,
@@ -29,20 +29,6 @@ export default function EventImage({ event, size, excludeFromGallery }: { event:
   }, [event.id]);
 
   if (size === 'small') {
-    const imageElement = (
-      <Image
-        width={320}
-        height={240}
-        alt='Event cover image'
-        className='mb-4 w-full rounded-md max-sm:block sm:hidden'
-        src={event.cover_image!}
-      />
-    );
-
-    if (excludeFromGallery) {
-      return imageElement;
-    }
-
     return (
       <a
         href={event.cover_image!}
@@ -52,7 +38,13 @@ export default function EventImage({ event, size, excludeFromGallery }: { event:
         target="_blank"
         rel="noreferrer"
       >
-        {imageElement}
+        <Image
+          width={320}
+          height={240}
+          alt='Event cover image'
+          className='mb-4 w-full rounded-md max-sm:block sm:hidden'
+          src={event.cover_image!}
+        />
       </a>
     );
   }

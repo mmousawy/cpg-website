@@ -6,6 +6,7 @@ import clsx from 'clsx';
 
 import { Database } from '@/database.types';
 import { CPGEvent } from '@/types/events';
+import Button from '@/components/shared/Button';
 
 import CloseSVG from 'public/icons/close.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';

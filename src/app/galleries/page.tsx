@@ -7,19 +7,30 @@ export const metadata = {
   description: 'Browse photo albums created by our community members',
 }
 
+// Revalidate every 60 seconds to reduce database queries
+export const revalidate = 60
+
 export default async function GalleriesPage() {
   const supabase = await createClient()
 
   // Fetch all public albums with their cover photos and user info
+  // Only fetch necessary fields to reduce egress
   const { data: albums, error } = await supabase
     .from('albums')
     .select(`
-      *,
-      profile:profiles(full_name, avatar_url, nickname),
-      photos:album_photos(*)
+      id,
+      title,
+      description,
+      slug,
+      cover_image_url,
+      is_public,
+      created_at,
+      profile:profiles(full_name, nickname),
+      photos:album_photos(id, photo_url)
     `)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
+    .limit(50)
 
   if (error) {
     console.error('Error fetching albums:', error)
@@ -31,7 +42,7 @@ export default async function GalleriesPage() {
     <section className="flex justify-center bg-background px-4 pb-8 pt-6 text-foreground sm:p-12 sm:pb-14">
       <div className="w-full max-w-screen-md">
         <div className="mb-8">
-          <h1 className="mb-2 text-4xl font-bold">Photo Galleries</h1>
+          <h1 className="mb-2 text-3xl font-bold">Photo Galleries</h1>
           <p className="text-lg opacity-70">
             Explore beautiful photo albums created by our community members
           </p>

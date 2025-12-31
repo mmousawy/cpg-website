@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',
       },
+      {
+        hostname: 'db.creativephotography.group',
+      },
     ],
   },
   webpack(config) {

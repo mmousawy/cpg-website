@@ -1,17 +1,32 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
+import clsx from 'clsx'
 
-export default function Avatar() {
+type AvatarProps = {
+  // For static mode: provide user data directly
+  avatarUrl?: string | null
+  fullName?: string | null
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+}
+
+export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, size = 'md', className }: AvatarProps) {
   const { user, isLoading } = useAuth()
   const supabase = createClient()
   const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null)
   const fetchedUserIdRef = useRef<string | null>(null)
 
-  // Fetch custom avatar from profile
+  // Determine if we're in static mode (props provided) or dynamic mode (using current user)
+  const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined
+
+  // Fetch custom avatar from profile (only in dynamic mode)
   useEffect(() => {
+    if (isStaticMode) return
+
     const fetchAvatar = async () => {
       if (!user) {
         setCustomAvatarUrl(null)
@@ -49,41 +64,52 @@ export default function Avatar() {
 
     window.addEventListener('avatarUpdated', handleAvatarUpdate)
     return () => window.removeEventListener('avatarUpdated', handleAvatarUpdate)
-  }, [user, supabase])
+  }, [user, supabase, isStaticMode])
 
-  if (isLoading) {
-    return <div className="h-10 w-10 animate-pulse rounded-full bg-border-color" />
+  // Size classes
+  const sizeClasses = {
+    sm: 'size-10',
+    md: 'size-12',
+    lg: 'size-16'
   }
 
-  const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name
+  // Loading state (only for dynamic mode)
+  if (!isStaticMode && isLoading) {
+    return <div className={clsx(sizeClasses[size], "animate-pulse rounded-full bg-border-color", className)} />
+  }
+
+  // Get avatar data
+  const avatarUrl = isStaticMode
+    ? staticAvatarUrl
+    : (customAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)
+
+  const fullName = isStaticMode
+    ? staticFullName
+    : user?.user_metadata?.full_name
+
+  const initials = fullName
+    ? fullName
       .split(' ')
       .map((n: string) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() || null
-
-  const avatarUrl = customAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture
+    : (!isStaticMode && user?.email?.slice(0, 2).toUpperCase()) || '?'
 
   return (
-    <>
+    <div className={clsx("relative overflow-hidden rounded-full bg-background", sizeClasses[size], className)}>
       {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={avatarUrl}
-          alt="Profile"
-          className="h-full w-full object-cover"
+          alt={fullName || 'Profile'}
+          fill
+          className="object-cover"
         />
-      ) : initials ? (
-        <span className="bg-primary text-sm font-bold text-white flex h-full w-full items-center justify-center">
-          {initials}
-        </span>
       ) : (
-        <svg className="h-6 w-6 text-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
+        <div className="flex size-full items-center justify-center bg-primary text-sm font-bold text-white">
+          {initials}
+        </div>
       )}
-    </>
+    </div>
   )
 }

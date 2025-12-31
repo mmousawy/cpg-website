@@ -1,0 +1,15 @@
+[
+  {
+    "id": "6e876173-9237-4a51-904b-fcd6aff32223",
+    "email": "murtada.al.mousawy@gmail.com",
+    "full_name": "Murtada al Mousawy",
+    "avatar_url": "https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/user-avatars/6e876173-9237-4a51-904b-fcd6aff32223/0635a50f-0a7c-4a83-85b7-11d5cc91d08d.png",
+    "bio": "",
+    "website": "",
+    "created_at": "2025-12-29T17:04:32.032145+00:00",
+    "updated_at": "2025-12-30T12:52:37.568272+00:00",
+    "last_logged_in": "2025-12-30T12:52:37.317+00:00",
+    "is_admin": false,
+    "nickname": "murtada"
+  }
+]

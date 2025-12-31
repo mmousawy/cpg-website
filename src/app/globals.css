@@ -12,6 +12,8 @@
   --background: #f7f7f7;
   --background-light: #ffffff;
   --foreground: #171717;
+  --text-muted: #737373;
+  --text-muted-light: #a3a3a3;
   --border-color: #e5e7ea;
   --error-red: #f75074;
 }
@@ -22,6 +24,8 @@
   --background: #171718;
   --background-light: #2b2b2b;
   --foreground: #ededed;
+  --text-muted: #a3a3a3;
+  --text-muted-light: #737373;
   --border-color: #383b3d;
   --error-red: #f5686a;
 }

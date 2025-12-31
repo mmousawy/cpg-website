@@ -11,8 +11,8 @@ import {
 
 import { Database } from '@/database.types';
 
-import EmailHeader from "./components/Header";
-import Footer from "./components/Footer";
+import EmailHeader from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
 
 export const CancelEmail = ({
   preview,

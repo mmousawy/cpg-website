@@ -48,12 +48,29 @@ Nicknames are used as user identifiers in gallery URLs instead of user IDs for b
 - `id` (UUID) - Primary key
 - `album_id` (UUID) - Foreign key to albums table
 - `photo_url` (TEXT) - Photo URL in storage
-- `title` (TEXT, nullable) - Photo title
+- `title` (TEXT, nullable) - Photo title/caption
 - `description` (TEXT, nullable) - Photo description
 - `width` (INTEGER, nullable) - Photo width in pixels
 - `height` (INTEGER, nullable) - Photo height in pixels
-- `sort_order` (INTEGER) - Display order
+- `sort_order` (INTEGER) - Display order (for drag-and-drop)
 - `created_at` (TIMESTAMPTZ) - Upload timestamp
+
+#### `album_tags`
+
+- `id` (UUID) - Primary key
+- `album_id` (UUID) - Foreign key to albums table
+- `tag` (TEXT) - Tag name (lowercase)
+- `created_at` (TIMESTAMPTZ) - Creation timestamp
+- Unique constraint on `(album_id, tag)`
+
+#### `album_comments`
+
+- `id` (UUID) - Primary key
+- `album_id` (UUID) - Foreign key to albums table
+- `user_id` (UUID) - Foreign key to profiles table
+- `comment_text` (TEXT) - Comment content
+- `created_at` (TIMESTAMPTZ) - Creation timestamp
+- `updated_at` (TIMESTAMPTZ) - Last update timestamp
 
 ## Storage Structure
 
@@ -72,11 +89,13 @@ user-albums/
 
 ### 1. Database Migration
 
-Run the SQL migration file to create the necessary tables:
+Run the SQL migration files to create the necessary tables:
 
 ```bash
-# In Supabase Dashboard -> SQL Editor, run:
-supabase/migrations/create_albums.sql
+# In Supabase Dashboard -> SQL Editor, run in order:
+1. supabase/migrations/create_albums.sql
+2. supabase/migrations/create_album_tags.sql
+3. supabase/migrations/create_album_comments.sql
 ```
 
 This will also add a unique constraint on the `nickname` field in the profiles table.
@@ -107,14 +126,17 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.ty
 - Edit album details
 - Delete albums (with all photos)
 - Auto-generated slugs from titles
+- **Album tags/categories** for discoverability
+- Comments section on public albums
 
 ### Photo Management
 
 - Upload multiple photos at once
 - Automatic image dimension detection
-- Photo reordering with sort_order
+- **Drag-and-drop photo reordering** with visual feedback
 - Delete individual photos
-- Drag-and-drop support (future enhancement)
+- **Photo captions/titles** with inline editing
+- Photos sorted by custom order
 
 ### Photo Gallery
 
@@ -122,6 +144,13 @@ npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/database.ty
 - PhotoSwipe lightbox for viewing
 - Responsive design
 - Image lazy loading
+
+### Social Features
+
+- **Comments system** on public albums
+- User profiles with avatars and nicknames
+- Comment moderation (album owners can delete comments)
+- Real-time comment timestamps
 
 ## Components
 
@@ -156,7 +185,8 @@ Renders album photos in a masonry grid with PhotoSwipe lightbox integration. Inc
 
 ## Future Enhancements
 
-- Drag-and-drop photo reordering
-- Album categories/tags
-- Photo captions and metadata
-- Comments on photos/albums
+- Album search and filtering by tags
+- Photo likes/reactions
+- Social sharing integration
+- Album collaborators (multiple users can add photos)
+- Photo editing tools (crop, rotate, filters)

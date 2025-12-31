@@ -3,8 +3,8 @@
 import clsx from 'clsx';
 import { useContext, useEffect, useState } from 'react';
 
-import SignupForm from './SignupForm';
-import Button from './Button';
+import SignupForm from '../auth/SignupForm';
+import Button from '../shared/Button';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { CPGEvent } from '@/types/events';

@@ -1,11 +1,26 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import { createClient } from '@/utils/supabase/server'
-import AlbumGallery from '@/components/AlbumGallery'
+import AlbumFullSizeGallery from '@/components/album/AlbumFullSizeGallery'
+import Comments from '@/components/shared/Comments'
+import Avatar from '@/components/auth/Avatar'
 import type { AlbumWithPhotos } from '@/types/albums'
 
+// Revalidate every 60 seconds to reduce database queries
+export const revalidate = 60
+
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
-  const { nickname, albumSlug } = await params
+  const resolvedParams = await params
+  // Decode URL parameters and remove @ prefix from nickname if present
+  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '')
+  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
+  const albumSlug = resolvedParams?.albumSlug || ''
+
+  if (!nickname || !albumSlug) {
+    return {
+      title: 'Album Not Found',
+    }
+  }
+
   const supabase = await createClient()
 
   // First get the user by nickname
@@ -42,7 +57,19 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 }
 
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
-  const { nickname, albumSlug } = await params
+  const resolvedParams = await params
+  // Decode URL parameters and remove @ prefix from nickname if present
+  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '')
+  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
+  const albumSlug = resolvedParams?.albumSlug || ''
+
+  console.log('🔍 Route params:', { rawNickname, nickname, albumSlug })
+
+  if (!nickname || !albumSlug) {
+    console.log('❌ Missing params')
+    notFound()
+  }
+
   const supabase = await createClient()
 
   // First get the user by nickname
@@ -52,17 +79,26 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('nickname', nickname)
     .single()
 
+  console.log('👤 Profile lookup:', { nickname, profile, error: profileError })
+
   if (profileError || !profile) {
+    console.log('❌ Profile not found')
     notFound()
   }
 
   // Fetch album with photos and user info
+  // Only fetch necessary fields to reduce egress
   const { data: album, error } = await supabase
     .from('albums')
     .select(`
-      *,
+      id,
+      title,
+      description,
+      slug,
+      is_public,
+      created_at,
       profile:profiles(full_name, avatar_url, nickname),
-      photos:album_photos(*)
+      photos:album_photos(id, photo_url, title, width, height, sort_order)
     `)
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
@@ -76,7 +112,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   const albumWithPhotos = album as unknown as AlbumWithPhotos
 
   // Sort photos by sort_order
-  const sortedPhotos = [...albumWithPhotos.photos].sort((a, b) => a.sort_order - b.sort_order)
+  const sortedPhotos = [...albumWithPhotos.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 
   return (
     <section className="flex justify-center bg-background px-4 pb-8 pt-6 text-foreground sm:p-12 sm:pb-14">
@@ -84,31 +120,22 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
         {/* Album Header */}
         <div className="mb-8">
           <div className="mb-4 flex items-center gap-3">
-            <div className="relative size-12 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-              {albumWithPhotos.profile?.avatar_url ? (
-                <Image
-                  src={albumWithPhotos.profile.avatar_url}
-                  alt={albumWithPhotos.profile.full_name || 'User'}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-sm font-bold text-neutral-600 dark:text-neutral-400">
-                  {albumWithPhotos.profile?.full_name?.charAt(0).toUpperCase() || '?'}
-                </div>
-              )}
-            </div>
+            <Avatar
+              avatarUrl={albumWithPhotos.profile?.avatar_url}
+              fullName={albumWithPhotos.profile?.full_name}
+              size="md"
+            />
             <div>
-              <p className="text-sm opacity-70">
-                Created by
-              </p>
               <p className="font-medium">
                 {albumWithPhotos.profile?.full_name || 'Unknown User'}
+              </p>
+              <p className="text-sm opacity-70">
+                {albumWithPhotos.profile?.nickname ? `@${albumWithPhotos.profile.nickname}` : '@unknown'}
               </p>
             </div>
           </div>
 
-          <h1 className="mb-3 text-4xl font-bold">{albumWithPhotos.title}</h1>
+          <h1 className="mb-3 text-3xl font-bold">{albumWithPhotos.title}</h1>
           {albumWithPhotos.description && (
             <p className="text-lg opacity-70">
               {albumWithPhotos.description}
@@ -127,8 +154,13 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
             </p>
           </div>
         ) : (
-          <AlbumGallery photos={sortedPhotos} />
+          <AlbumFullSizeGallery photos={sortedPhotos} />
         )}
+
+        {/* Comments Section */}
+        <div className="mt-12">
+          <Comments albumId={albumWithPhotos.id} />
+        </div>
       </div>
     </section>
   )

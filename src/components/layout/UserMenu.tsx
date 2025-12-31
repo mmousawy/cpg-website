@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes'
 
 import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
+import Avatar from '../auth/Avatar'
 import { createClient } from '@/utils/supabase/client'
 import { routes } from '@/config/routes'
 
@@ -17,57 +18,12 @@ export default function UserMenu() {
   const [mounted, setMounted] = useState(false)
   const supabase = createClient()
   const [isOpen, setIsOpen] = useState(false)
-  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
-  const fetchedUserIdRef = useRef<string | null>(null)
 
   // Wait for component to mount to access theme
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  // Fetch custom avatar from profile (only once per user)
-  useEffect(() => {
-    const fetchAvatar = async () => {
-      if (!user) {
-        setCustomAvatarUrl(null)
-        return
-      }
-
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', user.id)
-          .single()
-
-        if (data?.avatar_url) {
-          setCustomAvatarUrl(data.avatar_url)
-        } else {
-          setCustomAvatarUrl(null)
-        }
-      } catch {
-        // Table might not exist, ignore error
-        setCustomAvatarUrl(null)
-      }
-    }
-
-    if (user && user.id !== fetchedUserIdRef.current) {
-      fetchedUserIdRef.current = user.id
-      fetchAvatar()
-    } else if (!user) {
-      fetchedUserIdRef.current = null
-      setCustomAvatarUrl(null)
-    }
-
-    // Listen for avatar updates from account settings
-    const handleAvatarUpdate = () => {
-      fetchAvatar()
-    }
-
-    window.addEventListener('avatarUpdated', handleAvatarUpdate)
-    return () => window.removeEventListener('avatarUpdated', handleAvatarUpdate)
-  }, [user, supabase])
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -87,44 +43,17 @@ export default function UserMenu() {
     )
   }
 
-  const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name
-      .split(' ')
-      .map((n: string) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() || null
-
-  // Use custom avatar if available, otherwise fall back to OAuth avatar
-  const avatarUrl = customAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture
-
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 transition-colors",
+          "flex items-center justify-center overflow-hidden rounded-full border-2 transition-colors",
           isOpen ? "border-primary" : "border-border-color hover:border-primary"
         )}
         aria-label="User menu"
       >
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={avatarUrl}
-            alt="Profile"
-            className="h-full w-full object-cover"
-          />
-        ) : initials ? (
-          <span className="bg-primary text-sm font-bold text-white flex h-full w-full items-center justify-center">
-            {initials}
-          </span>
-        ) : (
-          <svg className="h-6 w-6 text-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        )}
+        <Avatar size="md" className="!size-10 border-0" />
       </button>
 
       {isOpen && (

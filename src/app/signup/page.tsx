@@ -5,11 +5,11 @@ import Link from 'next/link'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
-import Button from '@/components/Button'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import Container from '@/components/Container'
-import PageContainer from '@/components/PageContainer'
+import Button from '@/components/shared/Button'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+import Container from '@/components/layout/Container'
+import PageContainer from '@/components/layout/PageContainer'
 import { routes } from '@/config/routes'
 
 import DiscordSVG from 'public/icons/discord2.svg'
@@ -83,7 +83,7 @@ export default function SignupPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
             <CheckSVG className="h-8 w-8 fill-green-500" />
           </div>
-          <h1 className="mb-2 text-2xl font-bold">Check your email</h1>
+          <h1 className="mb-2 text-3xl font-bold">Check your email</h1>
           <p className="text-foreground/70">
             We&apos;ve sent a confirmation link to <strong>{email}</strong>.
             Click the link in the email to activate your account.
@@ -102,7 +102,7 @@ export default function SignupPage() {
   return (
     <PageContainer className="items-center justify-center">
       <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-2xl font-bold">Create an account</h1>
+        <h1 className="mb-2 text-center text-3xl font-bold">Create an account</h1>
         <p className="mb-8 text-center text-sm text-foreground/70">
           Join the Creative Photography Group community
         </p>
@@ -193,8 +193,7 @@ export default function SignupPage() {
               className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
             <p className="text-xs text-foreground/50">
-              Your unique username for the community. Used in your gallery URLs (example: /galleries/<strong>{nickname || 'johndoe'}</strong>/my-album).
-              Must be 3-30 characters: lowercase letters, numbers, and hyphens only. <strong>Cannot be changed later.</strong>
+              Your unique username for the community. Used in your gallery URLs.
             </p>
           </div>
 

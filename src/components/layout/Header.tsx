@@ -5,7 +5,7 @@ import Link from 'next/link'
 import LogoSVG from 'public/cpg-logo.svg'
 
 import UserMenu from './UserMenu'
-import Avatar from './Avatar'
+import Avatar from '../auth/Avatar'
 import MobileMenu from './MobileMenu'
 import { routes } from '@/config/routes'
 
@@ -34,7 +34,7 @@ export default function Header() {
   }, [mobileMenuOpen])
 
   return (
-    <header className="relative z-10 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-3 text-foreground shadow-md shadow-[#00000005] sm:p-4">
+    <header className="sticky top-0 z-10 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-3 text-foreground shadow-md shadow-[#00000005]">
       <div className="flex w-full max-w-screen-md items-center justify-between gap-4">
         {/* Left: Logo + Desktop Nav */}
         <div className="flex items-center gap-6">
@@ -67,10 +67,10 @@ export default function Header() {
             {/* Mobile Avatar - opens mobile menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-border-color transition-colors hover:border-primary"
+              className="flex items-center justify-center overflow-hidden rounded-full transition-colors hover:border-primary"
               aria-label="Open menu"
             >
-              <Avatar />
+              <Avatar size="md" className="!size-10 border-0" />
             </button>
 
             {/* Mobile Menu Button */}

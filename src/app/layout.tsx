@@ -5,8 +5,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import ModalProvider from "@/app/providers/ModalProvider";
 import SupabaseProvider from "./providers/SupabaseProvider";
-import Layout from "@/components/Layout";
-import Modal from "@/components/Modal";
+import Layout from "@/components/layout/Layout";
+import Modal from "@/components/shared/Modal";
 
 import "./globals.css";
 

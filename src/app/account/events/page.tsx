@@ -6,10 +6,10 @@ import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/Button'
-import Container from '@/components/Container'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import PageContainer from '@/components/PageContainer'
+import Button from '@/components/shared/Button'
+import Container from '@/components/layout/Container'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import PageContainer from '@/components/layout/PageContainer'
 import { routes } from '@/config/routes'
 
 import CalendarSVG from 'public/icons/calendar2.svg'
@@ -159,7 +159,12 @@ export default function MyEventsPage() {
   return (
     <PageContainer>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">My events</h1>
+        <div>
+          <h1 className="mb-2 text-3xl font-bold">My events</h1>
+          <p className="text-lg opacity-70">
+            View and manage your event registrations
+          </p>
+        </div>
       </div>
 
       <div className="space-y-8">

@@ -6,11 +6,11 @@ import Link from 'next/link'
 
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/Button'
-import Container from '@/components/Container'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import PageContainer from '@/components/PageContainer'
-import AlbumCard from '@/components/AlbumCard'
+import Button from '@/components/shared/Button'
+import Container from '@/components/layout/Container'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import PageContainer from '@/components/layout/PageContainer'
+import AlbumCard from '@/components/album/AlbumCard'
 import type { AlbumWithPhotos } from '@/types/albums'
 
 import PlusSVG from 'public/icons/plus.svg'
@@ -42,11 +42,18 @@ export default function AccountGalleriesPage() {
       const { data, error } = await supabase
         .from('albums')
         .select(`
-          *,
-          photos:album_photos(*)
+          id,
+          title,
+          description,
+          slug,
+          cover_image_url,
+          is_public,
+          created_at,
+          photos:album_photos(id, photo_url)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
+        .limit(50)
 
       if (error) {
         console.error('Error fetching albums:', error)
@@ -111,8 +118,8 @@ export default function AccountGalleriesPage() {
     <PageContainer>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="mb-1 text-3xl font-bold">My Galleries</h1>
-          <p className="opacity-70">
+          <h1 className="mb-2 text-3xl font-bold">My Galleries</h1>
+          <p className="text-lg opacity-70">
             Create and manage your photo albums
           </p>
         </div>

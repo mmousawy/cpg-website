@@ -1,0 +1,13 @@
+[
+  {
+    "id": "a7f4e4b3-b65f-474d-9716-840892f443e7",
+    "user_id": "6e876173-9237-4a51-904b-fcd6aff32223",
+    "title": "Test album",
+    "slug": "test-album",
+    "description": "Test description",
+    "cover_image_url": "https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/user-albums/6e876173-9237-4a51-904b-fcd6aff32223/a7f4e4b3-b65f-474d-9716-840892f443e7/a5f0bea6-6bb0-46ae-a134-56af68613ed8.jpg",
+    "is_public": true,
+    "created_at": "2025-12-30T13:39:15.801755+00:00",
+    "updated_at": "2025-12-30T14:08:47.325296+00:00"
+  }
+]

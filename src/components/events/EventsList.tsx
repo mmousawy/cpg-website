@@ -8,15 +8,31 @@ import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 import SignupButton from './SignupButton';
 import { Suspense } from 'react';
-import getImgDimensions from '@/utils/utils';
 import EventImage from './EventImage';
-import Container from './Container';
+import Container from '../layout/Container';
 
 export default async function Events({ filter }: { filter: 'upcoming' | 'past' }) {
   const supabase = await createClient();
 
-  const response = await supabase.from("events").select();
+  // Fetch events
+  const response = await supabase
+    .from("events")
+    .select('id, title, description, date, location, time, cover_image')
+    .order('date', { ascending: true })
+    .limit(20);
   const events = response.data;
+
+  // Fetch image metadata for all cover images
+  const coverImageUrls = events?.map(e => e.cover_image).filter(Boolean) || [];
+  const { data: imageMetadata } = await supabase
+    .from('images')
+    .select('url, width, height')
+    .in('url', coverImageUrls);
+
+  // Create a map of URL -> dimensions
+  const dimensionsMap = new Map(
+    imageMetadata?.map(img => [img.url, { width: img.width, height: img.height }]) || []
+  );
 
   // Filter events based on the filter prop
   const now = new Date();
@@ -33,16 +49,11 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
     }
   });
 
-  const enrichedEvents = await Promise.all(
-    filteredEvents?.map(async (event) => {
-      const dimensions = await getImgDimensions(event.cover_image!);
-
-      return {
-        ...event,
-        dimensions,
-      };
-    }) ?? []
-  );
+  // Use cover_image for event images
+  const enrichedEvents = filteredEvents?.map((event) => ({
+    ...event,
+    dimensions: dimensionsMap.get(event.cover_image!) || { width: 1200, height: 800 }
+  })) ?? [];
 
   return (
     <>
@@ -54,7 +65,7 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
       {enrichedEvents && enrichedEvents.map((event) => (
         <Container key={event.id} id={`gallery-${event.id}`}>
           <div>
-            <EventImage event={event} size='small' excludeFromGallery />
+            <EventImage event={event} size='small' />
             <div className='mb-6 flex justify-between'>
               <h3 className="text-2xl font-bold">{event.title}</h3>
               <SignupButton event={event} className="ml-2 max-sm:hidden" />

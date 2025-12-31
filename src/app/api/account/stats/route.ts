@@ -4,10 +4,10 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     const supabase = await createClient()
-    
+
     // Get the current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -33,8 +33,9 @@ export async function GET() {
         .eq('id', user.id)
         .single()
 
-      if (profileData?.last_logged_in) {
-        stats.lastLoggedIn = profileData.last_logged_in
+      const data = profileData as { last_logged_in: string | null } | null
+      if (data?.last_logged_in) {
+        stats.lastLoggedIn = data.last_logged_in
       }
     } catch {
       // Profiles table might not exist or last_logged_in column might not exist
@@ -42,10 +43,13 @@ export async function GET() {
 
     // Load RSVP stats
     try {
-      const { data: rsvps } = await supabase
+      const { data: rsvpsData } = await supabase
         .from('events_rsvps')
         .select('id, confirmed_at, canceled_at')
         .eq('user_id', user.id)
+
+      type RSVPData = { id: string; confirmed_at: string | null; canceled_at: string | null }[]
+      const rsvps = rsvpsData as RSVPData | null
 
       if (rsvps) {
         stats.rsvpsConfirmed = rsvps.filter(r => r.confirmed_at && !r.canceled_at).length
@@ -54,14 +58,16 @@ export async function GET() {
         // Try to get attended count separately (in case attended_at column doesn't exist)
         try {
           // Query with attended_at included to check if column exists
-          const { data: allRSVPs, error: attendedError } = await supabase
+          const { data: allRSVPsData, error: attendedError } = await supabase
             .from('events_rsvps')
             .select('id, attended_at')
             .eq('user_id', user.id)
-          
+
+          const allRSVPs = allRSVPsData as { id: string; attended_at: string | null }[] | null
+
           if (!attendedError && allRSVPs) {
             // Filter for RSVPs with attended_at set
-            stats.eventsAttended = allRSVPs.filter((r: any) => r.attended_at !== null).length
+            stats.eventsAttended = allRSVPs.filter(r => r.attended_at !== null).length
           }
         } catch {
           // attended_at column might not exist yet - that's okay
@@ -71,10 +77,10 @@ export async function GET() {
       // RSVPs table might not exist or have issues - that's okay
     }
 
-    // Load galleries count (when galleries table exists)
+    // Load galleries count (albums)
     try {
       const { count } = await supabase
-        .from('galleries')
+        .from('albums')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
 
@@ -82,87 +88,99 @@ export async function GET() {
         stats.galleries = count
       }
     } catch {
-      // Galleries table doesn't exist yet
+      // Albums table doesn't exist yet
     }
 
-    // Load photos count (when photos table exists)
+    // Load photos count (album_photos)
     try {
-      const { count } = await supabase
-        .from('photos')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-
-      if (count !== null) {
-        stats.photos = count
-      }
-    } catch {
-      // Photos table doesn't exist yet
-    }
-
-    // Load comments made count (when comments table exists)
-    try {
-      const { count } = await supabase
-        .from('comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-
-      if (count !== null) {
-        stats.commentsMade = count
-      }
-    } catch {
-      // Comments table doesn't exist yet
-    }
-
-    // Load comments received count (when comments table exists)
-    // This would need to query galleries owned by user and count comments on those galleries
-    try {
-      const { data: userGalleries } = await supabase
-        .from('galleries')
+      const { data: albumsData } = await supabase
+        .from('albums')
         .select('id')
         .eq('user_id', user.id)
 
-      if (userGalleries && userGalleries.length > 0) {
-        const galleryIds = userGalleries.map(g => g.id)
+      const albums = albumsData as { id: string }[] | null
+
+      if (albums && albums.length > 0) {
+        const albumIds = albums.map(a => a.id)
         const { count } = await supabase
-          .from('comments')
+          .from('album_photos')
           .select('*', { count: 'exact', head: true })
-          .in('gallery_id', galleryIds)
+          .in('album_id', albumIds)
 
         if (count !== null) {
-          stats.commentsReceived = count
+          stats.photos = count
         }
       }
     } catch {
-      // Comments or galleries table doesn't exist yet
+      // Album photos table doesn't exist yet
     }
 
-    // Load gallery views (when gallery_views table exists)
-    try {
-      const { count } = await supabase
-        .from('gallery_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('gallery_owner_id', user.id)
+    // TODO: Comments feature not yet implemented
+    // // Load comments made count (when comments table exists)
+    // try {
+    //   const { count } = await supabase
+    //     .from('comments')
+    //     .select('*', { count: 'exact', head: true })
+    //     .eq('user_id', user.id)
 
-      if (count !== null) {
-        stats.galleryViews = count
-      }
-    } catch {
-      // Gallery views table doesn't exist yet
-    }
+    //   if (count !== null) {
+    //     stats.commentsMade = count
+    //   }
+    // } catch {
+    //   // Comments table doesn't exist yet
+    // }
 
-    // Load profile views (when profile_views table exists)
-    try {
-      const { count } = await supabase
-        .from('profile_views')
-        .select('*', { count: 'exact', head: true })
-        .eq('profile_id', user.id)
+    // // Load comments received count (when comments table exists)
+    // // This would need to query galleries owned by user and count comments on those galleries
+    // try {
+    //   const { data: userGalleries } = await supabase
+    //     .from('albums')
+    //     .select('id')
+    //     .eq('user_id', user.id)
 
-      if (count !== null) {
-        stats.profileViews = count
-      }
-    } catch {
-      // Profile views table doesn't exist yet
-    }
+    //   if (userGalleries && userGalleries.length > 0) {
+    //     const galleryIds = userGalleries.map(g => g.id)
+    //     const { count } = await supabase
+    //       .from('comments')
+    //       .select('*', { count: 'exact', head: true })
+    //       .in('gallery_id', galleryIds)
+
+    //     if (count !== null) {
+    //       stats.commentsReceived = count
+    //     }
+    //   }
+    // } catch {
+    //   // Comments or albums table doesn't exist yet
+    // }
+
+    // TODO: Views tracking not yet implemented
+    // // Load gallery views (when gallery_views table exists)
+    // try {
+    //   const { count } = await supabase
+    //     .from('gallery_views')
+    //     .select('*', { count: 'exact', head: true })
+    //     .eq('gallery_owner_id', user.id)
+
+    //   if (count !== null) {
+    //     stats.galleryViews = count
+    //   }
+    // } catch {
+    //   // Gallery views table doesn't exist yet
+    // }
+
+    // // Load profile views (when profile_views table exists)
+    // try {
+    //   const { count } = await supabase
+    //     .from('profile_views')
+    //     .select('*', { count: 'exact', head: true })
+    //     .eq('profile_id', user.id)
+
+    //   if (count !== null) {
+    //     stats.profileViews = count
+    //   }
+    // } catch {
+    //   // Profile views table doesn't exist yet
+    // }
 
     return NextResponse.json(stats)
   } catch (error) {
@@ -173,4 +191,3 @@ export async function GET() {
     )
   }
 }
-

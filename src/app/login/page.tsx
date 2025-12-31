@@ -1,19 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
-import Button from '@/components/Button'
-import Container from '@/components/Container'
-import PageContainer from '@/components/PageContainer'
+import Button from '@/components/shared/Button'
+import Container from '@/components/layout/Container'
+import PageContainer from '@/components/layout/PageContainer'
 import { routes } from '@/config/routes'
 
 import DiscordSVG from 'public/icons/discord2.svg'
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/'
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
   return (
     <PageContainer className="items-center justify-center">
       <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-2xl font-bold">Welcome back</h1>
+        <h1 className="mb-2 text-center text-3xl font-bold">Welcome back</h1>
         <p className="mb-8 text-center text-sm text-foreground/70">
           Log in to your account to continue
         </p>
@@ -184,5 +184,13 @@ export default function LoginPage() {
         </p>
       </Container>
     </PageContainer>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<PageContainer><Container><p>Loading...</p></Container></PageContainer>}>
+      <LoginForm />
+    </Suspense>
   )
 }
