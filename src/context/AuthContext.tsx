@@ -130,6 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select('is_admin')
         .eq('id', user.id)
         .single();
+      if (typeof window !== 'undefined') {
+        console.log('[AuthContext] fetchAdmin', { userId: user.id, data, error });
+      }
       if (!cancelled) {
         setIsAdmin(!!data?.is_admin);
       }
