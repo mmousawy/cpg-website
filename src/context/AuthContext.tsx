@@ -28,12 +28,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     const supabase = createClient();
+    
+    if (typeof window !== 'undefined') {
+      console.log('[AuthContext] initializeAuth starting');
+    }
+    
     const initializeAuth = async () => {
       try {
+        if (typeof window !== 'undefined') {
+          console.log('[AuthContext] calling getSession...');
+        }
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!mounted) return;
         if (typeof window !== 'undefined') {
-          console.log('[AuthContext] getSession', { session, error });
+          console.log('[AuthContext] getSession result', { hasSession: !!session, error: error?.message || null });
         }
         if (error) {
           setUser(null);
@@ -119,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch isAdmin when user changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('[AuthContext] profile fetch effect running', { user });
+      console.log('[AuthContext] profile fetch effect running', { user: user?.id || null });
     }
     if (!user) {
       if (typeof window !== 'undefined') {
@@ -128,27 +136,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(false);
       return;
     }
-    let cancelled = false;
+    
+    const abortController = new AbortController();
     const supabase = createClient();
+    
     const fetchAdmin = async () => {
       if (typeof window !== 'undefined') {
         console.log('[AuthContext] fetchAdmin about to query', { userId: user.id });
       }
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', user.id)
-        .single();
-      if (typeof window !== 'undefined') {
-        console.log('[AuthContext] fetchAdmin', { userId: user.id, data, error });
-      }
-      if (!cancelled) {
-        setIsAdmin(!!data?.is_admin);
+      
+      try {
+        // Combine manual abort with 10s timeout
+        const timeoutId = setTimeout(() => abortController.abort(), 10000);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .abortSignal(abortController.signal)
+          .single();
+        
+        clearTimeout(timeoutId);
+        
+        if (typeof window !== 'undefined') {
+          console.log('[AuthContext] fetchAdmin result', { userId: user.id, data, error: error?.message || null });
+        }
+        
+        if (error) {
+          console.error('[AuthContext] fetchAdmin error:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!data?.is_admin);
+        }
+      } catch (err) {
+        // Ignore abort errors - they're expected on cleanup/timeout
+        if (err instanceof Error && err.name === 'AbortError') {
+          if (typeof window !== 'undefined') {
+            console.log('[AuthContext] fetchAdmin aborted (cleanup or timeout)');
+          }
+          return;
+        }
+        if (typeof window !== 'undefined') {
+          console.error('[AuthContext] fetchAdmin unexpected error:', err);
+        }
+        setIsAdmin(false);
       }
     };
+    
     fetchAdmin();
+    
     return () => {
-      cancelled = true;
+      abortController.abort();
     };
   }, [user]);
 
