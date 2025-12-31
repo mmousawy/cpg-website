@@ -25,7 +25,7 @@ export default async function GalleriesPage() {
       cover_image_url,
       is_public,
       created_at,
-      profile:profiles(full_name, nickname),
+      profile:profiles(full_name, nickname, avatar_url),
       photos:album_photos(id, photo_url)
     `)
     .eq('is_public', true)

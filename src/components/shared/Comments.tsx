@@ -30,7 +30,7 @@ interface CommentsProps {
 }
 
 export default function Comments({ albumId, isAlbumOwner = false }: CommentsProps) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const supabase = createClient()
   const [comments, setComments] = useState<Comment[]>([])
   const [commentText, setCommentText] = useState('')
@@ -145,6 +145,51 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
     <div className="space-y-6">
       <h3 className="text-xl font-semibold">Comments ({comments.length})</h3>
 
+      {/* Comments List */}
+      <div className="space-y-4">
+        {isLoading ? (
+          <p className="text-center text-foreground/70">Loading comments...</p>
+        ) : comments.length === 0 ? (
+          <p className="text-center text-foreground/70">
+            No comments yet. Be the first to comment!
+          </p>
+        ) : (
+          comments.map((comment) => (
+            <div key={comment.id} className="flex gap-3 dark:bg-foreground/5 rounded-lg shadow-md shadow-[#00000007] border border-border-color p-4">
+              <Avatar
+                avatarUrl={comment.profile?.avatar_url}
+                fullName={comment.profile?.full_name}
+                size="sm"
+              />
+              <div className="flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">
+                      {comment.profile?.full_name || 'Anonymous'}
+                    </p>
+                    <p className="text-xs text-foreground/50">
+                      @{comment.profile?.nickname} · {formatDate(comment.created_at)}
+                    </p>
+                  </div>
+                  {(user?.id === comment.user_id || isAdmin) && (
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="rounded p-1 hover:bg-red-600/10"
+                      aria-label="Delete comment"
+                    >
+                      <TrashSVG className="size-4 text-red-600" />
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-foreground/90">
+                  {comment.comment_text}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* Comment Form */}
       {user && (
         <form onSubmit={handleSubmitComment} className="space-y-3">
@@ -172,51 +217,6 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
           Please log in to leave a comment.
         </p>
       )}
-
-      {/* Comments List */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <p className="text-center text-foreground/70">Loading comments...</p>
-        ) : comments.length === 0 ? (
-          <p className="text-center text-foreground/70">
-            No comments yet. Be the first to comment!
-          </p>
-        ) : (
-          comments.map((comment) => (
-            <div key={comment.id} className="flex gap-3 rounded-lg border border-border-color p-4">
-              <Avatar
-                avatarUrl={comment.profile?.avatar_url}
-                fullName={comment.profile?.full_name}
-                size="sm"
-              />
-              <div className="flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium">
-                      {comment.profile?.full_name || 'Anonymous'}
-                    </p>
-                    <p className="text-xs text-foreground/50">
-                      @{comment.profile?.nickname} · {formatDate(comment.created_at)}
-                    </p>
-                  </div>
-                  {(user?.id === comment.user_id || isAlbumOwner) && (
-                    <button
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="rounded p-1 hover:bg-red-600/10"
-                      aria-label="Delete comment"
-                    >
-                      <TrashSVG className="size-4 text-red-600" />
-                    </button>
-                  )}
-                </div>
-                <p className="mt-2 text-sm text-foreground/90">
-                  {comment.comment_text}
-                </p>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
     </div>
   )
 }

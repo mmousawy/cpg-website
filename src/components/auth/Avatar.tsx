@@ -79,12 +79,12 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
   }
 
   // Get avatar data
-  const avatarUrl = isStaticMode 
-    ? staticAvatarUrl 
+  const avatarUrl = isStaticMode
+    ? staticAvatarUrl
     : (customAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)
-  
-  const fullName = isStaticMode 
-    ? staticFullName 
+
+  const fullName = isStaticMode
+    ? staticFullName
     : user?.user_metadata?.full_name
 
   const initials = fullName

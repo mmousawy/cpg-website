@@ -63,13 +63,6 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
   const albumSlug = resolvedParams?.albumSlug || ''
 
-  console.log('🔍 Route params:', { rawNickname, nickname, albumSlug })
-
-  if (!nickname || !albumSlug) {
-    console.log('❌ Missing params')
-    notFound()
-  }
-
   const supabase = await createClient()
 
   // First get the user by nickname
@@ -79,10 +72,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('nickname', nickname)
     .single()
 
-  console.log('👤 Profile lookup:', { nickname, profile, error: profileError })
-
   if (profileError || !profile) {
-    console.log('❌ Profile not found')
     notFound()
   }
 
@@ -126,53 +116,55 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   const sortedPhotos = [...albumWithPhotos.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 
   return (
-    <section className="flex justify-center bg-background px-4 pb-8 pt-6 text-foreground sm:p-12 sm:pb-14">
-      <div className="w-full max-w-screen-md">
-        {/* Album Header */}
-        <div className="mb-8">
-          <div className="mb-4 flex items-center gap-3">
-            <Avatar
-              avatarUrl={albumWithPhotos.profile?.avatar_url}
-              fullName={albumWithPhotos.profile?.full_name}
-              size="md"
-            />
-            <div>
-              <p className="font-medium">
-                {albumWithPhotos.profile?.full_name || 'Unknown User'}
+    <>
+      <section className="flex justify-center bg-background px-4 pb-8 pt-6 text-foreground sm:p-12 sm:pb-14">
+        <div className="w-full max-w-screen-md">
+          {/* Album Header */}
+          <div className="mb-8">
+            <h1 className="mb-4 text-3xl font-bold">{albumWithPhotos.title}</h1>
+            <div className="mb-4 flex items-center gap-3">
+              <Avatar
+                avatarUrl={albumWithPhotos.profile?.avatar_url}
+                fullName={albumWithPhotos.profile?.full_name}
+                size="md"
+              />
+              <div>
+                <p className="font-medium">
+                  {albumWithPhotos.profile?.full_name || 'Unknown User'}
+                </p>
+                <p className="text-sm opacity-70">
+                  {albumWithPhotos.profile?.nickname ? `@${albumWithPhotos.profile.nickname}` : '@unknown'}
+                </p>
+              </div>
+            </div>
+            <p className="mt-2 text-sm opacity-70 mb-4">
+              {sortedPhotos.length} {sortedPhotos.length === 1 ? 'photo' : 'photos'}
+            </p>
+            {albumWithPhotos.description && (
+              <p className="text-lg opacity-70">
+                {albumWithPhotos.description}
               </p>
-              <p className="text-sm opacity-70">
-                {albumWithPhotos.profile?.nickname ? `@${albumWithPhotos.profile.nickname}` : '@unknown'}
+            )}
+          </div>
+
+          {/* Gallery */}
+          {sortedPhotos.length === 0 ? (
+            <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
+              <p className="opacity-70">
+                This album doesn&apos;t have any photos yet.
               </p>
             </div>
-          </div>
-
-          <h1 className="mb-3 text-3xl font-bold">{albumWithPhotos.title}</h1>
-          {albumWithPhotos.description && (
-            <p className="text-lg opacity-70">
-              {albumWithPhotos.description}
-            </p>
+          ) : (
+            <AlbumFullSizeGallery photos={sortedPhotos} />
           )}
-          <p className="mt-2 text-sm opacity-70">
-            {sortedPhotos.length} {sortedPhotos.length === 1 ? 'photo' : 'photos'}
-          </p>
         </div>
-
-        {/* Gallery */}
-        {sortedPhotos.length === 0 ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-            <p className="opacity-70">
-              This album doesn&apos;t have any photos yet.
-            </p>
-          </div>
-        ) : (
-          <AlbumFullSizeGallery photos={sortedPhotos} />
-        )}
-
+      </section>
+      <section className='flex border-t border-t-border-color justify-center px-4 pb-8 pt-6 text-foreground sm:p-12 sm:pb-14 bg-background-light'>
         {/* Comments Section */}
-        <div className="mt-12">
+        <div className="w-full max-w-screen-md w-full">
           <Comments albumId={albumWithPhotos.id} />
         </div>
-      </div>
-    </section>
+      </section >
+    </>
   )
 }

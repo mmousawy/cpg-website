@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 import type { AlbumWithPhotos } from '@/types/albums'
 
-import TrashSVG from 'public/icons/trash.svg'
+import Avatar from '../auth/Avatar'
 
 type AlbumCardProps = {
   album: AlbumWithPhotos
@@ -38,15 +38,10 @@ export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCar
 
         <div className="p-4">
           <h3 className="mb-1 text-lg font-semibold line-clamp-1">{album.title}</h3>
-          {album.description && (
-            <p className="mb-2 text-sm text-[var(--text-muted)] line-clamp-2">
-              {album.description}
-            </p>
-          )}
           {album.profile && (
-            <p className="text-sm text-[var(--text-muted-light)]">
-              by {album.profile.full_name || 'Unknown User'}
-            </p>
+            <div className="flex items-center text-sm text-[var(--text-muted-light)]">
+              <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="sm" className='!size-6 mr-2' />@{album.profile.nickname}
+            </div>
           )}
           {!album.is_public && isOwner && (
             <span className="mt-2 inline-block rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">

@@ -80,7 +80,7 @@ export default function AlbumFullSizeGallery({ photos }: { photos: AlbumPhoto[] 
                 alt={photo.title || 'Album photo'}
                 width={photo.width || 1200}
                 height={photo.height || 800}
-                className="w-full h-auto rounded-lg object-contain bg-background-light cursor-zoom-in"
+                className="w-full h-auto object-contain bg-background-light cursor-zoom-in"
                 sizes="(max-width: 768px) 100vw, 800px"
                 priority={false}
                 unoptimized={true}
