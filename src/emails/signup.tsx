@@ -17,9 +17,9 @@ import { Database } from '@/database.types';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
-import EmailHeader from "./components/layout/Header";
+import EmailHeader from "./components/Header";
 import EventDetails from "./components/EventDetails";
-import Footer from "./components/layout/Footer";
+import Footer from "./components/Footer";
 
 export const SignupEmail = ({
   preview,

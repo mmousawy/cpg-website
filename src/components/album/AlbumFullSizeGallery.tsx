@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
 import Image from "next/image";
-import type { AlbumPhoto } from "@/types/albums";
+import type { AlbumPhoto, AlbumPhotoExtended } from "@/types/albums";
 
 function exifToString(exif: any) {
   if (!exif || typeof exif !== 'object') return null;
@@ -64,7 +64,7 @@ export default function AlbumFullSizeGallery({ photos }: { photos: AlbumPhoto[] 
   if (!photos || photos.length === 0) return null;
   return (
     <div id="album-gallery" className="flex flex-col gap-12">
-      {photos.map((photo) => {
+      {photos.map((photo: AlbumPhotoExtended) => {
         const exif = photo.image?.exif_data;
         return (
           <div key={photo.id} className="w-full">

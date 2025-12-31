@@ -4,6 +4,11 @@ export type Album = Tables<'albums'>
 export type AlbumPhoto = Tables<'album_photos'>
 export type AlbumTag = Tables<'album_tags'>
 
+export type AlbumPhotoExtended = Tables<'album_photos'> & {
+  image?: {
+    exif_data?: any;
+  };
+};
 export type AlbumWithPhotos = Album & {
   photos: AlbumPhoto[]
   tags?: AlbumTag[]

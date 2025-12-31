@@ -29,6 +29,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Title and date are required" }, { status: 400 });
   }
 
+  // Generate slug from title (simple example, adjust as needed)
+  const slug = title
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+
   // Create event
   const { data, error } = await supabase
     .from('events')
@@ -39,6 +46,7 @@ export async function POST(request: NextRequest) {
       time,
       location,
       cover_image,
+      slug,
     })
     .select()
     .single();

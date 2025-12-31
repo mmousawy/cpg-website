@@ -51,7 +51,7 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
             {/* Avatar list of attendees */}
             {attendeesWithAvatars?.map((attendee, attendeeIndex) => (
               <Image
-                key={`${attendee.uuid}_${attendeeIndex}`}
+                key={`${attendee.id}_${attendeeIndex}`}
                 width={32}
                 height={32}
                 className={clsx([

@@ -1,0 +1,501 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  public: {
+    Tables: {
+      album_comments: {
+        Row: {
+          album_id: string
+          comment_text: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          comment_text: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          comment_text?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_comments_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      album_photos: {
+        Row: {
+          album_id: string
+          created_at: string | null
+          description: string | null
+          height: number | null
+          id: string
+          photo_url: string
+          sort_order: number | null
+          title: string | null
+          width: number | null
+        }
+        Insert: {
+          album_id: string
+          created_at?: string | null
+          description?: string | null
+          height?: number | null
+          id?: string
+          photo_url: string
+          sort_order?: number | null
+          title?: string | null
+          width?: number | null
+        }
+        Update: {
+          album_id?: string
+          created_at?: string | null
+          description?: string | null
+          height?: number | null
+          id?: string
+          photo_url?: string
+          sort_order?: number | null
+          title?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_photos_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_album_photos_image_url"
+            columns: ["photo_url"]
+            isOneToOne: false
+            referencedRelation: "images"
+            referencedColumns: ["url"]
+          },
+        ]
+      }
+      album_tags: {
+        Row: {
+          album_id: string
+          created_at: string | null
+          id: string
+          tag: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string | null
+          id?: string
+          tag: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string | null
+          id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_tags_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      albums: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          slug: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "albums_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          cover_image: string | null
+          created_at: string | null
+          date: string | null
+          description: string | null
+          id: number
+          image_blurhash: string | null
+          image_height: number | null
+          image_url: string | null
+          image_width: number | null
+          location: string | null
+          max_attendees: number | null
+          rsvp_count: number | null
+          slug: string
+          time: string | null
+          title: string | null
+        }
+        Insert: {
+          cover_image?: string | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          id?: number
+          image_blurhash?: string | null
+          image_height?: number | null
+          image_url?: string | null
+          image_width?: number | null
+          location?: string | null
+          max_attendees?: number | null
+          rsvp_count?: number | null
+          slug: string
+          time?: string | null
+          title?: string | null
+        }
+        Update: {
+          cover_image?: string | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          id?: number
+          image_blurhash?: string | null
+          image_height?: number | null
+          image_url?: string | null
+          image_width?: number | null
+          location?: string | null
+          max_attendees?: number | null
+          rsvp_count?: number | null
+          slug?: string
+          time?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      events_rsvps: {
+        Row: {
+          attended_at: string | null
+          canceled_at: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          email: string | null
+          event_id: number | null
+          id: number
+          ip_address: string | null
+          name: string | null
+          user_id: string | null
+          uuid: string | null
+        }
+        Insert: {
+          attended_at?: string | null
+          canceled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          event_id?: number | null
+          id?: number
+          ip_address?: string | null
+          name?: string | null
+          user_id?: string | null
+          uuid?: string | null
+        }
+        Update: {
+          attended_at?: string | null
+          canceled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          event_id?: number | null
+          id?: number
+          ip_address?: string | null
+          name?: string | null
+          user_id?: string | null
+          uuid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      images: {
+        Row: {
+          created_at: string
+          exif_data: Json | null
+          file_size: number
+          height: number
+          id: string
+          mime_type: string
+          storage_path: string
+          uploaded_by: string | null
+          url: string
+          width: number
+        }
+        Insert: {
+          created_at?: string
+          exif_data?: Json | null
+          file_size: number
+          height: number
+          id?: string
+          mime_type: string
+          storage_path: string
+          uploaded_by?: string | null
+          url: string
+          width: number
+        }
+        Update: {
+          created_at?: string
+          exif_data?: Json | null
+          file_size?: number
+          height?: number
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          url?: string
+          width?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean | null
+          last_logged_in: string | null
+          nickname: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          is_admin?: boolean | null
+          last_logged_in?: string | null
+          nickname?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+          last_logged_in?: string | null
+          nickname?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
+

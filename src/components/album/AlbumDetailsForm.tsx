@@ -1,7 +1,7 @@
 import React from 'react'
 import type { ChangeEvent, KeyboardEvent } from 'react'
-import Button from './Button'
-import Container from './Container'
+import Button from '../shared/Button'
+import Container from '../layout/Container'
 
 interface AlbumDetailsFormProps {
   title: string

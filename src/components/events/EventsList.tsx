@@ -11,19 +11,26 @@ import { Suspense } from 'react';
 import EventImage from './EventImage';
 import Container from '../layout/Container';
 
+import type { CPGEvent } from '@/types/events';
+
 export default async function Events({ filter }: { filter: 'upcoming' | 'past' }) {
   const supabase = await createClient();
 
   // Fetch events
   const response = await supabase
     .from("events")
-    .select('id, title, description, date, location, time, cover_image')
+    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
     .order('date', { ascending: true })
     .limit(20);
-  const events = response.data;
+  if (response.error || !Array.isArray(response.data)) {
+    // You can customize this error handling as needed
+    throw new Error(`Failed to fetch events: ${response.error?.message ?? 'Unknown error'}`);
+  }
+
+  const events: CPGEvent[] = response.data;
 
   // Fetch image metadata for all cover images
-  const coverImageUrls = events?.map(e => e.cover_image).filter(Boolean) || [];
+  const coverImageUrls = (events.map(e => e.cover_image).filter((url): url is string => typeof url === 'string'));
   const { data: imageMetadata } = await supabase
     .from('images')
     .select('url, width, height')
@@ -50,10 +57,19 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
   });
 
   // Use cover_image for event images
-  const enrichedEvents = filteredEvents?.map((event) => ({
-    ...event,
-    dimensions: dimensionsMap.get(event.cover_image!) || { width: 1200, height: 800 }
-  })) ?? [];
+  const enrichedEvents = (filteredEvents ?? [])
+    .filter((event): event is CPGEvent => !!event && typeof event === 'object')
+    .map((event) => ({
+      ...event,
+      created_at: event.created_at ?? null,
+      image_blurhash: event.image_blurhash ?? null,
+      image_height: event.image_height ?? null,
+      image_url: event.image_url ?? null,
+      image_width: event.image_width ?? null,
+      max_attendees: event.max_attendees ?? null,
+      rsvp_count: event.rsvp_count ?? null,
+      dimensions: dimensionsMap.get(event.cover_image!) || { width: 1200, height: 800 }
+    }));
 
   return (
     <>
