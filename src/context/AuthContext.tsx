@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user && _event === 'SIGNED_IN') {
         try {
           await supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', session.user.id);
-        } catch {}
+        } catch { }
       }
     });
     return () => {
