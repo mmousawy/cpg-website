@@ -32,24 +32,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!mounted) return;
+        if (typeof window !== 'undefined') {
+          console.log('[AuthContext] getSession', { session, error });
+        }
         if (error) {
           setUser(null);
           setSession(null);
           setIsAdmin(false);
           setIsLoading(false);
+          if (typeof window !== 'undefined') {
+            console.error('[AuthContext] getSession error', error);
+          }
           return;
         }
         if (session) {
           const expiresAt = session.expires_at || 0;
           const now = Math.floor(Date.now() / 1000);
           const shouldRefresh = expiresAt - now < 60;
+          if (typeof window !== 'undefined') {
+            console.log('[AuthContext] session found', { session, expiresAt, now, shouldRefresh });
+          }
           if (shouldRefresh) {
             const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
             if (!mounted) return;
+            if (typeof window !== 'undefined') {
+              console.log('[AuthContext] refreshSession', { refreshedSession, refreshError });
+            }
             if (refreshError) {
               setUser(null);
               setSession(null);
               setIsAdmin(false);
+              if (typeof window !== 'undefined') {
+                console.error('[AuthContext] refreshSession error', refreshError);
+              }
             } else {
               setUser(refreshedSession?.user ?? session.user ?? null);
               setSession(refreshedSession ?? session);
@@ -65,25 +80,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(null);
           setIsAdmin(false);
           setIsLoading(false);
+          if (typeof window !== 'undefined') {
+            console.warn('[AuthContext] No session found');
+          }
         }
-      } catch {
+      } catch (err) {
         if (!mounted) return;
         setUser(null);
         setSession(null);
         setIsAdmin(false);
         setIsLoading(false);
+        if (typeof window !== 'undefined') {
+          console.error('[AuthContext] Unexpected error initializing auth', err);
+        }
       }
     };
     initializeAuth();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
+      if (typeof window !== 'undefined') {
+        console.log('[AuthContext] onAuthStateChange', { _event, session });
+      }
       setUser(session?.user ?? null);
       setSession(session);
       setIsLoading(false);
       if (session?.user && _event === 'SIGNED_IN') {
         try {
           await supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', session.user.id);
-        } catch { }
+        } catch {}
       }
     });
     return () => {
