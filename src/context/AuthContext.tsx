@@ -118,13 +118,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fetch isAdmin when user changes
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('[AuthContext] profile fetch effect running', { user });
+    }
     if (!user) {
+      if (typeof window !== 'undefined') {
+        console.log('[AuthContext] profile fetch: user is null, skipping');
+      }
       setIsAdmin(false);
       return;
     }
     let cancelled = false;
     const supabase = createClient();
     const fetchAdmin = async () => {
+      if (typeof window !== 'undefined') {
+        console.log('[AuthContext] fetchAdmin about to query', { userId: user.id });
+      }
       const { data, error } = await supabase
         .from('profiles')
         .select('is_admin')
