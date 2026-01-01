@@ -1,16 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import clsx from 'clsx'
 
-import { useAdmin } from '@/hooks/useAdmin'
-import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 
 import CalendarSVG from 'public/icons/calendar2.svg'
-import EditSVG from 'public/icons/edit.svg'
 
 type AdminCard = {
   title: string
@@ -21,7 +16,7 @@ type AdminCard = {
 }
 
 export default function AdminDashboardPage() {
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
 
   const adminCards: AdminCard[] = [
     {
@@ -66,27 +61,6 @@ export default function AdminDashboardPage() {
       enabled: false,
     },
   ]
-
-  if (adminLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
-      </PageContainer>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <Container>
-          <h1 className="mb-4 text-3xl font-bold">Access denied</h1>
-          <p className="text-foreground/70">You don't have permission to access this page.</p>
-        </Container>
-      </PageContainer>
-    )
-  }
 
   return (
     <PageContainer>

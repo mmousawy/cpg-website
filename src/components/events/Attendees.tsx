@@ -8,20 +8,28 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { CPGEvent } from '@/types/events';
 
 export default async function Attendees({ event, supabase }: Readonly<{ event: CPGEvent, supabase: SupabaseClient }>) {
-  const { data: attendees } = await supabase
+  // Query confirmed attendees for this event
+  // Note: Requires RLS policy to allow public viewing of confirmed RSVPs
+  const { data: attendees, error } = await supabase
     .from("events_rsvps")
     .select(`
       id,
+      user_id,
       email,
       confirmed_at,
       profiles (
         avatar_url
       )
     `)
-    .is("canceled_at", null)
-    .not("confirmed_at", "is", null)
     .eq("event_id", event.id)
+    .not("confirmed_at", "is", null)
+    .is("canceled_at", null)
+    .order("confirmed_at", { ascending: true })
     .limit(100);
+
+  if (error) {
+    console.error('[Attendees] Error fetching attendees:', error);
+  }
 
   if (!attendees || attendees.length === 0) {
     return (

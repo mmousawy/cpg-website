@@ -10,7 +10,6 @@ import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
-import { routes } from '@/config/routes'
 
 import CalendarSVG from 'public/icons/calendar2.svg'
 import LocationSVG from 'public/icons/location.svg'
@@ -38,22 +37,18 @@ type RSVP = {
 }
 
 export default function MyEventsPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  // User is guaranteed by ProtectedRoute layout
+  const { user } = useAuth()
 
   const [rsvps, setRsvps] = useState<RSVP[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState<number | null>(null)
 
   useEffect(() => {
+    // User is guaranteed by ProtectedRoute layout
+    if (!user) return
+
     const loadRSVPs = async () => {
-      // Wait for auth to finish loading
-      if (authLoading) return
-
-      if (!user) {
-        setIsLoading(false)
-        return
-      }
-
       try {
         const supabase = createClient()
         const { data, error } = await supabase
@@ -90,7 +85,7 @@ export default function MyEventsPage() {
     }
 
     loadRSVPs()
-  }, [user, authLoading])
+  }, [user])
 
   const handleCancel = async (rsvp: RSVP) => {
     if (!confirm('Are you sure you want to cancel this RSVP?')) return
@@ -146,12 +141,10 @@ export default function MyEventsPage() {
   )
   const canceledRSVPs = rsvps.filter(r => r.canceled_at)
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
+        <LoadingSpinner />
       </PageContainer>
     )
   }

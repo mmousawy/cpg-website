@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
 
@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Track current user ID to avoid refetching on token refresh
+  const currentUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -38,30 +41,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
+      const userId = session?.user?.id ?? null;
+      const userChanged = userId !== currentUserIdRef.current;
+      
       if (typeof window !== 'undefined') {
-        console.log('[AuthContext] onAuthStateChange', { event, hasSession: !!session, userId: session?.user?.id });
+        console.log('[AuthContext] onAuthStateChange', { event, userId, userChanged });
       }
       
+      // Update state
       setUser(session?.user ?? null);
       setSession(session);
-      setIsLoading(false);
       
-      // Update last_logged_in on sign in (fire and forget, don't block)
-      if (session?.user && event === 'SIGNED_IN') {
-        (async () => {
-          try {
-            await supabase
-              .from('profiles')
-              .update({ last_logged_in: new Date().toISOString() })
-              .eq('id', session.user.id);
-            if (typeof window !== 'undefined') {
-              console.log('[AuthContext] updated last_logged_in');
-            }
-          } catch {
-            // Silently ignore - not critical
+      // Handle user change (sign in, sign out, or different user)
+      if (userChanged) {
+        currentUserIdRef.current = userId;
+        
+        if (!userId) {
+          // User signed out
+          setIsAdmin(false);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Fetch profile data including is_admin
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', userId)
+            .single();
+          
+          if (!mounted) return;
+          
+          if (typeof window !== 'undefined') {
+            console.log('[AuthContext] profile fetch result', { userId, isAdmin: data?.is_admin, error: error?.message || null });
           }
-        })();
+          
+          setIsAdmin(error ? false : !!data?.is_admin);
+        } catch (err) {
+          if (!mounted) return;
+          if (typeof window !== 'undefined') {
+            console.error('[AuthContext] profile fetch error:', err);
+          }
+          setIsAdmin(false);
+        }
+        
+        // Update last_logged_in on sign in (fire and forget)
+        if (event === 'SIGNED_IN') {
+          supabase
+            .from('profiles')
+            .update({ last_logged_in: new Date().toISOString() })
+            .eq('id', userId)
+            .then(() => {
+              if (typeof window !== 'undefined') {
+                console.log('[AuthContext] updated last_logged_in');
+              }
+            });
+        }
       }
+      
+      setIsLoading(false);
     });
     
     return () => {
@@ -69,80 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Fetch isAdmin when user changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.log('[AuthContext] profile fetch effect running', { user: user?.id || null });
-    }
-    if (!user) {
-      if (typeof window !== 'undefined') {
-        console.log('[AuthContext] profile fetch: user is null, skipping');
-      }
-      setIsAdmin(false);
-      return;
-    }
-    
-    const abortController = new AbortController();
-    const supabase = createClient();
-    
-    const fetchAdmin = async () => {
-      if (typeof window !== 'undefined') {
-        console.log('[AuthContext] fetchAdmin about to query', { userId: user.id });
-      }
-      
-      try {
-        // Timeout after 10s
-        const timeoutId = setTimeout(() => abortController.abort(), 10000);
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .abortSignal(abortController.signal)
-          .single();
-        
-        clearTimeout(timeoutId);
-        
-        // Check if aborted (Supabase returns abort as error, not exception)
-        if (error?.message?.includes('AbortError') || error?.message?.includes('aborted')) {
-          if (typeof window !== 'undefined') {
-            console.log('[AuthContext] fetchAdmin aborted (cleanup or timeout)');
-          }
-          return;
-        }
-        
-        if (typeof window !== 'undefined') {
-          console.log('[AuthContext] fetchAdmin result', { userId: user.id, isAdmin: data?.is_admin, error: error?.message || null });
-        }
-        
-        if (error) {
-          console.error('[AuthContext] fetchAdmin error:', error.message);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data?.is_admin);
-        }
-      } catch (err) {
-        // Handle thrown AbortError (some versions of Supabase throw instead of return)
-        if (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted'))) {
-          if (typeof window !== 'undefined') {
-            console.log('[AuthContext] fetchAdmin aborted (cleanup or timeout)');
-          }
-          return;
-        }
-        if (typeof window !== 'undefined') {
-          console.error('[AuthContext] fetchAdmin unexpected error:', err);
-        }
-        setIsAdmin(false);
-      }
-    };
-    
-    fetchAdmin();
-    
-    return () => {
-      abortController.abort();
-    };
-  }, [user]);
 
   const signOut = useCallback(async () => {
     const supabase = createClient();

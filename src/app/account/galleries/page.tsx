@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -16,29 +15,24 @@ import type { AlbumWithPhotos } from '@/types/albums'
 import PlusSVG from 'public/icons/plus.svg'
 
 export default function AccountGalleriesPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  // User is guaranteed by ProtectedRoute layout
+  const { user } = useAuth()
   const supabase = createClient()
-  const router = useRouter()
 
   const [albums, setAlbums] = useState<AlbumWithPhotos[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-      return
-    }
+    // User is guaranteed by ProtectedRoute layout
+    if (!user) return
 
-    // Only fetch if not already loaded
-    if (user) {
-      if (albums.length === 0) {
-        fetchAlbums()
-      } else {
-        setIsLoading(false)
-      }
+    if (albums.length === 0) {
+      fetchAlbums()
+    } else {
+      setIsLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading])
+  }, [user])
 
   const fetchAlbums = async () => {
     if (!user) return
@@ -110,12 +104,10 @@ export default function AccountGalleriesPage() {
     }
   }
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
+        <LoadingSpinner />
       </PageContainer>
     )
   }

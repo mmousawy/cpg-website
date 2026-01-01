@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -26,9 +25,9 @@ type Profile = {
 }
 
 export default function AccountPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  // User is guaranteed by ProtectedRoute layout
+  const { user } = useAuth()
   const supabase = createClient()
-  const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -61,16 +60,8 @@ export default function AccountPage() {
   })
 
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (authLoading) {
-      return
-    }
-
-    // If no user after auth loads, set loading to false
-    if (!user) {
-      setIsLoading(false)
-      return
-    }
+    // User is guaranteed by ProtectedRoute layout
+    if (!user) return
 
     const loadData = async () => {
       try {
@@ -87,7 +78,7 @@ export default function AccountPage() {
 
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading])
+  }, [user])
 
   const loadProfile = async () => {
     if (!user) return
@@ -349,21 +340,6 @@ export default function AccountPage() {
       .toUpperCase()
       .slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() || '??'
-
-  // Debug logging (remove after fixing)
-  useEffect(() => {
-    console.log('Account page state:', { authLoading, isLoading, user: user?.id || 'null' })
-  }, [authLoading, isLoading, user])
-
-  if (authLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
-      </PageContainer>
-    )
-  }
 
   return (
     <PageContainer>
