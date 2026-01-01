@@ -13,9 +13,24 @@ import { routes } from '@/config/routes'
 
 import DiscordSVG from 'public/icons/discord2.svg'
 
+// Pages that should redirect to user dashboard after login
+const PUBLIC_LISTING_PAGES = ['/', '/past-meetups']
+
+// Determine the final redirect destination after login
+function getPostLoginRedirect(redirectTo: string | null): string {
+  // If no explicit redirect or it's a public listing page, go to user dashboard
+  if (!redirectTo || PUBLIC_LISTING_PAGES.includes(redirectTo)) {
+    return '/account/events'
+  }
+  
+  // Otherwise, return to the requested page (specific album, event, etc.)
+  return redirectTo
+}
+
 function LoginForm() {
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/'
+  const redirectToParam = searchParams.get('redirectTo')
+  const finalRedirect = getPostLoginRedirect(redirectToParam)
 
   const { signInWithEmail, signInWithGoogle, signInWithDiscord } = useAuth()
 
@@ -35,14 +50,15 @@ function LoginForm() {
       setError(error.message)
       setIsLoading(false)
     } else {
-      window.location.href = redirectTo
+      window.location.href = finalRedirect
     }
   }
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     setError(null)
-    const { error } = await signInWithGoogle(redirectTo)
+    // Pass the original param so auth-callback can apply its own logic
+    const { error } = await signInWithGoogle(redirectToParam || undefined)
     if (error) {
       setError(error.message)
       setIsLoading(false)
@@ -52,7 +68,8 @@ function LoginForm() {
   const handleDiscordSignIn = async () => {
     setIsLoading(true)
     setError(null)
-    const { error } = await signInWithDiscord(redirectTo)
+    // Pass the original param so auth-callback can apply its own logic
+    const { error } = await signInWithDiscord(redirectToParam || undefined)
     if (error) {
       setError(error.message)
       setIsLoading(false)

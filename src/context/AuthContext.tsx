@@ -1,13 +1,18 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createClient } from '@/utils/supabase/client';
+import { Database } from '@/database.types';
+
+export type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export type AuthState = {
   user: User | null;
   session: Session | null;
+  profile: Profile | null;
   isLoading: boolean;
   isAdmin: boolean;
+  refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: (redirectTo?: string) => Promise<{ error: any }>;
   signInWithDiscord: (redirectTo?: string) => Promise<{ error: any }>;
@@ -22,11 +27,43 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   // Track current user ID to avoid refetching on token refresh
   const currentUserIdRef = useRef<string | null>(null);
+  
+  // Derive isAdmin from profile
+  const isAdmin = useMemo(() => !!profile?.is_admin, [profile]);
+
+  // Function to fetch/refresh profile - can be called after profile updates
+  const fetchProfile = useCallback(async (userId: string) => {
+    const supabase = createClient();
+    console.log('[Auth] Fetching profile...');
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.log('[Auth] Profile fetch error:', error.message);
+      setProfile(null);
+    } else {
+      console.log('[Auth] Profile loaded:', { nickname: data?.nickname, isAdmin: data?.is_admin });
+      setProfile(data);
+    }
+    
+    return data;
+  }, []);
+
+  // Public method to refresh profile (e.g., after user edits their profile)
+  const refreshProfile = useCallback(async () => {
+    if (currentUserIdRef.current) {
+      await fetchProfile(currentUserIdRef.current);
+    }
+  }, [fetchProfile]);
 
   useEffect(() => {
     let mounted = true;
@@ -45,40 +82,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('[Auth]', event, { userId, userChanged });
       
-      // Update state immediately - don't wait for profile fetch
+      // Update auth state immediately
       setUser(session?.user ?? null);
       setSession(session);
       currentUserIdRef.current = userId;
       
-      // Auth is ready - stop loading immediately
-      // This allows the page to render while admin check happens in background
-      setIsLoading(false);
-      
       // Handle user change (sign in, sign out, or different user)
       if (userChanged) {
         if (!userId) {
-          // User signed out
-          setIsAdmin(false);
+          // User signed out - clear profile
+          setProfile(null);
+          setIsLoading(false);
           return;
         }
         
-        // Fetch admin status in background - no timeout needed, no blocking
-        console.log('[Auth] Fetching admin status...');
-        supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', userId)
-          .single()
-          .then(({ data, error }) => {
-            if (!mounted) return;
-            if (error) {
-              console.log('[Auth] Admin check error:', error.message);
-              setIsAdmin(false);
-            } else {
-              console.log('[Auth] Admin status:', data?.is_admin);
-              setIsAdmin(!!data?.is_admin);
-            }
-          });
+        // Fetch full profile (includes is_admin, nickname, avatar, etc.)
+        await fetchProfile(userId);
         
         // Update last_logged_in on actual sign in (fire and forget)
         if (event === 'SIGNED_IN') {
@@ -88,6 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('id', userId)
             .then(() => console.log('[Auth] Updated last_logged_in'));
         }
+      }
+      
+      if (mounted) {
+        setIsLoading(false);
       }
     });
     
@@ -102,6 +125,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(session?.user ?? null);
             setSession(session);
             currentUserIdRef.current = session?.user?.id ?? null;
+            
+            // Also fetch profile in fallback
+            if (session?.user?.id) {
+              await fetchProfile(session.user.id);
+            }
+            
             setIsLoading(false);
           }
         } catch (err) {
@@ -118,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(fallbackTimeout);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
     const supabase = createClient();
@@ -177,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signOut, signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, profile, isLoading, isAdmin, refreshProfile, signOut, signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );

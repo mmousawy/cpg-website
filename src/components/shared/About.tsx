@@ -1,4 +1,5 @@
 import Gallery from "./Gallery";
+import PageContainer from "@/components/layout/PageContainer";
 import getImgDimensions from '@/utils/utils';
 
 export type ImagesList = Array<{ src: string, width?: number, height?: number }>;
@@ -28,10 +29,8 @@ const enrichedImages = await Promise.all(
 
 export default function About() {
   return (
-    <section className="mt-auto flex justify-center bg-background-light px-6 py-7 text-foreground sm:p-12">
-      <div className="w-full max-w-screen-md gap-6">
-        <Gallery images={enrichedImages} />
-      </div>
-    </section>
+    <PageContainer variant="alt" className="mt-auto">
+      <Gallery images={enrichedImages} />
+    </PageContainer>
   );
 }

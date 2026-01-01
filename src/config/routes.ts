@@ -36,7 +36,7 @@ export const routes = {
     url: '/account/events',
   },
   accountGalleries: {
-    label: 'My Galleries',
+    label: 'My galleries',
     url: '/account/galleries',
   },
   admin: {

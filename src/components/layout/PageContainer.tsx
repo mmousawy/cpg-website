@@ -1,13 +1,25 @@
 import { ReactNode } from 'react'
+import clsx from 'clsx'
 
 type PageContainerProps = {
   children: ReactNode
   className?: string
+  /** Use alternate background color */
+  variant?: 'default' | 'alt'
 }
 
-export default function PageContainer({ children, className = '' }: PageContainerProps) {
+// Shared padding used across all pages
+export const pagePadding = 'px-4 pb-8 pt-6 sm:p-12 sm:pb-14';
+export const pagePaddingAlt = 'px-4 pb-6 pt-5 sm:p-10';
+
+export default function PageContainer({ children, className, variant = 'default' }: PageContainerProps) {
   return (
-    <div className={`flex grow justify-center px-4 pb-8 pt-6 sm:px-12 sm:pb-14 sm:pt-8 ${className}`}>
+    <div className={clsx(
+      'flex grow justify-center',
+      variant === 'alt' ? pagePaddingAlt : pagePadding,
+      variant === 'alt' && 'bg-background-light',
+      className
+    )}>
       <div className="w-full max-w-screen-md">
         {children}
       </div>

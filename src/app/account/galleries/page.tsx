@@ -7,12 +7,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 import AlbumCard from '@/components/album/AlbumCard'
 import type { AlbumWithPhotos } from '@/types/albums'
 
 import PlusSVG from 'public/icons/plus.svg'
+import { routes } from '@/config/routes'
 
 export default function AccountGalleriesPage() {
   // User is guaranteed by ProtectedRoute layout
@@ -104,32 +104,30 @@ export default function AccountGalleriesPage() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <LoadingSpinner />
-      </PageContainer>
-    )
-  }
-
   return (
     <PageContainer>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="mb-2 text-3xl font-bold">My Galleries</h1>
+          <h1 className="mb-2 text-3xl font-bold">{routes.accountGalleries.label}</h1>
           <p className="text-lg opacity-70">
             Create and manage your photo albums
           </p>
         </div>
         <Link href="/account/galleries/new">
-          <Button>
-            <PlusSVG className="size-5 -ml-0.5" />
+          <Button
+            icon={<PlusSVG className="size-5 -ml-0.5" />}
+            variant="primary"
+          >
             New Album
           </Button>
         </Link>
       </div>
 
-      {albums.length === 0 ? (
+      {isLoading ? (
+        <Container className="text-center animate-pulse">
+          <p className="text-foreground/50">Loading your albums...</p>
+        </Container>
+      ) : albums.length === 0 ? (
         <Container className="text-center">
           <p className="mb-4 text-lg opacity-70">
             You haven&apos;t created any albums yet

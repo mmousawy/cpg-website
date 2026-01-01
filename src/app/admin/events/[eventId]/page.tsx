@@ -6,21 +6,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import exifr from 'exifr'
 
-import { useAdmin } from '@/hooks/useAdmin'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 
 import ArrowLeftSVG from 'public/icons/arrow-left.svg'
 import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
-import CalendarSVG from 'public/icons/calendar2.svg'
-import TimeSVG from 'public/icons/time.svg'
-import LocationSVG from 'public/icons/location.svg'
 import clsx from 'clsx'
+
+// Shared input styling
+const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
 
 type Event = {
   id: number
@@ -34,7 +32,7 @@ type Event = {
 }
 
 export default function AdminEventFormPage() {
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
   const { user } = useAuth()
   const router = useRouter()
   const params = useParams()
@@ -46,7 +44,6 @@ export default function AdminEventFormPage() {
   const coverImageInputRef = useRef<HTMLInputElement>(null)
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null)
-  const [isUploadingCover, setIsUploadingCover] = useState(false)
 
   const [event, setEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -94,17 +91,14 @@ export default function AdminEventFormPage() {
   }
 
   useEffect(() => {
-    if (adminLoading || !isAdmin) {
-      return
-    }
-
+    // Admin access is guaranteed by ProtectedRoute layout
     if (!isNewEvent) {
       fetchEvent()
     } else {
       setIsLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminLoading, isAdmin, eventSlug])
+  }, [eventSlug])
 
   const fetchEvent = async () => {
     setIsLoading(true)
@@ -367,35 +361,14 @@ export default function AdminEventFormPage() {
     }
   }
 
-  if (adminLoading || isLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
-      </PageContainer>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <Container>
-          <h1 className="mb-4 text-3xl font-bold">Access denied</h1>
-          <p className="text-foreground/70">You don't have permission to access this page.</p>
-        </Container>
-      </PageContainer>
-    )
-  }
-
   return (
     <PageContainer>
-      <div className="mb-6">
+      <div className="mb-8">
         <Link href="/admin/events" className="mb-4 inline-flex items-center gap-2 text-sm text-primary hover:underline">
           <ArrowLeftSVG className="h-4 w-4 fill-primary" />
           Back to Events
         </Link>
-        <h1 className="text-3xl font-bold">
+        <h1 className="mb-2 text-3xl font-bold">
           {isNewEvent ? 'Create new event' : 'Edit event'}
         </h1>
         <p className="text-lg opacity-70">
@@ -403,6 +376,11 @@ export default function AdminEventFormPage() {
         </p>
       </div>
 
+      {isLoading ? (
+        <Container className="text-center animate-pulse">
+          <p className="text-foreground/50">Loading event...</p>
+        </Container>
+      ) : (
       <div className="space-y-6">
         <form onSubmit={handleSave}>
           {/* Event Details */}
@@ -420,7 +398,7 @@ export default function AdminEventFormPage() {
                   onChange={(e) => handleTitleChange(e.target.value)}
                   onBlur={handleTitleBlur}
                   required
-                  className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                  className={inputClassName}
                   placeholder="e.g., Monthly Meetup at Coffee Shop"
                 />
               </div>
@@ -435,8 +413,8 @@ export default function AdminEventFormPage() {
                   value={slug}
                   onChange={(e) => handleSlugChange(e.target.value)}
                   required
-                  pattern="[a-z0-9-]+"
-                  className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                  pattern="[-a-z0-9]+"
+                  className={inputClassName}
                   placeholder="url-friendly-event-name"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -453,7 +431,7 @@ export default function AdminEventFormPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={6}
-                  className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                  className={inputClassName}
                   placeholder="Describe your event, what to expect, any special notes..."
                 />
               </div>
@@ -469,7 +447,7 @@ export default function AdminEventFormPage() {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
-                    className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                    className={inputClassName}
                   />
                 </div>
 
@@ -482,7 +460,7 @@ export default function AdminEventFormPage() {
                     type="time"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                    className={inputClassName}
                   />
                 </div>
               </div>
@@ -496,7 +474,7 @@ export default function AdminEventFormPage() {
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                  className={inputClassName}
                   placeholder="e.g., Central Park, New York, NY"
                 />
               </div>
@@ -643,7 +621,7 @@ export default function AdminEventFormPage() {
                     key={rsvp.id}
                     className={clsx(
                       "flex items-center justify-between rounded-lg border border-border-color p-3",
-                      rsvp.attended_at && "bg-green-500/5"
+                      rsvp.attended_at && "text-green-600 border-green-600/30 bg-green-500/5"
                     )}
                   >
                     <div>
@@ -674,25 +652,24 @@ export default function AdminEventFormPage() {
           </Container>
         )}
 
-        {/* Delete Section - Only show for existing events */}
+        {/* Danger Zone - Only show for existing events */}
         {!isNewEvent && (
-          <Container>
-            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
-              <h3 className="mb-2 font-semibold text-red-600">Danger Zone</h3>
-              <p className="mb-4 text-sm text-foreground/70">
-                Once you delete an event, there is no going back. This will permanently delete the event and all associated RSVPs.
-              </p>
-              <Button
-                onClick={handleDelete}
-                variant="danger"
-                icon={<TrashSVG className="h-4 w-4" />}
-              >
-                Delete Event
-              </Button>
-            </div>
+          <Container className="border-red-500/30 bg-red-500/5">
+            <h3 className="mb-2 font-semibold text-red-600">Danger zone</h3>
+            <p className="mb-4 text-sm text-foreground/70">
+              Once you delete an event, there is no going back. This will permanently delete the event and all associated RSVPs.
+            </p>
+            <Button
+              onClick={handleDelete}
+              variant="danger"
+              icon={<TrashSVG className="h-4 w-4" />}
+            >
+              Delete event
+            </Button>
           </Container>
         )}
       </div>
+      )}
     </PageContainer>
   )
 }

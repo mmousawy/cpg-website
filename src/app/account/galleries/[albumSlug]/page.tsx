@@ -27,13 +27,27 @@ import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 import type { Album, AlbumPhoto } from '@/types/albums'
 
 import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
 import EditSVG from 'public/icons/edit.svg'
+import PlusSVG from 'public/icons/plus.svg'
+
+// Shared input styling
+const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+
+// Empty state component for photos section
+function EmptyPhotosState() {
+  return (
+    <div className="rounded-lg border-2 border-dashed border-border-color p-12 text-center">
+      <p className="opacity-70">
+        No photos yet. Add some photos to your album!
+      </p>
+    </div>
+  )
+}
 
 interface SortablePhotoProps {
   photo: AlbumPhoto
@@ -203,7 +217,8 @@ function SortablePhoto({
 }
 
 export default function AlbumDetailPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  // User is guaranteed by ProtectedRoute layout
+  const { user } = useAuth()
   const supabase = createClient()
   const router = useRouter()
   const params = useParams()
@@ -218,6 +233,7 @@ export default function AlbumDetailPage() {
   const [profile, setProfile] = useState<{ nickname: string | null } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -241,27 +257,22 @@ export default function AlbumDetailPage() {
   )
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-      return
-    }
+    // User is guaranteed by ProtectedRoute layout
+    if (!user) return
 
-    // Only fetch if not already loaded
-    if (user) {
-      fetchProfile()
-      if (!isNewAlbum) {
-        // Only fetch album if not already loaded
-        if (!album || album.slug !== albumSlug) {
-          fetchAlbum()
-        } else {
-          setIsLoading(false)
-        }
+    fetchProfile()
+    if (!isNewAlbum) {
+      // Only fetch album if not already loaded
+      if (!album || album.slug !== albumSlug) {
+        fetchAlbum()
       } else {
         setIsLoading(false)
       }
+    } else {
+      setIsLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, albumSlug])
+  }, [user, albumSlug])
 
   const fetchProfile = async () => {
     if (!user) return
@@ -816,19 +827,47 @@ export default function AlbumDetailPage() {
     setPendingPhotos(pendingPhotos.filter((_, i) => i !== index))
   }
 
-  if (authLoading || isLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
-      </PageContainer>
-    )
+  const handleAddPhotosClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleDeleteAlbum = async () => {
+    if (!album) return
+    if (!confirm('Are you sure you want to delete this album? This action cannot be undone and will remove all photos.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    setError(null)
+
+    try {
+      // Delete all photos first
+      await supabase.from('album_photos').delete().eq('album_id', album.id)
+      // Delete all tags
+      await supabase.from('album_tags').delete().eq('album_id', album.id)
+      // Delete the album
+      const { error: deleteError } = await supabase.from('albums').delete().eq('id', album.id)
+
+      if (deleteError) {
+        setError(deleteError.message || 'Failed to delete album')
+        setIsDeleting(false)
+        return
+      }
+
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/account/galleries')
+      }, 1500)
+    } catch (err) {
+      console.error('Error deleting album:', err)
+      setError('An unexpected error occurred')
+      setIsDeleting(false)
+    }
   }
 
   return (
     <PageContainer>
-      <div className="mb-6">
+      <div className="mb-8">
         <h1 className="mb-2 text-3xl font-bold">
           {isNewAlbum ? 'Create new album' : 'Edit album'}
         </h1>
@@ -839,6 +878,11 @@ export default function AlbumDetailPage() {
         </p>
       </div>
 
+      {isLoading ? (
+        <Container className="text-center animate-pulse">
+          <p className="text-foreground/50">Loading album...</p>
+        </Container>
+      ) : (
       <div className="space-y-6">
         {/* Album Details Form */}
         <Container>
@@ -853,7 +897,7 @@ export default function AlbumDetailPage() {
                 type="text"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                className={inputClassName}
                 placeholder="My Amazing Photo Album"
               />
               <p className="text-xs text-foreground/50">
@@ -870,7 +914,7 @@ export default function AlbumDetailPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+                className={inputClassName}
                 placeholder="Tell us about this album..."
               />
             </div>
@@ -918,7 +962,7 @@ export default function AlbumDetailPage() {
                 onChange={(e) => setTagInput(e.target.value)}
                 disabled={tags.length >= 5}
                 onKeyDown={handleAddTag}
-                className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none disabled:opacity-50"
+                className={`${inputClassName} disabled:opacity-50`}
                 placeholder={tags.length >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter to add'}
               />
               <p className="text-xs text-foreground/50">
@@ -942,7 +986,7 @@ export default function AlbumDetailPage() {
 
           <div className="mt-6">
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? 'Saving...' : isNewAlbum ? 'Create Album' : 'Save Changes'}
+              {isSaving ? 'Saving...' : isNewAlbum ? 'Create Album' : 'Save changes'}
             </Button>
           </div>
         </Container>
@@ -954,10 +998,11 @@ export default function AlbumDetailPage() {
               Photos ({isNewAlbum ? pendingPhotos.length : photos.length})
             </h2>
             <Button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleAddPhotosClick}
               disabled={isUploading}
+              icon={<PlusSVG className="size-4" />}
             >
-              {isUploading ? 'Uploading...' : 'Add Photos'}
+              {isUploading ? 'Uploading...' : 'Add photos'}
             </Button>
           </div>
 
@@ -973,11 +1018,7 @@ export default function AlbumDetailPage() {
           {isNewAlbum ? (
             // Show pending photos for new albums
             pendingPhotos.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-border-color p-12 text-center">
-                <p className="opacity-70">
-                  No photos yet. Add some photos to your album!
-                </p>
-              </div>
+              <EmptyPhotosState />
             ) : (
               <>
                 <p className="mb-4 text-sm text-foreground/70">
@@ -1009,11 +1050,7 @@ export default function AlbumDetailPage() {
           ) : (
             // Show uploaded photos for existing albums
             photos.length === 0 ? (
-              <div className="rounded-lg border-2 border-dashed border-border-color p-12 text-center">
-                <p className="opacity-70">
-                  No photos yet. Add some photos to your album!
-                </p>
-              </div>
+              <EmptyPhotosState />
             ) : (
               <>
                 <p className="mb-4 text-sm text-foreground/70">
@@ -1052,48 +1089,23 @@ export default function AlbumDetailPage() {
 
         {/* Danger zone: Album deletion warning section */}
         {!isNewAlbum && album && (
-          <Container>
-            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
-              <h3 className="mb-2 font-semibold text-red-600">Danger Zone</h3>
-              <p className="mb-4 text-sm text-foreground/70">
-                Once you delete an album, there is no going back. This will permanently delete the album and all associated photos and tags.
-              </p>
-              <Button
-                onClick={async () => {
-                  if (!confirm('Are you sure you want to delete this album? This action cannot be undone and will remove all photos.')) return;
-                  setIsSaving(true);
-                  setError(null);
-                  try {
-                    await supabase.from('album_photos').delete().eq('album_id', album.id);
-                    await supabase.from('album_tags').delete().eq('album_id', album.id);
-                    const { error: deleteError } = await supabase.from('albums').delete().eq('id', album.id);
-                    if (deleteError) {
-                      setError(deleteError.message || 'Failed to delete album');
-                      setIsSaving(false);
-                      return;
-                    }
-                    setSuccess(true);
-                    setTimeout(() => {
-                      router.push('/account/galleries');
-                    }, 1000);
-                  } catch (err) {
-                    setError('An unexpected error occurred');
-                    setIsSaving(false);
-                  }
-                }}
-                variant="danger"
-                icon={<TrashSVG className="h-4 w-4" />}
-                disabled={isSaving}
-              >
-                {isSaving ? 'Deleting...' : 'Delete Album'}
-              </Button>
-              {error && (
-                <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">{error}</div>
-              )}
-            </div>
+          <Container className="border-red-500/30 bg-red-500/5">
+            <h3 className="mb-2 font-semibold text-red-600">Danger zone</h3>
+            <p className="mb-4 text-sm text-foreground/70">
+              Once you delete an album, there is no going back. This will permanently delete the album and all associated photos and tags.
+            </p>
+            <Button
+              onClick={handleDeleteAlbum}
+              variant="danger"
+              icon={<TrashSVG className="h-4 w-4" />}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete album'}
+            </Button>
           </Container>
         )}
       </div>
+      )}
     </PageContainer>
   )
 }

@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 
 import CalendarSVG from 'public/icons/calendar2.svg'
@@ -141,30 +140,24 @@ export default function MyEventsPage() {
   )
   const canceledRSVPs = rsvps.filter(r => r.canceled_at)
 
-  if (isLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <LoadingSpinner />
-      </PageContainer>
-    )
-  }
-
   return (
     <PageContainer>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="mb-2 text-3xl font-bold">My events</h1>
-          <p className="text-lg opacity-70">
-            View and manage your event registrations
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="mb-2 text-3xl font-bold">My events</h1>
+        <p className="text-lg opacity-70">
+          View and manage your event registrations
+        </p>
       </div>
 
       <div className="space-y-8">
         {/* Upcoming Events */}
         <section>
           <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming Events</h2>
-          {upcomingRSVPs.length === 0 ? (
+          {isLoading ? (
+            <Container className="text-center animate-pulse">
+              <p className="text-foreground/50">Loading your events...</p>
+            </Container>
+          ) : upcomingRSVPs.length === 0 ? (
             <Container className="text-center">
               <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No upcoming events</p>
               <Link href="/" className="mt-4 inline-block">

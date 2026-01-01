@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
+import clsx from 'clsx'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import { routes } from '@/config/routes'
@@ -17,6 +18,22 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
   const { user, signOut } = useAuth()
   const { isAdmin } = useAdmin()
   const { theme, setTheme } = useTheme()
+  const pathname = usePathname()
+
+  // Helper to check if a route is active
+  // exact=true means only match the exact path (for parent routes that have sub-routes)
+  const isActive = (href: string, exact = false) => {
+    if (exact || href === '/') return pathname === href
+    return pathname.startsWith(href)
+  }
+
+  // Base styles for nav links
+  const navLinkClass = (href: string, exact = false) => clsx(
+    "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+    isActive(href, exact)
+      ? "bg-primary/10 text-primary border-l-2 border-primary"
+      : "hover:bg-background"
+  )
 
   if (!isOpen) return null
 
@@ -27,7 +44,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
         <Link
           href={routes.home.url}
           onClick={onClose}
-          className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-background"
+          className={navLinkClass(routes.home.url)}
         >
           <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -37,7 +54,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
         <Link
           href={routes.galleries.url}
           onClick={onClose}
-          className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-background"
+          className={navLinkClass(routes.galleries.url)}
         >
           <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -47,7 +64,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
         <Link
           href={routes.about.url}
           onClick={onClose}
-          className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-background"
+          className={navLinkClass(routes.about.url)}
         >
           <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -71,7 +88,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             <Link
               href="/account/events"
               onClick={onClose}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+              className={navLinkClass('/account/events')}
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -81,7 +98,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             <Link
               href="/account/galleries"
               onClick={onClose}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+              className={navLinkClass('/account/galleries')}
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -91,7 +108,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             <Link
               href="/account"
               onClick={onClose}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+              className={navLinkClass('/account', true)}
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -103,7 +120,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               <Link
                 href={routes.admin.url}
                 onClick={onClose}
-                className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+                className={navLinkClass(routes.admin.url)}
               >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -135,7 +152,14 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
                 onClose()
                 try {
                   await signOut()
-                  window.location.href = '/'
+                  // Only redirect to home if on a protected route
+                  const isProtectedRoute = pathname.startsWith('/account') || pathname.startsWith('/admin')
+                  if (isProtectedRoute) {
+                    window.location.href = '/'
+                  } else {
+                    // Stay on current page, just refresh to update UI
+                    window.location.reload()
+                  }
                 } catch (error) {
                   console.error('Error signing out:', error)
                 }
@@ -152,9 +176,9 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
       ) : (
         <div className="p-2">
           <Link
-            href={routes.login.url}
+            href={`${routes.login.url}?redirectTo=${encodeURIComponent(pathname)}`}
             onClick={onClose}
-            className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+            className={navLinkClass(routes.login.url)}
           >
             <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -162,9 +186,9 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             {routes.login.label}
           </Link>
           <Link
-            href={routes.signup.url}
+            href={`${routes.signup.url}?redirectTo=${encodeURIComponent(pathname)}`}
             onClick={onClose}
-            className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+            className={navLinkClass(routes.signup.url)}
           >
             <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

@@ -37,9 +37,9 @@ export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCar
         </div>
 
         <div className="p-4">
-          <h3 className="mb-1 text-lg font-semibold line-clamp-1">{album.title}</h3>
+          <h3 className="text-lg font-semibold line-clamp-1">{album.title}</h3>
           {album.profile && (
-            <div className="flex items-center text-sm text-[var(--text-muted-light)]">
+            <div className="flex items-center text-sm text-[var(--text-muted-light)] mt-1">
               <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="sm" className='!size-6 mr-2' />@{album.profile.nickname}
             </div>
           )}

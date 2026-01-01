@@ -2,12 +2,35 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import clsx from 'clsx'
 import LogoSVG from 'public/cpg-logo.svg'
 
 import UserMenu from './UserMenu'
 import Avatar from '../auth/Avatar'
 import MobileMenu from './MobileMenu'
 import { routes } from '@/config/routes'
+
+// Navigation link component with active state
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname()
+  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
+
+  return (
+    <Link
+      href={href}
+      className={clsx(
+        "relative py-1 font-medium transition-colors hover:text-primary",
+        isActive ? "text-primary" : "text-foreground"
+      )}
+    >
+      {children}
+      {isActive && (
+        <span className="absolute -bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />
+      )}
+    </Link>
+  )
+}
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -43,15 +66,15 @@ export default function Header() {
           </Link>
 
           <nav className="hidden items-center gap-6 sm:flex">
-            <Link href={routes.home.url} className="font-medium text-foreground transition-colors hover:text-primary">
+            <NavLink href={routes.home.url}>
               {routes.home.label}
-            </Link>
-            <Link href={routes.galleries.url} className="font-medium text-foreground transition-colors hover:text-primary">
+            </NavLink>
+            <NavLink href={routes.galleries.url}>
               {routes.galleries.label}
-            </Link>
-            <Link href={routes.about.url} className="font-medium text-foreground transition-colors hover:text-primary">
+            </NavLink>
+            <NavLink href={routes.about.url}>
               {routes.about.label}
-            </Link>
+            </NavLink>
           </nav>
         </div>
 

@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import clsx from 'clsx'
 
-import { useAdmin } from '@/hooks/useAdmin'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 import SadSVG from 'public/icons/sad.svg'
 
@@ -29,9 +27,9 @@ type RSVP = {
 }
 
 export default function AdminEventAttendancePage() {
+  // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
   const params = useParams()
   const eventId = parseInt(params.eventId as string)
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
   const supabase = createClient()
 
   const [event, setEvent] = useState<any>(null)
@@ -40,11 +38,9 @@ export default function AdminEventAttendancePage() {
   const [markingId, setMarkingId] = useState<number | null>(null)
 
   useEffect(() => {
-    if (!adminLoading) {
-      loadData()
-    }
+    loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminLoading, eventId])
+  }, [eventId])
 
   const loadData = async () => {
     // Load event
@@ -83,22 +79,22 @@ export default function AdminEventAttendancePage() {
     setMarkingId(null)
   }
 
-  if (adminLoading || isLoading) {
+  if (isLoading) {
     return (
-      <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
+      <PageContainer>
+        <Container className="text-center animate-pulse">
+          <p className="text-foreground/50">Loading attendance...</p>
+        </Container>
       </PageContainer>
     )
   }
 
-  if (!isAdmin) {
+  if (!event) {
     return (
-      <PageContainer className="items-center justify-center">
+      <PageContainer>
         <Container>
-          <h1 className="mb-4 text-3xl font-bold">Access denied</h1>
-          <p className="text-foreground/70">You don't have permission to access this page.</p>
+          <h1 className="mb-4 text-3xl font-bold">Event not found</h1>
+          <p className="text-foreground/70">The event you&apos;re looking for doesn&apos;t exist.</p>
         </Container>
       </PageContainer>
     )

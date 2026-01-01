@@ -148,9 +148,9 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
       {/* Comments List */}
       <div className="space-y-4">
         {isLoading ? (
-          <p className="text-center text-foreground/70">Loading comments...</p>
+          <p className="text-foreground/70">Loading comments...</p>
         ) : comments.length === 0 ? (
-          <p className="text-center text-foreground/70">
+          <p className="text-foreground/70">
             No comments yet. Be the first to comment!
           </p>
         ) : (
@@ -204,10 +204,10 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
           <Button
             type="submit"
             size="sm"
-            icon={<SendSVG />}
+            iconRight={<SendSVG />}
             disabled={isSubmitting || !commentText.trim()}
           >
-            {isSubmitting ? 'Posting...' : 'Post Comment'}
+            {isSubmitting ? 'Posting...' : 'Post comment'}
           </Button>
         </form>
       )}

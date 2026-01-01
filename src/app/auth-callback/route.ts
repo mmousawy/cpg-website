@@ -1,10 +1,24 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
+// Pages that should redirect to user dashboard after login
+const PUBLIC_LISTING_PAGES = ['/', '/past-meetups']
+
+// Determine the final redirect destination after login
+function getPostLoginRedirect(redirectTo: string | null): string {
+  // If no explicit redirect or it's a public listing page, go to user dashboard
+  if (!redirectTo || PUBLIC_LISTING_PAGES.includes(redirectTo)) {
+    return '/account/events'
+  }
+  
+  // Otherwise, return to the requested page (specific album, event, etc.)
+  return redirectTo
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const redirectTo = searchParams.get('redirectTo') || '/'
+  const redirectToParam = searchParams.get('redirectTo')
 
   if (code) {
     const supabase = await createClient()
@@ -38,7 +52,8 @@ export async function GET(request: Request) {
         }
       }
 
-      return NextResponse.redirect(`${origin}${redirectTo}`)
+      const finalRedirect = getPostLoginRedirect(redirectToParam)
+      return NextResponse.redirect(`${origin}${finalRedirect}`)
     }
   }
 

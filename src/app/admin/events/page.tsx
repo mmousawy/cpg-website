@@ -4,17 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-import { useAdmin } from '@/hooks/useAdmin'
 import { createClient } from '@/utils/supabase/client'
 import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 import Button from '@/components/shared/Button'
 import SadSVG from 'public/icons/sad.svg'
 import CalendarSVG from 'public/icons/calendar2.svg'
 import LocationSVG from 'public/icons/location.svg'
 import TimeSVG from 'public/icons/time.svg'
-import ArrowRightSVG from 'public/icons/arrow-right.svg'
 import PlusSVG from 'public/icons/plus.svg'
 
 type Event = {
@@ -29,18 +26,16 @@ type Event = {
 }
 
 export default function AdminEventsPage() {
-  const { isAdmin, isLoading: adminLoading } = useAdmin()
+  // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
   const supabase = createClient()
 
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!adminLoading) {
-      loadEvents()
-    }
+    loadEvents()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminLoading])
+  }, [])
 
   const loadEvents = async () => {
     const { data } = await supabase
@@ -50,27 +45,6 @@ export default function AdminEventsPage() {
 
     setEvents(data || [])
     setIsLoading(false)
-  }
-
-  if (adminLoading || isLoading) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <div className="flex justify-center">
-          <LoadingSpinner />
-        </div>
-      </PageContainer>
-    )
-  }
-
-  if (!isAdmin) {
-    return (
-      <PageContainer className="items-center justify-center">
-        <Container>
-          <h1 className="mb-4 text-3xl font-bold">Access denied</h1>
-          <p className="text-foreground/70">You don't have permission to access this page.</p>
-        </Container>
-      </PageContainer>
-    )
   }
 
   const upcomingEvents = events.filter(e => e.date && new Date(e.date) >= new Date())
@@ -95,135 +69,139 @@ export default function AdminEventsPage() {
         </Link>
       </div>
 
-      <div className="space-y-8">
-        {/* Upcoming Events */}
-        {upcomingEvents.length > 0 && (
-          <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming Events</h2>
-            <Container>
-              <div className="space-y-3">
-                {upcomingEvents.map((event) => (
-                  <Link key={event.id} href={`/admin/events/${event.slug || event.id}`}>
-                    <div className="rounded-lg border border-border-color p-4 transition-colors hover:border-primary/50 cursor-pointer">
-                      <div className="flex items-start gap-4">
-                        {event.cover_image && (
-                          <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                            <Image
-                              src={event.cover_image}
-                              alt={event.title || 'Event cover'}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{event.title}</h3>
-                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
-                            {event.date && (
-                              <span className="flex items-center gap-1">
-                                <CalendarSVG className="h-4 w-4 fill-foreground/70" />
-                                {new Date(event.date).toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}
-                              </span>
-                            )}
-                            {event.time && (
-                              <span className="flex items-center gap-1">
-                                <TimeSVG className="h-4 w-4 fill-foreground/70" />
-                                {event.time.substring(0, 5)}
-                              </span>
-                            )}
-                            {event.location && (
-                              <span className="flex items-center gap-1">
-                                <LocationSVG className="h-4 w-4 fill-foreground/70" />
-                                {event.location}
-                              </span>
-                            )}
+      {isLoading ? (
+        <Container className="text-center animate-pulse">
+          <p className="text-foreground/50">Loading events...</p>
+        </Container>
+      ) : events.length === 0 ? (
+        <Container variant="centered" className="min-h-64">
+          <div className="text-center">
+            <SadSVG className="mb-4 inline-block h-12 w-12 fill-foreground/50" />
+            <p className="mb-4 text-foreground/80">No events yet</p>
+            <Link href="/admin/events/new">
+              <Button icon={<PlusSVG className="h-5 w-5" />}>
+                Create your first event
+              </Button>
+            </Link>
+          </div>
+        </Container>
+      ) : (
+        <div className="space-y-8">
+          {/* Upcoming Events */}
+          {upcomingEvents.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming Events</h2>
+              <Container>
+                <div className="space-y-3">
+                  {upcomingEvents.map((event) => (
+                    <Link key={event.id} href={`/admin/events/${event.slug || event.id}`}>
+                      <div className="rounded-lg border border-border-color p-4 transition-colors hover:border-primary/50 cursor-pointer">
+                        <div className="flex items-start gap-4">
+                          {event.cover_image && (
+                            <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
+                              <Image
+                                src={event.cover_image}
+                                alt={event.title || 'Event cover'}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold">{event.title}</h3>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
+                              {event.date && (
+                                <span className="flex items-center gap-1">
+                                  <CalendarSVG className="h-4 w-4 fill-foreground/70" />
+                                  {new Date(event.date).toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                </span>
+                              )}
+                              {event.time && (
+                                <span className="flex items-center gap-1">
+                                  <TimeSVG className="h-4 w-4 fill-foreground/70" />
+                                  {event.time.substring(0, 5)}
+                                </span>
+                              )}
+                              {event.location && (
+                                <span className="flex items-center gap-1">
+                                  <LocationSVG className="h-4 w-4 fill-foreground/70" />
+                                  {event.location}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </Container>
-          </div>
-        )}
-
-        {/* Past Events */}
-        {pastEvents.length > 0 && (
-          <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Past Events</h2>
-            <Container>
-              <div className="space-y-3">
-                {pastEvents.map((event) => (
-                  <Link className='block' key={event.id} href={`/admin/events/${event.slug || event.id}`}>
-                    <div className="rounded-lg border border-border-color p-4 transition-all cursor-pointer">
-                      <div className="flex items-start gap-4">
-                        {event.cover_image && (
-                          <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                            <Image
-                              src={event.cover_image}
-                              alt={event.title || 'Event cover'}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{event.title}</h3>
-                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
-                            {event.date && (
-                              <span className="flex items-center gap-1">
-                                <CalendarSVG className="h-4 w-4 fill-foreground/70" />
-                                {new Date(event.date).toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}
-                              </span>
-                            )}
-                            {event.time && (
-                              <span className="flex items-center gap-1">
-                                <TimeSVG className="h-4 w-4 fill-foreground/70" />
-                                {event.time.substring(0, 5)}
-                              </span>
-                            )}
-                            {event.location && (
-                              <span className="flex items-center gap-1">
-                                <LocationSVG className="h-4 w-4 fill-foreground/70" />
-                                {event.location}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </Container>
-          </div>
-        )}
-
-        {events.length === 0 && (
-          <Container variant="centered" className="min-h-64">
-            <div className="text-center">
-              <SadSVG className="mb-4 inline-block h-12 w-12 fill-foreground/50" />
-              <p className="mb-4 text-foreground/80">No events yet</p>
-              <Link href="/admin/events/new">
-                <Button icon={<PlusSVG className="h-5 w-5" />}>
-                  Create your first event
-                </Button>
-              </Link>
+                    </Link>
+                  ))}
+                </div>
+              </Container>
             </div>
-          </Container>
-        )}
-      </div>
+          )}
+
+          {/* Past Events */}
+          {pastEvents.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Past Events</h2>
+              <Container>
+                <div className="space-y-3">
+                  {pastEvents.map((event) => (
+                    <Link className='block' key={event.id} href={`/admin/events/${event.slug || event.id}`}>
+                      <div className="rounded-lg border border-border-color p-4 transition-all cursor-pointer">
+                        <div className="flex items-start gap-4">
+                          {event.cover_image && (
+                            <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-lg">
+                              <Image
+                                src={event.cover_image}
+                                alt={event.title || 'Event cover'}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold">{event.title}</h3>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
+                              {event.date && (
+                                <span className="flex items-center gap-1">
+                                  <CalendarSVG className="h-4 w-4 fill-foreground/70" />
+                                  {new Date(event.date).toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                </span>
+                              )}
+                              {event.time && (
+                                <span className="flex items-center gap-1">
+                                  <TimeSVG className="h-4 w-4 fill-foreground/70" />
+                                  {event.time.substring(0, 5)}
+                                </span>
+                              )}
+                              {event.location && (
+                                <span className="flex items-center gap-1">
+                                  <LocationSVG className="h-4 w-4 fill-foreground/70" />
+                                  {event.location}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </Container>
+            </div>
+          )}
+        </div>
+      )}
     </PageContainer>
   )
 }

@@ -22,7 +22,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Creative Photography Group",
+  title: {
+    default: "Creative Photography Group",
+    template: "%s - Creative Photography Group",
+  },
   description: "Shoot, share, explore! 📸 Hosting monthly photography meetups and photo walks in and around Rotterdam.",
 };
 
