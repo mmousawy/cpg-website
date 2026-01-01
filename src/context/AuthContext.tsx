@@ -35,9 +35,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     console.log('[Auth] Initializing...');
     
+    // Helper: fetch profile with guaranteed timeout using Promise.race
+    const fetchProfileWithTimeout = async (userId: string): Promise<boolean> => {
+      const profilePromise = supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .single()
+        .then(({ data, error }) => {
+          if (error) {
+            console.log('[Auth] Profile query error:', error.message);
+            return false;
+          }
+          return !!data?.is_admin;
+        });
+      
+      const timeoutPromise = new Promise<boolean>((resolve) => {
+        setTimeout(() => {
+          console.log('[Auth] Profile fetch TIMEOUT (5s)');
+          resolve(false);
+        }, 5000);
+      });
+      
+      return Promise.race([profilePromise, timeoutPromise]);
+    };
+    
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      try {
       if (!mounted) return;
       authStateReceived = true;
       
@@ -47,67 +71,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth]', event, { userId, userChanged });
       
       // Update state immediately
-      console.log('[Auth] Setting user state...');
       setUser(session?.user ?? null);
       setSession(session);
-      console.log('[Auth] State updated, entering try block...');
       
-      try {
-        console.log('[Auth] In try block, userChanged:', userChanged);
-        // Handle user change (sign in, sign out, or different user)
-        if (userChanged) {
-          console.log('[Auth] User changed, userId:', userId);
-          currentUserIdRef.current = userId;
-          
-          if (!userId) {
-            // User signed out
-            console.log('[Auth] No userId, signing out');
-            setIsAdmin(false);
-            return;
-          }
-          
-          console.log('[Auth] Fetching profile...');
-          
-          // Fetch profile data including is_admin
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', userId)
-            .single();
-          
-          console.log('[Auth] Profile result:', { isAdmin: data?.is_admin, error: error?.message });
-          
-          if (!mounted) return;
-          
-          if (error) {
-            setIsAdmin(false);
-          } else {
-            setIsAdmin(!!data?.is_admin);
-          }
-          
-          // Update last_logged_in on actual sign in (fire and forget)
-          if (event === 'SIGNED_IN') {
-            supabase
-              .from('profiles')
-              .update({ last_logged_in: new Date().toISOString() })
-              .eq('id', userId);
-          }
-        }
-      } catch (err) {
-        if (!mounted) return;
-        console.error('[Auth] Inner error:', err);
-        setIsAdmin(false);
-      } finally {
-        console.log('[Auth] Completing, mounted:', mounted);
-        if (mounted) {
+      // Handle user change (sign in, sign out, or different user)
+      if (userChanged) {
+        currentUserIdRef.current = userId;
+        
+        if (!userId) {
+          // User signed out
+          setIsAdmin(false);
           setIsLoading(false);
+          return;
+        }
+        
+        // Fetch profile with timeout - Promise.race guarantees completion
+        console.log('[Auth] Fetching profile...');
+        const adminStatus = await fetchProfileWithTimeout(userId);
+        console.log('[Auth] Profile complete, isAdmin:', adminStatus);
+        
+        if (!mounted) return;
+        setIsAdmin(adminStatus);
+        
+        // Update last_logged_in on actual sign in (fire and forget)
+        if (event === 'SIGNED_IN') {
+          supabase
+            .from('profiles')
+            .update({ last_logged_in: new Date().toISOString() })
+            .eq('id', userId)
+            .then(() => console.log('[Auth] Updated last_logged_in'));
         }
       }
-      } catch (outerErr) {
-        console.error('[Auth] OUTER ERROR:', outerErr);
-        if (mounted) {
-          setIsLoading(false);
-        }
+      
+      if (mounted) {
+        setIsLoading(false);
       }
     });
     
