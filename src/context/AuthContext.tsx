@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      try {
       if (!mounted) return;
       authStateReceived = true;
       
@@ -46,19 +47,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth]', event, { userId, userChanged });
       
       // Update state immediately
+      console.log('[Auth] Setting user state...');
       setUser(session?.user ?? null);
       setSession(session);
+      console.log('[Auth] State updated, entering try block...');
       
       try {
+        console.log('[Auth] In try block, userChanged:', userChanged);
         // Handle user change (sign in, sign out, or different user)
         if (userChanged) {
+          console.log('[Auth] User changed, userId:', userId);
           currentUserIdRef.current = userId;
           
           if (!userId) {
             // User signed out
+            console.log('[Auth] No userId, signing out');
             setIsAdmin(false);
             return;
           }
+          
+          console.log('[Auth] Fetching profile...');
           
           // Fetch profile data including is_admin
           const { data, error } = await supabase
@@ -67,10 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('id', userId)
             .single();
           
+          console.log('[Auth] Profile result:', { isAdmin: data?.is_admin, error: error?.message });
+          
           if (!mounted) return;
           
           if (error) {
-            console.error('[Auth] Profile error:', error.message);
             setIsAdmin(false);
           } else {
             setIsAdmin(!!data?.is_admin);
@@ -86,10 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         if (!mounted) return;
-        console.error('[Auth] Error:', err);
+        console.error('[Auth] Inner error:', err);
         setIsAdmin(false);
       } finally {
-        // Always complete loading
+        console.log('[Auth] Completing, mounted:', mounted);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+      } catch (outerErr) {
+        console.error('[Auth] OUTER ERROR:', outerErr);
         if (mounted) {
           setIsLoading(false);
         }
