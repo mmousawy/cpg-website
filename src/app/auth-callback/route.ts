@@ -1,4 +1,5 @@
-import { createClient } from '@/utils/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 // Pages that should redirect to user dashboard after login
@@ -21,7 +22,25 @@ export async function GET(request: Request) {
   const redirectToParam = searchParams.get('redirectTo')
 
   if (code) {
-    const supabase = await createClient()
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          },
+        },
+      }
+    )
+    
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
@@ -53,7 +72,22 @@ export async function GET(request: Request) {
       }
 
       const finalRedirect = getPostLoginRedirect(redirectToParam)
-      return NextResponse.redirect(`${origin}${finalRedirect}`)
+      
+      // Create redirect response
+      const response = NextResponse.redirect(`${origin}${finalRedirect}`)
+      
+      // Copy all cookies from cookieStore to the response
+      // This ensures auth cookies are sent with the redirect
+      cookieStore.getAll().forEach((cookie) => {
+        response.cookies.set(cookie.name, cookie.value, {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+        })
+      })
+      
+      return response
     }
   }
 
