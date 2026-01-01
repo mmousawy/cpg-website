@@ -32,10 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     const supabase = createClient();
     
-    if (typeof window !== 'undefined') {
-      console.log('[AuthContext] setting up auth listener');
-    }
-    
     // Use onAuthStateChange as the single source of truth
     // This handles: initial session, sign in, sign out, token refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -44,27 +40,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userId = session?.user?.id ?? null;
       const userChanged = userId !== currentUserIdRef.current;
       
-      if (typeof window !== 'undefined') {
-        console.log('[AuthContext] onAuthStateChange', { event, userId, userChanged });
+      // Only log meaningful events in development
+      if (process.env.NODE_ENV === 'development' && userChanged) {
+        console.log('[AuthContext]', event, { userId });
       }
       
-      // Update state
+      // Update state immediately
       setUser(session?.user ?? null);
       setSession(session);
       
-      // Handle user change (sign in, sign out, or different user)
-      if (userChanged) {
-        currentUserIdRef.current = userId;
-        
-        if (!userId) {
-          // User signed out
-          setIsAdmin(false);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Fetch profile data including is_admin
-        try {
+      try {
+        // Handle user change (sign in, sign out, or different user)
+        if (userChanged) {
+          currentUserIdRef.current = userId;
+          
+          if (!userId) {
+            // User signed out
+            setIsAdmin(false);
+            return;
+          }
+          
+          // Fetch profile data including is_admin
           const { data, error } = await supabase
             .from('profiles')
             .select('is_admin')
@@ -73,34 +69,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           if (!mounted) return;
           
-          if (typeof window !== 'undefined') {
-            console.log('[AuthContext] profile fetch result', { userId, isAdmin: data?.is_admin, error: error?.message || null });
+          if (error) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('[AuthContext] profile fetch error:', error.message);
+            }
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(!!data?.is_admin);
           }
           
-          setIsAdmin(error ? false : !!data?.is_admin);
-        } catch (err) {
-          if (!mounted) return;
-          if (typeof window !== 'undefined') {
-            console.error('[AuthContext] profile fetch error:', err);
+          // Update last_logged_in on actual sign in (fire and forget)
+          if (event === 'SIGNED_IN') {
+            supabase
+              .from('profiles')
+              .update({ last_logged_in: new Date().toISOString() })
+              .eq('id', userId);
           }
-          setIsAdmin(false);
         }
-        
-        // Update last_logged_in on sign in (fire and forget)
-        if (event === 'SIGNED_IN') {
-          supabase
-            .from('profiles')
-            .update({ last_logged_in: new Date().toISOString() })
-            .eq('id', userId)
-            .then(() => {
-              if (typeof window !== 'undefined') {
-                console.log('[AuthContext] updated last_logged_in');
-              }
-            });
+      } catch (err) {
+        if (!mounted) return;
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[AuthContext] error:', err);
+        }
+        setIsAdmin(false);
+      } finally {
+        // Always complete loading, even if errors occurred
+        if (mounted) {
+          setIsLoading(false);
         }
       }
-      
-      setIsLoading(false);
     });
     
     return () => {
