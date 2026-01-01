@@ -33,11 +33,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Track current user ID to avoid refetching on token refresh
   const currentUserIdRef = useRef<string | null>(null);
   
+  // Track if we're already fetching profile to prevent duplicate fetches
+  const fetchingProfileRef = useRef<string | null>(null);
+  
+  // Track if we've already updated last_logged_in this session
+  const lastLoggedInUpdatedRef = useRef<string | null>(null);
+  
   // Derive isAdmin from profile
   const isAdmin = useMemo(() => !!profile?.is_admin, [profile]);
 
   // Function to fetch/refresh profile - runs in background, never blocks
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string, force = false) => {
+    // Prevent duplicate fetches for the same user
+    if (!force && fetchingProfileRef.current === userId) {
+      console.log('[Auth] Profile fetch already in progress, skipping');
+      return null;
+    }
+    
+    fetchingProfileRef.current = userId;
     const supabase = createClient();
     console.log('[Auth] Fetching profile...');
     
@@ -61,13 +74,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('[Auth] Profile fetch exception:', err);
       setProfile(null);
       return null;
+    } finally {
+      // Clear the fetching flag when done
+      if (fetchingProfileRef.current === userId) {
+        fetchingProfileRef.current = null;
+      }
     }
   }, []);
 
   // Public method to refresh profile (e.g., after user edits their profile)
   const refreshProfile = useCallback(async () => {
     if (currentUserIdRef.current) {
-      await fetchProfile(currentUserIdRef.current);
+      await fetchProfile(currentUserIdRef.current, true); // force=true to bypass duplicate check
     }
   }, [fetchProfile]);
 
@@ -98,12 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userId) {
             fetchProfile(userId);
             
-            // Update last_logged_in (fire and forget)
-            supabase
-              .from('profiles')
-              .update({ last_logged_in: new Date().toISOString() })
-              .eq('id', userId)
-              .then(() => console.log('[Auth] Updated last_logged_in'));
+            // Update last_logged_in (fire and forget, but only once per session)
+            if (lastLoggedInUpdatedRef.current !== userId) {
+              lastLoggedInUpdatedRef.current = userId;
+              supabase
+                .from('profiles')
+                .update({ last_logged_in: new Date().toISOString() })
+                .eq('id', userId)
+                .then(() => console.log('[Auth] Updated last_logged_in'));
+            }
           }
         }
       } catch (err) {
@@ -141,7 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Fetch profile in background (non-blocking)
           fetchProfile(userId);
           
-          if (event === 'SIGNED_IN') {
+          // Update last_logged_in on sign in (but only once per session)
+          if (event === 'SIGNED_IN' && lastLoggedInUpdatedRef.current !== userId) {
+            lastLoggedInUpdatedRef.current = userId;
             supabase
               .from('profiles')
               .update({ last_logged_in: new Date().toISOString() })
@@ -149,8 +172,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .then(() => console.log('[Auth] Updated last_logged_in'));
           }
         } else {
-          // Signed out - clear profile
+          // Signed out - clear profile and reset refs
           setProfile(null);
+          lastLoggedInUpdatedRef.current = null;
         }
       }
     });

@@ -26,7 +26,7 @@ type Profile = {
 
 export default function AccountPage() {
   // User is guaranteed by ProtectedRoute layout
-  const { user } = useAuth()
+  const { user, refreshProfile: refreshAuthProfile } = useAuth()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -250,8 +250,8 @@ export default function AccountPage() {
         setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null)
       }
 
-      // Dispatch custom event to notify header to refresh avatar
-      window.dispatchEvent(new CustomEvent('avatarUpdated'))
+      // Refresh profile in auth context so Avatar components update
+      refreshAuthProfile()
     } catch (err) {
       console.error('Unexpected upload error:', err)
       setAvatarError('An unexpected error occurred')
@@ -292,8 +292,8 @@ export default function AccountPage() {
         setProfile(prev => prev ? { ...prev, avatar_url: null } : null)
       }
 
-      // Dispatch custom event to notify header to refresh avatar
-      window.dispatchEvent(new CustomEvent('avatarUpdated'))
+      // Refresh profile in auth context so Avatar components update
+      refreshAuthProfile()
     } catch (err) {
       console.error('Unexpected error:', err)
       setAvatarError('An unexpected error occurred')

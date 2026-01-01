@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
-import { createClient } from '@/utils/supabase/client'
 import clsx from 'clsx'
 
 type AvatarProps = {
@@ -15,56 +13,10 @@ type AvatarProps = {
 }
 
 export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, size = 'md', className }: AvatarProps) {
-  const { user, isLoading } = useAuth()
-  const supabase = createClient()
-  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null)
-  const fetchedUserIdRef = useRef<string | null>(null)
+  const { user, profile, isLoading } = useAuth()
 
   // Determine if we're in static mode (props provided) or dynamic mode (using current user)
   const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined
-
-  // Fetch custom avatar from profile (only in dynamic mode)
-  useEffect(() => {
-    if (isStaticMode) return
-
-    const fetchAvatar = async () => {
-      if (!user) {
-        setCustomAvatarUrl(null)
-        return
-      }
-
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', user.id)
-          .single()
-
-        if (data?.avatar_url) {
-          setCustomAvatarUrl(data.avatar_url)
-        } else {
-          setCustomAvatarUrl(null)
-        }
-      } catch {
-        setCustomAvatarUrl(null)
-      }
-    }
-
-    if (user && user.id !== fetchedUserIdRef.current) {
-      fetchedUserIdRef.current = user.id
-      fetchAvatar()
-    } else if (!user) {
-      fetchedUserIdRef.current = null
-      setCustomAvatarUrl(null)
-    }
-
-    const handleAvatarUpdate = () => {
-      fetchAvatar()
-    }
-
-    window.addEventListener('avatarUpdated', handleAvatarUpdate)
-    return () => window.removeEventListener('avatarUpdated', handleAvatarUpdate)
-  }, [user, supabase, isStaticMode])
 
   // Size classes
   const sizeClasses = {
@@ -78,14 +30,14 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     return <div className={clsx(sizeClasses[size], "animate-pulse rounded-full bg-border-color", className)} />
   }
 
-  // Get avatar data
+  // Get avatar data - use profile from context instead of separate fetch
   const avatarUrl = isStaticMode
     ? staticAvatarUrl
-    : (customAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)
+    : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)
 
   const fullName = isStaticMode
     ? staticFullName
-    : user?.user_metadata?.full_name
+    : (profile?.full_name || user?.user_metadata?.full_name)
 
   const initials = fullName
     ? fullName
