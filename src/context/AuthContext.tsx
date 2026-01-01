@@ -35,31 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     console.log('[Auth] Initializing...');
     
-    // Helper: fetch profile with guaranteed timeout using Promise.race
-    const fetchProfileWithTimeout = async (userId: string): Promise<boolean> => {
-      const profilePromise = supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', userId)
-        .single()
-        .then(({ data, error }) => {
-          if (error) {
-            console.log('[Auth] Profile query error:', error.message);
-            return false;
-          }
-          return !!data?.is_admin;
-        });
-      
-      const timeoutPromise = new Promise<boolean>((resolve) => {
-        setTimeout(() => {
-          console.log('[Auth] Profile fetch TIMEOUT (5s)');
-          resolve(false);
-        }, 5000);
-      });
-      
-      return Promise.race([profilePromise, timeoutPromise]);
-    };
-    
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
@@ -70,28 +45,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('[Auth]', event, { userId, userChanged });
       
-      // Update state immediately
+      // Update state immediately - don't wait for profile fetch
       setUser(session?.user ?? null);
       setSession(session);
+      currentUserIdRef.current = userId;
+      
+      // Auth is ready - stop loading immediately
+      // This allows the page to render while admin check happens in background
+      setIsLoading(false);
       
       // Handle user change (sign in, sign out, or different user)
       if (userChanged) {
-        currentUserIdRef.current = userId;
-        
         if (!userId) {
           // User signed out
           setIsAdmin(false);
-          setIsLoading(false);
           return;
         }
         
-        // Fetch profile with timeout - Promise.race guarantees completion
-        console.log('[Auth] Fetching profile...');
-        const adminStatus = await fetchProfileWithTimeout(userId);
-        console.log('[Auth] Profile complete, isAdmin:', adminStatus);
-        
-        if (!mounted) return;
-        setIsAdmin(adminStatus);
+        // Fetch admin status in background - no timeout needed, no blocking
+        console.log('[Auth] Fetching admin status...');
+        supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', userId)
+          .single()
+          .then(({ data, error }) => {
+            if (!mounted) return;
+            if (error) {
+              console.log('[Auth] Admin check error:', error.message);
+              setIsAdmin(false);
+            } else {
+              console.log('[Auth] Admin status:', data?.is_admin);
+              setIsAdmin(!!data?.is_admin);
+            }
+          });
         
         // Update last_logged_in on actual sign in (fire and forget)
         if (event === 'SIGNED_IN') {
@@ -101,10 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq('id', userId)
             .then(() => console.log('[Auth] Updated last_logged_in'));
         }
-      }
-      
-      if (mounted) {
-        setIsLoading(false);
       }
     });
     
