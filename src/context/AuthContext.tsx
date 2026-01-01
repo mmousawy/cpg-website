@@ -30,94 +30,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     
     if (typeof window !== 'undefined') {
-      console.log('[AuthContext] initializeAuth starting');
+      console.log('[AuthContext] setting up auth listener');
     }
     
-    const initializeAuth = async () => {
-      try {
-        if (typeof window !== 'undefined') {
-          console.log('[AuthContext] calling getSession...');
-        }
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (!mounted) return;
-        if (typeof window !== 'undefined') {
-          console.log('[AuthContext] getSession result', { hasSession: !!session, error: error?.message || null });
-        }
-        if (error) {
-          setUser(null);
-          setSession(null);
-          setIsAdmin(false);
-          setIsLoading(false);
-          if (typeof window !== 'undefined') {
-            console.error('[AuthContext] getSession error', error);
-          }
-          return;
-        }
-        if (session) {
-          const expiresAt = session.expires_at || 0;
-          const now = Math.floor(Date.now() / 1000);
-          const shouldRefresh = expiresAt - now < 60;
-          if (typeof window !== 'undefined') {
-            console.log('[AuthContext] session found', { session, expiresAt, now, shouldRefresh });
-          }
-          if (shouldRefresh) {
-            const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-            if (!mounted) return;
-            if (typeof window !== 'undefined') {
-              console.log('[AuthContext] refreshSession', { refreshedSession, refreshError });
-            }
-            if (refreshError) {
-              setUser(null);
-              setSession(null);
-              setIsAdmin(false);
-              if (typeof window !== 'undefined') {
-                console.error('[AuthContext] refreshSession error', refreshError);
-              }
-            } else {
-              setUser(refreshedSession?.user ?? session.user ?? null);
-              setSession(refreshedSession ?? session);
-            }
-            setIsLoading(false);
-          } else {
-            setUser(session.user);
-            setSession(session);
-            setIsLoading(false);
-          }
-        } else {
-          setUser(null);
-          setSession(null);
-          setIsAdmin(false);
-          setIsLoading(false);
-          if (typeof window !== 'undefined') {
-            console.warn('[AuthContext] No session found');
-          }
-        }
-      } catch (err) {
-        if (!mounted) return;
-        setUser(null);
-        setSession(null);
-        setIsAdmin(false);
-        setIsLoading(false);
-        if (typeof window !== 'undefined') {
-          console.error('[AuthContext] Unexpected error initializing auth', err);
-        }
-      }
-    };
-    initializeAuth();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Use onAuthStateChange as the single source of truth
+    // This handles: initial session, sign in, sign out, token refresh
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+      
       if (typeof window !== 'undefined') {
-        console.log('[AuthContext] onAuthStateChange', { _event, session });
+        console.log('[AuthContext] onAuthStateChange', { event, hasSession: !!session, userId: session?.user?.id });
       }
+      
       setUser(session?.user ?? null);
       setSession(session);
       setIsLoading(false);
-      if (session?.user && _event === 'SIGNED_IN') {
-        try {
-          await supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', session.user.id);
-        } catch { }
+      
+      // Update last_logged_in on sign in (fire and forget, don't block)
+      if (session?.user && event === 'SIGNED_IN') {
+        supabase
+          .from('profiles')
+          .update({ last_logged_in: new Date().toISOString() })
+          .eq('id', session.user.id)
+          .then(() => {
+            if (typeof window !== 'undefined') {
+              console.log('[AuthContext] updated last_logged_in');
+            }
+          })
+          .catch(() => {
+            // Silently ignore - not critical
+          });
       }
     });
+    
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -146,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       try {
-        // Combine manual abort with 10s timeout
+        // Timeout after 10s
         const timeoutId = setTimeout(() => abortController.abort(), 10000);
         
         const { data, error } = await supabase
@@ -158,19 +103,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         clearTimeout(timeoutId);
         
+        // Check if aborted (Supabase returns abort as error, not exception)
+        if (error?.message?.includes('AbortError') || error?.message?.includes('aborted')) {
+          if (typeof window !== 'undefined') {
+            console.log('[AuthContext] fetchAdmin aborted (cleanup or timeout)');
+          }
+          return;
+        }
+        
         if (typeof window !== 'undefined') {
-          console.log('[AuthContext] fetchAdmin result', { userId: user.id, data, error: error?.message || null });
+          console.log('[AuthContext] fetchAdmin result', { userId: user.id, isAdmin: data?.is_admin, error: error?.message || null });
         }
         
         if (error) {
-          console.error('[AuthContext] fetchAdmin error:', error);
+          console.error('[AuthContext] fetchAdmin error:', error.message);
           setIsAdmin(false);
         } else {
           setIsAdmin(!!data?.is_admin);
         }
       } catch (err) {
-        // Ignore abort errors - they're expected on cleanup/timeout
-        if (err instanceof Error && err.name === 'AbortError') {
+        // Handle thrown AbortError (some versions of Supabase throw instead of return)
+        if (err instanceof Error && (err.name === 'AbortError' || err.message.includes('aborted'))) {
           if (typeof window !== 'undefined') {
             console.log('[AuthContext] fetchAdmin aborted (cleanup or timeout)');
           }
