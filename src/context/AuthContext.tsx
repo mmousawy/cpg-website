@@ -36,26 +36,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Derive isAdmin from profile
   const isAdmin = useMemo(() => !!profile?.is_admin, [profile]);
 
-  // Function to fetch/refresh profile - can be called after profile updates
+  // Function to fetch/refresh profile - runs in background, never blocks
   const fetchProfile = useCallback(async (userId: string) => {
     const supabase = createClient();
     console.log('[Auth] Fetching profile...');
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
-      console.log('[Auth] Profile fetch error:', error.message);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.log('[Auth] Profile fetch error:', error.message);
+        setProfile(null);
+      } else {
+        console.log('[Auth] Profile loaded:', { nickname: data?.nickname, isAdmin: data?.is_admin });
+        setProfile(data);
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('[Auth] Profile fetch exception:', err);
       setProfile(null);
-    } else {
-      console.log('[Auth] Profile loaded:', { nickname: data?.nickname, isAdmin: data?.is_admin });
-      setProfile(data);
+      return null;
     }
-    
-    return data;
   }, []);
 
   // Public method to refresh profile (e.g., after user edits their profile)
@@ -71,31 +77,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     console.log('[Auth] Initializing...');
     
-    // Helper to handle session updates
-    const handleSession = async (session: Session | null, event: string) => {
-      if (!mounted) return;
-      
-      const userId = session?.user?.id ?? null;
-      const userChanged = userId !== currentUserIdRef.current;
-      
-      console.log('[Auth]', event, { userId, userChanged });
-      
-      // Update auth state immediately
-      setUser(session?.user ?? null);
-      setSession(session);
-      currentUserIdRef.current = userId;
-      
-      // Handle user change (sign in, sign out, or different user)
-      if (userChanged) {
-        if (!userId) {
-          // User signed out - clear profile
-          setProfile(null);
-        } else {
-          // Fetch full profile (includes is_admin, nickname, avatar, etc.)
-          await fetchProfile(userId);
+    // Get initial session
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id ?? null;
+        
+        console.log('[Auth] Initial session:', userId ?? 'none');
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setSession(session);
+          currentUserIdRef.current = userId;
           
-          // Update last_logged_in on actual sign in (fire and forget)
-          if (event === 'SIGNED_IN') {
+          // IMPORTANT: Set loading false IMMEDIATELY - don't wait for profile
+          setIsLoading(false);
+          console.log('[Auth] Ready (isLoading=false)');
+          
+          // Fetch profile in background (non-blocking)
+          if (userId) {
+            fetchProfile(userId);
+            
+            // Update last_logged_in (fire and forget)
             supabase
               .from('profiles')
               .update({ last_logged_in: new Date().toISOString() })
@@ -103,19 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .then(() => console.log('[Auth] Updated last_logged_in'));
           }
         }
-      }
-      
-      if (mounted) {
-        setIsLoading(false);
-      }
-    };
-    
-    // Get initial session immediately (don't wait for onAuthStateChange)
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('[Auth] Initial getSession:', session?.user?.id ?? 'none');
-        await handleSession(session, 'INITIAL_GET_SESSION');
       } catch (err) {
         console.error('[Auth] getSession error:', err);
         if (mounted) {
@@ -126,14 +116,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     initSession();
     
-    // Set up auth state change listener for subsequent changes
+    // Listen for auth changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Skip INITIAL_SESSION since we already handled it with getSession()
+      if (!mounted) return;
+      
+      // Skip INITIAL_SESSION - we already handled it above
       if (event === 'INITIAL_SESSION') {
-        console.log('[Auth] Skipping INITIAL_SESSION (already handled)');
         return;
       }
-      await handleSession(session, event);
+      
+      const userId = session?.user?.id ?? null;
+      const userChanged = userId !== currentUserIdRef.current;
+      
+      console.log('[Auth]', event, { userId, userChanged });
+      
+      // Update auth state
+      setUser(session?.user ?? null);
+      setSession(session);
+      currentUserIdRef.current = userId;
+      
+      // Only fetch profile if user changed
+      if (userChanged) {
+        if (userId) {
+          // Fetch profile in background (non-blocking)
+          fetchProfile(userId);
+          
+          if (event === 'SIGNED_IN') {
+            supabase
+              .from('profiles')
+              .update({ last_logged_in: new Date().toISOString() })
+              .eq('id', userId)
+              .then(() => console.log('[Auth] Updated last_logged_in'));
+          }
+        } else {
+          // Signed out - clear profile
+          setProfile(null);
+        }
+      }
     });
     
     return () => {
