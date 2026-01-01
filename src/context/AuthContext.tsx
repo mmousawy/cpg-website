@@ -30,62 +30,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Track current user ID to avoid refetching on token refresh
   const currentUserIdRef = useRef<string | null>(null);
-  
-  // Track if we're already fetching profile to prevent duplicate fetches
   const fetchingProfileRef = useRef<string | null>(null);
-  
-  // Track if we've already updated last_logged_in this session
   const lastLoggedInUpdatedRef = useRef<string | null>(null);
   
-  // Derive isAdmin from profile
   const isAdmin = useMemo(() => !!profile?.is_admin, [profile]);
 
-  // Function to fetch/refresh profile - runs in background, never blocks
   const fetchProfile = useCallback(async (userId: string, force = false) => {
-    // Prevent duplicate fetches for the same user
-    if (!force && fetchingProfileRef.current === userId) {
-      console.log('[Auth] Profile fetch already in progress, skipping');
-      return null;
-    }
+    if (!force && fetchingProfileRef.current === userId) return null;
     
     fetchingProfileRef.current = userId;
-    const supabase = createClient();
-    console.log('[Auth] Fetching profile...');
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createClient()
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
       
-      if (error) {
-        console.log('[Auth] Profile fetch error:', error.message);
-        setProfile(null);
-      } else {
-        console.log('[Auth] Profile loaded:', { nickname: data?.nickname, isAdmin: data?.is_admin });
-        setProfile(data);
-      }
-      
+      setProfile(error ? null : data);
       return data;
-    } catch (err) {
-      console.error('[Auth] Profile fetch exception:', err);
+    } catch {
       setProfile(null);
       return null;
     } finally {
-      // Clear the fetching flag when done
       if (fetchingProfileRef.current === userId) {
         fetchingProfileRef.current = null;
       }
     }
   }, []);
 
-  // Public method to refresh profile (e.g., after user edits their profile)
   const refreshProfile = useCallback(async () => {
     if (currentUserIdRef.current) {
-      await fetchProfile(currentUserIdRef.current, true); // force=true to bypass duplicate check
+      await fetchProfile(currentUserIdRef.current, true);
     }
   }, [fetchProfile]);
 
@@ -93,86 +70,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     const supabase = createClient();
     
-    console.log('[Auth] Initializing...');
-    
-    // Get initial session
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id ?? null;
-        
-        console.log('[Auth] Initial session:', userId ?? 'none');
-        
-        if (mounted) {
-          setUser(session?.user ?? null);
-          setSession(session);
-          currentUserIdRef.current = userId;
-          
-          // IMPORTANT: Set loading false IMMEDIATELY - don't wait for profile
-          setIsLoading(false);
-          console.log('[Auth] Ready (isLoading=false)');
-          
-          // Fetch profile in background (non-blocking)
-          if (userId) {
-            fetchProfile(userId);
-            
-            // Update last_logged_in (fire and forget, but only once per session)
-            if (lastLoggedInUpdatedRef.current !== userId) {
-              lastLoggedInUpdatedRef.current = userId;
-              supabase
-                .from('profiles')
-                .update({ last_logged_in: new Date().toISOString() })
-                .eq('id', userId)
-                .then(() => console.log('[Auth] Updated last_logged_in'));
-            }
-          }
-        }
-      } catch (err) {
-        console.error('[Auth] getSession error:', err);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
+    const updateLastLoggedIn = (userId: string) => {
+      if (lastLoggedInUpdatedRef.current === userId) return;
+      lastLoggedInUpdatedRef.current = userId;
+      supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId);
     };
     
-    initSession();
-    
-    // Listen for auth changes (sign in, sign out, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Initialize session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
-      // Skip INITIAL_SESSION - we already handled it above
-      if (event === 'INITIAL_SESSION') {
-        return;
+      const userId = session?.user?.id ?? null;
+      setUser(session?.user ?? null);
+      setSession(session);
+      currentUserIdRef.current = userId;
+      setIsLoading(false);
+      
+      if (userId) {
+        fetchProfile(userId);
+        updateLastLoggedIn(userId);
       }
+    }).catch(() => {
+      if (mounted) setIsLoading(false);
+    });
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted || event === 'INITIAL_SESSION') return;
       
       const userId = session?.user?.id ?? null;
       const userChanged = userId !== currentUserIdRef.current;
       
-      console.log('[Auth]', event, { userId, userChanged });
-      
-      // Update auth state
       setUser(session?.user ?? null);
       setSession(session);
       currentUserIdRef.current = userId;
       
-      // Only fetch profile if user changed
       if (userChanged) {
         if (userId) {
-          // Fetch profile in background (non-blocking)
           fetchProfile(userId);
-          
-          // Update last_logged_in on sign in (but only once per session)
-          if (event === 'SIGNED_IN' && lastLoggedInUpdatedRef.current !== userId) {
-            lastLoggedInUpdatedRef.current = userId;
-            supabase
-              .from('profiles')
-              .update({ last_logged_in: new Date().toISOString() })
-              .eq('id', userId)
-              .then(() => console.log('[Auth] Updated last_logged_in'));
-          }
+          if (event === 'SIGNED_IN') updateLastLoggedIn(userId);
         } else {
-          // Signed out - clear profile and reset refs
           setProfile(null);
           lastLoggedInUpdatedRef.current = null;
         }
@@ -186,13 +123,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await createClient().auth.signOut();
   }, []);
 
   const signInWithGoogle = useCallback(async (redirectTo?: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth-callback${redirectTo ? `?redirectTo=${redirectTo}` : ''}` },
     });
@@ -200,8 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithDiscord = useCallback(async (redirectTo?: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await createClient().auth.signInWithOAuth({
       provider: 'discord',
       options: { redirectTo: `${window.location.origin}/auth-callback${redirectTo ? `?redirectTo=${redirectTo}` : ''}` },
     });
@@ -209,14 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await createClient().auth.signInWithPassword({ email, password });
     return { error };
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, metadata?: { full_name?: string; nickname?: string }) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { error } = await createClient().auth.signUp({
       email,
       password,
       options: {
@@ -228,21 +160,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await createClient().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     return { error };
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const { error } = await createClient().auth.updateUser({ password: newPassword });
     return { error };
   }, []);
 
+  const value = useMemo(() => ({
+    user, session, profile, isLoading, isAdmin, refreshProfile,
+    signOut, signInWithGoogle, signInWithDiscord, signInWithEmail,
+    signUpWithEmail, resetPassword, updatePassword
+  }), [user, session, profile, isLoading, isAdmin, refreshProfile, signOut,
+      signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail,
+      resetPassword, updatePassword]);
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, isLoading, isAdmin, refreshProfile, signOut, signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

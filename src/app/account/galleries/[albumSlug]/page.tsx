@@ -34,6 +34,7 @@ import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
 import EditSVG from 'public/icons/edit.svg'
 import PlusSVG from 'public/icons/plus.svg'
+import CloseSVG from 'public/icons/close.svg'
 
 // Shared input styling
 const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
@@ -941,15 +942,17 @@ export default function AlbumDetailPage() {
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary"
+                      className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
                     >
                       {tag}
                       <button
                         onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-primary-alt size-4 flex items-center justify-center rounded-full -mr-1"
+                        className="rounded-full bg-background-light/70 hover:bg-background-light font-bold text-foreground size-5 flex items-center justify-center rounded-full -mr-2 ml-1"
                         aria-label="Remove tag"
                       >
-                        &times;
+                        <CloseSVG
+                          className="size-3.5"
+                        />
                       </button>
                     </span>
                   ))}
