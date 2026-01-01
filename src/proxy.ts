@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const blacklist = process.env.BLACKLIST_IPS?.split(",") || [];
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const ipAddress = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for");
 
   // If IP address exists in blacklist, return 403
@@ -36,16 +36,12 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh the session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // IMPORTANT: This refreshes the session and syncs cookies
+  // Do not remove this - it ensures auth cookies are properly set
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/account', '/galleries/new', '/galleries/edit', '/galleries/my'];
-
-  // Admin routes - require admin access (will be checked in the page component)
-  const adminPaths = ['/admin'];
+  const protectedPaths = ['/account', '/admin'];
   const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -57,7 +53,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Auth routes - redirect to home if already authenticated
+  // Auth routes - redirect to dashboard if already authenticated
   const authPaths = ['/login', '/signup'];
   const isAuthPath = authPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
@@ -65,7 +61,7 @@ export async function proxy(request: NextRequest) {
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    url.pathname = '/account/events';
     return NextResponse.redirect(url);
   }
 
@@ -84,3 +80,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
+
