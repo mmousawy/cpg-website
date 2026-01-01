@@ -30,20 +30,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let authStateReceived = false;
     const supabase = createClient();
     
-    // Use onAuthStateChange as the single source of truth
-    // This handles: initial session, sign in, sign out, token refresh
+    console.log('[Auth] Initializing...');
+    
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+      authStateReceived = true;
       
       const userId = session?.user?.id ?? null;
       const userChanged = userId !== currentUserIdRef.current;
       
-      // Only log meaningful events in development
-      if (process.env.NODE_ENV === 'development' && userChanged) {
-        console.log('[AuthContext]', event, { userId });
-      }
+      console.log('[Auth]', event, { userId, userChanged });
       
       // Update state immediately
       setUser(session?.user ?? null);
@@ -70,9 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!mounted) return;
           
           if (error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('[AuthContext] profile fetch error:', error.message);
-            }
+            console.error('[Auth] Profile error:', error.message);
             setIsAdmin(false);
           } else {
             setIsAdmin(!!data?.is_admin);
@@ -88,20 +86,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         if (!mounted) return;
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[AuthContext] error:', err);
-        }
+        console.error('[Auth] Error:', err);
         setIsAdmin(false);
       } finally {
-        // Always complete loading, even if errors occurred
+        // Always complete loading
         if (mounted) {
           setIsLoading(false);
         }
       }
     });
     
+    // Fallback: If onAuthStateChange doesn't fire within 3 seconds, manually get session
+    const fallbackTimeout = setTimeout(async () => {
+      if (!authStateReceived && mounted) {
+        console.log('[Auth] Fallback: onAuthStateChange did not fire, calling getSession()');
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (mounted && !authStateReceived) {
+            console.log('[Auth] Fallback session:', session?.user?.id ?? 'none');
+            setUser(session?.user ?? null);
+            setSession(session);
+            currentUserIdRef.current = session?.user?.id ?? null;
+            setIsLoading(false);
+          }
+        } catch (err) {
+          console.error('[Auth] Fallback error:', err);
+          if (mounted) {
+            setIsLoading(false);
+          }
+        }
+      }
+    }, 3000);
+    
     return () => {
       mounted = false;
+      clearTimeout(fallbackTimeout);
       subscription.unsubscribe();
     };
   }, []);
