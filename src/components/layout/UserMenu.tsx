@@ -9,7 +9,6 @@ import { useTheme } from 'next-themes'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import Avatar from '../auth/Avatar'
-import { createClient } from '@/utils/supabase/client'
 import { routes } from '@/config/routes'
 
 export default function UserMenu() {
@@ -17,7 +16,6 @@ export default function UserMenu() {
   const { isAdmin } = useAdmin()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const supabase = createClient()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()

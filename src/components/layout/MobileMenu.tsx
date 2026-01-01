@@ -27,11 +27,11 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
     return pathname.startsWith(href)
   }
 
-  // Base styles for nav links
+  // Base styles for nav links (matches UserMenu styling)
   const navLinkClass = (href: string, exact = false) => clsx(
     "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
     isActive(href, exact)
-      ? "bg-primary/10 text-primary border-l-2 border-primary"
+      ? "bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]"
       : "hover:bg-background"
   )
 
