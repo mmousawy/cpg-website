@@ -67,15 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let authStateReceived = false;
     const supabase = createClient();
     
     console.log('[Auth] Initializing...');
     
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Helper to handle session updates
+    const handleSession = async (session: Session | null, event: string) => {
       if (!mounted) return;
-      authStateReceived = true;
       
       const userId = session?.user?.id ?? null;
       const userChanged = userId !== currentUserIdRef.current;
@@ -92,59 +90,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!userId) {
           // User signed out - clear profile
           setProfile(null);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Fetch full profile (includes is_admin, nickname, avatar, etc.)
-        await fetchProfile(userId);
-        
-        // Update last_logged_in on actual sign in (fire and forget)
-        if (event === 'SIGNED_IN') {
-          supabase
-            .from('profiles')
-            .update({ last_logged_in: new Date().toISOString() })
-            .eq('id', userId)
-            .then(() => console.log('[Auth] Updated last_logged_in'));
+        } else {
+          // Fetch full profile (includes is_admin, nickname, avatar, etc.)
+          await fetchProfile(userId);
+          
+          // Update last_logged_in on actual sign in (fire and forget)
+          if (event === 'SIGNED_IN') {
+            supabase
+              .from('profiles')
+              .update({ last_logged_in: new Date().toISOString() })
+              .eq('id', userId)
+              .then(() => console.log('[Auth] Updated last_logged_in'));
+          }
         }
       }
       
       if (mounted) {
         setIsLoading(false);
       }
-    });
+    };
     
-    // Fallback: If onAuthStateChange doesn't fire within 3 seconds, manually get session
-    const fallbackTimeout = setTimeout(async () => {
-      if (!authStateReceived && mounted) {
-        console.log('[Auth] Fallback: onAuthStateChange did not fire, calling getSession()');
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (mounted && !authStateReceived) {
-            console.log('[Auth] Fallback session:', session?.user?.id ?? 'none');
-            setUser(session?.user ?? null);
-            setSession(session);
-            currentUserIdRef.current = session?.user?.id ?? null;
-            
-            // Also fetch profile in fallback
-            if (session?.user?.id) {
-              await fetchProfile(session.user.id);
-            }
-            
-            setIsLoading(false);
-          }
-        } catch (err) {
-          console.error('[Auth] Fallback error:', err);
-          if (mounted) {
-            setIsLoading(false);
-          }
+    // Get initial session immediately (don't wait for onAuthStateChange)
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Auth] Initial getSession:', session?.user?.id ?? 'none');
+        await handleSession(session, 'INITIAL_GET_SESSION');
+      } catch (err) {
+        console.error('[Auth] getSession error:', err);
+        if (mounted) {
+          setIsLoading(false);
         }
       }
-    }, 3000);
+    };
+    
+    initSession();
+    
+    // Set up auth state change listener for subsequent changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip INITIAL_SESSION since we already handled it with getSession()
+      if (event === 'INITIAL_SESSION') {
+        console.log('[Auth] Skipping INITIAL_SESSION (already handled)');
+        return;
+      }
+      await handleSession(session, event);
+    });
     
     return () => {
       mounted = false;
-      clearTimeout(fallbackTimeout);
       subscription.unsubscribe();
     };
   }, [fetchProfile]);
