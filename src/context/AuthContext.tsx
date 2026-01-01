@@ -48,18 +48,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Update last_logged_in on sign in (fire and forget, don't block)
       if (session?.user && event === 'SIGNED_IN') {
-        supabase
-          .from('profiles')
-          .update({ last_logged_in: new Date().toISOString() })
-          .eq('id', session.user.id)
-          .then(() => {
+        (async () => {
+          try {
+            await supabase
+              .from('profiles')
+              .update({ last_logged_in: new Date().toISOString() })
+              .eq('id', session.user.id);
             if (typeof window !== 'undefined') {
               console.log('[AuthContext] updated last_logged_in');
             }
-          })
-          .catch(() => {
+          } catch {
             // Silently ignore - not critical
-          });
+          }
+        })();
       }
     });
     
