@@ -113,10 +113,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     <>
       <PageContainer>
         {/* Profile Header */}
-        <div className="mb-10">
+        <div className="mb-8 sm:mb-10">
           {/* Avatar and Name */}
-          <div className="mb-6 flex items-center gap-4">
-            <div className="relative flex shrink-0 h-26 w-26 items-center justify-center overflow-hidden rounded-full border-2 border-border-color">
+          <div className="mb-3 sm:mb-6 flex items-center gap-3 sm:gap-4">
+            <div className="relative flex shrink-0 h-20 w-20 sm:h-26 sm:w-26 items-center justify-center overflow-hidden rounded-full border-2 border-border-color">
               <ClickableAvatar
                 avatarUrl={typedProfile.avatar_url}
                 fullName={typedProfile.full_name}
@@ -124,18 +124,18 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold truncate">
+              <h1 className="sm:text-3xl text-xl font-bold truncate">
                 {typedProfile.full_name || `@${typedProfile.nickname}`}
               </h1>
               {typedProfile.full_name && (
-                <p className="text-lg opacity-70 mb-2">
+                <p className="sm:text-lg text-base opacity-70 sm:mb-2">
                   @{typedProfile.nickname}
                 </p>
               )}
 
-              {/* Links */}
+              {/* Links - Desktop only (inline with name) */}
               {(typedProfile.website || socialLinks.length > 0) && (
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="hidden sm:flex flex-wrap items-center gap-2">
                   {typedProfile.website && (
                     <a
                       href={typedProfile.website}
@@ -166,9 +166,40 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </div>
           </div>
 
+          {/* Links - Mobile only (full width below avatar) */}
+          {(typedProfile.website || socialLinks.length > 0) && (
+            <div className="flex sm:hidden flex-wrap items-center gap-2 mb-4">
+              {typedProfile.website && (
+                <a
+                  href={typedProfile.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
+                >
+                  <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  {getDomain(typedProfile.website)}
+                </a>
+              )}
+              {socialLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
+                >
+                  {getSocialIcon(link.label)}
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          )}
+
           {/* Bio */}
           {typedProfile.bio && (
-            <div className="text-lg opacity-80 mb-4 max-w-prose">
+            <div className="sm:text-lg text-base opacity-80 mb-4 max-w-prose">
               {typedProfile.bio.split('\n').map((line, index) => (
                 <p key={index} className={line.trim() === '' ? 'h-4' : 'leading-relaxed'}>
                   {line || '\u00A0'}
@@ -180,7 +211,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
         {/* Photo Albums Section */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold">
+          <h2 className="mb-2 sm:mb-4 sm:text-xl text-lg font-semibold">
             Photos by @{typedProfile.nickname}
           </h2>
 
@@ -209,7 +240,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       {/* Articles/Posts Section - Coming Soon */}
       <PageContainer variant="alt" className="border-t border-t-border-color">
         <div className="mb-4 flex items-center gap-3">
-          <h2 className="text-xl font-semibold opacity-50">
+          <h2 className="sm:text-xl text-lg font-semibold opacity-50">
             Articles by @{typedProfile.nickname}
           </h2>
           <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium opacity-50">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import Button from './Button'
@@ -155,36 +155,40 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
           </p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="flex gap-3 dark:bg-foreground/5 rounded-lg shadow-md shadow-[#00000007] border border-border-color p-4">
-              <Avatar
-                avatarUrl={comment.profile?.avatar_url}
-                fullName={comment.profile?.full_name}
-                size="sm"
-              />
-              <div className="flex-1">
-                <div className="flex items-start justify-between gap-2">
+            <div key={comment.id} className="dark:bg-foreground/5 rounded-lg shadow-md shadow-[#00000007] border border-border-color p-4">
+              <div className="flex items-start justify-between gap-2">
+                <Link 
+                  href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'} 
+                  className="flex gap-3 group"
+                >
+                  <Avatar
+                    avatarUrl={comment.profile?.avatar_url}
+                    fullName={comment.profile?.full_name}
+                    hoverEffect
+                    size="sm"
+                  />
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium group-hover:text-primary transition-colors">
                       {comment.profile?.full_name || 'Anonymous'}
                     </p>
-                    <p className="text-xs text-foreground/50">
+                    <p className="text-xs text-foreground/50 group-hover:text-primary transition-colors">
                       @{comment.profile?.nickname} · {formatDate(comment.created_at)}
                     </p>
                   </div>
-                  {(user?.id === comment.user_id || isAdmin) && (
-                    <button
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="rounded p-1 hover:bg-red-600/10"
-                      aria-label="Delete comment"
-                    >
-                      <TrashSVG className="size-4 text-red-600" />
-                    </button>
-                  )}
-                </div>
-                <p className="mt-2 text-sm text-foreground/90">
-                  {comment.comment_text}
-                </p>
+                </Link>
+                {(user?.id === comment.user_id || isAdmin) && (
+                  <button
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="rounded p-1 hover:bg-red-600/10"
+                    aria-label="Delete comment"
+                  >
+                    <TrashSVG className="size-4 text-red-600" />
+                  </button>
+                )}
               </div>
+              <p className="mt-2 text-sm text-foreground/90 ml-[52px]">
+                {comment.comment_text}
+              </p>
             </div>
           ))
         )}

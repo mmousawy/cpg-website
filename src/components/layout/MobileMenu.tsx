@@ -15,7 +15,7 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps) {
-  const { user, signOut } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const { isAdmin } = useAdmin()
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
@@ -85,6 +85,18 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </div>
 
           <div className="p-2">
+            {profile?.nickname && (
+              <Link
+                href={`/@${profile.nickname}`}
+                onClick={onClose}
+                className={navLinkClass(`/@${profile.nickname}`, true)}
+              >
+                <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                My profile
+              </Link>
+            )}
             <Link
               href="/account/events"
               onClick={onClose}

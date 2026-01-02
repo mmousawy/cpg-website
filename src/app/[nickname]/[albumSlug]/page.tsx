@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import AlbumFullSizeGallery from '@/components/album/AlbumFullSizeGallery'
 import Comments from '@/components/shared/Comments'
@@ -137,21 +138,25 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
         {/* Album Header */}
         <div className="mb-8">
           <h1 className="mb-4 text-3xl font-bold">{albumWithPhotos.title}</h1>
-          <div className="mb-4 flex items-center gap-3">
+          <Link 
+            href={albumWithPhotos.profile?.nickname ? `/@${albumWithPhotos.profile.nickname}` : '#'}
+            className="mb-4 flex items-center gap-3 w-fit group"
+          >
             <Avatar
               avatarUrl={albumWithPhotos.profile?.avatar_url}
               fullName={albumWithPhotos.profile?.full_name}
+              hoverEffect
               size="md"
             />
             <div>
-              <p className="font-medium">
+              <p className="font-medium group-hover:text-primary transition-colors">
                 {albumWithPhotos.profile?.full_name || 'Unknown User'}
               </p>
-              <p className="text-sm opacity-70">
+              <p className="text-sm opacity-70 group-hover:opacity-100 group-hover:text-primary transition-colors">
                 {albumWithPhotos.profile?.nickname ? `@${albumWithPhotos.profile.nickname}` : '@unknown'}
               </p>
             </div>
-          </div>
+          </Link>
           <p className="mt-2 text-sm opacity-70 mb-4">
             {sortedPhotos.length} {sortedPhotos.length === 1 ? 'photo' : 'photos'}
           </p>
