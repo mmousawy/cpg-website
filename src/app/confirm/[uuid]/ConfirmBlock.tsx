@@ -13,11 +13,11 @@ import { CPGEvent } from '@/types/events';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
-import CheckAddSVG from 'public/icons/check-add.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import TimeSVG from 'public/icons/time.svg';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 
 type Props = {
   event: CPGEvent;
@@ -111,14 +111,11 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
               )}
 
               {(rsvp.confirmed_at && !rsvp.canceled_at) && (
-                <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
-                  <CheckAddSVG className="shrink-0 fill-foreground" />
-                  <span>
-                    You&apos;ve already confirmed your RSVP. <br />If you&apos;d like to change your response, you can{' '}<br />
-                    <Link href={`/cancel/${rsvp.uuid}`} className='underline'>cancel your sign up</Link>
-                    .
-                  </span>
-                </div>
+                <SuccessMessage>
+                  You&apos;ve already confirmed your RSVP. <br />If you&apos;d like to change your response, you can{' '}<br />
+                  <Link href={`/cancel/${rsvp.uuid}`} className='underline'>cancel your sign up</Link>
+                  .
+                </SuccessMessage>
               )}
 
               {rsvp.canceled_at && (
@@ -134,12 +131,9 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
 
           {signupSuccess && (
             <>
-              <div className='mb-6 flex flex-col gap-4 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
-                <div className='flex gap-2'>
-                  <CheckAddSVG className="shrink-0 fill-foreground" />
-                  <span>Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!</span>
-                </div>
-              </div>
+              <SuccessMessage className="mb-6">
+                Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!
+              </SuccessMessage>
 
               <AddToCalendar event={event} />
             </>

@@ -15,8 +15,9 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 import CheckAddSVG from 'public/icons/check-add.svg';
-import ErrorSVG from 'public/icons/error.svg';
 import CloseSVG from 'public/icons/close.svg';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 
 type Props = {
   event?: CPGEvent;
@@ -191,12 +192,8 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
             Click the button below to confirm your spot. You&apos;ll receive a confirmation email with all the event details.
           </p>
 
-          {/* error message container */}
           {error && (
-            <div className='flex gap-2 rounded-md bg-[#c5012c20] p-2 text-[15px] font-semibold leading-6 text-error-red'>
-              <ErrorSVG className="shrink-0 fill-error-red" />
-              <span>Error: {error}</span>
-            </div>
+            <ErrorMessage>Error: {error}</ErrorMessage>
           )}
 
           <Button
@@ -213,26 +210,21 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       {/* User has existing RSVP - show cancel option */}
       {user && !success && hasExistingRSVP && (
         <div className="flex flex-col gap-4">
-          <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
-            <CheckAddSVG className="shrink-0 fill-foreground" />
+          <SuccessMessage>
             <div>
               <p>You&apos;re signed up for this event!</p>
               <p className="mt-1 text-sm font-normal text-foreground/70">
                 A confirmation email was sent to {user.email}
               </p>
             </div>
-          </div>
+          </SuccessMessage>
 
           <p className="text-sm text-foreground/70">
             Need to cancel? Click the button below to remove your RSVP.
           </p>
 
-          {/* error message container */}
           {error && (
-            <div className='flex gap-2 rounded-md bg-[#c5012c20] p-2 text-[15px] font-semibold leading-6 text-error-red'>
-              <ErrorSVG className="shrink-0 fill-error-red" />
-              <span>Error: {error}</span>
-            </div>
+            <ErrorMessage>Error: {error}</ErrorMessage>
           )}
 
           <Button
@@ -255,10 +247,9 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       )}
 
       {success && !hasExistingRSVP && (
-        <div className='flex gap-2 rounded-md bg-[#00a86b20] p-4 font-semibold leading-6 text-foreground'>
-          <CheckAddSVG className="shrink-0 fill-foreground" />
-          <span>You&apos;re all set! A confirmation email with event details is on its way to your inbox.</span>
-        </div>
+        <SuccessMessage>
+          You&apos;re all set! A confirmation email with event details is on its way to your inbox.
+        </SuccessMessage>
       )}
     </div>
   );

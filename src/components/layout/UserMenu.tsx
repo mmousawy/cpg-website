@@ -14,7 +14,7 @@ import { routes } from '@/config/routes'
 export default function UserMenu() {
   const { user, isLoading, signOut } = useAuth()
   const { isAdmin } = useAdmin()
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -27,7 +27,7 @@ export default function UserMenu() {
 
   // Base styles for menu links
   const menuLinkClass = (href: string, exact = false) => clsx(
-    "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors",
+    "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm",
     isActive(href, exact)
       ? "bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]"
       : "hover:bg-background"
@@ -61,12 +61,12 @@ export default function UserMenu() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "flex items-center justify-center overflow-hidden rounded-full border-2 transition-colors",
-          isOpen ? "border-primary" : "border-border-color hover:border-primary"
+          "group border-2 rounded-full",
+          isOpen ? "border-primary" : "border-transparent"
         )}
         aria-label="User menu"
       >
-        <Avatar size="md" className="!size-10 border-0" />
+        <Avatar size="md" className="!size-10 border-0" hoverEffect />
       </button>
 
       {isOpen && (
@@ -129,18 +129,18 @@ export default function UserMenu() {
               <div className="border-t border-border-color p-2">
                 <button
                   onClick={() => {
-                    setTheme(theme === 'dark' ? 'light' : 'dark')
+                    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
                   }}
-                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
                 >
                   <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    {mounted && theme === 'dark' ? (
+                    {mounted && resolvedTheme === 'dark' ? (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     ) : (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     )}
                   </svg>
-                  {mounted && theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 </button>
 
                 <button
@@ -160,7 +160,7 @@ export default function UserMenu() {
                       console.error('Error signing out:', error)
                     }
                   }}
-                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 transition-colors hover:bg-red-500/10"
+                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
                 >
                   <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -195,18 +195,18 @@ export default function UserMenu() {
               <div className="border-t border-border-color mt-2 pt-2">
                 <button
                   onClick={() => {
-                    setTheme(theme === 'dark' ? 'light' : 'dark')
+                    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
                   }}
-                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
                 >
                   <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    {mounted && theme === 'dark' ? (
+                    {mounted && resolvedTheme === 'dark' ? (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     ) : (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     )}
                   </svg>
-                  {mounted && theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 </button>
               </div>
             </div>

@@ -8,10 +8,9 @@ import Avatar from '../auth/Avatar'
 type AlbumCardProps = {
   album: AlbumWithPhotos
   isOwner?: boolean
-  onDelete?: () => void
 }
 
-export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCardProps) {
+export default function AlbumCard({ album, isOwner = false }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || '/placeholder-album.jpg'
   const photoCount = album.photos?.length || 0
 
@@ -20,14 +19,14 @@ export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCar
     : `/@${album.profile?.nickname || 'unknown'}/${album.slug}`
 
   return (
-    <div className="group overflow-hidden rounded-lg border border-border-color bg-background-light transition-shadow hover:shadow-lg">
-      <Link href={albumUrl} className="block">
+    <Link href={albumUrl} className="group block rounded-lg">
+      <div className="group block overflow-hidden rounded-lg border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong">
         <div className="relative aspect-[4/3] overflow-hidden bg-background">
           <Image
             src={coverImage}
             alt={album.title}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-200 group-hover:scale-105 group-focus:scale-105"
           />
           {photoCount > 0 && (
             <div className="absolute bottom-2 right-2 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-md">
@@ -36,11 +35,11 @@ export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCar
           )}
         </div>
 
-        <div className="p-4">
-          <h3 className="text-lg font-semibold line-clamp-1">{album.title}</h3>
+        <div className="p-4 pt-3">
+          <h3 className="text-md font-semibold line-clamp-1">{album.title}</h3>
           {album.profile && (
-            <div className="flex items-center text-sm text-[var(--text-muted-light)] mt-1">
-              <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="sm" className='!size-6 mr-2' />@{album.profile.nickname}
+            <div className="flex items-center text-sm text-[var(--text-muted)] mt-1">
+              <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="xxs" className='mr-1.5' />@{album.profile.nickname}
             </div>
           )}
           {!album.is_public && isOwner && (
@@ -49,9 +48,7 @@ export default function AlbumCard({ album, isOwner = false, onDelete }: AlbumCar
             </span>
           )}
         </div>
-      </Link>
-
-      {/* Delete button removed. Album deletion is now handled in the warning section on the edit gallery page. */}
-    </div>
+      </div>
+    </Link>
   )
 }

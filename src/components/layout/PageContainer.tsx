@@ -10,7 +10,7 @@ type PageContainerProps = {
 
 // Shared padding used across all pages
 export const pagePadding = 'px-4 pb-8 pt-6 sm:p-12 sm:pb-14';
-export const pagePaddingAlt = 'px-4 pb-6 pt-5 sm:p-10';
+export const pagePaddingAlt = 'px-4 pb-5 pt-4 sm:p-10 sm:pt-8';
 
 export default function PageContainer({ children, className, variant = 'default' }: PageContainerProps) {
   return (

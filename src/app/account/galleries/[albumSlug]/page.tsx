@@ -5,6 +5,8 @@ import exifr from 'exifr'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import clsx from 'clsx'
+import PhotoSwipeLightbox from 'photoswipe/lightbox'
+import 'photoswipe/style.css'
 import {
   DndContext,
   closestCenter,
@@ -30,11 +32,21 @@ import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
 import type { Album, AlbumPhoto } from '@/types/albums'
 
-import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
 import EditSVG from 'public/icons/edit.svg'
 import PlusSVG from 'public/icons/plus.svg'
 import CloseSVG from 'public/icons/close.svg'
+import ErrorMessage from '@/components/shared/ErrorMessage'
+import SuccessMessage from '@/components/shared/SuccessMessage'
+
+// Expand/zoom icon component
+function ExpandSVG({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+    </svg>
+  )
+}
 
 // Shared input styling
 const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
@@ -151,22 +163,36 @@ function SortablePhoto({
         isDragging && 'z-50'
       )}
     >
-      <div className="aspect-square overflow-hidden" {...attributes} {...listeners}>
-        <Image
-          src={photo.photo_url}
-          alt={photo.title || ''}
-          width={300}
-          height={300}
-          className="size-full cursor-move object-cover"
-        />
+      <div className="aspect-square overflow-hidden relative">
+        <div className="size-full" {...attributes} {...listeners}>
+          <Image
+            src={photo.photo_url}
+            alt={photo.title || ''}
+            width={300}
+            height={300}
+            className="size-full cursor-move object-cover"
+          />
+        </div>
+        {/* Zoom button - PhotoSwipe anchor */}
+        <a
+          href={photo.photo_url}
+          data-pswp-width={photo.width || 1200}
+          data-pswp-height={photo.height || 800}
+          target="_blank"
+          rel="noreferrer"
+          className="absolute right-2 top-2 rounded-md bg-black/50 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+          aria-label="View fullscreen"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ExpandSVG className="size-4" />
+        </a>
       </div>
 
       {/* Caption section */}
       <div className="p-2">
         {isEditing ? (
           <div className="space-y-2">
-            <input
-              type="text"
+            <textarea
               value={editingCaption}
               onChange={(e) => onCaptionChange(e.target.value)}
               placeholder="Add a caption..."
@@ -274,6 +300,22 @@ export default function AlbumDetailPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, albumSlug])
+
+  // Initialize PhotoSwipe lightbox for the photos grid
+  useEffect(() => {
+    let lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
+      gallery: '#edit-album-gallery',
+      children: 'a',
+      pswpModule: () => import('photoswipe'),
+    })
+
+    lightbox.init()
+
+    return () => {
+      lightbox?.destroy()
+      lightbox = null
+    }
+  }, [photos])
 
   const fetchProfile = async () => {
     if (!user) return
@@ -468,18 +510,7 @@ export default function AlbumDetailPage() {
               console.warn('Failed to extract EXIF data:', err)
             }
 
-            // Insert photo record
-            await supabase
-              .from('album_photos')
-              .insert({
-                album_id: newAlbum.id,
-                photo_url: publicUrl,
-                width: img.width,
-                height: img.height,
-                sort_order: index,
-              })
-
-            // Insert image metadata
+            // Insert image metadata first (album_photos has FK to images)
             await supabase
               .from('images')
               .insert({
@@ -491,6 +522,17 @@ export default function AlbumDetailPage() {
                 mime_type: file.type,
                 exif_data: exifData,
                 uploaded_by: user.id,
+              })
+
+            // Insert photo record
+            await supabase
+              .from('album_photos')
+              .insert({
+                album_id: newAlbum.id,
+                photo_url: publicUrl,
+                width: img.width,
+                height: img.height,
+                sort_order: index,
               })
 
             return publicUrl
@@ -654,6 +696,20 @@ export default function AlbumDetailPage() {
           console.warn('Failed to extract EXIF data:', err)
         }
 
+        // Insert image metadata first (album_photos has FK to images)
+        await supabase
+          .from('images')
+          .insert({
+            storage_path: filePath,
+            url: publicUrl,
+            width: img.width,
+            height: img.height,
+            file_size: file.size,
+            mime_type: file.type,
+            exif_data: exifData,
+            uploaded_by: user.id,
+          })
+
         // Insert photo record
         const { data: photoData, error: insertError } = await supabase
           .from('album_photos')
@@ -670,20 +726,6 @@ export default function AlbumDetailPage() {
         if (insertError) {
           throw new Error(`Failed to save photo: ${file.name}`)
         }
-
-        // Insert image metadata
-        await supabase
-          .from('images')
-          .insert({
-            storage_path: filePath,
-            url: publicUrl,
-            width: img.width,
-            height: img.height,
-            file_size: file.size,
-            mime_type: file.type,
-            exif_data: exifData,
-            uploaded_by: user.id,
-          })
 
         return photoData as AlbumPhoto
       })
@@ -885,6 +927,102 @@ export default function AlbumDetailPage() {
         </Container>
       ) : (
       <div className="space-y-6">
+        {/* Photos Section */}
+        <Container>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Photos ({isNewAlbum ? pendingPhotos.length : photos.length})
+            </h2>
+            <Button
+              onClick={handleAddPhotosClick}
+              disabled={isUploading}
+              icon={<PlusSVG className="size-4" />}
+            >
+              {isUploading ? 'Uploading...' : 'Add photos'}
+            </Button>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            multiple
+            onChange={handlePhotoUpload}
+            className="hidden"
+          />
+
+          {isNewAlbum ? (
+            // Show pending photos for new albums
+            pendingPhotos.length === 0 ? (
+              <EmptyPhotosState />
+            ) : (
+              <>
+                <p className="mb-4 text-sm text-foreground/70">
+                  Drag photos to reorder them. Photos will be uploaded when you create the album.
+                </p>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handlePendingPhotosDragEnd}
+                >
+                  <SortableContext
+                    items={pendingPhotos.map((_, i) => `pending-${i}`)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                      {pendingPhotos.map((file, index) => (
+                        <SortablePendingPhoto
+                          key={`pending-${index}`}
+                          file={file}
+                          index={index}
+                          onDelete={handleRemovePendingPhoto}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </>
+            )
+          ) : (
+            // Show uploaded photos for existing albums
+            photos.length === 0 ? (
+              <EmptyPhotosState />
+            ) : (
+              <>
+                <p className="mb-4 text-sm text-foreground/70">
+                  Drag photos to reorder them
+                </p>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={photos.map(p => p.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div id="edit-album-gallery" className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                      {photos.map((photo) => (
+                        <SortablePhoto
+                          key={photo.id}
+                          photo={photo}
+                          onDelete={handleDeletePhoto}
+                          onEditCaption={handleEditCaption}
+                          isEditing={editingPhotoId === photo.id}
+                          editingCaption={editingCaption}
+                          onCaptionChange={setEditingCaption}
+                          onSaveCaption={() => handleSaveCaption(photo.id)}
+                          onCancelEdit={handleCancelEdit}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </>
+            )
+          )}
+        </Container>
+        
         {/* Album Details Form */}
         <Container>
 
@@ -975,16 +1113,11 @@ export default function AlbumDetailPage() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500">
-              {error}
-            </div>
+            <ErrorMessage variant="compact" className="mt-6">{error}</ErrorMessage>
           )}
 
           {success && (
-            <div className="flex items-center gap-2 rounded-md bg-green-500/10 p-3 text-sm text-green-500">
-              <CheckSVG className="size-4" />
-              Album saved successfully!
-            </div>
+            <SuccessMessage variant="compact" className="mt-6">Album saved successfully!</SuccessMessage>
           )}
 
           <div className="mt-6">
@@ -994,101 +1127,7 @@ export default function AlbumDetailPage() {
           </div>
         </Container>
 
-        {/* Photos Section */}
-        <Container>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              Photos ({isNewAlbum ? pendingPhotos.length : photos.length})
-            </h2>
-            <Button
-              onClick={handleAddPhotosClick}
-              disabled={isUploading}
-              icon={<PlusSVG className="size-4" />}
-            >
-              {isUploading ? 'Uploading...' : 'Add photos'}
-            </Button>
-          </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            multiple
-            onChange={handlePhotoUpload}
-            className="hidden"
-          />
-
-          {isNewAlbum ? (
-            // Show pending photos for new albums
-            pendingPhotos.length === 0 ? (
-              <EmptyPhotosState />
-            ) : (
-              <>
-                <p className="mb-4 text-sm text-foreground/70">
-                  Drag photos to reorder them. Photos will be uploaded when you create the album.
-                </p>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handlePendingPhotosDragEnd}
-                >
-                  <SortableContext
-                    items={pendingPhotos.map((_, i) => `pending-${i}`)}
-                    strategy={rectSortingStrategy}
-                  >
-                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                      {pendingPhotos.map((file, index) => (
-                        <SortablePendingPhoto
-                          key={`pending-${index}`}
-                          file={file}
-                          index={index}
-                          onDelete={handleRemovePendingPhoto}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              </>
-            )
-          ) : (
-            // Show uploaded photos for existing albums
-            photos.length === 0 ? (
-              <EmptyPhotosState />
-            ) : (
-              <>
-                <p className="mb-4 text-sm text-foreground/70">
-                  Drag photos to reorder them
-                </p>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={photos.map(p => p.id)}
-                    strategy={rectSortingStrategy}
-                  >
-                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                      {photos.map((photo) => (
-                        <SortablePhoto
-                          key={photo.id}
-                          photo={photo}
-                          onDelete={handleDeletePhoto}
-                          onEditCaption={handleEditCaption}
-                          isEditing={editingPhotoId === photo.id}
-                          editingCaption={editingCaption}
-                          onCaptionChange={setEditingCaption}
-                          onSaveCaption={() => handleSaveCaption(photo.id)}
-                          onCancelEdit={handleCancelEdit}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              </>
-            )
-          )}
-        </Container>
 
         {/* Danger zone: Album deletion warning section */}
         {!isNewAlbum && album && (

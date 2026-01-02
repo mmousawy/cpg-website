@@ -16,6 +16,8 @@ import ArrowLeftSVG from 'public/icons/arrow-left.svg'
 import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
 import clsx from 'clsx'
+import ErrorMessage from '@/components/shared/ErrorMessage'
+import SuccessMessage from '@/components/shared/SuccessMessage'
 
 // Shared input styling
 const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
@@ -572,16 +574,13 @@ export default function AdminEventFormPage() {
             </div>
 
             {error && (
-              <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
-                {error}
-              </div>
+              <ErrorMessage variant="compact" className="mt-4">{error}</ErrorMessage>
             )}
 
             {success && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-500">
-                <CheckSVG className="h-4 w-4 fill-green-500" />
+              <SuccessMessage variant="compact" className="mt-4">
                 {isNewEvent ? 'Event created successfully! Redirecting...' : 'Event updated successfully!'}
-              </div>
+              </SuccessMessage>
             )}
 
             <div className="mt-6 flex gap-3">

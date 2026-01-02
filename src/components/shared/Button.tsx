@@ -39,7 +39,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     'bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary-alt',
   secondary:
-    'bg-background border-border-color text-foreground hover:border-primary hover:bg-primary/5',
+    'bg-background border-border-color-strong text-foreground hover:border-primary hover:bg-primary/5',
   danger:
     'bg-background border-red-500/30 text-red-500 hover:border-red-500 hover:bg-red-500/10',
   ghost:
@@ -83,9 +83,9 @@ export default function Button({
       disabled={disabled}
       {...props}
     >
-      {icon && <span className="inline-flex shrink-0 [&_svg]:fill-current">{icon}</span>}
+      {icon && <span className="inline-flex shrink-0 [&_svg]:fill-current [&_svg[fill=none]]:fill-none [&_svg]:stroke-current">{icon}</span>}
       {children}
-      {iconRight && <span className="inline-flex shrink-0 [&_svg]:fill-current">{iconRight}</span>}
+      {iconRight && <span className="inline-flex shrink-0 [&_svg]:fill-current [&_svg[fill=none]]:fill-none [&_svg]:stroke-current">{iconRight}</span>}
     </button>
   );
 }

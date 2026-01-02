@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
+import ErrorMessage from '@/components/shared/ErrorMessage'
 
 import CheckSVG from 'public/icons/check.svg'
 
@@ -105,9 +106,7 @@ export default function ResetPasswordPage() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-500">
-              {error}
-            </div>
+            <ErrorMessage variant="compact">{error}</ErrorMessage>
           )}
 
           <Button

@@ -9,12 +9,13 @@
 :root.light {
   --primary: #38785f;
   --primary-alt: #a6db93;
-  --background: #f7f7f7;
+  --background: #f0f1f3;
   --background-light: #ffffff;
   --foreground: #171717;
-  --text-muted: #737373;
-  --text-muted-light: #a3a3a3;
-  --border-color: #e5e7ea;
+  --text-muted: #6e7277;
+  --text-muted-light: #8f98a3;
+  --border-color: #e0e3e7;
+  --border-color-strong: #cdd0d4;
   --error-red: #f75074;
 }
 
@@ -22,11 +23,12 @@
   --primary: #4a9478;
   --primary-alt: #58c287;
   --background: #171718;
-  --background-light: #2b2b2b;
+  --background-light: #2e2f31;
   --foreground: #ededed;
   --text-muted: #a3a3a3;
   --text-muted-light: #737373;
-  --border-color: #383b3d;
+  --border-color: #383a3d;
+  --border-color-strong: #595b5f;
   --error-red: #f5686a;
 }
 

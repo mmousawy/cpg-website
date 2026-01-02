@@ -10,7 +10,8 @@ import Container from '@/components/layout/Container'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PageContainer from '@/components/layout/PageContainer'
 
-import CheckSVG from 'public/icons/check.svg'
+import ErrorMessage from '@/components/shared/ErrorMessage'
+import SuccessMessage from '@/components/shared/SuccessMessage'
 
 type Profile = {
   id: string
@@ -356,7 +357,7 @@ export default function AccountPage() {
         <div className="space-y-8">
           {/* Profile Information Section */}
           <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Profile Information</h2>
+            <h2 className="mb-4 text-lg font-semibold opacity-70">Edit your profile</h2>
             <form onSubmit={handleSubmit}>
               <Container>
                 {/* Profile Picture */}
@@ -389,7 +390,7 @@ export default function AccountPage() {
                     <div className="flex flex-wrap gap-2">
                       <label
                         className={clsx(
-                          "cursor-pointer rounded-lg border border-border-color bg-background px-4 py-2 text-sm font-medium transition-colors",
+                          "inline-flex cursor-pointer items-center justify-center rounded-full border border-border-color bg-background px-4 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors",
                           "hover:border-primary hover:bg-primary/5",
                           isUploadingAvatar && "pointer-events-none opacity-50"
                         )}
@@ -405,18 +406,14 @@ export default function AccountPage() {
                         {isUploadingAvatar ? 'Uploading...' : 'Upload new picture'}
                       </label>
                       {customAvatarUrl && (
-                        <button
+                        <Button
                           type="button"
+                          variant="danger"
                           onClick={handleRemoveAvatar}
                           disabled={isUploadingAvatar}
-                          className={clsx(
-                            "rounded-lg border border-red-500/30 px-4 py-2 text-sm font-medium text-red-500 transition-colors",
-                            "hover:border-red-500 hover:bg-red-500/10",
-                            isUploadingAvatar && "pointer-events-none opacity-50"
-                          )}
                         >
                           Remove
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <p className="mt-2 text-xs text-foreground/50">
@@ -507,16 +504,13 @@ export default function AccountPage() {
                 </div>
 
                 {error && (
-                  <div className="mt-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-500">
-                    {error}
-                  </div>
+                  <ErrorMessage variant="compact" className="mt-4">{error}</ErrorMessage>
                 )}
 
                 {success && (
-                  <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
-                    <CheckSVG className="h-4 w-4 fill-green-600" />
+                  <SuccessMessage variant="compact" className="mt-4">
                     Profile updated successfully!
-                  </div>
+                  </SuccessMessage>
                 )}
 
                 <Button
@@ -532,7 +526,7 @@ export default function AccountPage() {
 
           {/* Account Info Section */}
           <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Account Info</h2>
+            <h2 className="mb-4 text-lg font-semibold opacity-70">Account info</h2>
             <Container>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">

@@ -4,6 +4,7 @@ import AlbumFullSizeGallery from '@/components/album/AlbumFullSizeGallery'
 import Comments from '@/components/shared/Comments'
 import Avatar from '@/components/auth/Avatar'
 import PageContainer from '@/components/layout/PageContainer'
+import AlbumModerationPanel from '@/components/admin/AlbumModerationPanel'
 import type { AlbumWithPhotos } from '@/types/albums'
 
 // Revalidate every 60 seconds to reduce database queries
@@ -79,6 +80,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
 
   // Fetch album with photos and user info
   // Only fetch necessary fields to reduce egress
+  // Note: is_suspended and suspension_reason are fetched via raw query below for moderation
   const { data: album, error } = await supabase
     .from('albums')
     .select(`
@@ -103,19 +105,24 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('slug', albumSlug)
     .eq('is_public', true)
     .single()
-
-  // Debug logging for photo issues
-  console.log('[PublicAlbum] Query result:', { 
-    albumId: album?.id,
-    photoCount: album?.photos?.length,
-    error: error?.message,
-    photos: album?.photos?.map((p: any) => ({ id: p.id, url: p.photo_url?.substring(0, 50) }))
-  });
+  
+  // Fetch moderation fields separately (may not exist in older DB versions)
+  let moderationData = { is_suspended: false, suspension_reason: null as string | null }
+  if (album) {
+    const { data: modData } = await supabase
+      .from('albums')
+      .select('is_suspended, suspension_reason' as any)
+      .eq('id', album.id)
+      .single()
+    if (modData) {
+      moderationData = {
+        is_suspended: (modData as any).is_suspended || false,
+        suspension_reason: (modData as any).suspension_reason || null,
+      }
+    }
+  }
 
   if (error || !album) {
-    // Debug log for troubleshooting 404s
-    console.error('Album fetch error:', error);
-    console.error('Album fetch result:', album);
     notFound();
   }
 
@@ -165,6 +172,17 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
         ) : (
           <AlbumFullSizeGallery photos={sortedPhotos} />
         )}
+
+        {/* Admin Moderation Panel */}
+        <div className="mt-10">
+          <AlbumModerationPanel
+            albumId={albumWithPhotos.id}
+            albumTitle={albumWithPhotos.title}
+            ownerNickname={albumWithPhotos.profile?.nickname || 'unknown'}
+            isSuspended={moderationData.is_suspended}
+            suspensionReason={moderationData.suspension_reason}
+          />
+        </div>
       </PageContainer>
       
       <PageContainer variant="alt" className="border-t border-t-border-color">

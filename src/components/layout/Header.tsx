@@ -90,7 +90,7 @@ export default function Header() {
             {/* Mobile Avatar - opens mobile menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex items-center justify-center overflow-hidden rounded-full transition-colors hover:border-primary"
+              className="flex items-center justify-center overflow-hidden rounded-full hover:border-primary"
               aria-label="Open menu"
             >
               <Avatar size="md" className="!size-10 border-0" />
@@ -100,7 +100,7 @@ export default function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors ${mobileMenuOpen ? 'border-primary' : 'border-border-color hover:border-primary'
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${mobileMenuOpen ? 'border-primary' : 'border-border-color hover:border-primary'
                   }`}
                 aria-label="Toggle menu"
               >

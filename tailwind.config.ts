@@ -23,6 +23,7 @@ export default {
         'background-light': "var(--background-light)",
         foreground: "var(--foreground)",
         'border-color': "var(--border-color)",
+        'border-color-strong': "var(--border-color-strong)",
         'error-red': "var(--error-red)",
       },
     },

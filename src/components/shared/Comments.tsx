@@ -142,7 +142,7 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <h3 className="text-xl font-semibold">Comments ({comments.length})</h3>
 
       {/* Comments List */}

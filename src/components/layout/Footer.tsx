@@ -25,8 +25,8 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light p-4 py-6 text-[15px] text-foreground">
-      <div className="flex w-full max-w-screen-md flex-col items-center gap-4">
+    <footer className="mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light p-4 py-4 text-foreground">
+      <div className="flex w-full max-w-screen-md flex-col items-center gap-3">
         <div className="flex items-center gap-4 max-md:justify-center">
           {socialLinks.map(({ name, url, icon: Icon }) => (
             <a
@@ -43,7 +43,7 @@ export default function Footer() {
             </a>
           ))}
         </div>
-        <p className="text-center opacity-70 mt-2">&copy; {new Date().getFullYear()} Creative Photography Group</p>
+        <p className="text-center opacity-70">&copy; {new Date().getFullYear()} Creative Photography Group</p>
       </div>
     </footer>
   );

@@ -2,7 +2,7 @@ import Container from "@/components/layout/Container";
 import PageContainer from "@/components/layout/PageContainer";
 import { createClient } from '@/utils/supabase/server';
 import CancelBlock from "./CancelBlock";
-import ErrorSVG from 'public/icons/error.svg';
+import ErrorMessage from '@/components/shared/ErrorMessage';
 
 export default async function Cancel({
   params,
@@ -27,12 +27,9 @@ export default async function Cancel({
       <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Cancel your RSVP</h2>
       <Container>
         {(!event || !rsvp || !rsvp.email) && (
-          <div className='flex gap-2 rounded-md bg-[#c5012c20] p-2 text-[15px] font-semibold leading-6 text-error-red'>
-            <ErrorSVG className="shrink-0 fill-error-red" />
-            <p>
-              Something went wrong with retrieving your RSVP details. Please contact us for assistance.
-            </p>
-          </div>
+          <ErrorMessage>
+            Something went wrong with retrieving your RSVP details. Please contact us for assistance.
+          </ErrorMessage>
         )}
         { event && rsvp?.email && (
           <CancelBlock

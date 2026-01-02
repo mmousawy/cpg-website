@@ -29,7 +29,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
 
   // Base styles for nav links (matches UserMenu styling)
   const navLinkClass = (href: string, exact = false) => clsx(
-    "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+    "flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium",
     isActive(href, exact)
       ? "bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]"
       : "hover:bg-background"
@@ -136,7 +136,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           <div className="p-2">
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {mounted && theme === 'dark' ? (
@@ -164,7 +164,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
                   console.error('Error signing out:', error)
                 }
               }}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 transition-colors hover:bg-red-500/10"
+              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -201,7 +201,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
 
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-background"
+            className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
           >
             <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {mounted && theme === 'dark' ? (
