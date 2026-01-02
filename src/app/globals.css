@@ -58,3 +58,8 @@ button:disabled,
   pointer-events: none;
   top: -1000px;
 }
+
+.pswp__bg {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}

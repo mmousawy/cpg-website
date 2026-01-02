@@ -348,6 +348,7 @@ export type Database = {
           is_admin: boolean | null
           last_logged_in: string | null
           nickname: string | null
+          social_links: { label: string; url: string }[] | null
           updated_at: string | null
           website: string | null
         }
@@ -361,6 +362,7 @@ export type Database = {
           is_admin?: boolean | null
           last_logged_in?: string | null
           nickname?: string | null
+          social_links?: { label: string; url: string }[] | null
           updated_at?: string | null
           website?: string | null
         }
@@ -374,6 +376,7 @@ export type Database = {
           is_admin?: boolean | null
           last_logged_in?: string | null
           nickname?: string | null
+          social_links?: { label: string; url: string }[] | null
           updated_at?: string | null
           website?: string | null
         }

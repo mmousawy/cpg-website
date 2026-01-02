@@ -471,11 +471,11 @@ export default function AdminEventFormPage() {
                 <label htmlFor="location" className="text-sm font-medium">
                   Location
                 </label>
-                <input
+                <textarea
                   id="location"
-                  type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
+                  rows={3}
                   className={inputClassName}
                   placeholder="e.g., Central Park, New York, NY"
                 />

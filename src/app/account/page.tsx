@@ -12,6 +12,12 @@ import PageContainer from '@/components/layout/PageContainer'
 
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import SuccessMessage from '@/components/shared/SuccessMessage'
+import PlusIconSVG from 'public/icons/plus.svg'
+
+type SocialLink = {
+  label: string
+  url: string
+}
 
 type Profile = {
   id: string
@@ -21,6 +27,7 @@ type Profile = {
   avatar_url: string | null
   bio: string | null
   website: string | null
+  social_links: SocialLink[] | null
   created_at: string
   last_logged_in?: string | null
 }
@@ -44,6 +51,7 @@ export default function AccountPage() {
   const [nickname, setNickname] = useState('')
   const [bio, setBio] = useState('')
   const [website, setWebsite] = useState('')
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([])
   const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null)
 
   // Stats state
@@ -60,9 +68,16 @@ export default function AccountPage() {
     lastLoggedIn: null as string | null,
   })
 
+  // Track which user ID we've loaded data for to avoid reloading on token refresh
+  const loadedUserIdRef = useRef<string | null>(null)
+
   useEffect(() => {
     // User is guaranteed by ProtectedRoute layout
     if (!user) return
+
+    // Only load if we haven't loaded for this user yet
+    if (loadedUserIdRef.current === user.id) return
+    loadedUserIdRef.current = user.id
 
     const loadData = async () => {
       try {
@@ -87,7 +102,7 @@ export default function AccountPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, nickname, avatar_url, bio, website, created_at, last_logged_in, is_admin')
+        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, created_at, last_logged_in, is_admin')
         .eq('id', user.id)
         .single()
 
@@ -113,6 +128,7 @@ export default function AccountPage() {
             setNickname(newProfile.nickname || '')
             setBio(newProfile.bio || '')
             setWebsite(newProfile.website || '')
+            setSocialLinks((newProfile.social_links as SocialLink[]) || [])
             setCustomAvatarUrl(newProfile.avatar_url)
           } else if (insertError) {
             console.error('Error creating profile:', insertError.message || insertError)
@@ -133,6 +149,7 @@ export default function AccountPage() {
             avatar_url: user.user_metadata?.avatar_url || null,
             bio: null,
             website: null,
+            social_links: null,
             created_at: user.created_at || new Date().toISOString(),
           })
         }
@@ -142,6 +159,7 @@ export default function AccountPage() {
         setNickname(data.nickname || '')
         setBio(data.bio || '')
         setWebsite(data.website || '')
+        setSocialLinks((data.social_links as SocialLink[]) || [])
         setCustomAvatarUrl(data.avatar_url)
       }
     } catch (err) {
@@ -311,6 +329,9 @@ export default function AccountPage() {
     setError(null)
     setSuccess(false)
 
+    // Filter out empty social links
+    const validSocialLinks = socialLinks.filter(link => link.label.trim() && link.url.trim())
+
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -318,6 +339,7 @@ export default function AccountPage() {
         nickname,
         bio,
         website,
+        social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
       })
       .eq('id', user.id)
 
@@ -355,10 +377,10 @@ export default function AccountPage() {
         <LoadingSpinner centered />
       ) : (
         <div className="space-y-8">
-          {/* Profile Information Section */}
-          <div>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Edit your profile</h2>
-            <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
+            {/* Basic Info Section */}
+            <div>
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Basic info</h2>
               <Container>
                 {/* Profile Picture */}
                 <div className="mb-6 flex items-center gap-6 border-b border-border-color pb-6">
@@ -473,7 +495,18 @@ export default function AccountPage() {
                     />
                     <p className="text-xs text-foreground/50">Your nickname is used in your gallery URLs and cannot be changed. URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{nickname || 'your-nickname'}</p>
                   </div>
+                </div>
+              </Container>
+            </div>
 
+            {/* Public Profile Section */}
+            <div className="mt-8">
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Your public profile</h2>
+              <Container>
+                <p className="text-sm text-foreground/60 mb-4">
+                  This information will be visible on your public profile page.
+                </p>
+                <div className="space-y-4">
                   <div className="flex flex-col gap-2">
                     <label htmlFor="bio" className="text-sm font-medium">
                       Bio
@@ -483,8 +516,8 @@ export default function AccountPage() {
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       placeholder="Tell us about yourself..."
-                      rows={3}
-                      className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none resize-none"
+                      rows={4}
+                      className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
                     />
                   </div>
 
@@ -501,28 +534,102 @@ export default function AccountPage() {
                       className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
                     />
                   </div>
+
+                  {/* Social Links */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">
+                        Social links
+                      </label>
+                      <span className="text-xs text-foreground/50">
+                        {socialLinks.length}/3
+                      </span>
+                    </div>
+                    <p className="text-xs text-foreground/50 mb-2">
+                      Add links to your social profiles (max 3)
+                    </p>
+                    
+                    <div className="space-y-4">
+                      {socialLinks.map((link, index) => (
+                        <div key={index} className="flex flex-col gap-2 rounded-lg border border-border-color bg-background-light p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0">
+                          <input
+                            type="text"
+                            value={link.label}
+                            required
+                            onChange={(e) => {
+                              const newLinks = [...socialLinks]
+                              newLinks[index] = { ...newLinks[index], label: e.target.value }
+                              setSocialLinks(newLinks)
+                            }}
+                            placeholder="Label (e.g., Instagram)"
+                            className="w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none sm:w-1/3"
+                          />
+                          <input
+                            type="url"
+                            value={link.url}
+                            pattern="https://.*"
+                            required
+                            onChange={(e) => {
+                              const newLinks = [...socialLinks]
+                              newLinks[index] = { ...newLinks[index], url: e.target.value }
+                              setSocialLinks(newLinks)
+                            }}
+                            placeholder="https://..."
+                            className="w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none sm:flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newLinks = socialLinks.filter((_, i) => i !== index)
+                              setSocialLinks(newLinks)
+                            }}
+                            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border-color bg-background px-3 py-2 text-sm text-red-500 transition-colors hover:border-red-500 hover:bg-red-500/5 sm:w-auto"
+                            aria-label="Remove link"
+                          >
+                            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="sm:hidden">Remove</span>
+                          </button>
+                        </div>
+                      ))}
+                      
+                      {socialLinks.length < 3 && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          icon={<PlusIconSVG className="size-4" />}  
+                          onClick={() => setSocialLinks([...socialLinks, { label: '', url: '' }])}
+                        >
+                          Add social link
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-
-                {error && (
-                  <ErrorMessage variant="compact" className="mt-4">{error}</ErrorMessage>
-                )}
-
-                {success && (
-                  <SuccessMessage variant="compact" className="mt-4">
-                    Profile updated successfully!
-                  </SuccessMessage>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={isSaving}
-                  className="mt-6"
-                >
-                  {isSaving ? 'Saving...' : 'Save changes'}
-                </Button>
               </Container>
-            </form>
-          </div>
+            </div>
+
+            {/* Save Button & Messages */}
+            <div className="mt-6">
+              {error && (
+                <ErrorMessage variant="compact" className="mb-4">{error}</ErrorMessage>
+              )}
+
+              {success && (
+                <SuccessMessage variant="compact" className="mb-4">
+                  Profile updated successfully!
+                </SuccessMessage>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save changes'}
+              </Button>
+            </div>
+          </form>
 
           {/* Account Info Section */}
           <div>
