@@ -9,9 +9,10 @@ type ClickableAvatarProps = {
   avatarUrl: string | null
   fullName: string | null
   className?: string
+  suppressFocusOutline?: boolean
 }
 
-export default function ClickableAvatar({ avatarUrl, fullName, className }: ClickableAvatarProps) {
+export default function ClickableAvatar({ avatarUrl, fullName, className, suppressFocusOutline }: ClickableAvatarProps) {
   const galleryId = 'profile-avatar-gallery'
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
   const imageLoaded = useRef(false)
@@ -76,7 +77,7 @@ export default function ClickableAvatar({ avatarUrl, fullName, className }: Clic
         data-pswp-height={dimensions?.height || 500}
         target="_blank"
         rel="noreferrer"
-        className="block size-full cursor-zoom-in"
+        className={`relative block size-full cursor-zoom-in overflow-hidden rounded-full ${suppressFocusOutline ? 'focus:outline-none' : ''}`}
       >
         <Image
           src={avatarUrl}

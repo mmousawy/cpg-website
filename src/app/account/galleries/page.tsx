@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
@@ -75,14 +73,13 @@ export default function AccountGalleriesPage() {
             Create and manage your photo albums
           </p>
         </div>
-        <Link href="/account/galleries/new">
-          <Button
-            icon={<PlusSVG className="size-5 -ml-0.5" />}
-            variant="primary"
-          >
-            New Album
-          </Button>
-        </Link>
+        <Button
+          href="/account/galleries/new"
+          icon={<PlusSVG className="size-5 -ml-0.5" />}
+          variant="primary"
+        >
+          New Album
+        </Button>
       </div>
 
       {isLoading ? (
@@ -94,9 +91,7 @@ export default function AccountGalleriesPage() {
           <p className="mb-4 text-lg opacity-70">
             You haven&apos;t created any albums yet
           </p>
-          <Link href="/account/galleries/new">
-            <Button>Create Your First Album</Button>
-          </Link>
+          <Button href="/account/galleries/new">Create Your First Album</Button>
         </Container>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

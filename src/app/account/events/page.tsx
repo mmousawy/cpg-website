@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -160,15 +159,14 @@ export default function MyEventsPage() {
           ) : upcomingRSVPs.length === 0 ? (
             <Container className="text-center">
               <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No upcoming events</p>
-              <Link href="/" className="mt-4 inline-block">
-                <Button
-                  size='sm'
-                  iconRight={<ArrowRightSVG className="-mr-1.5" />}
-                  className="rounded-full"
-                >
-                  Browse events
-                </Button>
-              </Link>
+              <Button
+                href="/"
+                size='sm'
+                iconRight={<ArrowRightSVG className="-mr-1.5" />}
+                className="mt-4 rounded-full"
+              >
+                Browse events
+              </Button>
             </Container>
           ) : (
             <Container>

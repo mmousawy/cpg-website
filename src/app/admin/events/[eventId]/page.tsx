@@ -587,11 +587,9 @@ export default function AdminEventFormPage() {
               <Button type="submit" disabled={isSaving} variant="primary">
                 {isSaving ? 'Saving...' : isNewEvent ? 'Create Event' : 'Save Changes'}
               </Button>
-              <Link href="/admin/events">
-                <Button type="button" variant="secondary">
-                  Cancel
-                </Button>
-              </Link>
+              <Button href="/admin/events" variant="secondary">
+                Cancel
+              </Button>
             </div>
           </Container>
         </form>

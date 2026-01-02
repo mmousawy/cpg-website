@@ -140,7 +140,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
           <h1 className="mb-4 text-3xl font-bold">{albumWithPhotos.title}</h1>
           <Link 
             href={albumWithPhotos.profile?.nickname ? `/@${albumWithPhotos.profile.nickname}` : '#'}
-            className="mb-4 flex items-center gap-3 w-fit group"
+            className="mb-4 flex items-center gap-3 w-fit group rounded-lg"
           >
             <Avatar
               avatarUrl={albumWithPhotos.profile?.avatar_url}

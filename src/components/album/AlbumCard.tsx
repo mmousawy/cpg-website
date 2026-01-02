@@ -29,37 +29,38 @@ export default function AlbumCard({ album, isOwner = false }: AlbumCardProps) {
             className="object-cover transition-transform duration-200"
           />
           
-          {/* Top blur layer with gradient mask - visible on hover */}
+          {/* Desktop hover overlays - hidden on mobile */}
+          {/* Top blur layer with gradient mask */}
           <div 
-            className="absolute inset-x-0 top-0 h-24 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+            className="hidden sm:block absolute inset-x-0 top-0 h-24 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
             style={{ 
               WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
               maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
             }}
           />
-          {/* Top gradient overlay - visible on hover */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
+          {/* Top gradient overlay */}
+          <div className="hidden sm:block absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
           
-          {/* Bottom blur layer with gradient mask - visible on hover */}
+          {/* Bottom blur layer with gradient mask */}
           <div 
-            className="absolute inset-x-0 bottom-0 h-24 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+            className="hidden sm:block absolute inset-x-0 bottom-0 h-24 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
             style={{ 
               WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
               maskImage: 'linear-gradient(to top, black 0%, transparent 100%)'
             }}
           />
-          {/* Bottom gradient overlay - visible on hover */}
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
+          {/* Bottom gradient overlay */}
+          <div className="hidden sm:block absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
           
-          {/* Title - top left, visible on hover */}
-          <div className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
+          {/* Title - top left, visible on hover (desktop only) */}
+          <div className="hidden sm:block absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
             <h3 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md">
               {album.title}
             </h3>
           </div>
           
-          {/* Bottom info bar - visible on hover */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
+          {/* Bottom info bar - visible on hover (desktop only) */}
+          <div className="hidden sm:flex absolute bottom-0 left-0 right-0 p-3 items-center justify-between opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
             {/* Nickname - bottom left */}
             {album.profile && (
               <div className="flex items-center gap-1.5 text-sm text-white drop-shadow-md">
@@ -83,6 +84,29 @@ export default function AlbumCard({ album, isOwner = false }: AlbumCardProps) {
                 Private
               </span>
             </div>
+          )}
+        </div>
+
+        {/* Mobile info section - always visible, below image */}
+        <div className="sm:hidden p-3">
+          <h3 className="text-sm font-semibold line-clamp-1">{album.title}</h3>
+          <div className="flex items-center justify-between mt-1.5">
+            {album.profile && (
+              <div className="flex items-center gap-1.5 text-xs text-foreground/70">
+                <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="xxs" />
+                <span>@{album.profile.nickname}</span>
+              </div>
+            )}
+            {photoCount > 0 && (
+              <div className="text-xs text-foreground/50">
+                {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+              </div>
+            )}
+          </div>
+          {!album.is_public && isOwner && (
+            <span className="mt-2 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+              Private
+            </span>
           )}
         </div>
       </div>

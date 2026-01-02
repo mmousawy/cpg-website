@@ -59,14 +59,13 @@ export default function AdminEventsPage() {
             Create, edit, and delete events
           </p>
         </div>
-        <Link href="/admin/events/new">
-          <Button
-            icon={<PlusSVG className="h-5 w-5" />}
-            variant="primary"
-          >
-            Create event
-          </Button>
-        </Link>
+        <Button
+          href="/admin/events/new"
+          icon={<PlusSVG className="h-5 w-5" />}
+          variant="primary"
+        >
+          Create event
+        </Button>
       </div>
 
       {isLoading ? (
@@ -78,11 +77,9 @@ export default function AdminEventsPage() {
           <div className="text-center">
             <SadSVG className="mb-4 inline-block h-12 w-12 fill-foreground/50" />
             <p className="mb-4 text-foreground/80">No events yet</p>
-            <Link href="/admin/events/new">
-              <Button icon={<PlusSVG className="h-5 w-5" />}>
-                Create your first event
-              </Button>
-            </Link>
+            <Button href="/admin/events/new" icon={<PlusSVG className="h-5 w-5" />}>
+              Create your first event
+            </Button>
           </div>
         </Container>
       ) : (

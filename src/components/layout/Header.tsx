@@ -61,7 +61,7 @@ export default function Header() {
       <div className="flex w-full max-w-screen-md items-center justify-between gap-4">
         {/* Left: Logo + Desktop Nav */}
         <div className="flex items-center gap-6">
-          <Link href="/" aria-label="Creative Photography Group Home">
+          <Link href="/" className="rounded-full" aria-label="Creative Photography Group Home">
             <LogoSVG className="block size-14 max-sm:size-10" />
           </Link>
 

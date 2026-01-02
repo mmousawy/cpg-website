@@ -155,11 +155,11 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
           </p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="dark:bg-foreground/5 rounded-lg shadow-md shadow-[#00000007] border border-border-color p-4">
+            <div key={comment.id} className="dark:bg-foreground/10 rounded-lg shadow-md shadow-[#00000007] border border-border-color-strong p-4">
               <div className="flex items-start justify-between gap-2">
                 <Link 
                   href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'} 
-                  className="flex gap-3 group"
+                  className="flex gap-3 group rounded-lg"
                 >
                   <Avatar
                     avatarUrl={comment.profile?.avatar_url}

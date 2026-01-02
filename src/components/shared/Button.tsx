@@ -1,11 +1,12 @@
 // Move to shared/Button.tsx
 import clsx from 'clsx';
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import Link from 'next/link';
+import { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'custom';
 type ButtonSize = 'sm' | 'md';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type BaseButtonProps = {
   /**
    * Visual style variant
    * @default 'primary'
@@ -33,7 +34,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * Button content
    */
   children: ReactNode;
-}
+};
+
+type ButtonAsButton = BaseButtonProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps> & {
+    href?: never;
+  };
+
+type ButtonAsLink = BaseButtonProps &
+  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> & {
+    href: string;
+  };
+
+type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
@@ -61,31 +74,44 @@ export default function Button({
   iconRight,
   children,
   className,
-  disabled,
   ...props
 }: ButtonProps) {
-  return (
-    <button
-      className={clsx(
-        // Base styles
-        'inline-flex items-center justify-center gap-2 rounded-full border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
-        // Variant styles
-        variantStyles[variant],
-        // Size styles
-        sizeStyles[size],
-        // Width
-        fullWidth && 'w-full',
-        // Disabled state
-        disabled && 'cursor-not-allowed opacity-50',
-        // Custom className
-        className
-      )}
-      disabled={disabled}
-      {...props}
-    >
+  const classes = clsx(
+    // Base styles
+    'inline-flex items-center justify-center gap-2 rounded-full border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
+    // Variant styles
+    variantStyles[variant],
+    // Size styles
+    sizeStyles[size],
+    // Width
+    fullWidth && 'w-full',
+    // Disabled state (only for buttons)
+    'disabled' in props && props.disabled && 'cursor-not-allowed opacity-50',
+    // Custom className
+    className
+  );
+
+  const content = (
+    <>
       {icon && <span className="inline-flex shrink-0 [&_svg]:fill-current [&_svg[fill=none]]:fill-none [&_svg]:stroke-current">{icon}</span>}
       {children}
       {iconRight && <span className="inline-flex shrink-0 [&_svg]:fill-current [&_svg[fill=none]]:fill-none [&_svg]:stroke-current">{iconRight}</span>}
+    </>
+  );
+
+  if ('href' in props && props.href) {
+    const { href, ...linkProps } = props as ButtonAsLink;
+    return (
+      <Link href={href} className={classes} {...linkProps}>
+        {content}
+      </Link>
+    );
+  }
+
+  const buttonProps = props as ButtonAsButton;
+  return (
+    <button className={classes} {...buttonProps}>
+      {content}
     </button>
   );
 }

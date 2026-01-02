@@ -116,12 +116,15 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <div className="mb-8 sm:mb-10">
           {/* Avatar and Name */}
           <div className="mb-3 sm:mb-6 flex items-center gap-3 sm:gap-4">
-            <div className="relative flex shrink-0 h-20 w-20 sm:h-26 sm:w-26 items-center justify-center overflow-hidden rounded-full border-2 border-border-color">
-              <ClickableAvatar
-                avatarUrl={typedProfile.avatar_url}
-                fullName={typedProfile.full_name}
-                className="size-full"
-              />
+            <div className="relative shrink-0 rounded-full outline outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none">
+              <div className="flex h-20 w-20 sm:h-26 sm:w-26 items-center justify-center overflow-hidden rounded-full border-2 border-border-color">
+                <ClickableAvatar
+                  avatarUrl={typedProfile.avatar_url}
+                  fullName={typedProfile.full_name}
+                  className="size-full"
+                  suppressFocusOutline
+                />
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="sm:text-3xl text-xl font-bold truncate">
