@@ -138,7 +138,11 @@ export type Database = {
           description: string | null
           id: string
           is_public: boolean | null
+          is_suspended: boolean | null
           slug: string
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -149,7 +153,11 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean | null
+          is_suspended?: boolean | null
           slug: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -160,7 +168,11 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean | null
+          is_suspended?: boolean | null
           slug?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -275,6 +287,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_rsvps_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

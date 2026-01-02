@@ -66,44 +66,6 @@ export default function AccountGalleriesPage() {
     setIsLoading(false)
   }
 
-  const handleDeleteAlbum = async (albumId: string) => {
-    if (!confirm('Are you sure you want to delete this album? All photos will be removed.')) {
-      return
-    }
-
-    try {
-      // Delete all photos first
-      const { error: photosError } = await supabase
-        .from('album_photos')
-        .delete()
-        .eq('album_id', albumId)
-
-      if (photosError) {
-        console.error('Error deleting photos:', photosError)
-        alert('Failed to delete album photos')
-        return
-      }
-
-      // Delete album
-      const { error: albumError } = await supabase
-        .from('albums')
-        .delete()
-        .eq('id', albumId)
-
-      if (albumError) {
-        console.error('Error deleting album:', albumError)
-        alert('Failed to delete album')
-        return
-      }
-
-      // Refresh albums list
-      fetchAlbums()
-    } catch (err) {
-      console.error('Unexpected error:', err)
-      alert('An unexpected error occurred')
-    }
-  }
-
   return (
     <PageContainer>
       <div className="mb-8 flex items-start justify-between gap-4">
@@ -143,7 +105,6 @@ export default function AccountGalleriesPage() {
               key={album.id}
               album={album}
               isOwner
-              onDelete={() => handleDeleteAlbum(album.id)}
             />
           ))}
         </div>
