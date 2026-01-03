@@ -70,14 +70,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
     const supabase = createClient();
     
-    const updateLastLoggedIn = (userId: string) => {
+    const updateLastLoggedIn = async (userId: string): Promise<void> => {
       if (lastLoggedInUpdatedRef.current === userId) return;
       lastLoggedInUpdatedRef.current = userId;
-      supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId);
+      await supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId);
     };
     
     // Initialize session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
       
       const userId = session?.user?.id ?? null;
@@ -87,15 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       
       if (userId) {
+        // Update last_logged_in first, then fetch profile so stats get the updated value
+        await updateLastLoggedIn(userId);
         fetchProfile(userId);
-        updateLastLoggedIn(userId);
       }
     }).catch(() => {
       if (mounted) setIsLoading(false);
     });
     
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted || event === 'INITIAL_SESSION') return;
       
       const userId = session?.user?.id ?? null;
@@ -107,8 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (userChanged) {
         if (userId) {
+          if (event === 'SIGNED_IN') {
+            // Update last_logged_in first, then fetch profile
+            await updateLastLoggedIn(userId);
+          }
           fetchProfile(userId);
-          if (event === 'SIGNED_IN') updateLastLoggedIn(userId);
         } else {
           setProfile(null);
           lastLoggedInUpdatedRef.current = null;
