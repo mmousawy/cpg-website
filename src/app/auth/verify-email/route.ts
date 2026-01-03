@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { Resend } from "resend";
+import { render } from "@react-email/render";
 
 import { createAdminClient } from "@/utils/supabase/admin";
+import WelcomeTemplate from "@/emails/auth/welcome";
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Hash token for comparison
 function hashToken(token: string): string {
@@ -63,6 +68,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       `${origin}/auth-error?error=confirm_failed&message=${encodeURIComponent("Failed to verify email. Please try again.")}`
     );
+  }
+
+  // Get user profile for name
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", authToken.user_id)
+    .single();
+
+  const fullName = profile?.full_name || email.split("@")[0];
+
+  // Send welcome email
+  const emailResult = await resend.emails.send({
+    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+    to: email,
+    replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+    subject: "Welcome to Creative Photography Group! 📸",
+    html: await render(WelcomeTemplate({ fullName })),
+  });
+
+  if (emailResult.error) {
+    console.error("Welcome email error:", emailResult.error);
+    // Don't fail - verification was successful
   }
 
   console.log(`✅ Email verified for user: ${email}`);
