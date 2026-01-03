@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 // Pages that should redirect to user dashboard after login
-const PUBLIC_LISTING_PAGES = ['/', '/past-meetups']
+const PUBLIC_LISTING_PAGES = ['/', '/events']
 
 // Determine the final redirect destination after login
 function getPostLoginRedirect(redirectTo: string | null): string {

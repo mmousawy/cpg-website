@@ -6,7 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
-import AlbumCard from '@/components/album/AlbumCard'
+import AlbumGrid from '@/components/album/AlbumGrid'
 import type { AlbumWithPhotos } from '@/types/albums'
 
 import PlusSVG from 'public/icons/plus.svg'
@@ -94,15 +94,7 @@ export default function AccountGalleriesPage() {
           <Button href="/account/galleries/new">Create Your First Album</Button>
         </Container>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {albums.map((album) => (
-            <AlbumCard
-              key={album.id}
-              album={album}
-              isOwner
-            />
-          ))}
-        </div>
+        <AlbumGrid albums={albums} isOwner />
       )}
     </PageContainer>
   )

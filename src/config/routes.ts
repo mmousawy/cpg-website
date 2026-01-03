@@ -1,6 +1,6 @@
 export const routes = {
   home: {
-    label: 'Events',
+    label: 'Home',
     url: '/',
   },
   login: {
@@ -19,9 +19,9 @@ export const routes = {
     label: 'Reset password',
     url: '/reset-password',
   },
-  about: {
-    label: 'About',
-    url: '/about',
+  events: {
+    label: 'Events',
+    url: '/events',
   },
   galleries: {
     label: 'Galleries',

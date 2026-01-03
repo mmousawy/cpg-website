@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/utils/supabase/server';
 
 import Attendees, { AttendeesLoading } from './Attendees';
@@ -6,14 +7,14 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
-import SignupButton from './SignupButton';
+import EventRsvpStatus from './EventRsvpStatus';
 import { Suspense } from 'react';
 import EventImage from './EventImage';
 import Container from '../layout/Container';
 
 import type { CPGEvent } from '@/types/events';
 
-export default async function Events({ filter }: { filter: 'upcoming' | 'past' }) {
+export default async function Events({ filter, emptyMessage }: { filter: 'upcoming' | 'past', emptyMessage?: string }) {
   const supabase = await createClient();
 
   // Fetch events
@@ -29,17 +30,6 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
 
   const events: CPGEvent[] = response.data;
 
-  // Fetch image metadata for all cover images
-  const coverImageUrls = (events.map(e => e.cover_image).filter((url): url is string => typeof url === 'string'));
-  const { data: imageMetadata } = await supabase
-    .from('images')
-    .select('url, width, height')
-    .in('url', coverImageUrls);
-
-  // Create a map of URL -> dimensions
-  const dimensionsMap = new Map(
-    imageMetadata?.map(img => [img.url, { width: img.width, height: img.height }]) || []
-  );
 
   // Filter events based on the filter prop
   const now = new Date();
@@ -56,7 +46,7 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
     }
   });
 
-  // Use cover_image for event images
+  // Normalize event data
   const enrichedEvents = (filteredEvents ?? [])
     .filter((event): event is CPGEvent => !!event && typeof event === 'object')
     .map((event) => ({
@@ -68,23 +58,24 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
       image_width: event.image_width ?? null,
       max_attendees: event.max_attendees ?? null,
       rsvp_count: event.rsvp_count ?? null,
-      dimensions: dimensionsMap.get(event.cover_image!) || { width: 1200, height: 800 }
     }));
 
   return (
     <>
       {(!enrichedEvents || enrichedEvents.length === 0) && (
         <Container className="text-center">
-          <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No events found</p>
+          <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> {emptyMessage || 'No events found'}</p>
         </Container>
       )}
       {enrichedEvents && enrichedEvents.map((event) => (
-        <Container key={event.id} id={`gallery-${event.id}`}>
+        <Container key={event.id}>
           <div>
             <EventImage event={event} size='small' />
             <div className='mb-6 flex justify-between'>
-              <h3 className="text-2xl font-bold">{event.title}</h3>
-              <SignupButton event={event} className="ml-2 max-sm:hidden" />
+              <Link href={`/events/${event.slug}`} className="group">
+                <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">{event.title}</h3>
+              </Link>
+              <EventRsvpStatus event={event} className="ml-2 max-sm:hidden" />
             </div>
             <div className='flex gap-6'>
               <div>
@@ -108,7 +99,7 @@ export default async function Events({ filter }: { filter: 'upcoming' | 'past' }
               <Suspense fallback={<AttendeesLoading />}>
                 <Attendees event={event} supabase={supabase} />
               </Suspense>
-              <SignupButton event={event} className="ml-2 self-end sm:hidden" />
+              <EventRsvpStatus event={event} className="ml-2 self-end sm:hidden" />
             </div>
           </div>
         </Container>

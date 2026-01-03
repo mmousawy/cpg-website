@@ -15,6 +15,7 @@ import ErrorMessage from '@/components/shared/ErrorMessage'
 
 import DiscordSVG from 'public/icons/discord2.svg'
 import CheckSVG from 'public/icons/check.svg'
+import ArrowLink from '@/components/shared/ArrowLink'
 
 export default function SignupPage() {
   const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth()
@@ -89,12 +90,9 @@ export default function SignupPage() {
             We&apos;ve sent a confirmation link to <strong>{email}</strong>.
             Click the link in the email to activate your account.
           </p>
-          <Link
-            href={routes.login.url}
-            className="mt-6 inline-block text-primary hover:text-primary-alt"
-          >
+          <ArrowLink href={routes.login.url} direction="left" className="mt-6">
             Back to login
-          </Link>
+          </ArrowLink>
         </Container>
       </PageContainer>
     )
@@ -116,7 +114,7 @@ export default function SignupPage() {
             variant="secondary"
             fullWidth
             icon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" data-no-inherit>
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -238,7 +236,7 @@ export default function SignupPage() {
             type="submit"
             disabled={isLoading}
             fullWidth
-            className="mt-2"
+            className="mt-2 py-2"
           >
             {isLoading ? 'Creating account...' : 'Create account'}
           </Button>

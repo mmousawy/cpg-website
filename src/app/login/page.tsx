@@ -15,7 +15,7 @@ import ErrorMessage from '@/components/shared/ErrorMessage'
 import DiscordSVG from 'public/icons/discord2.svg'
 
 // Pages that should redirect to user dashboard after login
-const PUBLIC_LISTING_PAGES = ['/', '/past-meetups']
+const PUBLIC_LISTING_PAGES = ['/', '/events']
 
 // Determine the final redirect destination after login
 function getPostLoginRedirect(redirectTo: string | null): string {
@@ -93,7 +93,7 @@ function LoginForm() {
             variant="secondary"
             fullWidth
             icon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" data-no-inherit>
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -186,7 +186,7 @@ function LoginForm() {
             type="submit"
             disabled={isLoading}
             fullWidth
-            className="mt-2"
+            className="mt-2 py-2"
           >
             {isLoading ? 'Logging in...' : 'Log in'}
           </Button>

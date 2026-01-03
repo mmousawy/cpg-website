@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import AlbumCard from '@/components/album/AlbumCard'
+import AlbumGrid from '@/components/album/AlbumGrid'
 import PageContainer from '@/components/layout/PageContainer'
 import type { AlbumWithPhotos } from '@/types/albums'
 
@@ -55,11 +55,7 @@ export default async function GalleriesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {albumsWithPhotos.map((album) => (
-            <AlbumCard key={album.id} album={album} />
-          ))}
-        </div>
+        <AlbumGrid albums={albumsWithPhotos} />
       )}
     </PageContainer>
   )

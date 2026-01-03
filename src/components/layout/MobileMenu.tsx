@@ -1,5 +1,6 @@
 'use client'
 
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -17,7 +18,7 @@ interface MobileMenuProps {
 export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps) {
   const { user, profile, signOut } = useAuth()
   const { isAdmin } = useAdmin()
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
   const pathname = usePathname()
 
   // Helper to check if a route is active
@@ -38,7 +39,19 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
   if (!isOpen) return null
 
   return (
-    <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color bg-background-light shadow-lg">
+    <>
+      {/* Dark overlay - rendered via portal to escape header's stacking context */}
+      {mounted && createPortal(
+        <div 
+          className="fixed inset-0 z-30 bg-black/40 dark:bg-black/60 backdrop-blur-[1px]"
+          onClick={onClose}
+          aria-hidden="true"
+        />,
+        document.body
+      )}
+      
+      {/* Menu panel */}
+      <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color bg-background-light shadow-lg">
       {/* Navigation Links */}
       <div className="p-2">
         <Link
@@ -62,14 +75,14 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           {routes.galleries.label}
         </Link>
         <Link
-          href={routes.about.url}
+          href={routes.events.url}
           onClick={onClose}
-          className={navLinkClass(routes.about.url)}
+          className={navLinkClass(routes.events.url)}
         >
           <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          {routes.about.label}
+          {routes.events.label}
         </Link>
       </div>
 
@@ -147,17 +160,17 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
 
           <div className="p-2">
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {mounted && theme === 'dark' ? (
+                {mounted && resolvedTheme === 'dark' ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 ) : (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 )}
               </svg>
-              {mounted && theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             </button>
             <button
               onClick={async () => {
@@ -212,20 +225,21 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           <div className="mx-2 my-2 border-t border-border-color" />
 
           <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
             className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
           >
             <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {mounted && theme === 'dark' ? (
+              {mounted && resolvedTheme === 'dark' ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               )}
             </svg>
-            {mounted && theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           </button>
         </div>
       )}
     </div>
+    </>
   )
 }

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
-import AlbumCard from '@/components/album/AlbumCard'
+import AlbumGrid from '@/components/album/AlbumGrid'
 import ClickableAvatar from '@/components/shared/ClickableAvatar'
 import PageContainer from '@/components/layout/PageContainer'
 import { getSocialIcon, getDomain } from '@/utils/socialIcons'
@@ -131,14 +131,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                 {typedProfile.full_name || `@${typedProfile.nickname}`}
               </h1>
               {typedProfile.full_name && (
-                <p className="sm:text-lg text-base opacity-70 sm:mb-2">
+                <p className="sm:text-lg text-base opacity-70">
                   @{typedProfile.nickname}
                 </p>
               )}
 
               {/* Links - Desktop only (inline with name) */}
               {(typedProfile.website || socialLinks.length > 0) && (
-                <div className="hidden sm:flex flex-wrap items-center gap-2">
+                <div className="hidden sm:flex flex-wrap items-center gap-2 sm:mt-2">
                   {typedProfile.website && (
                     <a
                       href={typedProfile.website}
@@ -231,11 +231,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {albumsWithPhotos.map((album) => (
-                <AlbumCard key={album.id} album={album} />
-              ))}
-            </div>
+            <AlbumGrid albums={albumsWithPhotos} />
           )}
         </div>
       </PageContainer>

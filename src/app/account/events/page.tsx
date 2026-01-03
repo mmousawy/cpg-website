@@ -151,7 +151,7 @@ export default function MyEventsPage() {
       <div className="space-y-8">
         {/* Upcoming Events */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming Events</h2>
+          <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming events</h2>
           {isLoading ? (
             <Container className="text-center animate-pulse">
               <p className="text-foreground/50">Loading your events...</p>
@@ -187,7 +187,7 @@ export default function MyEventsPage() {
         {/* Past Events */}
         {pastRSVPs.length > 0 && (
           <section>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Past Events</h2>
+            <h2 className="mb-4 text-lg font-semibold opacity-70">Past events</h2>
             <Container>
               <div className="space-y-3">
                 {pastRSVPs.map((rsvp) => (

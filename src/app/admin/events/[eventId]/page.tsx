@@ -12,7 +12,7 @@ import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
 
-import ArrowLeftSVG from 'public/icons/arrow-left.svg'
+import ArrowLink from '@/components/shared/ArrowLink'
 import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
 import clsx from 'clsx'
@@ -366,10 +366,6 @@ export default function AdminEventFormPage() {
   return (
     <PageContainer>
       <div className="mb-8">
-        <Link href="/admin/events" className="mb-4 inline-flex items-center gap-2 text-sm text-primary hover:underline">
-          <ArrowLeftSVG className="h-4 w-4 fill-primary" />
-          Back to Events
-        </Link>
         <h1 className="mb-2 text-3xl font-bold">
           {isNewEvent ? 'Create new event' : 'Edit event'}
         </h1>

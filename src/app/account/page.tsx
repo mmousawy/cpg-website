@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTheme } from 'next-themes'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -28,6 +29,7 @@ type Profile = {
   bio: string | null
   website: string | null
   social_links: SocialLink[] | null
+  album_card_style: 'large' | 'compact' | null
   created_at: string
   last_logged_in?: string | null
 }
@@ -35,6 +37,7 @@ type Profile = {
 export default function AccountPage() {
   // User is guaranteed by ProtectedRoute layout
   const { user, refreshProfile: refreshAuthProfile } = useAuth()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -45,6 +48,7 @@ export default function AccountPage() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [themeMounted, setThemeMounted] = useState(false)
 
   // Form state
   const [fullName, setFullName] = useState('')
@@ -53,6 +57,7 @@ export default function AccountPage() {
   const [website, setWebsite] = useState('')
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([])
   const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null)
+  const [albumCardStyle, setAlbumCardStyle] = useState<'large' | 'compact'>('large')
 
   // Stats state
   const [stats, setStats] = useState({
@@ -70,6 +75,11 @@ export default function AccountPage() {
 
   // Track which user ID we've loaded data for to avoid reloading on token refresh
   const loadedUserIdRef = useRef<string | null>(null)
+
+  // Wait for theme to be available client-side
+  useEffect(() => {
+    setThemeMounted(true)
+  }, [])
 
   useEffect(() => {
     // User is guaranteed by ProtectedRoute layout
@@ -102,7 +112,7 @@ export default function AccountPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, created_at, last_logged_in, is_admin')
+        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, created_at, last_logged_in, is_admin')
         .eq('id', user.id)
         .single()
 
@@ -130,6 +140,7 @@ export default function AccountPage() {
             setWebsite(newProfile.website || '')
             setSocialLinks((newProfile.social_links as SocialLink[]) || [])
             setCustomAvatarUrl(newProfile.avatar_url)
+            setAlbumCardStyle(newProfile.album_card_style || 'large')
           } else if (insertError) {
             console.error('Error creating profile:', insertError.message || insertError)
             // Fall back to user metadata
@@ -150,6 +161,7 @@ export default function AccountPage() {
             bio: null,
             website: null,
             social_links: null,
+            album_card_style: null,
             created_at: user.created_at || new Date().toISOString(),
           })
         }
@@ -161,6 +173,7 @@ export default function AccountPage() {
         setWebsite(data.website || '')
         setSocialLinks((data.social_links as SocialLink[]) || [])
         setCustomAvatarUrl(data.avatar_url)
+        setAlbumCardStyle(data.album_card_style || 'large')
       }
     } catch (err) {
       console.error('Unexpected error loading profile:', err)
@@ -340,6 +353,7 @@ export default function AccountPage() {
         bio,
         website,
         social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
+        album_card_style: albumCardStyle,
       })
       .eq('id', user.id)
 
@@ -348,6 +362,8 @@ export default function AccountPage() {
     } else {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
+      // Refresh profile in auth context so preference is available app-wide
+      refreshAuthProfile()
     }
 
     setIsSaving(false)
@@ -605,6 +621,168 @@ export default function AccountPage() {
                         </Button>
                       )}
                     </div>
+                  </div>
+                </div>
+              </Container>
+            </div>
+
+            {/* Preferences Section */}
+            <div className="mt-8">
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Preferences</h2>
+              <Container>
+                <div className="space-y-6">
+                  {/* Gallery card style */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">
+                      Gallery card style
+                    </label>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {/* Large option */}
+                      <button
+                        type="button"
+                        onClick={() => setAlbumCardStyle('large')}
+                        className={clsx(
+                          "rounded-lg border-2 p-3 text-left transition-colors",
+                          albumCardStyle === 'large'
+                            ? "border-primary bg-primary/5"
+                            : "border-border-color hover:border-border-color-strong"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className={clsx(
+                                "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
+                                albumCardStyle === 'large' ? "border-primary" : "border-border-color"
+                              )}>
+                                {albumCardStyle === 'large' && (
+                                  <div className="size-2 rounded-full bg-primary" />
+                                )}
+                              </div>
+                              <span className="font-medium text-sm">Large</span>
+                            </div>
+                            <p className="text-xs text-foreground/50 ml-6">
+                              Info visible below image
+                            </p>
+                          </div>
+                          {/* Wireframe - top right */}
+                          <div className="w-20 shrink-0 rounded border border-border-color-strong overflow-hidden bg-background">
+                            {/* Image area */}
+                            <div className="h-12 bg-foreground/5" />
+                            {/* Info section below */}
+                            <div className="p-1.5 bg-background-light border-t border-border-color-strong">
+                              {/* Title */}
+                              <div className="h-1 w-4/5 bg-foreground/20 rounded mb-1.5" />
+                              {/* Avatar + username + photo count */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <div className="size-2 rounded-full bg-foreground/15" />
+                                  <div className="h-1 w-6 bg-foreground/10 rounded" />
+                                </div>
+                                <div className="h-1 w-4 bg-foreground/10 rounded" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Compact option */}
+                      <button
+                        type="button"
+                        onClick={() => setAlbumCardStyle('compact')}
+                        className={clsx(
+                          "rounded-lg border-2 p-3 text-left transition-colors",
+                          albumCardStyle === 'compact'
+                            ? "border-primary bg-primary/5"
+                            : "border-border-color hover:border-border-color-strong"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className={clsx(
+                                "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
+                                albumCardStyle === 'compact' ? "border-primary" : "border-border-color"
+                              )}>
+                                {albumCardStyle === 'compact' && (
+                                  <div className="size-2 rounded-full bg-primary" />
+                                )}
+                              </div>
+                              <span className="font-medium text-sm">Compact</span>
+                            </div>
+                            <p className="text-xs text-foreground/50 ml-6">
+                              Info shown on hover
+                            </p>
+                          </div>
+                          {/* Wireframe - top right */}
+                          <div className="w-20 shrink-0 rounded border border-border-color-strong overflow-hidden bg-background">
+                            {/* Image area with hover overlays */}
+                            <div className="h-[4.75rem] bg-foreground/5 relative">
+                              {/* Top overlay - title */}
+                              <div className="absolute inset-x-0 top-0 p-1.5 bg-gradient-to-b from-background-light to-transparent">
+                                <div className="h-1 w-3/4 bg-foreground/25 rounded" />
+                              </div>
+                              {/* Bottom overlay - avatar + photo count */}
+                              <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-background-light to-transparent">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1">
+                                    <div className="size-2 rounded-full bg-foreground/20" />
+                                    <div className="h-1 w-5 bg-foreground/15 rounded" />
+                                  </div>
+                                  <div className="h-1 w-4 bg-foreground/15 rounded" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Theme */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">
+                      Theme
+                    </label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: 'system', label: 'Auto', icon: (
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        )},
+                        { value: 'light', label: 'Light', icon: (
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                        )},
+                        { value: 'dark', label: 'Dark', icon: (
+                          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                          </svg>
+                        )},
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setTheme(option.value)}
+                          className={clsx(
+                            "flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors",
+                            themeMounted && theme === option.value
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-border-color hover:border-border-color-strong"
+                          )}
+                        >
+                          {option.icon}
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-foreground/50">
+                      {themeMounted && theme === 'system' 
+                        ? `Currently using ${resolvedTheme} mode based on your system` 
+                        : 'Choose your preferred color scheme'}
+                    </p>
                   </div>
                 </div>
               </Container>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
@@ -20,7 +20,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     <Link
       href={href}
       className={clsx(
-        "relative py-1 font-medium transition-colors hover:text-primary",
+        "relative py-1 font-medium transition-colors hover:text-primary rounded",
         isActive ? "text-primary" : "text-foreground"
       )}
     >
@@ -35,29 +35,14 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMobileMenuOpen(false)
-      }
-    }
-
-    if (mobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [mobileMenuOpen])
 
   return (
-    <header className="sticky top-0 z-10 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-3 text-foreground shadow-md shadow-[#00000005]">
+    <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-3 text-foreground shadow-md shadow-[#00000005]">
       <div className="flex w-full max-w-screen-md items-center justify-between gap-4">
         {/* Left: Logo + Desktop Nav */}
         <div className="flex items-center gap-6">
@@ -69,11 +54,11 @@ export default function Header() {
             <NavLink href={routes.home.url}>
               {routes.home.label}
             </NavLink>
+            <NavLink href={routes.events.url}>
+              {routes.events.label}
+            </NavLink>
             <NavLink href={routes.galleries.url}>
               {routes.galleries.label}
-            </NavLink>
-            <NavLink href={routes.about.url}>
-              {routes.about.label}
             </NavLink>
           </nav>
         </div>
@@ -90,14 +75,14 @@ export default function Header() {
             {/* Mobile Avatar - opens mobile menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex items-center justify-center overflow-hidden rounded-full hover:border-primary"
+              className="flex items-center justify-center overflow-hidden rounded-full"
               aria-label="Open menu"
             >
               <Avatar size="md" className="!size-10 border-0" />
             </button>
 
             {/* Mobile Menu Button */}
-            <div className="relative" ref={menuRef}>
+            <div className="relative">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${mobileMenuOpen ? 'border-primary' : 'border-border-color hover:border-primary'

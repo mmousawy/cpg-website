@@ -87,7 +87,7 @@ export default function AdminEventsPage() {
           {/* Upcoming Events */}
           {upcomingEvents.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming Events</h2>
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming events</h2>
               <Container>
                 <div className="space-y-3">
                   {upcomingEvents.map((event) => (
@@ -144,7 +144,7 @@ export default function AdminEventsPage() {
           {/* Past Events */}
           {pastEvents.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold opacity-70">Past Events</h2>
+              <h2 className="mb-4 text-lg font-semibold opacity-70">Past events</h2>
               <Container>
                 <div className="space-y-3">
                   {pastEvents.map((event) => (

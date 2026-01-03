@@ -1,70 +1,40 @@
-'use client';
+import Link from 'next/link';
+import Image from 'next/image';
 
 import { CPGEvent } from '@/types/events';
 
-import Image from 'next/image';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
-import { useEffect } from 'react';
-
-type ImageDimensions = {
-  width: number;
-  height: number;
-};
-
-export default function EventImage({ event, size }: { event: CPGEvent & { dimensions: ImageDimensions }, size?: 'small' }) {
-  useEffect(() => {
-    let lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
-      gallery: `#gallery-${event.id}`,
-      children: 'a',
-      pswpModule: () => import('photoswipe'),
-    });
-
-    lightbox.init();
-
-    return () => {
-      lightbox?.destroy();
-      lightbox = null;
-    };
-  }, [event.id]);
+export default function EventImage({ event, size }: { event: CPGEvent, size?: 'small' }) {
+  if (!event.cover_image) return null;
 
   if (size === 'small') {
     return (
-      <a
-        href={event.cover_image!}
+      <Link
+        href={`/events/${event.slug}`}
         className="block"
-        data-pswp-width={event.dimensions.width}
-        data-pswp-height={event.dimensions.height}
-        target="_blank"
-        rel="noreferrer"
       >
         <Image
           width={320}
           height={240}
-          alt='Event cover image'
+          alt={event.title || 'Event cover image'}
           className='mb-4 w-full rounded-md max-sm:block sm:hidden'
-          src={event.cover_image!}
+          src={event.cover_image}
         />
-      </a>
+      </Link>
     );
   }
 
   return (
-    <a
-      href={event.cover_image!}
+    <Link
+      href={`/events/${event.slug}`}
       className="block size-60 shrink-0 max-sm:hidden"
-      data-pswp-width={event.dimensions.width}
-      data-pswp-height={event.dimensions.height}
-      target="_blank"
-      rel="noreferrer"
     >
       <Image
         width={640}
         height={640}
-        alt='Event cover image'
-        className='rounded-md object-cover'
-        src={event.cover_image!}
+        alt={event.title || 'Event cover image'}
+        className='size-full rounded-md object-cover'
+        src={event.cover_image}
       />
-    </a>
+    </Link>
   );
-};
+}

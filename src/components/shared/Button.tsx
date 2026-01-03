@@ -50,13 +50,13 @@ type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary-alt',
+    'bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary-alt focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt',
   secondary:
-    'bg-background border-border-color-strong text-foreground hover:border-primary hover:bg-primary/5',
+    'bg-background border-border-color-strong text-foreground hover:border-primary hover:bg-primary/5 focus-visible:border-primary focus-visible:bg-primary/5',
   danger:
-    'bg-background border-red-500/30 text-red-500 hover:border-red-500 hover:bg-red-500/10',
+    'bg-background border-red-500/30 text-red-500 hover:border-red-500 hover:bg-red-500/10 focus-visible:border-red-500 focus-visible:bg-red-500/10',
   ghost:
-    'bg-transparent border-transparent text-foreground hover:bg-background',
+    'bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background',
   custom:
     '',
 };
@@ -78,7 +78,7 @@ export default function Button({
 }: ButtonProps) {
   const classes = clsx(
     // Base styles
-    'inline-flex items-center justify-center gap-2 rounded-full border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
+    'group inline-flex items-center justify-center gap-2 rounded-full border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
     // Variant styles
     variantStyles[variant],
     // Size styles
@@ -93,9 +93,9 @@ export default function Button({
 
   const content = (
     <>
-      {icon && <span className="inline-flex shrink-0 [&_svg]:fill-current [&_svg[fill=none]]:fill-none [&_svg]:stroke-current">{icon}</span>}
+      {icon && <span className="inline-flex shrink-0 [&_svg:not([data-no-inherit])]:fill-current [&_svg[fill=none]]:fill-none [&_svg[stroke]]:stroke-current">{icon}</span>}
       {children}
-      {iconRight && <span className="inline-flex shrink-0 [&_svg]:fill-current [&_svg[fill=none]]:fill-none [&_svg]:stroke-current">{iconRight}</span>}
+      {iconRight && <span className="inline-flex shrink-0 [&_svg:not([data-no-inherit])]:fill-current [&_svg[fill=none]]:fill-none [&_svg[stroke]]:stroke-current">{iconRight}</span>}
     </>
   );
 

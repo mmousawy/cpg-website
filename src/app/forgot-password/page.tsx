@@ -12,7 +12,7 @@ import { routes } from '@/config/routes'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 
 import CheckSVG from 'public/icons/check.svg'
-import ArrowLeftSVG from 'public/icons/arrow-left.svg';
+import ArrowLink from '@/components/shared/ArrowLink'
 
 export default function ForgotPasswordPage() {
   const { resetPassword } = useAuth()
@@ -50,12 +50,9 @@ export default function ForgotPasswordPage() {
             We&apos;ve sent a password reset link to <strong>{email}</strong>.
             Click the link in the email to reset your password.
           </p>
-          <Link
-            href={routes.login.url}
-            className="mt-6 inline-block text-primary hover:text-primary-alt"
-          >
+          <ArrowLink href={routes.login.url} direction="left" className="mt-6">
             Back to login
-          </Link>
+          </ArrowLink>
         </Container>
       </PageContainer>
     )
@@ -100,10 +97,9 @@ export default function ForgotPasswordPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-foreground/70">
-          <Link href={routes.login.url} className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary-">
-            <ArrowLeftSVG className="fill-current" />
+          <ArrowLink href={routes.login.url} direction="left">
             Back to login
-          </Link>
+          </ArrowLink>
         </p>
       </Container>
     </PageContainer>

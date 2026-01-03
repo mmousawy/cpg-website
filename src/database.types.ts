@@ -339,6 +339,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          album_card_style: 'large' | 'compact' | null
           avatar_url: string | null
           bio: string | null
           created_at: string | null
@@ -353,6 +354,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          album_card_style?: 'large' | 'compact' | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
@@ -367,6 +369,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          album_card_style?: 'large' | 'compact' | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null

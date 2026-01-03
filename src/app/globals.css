@@ -20,7 +20,7 @@
 }
 
 :root.dark {
-  --primary: #4a9478;
+  --primary: rgb(69, 146, 116);
   --primary-alt: #58c287;
   --background: #171718;
   --background-light: #2e2f31;
@@ -34,6 +34,20 @@
 
 body {
   text-rendering: optimizeLegibility;
+}
+
+/* Fade-in animation for images */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
 }
 
 /* Make all clickable elements show pointer cursor */
@@ -73,4 +87,105 @@ a, button, input, textarea, select, [tabindex] {
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Eased gradient scrim - smoother fade with interpolated stops */
+.scrim-gradient-mask {
+  -webkit-mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.738) 19%,
+    rgba(0, 0, 0, 0.541) 34%,
+    rgba(0, 0, 0, 0.382) 47%,
+    rgba(0, 0, 0, 0.278) 56.5%,
+    rgba(0, 0, 0, 0.194) 65%,
+    rgba(0, 0, 0, 0.126) 73%,
+    rgba(0, 0, 0, 0.075) 80.2%,
+    rgba(0, 0, 0, 0.042) 86.1%,
+    rgba(0, 0, 0, 0.021) 91%,
+    rgba(0, 0, 0, 0.008) 95.2%,
+    rgba(0, 0, 0, 0.002) 98.2%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.738) 19%,
+    rgba(0, 0, 0, 0.541) 34%,
+    rgba(0, 0, 0, 0.382) 47%,
+    rgba(0, 0, 0, 0.278) 56.5%,
+    rgba(0, 0, 0, 0.194) 65%,
+    rgba(0, 0, 0, 0.126) 73%,
+    rgba(0, 0, 0, 0.075) 80.2%,
+    rgba(0, 0, 0, 0.042) 86.1%,
+    rgba(0, 0, 0, 0.021) 91%,
+    rgba(0, 0, 0, 0.008) 95.2%,
+    rgba(0, 0, 0, 0.002) 98.2%,
+    transparent 100%
+  );
+}
+
+.scrim-gradient-overlay {
+  background: linear-gradient(
+    to top,
+    var(--background) 0%,
+    color-mix(in srgb, var(--background) 73.8%, transparent) 19%,
+    color-mix(in srgb, var(--background) 54.1%, transparent) 34%,
+    color-mix(in srgb, var(--background) 38.2%, transparent) 47%,
+    color-mix(in srgb, var(--background) 27.8%, transparent) 56.5%,
+    color-mix(in srgb, var(--background) 19.4%, transparent) 65%,
+    color-mix(in srgb, var(--background) 12.6%, transparent) 73%,
+    color-mix(in srgb, var(--background) 7.5%, transparent) 80.2%,
+    color-mix(in srgb, var(--background) 4.2%, transparent) 86.1%,
+    color-mix(in srgb, var(--background) 2.1%, transparent) 91%,
+    color-mix(in srgb, var(--background) 0.8%, transparent) 95.2%,
+    color-mix(in srgb, var(--background) 0.2%, transparent) 98.2%,
+    transparent 100%
+  );
+}
+
+/* Stronger gradient scrim - starts higher for better text contrast */
+.scrim-gradient-mask-strong {
+  -webkit-mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.9) 25%,
+    rgba(0, 0, 0, 0.75) 40%,
+    rgba(0, 0, 0, 0.6) 52%,
+    rgba(0, 0, 0, 0.45) 62%,
+    rgba(0, 0, 0, 0.3) 72%,
+    rgba(0, 0, 0, 0.18) 80%,
+    rgba(0, 0, 0, 0.08) 88%,
+    rgba(0, 0, 0, 0.02) 95%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.9) 25%,
+    rgba(0, 0, 0, 0.75) 40%,
+    rgba(0, 0, 0, 0.6) 52%,
+    rgba(0, 0, 0, 0.45) 62%,
+    rgba(0, 0, 0, 0.3) 72%,
+    rgba(0, 0, 0, 0.18) 80%,
+    rgba(0, 0, 0, 0.08) 88%,
+    rgba(0, 0, 0, 0.02) 95%,
+    transparent 100%
+  );
+}
+
+.scrim-gradient-overlay-strong {
+  background: linear-gradient(
+    to top,
+    var(--background) 0%,
+    color-mix(in srgb, var(--background) 90%, transparent) 25%,
+    color-mix(in srgb, var(--background) 75%, transparent) 40%,
+    color-mix(in srgb, var(--background) 55%, transparent) 52%,
+    color-mix(in srgb, var(--background) 35%, transparent) 62%,
+    color-mix(in srgb, var(--background) 20%, transparent) 72%,
+    color-mix(in srgb, var(--background) 10%, transparent) 80%,
+    color-mix(in srgb, var(--background) 4%, transparent) 88%,
+    color-mix(in srgb, var(--background) 1%, transparent) 95%,
+    transparent 100%
+  );
 }

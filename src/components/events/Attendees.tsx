@@ -31,9 +31,21 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
     console.error('[Attendees] Error fetching attendees:', error);
   }
 
+  // Check if event is in the past
+  const isPastEvent = (() => {
+    if (!event?.date) return false;
+    const eventDate = new Date(event.date);
+    eventDate.setHours(0, 0, 0, 0);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return eventDate < now;
+  })();
+
   if (!attendees || attendees.length === 0) {
     return (
-      <div className='text-[15px] font-semibold leading-6'>No attendees yet &mdash; join and be the first!</div>
+      <div className='text-[15px] font-semibold leading-6'>
+        {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
+      </div>
     );
   }
 
@@ -54,7 +66,7 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
   return (
     <>
       {!!attendeesWithAvatars?.length && (
-        <div className='flex gap-3 max-sm:flex-col-reverse max-sm:gap-2 max-sm:text-sm sm:items-center'>
+        <div className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'>
           <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
             {/* Avatar list of attendees */}
             {attendeesWithAvatars?.map((attendee, attendeeIndex) => (

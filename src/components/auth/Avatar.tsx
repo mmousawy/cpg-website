@@ -61,16 +61,17 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
   }
 
   return (
+    // Add CSS circle mask to the image
     <div className={clsx("relative overflow-hidden rounded-full", sizeClasses[size], className)}>
       {hoverEffect && 
-        <div className="z-10 rounded-full absolute w-full h-full shadow-[inset_0_0_0_2px_#fff,inset_0_0_0_2.5px_#00000030] scale-130 group-focus:scale-100 group-hover:scale-100 transition-all duration-200"></div>
-      } 
+        <div className="z-10 rounded-full absolute w-full h-full shadow-[inset_0_0_0_2px_var(--primary),inset_0_0_0_2.5px_#00000030] scale-130 group-focus-visible:scale-100 group-hover:scale-100 transition-all duration-200"></div>
+      }
       {avatarUrl ? (
         <Image
           src={avatarUrl}
           alt={fullName || 'Profile'}
           fill
-          className="object-cover"
+          className="object-cover transition-all duration-200"
         />
       ) : initials && initials !== '?' ? (
         // Vertical centering for smaller sizes
@@ -83,6 +84,10 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>
         </div>
+      )}
+      {/* Add white overlay to show up on hover */}
+      {hoverEffect && (
+        <div className="z-10 rounded-full absolute w-full h-full border-2 border-primary bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200"></div>
       )}
     </div>
   )

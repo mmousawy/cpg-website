@@ -61,12 +61,12 @@ export default function UserMenu() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "group border-2 rounded-full",
-          isOpen ? "border-primary" : "border-transparent"
+          "group block rounded-full hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2",
+          isOpen ? "outline-primary outline-2" : "outline-transparent"
         )}
         aria-label="User menu"
       >
-        <Avatar size="md" className="!size-10 border-0" hoverEffect />
+        <Avatar size="md" className="!size-12 border-0" />
       </button>
 
       {isOpen && (

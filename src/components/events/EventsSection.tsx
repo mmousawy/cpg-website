@@ -16,7 +16,7 @@ export default function EventsSection({ filter }: { filter?: EventDateFilterType
     <PageContainer>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold leading-tight opacity-70">{title}</h2>
-        <Link href={filter === 'past' ? '/' : '/past-meetups'} className="underline underline-offset-2 opacity-70">{linkText}</Link>
+        <Link href="/events" className="underline underline-offset-2 opacity-70">All events</Link>
       </div>
       <div className="grid gap-6">
         <Suspense fallback={<EventsLoading />}>
