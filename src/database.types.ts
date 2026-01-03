@@ -187,6 +187,39 @@ export type Database = {
           },
         ]
       }
+      auth_tokens: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          token_hash: string
+          token_type: string
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          token_hash: string
+          token_type: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          token_type?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           cover_image: string | null
@@ -339,7 +372,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          album_card_style: 'large' | 'compact' | null
           avatar_url: string | null
           bio: string | null
           created_at: string | null
@@ -349,12 +381,11 @@ export type Database = {
           is_admin: boolean | null
           last_logged_in: string | null
           nickname: string | null
-          social_links: { label: string; url: string }[] | null
+          social_links: Json | null
           updated_at: string | null
           website: string | null
         }
         Insert: {
-          album_card_style?: 'large' | 'compact' | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
@@ -364,12 +395,11 @@ export type Database = {
           is_admin?: boolean | null
           last_logged_in?: string | null
           nickname?: string | null
-          social_links?: { label: string; url: string }[] | null
+          social_links?: Json | null
           updated_at?: string | null
           website?: string | null
         }
         Update: {
-          album_card_style?: 'large' | 'compact' | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
@@ -379,7 +409,7 @@ export type Database = {
           is_admin?: boolean | null
           last_logged_in?: string | null
           nickname?: string | null
-          social_links?: { label: string; url: string }[] | null
+          social_links?: Json | null
           updated_at?: string | null
           website?: string | null
         }
@@ -390,7 +420,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
