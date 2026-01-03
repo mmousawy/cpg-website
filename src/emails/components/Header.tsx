@@ -5,14 +5,15 @@ import {
   Text,
 } from "@react-email/components";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+// Use production URL for email images (localhost won't work in email clients)
+const EMAIL_ASSETS_URL = process.env.EMAIL_ASSETS_URL || "https://creativephotography.group";
 
 export default function Header() {
   return (
     <>
       <Section className="">
         <Img
-          src={`${baseUrl}/cpg-logo-small.png`}
+          src={`${EMAIL_ASSETS_URL}/cpg-logo-small.png`}
           width="50"
           height="50"
           alt="Creative Photography Group"

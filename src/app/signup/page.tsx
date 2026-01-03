@@ -28,18 +28,10 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const generateNickname = (text: string) => {
+  const sanitizeNickname = (text: string) => {
     return text
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-  }
-
-  const handleFullNameChange = (value: string) => {
-    setFullName(value)
-    if (!nickname) {
-      setNickname(generateNickname(value))
-    }
+      .replace(/[^a-z0-9-]/g, '')
   }
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
@@ -168,7 +160,7 @@ export default function SignupPage() {
               id="fullName"
               type="text"
               value={fullName}
-              onChange={(e) => handleFullNameChange(e.target.value)}
+              onChange={(e) => setFullName(e.target.value)}
               placeholder="John Doe"
               required
               className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
@@ -183,7 +175,7 @@ export default function SignupPage() {
               id="nickname"
               type="text"
               value={nickname}
-              onChange={(e) => setNickname(generateNickname(e.target.value))}
+              onChange={(e) => setNickname(sanitizeNickname(e.target.value))}
               placeholder="johndoe"
               required
               pattern="[a-z0-9-]{3,30}"

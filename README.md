@@ -1,49 +1,230 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Creative Photography Group Website
+
+Community platform for photography enthusiasts built with Next.js and Supabase. Features event management, photo galleries, and user profiles.
+
+## Features
+
+### Events
+- Event listings (upcoming/past)
+- RSVP system with email confirmation
+- Calendar integration (Google, Outlook, Apple/iCal)
+- Attendee list with Gravatar fallback
+- Attendance tracking for admins
+- reCAPTCHA protection
+
+### Photo Galleries
+- User albums with drag-and-drop reordering
+- Photo uploads with EXIF extraction (camera, lens, settings, GPS)
+- Photo captions
+- Album comments and tags
+- Public/private visibility
+- Full-size viewing (PhotoSwipe)
+- Masonry grid layout
+- Admin moderation (suspend/unsuspend)
+
+### User Profiles
+- Public profile pages (`/@username`)
+- Custom avatar uploads
+- Bio, website, social links (with auto-detected icons)
+- Activity stats
+
+### Authentication
+- Google OAuth
+- Discord OAuth
+- Email/password
+- Password reset
+
+### Admin
+- Event CRUD
+- Attendance tracking
+- Album moderation
+
+### Other
+- Dark/light/system theme
+- Responsive design with mobile menu
+- ISR caching (60s revalidation)
+- Loading skeletons
+- Custom 404 page
+- Email notifications (React Email + Resend)
+
+## Tech Stack
+
+| Category | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth |
+| Storage | Supabase Storage |
+| Styling | Tailwind CSS 4 |
+| Email | React Email + Resend |
+| Gallery | PhotoSwipe |
+| Drag & Drop | dnd-kit |
+| Analytics | Vercel Analytics |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- Supabase project
+- (Optional) Resend account, reCAPTCHA keys
+
+### Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in your values:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+See `.env.example` for all required variables. Key ones:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `SUPABASE_SERVICE_ROLE_KEY` - Found in Supabase Dashboard → Project Settings → API
+- `RESEND_API_KEY` - From your Resend dashboard
+- `EMAIL_ASSETS_URL` - Your production URL (for email images to work)
+- `ENCRYPTION_KEY` - Generate with `openssl rand -hex 32`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For OAuth, configure Google and Discord credentials in Supabase Dashboard → Authentication → Providers.
 
-## Learn More
+### Run
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Scripts
 
-## Deploy on Vercel
+```bash
+npm run dev      # Dev server (Turbopack)
+npm run build    # Production build
+npm run start    # Production server
+npm run lint     # ESLint
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/                    # Pages (App Router)
+│   ├── [nickname]/         # User profiles (@username)
+│   ├── account/            # Account settings, user galleries
+│   ├── admin/              # Admin dashboard
+│   ├── api/                # API routes
+│   ├── events/             # Event pages
+│   ├── galleries/          # Public galleries
+│   └── ...
+├── components/
+│   ├── admin/              # Admin components
+│   ├── album/              # Gallery components
+│   ├── auth/               # Auth components
+│   ├── events/             # Event components
+│   ├── layout/             # Header, footer, etc.
+│   └── shared/             # Reusable UI
+├── config/                 # Routes, socials
+├── context/                # React context
+├── emails/                 # Email templates
+├── hooks/                  # Custom hooks
+├── types/                  # TypeScript types
+└── utils/                  # Utilities, Supabase clients
 
-## Generate Supabase Typescript types
+supabase/
+└── migrations/             # Database migrations
+```
+
+## Database
+
+### Tables
+
+| Table | Description |
+| --- | --- |
+| `profiles` | User profiles |
+| `events` | Events/meetups |
+| `events_rsvps` | RSVPs and attendance |
+| `albums` | Photo albums |
+| `album_photos` | Photos |
+| `album_comments` | Comments |
+| `album_tags` | Tags |
+| `images` | Image metadata + EXIF |
+| `auth_tokens` | Email verification & password reset tokens |
+
+### Storage Buckets
+
+- `user-avatars` - Profile pictures
+- `user-albums` - Gallery photos
+- `event-covers` - Event images
+
+## Generate Supabase Types
+
+```bash
+npx supabase gen types typescript --project-id "your-project-id" > ./src/database.types.ts
+```
+
+Or via SSH:
 
 ```bash
 ssh user@domain "npx supabase gen types typescript --db-url 'postgresql://postgres.[tenant-id]:[password]@localhost:5432/postgres' --schema public" > ./src/database.types.ts
 ```
 
-## Things to add
+## Deployment
 
-| Status                                     | Description                                        |
-| ------------------------------------------ | -------------------------------------------------- |
-| <input type="checkbox" disabled checked /> | Add to calendar button in success screen and email |
-| <input type="checkbox" disabled checked /> | Custom 404 page                                    |
+Deploy to Vercel:
+
+1. Connect repository
+2. Set environment variables
+3. Configure Supabase OAuth redirect URLs for production
+4. Set up RLS and storage policies
+
+## Roadmap
+
+### In Progress
+
+- [ ] Event comments
+- [ ] Articles/posts on user profiles
+
+### Admin
+
+- [ ] Member management
+- [ ] Statistics/analytics dashboard
+- [ ] Admin tools
+
+### Photos
+
+- [ ] Display EXIF data to viewers
+- [ ] Photo download button
+- [ ] Manual album cover selection
+- [ ] Bulk photo actions (delete, edit)
+- [ ] Tags on individual photos
+
+### Events
+
+- [ ] Waitlist when event is full
+- [ ] Email reminders before events
+- [ ] Recurring events
+
+### Engagement
+
+- [ ] Photo/album likes
+- [ ] Follow photographers
+- [ ] Activity feed
+- [ ] In-app notifications
+
+### Discovery
+
+- [ ] Search (albums, photos, users, events)
+- [ ] Member directory
+- [ ] Featured/trending galleries
+
+### Sharing
+
+- [ ] Social share buttons
+- [ ] Embed code for galleries
+
+### Moderation
+
+- [ ] Report content
+- [ ] User blocking
+- [ ] Email notification on album suspension/deletion

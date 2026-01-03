@@ -11,6 +11,7 @@ import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
 import { routes } from '@/config/routes'
 import ErrorMessage from '@/components/shared/ErrorMessage'
+import SuccessMessage from '@/components/shared/SuccessMessage'
 
 import DiscordSVG from 'public/icons/discord2.svg'
 
@@ -31,6 +32,7 @@ function getPostLoginRedirect(redirectTo: string | null): string {
 function LoginForm() {
   const searchParams = useSearchParams()
   const redirectToParam = searchParams.get('redirectTo')
+  const verified = searchParams.get('verified')
   const finalRedirect = getPostLoginRedirect(redirectToParam)
 
   const { signInWithEmail, signInWithGoogle, signInWithDiscord } = useAuth()
@@ -81,9 +83,15 @@ function LoginForm() {
     <PageContainer className="items-center justify-center">
       <Container padding="lg" className="mx-auto max-w-md">
         <h1 className="mb-2 text-center text-3xl font-bold">Welcome back</h1>
-        <p className="mb-8 text-center text-sm text-foreground/70">
+        <p className="mb-6 text-center text-sm text-foreground/70">
           Log in to your account to continue
         </p>
+
+        {verified && (
+          <SuccessMessage variant="compact" className="mb-6">
+            Email verified successfully! You can now log in.
+          </SuccessMessage>
+        )}
 
         {/* Social Login Buttons */}
         <div className="mb-6 flex flex-col gap-3">

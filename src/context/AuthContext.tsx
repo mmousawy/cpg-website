@@ -148,22 +148,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, metadata?: { full_name?: string; nickname?: string }) => {
-    const { error } = await createClient().auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth-callback`,
-        data: metadata,
-      },
-    });
-    return { error };
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          full_name: metadata?.full_name,
+          nickname: metadata?.nickname,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        return { error: { message: data.message || 'Failed to create account' } };
+      }
+      
+      return { error: null };
+    } catch {
+      return { error: { message: 'An unexpected error occurred' } };
+    }
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
-    const { error } = await createClient().auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    return { error };
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        return { error: { message: data.message || 'Failed to send reset email' } };
+      }
+      
+      return { error: null };
+    } catch {
+      return { error: { message: 'An unexpected error occurred' } };
+    }
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {
