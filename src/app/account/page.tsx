@@ -57,7 +57,13 @@ export default function AccountPage() {
   const [website, setWebsite] = useState('')
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([])
   const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null)
-  const [albumCardStyle, setAlbumCardStyle] = useState<'large' | 'compact'>('large')
+  const [albumCardStyle, setAlbumCardStyleState] = useState<'large' | 'compact'>('large')
+  
+  // Wrapper to save album card style to both state and localStorage
+  const setAlbumCardStyle = (value: 'large' | 'compact') => {
+    setAlbumCardStyleState(value)
+    localStorage.setItem('album-card-style', value)
+  }
 
   // Stats state
   const [stats, setStats] = useState({
@@ -76,9 +82,14 @@ export default function AccountPage() {
   // Track which user ID we've loaded data for to avoid reloading on token refresh
   const loadedUserIdRef = useRef<string | null>(null)
 
-  // Wait for theme to be available client-side
+  // Wait for theme to be available client-side and load album card style from localStorage
   useEffect(() => {
     setThemeMounted(true)
+    // Load album card style from localStorage
+    const stored = localStorage.getItem('album-card-style')
+    if (stored === 'large' || stored === 'compact') {
+      setAlbumCardStyleState(stored)
+    }
   }, [])
 
   useEffect(() => {
@@ -140,7 +151,10 @@ export default function AccountPage() {
             setWebsite(newProfile.website || '')
             setSocialLinks((newProfile.social_links as SocialLink[]) || [])
             setCustomAvatarUrl(newProfile.avatar_url)
-            setAlbumCardStyle(newProfile.album_card_style || 'large')
+            // Only set from profile if localStorage doesn't have a value (localStorage takes priority)
+            if (!localStorage.getItem('album-card-style') && newProfile.album_card_style) {
+              setAlbumCardStyle(newProfile.album_card_style)
+            }
           } else if (insertError) {
             console.error('Error creating profile:', insertError.message || insertError)
             // Fall back to user metadata
@@ -173,7 +187,10 @@ export default function AccountPage() {
         setWebsite(data.website || '')
         setSocialLinks((data.social_links as SocialLink[]) || [])
         setCustomAvatarUrl(data.avatar_url)
-        setAlbumCardStyle(data.album_card_style || 'large')
+        // Only set from profile if localStorage doesn't have a value (localStorage takes priority)
+        if (!localStorage.getItem('album-card-style') && data.album_card_style) {
+          setAlbumCardStyle(data.album_card_style)
+        }
       }
     } catch (err) {
       console.error('Unexpected error loading profile:', err)
@@ -626,8 +643,31 @@ export default function AccountPage() {
               </Container>
             </div>
 
-            {/* Preferences Section */}
-            <div className="mt-8">
+
+
+            {/* Save Button & Messages */}
+            <div className="mt-6">
+              {error && (
+                <ErrorMessage variant="compact" className="mb-4">{error}</ErrorMessage>
+              )}
+
+              {success && (
+                <SuccessMessage variant="compact" className="mb-4">
+                  Profile updated successfully!
+                </SuccessMessage>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save changes'}
+              </Button>
+            </div>
+          </form>
+
+          {/* Preferences Section */}
+          <div className="mt-8">
               <h2 className="mb-4 text-lg font-semibold opacity-70">Preferences</h2>
               <Container>
                 <div className="space-y-6">
@@ -787,27 +827,6 @@ export default function AccountPage() {
                 </div>
               </Container>
             </div>
-
-            {/* Save Button & Messages */}
-            <div className="mt-6">
-              {error && (
-                <ErrorMessage variant="compact" className="mb-4">{error}</ErrorMessage>
-              )}
-
-              {success && (
-                <SuccessMessage variant="compact" className="mb-4">
-                  Profile updated successfully!
-                </SuccessMessage>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isSaving}
-              >
-                {isSaving ? 'Saving...' : 'Save changes'}
-              </Button>
-            </div>
-          </form>
 
           {/* Account Info Section */}
           <div>
