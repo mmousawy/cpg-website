@@ -34,8 +34,8 @@ export default function AdminDashboardPage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
       ),
-      href: '#',
-      enabled: false,
+      href: '/admin/members',
+      enabled: true,
     },
     {
       title: 'View Statistics',
@@ -68,12 +68,12 @@ export default function AdminDashboardPage() {
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {adminCards.map((card) => {
           const cardContent = (
             <>
               <div className={clsx(
-                'mb-4 inline-flex rounded-lg p-3',
+                'mb-4 inline-flex rounded-lg p-2 sm:p-3',
                 card.enabled ? 'bg-primary/10 text-primary' : 'bg-foreground/10 text-foreground/50'
               )}>
                 {card.icon}
