@@ -24,12 +24,17 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 
 import { useAuth } from '@/hooks/useAuth'
+import { useFormChanges } from '@/hooks/useFormChanges'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
+import StickyActionBar from '@/components/shared/StickyActionBar'
 import type { Album, AlbumPhoto } from '@/types/albums'
 
 import TrashSVG from 'public/icons/trash.svg'
@@ -38,6 +43,17 @@ import PlusSVG from 'public/icons/plus.svg'
 import CloseSVG from 'public/icons/close.svg'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import SuccessMessage from '@/components/shared/SuccessMessage'
+
+// Zod schema for album form validation
+const albumFormSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  slug: z.string().min(1, 'Slug is required'),
+  description: z.string().optional(),
+  isPublic: z.boolean(),
+  tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed'),
+})
+
+type AlbumFormData = z.infer<typeof albumFormSchema>
 
 // Expand/zoom icon component
 function ExpandSVG({ className }: { className?: string }) {
@@ -256,6 +272,7 @@ export default function AlbumDetailPage() {
 
   const [album, setAlbum] = useState<Album | null>(null)
   const [photos, setPhotos] = useState<AlbumPhoto[]>([])
+  const [savedPhotos, setSavedPhotos] = useState<AlbumPhoto[]>([]) // Baseline for dirty tracking
   const [pendingPhotos, setPendingPhotos] = useState<File[]>([])
   const [profile, setProfile] = useState<{ nickname: string | null } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -263,17 +280,47 @@ export default function AlbumDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null)
   const [editingCaption, setEditingCaption] = useState('')
-
-  // Form state
-  const [title, setTitle] = useState('')
-  const [slug, setSlug] = useState('')
-  const [description, setDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(true)
-  const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
+
+  // Saved form values for dirty tracking
+  const [savedFormValues, setSavedFormValues] = useState<AlbumFormData | null>(null)
+
+  // Form defaults
+  const formDefaultValues: AlbumFormData = {
+    title: '',
+    slug: '',
+    description: '',
+    isPublic: true,
+    tags: [],
+  }
+
+  // React Hook Form setup
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<AlbumFormData>({
+    resolver: zodResolver(albumFormSchema),
+    defaultValues: formDefaultValues,
+  })
+
+  // Watch form values for dirty tracking
+  const currentValues = watch()
+  const watchedSlug = watch('slug')
+  const watchedTags = watch('tags')
+
+  // Track if photos have changed (for existing albums)
+  const photosChanged = !isNewAlbum && JSON.stringify(photos.map(p => p.id)) !== JSON.stringify(savedPhotos.map(p => p.id))
+  const hasPendingPhotos = pendingPhotos.length > 0
+
+  // Use custom dirty tracking
+  const { hasChanges, changeCount } = useFormChanges(currentValues, savedFormValues, {}, photosChanged, hasPendingPhotos)
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -349,16 +396,12 @@ export default function AlbumDetailPage() {
 
       if (albumError) {
         console.error('Error fetching album:', albumError)
-        setError('Album not found')
+        setSubmitError('Album not found')
         setIsLoading(false)
         return
       }
 
       setAlbum(albumData as Album)
-      setTitle(albumData.title)
-      setSlug(albumData.slug)
-      setDescription(albumData.description || '')
-      setIsPublic(albumData.is_public)
 
       // Fetch tags
       const { data: tagsData } = await supabase
@@ -366,9 +409,18 @@ export default function AlbumDetailPage() {
         .select('tag')
         .eq('album_id', albumData.id)
 
-      if (tagsData) {
-        setTags(tagsData.map(t => t.tag))
+      const albumTags = tagsData?.map(t => t.tag) || []
+
+      // Set form values
+      const formValues: AlbumFormData = {
+        title: albumData.title,
+        slug: albumData.slug,
+        description: albumData.description || '',
+        isPublic: albumData.is_public,
+        tags: albumTags,
       }
+      reset(formValues)
+      setSavedFormValues(formValues)
 
       // Fetch photos - only necessary fields
       const { data: photosData, error: photosError } = await supabase
@@ -381,10 +433,11 @@ export default function AlbumDetailPage() {
         console.error('Error fetching photos:', photosError)
       } else {
         setPhotos(photosData as AlbumPhoto[])
+        setSavedPhotos(photosData as AlbumPhoto[])
       }
     } catch (err) {
       console.error('Unexpected error:', err)
-      setError('An unexpected error occurred')
+      setSubmitError('An unexpected error occurred')
     }
     setIsLoading(false)
   }
@@ -397,23 +450,18 @@ export default function AlbumDetailPage() {
   }
 
   const handleTitleChange = (value: string) => {
-    setTitle(value)
+    setValue('title', value, { shouldDirty: true })
     // Always auto-generate slug from title for new albums
     if (isNewAlbum) {
-      setSlug(generateSlug(value))
+      setValue('slug', generateSlug(value), { shouldDirty: true })
     }
   }
 
-  const handleSave = async () => {
+  const onSubmit = async (data: AlbumFormData) => {
     if (!user) return
 
-    if (!title.trim() || !slug.trim()) {
-      setError('Title and slug are required')
-      return
-    }
-
     setIsSaving(true)
-    setError(null)
+    setSubmitError(null)
     setSuccess(false)
 
     try {
@@ -423,26 +471,26 @@ export default function AlbumDetailPage() {
           .from('albums')
           .insert({
             user_id: user.id,
-            title: title.trim(),
-            slug: slug.trim(),
-            description: description.trim() || null,
-            is_public: isPublic,
+            title: data.title.trim(),
+            slug: data.slug.trim(),
+            description: data.description?.trim() || null,
+            is_public: data.isPublic,
           })
           .select()
           .single()
 
         if (createError) {
           console.error('Error creating album:', createError)
-          setError(createError.message || 'Failed to create album')
+          setSubmitError(createError.message || 'Failed to create album')
           setIsSaving(false)
           return
         }
 
         // Add tags for new album
-        if (tags.length > 0 && newAlbum) {
+        if (data.tags.length > 0 && newAlbum) {
           const { error: tagsError } = await supabase
             .from('album_tags')
-            .insert(tags.map(tag => ({
+            .insert(data.tags.map(tag => ({
               album_id: newAlbum.id,
               tag: tag.toLowerCase()
             })))
@@ -551,17 +599,17 @@ export default function AlbumDetailPage() {
 
         setSuccess(true)
         setTimeout(() => {
-          router.push(`/account/galleries/${slug}`)
+          router.push(`/account/galleries/${data.slug}`)
         }, 1000)
       } else {
         // Update existing album with cover image in single request
         const { error: updateError } = await supabase
           .from('albums')
           .update({
-            title: title.trim(),
-            slug: slug.trim(),
-            description: description.trim() || null,
-            is_public: isPublic,
+            title: data.title.trim(),
+            slug: data.slug.trim(),
+            description: data.description?.trim() || null,
+            is_public: data.isPublic,
             cover_image_url: photos.length > 0 ? photos[0].photo_url : album!.cover_image_url,
             updated_at: new Date().toISOString(),
           })
@@ -569,7 +617,7 @@ export default function AlbumDetailPage() {
 
         if (updateError) {
           console.error('Error updating album:', updateError)
-          setError(updateError.message || 'Failed to update album')
+          setSubmitError(updateError.message || 'Failed to update album')
           setIsSaving(false)
           return
         }
@@ -580,10 +628,10 @@ export default function AlbumDetailPage() {
           .delete()
           .eq('album_id', album!.id)
 
-        if (tags.length > 0) {
+        if (data.tags.length > 0) {
           await supabase
             .from('album_tags')
-            .insert(tags.map(tag => ({
+            .insert(data.tags.map(tag => ({
               album_id: album!.id,
               tag: tag.toLowerCase()
             })))
@@ -606,10 +654,22 @@ export default function AlbumDetailPage() {
             .upsert(updates, { onConflict: 'id' })
         }
 
+        // Create clean saved data and reset form to match
+        const savedData: AlbumFormData = {
+          title: data.title.trim(),
+          slug: data.slug.trim(),
+          description: data.description?.trim() || '',
+          isPublic: data.isPublic,
+          tags: data.tags,
+        }
+        reset(savedData)
+        setSavedFormValues(savedData)
+        setSavedPhotos([...photos])
+
         setSuccess(true)
-        if (slug !== albumSlug) {
+        if (data.slug !== albumSlug) {
           setTimeout(() => {
-            router.push(`/account/galleries/${slug}`)
+            router.push(`/account/galleries/${data.slug}`)
           }, 1000)
         } else {
           setTimeout(() => setSuccess(false), 3000)
@@ -617,7 +677,7 @@ export default function AlbumDetailPage() {
       }
     } catch (err) {
       console.error('Unexpected error:', err)
-      setError('An unexpected error occurred')
+      setSubmitError('An unexpected error occurred')
     }
 
     setIsSaving(false)
@@ -638,7 +698,7 @@ export default function AlbumDetailPage() {
     if (!album) return
 
     setIsUploading(true)
-    setError(null)
+    setSubmitError(null)
 
     try {
 
@@ -742,7 +802,7 @@ export default function AlbumDetailPage() {
       }
     } catch (err: any) {
       console.error('Upload error:', err)
-      setError(err.message || 'Failed to upload photos')
+      setSubmitError(err.message || 'Failed to upload photos')
     }
 
     setIsUploading(false)
@@ -854,16 +914,18 @@ export default function AlbumDetailPage() {
     if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault()
       const newTag = tagInput.trim().toLowerCase()
+      const currentTags = watchedTags || []
 
-      if (tags.length < 5 && !tags.includes(newTag)) {
-        setTags([...tags, newTag])
+      if (currentTags.length < 5 && !currentTags.includes(newTag)) {
+        setValue('tags', [...currentTags, newTag], { shouldDirty: true })
       }
       setTagInput('')
     }
   }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
+    const currentTags = watchedTags || []
+    setValue('tags', currentTags.filter(tag => tag !== tagToRemove), { shouldDirty: true })
   }
 
   const handleRemovePendingPhoto = (index: number) => {
@@ -881,7 +943,7 @@ export default function AlbumDetailPage() {
     }
 
     setIsDeleting(true)
-    setError(null)
+    setSubmitError(null)
 
     try {
       // Delete all photos first
@@ -892,7 +954,7 @@ export default function AlbumDetailPage() {
       const { error: deleteError } = await supabase.from('albums').delete().eq('id', album.id)
 
       if (deleteError) {
-        setError(deleteError.message || 'Failed to delete album')
+        setSubmitError(deleteError.message || 'Failed to delete album')
         setIsDeleting(false)
         return
       }
@@ -903,12 +965,13 @@ export default function AlbumDetailPage() {
       }, 1500)
     } catch (err) {
       console.error('Error deleting album:', err)
-      setError('An unexpected error occurred')
+      setSubmitError('An unexpected error occurred')
       setIsDeleting(false)
     }
   }
 
   return (
+    <>
     <PageContainer>
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-bold">
@@ -1025,8 +1088,7 @@ export default function AlbumDetailPage() {
         
         {/* Album Details Form */}
         <Container>
-
-          <div className="space-y-4">
+          <form id="album-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col gap-2">
               <label htmlFor="title" className="text-sm font-medium">
                 Title *
@@ -1034,13 +1096,16 @@ export default function AlbumDetailPage() {
               <input
                 id="title"
                 type="text"
-                value={title}
+                {...register('title')}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className={inputClassName}
+                className={clsx(inputClassName, errors.title && 'border-red-500')}
                 placeholder="My Amazing Photo Album"
               />
+              {errors.title && (
+                <p className="text-xs text-red-500">{errors.title.message}</p>
+              )}
               <p className="text-xs text-foreground/50">
-                URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{profile?.nickname || 'your-nickname'}/{slug || 'your-title'}
+                URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{profile?.nickname || 'your-nickname'}/{watchedSlug || 'your-title'}
               </p>
             </div>
 
@@ -1050,8 +1115,7 @@ export default function AlbumDetailPage() {
               </label>
               <textarea
                 id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                {...register('description')}
                 rows={4}
                 className={inputClassName}
                 placeholder="Tell us about this album..."
@@ -1062,8 +1126,7 @@ export default function AlbumDetailPage() {
               <input
                 id="isPublic"
                 type="checkbox"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
+                {...register('isPublic')}
                 className="size-4 rounded border-neutral-300 text-blue-600"
               />
               <label htmlFor="isPublic" className="ml-2 text-sm">
@@ -1075,17 +1138,18 @@ export default function AlbumDetailPage() {
               <label htmlFor="tags" className="text-sm font-medium">
                 Tags
               </label>
-              {tags.length > 0 && (
+              {watchedTags && watchedTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {tags.map((tag) => (
+                  {watchedTags.map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
                     >
                       {tag}
                       <button
+                        type="button"
                         onClick={() => handleRemoveTag(tag)}
-                        className="rounded-full bg-background-light/70 hover:bg-background-light font-bold text-foreground size-5 flex items-center justify-center rounded-full -mr-2 ml-1"
+                        className="rounded-full bg-background-light/70 hover:bg-background-light font-bold text-foreground size-5 flex items-center justify-center -mr-2 ml-1"
                         aria-label="Remove tag"
                       >
                         <CloseSVG
@@ -1096,35 +1160,24 @@ export default function AlbumDetailPage() {
                   ))}
                 </div>
               )}
+              {errors.tags && (
+                <p className="text-xs text-red-500">{errors.tags.message}</p>
+              )}
               <input
                 id="tags"
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                disabled={tags.length >= 5}
+                disabled={(watchedTags?.length || 0) >= 5}
                 onKeyDown={handleAddTag}
                 className={`${inputClassName} disabled:opacity-50`}
-                placeholder={tags.length >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter to add'}
+                placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter to add'}
               />
               <p className="text-xs text-foreground/50">
                 Add up to 5 tags to help people discover your album
               </p>
             </div>
-          </div>
-
-          {error && (
-            <ErrorMessage variant="compact" className="mt-6">{error}</ErrorMessage>
-          )}
-
-          {success && (
-            <SuccessMessage variant="compact" className="mt-6">Album saved successfully!</SuccessMessage>
-          )}
-
-          <div className="mt-6">
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? 'Saving...' : isNewAlbum ? 'Create Album' : 'Save changes'}
-            </Button>
-          </div>
+          </form>
         </Container>
 
 
@@ -1146,8 +1199,37 @@ export default function AlbumDetailPage() {
             </Button>
           </Container>
         )}
+
       </div>
       )}
     </PageContainer>
+
+    {/* Sticky Action Bar - outside PageContainer */}
+    {!isLoading && (
+      <StickyActionBar>
+        <div className="flex items-center gap-2 text-sm">
+          {submitError && (
+            <span className="text-red-500">{submitError}</span>
+          )}
+          {success && (
+            <span className="text-green-500">Album saved successfully!</span>
+          )}
+          {!submitError && !success && hasChanges && (
+            <span className="text-foreground/70">
+              {changeCount} unsaved {changeCount === 1 ? 'change' : 'changes'}
+            </span>
+          )}
+        </div>
+        <Button
+          type="submit"
+          form="album-form"
+          disabled={isSaving || (!isNewAlbum && !hasChanges)}
+          loading={isSaving}
+        >
+          {isNewAlbum ? 'Create Album' : 'Save changes'}
+        </Button>
+      </StickyActionBar>
+    )}
+    </>
   )
 }

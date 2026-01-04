@@ -70,8 +70,13 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
         <Image
           src={avatarUrl}
           alt={fullName || 'Profile'}
-          fill
-          className="object-cover transition-all duration-200"
+          // "sizes" and "width" and "height" based on iconSizeClasses[size]
+          sizes='64px'
+          width={100}
+          height={100}
+          loading='lazy'
+          quality={95}
+          className="object-cover w-full h-full transition-all duration-200"
         />
       ) : initials && initials !== '?' ? (
         // Vertical centering for smaller sizes

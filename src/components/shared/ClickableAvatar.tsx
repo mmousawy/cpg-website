@@ -82,7 +82,11 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
         <Image
           src={avatarUrl}
           alt={fullName + ' profile avatar' || 'Profile avatar'}
-          fill
+          sizes="100px"
+          width={100}
+          height={100}
+          loading='eager'
+          quality={95}
           className="object-cover"
         />
       </a>

@@ -52,6 +52,9 @@ export default async function RecentEvents() {
                 <Image
                   src={event.cover_image}
                   alt={event.title || 'Event cover'}
+                  sizes="128px"
+                  loading='eager'
+                  quality={95}
                   fill
                   className="object-cover"
                 />
@@ -61,7 +64,7 @@ export default async function RecentEvents() {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1.5">
-                <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-3">
                   {event.title}
                 </h4>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${

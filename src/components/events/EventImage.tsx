@@ -31,6 +31,9 @@ export default function EventImage({ event, size }: { event: CPGEvent, size?: 's
       <Image
         width={640}
         height={640}
+        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 640px"
+        loading='eager'
+        quality={95}
         alt={event.title || 'Event cover image'}
         className='size-full rounded-md object-cover'
         src={event.cover_image}

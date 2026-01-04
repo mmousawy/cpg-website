@@ -6,6 +6,7 @@ import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProv
 import ModalProvider from "@/app/providers/ModalProvider";
 import SupabaseProvider from "./providers/SupabaseProvider";
 import { AuthProvider } from "@/context/AuthContext";
+import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
 import Layout from "@/components/layout/Layout";
 import Modal from "@/components/shared/Modal";
 
@@ -45,12 +46,14 @@ export default function RootLayout({
         <SupabaseProvider>
           <AuthProvider>
             <ThemeProvider>
-              <ModalProvider>
-                <Layout>
-                  {children}
-                </Layout>
-                <Modal />
-              </ModalProvider>
+              <UnsavedChangesProvider>
+                <ModalProvider>
+                  <Layout>
+                    {children}
+                  </Layout>
+                  <Modal />
+                </ModalProvider>
+              </UnsavedChangesProvider>
             </ThemeProvider>
           </AuthProvider>
         </SupabaseProvider>

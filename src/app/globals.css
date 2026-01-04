@@ -27,7 +27,7 @@
   --foreground: #ededed;
   --text-muted: #a3a3a3;
   --text-muted-light: #737373;
-  --border-color: #383a3d;
+  --border-color: #424447;
   --border-color-strong: #595b5f;
   --error-red: #f5686a;
 }
@@ -188,4 +188,9 @@ a, button, input, textarea, select, [tabindex] {
     color-mix(in srgb, var(--background) 1%, transparent) 95%,
     transparent 100%
   );
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  border-color: var(--border-color);
 }

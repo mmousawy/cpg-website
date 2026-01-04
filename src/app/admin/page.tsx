@@ -22,7 +22,7 @@ export default function AdminDashboardPage() {
     {
       title: 'Manage Events',
       description: 'Create, edit, and manage events',
-      icon: <CalendarSVG className="h-8 w-8" />,
+      icon: <CalendarSVG className="h-8 w-8 fill-current" />,
       href: '/admin/events',
       enabled: true,
     },
