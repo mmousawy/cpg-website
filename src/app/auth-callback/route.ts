@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 // Pages that should redirect to user dashboard after login
 const PUBLIC_LISTING_PAGES = ['/', '/events']
@@ -16,13 +16,17 @@ function getPostLoginRedirect(redirectTo: string | null): string {
   return redirectTo
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const redirectToParam = searchParams.get('redirectTo')
 
   if (code) {
     const cookieStore = await cookies()
+    
+    // Create response first so we can set cookies on it
+    const finalRedirect = getPostLoginRedirect(redirectToParam)
+    const response = NextResponse.redirect(`${origin}${finalRedirect}`)
     
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,8 +37,10 @@ export async function GET(request: Request) {
             return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
+            // Set cookies on both the cookie store AND the response
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options)
+              response.cookies.set(name, value, options)
             })
           },
         },
@@ -71,26 +77,13 @@ export async function GET(request: Request) {
         }
       }
 
-      const finalRedirect = getPostLoginRedirect(redirectToParam)
-      
-      // Create redirect response
-      const response = NextResponse.redirect(`${origin}${finalRedirect}`)
-      
-      // Copy all cookies from cookieStore to the response
-      // This ensures auth cookies are sent with the redirect
-      cookieStore.getAll().forEach((cookie) => {
-        response.cookies.set(cookie.name, cookie.value, {
-          path: '/',
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-        })
-      })
-      
       return response
     }
+    
+    // Exchange failed - redirect to error page
+    return NextResponse.redirect(`${origin}/auth-error`)
   }
 
-  // Return the user to an error page with instructions
+  // No code provided - redirect to error page
   return NextResponse.redirect(`${origin}/auth-error`)
 }
