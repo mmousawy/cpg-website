@@ -71,11 +71,13 @@ export async function GET(request: NextRequest) {
   }
 
   // Get user profile for name
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", authToken.user_id)
-    .single();
+  const { data: profile } = authToken.user_id
+    ? await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", authToken.user_id)
+        .single()
+    : { data: null };
 
   const fullName = profile?.full_name || email.split("@")[0];
 

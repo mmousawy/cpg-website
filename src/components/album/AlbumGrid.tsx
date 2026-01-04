@@ -37,8 +37,13 @@ export default function AlbumGrid({
     }
   }, [])
   
+  // Validate that profile preference is a valid variant
+  const profileVariant = profile?.album_card_style === 'large' || profile?.album_card_style === 'compact' 
+    ? profile.album_card_style 
+    : undefined
+  
   // Use explicit variant if provided, otherwise localStorage, then profile, default to 'large'
-  const effectiveVariant = variant ?? localPreference ?? profile?.album_card_style ?? 'large'
+  const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? profileVariant ?? 'large'
   
   return (
     <div className={className}>

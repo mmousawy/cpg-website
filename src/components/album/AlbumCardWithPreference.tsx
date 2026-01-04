@@ -22,8 +22,13 @@ export default function AlbumCardWithPreference({
 }: AlbumCardWithPreferenceProps) {
   const { profile } = useAuth()
   
+  // Validate that profile preference is a valid variant
+  const profileVariant = profile?.album_card_style === 'large' || profile?.album_card_style === 'compact' 
+    ? profile.album_card_style 
+    : undefined
+  
   // Use explicit variant if provided, otherwise use user preference, default to 'large'
-  const effectiveVariant = variant ?? profile?.album_card_style ?? 'large'
+  const effectiveVariant: AlbumCardVariant = variant ?? profileVariant ?? 'large'
   
   return (
     <AlbumCard 
