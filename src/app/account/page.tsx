@@ -18,6 +18,7 @@ import PageContainer from '@/components/layout/PageContainer'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import SuccessMessage from '@/components/shared/SuccessMessage'
 import StickyActionBar from '@/components/shared/StickyActionBar'
+import Avatar from '@/components/auth/Avatar'
 import PlusIconSVG from 'public/icons/plus.svg'
 
 // Zod schema for form validation
@@ -464,22 +465,14 @@ export default function AccountPage() {
 
   // Determine which avatar to display:
   // 1. If there's a pending upload, show the preview
-  // 2. If pending removal, show nothing (will fall back to initials or OAuth)
-  // 3. Otherwise show saved avatar or OAuth avatar
+  // 2. If pending removal, show nothing (Avatar component will show initials)
+  // 3. Otherwise show saved avatar (profile.avatar_url is the single source of truth)
   const displayAvatarUrl = pendingAvatarPreview 
     ? pendingAvatarPreview 
     : pendingAvatarRemove 
       ? null 
-      : (savedAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)
+      : savedAvatarUrl
   const fullName = watch('fullName')
-  const initials = fullName
-    ? fullName
-      .split(' ')
-      .map((n: string) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() || '??'
 
   return (
     <>
@@ -502,24 +495,15 @@ export default function AccountPage() {
                 <Container>
                   {/* Profile Picture */}
                   <div className="mb-6 flex items-center gap-6 border-b border-border-color pb-6">
-                    <div className="relative">
-                      <div className={clsx(
-                        "flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2",
-                        hasAvatarChanges ? "border-primary" : "border-border-color"
-                      )}>
-                        {displayAvatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={displayAvatarUrl}
-                            alt="Profile"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="bg-primary text-2xl font-bold text-white flex h-full w-full items-center justify-center">
-                            {initials}
-                          </span>
-                        )}
-                      </div>
+                    <div className={clsx(
+                      "rounded-full border-2",
+                      hasAvatarChanges ? "border-primary" : "border-border-color"
+                    )}>
+                      <Avatar
+                        avatarUrl={displayAvatarUrl}
+                        fullName={fullName || user?.email}
+                        size="xl"
+                      />
                     </div>
                     <div className="flex-1">
                       <div className="flex flex-wrap gap-2">
@@ -566,11 +550,6 @@ export default function AccountPage() {
                       <p className="mt-2 text-xs text-foreground/50">
                         JPG, PNG, GIF or WebP. Max 5MB.
                       </p>
-                      {!hasAvatarChanges && !savedAvatarUrl && (user?.user_metadata?.avatar_url || user?.user_metadata?.picture) && (
-                        <p className="mt-1 text-xs text-foreground/50">
-                          Currently showing your {user?.app_metadata?.provider === 'google' ? 'Google' : user?.app_metadata?.provider === 'discord' ? 'Discord' : 'social'} profile picture.
-                        </p>
-                      )}
                       {avatarError && (
                         <p className="mt-2 text-sm text-red-500">{avatarError}</p>
                       )}

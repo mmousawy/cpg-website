@@ -1,13 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import clsx from 'clsx'
 
 import { useAuth } from '@/hooks/useAuth'
+import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
 import { routes } from '@/config/routes'
@@ -19,6 +18,7 @@ import ArrowLink from '@/components/shared/ArrowLink'
 
 export default function SignupPage() {
   const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth()
+  const supabase = createClient()
 
   const [fullName, setFullName] = useState('')
   const [nickname, setNickname] = useState('')
@@ -27,6 +27,12 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  
+  // Nickname availability state
+  const [isCheckingNickname, setIsCheckingNickname] = useState(false)
+  const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null)
+  const [nicknameError, setNicknameError] = useState<string | null>(null)
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const sanitizeNickname = (text: string) => {
     return text
@@ -34,8 +40,90 @@ export default function SignupPage() {
       .replace(/[^a-z0-9-]/g, '')
   }
 
+  // Check nickname availability with debounce
+  const checkNicknameAvailability = async (value: string) => {
+    // Validate format first
+    if (value.length < 3) {
+      setNicknameAvailable(null)
+      setNicknameError(value.length > 0 ? 'Nickname must be at least 3 characters' : null)
+      return
+    }
+    
+    if (value.startsWith('-') || value.endsWith('-')) {
+      setNicknameAvailable(null)
+      setNicknameError('Nickname cannot start or end with a hyphen')
+      return
+    }
+
+    setNicknameError(null)
+    setIsCheckingNickname(true)
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('nickname', value)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error checking nickname:', error)
+        setNicknameAvailable(null)
+      } else {
+        setNicknameAvailable(data === null)
+      }
+    } catch (err) {
+      console.error('Error checking nickname:', err)
+      setNicknameAvailable(null)
+    } finally {
+      setIsCheckingNickname(false)
+    }
+  }
+
+  // Debounced nickname check
+  const handleNicknameChange = (value: string) => {
+    const sanitized = sanitizeNickname(value)
+    setNickname(sanitized)
+    setNicknameAvailable(null)
+    
+    // Clear previous timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    
+    // Set new debounced check
+    debounceRef.current = setTimeout(() => {
+      checkNicknameAvailability(sanitized)
+    }, 500)
+  }
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [])
+
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate nickname
+    if (nickname.length < 3) {
+      setNicknameError('Nickname must be at least 3 characters')
+      return
+    }
+    
+    if (nickname.startsWith('-') || nickname.endsWith('-')) {
+      setNicknameError('Nickname cannot start or end with a hyphen')
+      return
+    }
+    
+    if (nicknameAvailable === false) {
+      setError('This nickname is already taken')
+      return
+    }
+    
     setIsLoading(true)
     setError(null)
 
@@ -171,18 +259,49 @@ export default function SignupPage() {
             <label htmlFor="nickname" className="text-sm font-medium">
               Nickname (username)
             </label>
-            <input
-              id="nickname"
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(sanitizeNickname(e.target.value))}
-              placeholder="johndoe"
-              required
-              pattern="[a-z0-9-]{3,30}"
-              minLength={3}
-              maxLength={30}
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">@</span>
+              <input
+                id="nickname"
+                type="text"
+                value={nickname}
+                onChange={(e) => handleNicknameChange(e.target.value)}
+                placeholder="johndoe"
+                required
+                autoComplete="off"
+                minLength={3}
+                maxLength={30}
+                className="w-full rounded-lg border border-border-color bg-background py-2 pl-8 pr-10 text-sm transition-colors focus:border-primary focus:outline-none"
+              />
+              {/* Availability indicator */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {isCheckingNickname && (
+                  <svg className="size-4 animate-spin text-foreground/50" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                )}
+                {!isCheckingNickname && nicknameAvailable === true && nickname.length >= 3 && (
+                  <svg className="size-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {!isCheckingNickname && nicknameAvailable === false && (
+                  <svg className="size-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            {nicknameError && (
+              <p className="text-sm text-red-500">{nicknameError}</p>
+            )}
+            {!nicknameError && nicknameAvailable === false && (
+              <p className="text-sm text-red-500">This nickname is already taken</p>
+            )}
+            {!nicknameError && nicknameAvailable === true && nickname.length >= 3 && (
+              <p className="text-sm text-green-600">Nickname is available!</p>
+            )}
             <p className="text-xs text-foreground/50">
               Your unique username for the community. Used in your gallery URLs.
             </p>
@@ -226,7 +345,7 @@ export default function SignupPage() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || nicknameAvailable === false || nickname.length < 3 || !!nicknameError}
             fullWidth
             className="mt-2 py-2"
           >

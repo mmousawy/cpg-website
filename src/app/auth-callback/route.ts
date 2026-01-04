@@ -69,10 +69,21 @@ export async function GET(request: NextRequest) {
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
           })
         } else {
-          // Update last logged in
+          // Update last logged in and sync OAuth avatar if user hasn't set a custom one
+          const oauthAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+          const updateData: Record<string, unknown> = { 
+            last_logged_in: new Date().toISOString() 
+          }
+          
+          // Only update avatar if profile doesn't have one (user hasn't uploaded custom)
+          // and OAuth provides one
+          if (!profile.avatar_url && oauthAvatarUrl) {
+            updateData.avatar_url = oauthAvatarUrl
+          }
+          
           await supabase
             .from('profiles')
-            .update({ last_logged_in: new Date().toISOString() })
+            .update(updateData)
             .eq('id', user.id)
         }
       }

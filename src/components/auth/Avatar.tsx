@@ -8,7 +8,7 @@ type AvatarProps = {
   // For static mode: provide user data directly
   avatarUrl?: string | null
   fullName?: string | null
-  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   hoverEffect?: boolean
 }
@@ -25,22 +25,24 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     xs: 'size-8',
     sm: 'size-10',
     md: 'size-12',
-    lg: 'size-16'
+    lg: 'size-16',
+    xl: 'size-24'
   }
 
-  // Loading state (only for dynamic mode)
-  if (!isStaticMode && isLoading) {
+  // Loading state (only for dynamic mode) - wait for profile to load to avoid flicker
+  if (!isStaticMode && (isLoading || !profile)) {
     return <div className={clsx(sizeClasses[size], "animate-pulse rounded-full bg-border-color", className)} />
   }
 
-  // Get avatar data - use profile from context instead of separate fetch
+  // Get avatar data - profile.avatar_url is the single source of truth
+  // OAuth avatars are synced to profile.avatar_url on login
   const avatarUrl = isStaticMode
     ? staticAvatarUrl
-    : (profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture)
+    : profile?.avatar_url
 
   const fullName = isStaticMode
     ? staticFullName
-    : (profile?.full_name || user?.user_metadata?.full_name)
+    : profile?.full_name
 
   const initials = fullName
     ? fullName
@@ -57,7 +59,8 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     xs: 'size-4',
     sm: 'size-5',
     md: 'size-6',
-    lg: 'size-8'
+    lg: 'size-8',
+    xl: 'size-12'
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import PageLoading from '@/components/shared/PageLoading'
 import PageContainer from '@/components/layout/PageContainer'
@@ -12,11 +12,14 @@ type ProtectedRouteProps = {
   requireAdmin?: boolean
   /** Custom redirect path when not authenticated (default: /login) */
   redirectTo?: string
+  /** Skip the onboarding check (for the onboarding page itself) */
+  skipOnboardingCheck?: boolean
 }
 
 /**
  * Wrapper component for protected routes.
  * Handles authentication checking, loading states, and redirects.
+ * Also redirects users without a nickname to the onboarding page.
  * 
  * Usage in layout.tsx:
  * ```tsx
@@ -30,10 +33,12 @@ type ProtectedRouteProps = {
 export default function ProtectedRoute({ 
   children, 
   requireAdmin = false,
-  redirectTo = '/login'
+  redirectTo = '/login',
+  skipOnboardingCheck = false
 }: ProtectedRouteProps) {
-  const { user, isAdmin, isLoading } = useAuth()
+  const { user, profile, isAdmin, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (isLoading) return
@@ -44,13 +49,25 @@ export default function ProtectedRoute({
       return
     }
 
+    // Check if user needs to complete onboarding (no nickname set)
+    // Skip this check if we're already on the onboarding page or if skipOnboardingCheck is true
+    if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
+      router.push('/onboarding')
+      return
+    }
+
     if (requireAdmin && !isAdmin) {
       router.push('/')
     }
-  }, [user, isAdmin, isLoading, requireAdmin, redirectTo, router])
+  }, [user, profile, isAdmin, isLoading, requireAdmin, redirectTo, router, skipOnboardingCheck, pathname])
 
   // Show loading while checking auth or redirecting
   if (isLoading || !user) {
+    return <PageLoading />
+  }
+
+  // Show loading while redirecting to onboarding
+  if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
     return <PageLoading />
   }
 
