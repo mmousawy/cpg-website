@@ -78,7 +78,7 @@ export default function Header() {
               className="flex items-center justify-center overflow-hidden rounded-full"
               aria-label="Open menu"
             >
-              <Avatar size="md" className="!size-10 border-0" />
+              <Avatar size="sm" />
             </button>
 
             {/* Mobile Menu Button */}

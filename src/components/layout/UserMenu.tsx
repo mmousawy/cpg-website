@@ -52,7 +52,7 @@ export default function UserMenu() {
 
   if (isLoading) {
     return (
-      <div className="h-10 w-10 animate-pulse rounded-full bg-border-color" />
+      <div className="h-12 w-12 animate-pulse rounded-full bg-border-color" />
     )
   }
 
@@ -66,7 +66,7 @@ export default function UserMenu() {
         )}
         aria-label="User menu"
       >
-        <Avatar size="md" className="!size-12 border-0" />
+        <Avatar size="md" />
       </button>
 
       {isOpen && (
