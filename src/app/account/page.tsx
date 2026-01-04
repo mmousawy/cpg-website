@@ -30,6 +30,7 @@ type Profile = {
   website: string | null
   social_links: SocialLink[] | null
   album_card_style: 'large' | 'compact' | null
+  theme?: 'light' | 'dark' | 'system' | null
   created_at: string
   last_logged_in?: string | null
 }
@@ -63,6 +64,18 @@ export default function AccountPage() {
   const setAlbumCardStyle = (value: 'large' | 'compact') => {
     setAlbumCardStyleState(value)
     localStorage.setItem('album-card-style', value)
+  }
+
+  // Wrapper to save theme to both next-themes and database
+  const handleThemeChange = async (value: string) => {
+    setTheme(value)
+    // Save to database in background
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ theme: value })
+        .eq('id', user.id)
+    }
   }
 
   // Stats state
@@ -123,7 +136,7 @@ export default function AccountPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, created_at, last_logged_in, is_admin')
+        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin')
         .eq('id', user.id)
         .single()
 
@@ -190,6 +203,10 @@ export default function AccountPage() {
         // Only set from profile if localStorage doesn't have a value (localStorage takes priority)
         if (!localStorage.getItem('album-card-style') && data.album_card_style) {
           setAlbumCardStyle(data.album_card_style)
+        }
+        // Apply theme from database if it exists
+        if (data.theme && ['light', 'dark', 'system'].includes(data.theme)) {
+          setTheme(data.theme)
         }
       }
     } catch (err) {
@@ -805,7 +822,7 @@ export default function AccountPage() {
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => setTheme(option.value)}
+                          onClick={() => handleThemeChange(option.value)}
                           className={clsx(
                             "flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors",
                             themeMounted && theme === option.value

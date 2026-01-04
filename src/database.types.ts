@@ -372,6 +372,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          album_card_style: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string | null
@@ -382,10 +383,14 @@ export type Database = {
           last_logged_in: string | null
           nickname: string | null
           social_links: Json | null
+          suspended_at: string | null
+          suspended_reason: string | null
+          theme: string | null
           updated_at: string | null
           website: string | null
         }
         Insert: {
+          album_card_style?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
@@ -396,10 +401,14 @@ export type Database = {
           last_logged_in?: string | null
           nickname?: string | null
           social_links?: Json | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
+          theme?: string | null
           updated_at?: string | null
           website?: string | null
         }
         Update: {
+          album_card_style?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
@@ -410,6 +419,9 @@ export type Database = {
           last_logged_in?: string | null
           nickname?: string | null
           social_links?: Json | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
+          theme?: string | null
           updated_at?: string | null
           website?: string | null
         }
