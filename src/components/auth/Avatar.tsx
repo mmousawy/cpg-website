@@ -29,8 +29,8 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     xl: 'size-24'
   }
 
-  // Loading state (only for dynamic mode) - wait for profile to load to avoid flicker
-  if (!isStaticMode && (isLoading || !profile)) {
+  // Loading state (only for dynamic mode) - only show pulse during initial auth loading
+  if (!isStaticMode && isLoading) {
     return <div className={clsx(sizeClasses[size], "animate-pulse rounded-full bg-border-color", className)} />
   }
 
@@ -44,6 +44,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     ? staticFullName
     : profile?.full_name
 
+  // For initials, also check user email as fallback
   const initials = fullName
     ? fullName
       .split(' ')
@@ -51,7 +52,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
       .join('')
       .toUpperCase()
       .slice(0, 2)
-    : (!isStaticMode && user?.email?.slice(0, 2).toUpperCase()) || '?'
+    : (user?.email?.slice(0, 2).toUpperCase()) || null
 
   // Icon sizes matching avatar sizes
   const iconSizeClasses = {
@@ -81,13 +82,14 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
           quality={95}
           className="object-cover w-full h-full transition-all duration-200"
         />
-      ) : initials && initials !== '?' ? (
-        // Vertical centering for smaller sizes
+      ) : initials ? (
+        // Show initials if we have a name or email
         <div className="flex size-full items-center justify-center bg-[#5e9b84] text-sm font-bold text-white h-full leading-none" style={{ fontSize: `${(parseInt(iconSizeClasses[size]?.replace('size-', '')) || 12) * 4}px` }}>
           {initials}
         </div>
       ) : (
-        <div className="flex size-full items-center justify-center bg-[#5e9b84]">
+        // Fallback: person icon on grey background
+        <div className="flex size-full items-center justify-center bg-[#8f98a3] dark:bg-[#6e7277]">
           <svg className={clsx("fill-white/90", iconSizeClasses[size])} viewBox="0 0 24 24">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>
