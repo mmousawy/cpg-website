@@ -70,15 +70,17 @@ export default function UserMenu() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color bg-background-light shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light shadow-lg">
           {user ? (
             <>
-              <div className="border-b border-border-color p-4">
+              {/* <div className="p-4">
                 <p className="font-semibold truncate">
                   {user.user_metadata?.full_name || 'User'}
                 </p>
                 <p className="text-sm text-foreground/60 truncate">{user.email}</p>
               </div>
+
+              <div className="border-t border-border-color-strong mx-4" /> */}
 
               <div className="p-2">
                 {profile?.nickname && (
@@ -138,7 +140,10 @@ export default function UserMenu() {
                 )}
               </div>
 
-              <div className="border-t border-border-color p-2">
+              {/* Divider */}
+              <div className="border-t border-border-color-strong mx-4" />
+
+              <div className="p-2">
                 <button
                   onClick={() => {
                     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')

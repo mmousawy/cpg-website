@@ -51,7 +51,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
       )}
       
       {/* Menu panel */}
-      <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color bg-background-light shadow-lg">
+      <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light shadow-lg">
       {/* Navigation Links */}
       <div className="p-2">
         <Link
@@ -87,15 +87,15 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
       </div>
 
       {/* Divider */}
-      <div className="mx-2 border-t border-border-color" />
+      <div className="mx-4 border-t border-border-color-strong" />
 
       {/* User Menu Items */}
       {user ? (
         <>
-          <div className="p-4 pb-0">
+          {/* <div className="p-4 pb-0">
             <p className="truncate font-semibold">{user.user_metadata?.full_name || 'User'}</p>
             <p className="truncate text-sm text-foreground/60">{user.email}</p>
-          </div>
+          </div> */}
 
           <div className="p-2">
             {profile?.nickname && (
@@ -156,7 +156,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </div>
 
           {/* Divider */}
-          <div className="mx-2 border-t border-border-color" />
+          <div className="mx-4 border-t border-border-color-strong" />
 
           <div className="p-2">
             <button
@@ -222,7 +222,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </Link>
 
           {/* Divider */}
-          <div className="mx-2 my-2 border-t border-border-color" />
+          <div className="mx-2 my-2 border-t border-border-color-strong" />
 
           <button
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
