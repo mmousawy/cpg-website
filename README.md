@@ -85,7 +85,31 @@ See `.env.example` for all required variables. Key ones:
 - `EMAIL_ASSETS_URL` - Your production URL (for email images to work)
 - `ENCRYPTION_KEY` - Generate with `openssl rand -hex 32`
 
-For OAuth, configure Google and Discord credentials in Supabase Dashboard → Authentication → Providers.
+### OAuth Configuration
+
+**For Production (Supabase Dashboard):**
+
+Configure Google and Discord credentials in Supabase Dashboard → Authentication → Providers.
+
+**For Local Development (Supabase CLI):**
+
+Set these environment variables before running `supabase start`:
+
+```bash
+# Google OAuth
+export SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID="your-google-client-id"
+export SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET="your-google-secret"
+
+# Discord OAuth
+export SUPABASE_AUTH_EXTERNAL_DISCORD_CLIENT_ID="your-discord-client-id"
+export SUPABASE_AUTH_EXTERNAL_DISCORD_SECRET="your-discord-secret"
+```
+
+To get these credentials:
+- **Google**: [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → Create OAuth 2.0 Client ID
+- **Discord**: [Discord Developer Portal](https://discord.com/developers/applications) → New Application → OAuth2
+
+Set the redirect URI to: `http://localhost:54321/auth/v1/callback`
 
 ### Run
 

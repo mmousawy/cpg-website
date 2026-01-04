@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       {
         hostname: 'db.creativephotography.group',
       },
+      {
+        hostname: 'cdn.discordapp.com',
+      },
+      {
+        hostname: '*.googleusercontent.com',
+      },
     ],
   },
   webpack(config) {
