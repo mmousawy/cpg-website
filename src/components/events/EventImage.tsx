@@ -4,7 +4,8 @@ import Image from 'next/image';
 import { CPGEvent } from '@/types/events';
 
 export default function EventImage({ event, size }: { event: CPGEvent, size?: 'small' }) {
-  if (!event.cover_image) return null;
+  const imageSrc = event.cover_image || event.image_url;
+  if (!imageSrc) return null;
 
   if (size === 'small') {
     return (
@@ -17,7 +18,7 @@ export default function EventImage({ event, size }: { event: CPGEvent, size?: 's
           height={240}
           alt={event.title || 'Event cover image'}
           className='mb-4 w-full rounded-md max-sm:block sm:hidden'
-          src={event.cover_image}
+          src={imageSrc}
         />
       </Link>
     );
@@ -36,7 +37,7 @@ export default function EventImage({ event, size }: { event: CPGEvent, size?: 's
         quality={95}
         alt={event.title || 'Event cover image'}
         className='size-full rounded-md object-cover'
-        src={event.cover_image}
+        src={imageSrc}
       />
     </Link>
   );

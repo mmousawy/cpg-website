@@ -16,6 +16,7 @@ import CancelSVG from 'public/icons/cancel.svg'
 import CheckSVG from 'public/icons/check.svg'
 import SadSVG from 'public/icons/sad.svg'
 import ArrowRightSVG from 'public/icons/arrow-right.svg'
+import { routes } from '@/config/routes'
 
 type RSVP = {
   id: number
@@ -151,7 +152,7 @@ export default function MyEventsPage() {
       <div className="space-y-8">
         {/* Upcoming Events */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold opacity-70">Upcoming events</h2>
+          <h2 className="mb-4 text-lg font-semibold opacity-70">Your upcoming events</h2>
           {isLoading ? (
             <Container className="text-center animate-pulse">
               <p className="text-foreground/50">Loading your events...</p>
@@ -160,7 +161,7 @@ export default function MyEventsPage() {
             <Container className="text-center">
               <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No upcoming events</p>
               <Button
-                href="/"
+                href={routes.events.url}
                 size='sm'
                 iconRight={<ArrowRightSVG className="-mr-1.5" />}
                 className="mt-4 rounded-full"

@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
       {
         hostname: '*.googleusercontent.com',
       },
+      {
+        hostname: 'secure.meetupstatic.com',
+      },
     ],
   },
   webpack(config) {

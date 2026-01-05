@@ -69,7 +69,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
       return (
         <div 
           className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none"
-          style={{ fontSize: sizeConfig.fontSize * 0.4 }}
+          style={{ fontSize: sizeConfig.fontSize * 0.875 }}
         >
           {initials}
         </div>

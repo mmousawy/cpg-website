@@ -43,7 +43,7 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
 
   if (!attendees || attendees.length === 0) {
     return (
-      <div className='text-[15px] font-semibold leading-6'>
+      <div className='text-[15px] font-semibold text-foreground/70 leading-6'>
         {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
       </div>
     );

@@ -13,7 +13,7 @@ export default async function RecentEvents() {
   // Fetch 3 most recent events by date (descending)
   const { data: events, error } = await supabase
     .from('events')
-    .select('id, title, date, location, time, cover_image, slug')
+    .select('id, title, date, location, time, cover_image, image_url, slug')
     .order('date', { ascending: false })
     .limit(3)
 
@@ -47,10 +47,10 @@ export default async function RecentEvents() {
         >
           <div className="flex items-start gap-3 sm:gap-4">
             {/* Thumbnail */}
-            {event.cover_image && (
+            {(event.cover_image || event.image_url) && (
               <div className="relative h-16 w-24 sm:h-20 sm:w-32 shrink-0 overflow-hidden rounded-lg bg-background-light">
                 <Image
-                  src={event.cover_image}
+                  src={event.cover_image || event.image_url!}
                   alt={event.title || 'Event cover'}
                   sizes="128px"
                   loading='eager'

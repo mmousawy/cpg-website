@@ -22,7 +22,7 @@ export default async function Events({ filter, emptyMessage }: { filter: 'upcomi
     .from("events")
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
     .order('date', { ascending: true })
-    .limit(20);
+    .limit(30);
   if (response.error || !Array.isArray(response.data)) {
     // You can customize this error handling as needed
     throw new Error(`Failed to fetch events: ${response.error?.message ?? 'Unknown error'}`);
@@ -44,6 +44,11 @@ export default async function Events({ filter, emptyMessage }: { filter: 'upcomi
     } else {
       return eventDate < now;
     }
+  }).sort((a, b) => {
+    const dateA = new Date(a.date!).getTime();
+    const dateB = new Date(b.date!).getTime();
+    // Upcoming: ascending (closest first), Past: descending (most recent first)
+    return filter === 'upcoming' ? dateA - dateB : dateB - dateA;
   });
 
   // Normalize event data
@@ -86,7 +91,7 @@ export default async function Events({ filter, emptyMessage }: { filter: 'upcomi
                   <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground " />{event.time?.substring(0, 5)}</span>
                 </span>
                 <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'>
-                  <LocationSVG className="shrink-0 fill-foreground " />{event.location?.replace(/\r\n/gm, ' • ')}
+                  <LocationSVG className="shrink-0 fill-foreground " />{event.location?.split('\n')[0] ?? ''}
                 </span>
                 <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold max-sm:mb-6 sm:hidden'>
                   <LocationSVG className="shrink-0 fill-foreground " />{event.location}

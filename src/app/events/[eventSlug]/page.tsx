@@ -97,11 +97,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   return (
     <>
       {/* Hero Section with Cover Image */}
-      {event.cover_image && (
+      {(event.cover_image || event.image_url) && (
         <div className="relative h-72 sm:h-96 md:h-[28rem] w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={event.cover_image}
+            src={event.cover_image || event.image_url!}
             alt={event.title || 'Event cover'}
             className="absolute inset-0 size-full object-cover"
           />
@@ -128,10 +128,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         </div>
       )}
 
-      <PageContainer className={event.cover_image ? '!pt-6 sm:!pt-8' : ''}>
+      <PageContainer className={(event.cover_image || event.image_url) ? '!pt-6 sm:!pt-8' : ''}>
         <Container>
           {/* Title (if no cover image) */}
-          {!event.cover_image && (
+          {!(event.cover_image || event.image_url) && (
             <div className="mb-6">
               {isPastEvent && (
                 <span className="mb-2 inline-block rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium">
@@ -172,6 +172,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             )}
           </div>
 
+          {/* Description Section */}
+          {event.description && (
+            <div className="mb-8">
+              <h2 className="mb-3 text-lg font-semibold">About this event</h2>
+              <p className="whitespace-pre-line text-foreground/90 leading-relaxed">{event.description}</p>
+            </div>
+          )}
+
           {/* Hosts Section */}
           {hosts && hosts.length > 0 && (
             <div className="mb-8">
@@ -205,14 +213,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             </div>
           )}
 
-          {/* Description Section */}
-          {event.description && (
-            <div className="mb-8">
-              <h2 className="mb-3 text-lg font-semibold">About this event</h2>
-              <p className="whitespace-pre-line text-foreground/90 leading-relaxed">{event.description}</p>
-            </div>
-          )}
-
           {/* Add to Calendar */}
           {!isPastEvent && (
             <div className="mb-8">
@@ -230,9 +230,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         </Container>
       </PageContainer>
 
-      {/* Sticky Action Bar */}
-      {/* TODO: Remove isPastEvent condition once testing is complete */}
-      <EventSignupBar event={event} />
+      {/* Sticky Action Bar - only show for upcoming events */}
+      {!isPastEvent && <EventSignupBar event={event} />}
 
       {/* Comments Section - Coming Soon */}
       <PageContainer variant="alt" className="border-t border-t-border-color">
