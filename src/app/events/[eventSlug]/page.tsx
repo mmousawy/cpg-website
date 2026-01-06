@@ -98,7 +98,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     <>
       {/* Hero Section with Cover Image */}
       {(event.cover_image || event.image_url) && (
-        <div className="relative h-72 sm:h-96 md:h-[28rem] w-full overflow-hidden">
+        <div className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={event.cover_image || event.image_url!}
@@ -107,17 +107,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           />
           
           {/* Frosted glass blur layer with eased gradient mask */}
-          <div className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask" />
+          <div className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong" />
           
           {/* Eased gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay" />
+          <div className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong" />
           
           {/* Title overlay */}
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-6 sm:px-8 sm:pb-8">
+          <div className="absolute inset-x-0 bottom-0 px-4 pb-0 sm:px-8 sm:pb-4">
             <div className="mx-auto max-w-screen-md">
               {isPastEvent && (
                 <span className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
                   Past event
+                </span>
+              )}
+              {!isPastEvent && (
+                <span className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary backdrop-blur-sm">
+                  Upcoming event
                 </span>
               )}
               <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">
