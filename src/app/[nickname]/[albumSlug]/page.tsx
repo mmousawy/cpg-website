@@ -179,7 +179,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
         )}
 
         {/* Admin Moderation Panel */}
-        <div className="mt-10">
+        <div className="mt-6 md:mt-14">
           <AlbumModerationPanel
             albumId={albumWithPhotos.id}
             albumTitle={albumWithPhotos.title}

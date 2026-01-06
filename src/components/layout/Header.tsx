@@ -42,7 +42,7 @@ export default function Header() {
 
 
   return (
-    <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-3 text-foreground shadow-md shadow-[#00000005]">
+    <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-2 text-foreground shadow-md shadow-[#00000005]">
       <div className="flex w-full max-w-screen-md items-center justify-between gap-4">
         {/* Left: Logo + Desktop Nav */}
         <div className="flex items-center gap-6">

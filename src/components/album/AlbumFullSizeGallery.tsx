@@ -33,7 +33,7 @@ export default function AlbumFullSizeGallery({ photos }: { photos: AlbumPhoto[] 
 
   if (!photos || photos.length === 0) return null;
   return (
-    <div id="album-gallery" className="flex flex-col gap-12">
+    <div id="album-gallery" className="flex flex-col gap-4 md:gap-12">
       {photos.map((photo: AlbumPhotoExtended) => {
         const exif = photo.image?.exif_data;
         const exifString = exifToString(exif);
