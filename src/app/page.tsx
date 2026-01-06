@@ -1,19 +1,18 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Suspense } from 'react'
 import { createClient } from '@/utils/supabase/server'
 
-// Hero images - rotated every ~4 days
-import heroImg1 from 'public/gallery/home-hero1.jpg'
-import heroImg2 from 'public/gallery/home-hero2.jpg'
-import heroImg3 from 'public/gallery/home-hero3.jpg'
-import heroImg4 from 'public/gallery/home-hero4.jpg'
-import heroImg5 from 'public/gallery/home-hero5.jpg'
-import heroImg6 from 'public/gallery/home-hero6.jpg'
-import heroImg7 from 'public/gallery/home-hero7.jpg'
-import heroImg8 from 'public/gallery/home-hero8.jpg'
-
-const heroImages = [heroImg1, heroImg2, heroImg3, heroImg4, heroImg5, heroImg6, heroImg7, heroImg8]
+// Hero images - using URL paths instead of static imports to avoid bundling blur placeholders
+const heroImages = [
+  '/gallery/home-hero1.jpg',
+  '/gallery/home-hero2.jpg',
+  '/gallery/home-hero3.jpg',
+  '/gallery/home-hero4.jpg',
+  '/gallery/home-hero5.jpg',
+  '/gallery/home-hero6.jpg',
+  '/gallery/home-hero7.jpg',
+  '/gallery/home-hero8.jpg',
+]
 
 function getHeroImage() {
   const index = Math.floor(Math.random() * heroImages.length);
@@ -22,7 +21,7 @@ function getHeroImage() {
 
 import PageContainer from '@/components/layout/PageContainer'
 import Container from '@/components/layout/Container'
-import RecentEvents, { RecentEventsLoading } from '@/components/events/RecentEvents'
+import RecentEventsList from '@/components/events/RecentEventsList'
 import AlbumGrid from '@/components/album/AlbumGrid'
 import Avatar from '@/components/auth/Avatar'
 import Button from '@/components/shared/Button'
@@ -49,46 +48,52 @@ export const revalidate = 60
 export default async function Home() {
   const supabase = await createClient()
 
-  // Fetch recent public albums
-  const { data: albums } = await supabase
-    .from('albums')
-    .select(`
-      id,
-      title,
-      description,
-      slug,
-      cover_image_url,
-      is_public,
-      created_at,
-      profile:profiles(full_name, nickname, avatar_url),
-      photos:album_photos(id, photo_url)
-    `)
-    .eq('is_public', true)
-    .order('created_at', { ascending: false })
-    .limit(6)
+  // Fetch all data in parallel for faster page load and no-JS compatibility
+  const [
+    { data: albums },
+    { data: organizers },
+    { data: members },
+    { data: events },
+  ] = await Promise.all([
+    // Fetch recent public albums
+    supabase
+      .from('albums')
+      .select(`
+        id,
+        title,
+        description,
+        slug,
+        cover_image_url,
+        is_public,
+        created_at,
+        profile:profiles(full_name, nickname, avatar_url),
+        photos:album_photos(id, photo_url)
+      `)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(6),
+    // Fetch organizers (admins)
+    supabase
+      .from('profiles')
+      .select('id, full_name, nickname, avatar_url, bio')
+      .eq('is_admin', true)
+      .limit(5),
+    // Fetch recent members
+    supabase
+      .from('profiles')
+      .select('id, full_name, nickname, avatar_url')
+      .not('nickname', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(12),
+    // Fetch recent events
+    supabase
+      .from('events')
+      .select('id, title, date, location, time, cover_image, image_url, slug')
+      .order('date', { ascending: false })
+      .limit(3),
+  ])
 
   const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[]
-
-  // Fetch organizers (admins)
-  const { data: organizers } = await supabase
-    .from('profiles')
-    .select('id, full_name, nickname, avatar_url, bio')
-    .eq('is_admin', true)
-    .limit(5)
-
-  // Fetch recent members
-  const { data: members } = await supabase
-    .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
-    .not('nickname', 'is', null)
-    .order('created_at', { ascending: false })
-    .limit(12)
-
-  // Get total member count
-  const { count: memberCount } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .not('nickname', 'is', null)
 
   return (
     <>
@@ -100,9 +105,8 @@ export default async function Home() {
           alt="Creative Photography Group meetup"
           fill
           className="object-cover brightness-75 animate-fade-in"
-          placeholder="blur"
           priority
-          sizes="100vw"
+          sizes="60vw"
           quality={95}
         />
         
@@ -188,9 +192,7 @@ export default async function Home() {
               <h3 className="text-lg font-semibold">Recent events</h3>
               <ArrowLink href="/events">View all</ArrowLink>
             </div>
-            <Suspense fallback={<RecentEventsLoading />}>
-              <RecentEvents />
-            </Suspense>
+            <RecentEventsList events={events || []} />
           </div>
 
           {/* Galleries */}

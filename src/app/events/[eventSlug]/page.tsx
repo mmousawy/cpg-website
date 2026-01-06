@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Suspense } from 'react'
+import Image from 'next/image'
+import crypto from 'crypto'
+import clsx from 'clsx'
 import { createClient } from '@/utils/supabase/server'
 import PageContainer from '@/components/layout/PageContainer'
 import Container from '@/components/layout/Container'
-import Attendees, { AttendeesLoading } from '@/components/events/Attendees'
 import AddToCalendar from '@/components/events/AddToCalendar'
 import EventSignupBar from '@/components/events/EventSignupBar'
 import Avatar from '@/components/auth/Avatar'
@@ -47,6 +48,54 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   }
 }
 
+// Inline attendees display component
+function AttendeesDisplay({ attendees, isPastEvent }: { 
+  attendees: { id: string; email: string; profiles: { avatar_url: string | null } | null }[]
+  isPastEvent: boolean 
+}) {
+  if (!attendees || attendees.length === 0) {
+    return (
+      <div className='text-[15px] font-semibold text-foreground/70 leading-6'>
+        {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
+      </div>
+    );
+  }
+
+  const attendeesWithAvatars = attendees.map((attendee) => {
+    const customAvatar = attendee.profiles?.avatar_url;
+    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`;
+    return { ...attendee, avatarUrl: customAvatar || gravatarUrl };
+  });
+
+  return (
+    <div className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'>
+      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
+        {attendeesWithAvatars.map((attendee, idx) => (
+          <Image
+            key={`${attendee.id}_${idx}`}
+            width={32}
+            height={32}
+            className={clsx([
+              attendeesWithAvatars.length > 1 && "-mr-2",
+              "size-8 rounded-full object-cover"
+            ])}
+            src={attendee.avatarUrl}
+            alt="Avatar"
+          />
+        ))}
+        <div className={clsx([
+          "absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light",
+          attendeesWithAvatars.length < 20 && "invisible",
+          attendeesWithAvatars.length > 7 && "max-xs:visible",
+          attendeesWithAvatars.length > 12 && "max-md:visible",
+          attendeesWithAvatars.length > 16 && "!visible",
+        ])} />
+      </div>
+      {attendeesWithAvatars.length} attendee{attendeesWithAvatars.length === 1 ? '' : 's'}
+    </div>
+  );
+}
+
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
   const resolvedParams = await params
   const eventSlug = resolvedParams?.eventSlug || ''
@@ -57,7 +106,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
   const supabase = await createClient()
 
-  // Fetch event
+  // Fetch event first (needed for attendees query)
   const { data: event, error } = await supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
@@ -67,6 +116,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   if (error || !event) {
     notFound()
   }
+
+  // Fetch hosts and attendees in parallel
+  const [{ data: hosts }, { data: attendees }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, nickname, avatar_url')
+      .eq('is_admin', true)
+      .limit(5),
+    supabase
+      .from('events_rsvps')
+      .select(`id, user_id, email, confirmed_at, profiles (avatar_url)`)
+      .eq('event_id', event.id)
+      .not('confirmed_at', 'is', null)
+      .is('canceled_at', null)
+      .order('confirmed_at', { ascending: true })
+      .limit(100)
+  ])
 
   // Format the event date
   const eventDate = event.date ? new Date(event.date) : null
@@ -86,13 +152,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   const isPastEvent = eventDate ? eventDate < now : false
-
-  // Fetch hosts/organizers (admins for now)
-  const { data: hosts } = await supabase
-    .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
-    .eq('is_admin', true)
-    .limit(5)
 
   return (
     <>
@@ -228,9 +287,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           {/* Attendees Section */}
           <div>
             <h2 className="mb-3 text-lg font-semibold">Attendees</h2>
-            <Suspense fallback={<AttendeesLoading />}>
-              <Attendees event={event} supabase={supabase} />
-            </Suspense>
+            <AttendeesDisplay attendees={attendees || []} isPastEvent={isPastEvent} />
           </div>
         </Container>
       </PageContainer>

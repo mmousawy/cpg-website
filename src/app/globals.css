@@ -1,11 +1,37 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
+/* Base/fallback: use system preference when JS is disabled */
 :root {
-  --primary: #38786052;
+  --primary: #38785f;
   --primary-alt: #a6db93;
+  --background: #f0f1f3;
+  --background-light: #ffffff;
+  --foreground: #171717;
+  --text-muted: #6e7277;
+  --text-muted-light: #8f98a3;
+  --border-color: #e0e3e7;
+  --border-color-strong: #cdd0d4;
+  --error-red: #f75074;
 }
 
+/* System dark mode preference (works without JS) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --primary: rgb(69, 146, 116);
+    --primary-alt: #58c287;
+    --background: #171718;
+    --background-light: #2e2f31;
+    --foreground: #ededed;
+    --text-muted: #a3a3a3;
+    --text-muted-light: #737373;
+    --border-color: #424447;
+    --border-color-strong: #595b5f;
+    --error-red: #f5686a;
+  }
+}
+
+/* Explicit light mode (set by next-themes via JS) */
 :root.light {
   --primary: #38785f;
   --primary-alt: #a6db93;
@@ -19,6 +45,7 @@
   --error-red: #f75074;
 }
 
+/* Explicit dark mode (set by next-themes via JS) */
 :root.dark {
   --primary: rgb(69, 146, 116);
   --primary-alt: #58c287;

@@ -82,8 +82,19 @@ export default function AccountGalleriesPage() {
         </Button>
       </div>
 
+      {/* No-JS fallback */}
+      <noscript>
+        <style>{`.js-loading { display: none !important; }`}</style>
+        <Container className="text-center">
+          <p className="text-lg font-medium mb-2">JavaScript required</p>
+          <p className="text-foreground/70">
+            Please enable JavaScript to manage your galleries.
+          </p>
+        </Container>
+      </noscript>
+
       {isLoading ? (
-        <Container className="text-center animate-pulse">
+        <Container className="text-center animate-pulse js-loading">
           <p className="text-foreground/50">Loading your albums...</p>
         </Container>
       ) : albums.length === 0 ? (

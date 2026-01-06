@@ -149,12 +149,23 @@ export default function MyEventsPage() {
         </p>
       </div>
 
+      {/* No-JS fallback */}
+      <noscript>
+        <style>{`.js-loading { display: none !important; }`}</style>
+        <Container className="text-center">
+          <p className="text-lg font-medium mb-2">JavaScript required</p>
+          <p className="text-foreground/70">
+            Please enable JavaScript to view your event registrations.
+          </p>
+        </Container>
+      </noscript>
+
       <div className="space-y-8">
         {/* Upcoming Events */}
         <section>
           <h2 className="mb-4 text-lg font-semibold opacity-70">Your upcoming events</h2>
           {isLoading ? (
-            <Container className="text-center animate-pulse">
+            <Container className="text-center animate-pulse js-loading">
               <p className="text-foreground/50">Loading your events...</p>
             </Container>
           ) : upcomingRSVPs.length === 0 ? (

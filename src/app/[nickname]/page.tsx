@@ -70,7 +70,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   const supabase = await createClient()
 
-  // Fetch profile
+  // Fetch profile first (needed for albums query)
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id, full_name, nickname, avatar_url, bio, website, social_links, created_at')
@@ -83,7 +83,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   const typedProfile = profile as unknown as ProfileData
 
-  // Fetch user's public albums
+  // Fetch user's public albums (profile.id is now available)
   const { data: albums } = await supabase
     .from('albums')
     .select(`

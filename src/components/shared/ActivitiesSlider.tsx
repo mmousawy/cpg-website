@@ -118,63 +118,84 @@ export default function ActivitiesSlider() {
     </button>
   )
 
+  // Reusable activity card component
+  const ActivityCard = ({ activity }: { activity: typeof activities[0] }) => {
+    const styles = colorStyles[activity.color]
+    return (
+      <div className={`group flex h-full items-start gap-3 rounded-xl border p-4 transition-all hover:shadow-sm ${styles.card}`}>
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${styles.icon}`}>
+          {activity.icon}
+        </div>
+        <div className="min-w-0">
+          <p className={`text-xl font-semibold ${styles.title}`}>{activity.title}</p>
+          <p className="text-md text-foreground/80 mt-1">{activity.description}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="relative">
-      {/* Desktop navigation buttons - hidden on mobile */}
-      <div className="hidden sm:block absolute left-0 top-1/2 z-20 -translate-y-1/2">
-        <NavButton direction="prev" />
-      </div>
-      <div className="hidden sm:block absolute right-0 top-1/2 z-20 -translate-y-1/2">
-        <NavButton direction="next" />
-      </div>
+    <>
+      {/* No-JS fallback: static grid */}
+      <noscript>
+        <div className="grid gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3">
+          {activities.map((activity) => (
+            <ActivityCard key={activity.title} activity={activity} />
+          ))}
+        </div>
+      </noscript>
 
-      {/* Swiper - full viewport width on mobile, with fade mask on sm+ */}
-      <div 
-        className="w-screen relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-0 sm:translate-x-0 sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
-      >
-        <Swiper
-          modules={[Navigation, A11y]}
-          onSwiper={(swiper) => { swiperRef.current = swiper }}
-          spaceBetween={24}
-          slidesPerView={1}
-          centeredSlides={true}
-          slidesOffsetBefore={12}
-          slidesOffsetAfter={12}
-          breakpoints={{
-            640: { 
-              slidesPerView: 2,
-              slidesOffsetBefore: 0,
-              slidesOffsetAfter: 0,
-            },
-          }}
-          grabCursor
-          loop
-          className="[&_.swiper-wrapper]:items-stretch"
+      {/* JS-enabled: interactive slider (hidden when JS disabled via noscript style) */}
+      <div className="relative js-only-slider">
+        <noscript>
+          <style>{`.js-only-slider { display: none !important; }`}</style>
+        </noscript>
+
+        {/* Desktop navigation buttons - hidden on mobile */}
+        <div className="hidden sm:block absolute left-0 top-1/2 z-20 -translate-y-1/2">
+          <NavButton direction="prev" />
+        </div>
+        <div className="hidden sm:block absolute right-0 top-1/2 z-20 -translate-y-1/2">
+          <NavButton direction="next" />
+        </div>
+
+        {/* Swiper - full viewport width on mobile, with fade mask on sm+ */}
+        <div 
+          className="w-screen relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-0 sm:translate-x-0 sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
-          {activities.map((activity) => {
-            const styles = colorStyles[activity.color]
-            return (
+          <Swiper
+            modules={[Navigation, A11y]}
+            onSwiper={(swiper) => { swiperRef.current = swiper }}
+            spaceBetween={24}
+            slidesPerView={1}
+            centeredSlides={true}
+            slidesOffsetBefore={12}
+            slidesOffsetAfter={12}
+            breakpoints={{
+              640: { 
+                slidesPerView: 2,
+                slidesOffsetBefore: 0,
+                slidesOffsetAfter: 0,
+              },
+            }}
+            grabCursor
+            loop
+            className="[&_.swiper-wrapper]:items-stretch"
+          >
+            {activities.map((activity) => (
               <SwiperSlide key={activity.title} className="!h-auto">
-                <div className={`group flex h-full items-start gap-3 rounded-xl border p-4 transition-all hover:shadow-sm ${styles.card}`}>
-                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${styles.icon}`}>
-                    {activity.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className={`text-xl font-semibold ${styles.title}`}>{activity.title}</p>
-                    <p className="text-md text-foreground/80 mt-1">{activity.description}</p>
-                  </div>
-                </div>
+                <ActivityCard activity={activity} />
               </SwiperSlide>
-            )
-          })}
-        </Swiper>
-      </div>
+            ))}
+          </Swiper>
+        </div>
 
-      {/* Mobile navigation buttons - below the slider */}
-      <div className="flex sm:hidden justify-center gap-4 mt-4">
-        <NavButton direction="prev" />
-        <NavButton direction="next" />
+        {/* Mobile navigation buttons - below the slider */}
+        <div className="flex sm:hidden justify-center gap-4 mt-4">
+          <NavButton direction="prev" />
+          <NavButton direction="next" />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

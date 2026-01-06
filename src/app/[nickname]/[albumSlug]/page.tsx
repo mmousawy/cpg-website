@@ -79,52 +79,49 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     notFound()
   }
 
-  // Fetch album with photos and user info
-  // Only fetch necessary fields to reduce egress
-  // Note: is_suspended and suspension_reason are fetched via raw query below for moderation
-  const { data: album, error } = await supabase
-    .from('albums')
-    .select(`
-      id,
-      title,
-      description,
-      slug,
-      is_public,
-      created_at,
-      profile:profiles(full_name, avatar_url, nickname),
-      photos:album_photos(
+  // Fetch album with photos and moderation data in parallel
+  const [{ data: album, error }, { data: modData }] = await Promise.all([
+    supabase
+      .from('albums')
+      .select(`
         id,
-        photo_url,
         title,
-        width,
-        height,
-        sort_order,
-        image:images(exif_data)
-      )
-    `)
-    .eq('user_id', profile.id)
-    .eq('slug', albumSlug)
-    .eq('is_public', true)
-    .single()
-  
-  // Fetch moderation fields separately (may not exist in older DB versions)
-  let moderationData = { is_suspended: false, suspension_reason: null as string | null }
-  if (album) {
-    const { data: modData } = await supabase
+        description,
+        slug,
+        is_public,
+        created_at,
+        profile:profiles(full_name, avatar_url, nickname),
+        photos:album_photos(
+          id,
+          photo_url,
+          title,
+          width,
+          height,
+          sort_order,
+          image:images(exif_data)
+        )
+      `)
+      .eq('user_id', profile.id)
+      .eq('slug', albumSlug)
+      .eq('is_public', true)
+      .single(),
+    // Fetch moderation fields - we'll filter by user_id and slug since we don't have album.id yet
+    supabase
       .from('albums')
       .select('is_suspended, suspension_reason' as any)
-      .eq('id', album.id)
+      .eq('user_id', profile.id)
+      .eq('slug', albumSlug)
+      .eq('is_public', true)
       .single()
-    if (modData) {
-      moderationData = {
-        is_suspended: (modData as any).is_suspended || false,
-        suspension_reason: (modData as any).suspension_reason || null,
-      }
-    }
-  }
+  ])
 
   if (error || !album) {
     notFound();
+  }
+  
+  const moderationData = {
+    is_suspended: (modData as any)?.is_suspended || false,
+    suspension_reason: (modData as any)?.suspension_reason || null,
   }
 
   const albumWithPhotos = album as unknown as AlbumWithPhotos

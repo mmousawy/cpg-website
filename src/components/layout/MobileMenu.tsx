@@ -8,18 +8,26 @@ import clsx from 'clsx'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import { routes } from '@/config/routes'
+import type { ServerAuth } from '@/utils/supabase/getServerAuth'
+import { signOutAction } from '@/app/actions/auth'
 
 interface MobileMenuProps {
   isOpen: boolean
   onClose: () => void
   mounted: boolean
+  serverAuth?: ServerAuth
 }
 
-export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps) {
-  const { user, profile, signOut } = useAuth()
-  const { isAdmin } = useAdmin()
+export default function MobileMenu({ isOpen, onClose, mounted, serverAuth }: MobileMenuProps) {
+  const { user: clientUser, profile: clientProfile, signOut } = useAuth()
+  const { isAdmin: clientIsAdmin } = useAdmin()
   const { resolvedTheme, setTheme } = useTheme()
   const pathname = usePathname()
+
+  // Use server auth for initial render, client auth after hydration
+  const user = mounted ? clientUser : serverAuth?.user
+  const profile = mounted ? clientProfile : serverAuth?.profile
+  const isAdmin = mounted ? clientIsAdmin : serverAuth?.profile?.is_admin
 
   // Helper to check if a route is active
   // exact=true means only match the exact path (for parent routes that have sub-routes)
@@ -172,30 +180,36 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               </svg>
               {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             </button>
-            <button
-              onClick={async () => {
+            <form 
+              action={signOutAction}
+              onSubmit={async (e) => {
+                // Progressive enhancement: use client-side signOut when JS is enabled
+                e.preventDefault()
                 onClose()
                 try {
                   await signOut()
-                  // Only redirect to home if on a protected route
+                  // Only redirect if on a protected route, otherwise let React update the UI
                   const isProtectedRoute = pathname.startsWith('/account') || pathname.startsWith('/admin')
                   if (isProtectedRoute) {
                     window.location.href = '/'
-                  } else {
-                    // Stay on current page, just refresh to update UI
-                    window.location.reload()
                   }
+                  // On public pages, the auth context will update the UI automatically
                 } catch (error) {
                   console.error('Error signing out:', error)
                 }
               }}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
             >
-              <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Sign out
-            </button>
+              <input type="hidden" name="redirectTo" value={pathname} />
+              <button
+                type="submit"
+                className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
+              >
+                <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign out
+              </button>
+            </form>
           </div>
         </>
       ) : (

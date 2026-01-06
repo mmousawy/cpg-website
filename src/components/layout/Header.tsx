@@ -10,6 +10,7 @@ import UserMenu from './UserMenu'
 import Avatar from '../auth/Avatar'
 import MobileMenu from './MobileMenu'
 import { routes } from '@/config/routes'
+import type { ServerAuth } from '@/utils/supabase/getServerAuth'
 
 // Navigation link component with active state
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -32,7 +33,11 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   )
 }
 
-export default function Header() {
+type HeaderProps = {
+  serverAuth?: ServerAuth
+}
+
+export default function Header({ serverAuth }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -67,7 +72,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {/* Desktop Only: UserMenu */}
           <div className="hidden sm:block">
-            <UserMenu />
+            <UserMenu serverAuth={serverAuth} />
           </div>
 
           {/* Mobile Only: Avatar + Menu Button */}
@@ -78,7 +83,11 @@ export default function Header() {
               className="flex items-center justify-center overflow-hidden rounded-full"
               aria-label="Open menu"
             >
-              <Avatar size="sm" />
+              <Avatar 
+                size="sm" 
+                avatarUrl={serverAuth?.profile?.avatar_url}
+                fullName={serverAuth?.profile?.full_name}
+              />
             </button>
 
             {/* Mobile Menu Button */}
@@ -98,7 +107,7 @@ export default function Header() {
                 </svg>
               </button>
 
-              <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} mounted={mounted} />
+              <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} mounted={mounted} serverAuth={serverAuth} />
             </div>
           </div>
         </div>

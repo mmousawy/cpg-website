@@ -10,15 +10,25 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import Avatar from '../auth/Avatar'
 import { routes } from '@/config/routes'
+import type { ServerAuth } from '@/utils/supabase/getServerAuth'
+import { signOutAction } from '@/app/actions/auth'
 
-export default function UserMenu() {
-  const { user, profile, isLoading, signOut } = useAuth()
-  const { isAdmin } = useAdmin()
+type UserMenuProps = {
+  serverAuth?: ServerAuth
+}
+
+export default function UserMenu({ serverAuth }: UserMenuProps) {
+  const { user: clientUser, profile: clientProfile, isLoading, signOut } = useAuth()
+  const { isAdmin: clientIsAdmin } = useAdmin()
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const detailsRef = useRef<HTMLDetailsElement>(null)
   const pathname = usePathname()
+
+  // Use server auth for initial render, client auth after hydration
+  const user = mounted ? clientUser : serverAuth?.user
+  const profile = mounted ? clientProfile : serverAuth?.profile
+  const isAdmin = mounted ? clientIsAdmin : serverAuth?.profile?.is_admin
 
   // Helper to check if a route is active
   // exact=true means only match the exact path (for parent routes that have sub-routes)
@@ -38,11 +48,11 @@ export default function UserMenu() {
     setMounted(true)
   }, [])
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside (progressive enhancement)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      if (detailsRef.current && !detailsRef.current.contains(event.target as Node)) {
+        detailsRef.current.open = false
       }
     }
 
@@ -50,27 +60,36 @@ export default function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className="h-12 w-12 animate-pulse rounded-full bg-border-color" />
-    )
-  }
+  // Close menu when navigating (progressive enhancement)
+  useEffect(() => {
+    if (detailsRef.current) {
+      detailsRef.current.open = false
+    }
+  }, [pathname])
 
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={clsx(
-          "group block rounded-full hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2",
-          isOpen ? "outline-primary outline-2" : "outline-transparent"
-        )}
+    <details ref={detailsRef} className="relative group">
+      <summary
+        className="list-none cursor-pointer block rounded-full hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2 outline-transparent group-open:outline-primary group-open:outline-2 [&::-webkit-details-marker]:hidden"
         aria-label="User menu"
       >
-        <Avatar size="md" />
-      </button>
+        {/* 
+          No-JS: Shows server-rendered avatar immediately
+          With JS loading: Shows skeleton briefly (only if no serverAuth)
+          With JS loaded: Shows actual avatar
+        */}
+        {mounted && isLoading && !serverAuth?.user ? (
+          <div className="h-12 w-12 animate-pulse rounded-full bg-border-color" />
+        ) : (
+          <Avatar 
+            size="md" 
+            avatarUrl={profile?.avatar_url}
+            fullName={profile?.full_name}
+          />
+        )}
+      </summary>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light shadow-lg">
+      <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light shadow-lg">
           {user ? (
             <>
               {/* <div className="p-4">
@@ -86,7 +105,6 @@ export default function UserMenu() {
                 {profile?.nickname && (
                   <Link
                     href={`/@${profile.nickname}`}
-                    onClick={() => setIsOpen(false)}
                     className={menuLinkClass(`/@${profile.nickname}`, true)}
                   >
                     <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,7 +115,6 @@ export default function UserMenu() {
                 )}
                 <Link
                   href="/account/events"
-                  onClick={() => setIsOpen(false)}
                   className={menuLinkClass('/account/events')}
                 >
                   <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +124,6 @@ export default function UserMenu() {
                 </Link>
                 <Link
                   href="/account/galleries"
-                  onClick={() => setIsOpen(false)}
                   className={menuLinkClass('/account/galleries')}
                 >
                   <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,7 +133,6 @@ export default function UserMenu() {
                 </Link>
                 <Link
                   href="/account"
-                  onClick={() => setIsOpen(false)}
                   className={menuLinkClass('/account', true)}
                 >
                   <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,7 +144,6 @@ export default function UserMenu() {
                 {isAdmin && (
                   <Link
                     href={routes.admin.url}
-                    onClick={() => setIsOpen(false)}
                     className={menuLinkClass(routes.admin.url)}
                   >
                     <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,37 +174,42 @@ export default function UserMenu() {
                   {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 </button>
 
-                <button
-                  onClick={async () => {
-                    setIsOpen(false)
+                <form 
+                  action={signOutAction}
+                  onSubmit={async (e) => {
+                    // Progressive enhancement: use client-side signOut when JS is enabled
+                    e.preventDefault()
+                    if (detailsRef.current) detailsRef.current.open = false
                     try {
                       await signOut()
-                      // Only redirect to home if on a protected route
+                      // Only redirect if on a protected route, otherwise let React update the UI
                       const isProtectedRoute = pathname.startsWith('/account') || pathname.startsWith('/admin')
                       if (isProtectedRoute) {
                         window.location.href = '/'
-                      } else {
-                        // Stay on current page, just refresh to update UI
-                        window.location.reload()
                       }
+                      // On public pages, the auth context will update the UI automatically
                     } catch (error) {
                       console.error('Error signing out:', error)
                     }
                   }}
-                  className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
                 >
-                  <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Sign out
-                </button>
+                  <input type="hidden" name="redirectTo" value={pathname} />
+                  <button
+                    type="submit"
+                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
+                  >
+                    <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign out
+                  </button>
+                </form>
               </div>
             </>
           ) : (
             <div className="p-2">
               <Link
                 href={`${routes.login.url}?redirectTo=${encodeURIComponent(pathname)}`}
-                onClick={() => setIsOpen(false)}
                 className={menuLinkClass(routes.login.url)}
               >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -200,7 +219,6 @@ export default function UserMenu() {
               </Link>
               <Link
                 href={`${routes.signup.url}?redirectTo=${encodeURIComponent(pathname)}`}
-                onClick={() => setIsOpen(false)}
                 className={menuLinkClass(routes.signup.url)}
               >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,7 +247,6 @@ export default function UserMenu() {
             </div>
           )}
         </div>
-      )}
-    </div>
+    </details>
   )
 }

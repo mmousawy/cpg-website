@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import clsx from 'clsx'
@@ -25,6 +26,11 @@ const SIZE_MAP = {
 
 export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, size = 'md', className, hoverEffect = false }: AvatarProps) {
   const { user, profile, isLoading } = useAuth()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Determine if we're in static mode (props provided) or dynamic mode (using current user)
   const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined
@@ -41,8 +47,9 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     ? fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : (user?.email?.slice(0, 2).toUpperCase()) || null
 
-  // Loading state (dynamic mode only)
-  const showLoading = !isStaticMode && isLoading
+  // Loading state (dynamic mode only, and only after JS mounts)
+  // Without JS: mounted stays false, so we skip loading and show fallback icon
+  const showLoading = mounted && !isStaticMode && isLoading
 
   // Render content based on state
   const renderContent = () => {

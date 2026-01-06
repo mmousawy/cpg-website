@@ -9,6 +9,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
 import Layout from "@/components/layout/Layout";
 import Modal from "@/components/shared/Modal";
+import { getServerAuth } from "@/utils/supabase/getServerAuth";
 
 import "./globals.css";
 
@@ -30,11 +31,14 @@ export const metadata: Metadata = {
   description: "Shoot, share, explore! 📸 Hosting monthly photography meetups and photo walks in and around Rotterdam.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch auth data on the server for SSR
+  const serverAuth = await getServerAuth()
+
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
       <head>
@@ -48,7 +52,7 @@ export default function RootLayout({
             <ThemeProvider>
               <UnsavedChangesProvider>
                 <ModalProvider>
-                  <Layout>
+                  <Layout serverAuth={serverAuth}>
                     {children}
                   </Layout>
                   <Modal />

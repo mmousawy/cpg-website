@@ -484,8 +484,22 @@ export default function AccountPage() {
           </p>
         </div>
 
+        {/* No-JS fallback: show message and hide loading spinner */}
+        <noscript>
+          <style>{`.js-loading { display: none !important; }`}</style>
+          <div className="rounded-xl border border-border-color bg-background-light p-6 text-center">
+            <p className="text-lg font-medium mb-2">JavaScript required</p>
+            <p className="text-foreground/70">
+              This page requires JavaScript to manage your account settings. 
+              Please enable JavaScript in your browser to continue.
+            </p>
+          </div>
+        </noscript>
+
         {isLoading ? (
-          <LoadingSpinner centered />
+          <div className="js-loading">
+            <LoadingSpinner centered />
+          </div>
         ) : (
           <div className="space-y-8">
             <form id="account-form" onSubmit={handleSubmit(onSubmit)}>
