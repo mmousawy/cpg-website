@@ -97,13 +97,13 @@ export default async function Home() {
   return (
     <>
       {/* Hero Section */}
-      <div className="relative h-80 sm:h-96 md:h-[28rem] w-full overflow-hidden bg-background-light">
+      <div className="relative h-[clamp(16rem,25svw,24rem)] w-full overflow-hidden bg-background-light">
         {/* Background image */}
         <Image
           src={getHeroImage()}
           alt="Creative Photography Group meetup"
           fill
-          className="object-cover brightness-75 animate-fade-in"
+          className="object-cover object-[center_30%] brightness-75 animate-fade-in"
           priority
           sizes="60vw"
           quality={95}
@@ -128,9 +128,37 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Explore Section - Events & Galleries */}
+      <PageContainer innerClassName='space-y-6 md:space-y-8'>
+        <Container variant="gradient">
+          <h2 className="text-2xl font-bold mb-4">Explore what we&apos;re up to</h2>
+          <p className="text-foreground/90 leading-relaxed mb-8">
+            Join our meetups and discover photos from the community.
+          </p>
+
+          {/* Events */}
+          <div className="mb-10">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Recent events</h3>
+              <ArrowLink href="/events">View all</ArrowLink>
+            </div>
+            <RecentEventsList events={events || []} />
+          </div>
+
+          {/* Galleries */}
+          {albumsWithPhotos.length > 0 && (
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Recent galleries</h3>
+                <ArrowLink href="/galleries">View all</ArrowLink>
+              </div>
+              <AlbumGrid albums={albumsWithPhotos} />
+            </div>
+          )}
+        </Container>
+
       {/* About Section */}
-      <PageContainer innerClassName="space-y-8">
-        <Container>
+        <Container variant="gradient">
           <h2 className="text-2xl font-bold mb-4">What&apos;s Creative Photography Group?</h2>
 
           <p className="max-w-[50ch] text-foreground/90 leading-relaxed mb-4">
@@ -168,7 +196,6 @@ export default async function Home() {
             </div>
           </div>
         </Container>
-      </PageContainer>
 
       <div className='w-full max-w-screen-md mx-auto overflow-hidden'>
         <div className='py-4 sm:py-10'>
@@ -177,36 +204,8 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Explore Section - Events & Galleries */}
-      <PageContainer innerClassName='space-y-6 md:space-y-8'>
-        <Container>
-          <h2 className="text-2xl font-bold mb-4">Explore what we&apos;re up to</h2>
-          <p className="text-foreground/90 leading-relaxed mb-8">
-            Join our meetups and discover photos from the community.
-          </p>
-
-          {/* Events */}
-          <div className="mb-10">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Recent events</h3>
-              <ArrowLink href="/events">View all</ArrowLink>
-            </div>
-            <RecentEventsList events={events || []} />
-          </div>
-
-          {/* Galleries */}
-          {albumsWithPhotos.length > 0 && (
-            <div>
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Recent galleries</h3>
-                <ArrowLink href="/galleries">View all</ArrowLink>
-              </div>
-              <AlbumGrid albums={albumsWithPhotos} />
-            </div>
-          )}
-        </Container>
-
-        <Container>
+      {/* Meet the Community Section */}
+        <Container variant="gradient">
           <h2 className="text-2xl font-bold mb-4">Meet the community</h2>
           <p className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6">
             Meet the team of dedicated organizers who keep the community thriving, and passionate photographers who are eager to share their work and learn from others!

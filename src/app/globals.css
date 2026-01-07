@@ -50,7 +50,7 @@
   --primary: rgb(69, 146, 116);
   --primary-alt: #58c287;
   --background: #171718;
-  --background-light: #2e2f31;
+  --background-light: #252527;
   --foreground: #ededed;
   --text-muted: #a3a3a3;
   --text-muted-light: #737373;
@@ -59,8 +59,45 @@
   --error-red: #f5686a;
 }
 
+:root.midnight {
+  --primary: rgb(69, 146, 116);
+  --primary-alt: #58c287;
+  --background: #0d0d0e;
+  --background-light: #1b1c1f;
+  --foreground: #dce4e9;
+  --text-muted: #888888;
+  --text-muted-light: #737373;
+  --border-color: #34373b;
+  --border-color-strong: #4c4f57;
+  --error-red: #f5686a;
+}
+
 body {
   text-rendering: optimizeLegibility;
+}
+
+/* Container gradient variant - only active in dark/midnight themes */
+.container-gradient {
+  border: 0.0625rem solid var(--border-color);
+  background: var(--background-light);
+}
+
+:root.dark .container-gradient,
+:root.midnight .container-gradient {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--background-light), var(--background)) padding-box,
+    linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
+}
+
+/* Also apply in system dark mode when no explicit theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .container-gradient {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--background-light), var(--background)) padding-box,
+      linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
+  }
 }
 
 /* Fade-in animation for images */

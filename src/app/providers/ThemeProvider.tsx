@@ -4,7 +4,12 @@ import { ThemeProvider } from "next-themes";
 
 export function ThemeProviderWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      themes={['light', 'dark', 'midnight', 'system']}
+    >
       {children}
     </ThemeProvider>
   );

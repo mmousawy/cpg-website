@@ -4,7 +4,7 @@ import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import type { CPGEvent, EventAttendee } from '@/types/events';
 
-const PAST_EVENTS_PER_PAGE = 10;
+const PAST_EVENTS_PER_PAGE = 5;
 
 export default async function EventsPage() {
   const supabase = createPublicClient();

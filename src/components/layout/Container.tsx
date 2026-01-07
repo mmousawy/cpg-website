@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 type ContainerProps = {
   children: ReactNode
   className?: string
-  variant?: 'default' | 'centered' | 'form'
+  variant?: 'default' | 'centered' | 'form' | 'gradient'
   padding?: 'sm' | 'md' | 'lg'
   id?: string
 }
@@ -16,7 +16,7 @@ export default function Container({
   padding = 'md',
   id,
 }: ContainerProps) {
-  const baseStyles = "rounded-2xl border-[0.0625rem] border-border-color bg-background-light fill-foreground text-foreground shadow-lg shadow-[#00000007]";
+  const baseStyles = "rounded-2xl fill-foreground text-foreground shadow-lg shadow-[#00000007]";
 
   const paddingStyles = {
     sm: "p-4",
@@ -25,9 +25,10 @@ export default function Container({
   };
 
   const variantStyles = {
-    default: "",
-    centered: "flex min-h-28 justify-center items-center",
-    form: "",
+    default: "border-[0.0625rem] border-border-color bg-background-light",
+    centered: "border-[0.0625rem] border-border-color bg-background-light flex min-h-28 justify-center items-center",
+    form: "border-[0.0625rem] border-border-color bg-background-light",
+    gradient: "container-gradient",
   };
 
   return (

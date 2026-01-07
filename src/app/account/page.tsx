@@ -35,7 +35,7 @@ const accountFormSchema = z.object({
   website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   socialLinks: z.array(socialLinkSchema).max(3, 'Maximum 3 social links allowed'),
   albumCardStyle: z.enum(['large', 'compact']),
-  theme: z.enum(['system', 'light', 'dark']),
+  theme: z.enum(['system', 'light', 'dark', 'midnight']),
 });
 
 type AccountFormData = z.infer<typeof accountFormSchema>
@@ -55,7 +55,7 @@ type Profile = Pick<Tables<'profiles'>,
 > & {
   social_links: SocialLink[] | null
   album_card_style: 'large' | 'compact' | null
-  theme?: 'light' | 'dark' | 'system' | null
+  theme?: 'light' | 'dark' | 'midnight' | 'system' | null
 }
 
 export default function AccountPage() {
@@ -252,9 +252,9 @@ export default function AccountPage() {
           : data.album_card_style || 'large';
 
         // Get theme from database (don't use useTheme() value as it may be undefined initially)
-        const profileTheme: 'system' | 'light' | 'dark' =
-          data.theme && ['light', 'dark', 'system'].includes(data.theme)
-            ? data.theme as 'system' | 'light' | 'dark'
+        const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =
+          data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
+            ? data.theme as 'system' | 'light' | 'dark' | 'midnight'
             : 'system';
 
         // Set form values and baseline for dirty comparison
@@ -841,7 +841,7 @@ export default function AccountPage() {
                         name="theme"
                         control={control}
                         render={({ field }) => (
-                          <div className="flex gap-2">
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                             {[
                               { value: 'system', label: 'Auto', icon: (
                                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -854,6 +854,11 @@ export default function AccountPage() {
                                 </svg>
                               )},
                               { value: 'dark', label: 'Dark', icon: (
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                              )},
+                              { value: 'midnight', label: 'Midnight', icon: (
                                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                 </svg>

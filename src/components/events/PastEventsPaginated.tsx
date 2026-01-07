@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import EventsList from './EventsList';
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import Button from '../shared/Button';
 
 type PastEventsPaginatedProps = {
   initialEvents: CPGEvent[];
@@ -53,10 +54,11 @@ export default function PastEventsPaginated({
 
       {hasMore && (
         <div className="flex justify-center pt-4">
-          <button
+          <Button
             onClick={loadMore}
+            variant="custom"
             disabled={isPending}
-            className="rounded-full bg-foreground/10 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-foreground/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full bg-foreground/10 border-foreground/10 px-6 py-2.5 text-sm font-medium transition-colors hover:bg-foreground/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? (
               <span className="flex items-center gap-2">
@@ -69,7 +71,7 @@ export default function PastEventsPaginated({
             ) : (
               `Load more (${remainingCount} remaining)`
             )}
-          </button>
+          </Button>
         </div>
       )}
     </>
