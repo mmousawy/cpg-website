@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache';
 export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   // Revalidate the public album page
   if (albumSlug) {
-    revalidatePath(`/@${nickname}/${albumSlug}`);
+    revalidatePath(`/@${nickname}/album/${albumSlug}`);
   }
   // Revalidate the user's profile page (shows their albums)
   revalidatePath(`/@${nickname}`);
@@ -44,3 +44,4 @@ export async function revalidateEvent(eventSlug?: string) {
 export async function revalidateAll() {
   revalidatePath('/', 'layout');
 }
+

@@ -12,7 +12,6 @@ import TrashSVG from 'public/icons/trash.svg';
 
 interface Comment {
   id: string
-  album_id: string
   user_id: string
   comment_text: string
   created_at: string
@@ -25,11 +24,11 @@ interface Comment {
 }
 
 interface CommentsProps {
-  albumId: string
-  isAlbumOwner?: boolean
+  albumId?: string
+  photoId?: string
 }
 
-export default function Comments({ albumId, isAlbumOwner = false }: CommentsProps) {
+export default function Comments({ albumId, photoId }: CommentsProps) {
   const { user, isAdmin } = useAuth();
   const supabase = createClient();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -37,40 +36,54 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Determine which entity we're commenting on
+  const entityType = albumId ? 'album' : 'photo';
+  const entityId = albumId || photoId;
+
   const fetchComments = useCallback(async () => {
+    if (!entityId) return;
+
     setIsLoading(true);
     try {
+      // Query through appropriate junction table
+      const junctionTable = entityType === 'album' ? 'album_comments' : 'photo_comments';
+      const entityColumn = entityType === 'album' ? 'album_id' : 'photo_id';
+
       const { data, error } = await supabase
-        .from('album_comments')
+        .from(junctionTable)
         .select(`
-          id,
-          album_id,
-          user_id,
-          comment_text,
-          created_at,
-          updated_at,
-          profile:profiles(full_name, nickname, avatar_url)
+          comment_id,
+          comments (
+            id,
+            user_id,
+            comment_text,
+            created_at,
+            updated_at,
+            profile:profiles(full_name, nickname, avatar_url)
+          )
         `)
-        .eq('album_id', albumId)
-        .order('created_at', { ascending: false })
+        .eq(entityColumn, entityId)
+        .order('comments(created_at)', { ascending: false })
         .limit(100);
 
       if (error) {
         console.error('Error fetching comments:', error);
       } else if (data) {
-        // Map profile array to single object
-        setComments(
-          data.map((c: any) => ({
+        // Flatten the nested structure
+        const flatComments = data
+          .map((ac: any) => ac.comments)
+          .filter((c: any) => c !== null)
+          .map((c: any) => ({
             ...c,
             profile: Array.isArray(c.profile) ? c.profile[0] : c.profile,
-          })) as Comment[],
-        );
+          })) as Comment[];
+        setComments(flatComments);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
     }
     setIsLoading(false);
-  }, [albumId, supabase]);
+  }, [entityId, entityType, supabase]);
 
   // Fetch comments on mount and when albumId changes
   useEffect(() => {
@@ -84,20 +97,39 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user || !commentText.trim()) return;
+    if (!user || !commentText.trim() || !entityId) return;
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('album_comments')
+      // 1. Insert into comments table
+      const { data: commentData, error: commentError } = await supabase
+        .from('comments')
         .insert({
-          album_id: albumId,
           user_id: user.id,
           comment_text: commentText.trim(),
-        });
+        })
+        .select('id')
+        .single();
 
-      if (error) {
-        console.error('Error posting comment:', error);
+      if (commentError || !commentData) {
+        console.error('Error creating comment:', commentError);
+        alert('Failed to post comment');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Link comment via appropriate junction table
+      const junctionTable = entityType === 'album' ? 'album_comments' : 'photo_comments';
+      const linkData = entityType === 'album'
+        ? { album_id: entityId, comment_id: commentData.id }
+        : { photo_id: entityId, comment_id: commentData.id };
+
+      const { error: linkError } = await supabase
+        .from(junctionTable)
+        .insert(linkData);
+
+      if (linkError) {
+        console.error(`Error linking comment to ${entityType}:`, linkError);
         alert('Failed to post comment');
       } else {
         setCommentText('');
@@ -116,8 +148,9 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
     }
 
     try {
+      // Delete from comments table (cascade will remove junction link)
       const { error } = await supabase
-        .from('album_comments')
+        .from('comments')
         .delete()
         .eq('id', commentId);
 

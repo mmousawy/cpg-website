@@ -1,0 +1,166 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/utils/supabase/client';
+import type { Album } from '@/types/albums';
+import Button from '@/components/shared/Button';
+
+interface AlbumPickerProps {
+  selectedAlbumIds: string[];
+  onSelectionChange: (albumIds: string[]) => void;
+  onCreateNew?: () => void;
+}
+
+export default function AlbumPicker({
+  selectedAlbumIds,
+  onSelectionChange,
+  onCreateNew,
+}: AlbumPickerProps) {
+  const { user } = useAuth();
+  const supabase = createClient();
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newAlbumTitle, setNewAlbumTitle] = useState('');
+  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchAlbums();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const fetchAlbums = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('albums')
+        .select('id, title, slug')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error('Error fetching albums:', error);
+      } else {
+        setAlbums((data || []) as Album[]);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    }
+    setIsLoading(false);
+  };
+
+  const handleToggleAlbum = (albumId: string) => {
+    const newSelection = selectedAlbumIds.includes(albumId)
+      ? selectedAlbumIds.filter((id) => id !== albumId)
+      : [...selectedAlbumIds, albumId];
+    onSelectionChange(newSelection);
+  };
+
+  const handleCreateAlbum = async () => {
+    if (!user || !newAlbumTitle.trim()) return;
+
+    setIsCreatingAlbum(true);
+    try {
+      const slug = newAlbumTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      const { data: newAlbum, error } = await supabase
+        .from('albums')
+        .insert({
+          user_id: user.id,
+          title: newAlbumTitle.trim(),
+          slug,
+          is_public: true,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to create album');
+      }
+
+      setAlbums([newAlbum as Album, ...albums]);
+      onSelectionChange([...selectedAlbumIds, newAlbum.id]);
+      setNewAlbumTitle('');
+    } catch (err: any) {
+      console.error('Error creating album:', err);
+      alert(err.message || 'Failed to create album');
+    } finally {
+      setIsCreatingAlbum(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border-color bg-background-light p-4">
+        <p className="text-sm text-foreground/60">Loading albums...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="mb-2 block text-sm font-medium">
+          Add to album? (optional)
+        </label>
+        <div className="space-y-2">
+          {albums.length === 0 ? (
+            <p className="text-sm text-foreground/60">No albums yet</p>
+          ) : (
+            albums.map((album) => (
+              <label
+                key={album.id}
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-border-color bg-background p-3 transition-colors hover:bg-background-light"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedAlbumIds.includes(album.id)}
+                  onChange={() => handleToggleAlbum(album.id)}
+                  className="size-4 rounded border-border-color text-primary focus:ring-primary"
+                />
+                <span className="flex-1 text-sm">{album.title}</span>
+              </label>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border-color bg-background-light p-4">
+        <label className="mb-2 block text-sm font-medium">
+          Create new album
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newAlbumTitle}
+            onChange={(e) => setNewAlbumTitle(e.target.value)}
+            placeholder="Album title"
+            className="flex-1 rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCreateAlbum();
+              }
+            }}
+          />
+          <Button
+            onClick={handleCreateAlbum}
+            disabled={!newAlbumTitle.trim() || isCreatingAlbum}
+            loading={isCreatingAlbum}
+            size="sm"
+          >
+            Create
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

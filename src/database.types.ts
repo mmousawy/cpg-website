@@ -12,41 +12,29 @@ export type Database = {
       album_comments: {
         Row: {
           album_id: string
-          comment_text: string
-          created_at: string | null
-          id: string
-          updated_at: string | null
-          user_id: string
+          comment_id: string
         }
         Insert: {
           album_id: string
-          comment_text: string
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id: string
+          comment_id: string
         }
         Update: {
           album_id?: string
-          comment_text?: string
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-          user_id?: string
+          comment_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "album_comments_album_id_fkey"
+            foreignKeyName: "album_comments_album_id_fkey1"
             columns: ["album_id"]
             isOneToOne: false
             referencedRelation: "albums"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "album_comments_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "album_comments_comment_id_fkey"
+            columns: ["comment_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
         ]
@@ -94,10 +82,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_album_photos_image_url"
+            foreignKeyName: "fk_album_photos_photo_url"
             columns: ["photo_url"]
             isOneToOne: false
-            referencedRelation: "images"
+            referencedRelation: "photos"
             referencedColumns: ["url"]
           },
         ]
@@ -220,6 +208,38 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          comment_text: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           cover_image: string | null
@@ -331,41 +351,89 @@ export type Database = {
           },
         ]
       }
-      images: {
+      photo_comments: {
         Row: {
+          comment_id: string
+          photo_id: string
+        }
+        Insert: {
+          comment_id: string
+          photo_id: string
+        }
+        Update: {
+          comment_id?: string
+          photo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_comments_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_comments_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photos: {
+        Row: {
+          blurhash: string | null
           created_at: string
+          description: string | null
           exif_data: Json | null
           file_size: number
           height: number
           id: string
+          is_public: boolean
           mime_type: string
+          short_id: string
+          sort_order: number | null
           storage_path: string
-          uploaded_by: string | null
+          title: string | null
           url: string
+          user_id: string | null
           width: number
         }
         Insert: {
+          blurhash?: string | null
           created_at?: string
+          description?: string | null
           exif_data?: Json | null
           file_size: number
           height: number
           id?: string
+          is_public?: boolean
           mime_type: string
+          short_id: string
+          sort_order?: number | null
           storage_path: string
-          uploaded_by?: string | null
+          title?: string | null
           url: string
+          user_id?: string | null
           width: number
         }
         Update: {
+          blurhash?: string | null
           created_at?: string
+          description?: string | null
           exif_data?: Json | null
           file_size?: number
           height?: number
           id?: string
+          is_public?: boolean
           mime_type?: string
+          short_id?: string
+          sort_order?: number | null
           storage_path?: string
-          uploaded_by?: string | null
+          title?: string | null
           url?: string
+          user_id?: string | null
           width?: number
         }
         Relationships: []
@@ -564,5 +632,4 @@ export const Constants = {
   public: {
     Enums: {},
   },
-} as const
-
+} as const;

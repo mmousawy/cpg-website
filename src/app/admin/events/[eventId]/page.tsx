@@ -271,9 +271,9 @@ export default function AdminEventFormPage() {
 
         coverImageUrl = publicUrl;
 
-        // Store image metadata
+        // Store photo metadata
         const { error: metadataError } = await supabase
-          .from('images')
+          .from('photos')
           .insert({
             storage_path: filePath,
             url: publicUrl,
@@ -282,7 +282,7 @@ export default function AdminEventFormPage() {
             file_size: coverImageFile.size,
             mime_type: coverImageFile.type,
             exif_data: exifData,
-            uploaded_by: user?.id,
+            user_id: user?.id,
           });
 
         if (metadataError) {

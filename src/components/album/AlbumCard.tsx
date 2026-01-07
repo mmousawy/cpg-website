@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import type { AlbumWithPhotos } from '@/types/albums';
 
@@ -19,11 +19,11 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large' }:
 
   const albumUrl = isOwner
     ? `/account/galleries/${album.slug}`
-    : `/@${album.profile?.nickname || 'unknown'}/${album.slug}`;
+    : `/@${album.profile?.nickname || 'unknown'}/album/${album.slug}`;
 
   return (
-    <Link href={albumUrl} className="group block rounded-lg">
-      <div className="group block overflow-hidden rounded-lg border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong">
+    <Link href={albumUrl} className="group block">
+      <div className="group block overflow-hidden border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong">
         <div className="relative aspect-[4/3] overflow-hidden bg-background">
           <Image
             src={coverImage}

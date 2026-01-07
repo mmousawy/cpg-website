@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (owner?.nickname) {
-        revalidatePath(`/@${owner.nickname}/${album.slug}`);
+        revalidatePath(`/@${owner.nickname}/album/${album.slug}`);
         revalidatePath(`/@${owner.nickname}`);
       }
     }

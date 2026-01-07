@@ -222,6 +222,9 @@ Deploy to Vercel:
 - [ ] Manual album cover selection
 - [ ] Bulk photo actions (delete, edit)
 - [ ] Tags on individual photos
+- [ ] More metadata for images if not visible/available in EXIF data (camera brand, model, lens, location, etc.)
+- [ ] Member profile photo stream of individual photos
+- [ ] Mobile-friendly drag/drop to manage photos
 
 ### Events
 
@@ -235,6 +238,10 @@ Deploy to Vercel:
 - [ ] Follow photographers
 - [ ] Activity feed
 - [ ] In-app notifications
+- [ ] Community photo albums (event-specific/collaboration projects)
+- [ ] Monthly challenges
+- [ ] Member badges (skills/interests/photography style)
+- [ ] Member interests (things they are open to do with other members)
 
 ### Discovery
 

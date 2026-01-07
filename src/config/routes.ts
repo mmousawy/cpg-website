@@ -35,9 +35,13 @@ export const routes = {
     label: 'My Events',
     url: '/account/events',
   },
-  accountGalleries: {
-    label: 'My galleries',
-    url: '/account/galleries',
+  accountPhotos: {
+    label: 'Manage photos',
+    url: '/account/photos',
+  },
+  accountUpload: {
+    label: 'Upload',
+    url: '/account/upload',
   },
   admin: {
     label: 'Admin',

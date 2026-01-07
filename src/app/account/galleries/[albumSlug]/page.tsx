@@ -1,49 +1,54 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import exifr from 'exifr';
-import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
-import clsx from 'clsx';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
+    DndContext,
+    DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  rectSortingStrategy,
+    SortableContext,
+    arrayMove,
+    rectSortingStrategy,
+    sortableKeyboardCoordinates,
+    useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import clsx from 'clsx';
+import exifr from 'exifr';
+import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import 'photoswipe/style.css';
+import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { revalidateAlbum } from '@/app/actions/revalidate';
+import { ModalContext } from '@/app/providers/ModalProvider';
+import Container from '@/components/layout/Container';
+import WidePageContainer from '@/components/layout/WidePageContainer';
+import AddToAlbumContent from '@/components/photo/AddToAlbumContent';
+import type { PhotoFormData } from '@/components/photo/PhotoEditSidebar';
+import PhotoEditSidebar from '@/components/photo/PhotoEditSidebar';
+import Button from '@/components/shared/Button';
+import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
-import { createClient } from '@/utils/supabase/client';
-import Button from '@/components/shared/Button';
-import Container from '@/components/layout/Container';
-import PageContainer from '@/components/layout/PageContainer';
-import StickyActionBar from '@/components/shared/StickyActionBar';
 import type { Album, AlbumPhoto } from '@/types/albums';
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import type { Photo } from '@/types/photos';
+import { createClient } from '@/utils/supabase/client';
+import { useContext } from 'react';
 
-import TrashSVG from 'public/icons/trash.svg';
-import EditSVG from 'public/icons/edit.svg';
-import PlusSVG from 'public/icons/plus.svg';
 import CloseSVG from 'public/icons/close.svg';
-import ErrorMessage from '@/components/shared/ErrorMessage';
-import SuccessMessage from '@/components/shared/SuccessMessage';
+import EditSVG from 'public/icons/edit.svg';
+import ExpandSVG from 'public/icons/expand.svg';
+import PlusSVG from 'public/icons/plus.svg';
+import TrashSVG from 'public/icons/trash.svg';
 
 // Zod schema for album form validation
 const albumFormSchema = z.object({
@@ -55,15 +60,6 @@ const albumFormSchema = z.object({
 });
 
 type AlbumFormData = z.infer<typeof albumFormSchema>
-
-// Expand/zoom icon component
-function ExpandSVG({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-    </svg>
-  );
-}
 
 // Shared input styling
 const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none";
@@ -88,6 +84,8 @@ interface SortablePhotoProps {
   onCaptionChange: (value: string) => void
   onSaveCaption: () => void
   onCancelEdit: () => void
+  isSelected?: boolean
+  onSelect?: (photoId: string, isMultiSelect: boolean) => void
 }
 
 interface SortablePendingPhotoProps {
@@ -155,6 +153,8 @@ function SortablePhoto({
   onCaptionChange,
   onSaveCaption,
   onCancelEdit,
+  isSelected = false,
+  onSelect,
 }: SortablePhotoProps) {
   const {
     attributes,
@@ -176,10 +176,41 @@ function SortablePhoto({
       ref={setNodeRef}
       style={style}
       className={clsx(
-        'group relative overflow-hidden rounded-lg border border-border-color bg-background',
+        'group relative overflow-hidden rounded-lg border-2 bg-background transition-all',
+        isSelected
+          ? 'border-primary ring-2 ring-primary ring-offset-2'
+          : 'border-border-color hover:border-primary/50',
         isDragging && 'z-50',
       )}
+      onClick={(e) => {
+        if (onSelect && !isDragging) {
+          const isMultiSelect = e.shiftKey || e.metaKey || e.ctrlKey;
+          onSelect(photo.id, isMultiSelect);
+        }
+      }}
     >
+      {/* Selection checkbox */}
+      {onSelect && (
+        <div
+          className={clsx(
+            'absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all',
+            isSelected
+              ? 'border-primary bg-primary text-white'
+              : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100',
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(photo.id, false);
+          }}
+        >
+          {isSelected && (
+            <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+      )}
+
       <div className="aspect-square overflow-hidden relative">
         <div className="size-full" {...attributes} {...listeners}>
           <Image
@@ -267,6 +298,7 @@ export default function AlbumDetailPage() {
   const router = useRouter();
   const params = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalContext = useContext(ModalContext);
 
   const albumSlug = params.albumSlug as string;
   const isNewAlbum = albumSlug === 'new';
@@ -285,6 +317,8 @@ export default function AlbumDetailPage() {
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
   const [editingCaption, setEditingCaption] = useState('');
   const [tagInput, setTagInput] = useState('');
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [photosMetadata, setPhotosMetadata] = useState<Map<string, Photo>>(new Map());
 
   // Saved form values for dirty tracking
   const [savedFormValues, setSavedFormValues] = useState<AlbumFormData | null>(null);
@@ -435,6 +469,21 @@ export default function AlbumDetailPage() {
       } else {
         setPhotos(photosData as AlbumPhoto[]);
         setSavedPhotos(photosData as AlbumPhoto[]);
+
+        // Fetch photo metadata
+        const photoUrls = photosData.map((p) => p.photo_url);
+        const { data: photosMetadataData } = await supabase
+          .from('photos')
+          .select('*')
+          .in('url', photoUrls);
+
+        if (photosMetadataData) {
+          const metadataMap = new Map<string, Photo>();
+          photosMetadataData.forEach((p) => {
+            metadataMap.set(p.url, p as Photo);
+          });
+          setPhotosMetadata(metadataMap);
+        }
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -559,9 +608,10 @@ export default function AlbumDetailPage() {
               console.warn('Failed to extract EXIF data:', err);
             }
 
-            // Insert image metadata first (album_photos has FK to images)
+            // Insert photo metadata first (album_photos has FK to photos)
+            // is_public = false by default for album uploads (album only, not in photostream)
             await supabase
-              .from('images')
+              .from('photos')
               .insert({
                 storage_path: filePath,
                 url: publicUrl,
@@ -570,7 +620,8 @@ export default function AlbumDetailPage() {
                 file_size: file.size,
                 mime_type: file.type,
                 exif_data: exifData,
-                uploaded_by: user.id,
+                user_id: user.id,
+                is_public: false, // Album only by default
               });
 
             // Insert photo record
@@ -767,9 +818,10 @@ export default function AlbumDetailPage() {
           console.warn('Failed to extract EXIF data:', err);
         }
 
-        // Insert image metadata first (album_photos has FK to images)
+        // Insert photo metadata first (album_photos has FK to photos)
+        // is_public = false by default for album uploads (album only, not in photostream)
         await supabase
-          .from('images')
+          .from('photos')
           .insert({
             storage_path: filePath,
             url: publicUrl,
@@ -778,7 +830,8 @@ export default function AlbumDetailPage() {
             file_size: file.size,
             mime_type: file.type,
             exif_data: exifData,
-            uploaded_by: user.id,
+            user_id: user.id,
+            is_public: false, // Album only by default
           });
 
         // Insert photo record
@@ -986,9 +1039,97 @@ export default function AlbumDetailPage() {
     }
   };
 
+  const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
+    setSelectedPhotoIds((prev) => {
+      const newSet = new Set(prev);
+      if (isMultiSelect) {
+        if (newSet.has(photoId)) {
+          newSet.delete(photoId);
+        } else {
+          newSet.add(photoId);
+        }
+      } else {
+        newSet.clear();
+        newSet.add(photoId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSavePhoto = async (photoId: string, data: PhotoFormData) => {
+    if (!user) return;
+
+    const photo = photos.find((p) => p.id === photoId);
+    if (!photo) return;
+
+    // Update album_photo title
+    const { error } = await supabase
+      .from('album_photos')
+      .update({ title: data.title })
+      .eq('id', photoId);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to save photo');
+    }
+
+    // Also update the photo metadata if it exists
+    const photoMetadata = photosMetadata.get(photo.photo_url);
+    if (photoMetadata) {
+      await supabase
+        .from('photos')
+        .update({
+          title: data.title,
+          description: data.description,
+          is_public: data.is_public,
+        })
+        .eq('id', photoMetadata.id);
+    }
+
+    // Refresh photos
+    await fetchAlbum();
+  };
+
+  const handleDeletePhotoFromAlbum = async (photoId: string) => {
+    const photo = photos.find((p) => p.id === photoId);
+    if (!photo) return;
+
+    // Remove from album
+    const { error } = await supabase
+      .from('album_photos')
+      .delete()
+      .eq('id', photoId);
+
+    if (error) {
+      throw new Error(error.message || 'Failed to remove photo from album');
+    }
+
+    // Remove from selection
+    setSelectedPhotoIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(photoId);
+      return newSet;
+    });
+
+    // Refresh photos
+    await fetchAlbum();
+  };
+
+  const selectedPhotos: Photo[] = Array.from(selectedPhotoIds)
+    .map((id) => {
+      const albumPhoto = photos.find((p) => p.id === id);
+      if (!albumPhoto) return null;
+      const metadata = photosMetadata.get(albumPhoto.photo_url);
+      if (!metadata) return null;
+      return {
+        ...metadata,
+        title: albumPhoto.title || metadata.title,
+      } as Photo;
+    })
+    .filter((p): p is Photo => p !== null);
+
   return (
     <>
-      <PageContainer>
+      <WidePageContainer>
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">
             {isNewAlbum ? 'Create new album' : 'Edit album'}
@@ -1006,217 +1147,273 @@ export default function AlbumDetailPage() {
           </Container>
         ) : (
           <div className="space-y-6">
-            {/* Photos Section */}
-            <Container>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold">
-              Photos ({isNewAlbum ? pendingPhotos.length : photos.length})
-                </h2>
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h1 className="mb-2 text-3xl font-bold">
+                  {isNewAlbum ? 'Create new album' : `Edit album: ${album?.title || ''}`}
+                </h1>
+                <p className="text-lg opacity-70">
+                  {isNewAlbum
+                    ? 'Create a new photo album to share with the community'
+                    : 'Manage your album details and photos'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {!isNewAlbum && album && (
+                  <Button
+                    onClick={() => {
+                      modalContext.setTitle('Add Photos from Library');
+                      modalContext.setContent(
+                        <AddToAlbumContent
+                          albumId={album.id}
+                          existingPhotoUrls={photos.map((p) => p.photo_url)}
+                          onClose={() => modalContext.setIsOpen(false)}
+                          onSuccess={() => {
+                            fetchAlbum();
+                            modalContext.setIsOpen(false);
+                          }}
+                        />,
+                      );
+                      modalContext.setIsOpen(true);
+                    }}
+                    variant="secondary"
+                  >
+                    Add from library
+                  </Button>
+                )}
                 <Button
                   onClick={handleAddPhotosClick}
                   disabled={isUploading}
                   icon={<PlusSVG className="size-4" />}
                 >
-                  {isUploading ? 'Uploading...' : 'Add photos'}
+                  {isUploading ? 'Uploading...' : isNewAlbum ? 'Add photos' : 'Upload new'}
                 </Button>
               </div>
+            </div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
-                multiple
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
+            {/* Two-column layout */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_400px]">
+              {/* Left: Photos Grid */}
+              <div>
+                <div className="mb-4">
+                  <h2 className="text-xl font-semibold">
+                    Photos ({isNewAlbum ? pendingPhotos.length : photos.length})
+                  </h2>
+                </div>
 
-              {isNewAlbum ? (
-              // Show pending photos for new albums
-                pendingPhotos.length === 0 ? (
-                  <EmptyPhotosState />
-                ) : (
-                  <>
-                    <p className="mb-4 text-sm text-foreground/70">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+
+                {isNewAlbum ? (
+                // Show pending photos for new albums
+                  pendingPhotos.length === 0 ? (
+                    <EmptyPhotosState />
+                  ) : (
+                    <>
+                      <p className="mb-4 text-sm text-foreground/70">
                   Drag photos to reorder them. Photos will be uploaded when you create the album.
-                    </p>
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handlePendingPhotosDragEnd}
-                    >
-                      <SortableContext
-                        items={pendingPhotos.map((_, i) => `pending-${i}`)}
-                        strategy={rectSortingStrategy}
+                      </p>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handlePendingPhotosDragEnd}
                       >
-                        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                          {pendingPhotos.map((file, index) => (
-                            <SortablePendingPhoto
-                              key={`pending-${index}`}
-                              file={file}
-                              index={index}
-                              onDelete={handleRemovePendingPhoto}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  </>
-                )
-              ) : (
-              // Show uploaded photos for existing albums
-                photos.length === 0 ? (
-                  <EmptyPhotosState />
-                ) : (
-                  <>
-                    <p className="mb-4 text-sm text-foreground/70">
-                  Drag photos to reorder them
-                    </p>
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <SortableContext
-                        items={photos.map(p => p.id)}
-                        strategy={rectSortingStrategy}
-                      >
-                        <div id="edit-album-gallery" className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                          {photos.map((photo) => (
-                            <SortablePhoto
-                              key={photo.id}
-                              photo={photo}
-                              onDelete={handleDeletePhoto}
-                              onEditCaption={handleEditCaption}
-                              isEditing={editingPhotoId === photo.id}
-                              editingCaption={editingCaption}
-                              onCaptionChange={setEditingCaption}
-                              onSaveCaption={() => handleSaveCaption(photo.id)}
-                              onCancelEdit={handleCancelEdit}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  </>
-                )
-              )}
-            </Container>
-
-            {/* Album Details Form */}
-            <Container>
-              <form id="album-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="title" className="text-sm font-medium">
-                Title *
-                  </label>
-                  <input
-                    id="title"
-                    type="text"
-                    {...register('title')}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    className={clsx(inputClassName, errors.title && 'border-red-500')}
-                    placeholder="My Amazing Photo Album"
-                  />
-                  {errors.title && (
-                    <p className="text-xs text-red-500">{errors.title.message}</p>
-                  )}
-                  <p className="text-xs text-foreground/50">
-                URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{profile?.nickname || 'your-nickname'}/{watchedSlug || 'your-title'}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="description" className="text-sm font-medium">
-                Description
-                  </label>
-                  <textarea
-                    id="description"
-                    {...register('description')}
-                    rows={4}
-                    className={inputClassName}
-                    placeholder="Tell us about this album..."
-                  />
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    id="isPublic"
-                    type="checkbox"
-                    {...register('isPublic')}
-                    className="size-4 rounded border-neutral-300 text-blue-600"
-                  />
-                  <label htmlFor="isPublic" className="ml-2 text-sm">
-                Make this album public (visible to everyone)
-                  </label>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="tags" className="text-sm font-medium">
-                Tags
-                  </label>
-                  {watchedTags && watchedTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {watchedTags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
+                        <SortableContext
+                          items={pendingPhotos.map((_, i) => `pending-${i}`)}
+                          strategy={rectSortingStrategy}
                         >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(tag)}
-                            className="rounded-full bg-background-light/70 hover:bg-background-light font-bold text-foreground size-5 flex items-center justify-center -mr-2 ml-1"
-                            aria-label="Remove tag"
-                          >
-                            <CloseSVG
-                              className="size-3.5"
-                            />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {errors.tags && (
-                    <p className="text-xs text-red-500">{errors.tags.message}</p>
-                  )}
-                  <input
-                    id="tags"
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    disabled={(watchedTags?.length || 0) >= 5}
-                    onKeyDown={handleAddTag}
-                    className={`${inputClassName} disabled:opacity-50`}
-                    placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter to add'}
+                          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                            {pendingPhotos.map((file, index) => (
+                              <SortablePendingPhoto
+                                key={`pending-${index}`}
+                                file={file}
+                                index={index}
+                                onDelete={handleRemovePendingPhoto}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    </>
+                  )
+                ) : (
+                // Show uploaded photos for existing albums
+                  photos.length === 0 ? (
+                    <EmptyPhotosState />
+                  ) : (
+                    <>
+                      <p className="mb-4 text-sm text-foreground/70">
+                  Drag photos to reorder them
+                      </p>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={photos.map(p => p.id)}
+                          strategy={rectSortingStrategy}
+                        >
+                          <div id="edit-album-gallery" className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                            {photos.map((photo) => (
+                              <SortablePhoto
+                                key={photo.id}
+                                photo={photo}
+                                onDelete={handleDeletePhoto}
+                                onEditCaption={handleEditCaption}
+                                isEditing={editingPhotoId === photo.id}
+                                editingCaption={editingCaption}
+                                onCaptionChange={setEditingCaption}
+                                onSaveCaption={() => handleSaveCaption(photo.id)}
+                                onCancelEdit={handleCancelEdit}
+                                isSelected={selectedPhotoIds.has(photo.id)}
+                                onSelect={handleSelectPhoto}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    </>
+                  )
+                )}
+              </div>
+
+              {/* Right: Sidebar */}
+              <div>
+                {selectedPhotos.length > 0 ? (
+                  <PhotoEditSidebar
+                    selectedPhotos={selectedPhotos}
+                    onSave={handleSavePhoto}
+                    onDelete={handleDeletePhotoFromAlbum}
+                    onAddToAlbum={() => {}}
+                    isLoading={isLoading}
                   />
-                  <p className="text-xs text-foreground/50">
+                ) : (
+                  <div className="sticky top-4 rounded-lg border border-border-color bg-background-light p-6">
+                    <h2 className="mb-6 text-lg font-semibold">Album Details</h2>
+                    <form id="album-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="title" className="text-sm font-medium">
+                Title *
+                        </label>
+                        <input
+                          id="title"
+                          type="text"
+                          {...register('title')}
+                          onChange={(e) => handleTitleChange(e.target.value)}
+                          className={clsx(inputClassName, errors.title && 'border-red-500')}
+                          placeholder="My Amazing Photo Album"
+                        />
+                        {errors.title && (
+                          <p className="text-xs text-red-500">{errors.title.message}</p>
+                        )}
+                        <p className="text-xs text-foreground/50">
+                URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{profile?.nickname || 'your-nickname'}/{watchedSlug || 'your-title'}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="description" className="text-sm font-medium">
+                Description
+                        </label>
+                        <textarea
+                          id="description"
+                          {...register('description')}
+                          rows={4}
+                          className={inputClassName}
+                          placeholder="Tell us about this album..."
+                        />
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          id="isPublic"
+                          type="checkbox"
+                          {...register('isPublic')}
+                          className="size-4 rounded border-neutral-300 text-blue-600"
+                        />
+                        <label htmlFor="isPublic" className="ml-2 text-sm">
+                Make this album public (visible to everyone)
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="tags" className="text-sm font-medium">
+                Tags
+                        </label>
+                        {watchedTags && watchedTags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {watchedTags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
+                              >
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTag(tag)}
+                                  className="rounded-full bg-background-light/70 hover:bg-background-light font-bold text-foreground size-5 flex items-center justify-center -mr-2 ml-1"
+                                  aria-label="Remove tag"
+                                >
+                                  <CloseSVG
+                                    className="size-3.5"
+                                  />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {errors.tags && (
+                          <p className="text-xs text-red-500">{errors.tags.message}</p>
+                        )}
+                        <input
+                          id="tags"
+                          type="text"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          disabled={(watchedTags?.length || 0) >= 5}
+                          onKeyDown={handleAddTag}
+                          className={`${inputClassName} disabled:opacity-50`}
+                          placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter to add'}
+                        />
+                        <p className="text-xs text-foreground/50">
                 Add up to 5 tags to help people discover your album
-                  </p>
-                </div>
-              </form>
-            </Container>
+                        </p>
+                      </div>
+                    </form>
 
-            {/* Danger zone: Album deletion warning section */}
-            {!isNewAlbum && album && (
-              <Container className="border-red-500/30 bg-red-500/5">
-                <h3 className="mb-2 font-semibold text-red-600">Danger zone</h3>
-                <p className="mb-4 text-sm text-foreground/70">
-              Once you delete an album, there is no going back. This will permanently delete the album and all associated photos and tags.
-                </p>
-                <Button
-                  onClick={handleDeleteAlbum}
-                  variant="danger"
-                  icon={<TrashSVG className="h-4 w-4" />}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete album'}
-                </Button>
-              </Container>
-            )}
-
+                    {/* Danger zone */}
+                    {!isNewAlbum && album && (
+                      <div className="mt-6 rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+                        <h3 className="mb-2 font-semibold text-red-600">Danger zone</h3>
+                        <p className="mb-4 text-sm text-foreground/70">
+                          Once you delete an album, there is no going back. This will permanently delete the album and all associated photos and tags.
+                        </p>
+                        <Button
+                          onClick={handleDeleteAlbum}
+                          variant="danger"
+                          icon={<TrashSVG className="h-4 w-4" />}
+                          disabled={isDeleting}
+                          fullWidth
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete album'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
-      </PageContainer>
+      </WidePageContainer>
 
       {/* Sticky Action Bar - outside PageContainer */}
       {!isLoading && (

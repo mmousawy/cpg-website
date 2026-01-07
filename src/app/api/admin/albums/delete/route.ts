@@ -63,11 +63,19 @@ export async function POST(request: NextRequest) {
       .delete()
       .eq('album_id', albumId);
 
-    // Delete album comments
-    await supabase
+    // Delete album comments (get comment IDs first, then delete from comments table)
+    const { data: albumCommentLinks } = await supabase
       .from('album_comments')
-      .delete()
+      .select('comment_id')
       .eq('album_id', albumId);
+
+    if (albumCommentLinks && albumCommentLinks.length > 0) {
+      const commentIds = albumCommentLinks.map(ac => ac.comment_id);
+      await supabase
+        .from('comments')
+        .delete()
+        .in('id', commentIds);
+    }
 
     // Delete the album
     const { error: deleteError } = await supabase
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (owner?.nickname) {
-      revalidatePath(`/@${owner.nickname}/${album.slug}`);
+      revalidatePath(`/@${owner.nickname}/album/${album.slug}`);
       revalidatePath(`/@${owner.nickname}`);
     }
     revalidatePath('/galleries');

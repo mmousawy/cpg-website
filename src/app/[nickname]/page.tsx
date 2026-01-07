@@ -1,12 +1,13 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { createPublicClient } from '@/utils/supabase/server';
 import AlbumGrid from '@/components/album/AlbumGrid';
-import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import PageContainer from '@/components/layout/PageContainer';
-import { getSocialIcon, getDomain } from '@/utils/socialIcons';
-import type { AlbumWithPhotos } from '@/types/albums';
+import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import type { Tables } from '@/database.types';
+import type { AlbumWithPhotos } from '@/types/albums';
+import type { Photo } from '@/types/photos';
+import { getDomain, getSocialIcon } from '@/utils/socialIcons';
+import { createPublicClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
 
 // Cache indefinitely - revalidated on-demand when data changes
 
@@ -102,8 +103,20 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
 
-  // Get total photo count
-  const totalPhotos = albumsWithPhotos.reduce((acc, album) => acc + (album.photos?.length || 0), 0);
+  // Fetch user's public photos
+  const { data: photos } = await supabase
+    .from('photos')
+    .select('*')
+    .eq('user_id', typedProfile.id)
+    .eq('is_public', true)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const publicPhotos = (photos || []) as Photo[];
+
+  // Get total photo count (from albums + photostream)
+  const albumPhotoCount = albumsWithPhotos.reduce((acc, album) => acc + (album.photos?.length || 0), 0);
+  const totalPhotos = albumPhotoCount + publicPhotos.length;
 
   const socialLinks = (typedProfile.social_links || []) as SocialLink[];
 
@@ -210,7 +223,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           )}
         </div>
 
-        {/* Photo Albums Section */}
+        {/* Photos Section */}
         <div>
           <h2 className="mb-2 sm:mb-4 sm:text-xl text-lg font-semibold">
             Photos by @{typedProfile.nickname}
@@ -221,19 +234,32 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             <span>{albumsWithPhotos.length} {albumsWithPhotos.length === 1 ? 'album' : 'albums'}</span>
             <span>{totalPhotos} {totalPhotos === 1 ? 'photo' : 'photos'}</span>
           </div>
-
-          {albumsWithPhotos.length === 0 ? (
-            <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-              <p className="text-lg opacity-70">
-                No public albums yet.
-              </p>
-            </div>
-          ) : (
-            <AlbumGrid albums={albumsWithPhotos} />
-          )}
         </div>
-      </PageContainer>
 
+        {/* Photostream */}
+        {publicPhotos.length > 0 && (
+          <>
+            <h3 className="mb-4 max-w-screen-md text-lg font-medium mx-auto">Photostream</h3>
+            <JustifiedPhotoGrid photos={publicPhotos} profileNickname={typedProfile.nickname || nickname} />
+          </>
+        )}
+
+        {/* Albums */}
+        {albumsWithPhotos.length > 0 && (
+          <>
+            <h3 className="mb-4 max-w-screen-md text-lg font-medium mx-auto mt-6 md:mt-8">Albums</h3>
+            {albumsWithPhotos.length === 0 ? (
+              <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
+                <p className="text-lg opacity-70">
+              No public albums yet.
+                </p>
+              </div>
+            ) : (
+              <AlbumGrid albums={albumsWithPhotos} />
+            )}
+          </>
+        )}
+      </PageContainer>
       {/* Articles/Posts Section - Coming Soon */}
       <PageContainer variant="alt" className="border-t border-t-border-color">
         <div className="mb-4 flex items-center gap-3">
