@@ -1,7 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { Database } from '@/database.types';
 
+/**
+ * Creates a Supabase client with cookie access (for authenticated requests).
+ * Using this makes the page DYNAMIC (server-rendered on each request).
+ * Use for: protected routes, user-specific data, mutations.
+ */
 export const createClient = async () => {
   const cookieStore = await cookies();
 
@@ -27,5 +33,17 @@ export const createClient = async () => {
         },
       },
     },
+  );
+};
+
+/**
+ * Creates a Supabase client WITHOUT cookie access (for public data only).
+ * Using this allows the page to be STATIC (pre-rendered or cached).
+ * Use for: public pages fetching public data (homepage, galleries, events, profiles).
+ */
+export const createPublicClient = () => {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 };

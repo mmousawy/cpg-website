@@ -12,15 +12,16 @@ export default async function Cancel({
   const supabase = await createClient();
   const { uuid } = await params;
 
+  // Single query with JOIN instead of 2 sequential queries
   const { data: rsvp } = await supabase.from("events_rsvps")
-    .select()
+    .select(`
+      *,
+      events (*)
+    `)
     .eq("uuid", uuid)
     .single();
 
-  const { data: event } = await supabase.from("events")
-    .select()
-    .eq("id", rsvp?.event_id || -1)
-    .single();
+  const event = rsvp?.events || null;
 
   return (
     <PageContainer>

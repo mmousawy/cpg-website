@@ -36,6 +36,7 @@ import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
 import StickyActionBar from '@/components/shared/StickyActionBar'
 import type { Album, AlbumPhoto } from '@/types/albums'
+import { revalidateAlbum } from '@/app/actions/revalidate'
 
 import TrashSVG from 'public/icons/trash.svg'
 import EditSVG from 'public/icons/edit.svg'
@@ -597,6 +598,11 @@ export default function AlbumDetailPage() {
           }
         }
 
+        // Revalidate album pages
+        if (profile?.nickname) {
+          await revalidateAlbum(profile.nickname, data.slug)
+        }
+
         setSuccess(true)
         setTimeout(() => {
           router.push(`/account/galleries/${data.slug}`)
@@ -665,6 +671,11 @@ export default function AlbumDetailPage() {
         reset(savedData)
         setSavedFormValues(savedData)
         setSavedPhotos([...photos])
+
+        // Revalidate album pages
+        if (profile?.nickname) {
+          await revalidateAlbum(profile.nickname, data.slug)
+        }
 
         setSuccess(true)
         if (data.slug !== albumSlug) {
@@ -957,6 +968,11 @@ export default function AlbumDetailPage() {
         setSubmitError(deleteError.message || 'Failed to delete album')
         setIsDeleting(false)
         return
+      }
+
+      // Revalidate album pages
+      if (profile?.nickname) {
+        await revalidateAlbum(profile.nickname, album.slug)
       }
 
       setSuccess(true)

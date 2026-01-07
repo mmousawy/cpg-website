@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
+import type { Tables } from '@/database.types'
 import { createClient } from '@/utils/supabase/client'
 import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
@@ -14,16 +15,7 @@ import LocationSVG from 'public/icons/location.svg'
 import TimeSVG from 'public/icons/time.svg'
 import PlusSVG from 'public/icons/plus.svg'
 
-type Event = {
-  id: number
-  slug?: string | null
-  title: string | null
-  date: string | null
-  time: string | null
-  location: string | null
-  description: string | null
-  cover_image: string | null
-}
+type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image'>
 
 export default function AdminEventsPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 
 export async function POST(request: NextRequest) {
@@ -78,6 +79,21 @@ export async function POST(request: NextRequest) {
       console.error('Error deleting album:', deleteError)
       return NextResponse.json({ error: 'Failed to delete album' }, { status: 500 })
     }
+
+    // Revalidate album pages
+    // Get owner nickname for path revalidation
+    const { data: owner } = await supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('id', album.user_id)
+      .single()
+
+    if (owner?.nickname) {
+      revalidatePath(`/@${owner.nickname}/${album.slug}`)
+      revalidatePath(`/@${owner.nickname}`)
+    }
+    revalidatePath('/galleries')
+    revalidatePath('/')
 
     // TODO: Send notification email to album owner about deletion
 

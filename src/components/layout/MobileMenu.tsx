@@ -8,26 +8,19 @@ import clsx from 'clsx'
 import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import { routes } from '@/config/routes'
-import type { ServerAuth } from '@/utils/supabase/getServerAuth'
 import { signOutAction } from '@/app/actions/auth'
 
 interface MobileMenuProps {
   isOpen: boolean
   onClose: () => void
   mounted: boolean
-  serverAuth?: ServerAuth
 }
 
-export default function MobileMenu({ isOpen, onClose, mounted, serverAuth }: MobileMenuProps) {
-  const { user: clientUser, profile: clientProfile, signOut } = useAuth()
-  const { isAdmin: clientIsAdmin } = useAdmin()
+export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps) {
+  const { user, profile, signOut } = useAuth()
+  const { isAdmin } = useAdmin()
   const { resolvedTheme, setTheme } = useTheme()
   const pathname = usePathname()
-
-  // Use server auth for initial render, client auth after hydration
-  const user = mounted ? clientUser : serverAuth?.user
-  const profile = mounted ? clientProfile : serverAuth?.profile
-  const isAdmin = mounted ? clientIsAdmin : serverAuth?.profile?.is_admin
 
   // Helper to check if a route is active
   // exact=true means only match the exact path (for parent routes that have sub-routes)

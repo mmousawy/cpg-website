@@ -11,25 +11,16 @@ import EventRsvpStatus from './EventRsvpStatus';
 import EventImage from './EventImage';
 import Container from '../layout/Container';
 
-import type { CPGEvent } from '@/types/events';
-
-type Attendee = {
-  id: string
-  event_id: number
-  user_id: string | null
-  email: string
-  confirmed_at: string
-  profiles: { avatar_url: string | null } | null
-}
+import type { CPGEvent, EventAttendee } from '@/types/events';
 
 type EventsListProps = {
   events: CPGEvent[]
-  attendeesByEvent: Record<number, Attendee[]>
+  attendeesByEvent: Record<number, EventAttendee[]>
   emptyMessage?: string
 }
 
 // Inline attendees display component (no data fetching)
-function AttendeesDisplay({ attendees, isPastEvent }: { attendees: Attendee[], isPastEvent: boolean }) {
+function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee[], isPastEvent: boolean }) {
   if (!attendees || attendees.length === 0) {
     return (
       <div className='text-[15px] font-semibold text-foreground/70 leading-6'>

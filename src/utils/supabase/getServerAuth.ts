@@ -1,12 +1,9 @@
 import { createClient } from './server'
 import type { User } from '@supabase/supabase-js'
+import type { Tables } from '@/database.types'
 
-export type ServerProfile = {
-  id: string
-  full_name: string | null
-  nickname: string | null
-  avatar_url: string | null
-  is_admin: boolean
+export type ServerProfile = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'> & {
+  is_admin: boolean  // is_admin can be null in DB but we default to false
 }
 
 export type ServerAuth = {
@@ -40,6 +37,12 @@ export async function getServerAuth(): Promise<ServerAuth> {
       profile: profile as ServerProfile | null
     }
   } catch (error) {
+    // Silently fail during static generation (no cookies available)
+    // This is expected behavior, not an error
+    if (error instanceof Error && error.message.includes('Dynamic server usage')) {
+      return { user: null, profile: null }
+    }
+    // Log actual errors
     console.error('Error getting server auth:', error)
     return { user: null, profile: null }
   }

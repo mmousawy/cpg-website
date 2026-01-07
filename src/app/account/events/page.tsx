@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
+import type { Tables } from '@/database.types'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
@@ -18,20 +19,10 @@ import SadSVG from 'public/icons/sad.svg'
 import ArrowRightSVG from 'public/icons/arrow-right.svg'
 import { routes } from '@/config/routes'
 
-type RSVP = {
-  id: number
-  uuid: string
-  confirmed_at: string | null
-  canceled_at: string | null
-  attended_at: string | null
-  created_at: string
-  events: {
-    id: number
-    title: string
-    date: string
-    time: string
-    location: string
-    cover_image: string | null
+// RSVP with joined event data - use non-null date since we filter for valid events
+type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'> & {
+  events: Omit<Pick<Tables<'events'>, 'id' | 'title' | 'date' | 'time' | 'location' | 'cover_image'>, 'date'> & {
+    date: string  // Non-null since we only show events with valid dates
   }
 }
 

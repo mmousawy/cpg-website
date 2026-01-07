@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/utils/supabase/server'
+import { createPublicClient } from '@/utils/supabase/server'
 
 // Hero images - using URL paths instead of static imports to avoid bundling blur placeholders
 const heroImages = [
@@ -11,7 +11,6 @@ const heroImages = [
   '/gallery/home-hero5.jpg',
   '/gallery/home-hero6.jpg',
   '/gallery/home-hero7.jpg',
-  '/gallery/home-hero8.jpg',
 ]
 
 function getHeroImage() {
@@ -43,10 +42,10 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
 }
 
 // Revalidate every 60 seconds
-export const revalidate = 60
+// Cache indefinitely - revalidated on-demand when data changes
 
 export default async function Home() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   // Fetch all data in parallel for faster page load and no-JS compatibility
   const [

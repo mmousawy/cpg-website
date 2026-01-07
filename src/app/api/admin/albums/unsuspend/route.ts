@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 
 export async function POST(request: NextRequest) {
@@ -44,6 +45,27 @@ export async function POST(request: NextRequest) {
       console.error('Error unsuspending album:', updateError)
       return NextResponse.json({ error: 'Failed to unsuspend album' }, { status: 500 })
     }
+
+    // Get album info for revalidation
+    const { data: album } = await supabase
+      .from('albums')
+      .select('slug, user_id')
+      .eq('id', albumId)
+      .single()
+
+    if (album) {
+      const { data: owner } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('id', album.user_id)
+        .single()
+
+      if (owner?.nickname) {
+        revalidatePath(`/@${owner.nickname}/${album.slug}`)
+        revalidatePath(`/@${owner.nickname}`)
+      }
+    }
+    revalidatePath('/galleries')
 
     return NextResponse.json({ success: true })
   } catch (error) {

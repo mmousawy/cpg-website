@@ -1,29 +1,27 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/utils/supabase/server'
+import { createPublicClient } from '@/utils/supabase/server'
 import AlbumGrid from '@/components/album/AlbumGrid'
 import ClickableAvatar from '@/components/shared/ClickableAvatar'
 import PageContainer from '@/components/layout/PageContainer'
 import { getSocialIcon, getDomain } from '@/utils/socialIcons'
 import type { AlbumWithPhotos } from '@/types/albums'
+import type { Tables } from '@/database.types'
 
-// Revalidate every 60 seconds to reduce database queries
-export const revalidate = 60
+// Cache indefinitely - revalidated on-demand when data changes
 
-type SocialLink = {
-  label: string
-  url: string
-}
+type SocialLink = { label: string; url: string }
 
-type ProfileData = {
-  id: string
-  full_name: string | null
-  nickname: string | null
-  avatar_url: string | null
-  bio: string | null
-  website: string | null
+type ProfileData = Pick<Tables<'profiles'>, 
+  | 'id' 
+  | 'full_name' 
+  | 'nickname' 
+  | 'avatar_url' 
+  | 'bio' 
+  | 'website' 
+  | 'created_at'
+> & {
   social_links: SocialLink[] | null
-  created_at: string | null
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
@@ -38,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     }
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -68,7 +66,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     notFound()
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   // Fetch profile first (needed for albums query)
   const { data: profile, error: profileError } = await supabase

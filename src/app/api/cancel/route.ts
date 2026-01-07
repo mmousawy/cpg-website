@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
 
@@ -71,6 +72,12 @@ export async function POST(request: NextRequest) {
 
   // Log the cancellation
   console.log(`❌ RSVP canceled with UUID: ${uuid}`);
+
+  // Revalidate event pages (attendee count may have changed)
+  if (event.slug) {
+    revalidatePath(`/events/${event.slug}`);
+  }
+  revalidatePath('/events');
 
   return NextResponse.json({}, { status: 200 });
 }

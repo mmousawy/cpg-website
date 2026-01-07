@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/utils/supabase/server'
+import { createPublicClient } from '@/utils/supabase/server'
 import AlbumFullSizeGallery from '@/components/album/AlbumFullSizeGallery'
 import Comments from '@/components/shared/Comments'
 import Avatar from '@/components/auth/Avatar'
@@ -8,8 +8,7 @@ import PageContainer from '@/components/layout/PageContainer'
 import AlbumModerationPanel from '@/components/admin/AlbumModerationPanel'
 import type { AlbumWithPhotos } from '@/types/albums'
 
-// Revalidate every 60 seconds to reduce database queries
-export const revalidate = 60
+// Cache indefinitely - revalidated on-demand when data changes
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
   const resolvedParams = await params
@@ -24,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     }
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   // First get the user by nickname
   const { data: profile } = await supabase
@@ -66,7 +65,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
   const albumSlug = resolvedParams?.albumSlug || ''
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   // First get the user by nickname
   const { data: profile, error: profileError } = await supabase
@@ -79,49 +78,41 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     notFound()
   }
 
-  // Fetch album with photos and moderation data in parallel
-  const [{ data: album, error }, { data: modData }] = await Promise.all([
-    supabase
-      .from('albums')
-      .select(`
+  // Single query for album with photos and moderation data
+  const { data: album, error } = await supabase
+    .from('albums')
+    .select(`
+      id,
+      title,
+      description,
+      slug,
+      is_public,
+      created_at,
+      is_suspended,
+      suspension_reason,
+      profile:profiles(full_name, avatar_url, nickname),
+      photos:album_photos(
         id,
+        photo_url,
         title,
-        description,
-        slug,
-        is_public,
-        created_at,
-        profile:profiles(full_name, avatar_url, nickname),
-        photos:album_photos(
-          id,
-          photo_url,
-          title,
-          width,
-          height,
-          sort_order,
-          image:images(exif_data)
-        )
-      `)
-      .eq('user_id', profile.id)
-      .eq('slug', albumSlug)
-      .eq('is_public', true)
-      .single(),
-    // Fetch moderation fields - we'll filter by user_id and slug since we don't have album.id yet
-    supabase
-      .from('albums')
-      .select('is_suspended, suspension_reason' as any)
-      .eq('user_id', profile.id)
-      .eq('slug', albumSlug)
-      .eq('is_public', true)
-      .single()
-  ])
+        width,
+        height,
+        sort_order,
+        image:images(exif_data)
+      )
+    `)
+    .eq('user_id', profile.id)
+    .eq('slug', albumSlug)
+    .eq('is_public', true)
+    .single()
 
   if (error || !album) {
     notFound();
   }
   
   const moderationData = {
-    is_suspended: (modData as any)?.is_suspended || false,
-    suspension_reason: (modData as any)?.suspension_reason || null,
+    is_suspended: (album as any)?.is_suspended || false,
+    suspension_reason: (album as any)?.suspension_reason || null,
   }
 
   const albumWithPhotos = album as unknown as AlbumWithPhotos

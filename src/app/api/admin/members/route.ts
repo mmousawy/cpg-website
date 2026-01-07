@@ -1,19 +1,20 @@
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
+import type { Tables } from '@/database.types'
 
-type Profile = {
-  id: string
-  email: string | null
-  full_name: string | null
-  nickname: string | null
-  avatar_url: string | null
-  is_admin: boolean | null
-  created_at: string | null
-  last_logged_in: string | null
-  suspended_at: string | null
-  suspended_reason: string | null
-}
+type Profile = Pick<Tables<'profiles'>, 
+  | 'id' 
+  | 'email' 
+  | 'full_name' 
+  | 'nickname' 
+  | 'avatar_url' 
+  | 'is_admin' 
+  | 'created_at' 
+  | 'last_logged_in' 
+  | 'suspended_at' 
+  | 'suspended_reason'
+>
 
 // GET - List all members
 export async function GET(request: NextRequest) {

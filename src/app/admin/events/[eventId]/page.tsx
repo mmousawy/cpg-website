@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import exifr from 'exifr'
 
+import type { Tables } from '@/database.types'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
@@ -13,6 +14,7 @@ import Container from '@/components/layout/Container'
 import PageContainer from '@/components/layout/PageContainer'
 
 import ArrowLink from '@/components/shared/ArrowLink'
+import { revalidateEvent } from '@/app/actions/revalidate'
 import CheckSVG from 'public/icons/check.svg'
 import TrashSVG from 'public/icons/trash.svg'
 import clsx from 'clsx'
@@ -22,16 +24,7 @@ import SuccessMessage from '@/components/shared/SuccessMessage'
 // Shared input styling
 const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
 
-type Event = {
-  id: number
-  title: string | null
-  description: string | null
-  date: string | null
-  time: string | null
-  location: string | null
-  cover_image: string | null
-  slug: string
-}
+type Event = Pick<Tables<'events'>, 'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'>
 
 export default function AdminEventFormPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
@@ -187,6 +180,8 @@ export default function AdminEventFormPage() {
     })
 
     if (result.ok) {
+      // Revalidate event pages
+      await revalidateEvent(eventSlug)
       router.push('/admin/events')
     } else {
       const data = await result.json()
@@ -319,6 +314,9 @@ export default function AdminEventFormPage() {
           return
         }
 
+        // Revalidate event pages
+        await revalidateEvent(finalSlug)
+
         setSuccess(true)
         setTimeout(() => {
           router.push('/admin/events')
@@ -349,6 +347,9 @@ export default function AdminEventFormPage() {
         setCoverImage(coverImageUrl)
         setCoverImagePreview(coverImageUrl)
         setCoverImageFile(null)
+
+        // Revalidate event pages
+        await revalidateEvent(finalSlug)
 
         setSuccess(true)
         setTimeout(() => {

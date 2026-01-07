@@ -10,7 +10,7 @@ import UserMenu from './UserMenu'
 import Avatar from '../auth/Avatar'
 import MobileMenu from './MobileMenu'
 import { routes } from '@/config/routes'
-import type { ServerAuth } from '@/utils/supabase/getServerAuth'
+import { useAuth } from '@/hooks/useAuth'
 
 // Navigation link component with active state
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -33,13 +33,10 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   )
 }
 
-type HeaderProps = {
-  serverAuth?: ServerAuth
-}
-
-export default function Header({ serverAuth }: HeaderProps) {
+export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const { profile } = useAuth()
 
   useEffect(() => {
     setMounted(true)
@@ -72,7 +69,7 @@ export default function Header({ serverAuth }: HeaderProps) {
         <div className="flex items-center gap-3">
           {/* Desktop Only: UserMenu */}
           <div className="hidden sm:block">
-            <UserMenu serverAuth={serverAuth} />
+            <UserMenu />
           </div>
 
           {/* Mobile Only: Avatar + Menu Button */}
@@ -85,8 +82,8 @@ export default function Header({ serverAuth }: HeaderProps) {
             >
               <Avatar 
                 size="sm" 
-                avatarUrl={serverAuth?.profile?.avatar_url}
-                fullName={serverAuth?.profile?.full_name}
+                avatarUrl={profile?.avatar_url}
+                fullName={profile?.full_name}
               />
             </button>
 
@@ -107,7 +104,7 @@ export default function Header({ serverAuth }: HeaderProps) {
                 </svg>
               </button>
 
-              <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} mounted={mounted} serverAuth={serverAuth} />
+              <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} mounted={mounted} />
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createPublicClient } from '@/utils/supabase/server'
 import AlbumGrid from '@/components/album/AlbumGrid'
 import PageContainer from '@/components/layout/PageContainer'
 import type { AlbumWithPhotos } from '@/types/albums'
@@ -8,11 +8,10 @@ export const metadata = {
   description: 'Browse photo albums created by our community members',
 }
 
-// Revalidate every 60 seconds to reduce database queries
-export const revalidate = 60
+// Cache indefinitely - revalidated on-demand when data changes
 
 export default async function GalleriesPage() {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   // Fetch all public albums with their cover photos and user info
   // Only fetch necessary fields to reduce egress

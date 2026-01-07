@@ -10,25 +10,15 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import Avatar from '../auth/Avatar'
 import { routes } from '@/config/routes'
-import type { ServerAuth } from '@/utils/supabase/getServerAuth'
 import { signOutAction } from '@/app/actions/auth'
 
-type UserMenuProps = {
-  serverAuth?: ServerAuth
-}
-
-export default function UserMenu({ serverAuth }: UserMenuProps) {
-  const { user: clientUser, profile: clientProfile, isLoading, signOut } = useAuth()
-  const { isAdmin: clientIsAdmin } = useAdmin()
+export default function UserMenu() {
+  const { user, profile, isLoading, signOut } = useAuth()
+  const { isAdmin } = useAdmin()
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const detailsRef = useRef<HTMLDetailsElement>(null)
   const pathname = usePathname()
-
-  // Use server auth for initial render, client auth after hydration
-  const user = mounted ? clientUser : serverAuth?.user
-  const profile = mounted ? clientProfile : serverAuth?.profile
-  const isAdmin = mounted ? clientIsAdmin : serverAuth?.profile?.is_admin
 
   // Helper to check if a route is active
   // exact=true means only match the exact path (for parent routes that have sub-routes)
@@ -73,12 +63,8 @@ export default function UserMenu({ serverAuth }: UserMenuProps) {
         className="list-none cursor-pointer block rounded-full hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2 outline-transparent group-open:outline-primary group-open:outline-2 [&::-webkit-details-marker]:hidden"
         aria-label="User menu"
       >
-        {/* 
-          No-JS: Shows server-rendered avatar immediately
-          With JS loading: Shows skeleton briefly (only if no serverAuth)
-          With JS loaded: Shows actual avatar
-        */}
-        {mounted && isLoading && !serverAuth?.user ? (
+        {/* Show skeleton while loading, then actual avatar */}
+        {!mounted || isLoading ? (
           <div className="h-12 w-12 animate-pulse rounded-full bg-border-color" />
         ) : (
           <Avatar 

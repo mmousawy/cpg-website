@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import clsx from 'clsx'
 
+import type { Tables } from '@/database.types'
 import { createClient } from '@/utils/supabase/client'
 import Button from '@/components/shared/Button'
 import Container from '@/components/layout/Container'
@@ -15,16 +16,16 @@ import CalendarSVG from 'public/icons/calendar2.svg'
 import LocationSVG from 'public/icons/location.svg'
 import TimeSVG from 'public/icons/time.svg'
 
-type RSVP = {
-  id: number
-  uuid: string
-  name: string | null
-  email: string | null
-  confirmed_at: string | null
-  canceled_at: string | null
-  attended_at: string | null
-  created_at: string
-}
+type RSVP = Pick<Tables<'events_rsvps'>, 
+  | 'id' 
+  | 'uuid' 
+  | 'name' 
+  | 'email' 
+  | 'confirmed_at' 
+  | 'canceled_at' 
+  | 'attended_at' 
+  | 'created_at'
+>
 
 export default function AdminEventAttendancePage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin

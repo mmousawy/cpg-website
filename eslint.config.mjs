@@ -1,16 +1,28 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextConfig from "eslint-config-next";
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextConfig,
+  {
+    rules: {
+      // Always require semicolons
+      "semi": ["error", "always"],
+
+      // Always require trailing commas in multiline
+      "comma-dangle": ["error", "always-multiline"],
+
+      // Use 2 spaces for indentation
+      "indent": ["error", 2, { "SwitchCase": 1 }],
+
+      // No trailing whitespace
+      "no-trailing-spaces": "error",
+
+      // Maximum 1 consecutive empty line
+      "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 0, "maxBOF": 0 }],
+
+      // Ensure newline at end of file
+      "eol-last": ["error", "always"],
+    },
+  },
 ];
 
 export default eslintConfig;

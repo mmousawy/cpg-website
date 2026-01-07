@@ -9,7 +9,6 @@ import { AuthProvider } from "@/context/AuthContext";
 import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
 import Layout from "@/components/layout/Layout";
 import Modal from "@/components/shared/Modal";
-import { getServerAuth } from "@/utils/supabase/getServerAuth";
 
 import "./globals.css";
 
@@ -24,6 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://creativephotographygroup.com'),
   title: {
     default: "Creative Photography Group",
     template: "%s - Creative Photography Group",
@@ -31,14 +31,11 @@ export const metadata: Metadata = {
   description: "Shoot, share, explore! 📸 Hosting monthly photography meetups and photo walks in and around Rotterdam.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Fetch auth data on the server for SSR
-  const serverAuth = await getServerAuth()
-
   return (
     <html lang="en" suppressHydrationWarning className="h-full">
       <head>
@@ -52,7 +49,7 @@ export default async function RootLayout({
             <ThemeProvider>
               <UnsavedChangesProvider>
                 <ModalProvider>
-                  <Layout serverAuth={serverAuth}>
+                  <Layout>
                     {children}
                   </Layout>
                   <Modal />

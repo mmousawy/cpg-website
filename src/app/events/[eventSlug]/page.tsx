@@ -3,20 +3,25 @@ import Link from 'next/link'
 import Image from 'next/image'
 import crypto from 'crypto'
 import clsx from 'clsx'
-import { createClient } from '@/utils/supabase/server'
+import { createPublicClient } from '@/utils/supabase/server'
 import PageContainer from '@/components/layout/PageContainer'
 import Container from '@/components/layout/Container'
 import AddToCalendar from '@/components/events/AddToCalendar'
 import EventSignupBar from '@/components/events/EventSignupBar'
 import Avatar from '@/components/auth/Avatar'
-import type { CPGEvent } from '@/types/events'
+import type { Tables } from '@/database.types'
 
 import CalendarSVG from 'public/icons/calendar2.svg'
 import LocationSVG from 'public/icons/location.svg'
 import TimeSVG from 'public/icons/time.svg'
 
+// Type for attendee with joined profile data
+type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
+  profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null
+}
+
 // Revalidate every 60 seconds
-export const revalidate = 60
+// Cache indefinitely - revalidated on-demand when data changes
 
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {
   const resolvedParams = await params
@@ -28,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
     }
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
   const { data: event } = await supabase
     .from('events')
@@ -50,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
 
 // Inline attendees display component
 function AttendeesDisplay({ attendees, isPastEvent }: { 
-  attendees: { id: string; email: string; profiles: { avatar_url: string | null } | null }[]
+  attendees: AttendeeWithProfile[]
   isPastEvent: boolean 
 }) {
   if (!attendees || attendees.length === 0) {
@@ -104,35 +109,35 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     notFound()
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
 
-  // Fetch event first (needed for attendees query)
-  const { data: event, error } = await supabase
-    .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
-    .eq('slug', eventSlug)
-    .single()
+  // Fetch event and hosts in parallel (hosts don't depend on event data)
+  const [{ data: event, error }, { data: hosts }] = await Promise.all([
+    supabase
+      .from('events')
+      .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
+      .eq('slug', eventSlug)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('id, full_name, nickname, avatar_url')
+      .eq('is_admin', true)
+      .limit(5)
+  ])
 
   if (error || !event) {
     notFound()
   }
 
-  // Fetch hosts and attendees in parallel
-  const [{ data: hosts }, { data: attendees }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, full_name, nickname, avatar_url')
-      .eq('is_admin', true)
-      .limit(5),
-    supabase
-      .from('events_rsvps')
-      .select(`id, user_id, email, confirmed_at, profiles (avatar_url)`)
-      .eq('event_id', event.id)
-      .not('confirmed_at', 'is', null)
-      .is('canceled_at', null)
-      .order('confirmed_at', { ascending: true })
-      .limit(100)
-  ])
+  // Fetch attendees (depends on event.id)
+  const { data: attendees } = await supabase
+    .from('events_rsvps')
+    .select(`id, user_id, email, confirmed_at, profiles (avatar_url)`)
+    .eq('event_id', event.id)
+    .not('confirmed_at', 'is', null)
+    .is('canceled_at', null)
+    .order('confirmed_at', { ascending: true })
+    .limit(100)
 
   // Format the event date
   const eventDate = event.date ? new Date(event.date) : null

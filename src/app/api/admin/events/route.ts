@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 
 export async function POST(request: NextRequest) {
@@ -55,6 +56,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
+  // Revalidate event pages
+  revalidatePath('/events');
+  revalidatePath('/');
+
   return NextResponse.json(data, { status: 201 });
 }
 
@@ -109,6 +114,13 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
+  // Revalidate event pages
+  if (data?.slug) {
+    revalidatePath(`/events/${data.slug}`);
+  }
+  revalidatePath('/events');
+  revalidatePath('/');
+
   return NextResponse.json(data, { status: 200 });
 }
 
@@ -154,6 +166,13 @@ export async function DELETE(request: NextRequest) {
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
+
+  // Revalidate event pages
+  if (slug) {
+    revalidatePath(`/events/${slug}`);
+  }
+  revalidatePath('/events');
+  revalidatePath('/');
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

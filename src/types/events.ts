@@ -1,7 +1,15 @@
-import { Database } from '@/database.types';
+import { Database, Tables } from '@/database.types';
 
 export type CPGEvent = Database['public']['Tables']['events']['Row'];
 
 export const eventDateFilter = ["upcoming", "past"] as const;
 
 export type EventDateFilterType = typeof eventDateFilter[number];
+
+// Shared attendee type for event components
+export type EventAttendee = Pick<Tables<'events_rsvps'>, 'event_id' | 'user_id'> & {
+  id: string;
+  email: string;
+  confirmed_at: string;
+  profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null;
+};

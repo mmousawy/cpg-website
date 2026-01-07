@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import clsx from 'clsx'
 
+import type { Tables } from '@/database.types'
 import { useAuth } from '@/hooks/useAuth'
 import { useFormChanges } from '@/hooks/useFormChanges'
 import { createClient } from '@/utils/supabase/client'
@@ -19,6 +20,7 @@ import ErrorMessage from '@/components/shared/ErrorMessage'
 import SuccessMessage from '@/components/shared/SuccessMessage'
 import StickyActionBar from '@/components/shared/StickyActionBar'
 import Avatar from '@/components/auth/Avatar'
+import { revalidateProfile } from '@/app/actions/revalidate'
 import PlusIconSVG from 'public/icons/plus.svg'
 
 // Zod schema for form validation
@@ -38,19 +40,22 @@ const accountFormSchema = z.object({
 
 type AccountFormData = z.infer<typeof accountFormSchema>
 
-type Profile = {
-  id: string
-  email: string | null
-  full_name: string | null
-  nickname: string | null
-  avatar_url: string | null
-  bio: string | null
-  website: string | null
-  social_links: { label: string; url: string }[] | null
+type SocialLink = { label: string; url: string }
+
+type Profile = Pick<Tables<'profiles'>, 
+  | 'id' 
+  | 'email' 
+  | 'full_name' 
+  | 'nickname' 
+  | 'avatar_url' 
+  | 'bio' 
+  | 'website' 
+  | 'created_at' 
+  | 'last_logged_in'
+> & {
+  social_links: SocialLink[] | null
   album_card_style: 'large' | 'compact' | null
   theme?: 'light' | 'dark' | 'system' | null
-  created_at: string
-  last_logged_in?: string | null
 }
 
 export default function AccountPage() {
@@ -222,6 +227,7 @@ export default function AccountPage() {
             social_links: null,
             album_card_style: null,
             created_at: user.created_at || new Date().toISOString(),
+            last_logged_in: null,
           })
           const formValues: AccountFormData = {
             fullName: user.user_metadata?.full_name || '',
@@ -451,6 +457,11 @@ export default function AccountPage() {
         reset(savedData)
         setSavedFormValues(savedData)
         
+        // Revalidate profile pages
+        if (nickname) {
+          await revalidateProfile(nickname)
+        }
+
         setSuccess(true)
         setTimeout(() => setSuccess(false), 3000)
         refreshAuthProfile()

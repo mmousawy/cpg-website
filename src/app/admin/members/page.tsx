@@ -4,21 +4,22 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import clsx from 'clsx'
 
+import type { Tables } from '@/database.types'
 import Button from '@/components/shared/Button'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 
-type Member = {
-  id: string
-  email: string | null
-  full_name: string | null
-  nickname: string | null
-  avatar_url: string | null
-  is_admin: boolean | null
-  created_at: string | null
-  last_logged_in: string | null
-  suspended_at: string | null
-  suspended_reason: string | null
-}
+type Member = Pick<Tables<'profiles'>, 
+  | 'id' 
+  | 'email' 
+  | 'full_name' 
+  | 'nickname' 
+  | 'avatar_url' 
+  | 'is_admin' 
+  | 'created_at' 
+  | 'last_logged_in' 
+  | 'suspended_at' 
+  | 'suspended_reason'
+>
 
 type SortField = 'email' | 'full_name' | 'nickname' | 'created_at' | 'last_logged_in' | 'suspended_at'
 
