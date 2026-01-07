@@ -1,161 +1,161 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 
-import { useAuth } from '@/hooks/useAuth'
-import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import { routes } from '@/config/routes'
-import ErrorMessage from '@/components/shared/ErrorMessage'
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/utils/supabase/client';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import { routes } from '@/config/routes';
+import ErrorMessage from '@/components/shared/ErrorMessage';
 
-import DiscordSVG from 'public/icons/discord2.svg'
-import CheckSVG from 'public/icons/check.svg'
-import ArrowLink from '@/components/shared/ArrowLink'
+import DiscordSVG from 'public/icons/discord2.svg';
+import CheckSVG from 'public/icons/check.svg';
+import ArrowLink from '@/components/shared/ArrowLink';
 
 export default function SignupClient() {
-  const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth()
-  const supabase = createClient()
+  const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth();
+  const supabase = createClient();
 
-  const [fullName, setFullName] = useState('')
-  const [nickname, setNickname] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  
+  const [fullName, setFullName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
   // Nickname availability state
-  const [isCheckingNickname, setIsCheckingNickname] = useState(false)
-  const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null)
-  const [nicknameError, setNicknameError] = useState<string | null>(null)
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const [isCheckingNickname, setIsCheckingNickname] = useState(false);
+  const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
+  const [nicknameError, setNicknameError] = useState<string | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const sanitizeNickname = (text: string) => {
     return text
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
-  }
+      .replace(/[^a-z0-9-]/g, '');
+  };
 
   // Check nickname availability with debounce
   const checkNicknameAvailability = async (value: string) => {
     // Validate format first
     if (value.length < 3) {
-      setNicknameAvailable(null)
-      setNicknameError(value.length > 0 ? 'Nickname must be at least 3 characters' : null)
-      return
-    }
-    
-    if (value.startsWith('-') || value.endsWith('-')) {
-      setNicknameAvailable(null)
-      setNicknameError('Nickname cannot start or end with a hyphen')
-      return
+      setNicknameAvailable(null);
+      setNicknameError(value.length > 0 ? 'Nickname must be at least 3 characters' : null);
+      return;
     }
 
-    setNicknameError(null)
-    setIsCheckingNickname(true)
-    
+    if (value.startsWith('-') || value.endsWith('-')) {
+      setNicknameAvailable(null);
+      setNicknameError('Nickname cannot start or end with a hyphen');
+      return;
+    }
+
+    setNicknameError(null);
+    setIsCheckingNickname(true);
+
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('nickname')
         .eq('nickname', value)
-        .maybeSingle()
+        .maybeSingle();
 
       if (error) {
-        console.error('Error checking nickname:', error)
-        setNicknameAvailable(null)
+        console.error('Error checking nickname:', error);
+        setNicknameAvailable(null);
       } else {
-        setNicknameAvailable(data === null)
+        setNicknameAvailable(data === null);
       }
     } catch (err) {
-      console.error('Error checking nickname:', err)
-      setNicknameAvailable(null)
+      console.error('Error checking nickname:', err);
+      setNicknameAvailable(null);
     } finally {
-      setIsCheckingNickname(false)
+      setIsCheckingNickname(false);
     }
-  }
+  };
 
   // Debounced nickname check
   const handleNicknameChange = (value: string) => {
-    const sanitized = sanitizeNickname(value)
-    setNickname(sanitized)
-    setNicknameAvailable(null)
-    
+    const sanitized = sanitizeNickname(value);
+    setNickname(sanitized);
+    setNicknameAvailable(null);
+
     // Clear previous timeout
     if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
+      clearTimeout(debounceRef.current);
     }
-    
+
     // Set new debounced check
     debounceRef.current = setTimeout(() => {
-      checkNicknameAvailability(sanitized)
-    }, 500)
-  }
+      checkNicknameAvailability(sanitized);
+    }, 500);
+  };
 
   // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
+        clearTimeout(debounceRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     // Validate nickname
     if (nickname.length < 3) {
-      setNicknameError('Nickname must be at least 3 characters')
-      return
+      setNicknameError('Nickname must be at least 3 characters');
+      return;
     }
-    
-    if (nickname.startsWith('-') || nickname.endsWith('-')) {
-      setNicknameError('Nickname cannot start or end with a hyphen')
-      return
-    }
-    
-    if (nicknameAvailable === false) {
-      setError('This nickname is already taken')
-      return
-    }
-    
-    setIsLoading(true)
-    setError(null)
 
-    const { error } = await signUpWithEmail(email, password, { full_name: fullName, nickname: nickname.toLowerCase() })
+    if (nickname.startsWith('-') || nickname.endsWith('-')) {
+      setNicknameError('Nickname cannot start or end with a hyphen');
+      return;
+    }
+
+    if (nicknameAvailable === false) {
+      setError('This nickname is already taken');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    const { error } = await signUpWithEmail(email, password, { full_name: fullName, nickname: nickname.toLowerCase() });
 
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     } else {
-      setSuccess(true)
-      setIsLoading(false)
+      setSuccess(true);
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true)
-    setError(null)
-    const { error } = await signInWithGoogle()
+    setIsLoading(true);
+    setError(null);
+    const { error } = await signInWithGoogle();
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDiscordSignIn = async () => {
-    setIsLoading(true)
-    setError(null)
-    const { error } = await signInWithDiscord()
+    setIsLoading(true);
+    setError(null);
+    const { error } = await signInWithDiscord();
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -174,7 +174,7 @@ export default function SignupClient() {
           </ArrowLink>
         </Container>
       </PageContainer>
-    )
+    );
   }
 
   return (
@@ -360,6 +360,5 @@ export default function SignupClient() {
         </p>
       </Container>
     </PageContainer>
-  )
+  );
 }
-

@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import Header from './Header'
-import Footer from './Footer'
+import Header from './Header';
+import Footer from './Footer';
 
 type LayoutProps = {
   children: React.ReactNode
@@ -16,6 +16,5 @@ export default function Layout({ children }: LayoutProps) {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
-

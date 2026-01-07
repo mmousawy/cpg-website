@@ -1,23 +1,23 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import clsx from 'clsx'
+import { useState, useEffect } from 'react';
+import clsx from 'clsx';
 
-import type { Tables } from '@/database.types'
-import { useAuth } from '@/hooks/useAuth'
-import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
+import type { Tables } from '@/database.types';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/utils/supabase/client';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
 
-import CalendarSVG from 'public/icons/calendar2.svg'
-import LocationSVG from 'public/icons/location.svg'
-import TimeSVG from 'public/icons/time.svg'
-import CancelSVG from 'public/icons/cancel.svg'
-import CheckSVG from 'public/icons/check.svg'
-import SadSVG from 'public/icons/sad.svg'
-import ArrowRightSVG from 'public/icons/arrow-right.svg'
-import { routes } from '@/config/routes'
+import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationSVG from 'public/icons/location.svg';
+import TimeSVG from 'public/icons/time.svg';
+import CancelSVG from 'public/icons/cancel.svg';
+import CheckSVG from 'public/icons/check.svg';
+import SadSVG from 'public/icons/sad.svg';
+import ArrowRightSVG from 'public/icons/arrow-right.svg';
+import { routes } from '@/config/routes';
 
 // RSVP with joined event data - use non-null date since we filter for valid events
 type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'> & {
@@ -28,19 +28,22 @@ type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'cance
 
 export default function MyEventsPage() {
   // User is guaranteed by ProtectedRoute layout
-  const { user } = useAuth()
+  const { user } = useAuth();
 
-  const [rsvps, setRsvps] = useState<RSVP[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [cancellingId, setCancellingId] = useState<number | null>(null)
+  const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+
+  // Compute once on mount to avoid React Compiler purity warning
+  const [sevenDaysAgo] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   useEffect(() => {
     // User is guaranteed by ProtectedRoute layout
-    if (!user) return
+    if (!user) return;
 
     const loadRSVPs = async () => {
       try {
-        const supabase = createClient()
+        const supabase = createClient();
         const { data, error } = await supabase
           .from('events_rsvps')
           .select(`
@@ -60,38 +63,38 @@ export default function MyEventsPage() {
             )
           `)
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error loading RSVPs:', error)
+          console.error('Error loading RSVPs:', error);
         } else {
-          setRsvps((data as unknown as RSVP[]) || [])
+          setRsvps((data as unknown as RSVP[]) || []);
         }
       } catch (err) {
-        console.error('Unexpected error loading RSVPs:', err)
+        console.error('Unexpected error loading RSVPs:', err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadRSVPs()
-  }, [user])
+    loadRSVPs();
+  }, [user]);
 
   const handleCancel = async (rsvp: RSVP) => {
-    if (!confirm('Are you sure you want to cancel this RSVP?')) return
+    if (!confirm('Are you sure you want to cancel this RSVP?')) return;
 
-    setCancellingId(rsvp.id)
+    setCancellingId(rsvp.id);
 
     try {
       const result = await fetch('/api/cancel', {
         method: 'POST',
         body: JSON.stringify({ uuid: rsvp.uuid }),
         headers: { 'Content-Type': 'application/json' },
-      })
+      });
 
       if (result.ok && user) {
         // Reload RSVPs
-        const supabase = createClient()
+        const supabase = createClient();
         const { data } = await supabase
           .from('events_rsvps')
           .select(`
@@ -111,25 +114,24 @@ export default function MyEventsPage() {
             )
           `)
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false });
 
         if (data) {
-          setRsvps((data as unknown as RSVP[]) || [])
+          setRsvps((data as unknown as RSVP[]) || []);
         }
       }
     } finally {
-      setCancellingId(null)
+      setCancellingId(null);
     }
-  }
-
+  };
 
   const upcomingRSVPs = rsvps.filter(
-    r => !r.canceled_at && r.events && new Date(r.events.date) >= new Date()
-  )
+    r => !r.canceled_at && r.events && new Date(r.events.date) >= new Date(),
+  );
   const pastRSVPs = rsvps.filter(
-    r => !r.canceled_at && r.events && new Date(r.events.date) < new Date()
-  )
-  const canceledRSVPs = rsvps.filter(r => r.canceled_at)
+    r => !r.canceled_at && r.events && new Date(r.events.date) < new Date(),
+  );
+  const canceledRSVPs = rsvps.filter(r => r.canceled_at);
 
   return (
     <PageContainer>
@@ -198,6 +200,7 @@ export default function MyEventsPage() {
                     key={rsvp.id}
                     rsvp={rsvp}
                     isPast
+                    sevenDaysAgo={sevenDaysAgo}
                   />
                 ))}
               </div>
@@ -220,7 +223,7 @@ export default function MyEventsPage() {
         )}
       </div>
     </PageContainer>
-  )
+  );
 }
 
 function EventCard({
@@ -229,16 +232,23 @@ function EventCard({
   isCancelling,
   isPast,
   isCanceled,
+  sevenDaysAgo,
 }: {
   rsvp: RSVP
   onCancel?: () => void
   isCancelling?: boolean
   isPast?: boolean
   isCanceled?: boolean
+  sevenDaysAgo?: number
 }) {
-  const event = rsvp.events
+  const event = rsvp.events;
 
-  if (!event) return null
+  if (!event) return null;
+
+  // Check if event is within 7 days of now (for pending confirmation display)
+  const isWithinSevenDays = sevenDaysAgo
+    ? new Date(event.date) > new Date(sevenDaysAgo)
+    : false;
 
   return (
     <div className="flex items-start justify-between gap-4 rounded-lg border border-border-color p-4">
@@ -277,7 +287,7 @@ function EventCard({
               <CheckSVG className="h-3 w-3 fill-green-600" />
               Attended
             </span>
-          ) : new Date(event.date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? (
+          ) : isWithinSevenDays ? (
             <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
               Pending confirmation
             </span>
@@ -307,5 +317,5 @@ function EventCard({
         )}
       </div>
     </div>
-  )
+  );
 }

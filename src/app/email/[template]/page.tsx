@@ -20,7 +20,7 @@ export default async function Email({
   const { template } = await params;
 
   const templateLoader = templates[template];
-  
+
   if (!templateLoader) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -40,7 +40,7 @@ export default async function Email({
   }
 
   const EmailComponent = (await templateLoader()).default;
-  const renderedTemplate = await render(<EmailComponent preview />)
+  const renderedTemplate = await render(<EmailComponent preview />);
 
   return (
     <iframe

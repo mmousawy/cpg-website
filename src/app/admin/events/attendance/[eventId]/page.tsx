@@ -1,47 +1,47 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import clsx from 'clsx'
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import clsx from 'clsx';
 
-import type { Tables } from '@/database.types'
-import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import SadSVG from 'public/icons/sad.svg'
+import type { Tables } from '@/database.types';
+import { createClient } from '@/utils/supabase/client';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import SadSVG from 'public/icons/sad.svg';
 
-import CheckSVG from 'public/icons/check.svg'
-import CalendarSVG from 'public/icons/calendar2.svg'
-import LocationSVG from 'public/icons/location.svg'
-import TimeSVG from 'public/icons/time.svg'
+import CheckSVG from 'public/icons/check.svg';
+import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationSVG from 'public/icons/location.svg';
+import TimeSVG from 'public/icons/time.svg';
 
-type RSVP = Pick<Tables<'events_rsvps'>, 
-  | 'id' 
-  | 'uuid' 
-  | 'name' 
-  | 'email' 
-  | 'confirmed_at' 
-  | 'canceled_at' 
-  | 'attended_at' 
+type RSVP = Pick<Tables<'events_rsvps'>,
+  | 'id'
+  | 'uuid'
+  | 'name'
+  | 'email'
+  | 'confirmed_at'
+  | 'canceled_at'
+  | 'attended_at'
   | 'created_at'
 >
 
 export default function AdminEventAttendancePage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
-  const params = useParams()
-  const eventId = parseInt(params.eventId as string)
-  const supabase = createClient()
+  const params = useParams();
+  const eventId = parseInt(params.eventId as string);
+  const supabase = createClient();
 
-  const [event, setEvent] = useState<any>(null)
-  const [rsvps, setRsvps] = useState<RSVP[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [markingId, setMarkingId] = useState<number | null>(null)
+  const [event, setEvent] = useState<any>(null);
+  const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [markingId, setMarkingId] = useState<number | null>(null);
 
   useEffect(() => {
-    loadData()
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId])
+  }, [eventId]);
 
   const loadData = async () => {
     // Load event
@@ -49,36 +49,36 @@ export default function AdminEventAttendancePage() {
       .from('events')
       .select()
       .eq('id', eventId)
-      .single()
+      .single();
 
-    setEvent(eventData)
+    setEvent(eventData);
 
     // Load RSVPs for this event
     const { data: rsvpsData } = await supabase
       .from('events_rsvps')
       .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at')
       .eq('event_id', eventId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
-    setRsvps(rsvpsData || [])
-    setIsLoading(false)
-  }
+    setRsvps(rsvpsData || []);
+    setIsLoading(false);
+  };
 
   const handleMarkAttended = async (rsvpId: number) => {
-    setMarkingId(rsvpId)
+    setMarkingId(rsvpId);
 
     const result = await fetch('/api/admin/mark-attendance', {
       method: 'POST',
       body: JSON.stringify({ rsvp_id: rsvpId }),
       headers: { 'Content-Type': 'application/json' },
-    })
+    });
 
     if (result.ok) {
-      await loadData()
+      await loadData();
     }
 
-    setMarkingId(null)
-  }
+    setMarkingId(null);
+  };
 
   if (isLoading) {
     return (
@@ -87,7 +87,7 @@ export default function AdminEventAttendancePage() {
           <p className="text-foreground/50">Loading attendance...</p>
         </Container>
       </PageContainer>
-    )
+    );
   }
 
   if (!event) {
@@ -98,11 +98,11 @@ export default function AdminEventAttendancePage() {
           <p className="text-foreground/70">The event you&apos;re looking for doesn&apos;t exist.</p>
         </Container>
       </PageContainer>
-    )
+    );
   }
 
-  const confirmedRSVPs = rsvps.filter(r => r.confirmed_at && !r.canceled_at)
-  const attendedRSVPs = rsvps.filter(r => r.attended_at)
+  const confirmedRSVPs = rsvps.filter(r => r.confirmed_at && !r.canceled_at);
+  const attendedRSVPs = rsvps.filter(r => r.attended_at);
 
   return (
     <PageContainer>
@@ -159,7 +159,7 @@ export default function AdminEventAttendancePage() {
                   key={rsvp.id}
                   className={clsx(
                     "flex items-center justify-between rounded-lg border border-border-color p-3",
-                    rsvp.attended_at && "bg-green-500/5"
+                    rsvp.attended_at && "bg-green-500/5",
                   )}
                 >
                   <div>
@@ -190,5 +190,5 @@ export default function AdminEventAttendancePage() {
         </Container>
       </div>
     </PageContainer>
-  )
+  );
 }

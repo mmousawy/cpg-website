@@ -1,4 +1,4 @@
-import type { Tables } from '@/database.types'
+import type { Tables } from '@/database.types';
 
 export type Album = Tables<'albums'>
 export type AlbumPhoto = Tables<'album_photos'>

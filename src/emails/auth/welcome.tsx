@@ -83,4 +83,3 @@ export const WelcomeTemplate = ({
 };
 
 export default WelcomeTemplate;
-

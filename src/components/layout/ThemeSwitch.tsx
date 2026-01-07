@@ -1,16 +1,13 @@
 'use client';
 
 import { useTheme } from "next-themes";
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback } from "react";
 import clsx from 'clsx';
+import { useMounted } from '@/hooks/useMounted';
 
 export default function ThemeSwitch() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { theme, setTheme, systemTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true)
-  }, []);
 
   useEffect(() => {
     // If the theme is set to "system", we need to check the user's system preference

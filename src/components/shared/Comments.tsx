@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { createClient } from '@/utils/supabase/client'
-import { useAuth } from '@/hooks/useAuth'
-import Button from './Button'
-import Avatar from '../auth/Avatar'
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import Button from './Button';
+import Avatar from '../auth/Avatar';
 
-import SendSVG from 'public/icons/arrow-right.svg'
-import TrashSVG from 'public/icons/trash.svg'
+import SendSVG from 'public/icons/arrow-right.svg';
+import TrashSVG from 'public/icons/trash.svg';
 
 interface Comment {
   id: string
@@ -30,19 +30,15 @@ interface CommentsProps {
 }
 
 export default function Comments({ albumId, isAlbumOwner = false }: CommentsProps) {
-  const { user, isAdmin } = useAuth()
-  const supabase = createClient()
-  const [comments, setComments] = useState<Comment[]>([])
-  const [commentText, setCommentText] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { user, isAdmin } = useAuth();
+  const supabase = createClient();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentText, setCommentText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchComments()
-  }, [albumId])
-
-  const fetchComments = async () => {
-    setIsLoading(true)
+  const fetchComments = useCallback(async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('album_comments')
@@ -57,89 +53,98 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
         `)
         .eq('album_id', albumId)
         .order('created_at', { ascending: false })
-        .limit(100)
+        .limit(100);
 
       if (error) {
-        console.error('Error fetching comments:', error)
+        console.error('Error fetching comments:', error);
       } else if (data) {
         // Map profile array to single object
         setComments(
           data.map((c: any) => ({
             ...c,
-            profile: Array.isArray(c.profile) ? c.profile[0] : c.profile
-          })) as Comment[]
-        )
+            profile: Array.isArray(c.profile) ? c.profile[0] : c.profile,
+          })) as Comment[],
+        );
       }
     } catch (err) {
-      console.error('Unexpected error:', err)
+      console.error('Unexpected error:', err);
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  }, [albumId, supabase]);
+
+  // Fetch comments on mount and when albumId changes
+  useEffect(() => {
+    // Schedule fetch via microtask to satisfy React Compiler
+    const timerId = setTimeout(() => {
+      fetchComments();
+    }, 0);
+    return () => clearTimeout(timerId);
+  }, [fetchComments]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!user || !commentText.trim()) return
+    if (!user || !commentText.trim()) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from('album_comments')
         .insert({
           album_id: albumId,
           user_id: user.id,
-          comment_text: commentText.trim()
-        })
+          comment_text: commentText.trim(),
+        });
 
       if (error) {
-        console.error('Error posting comment:', error)
-        alert('Failed to post comment')
+        console.error('Error posting comment:', error);
+        alert('Failed to post comment');
       } else {
-        setCommentText('')
-        await fetchComments()
+        setCommentText('');
+        await fetchComments();
       }
     } catch (err) {
-      console.error('Unexpected error:', err)
-      alert('An unexpected error occurred')
+      console.error('Unexpected error:', err);
+      alert('An unexpected error occurred');
     }
-    setIsSubmitting(false)
-  }
+    setIsSubmitting(false);
+  };
 
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm('Are you sure you want to delete this comment?')) {
-      return
+      return;
     }
 
     try {
       const { error } = await supabase
         .from('album_comments')
         .delete()
-        .eq('id', commentId)
+        .eq('id', commentId);
 
       if (error) {
-        console.error('Error deleting comment:', error)
-        alert('Failed to delete comment')
+        console.error('Error deleting comment:', error);
+        alert('Failed to delete comment');
       } else {
-        setComments(comments.filter(c => c.id !== commentId))
+        setComments(comments.filter(c => c.id !== commentId));
       }
     } catch (err) {
-      console.error('Unexpected error:', err)
-      alert('An unexpected error occurred')
+      console.error('Unexpected error:', err);
+      alert('An unexpected error occurred');
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'just now'
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
 
-    return date.toLocaleDateString()
-  }
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -157,8 +162,8 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
           comments.map((comment) => (
             <div key={comment.id} className="dark:bg-foreground/10 rounded-lg shadow-md shadow-[#00000007] border border-border-color-strong p-4">
               <div className="flex items-start justify-between gap-2">
-                <Link 
-                  href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'} 
+                <Link
+                  href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
                   className="flex gap-3 group rounded-lg"
                 >
                   <Avatar
@@ -222,5 +227,5 @@ export default function Comments({ albumId, isAlbumOwner = false }: CommentsProp
         </p>
       )}
     </div>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import Link from 'next/link'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import { routes } from '@/config/routes'
+import Link from 'next/link';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import { routes } from '@/config/routes';
 
-import ErrorSVG from 'public/icons/error.svg'
+import ErrorSVG from 'public/icons/error.svg';
 
 export default function AuthErrorPage() {
   return (
@@ -33,5 +33,5 @@ export default function AuthErrorPage() {
         </div>
       </Container>
     </PageContainer>
-  )
+  );
 }

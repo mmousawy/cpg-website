@@ -85,5 +85,5 @@ export default function EventDetails({ event, noDescription }: { event: Database
         <Text className="!mb-0 text-[14px] leading-[24px] text-[#171717]" dangerouslySetInnerHTML={{ __html: eventDescriptionFiltered }} />
       )}
     </Section>
-  )
+  );
 }

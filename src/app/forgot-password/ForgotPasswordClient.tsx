@@ -1,41 +1,41 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState } from 'react';
+import Link from 'next/link';
 
-import { useAuth } from '@/hooks/useAuth'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import { routes } from '@/config/routes'
-import ErrorMessage from '@/components/shared/ErrorMessage'
+import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import { routes } from '@/config/routes';
+import ErrorMessage from '@/components/shared/ErrorMessage';
 
-import CheckSVG from 'public/icons/check.svg'
-import ArrowLink from '@/components/shared/ArrowLink'
+import CheckSVG from 'public/icons/check.svg';
+import ArrowLink from '@/components/shared/ArrowLink';
 
 export default function ForgotPasswordClient() {
-  const { resetPassword } = useAuth()
+  const { resetPassword } = useAuth();
 
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    const { error } = await resetPassword(email)
+    const { error } = await resetPassword(email);
 
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     } else {
-      setSuccess(true)
-      setIsLoading(false)
+      setSuccess(true);
+      setIsLoading(false);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -54,7 +54,7 @@ export default function ForgotPasswordClient() {
           </ArrowLink>
         </Container>
       </PageContainer>
-    )
+    );
   }
 
   return (
@@ -102,6 +102,5 @@ export default function ForgotPasswordClient() {
         </p>
       </Container>
     </PageContainer>
-  )
+  );
 }
-

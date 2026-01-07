@@ -82,4 +82,3 @@ export const ResetPasswordTemplate = ({
 };
 
 export default ResetPasswordTemplate;
-

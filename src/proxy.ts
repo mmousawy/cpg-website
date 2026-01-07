@@ -29,11 +29,11 @@ export default async function proxy(request: NextRequest) {
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           );
         },
       },
-    }
+    },
   );
 
   // IMPORTANT: This refreshes the session and syncs cookies
@@ -43,7 +43,7 @@ export default async function proxy(request: NextRequest) {
   // Protected routes - redirect to login if not authenticated
   const protectedPaths = ['/account', '/admin'];
   const isProtectedPath = protectedPaths.some(path =>
-    request.nextUrl.pathname.startsWith(path)
+    request.nextUrl.pathname.startsWith(path),
   );
 
   if (isProtectedPath && !user) {
@@ -56,7 +56,7 @@ export default async function proxy(request: NextRequest) {
   // Auth routes - redirect to dashboard if already authenticated
   const authPaths = ['/login', '/signup'];
   const isAuthPath = authPaths.some(path =>
-    request.nextUrl.pathname.startsWith(path)
+    request.nextUrl.pathname.startsWith(path),
   );
 
   if (isAuthPath && user) {
@@ -80,4 +80,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
-

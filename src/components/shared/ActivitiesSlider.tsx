@@ -1,11 +1,34 @@
-'use client'
+'use client';
 
-import { useRef } from 'react'
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, A11y } from 'swiper/modules'
-import type { Swiper as SwiperType } from 'swiper'
+import { useRef } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, A11y } from 'swiper/modules';
+import type { Swiper as SwiperType } from 'swiper';
 
-import 'swiper/css'
+import 'swiper/css';
+
+// Navigation button component - defined outside to avoid React Compiler warning
+function NavButton({
+  direction,
+  className,
+  onNavigate,
+}: {
+  direction: 'prev' | 'next';
+  className?: string;
+  onNavigate: (direction: 'prev' | 'next') => void;
+}) {
+  return (
+    <button
+      onClick={() => onNavigate(direction)}
+      className={`flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-sm transition-all hover:border-primary hover:border-primary text-primary ${className || ''}`}
+      aria-label={direction === 'prev' ? 'Previous slide' : 'Next slide'}
+    >
+      <svg className="size-5 text-foreground/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d={direction === 'prev' ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} />
+      </svg>
+    </button>
+  );
+}
 
 const activities = [
   {
@@ -68,7 +91,7 @@ const activities = [
       </svg>
     ),
   },
-]
+];
 
 const colorStyles: Record<string, { card: string; icon: string; title: string }> = {
   amber: {
@@ -101,38 +124,34 @@ const colorStyles: Record<string, { card: string; icon: string; title: string }>
     icon: 'bg-sky-500/20 text-sky-600 dark:text-sky-400',
     title: 'text-sky-700 dark:text-sky-300',
   },
+};
+
+// Activity card component - defined outside to avoid React Compiler warning
+function ActivityCard({ activity }: { activity: typeof activities[0] }) {
+  const styles = colorStyles[activity.color];
+  return (
+    <div className={`group flex h-full items-start gap-3 rounded-xl border p-4 transition-all hover:shadow-sm ${styles.card}`}>
+      <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${styles.icon}`}>
+        {activity.icon}
+      </div>
+      <div className="min-w-0">
+        <p className={`text-xl font-semibold ${styles.title}`}>{activity.title}</p>
+        <p className="text-md text-foreground/80 mt-1">{activity.description}</p>
+      </div>
+    </div>
+  );
 }
 
 export default function ActivitiesSlider() {
-  const swiperRef = useRef<SwiperType | null>(null)
+  const swiperRef = useRef<SwiperType | null>(null);
 
-  const NavButton = ({ direction, className }: { direction: 'prev' | 'next'; className?: string }) => (
-    <button
-      onClick={() => direction === 'prev' ? swiperRef.current?.slidePrev() : swiperRef.current?.slideNext()}
-      className={`flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-sm transition-all hover:border-primary hover:border-primary text-primary ${className || ''}`}
-      aria-label={direction === 'prev' ? 'Previous slide' : 'Next slide'}
-    >
-      <svg className="size-5 text-foreground/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d={direction === 'prev' ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} />
-      </svg>
-    </button>
-  )
-
-  // Reusable activity card component
-  const ActivityCard = ({ activity }: { activity: typeof activities[0] }) => {
-    const styles = colorStyles[activity.color]
-    return (
-      <div className={`group flex h-full items-start gap-3 rounded-xl border p-4 transition-all hover:shadow-sm ${styles.card}`}>
-        <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${styles.icon}`}>
-          {activity.icon}
-        </div>
-        <div className="min-w-0">
-          <p className={`text-xl font-semibold ${styles.title}`}>{activity.title}</p>
-          <p className="text-md text-foreground/80 mt-1">{activity.description}</p>
-        </div>
-      </div>
-    )
-  }
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      swiperRef.current?.slidePrev();
+    } else {
+      swiperRef.current?.slideNext();
+    }
+  };
 
   return (
     <>
@@ -153,26 +172,26 @@ export default function ActivitiesSlider() {
 
         {/* Desktop navigation buttons - hidden on mobile */}
         <div className="hidden sm:block absolute left-0 top-1/2 z-20 -translate-y-1/2">
-          <NavButton direction="prev" />
+          <NavButton direction="prev" onNavigate={handleNavigate} />
         </div>
         <div className="hidden sm:block absolute right-0 top-1/2 z-20 -translate-y-1/2">
-          <NavButton direction="next" />
+          <NavButton direction="next" onNavigate={handleNavigate} />
         </div>
 
         {/* Swiper - full viewport width on mobile, with fade mask on sm+ */}
-        <div 
+        <div
           className="w-screen relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-0 sm:translate-x-0 sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
           <Swiper
             modules={[Navigation, A11y]}
-            onSwiper={(swiper) => { swiperRef.current = swiper }}
+            onSwiper={(swiper) => { swiperRef.current = swiper; }}
             spaceBetween={24}
             slidesPerView={1}
             centeredSlides={true}
             slidesOffsetBefore={12}
             slidesOffsetAfter={12}
             breakpoints={{
-              640: { 
+              640: {
                 slidesPerView: 2,
                 slidesOffsetBefore: 0,
                 slidesOffsetAfter: 0,
@@ -192,10 +211,10 @@ export default function ActivitiesSlider() {
 
         {/* Mobile navigation buttons - below the slider */}
         <div className="flex sm:hidden justify-center gap-4 mt-4">
-          <NavButton direction="prev" />
-          <NavButton direction="next" />
+          <NavButton direction="prev" onNavigate={handleNavigate} />
+          <NavButton direction="next" onNavigate={handleNavigate} />
         </div>
       </div>
     </>
-  )
+  );
 }

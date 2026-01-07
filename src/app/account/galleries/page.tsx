@@ -1,41 +1,41 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
-import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import AlbumGrid from '@/components/album/AlbumGrid'
-import type { AlbumWithPhotos } from '@/types/albums'
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/utils/supabase/client';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import AlbumGrid from '@/components/album/AlbumGrid';
+import type { AlbumWithPhotos } from '@/types/albums';
 
-import PlusSVG from 'public/icons/plus.svg'
-import { routes } from '@/config/routes'
+import PlusSVG from 'public/icons/plus.svg';
+import { routes } from '@/config/routes';
 
 export default function AccountGalleriesPage() {
   // User is guaranteed by ProtectedRoute layout
-  const { user } = useAuth()
-  const supabase = createClient()
+  const { user } = useAuth();
+  const supabase = createClient();
 
-  const [albums, setAlbums] = useState<AlbumWithPhotos[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [albums, setAlbums] = useState<AlbumWithPhotos[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // User is guaranteed by ProtectedRoute layout
-    if (!user) return
+    if (!user) return;
 
     if (albums.length === 0) {
-      fetchAlbums()
+      fetchAlbums();
     } else {
-      setIsLoading(false)
+      setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user]);
 
   const fetchAlbums = async () => {
-    if (!user) return
+    if (!user) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('albums')
@@ -51,18 +51,18 @@ export default function AccountGalleriesPage() {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(50);
 
       if (error) {
-        console.error('Error fetching albums:', error)
+        console.error('Error fetching albums:', error);
       } else {
-        setAlbums((data || []) as unknown as AlbumWithPhotos[])
+        setAlbums((data || []) as unknown as AlbumWithPhotos[]);
       }
     } catch (err) {
-      console.error('Unexpected error:', err)
+      console.error('Unexpected error:', err);
     }
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   return (
     <PageContainer>
@@ -108,5 +108,5 @@ export default function AccountGalleriesPage() {
         <AlbumGrid albums={albums} isOwner />
       )}
     </PageContainer>
-  )
+  );
 }

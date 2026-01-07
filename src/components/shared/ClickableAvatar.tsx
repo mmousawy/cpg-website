@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
-import PhotoSwipeLightbox from 'photoswipe/lightbox'
-import 'photoswipe/style.css'
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import 'photoswipe/style.css';
 
 type ClickableAvatarProps = {
   avatarUrl: string | null
@@ -13,24 +13,24 @@ type ClickableAvatarProps = {
 }
 
 export default function ClickableAvatar({ avatarUrl, fullName, className, suppressFocusOutline }: ClickableAvatarProps) {
-  const galleryId = 'profile-avatar-gallery'
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
-  const imageLoaded = useRef(false)
+  const galleryId = 'profile-avatar-gallery';
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const imageLoaded = useRef(false);
 
   // Load image dimensions
   useEffect(() => {
-    if (!avatarUrl || imageLoaded.current) return
+    if (!avatarUrl || imageLoaded.current) return;
 
-    const img = new window.Image()
+    const img = new window.Image();
     img.onload = () => {
-      setDimensions({ width: img.naturalWidth, height: img.naturalHeight })
-      imageLoaded.current = true
-    }
-    img.src = avatarUrl
-  }, [avatarUrl])
+      setDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      imageLoaded.current = true;
+    };
+    img.src = avatarUrl;
+  }, [avatarUrl]);
 
   useEffect(() => {
-    if (!avatarUrl || !dimensions) return
+    if (!avatarUrl || !dimensions) return;
 
     let lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
       gallery: `#${galleryId}`,
@@ -40,25 +40,25 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
       initialZoomLevel: 'fit',
       secondaryZoomLevel: 1,
       maxZoomLevel: 1,
-    })
+    });
 
-    lightbox.init()
+    lightbox.init();
 
     return () => {
-      lightbox?.destroy()
-      lightbox = null
-    }
-  }, [avatarUrl, dimensions])
+      lightbox?.destroy();
+      lightbox = null;
+    };
+  }, [avatarUrl, dimensions]);
 
   // Generate initials for fallback
   const initials = fullName
     ? fullName
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : '?'
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+    : '?';
 
   if (!avatarUrl) {
     // Non-clickable fallback with initials
@@ -66,7 +66,7 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
       <div className={`flex items-center justify-center bg-[#5e9b84] text-white font-bold text-2xl ${className || ''}`}>
         {initials}
       </div>
-    )
+    );
   }
 
   return (
@@ -91,5 +91,5 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
         />
       </a>
     </div>
-  )
+  );
 }

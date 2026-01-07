@@ -1,19 +1,19 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import crypto from 'crypto'
-import clsx from 'clsx'
-import { createPublicClient } from '@/utils/supabase/server'
-import PageContainer from '@/components/layout/PageContainer'
-import Container from '@/components/layout/Container'
-import AddToCalendar from '@/components/events/AddToCalendar'
-import EventSignupBar from '@/components/events/EventSignupBar'
-import Avatar from '@/components/auth/Avatar'
-import type { Tables } from '@/database.types'
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import crypto from 'crypto';
+import clsx from 'clsx';
+import { createPublicClient } from '@/utils/supabase/server';
+import PageContainer from '@/components/layout/PageContainer';
+import Container from '@/components/layout/Container';
+import AddToCalendar from '@/components/events/AddToCalendar';
+import EventSignupBar from '@/components/events/EventSignupBar';
+import Avatar from '@/components/auth/Avatar';
+import type { Tables } from '@/database.types';
 
-import CalendarSVG from 'public/icons/calendar2.svg'
-import LocationSVG from 'public/icons/location.svg'
-import TimeSVG from 'public/icons/time.svg'
+import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationSVG from 'public/icons/location.svg';
+import TimeSVG from 'public/icons/time.svg';
 
 // Type for attendee with joined profile data
 type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
@@ -24,39 +24,39 @@ type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
 // Cache indefinitely - revalidated on-demand when data changes
 
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {
-  const resolvedParams = await params
-  const eventSlug = resolvedParams?.eventSlug || ''
+  const resolvedParams = await params;
+  const eventSlug = resolvedParams?.eventSlug || '';
 
   if (!eventSlug) {
     return {
       title: 'Event Not Found',
-    }
+    };
   }
 
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   const { data: event } = await supabase
     .from('events')
     .select('title, description')
     .eq('slug', eventSlug)
-    .single()
+    .single();
 
   if (!event) {
     return {
       title: 'Event Not Found',
-    }
+    };
   }
 
   return {
     title: `${event.title} - Creative Photography Group`,
     description: event.description || `Join us for ${event.title}`,
-  }
+  };
 }
 
 // Inline attendees display component
-function AttendeesDisplay({ attendees, isPastEvent }: { 
+function AttendeesDisplay({ attendees, isPastEvent }: {
   attendees: AttendeeWithProfile[]
-  isPastEvent: boolean 
+  isPastEvent: boolean
 }) {
   if (!attendees || attendees.length === 0) {
     return (
@@ -82,7 +82,7 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
             height={32}
             className={clsx([
               attendeesWithAvatars.length > 1 && "-mr-2",
-              "size-8 rounded-full object-cover"
+              "size-8 rounded-full object-cover",
             ])}
             src={attendee.avatarUrl}
             alt="Avatar"
@@ -102,14 +102,14 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
-  const resolvedParams = await params
-  const eventSlug = resolvedParams?.eventSlug || ''
+  const resolvedParams = await params;
+  const eventSlug = resolvedParams?.eventSlug || '';
 
   if (!eventSlug) {
-    notFound()
+    notFound();
   }
 
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   // Fetch event and hosts in parallel (hosts don't depend on event data)
   const [{ data: event, error }, { data: hosts }] = await Promise.all([
@@ -122,11 +122,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       .from('profiles')
       .select('id, full_name, nickname, avatar_url')
       .eq('is_admin', true)
-      .limit(5)
-  ])
+      .limit(5),
+  ]);
 
   if (error || !event) {
-    notFound()
+    notFound();
   }
 
   // Fetch attendees (depends on event.id)
@@ -137,26 +137,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     .not('confirmed_at', 'is', null)
     .is('canceled_at', null)
     .order('confirmed_at', { ascending: true })
-    .limit(100)
+    .limit(100);
 
   // Format the event date
-  const eventDate = event.date ? new Date(event.date) : null
+  const eventDate = event.date ? new Date(event.date) : null;
   const formattedDate = eventDate
     ? eventDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : 'Date TBD'
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+    : 'Date TBD';
 
   // Format time
-  const formattedTime = event.time ? event.time.substring(0, 5) : 'Time TBD'
+  const formattedTime = event.time ? event.time.substring(0, 5) : 'Time TBD';
 
   // Check if event is in the past
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const isPastEvent = eventDate ? eventDate < now : false
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const isPastEvent = eventDate ? eventDate < now : false;
 
   return (
     <>
@@ -169,13 +169,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             alt={event.title || 'Event cover'}
             className="absolute inset-0 size-full object-cover"
           />
-          
+
           {/* Frosted glass blur layer with eased gradient mask */}
           <div className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong" />
-          
+
           {/* Eased gradient overlay */}
           <div className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong" />
-          
+
           {/* Title overlay */}
           <div className="absolute inset-x-0 bottom-0 px-4 pb-0 sm:px-8 sm:pb-4">
             <div className="mx-auto max-w-screen-md">
@@ -313,7 +313,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         </p>
       </PageContainer>
 
-
     </>
-  )
+  );
 }

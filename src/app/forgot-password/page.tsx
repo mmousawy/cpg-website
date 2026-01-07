@@ -1,5 +1,5 @@
-import JavaScriptRequired from '@/components/shared/JavaScriptRequired'
-import ForgotPasswordClient from './ForgotPasswordClient'
+import JavaScriptRequired from '@/components/shared/JavaScriptRequired';
+import ForgotPasswordClient from './ForgotPasswordClient';
 
 export default function ForgotPasswordPage() {
   return (
@@ -9,5 +9,5 @@ export default function ForgotPasswordPage() {
         <ForgotPasswordClient />
       </div>
     </>
-  )
+  );
 }

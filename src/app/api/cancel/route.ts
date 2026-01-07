@@ -35,10 +35,10 @@ export async function POST(request: NextRequest) {
 
   // Check if the current user owns this RSVP (if logged in)
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   // Allow cancellation if: user owns the RSVP OR the RSVP has an email (legacy support)
   const canCancel = (user && rsvp.user_id === user.id) || rsvp.email;
-  
+
   if (!canCancel) {
     return NextResponse.json({ message: "Unauthorized to cancel this RSVP" }, { status: 403 });
   }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   // Cancel the RSVP in the database
   await supabase.from('events_rsvps')
     .update({
-      canceled_at: new Date().toISOString()
+      canceled_at: new Date().toISOString(),
     })
     .eq('uuid', uuid);
 

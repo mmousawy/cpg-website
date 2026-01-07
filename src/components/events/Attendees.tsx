@@ -59,7 +59,7 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
 
     return {
       ...attendee,
-      avatarUrl: customAvatar || gravatarUrl
+      avatarUrl: customAvatar || gravatarUrl,
     };
   });
 
@@ -76,7 +76,7 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
                 height={32}
                 className={clsx([
                   (attendeesWithAvatars?.length || 0) > 1 && "-mr-2",
-                  "size-8 rounded-full object-cover"
+                  "size-8 rounded-full object-cover",
                 ])}
                 src={attendee.avatarUrl}
                 alt="Avatar"
@@ -98,11 +98,11 @@ export default async function Attendees({ event, supabase }: Readonly<{ event: C
         </div>
       )}
     </>
-  )
+  );
 }
 
 export function AttendeesLoading() {
   return (
     <div className="h-8 w-[30%] animate-pulse rounded bg-border-color" />
-  )
+  );
 }

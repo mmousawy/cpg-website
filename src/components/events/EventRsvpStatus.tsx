@@ -101,4 +101,3 @@ export default function EventRsvpStatus({ className, event }: Props) {
     </Button>
   );
 }
-

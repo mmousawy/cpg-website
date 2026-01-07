@@ -1,17 +1,17 @@
-import { createPublicClient } from '@/utils/supabase/server'
-import AlbumGrid from '@/components/album/AlbumGrid'
-import PageContainer from '@/components/layout/PageContainer'
-import type { AlbumWithPhotos } from '@/types/albums'
+import { createPublicClient } from '@/utils/supabase/server';
+import AlbumGrid from '@/components/album/AlbumGrid';
+import PageContainer from '@/components/layout/PageContainer';
+import type { AlbumWithPhotos } from '@/types/albums';
 
 export const metadata = {
   title: 'Photo galleries',
   description: 'Browse photo albums created by our community members',
-}
+};
 
 // Cache indefinitely - revalidated on-demand when data changes
 
 export default async function GalleriesPage() {
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   // Fetch all public albums with their cover photos and user info
   // Only fetch necessary fields to reduce egress
@@ -30,13 +30,13 @@ export default async function GalleriesPage() {
     `)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(50);
 
   if (error) {
-    console.error('Error fetching albums:', error)
+    console.error('Error fetching albums:', error);
   }
 
-  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[]
+  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
 
   return (
     <PageContainer>
@@ -57,5 +57,5 @@ export default async function GalleriesPage() {
         <AlbumGrid albums={albumsWithPhotos} />
       )}
     </PageContainer>
-  )
+  );
 }

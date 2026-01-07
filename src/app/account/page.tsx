@@ -1,33 +1,33 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useRef } from 'react'
-import { useTheme } from 'next-themes'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import clsx from 'clsx'
+import { useState, useEffect, useRef } from 'react';
+import { useTheme } from 'next-themes';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import clsx from 'clsx';
 
-import type { Tables } from '@/database.types'
-import { useAuth } from '@/hooks/useAuth'
-import { useFormChanges } from '@/hooks/useFormChanges'
-import { createClient } from '@/utils/supabase/client'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
-import PageContainer from '@/components/layout/PageContainer'
+import type { Tables } from '@/database.types';
+import { useAuth } from '@/hooks/useAuth';
+import { useFormChanges } from '@/hooks/useFormChanges';
+import { createClient } from '@/utils/supabase/client';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import PageContainer from '@/components/layout/PageContainer';
 
-import ErrorMessage from '@/components/shared/ErrorMessage'
-import SuccessMessage from '@/components/shared/SuccessMessage'
-import StickyActionBar from '@/components/shared/StickyActionBar'
-import Avatar from '@/components/auth/Avatar'
-import { revalidateProfile } from '@/app/actions/revalidate'
-import PlusIconSVG from 'public/icons/plus.svg'
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import SuccessMessage from '@/components/shared/SuccessMessage';
+import StickyActionBar from '@/components/shared/StickyActionBar';
+import Avatar from '@/components/auth/Avatar';
+import { revalidateProfile } from '@/app/actions/revalidate';
+import PlusIconSVG from 'public/icons/plus.svg';
 
 // Zod schema for form validation
 const socialLinkSchema = z.object({
   label: z.string().min(1, 'Label is required'),
   url: z.string().url('Must be a valid URL starting with https://').startsWith('https://', 'URL must start with https://'),
-})
+});
 
 const accountFormSchema = z.object({
   fullName: z.string().optional(),
@@ -36,21 +36,21 @@ const accountFormSchema = z.object({
   socialLinks: z.array(socialLinkSchema).max(3, 'Maximum 3 social links allowed'),
   albumCardStyle: z.enum(['large', 'compact']),
   theme: z.enum(['system', 'light', 'dark']),
-})
+});
 
 type AccountFormData = z.infer<typeof accountFormSchema>
 
 type SocialLink = { label: string; url: string }
 
-type Profile = Pick<Tables<'profiles'>, 
-  | 'id' 
-  | 'email' 
-  | 'full_name' 
-  | 'nickname' 
-  | 'avatar_url' 
-  | 'bio' 
-  | 'website' 
-  | 'created_at' 
+type Profile = Pick<Tables<'profiles'>,
+  | 'id'
+  | 'email'
+  | 'full_name'
+  | 'nickname'
+  | 'avatar_url'
+  | 'bio'
+  | 'website'
+  | 'created_at'
   | 'last_logged_in'
 > & {
   social_links: SocialLink[] | null
@@ -60,28 +60,28 @@ type Profile = Pick<Tables<'profiles'>,
 
 export default function AccountPage() {
   // User is guaranteed by ProtectedRoute layout
-  const { user, refreshProfile: refreshAuthProfile } = useAuth()
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const supabase = createClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user, refreshProfile: refreshAuthProfile } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const supabase = createClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [nickname, setNickname] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [avatarError, setAvatarError] = useState<string | null>(null)
-  const [themeMounted, setThemeMounted] = useState(false)
-  
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [nickname, setNickname] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [themeMounted, setThemeMounted] = useState(false);
+
   // Avatar state - saved value and pending changes
-  const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null)
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
-  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null)
-  const [pendingAvatarRemove, setPendingAvatarRemove] = useState(false)
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  const [pendingAvatarRemove, setPendingAvatarRemove] = useState(false);
 
   // Store the saved form values as the baseline for dirty comparison
-  const [savedFormValues, setSavedFormValues] = useState<AccountFormData | null>(null)
+  const [savedFormValues, setSavedFormValues] = useState<AccountFormData | null>(null);
 
   // React Hook Form setup
   const {
@@ -100,22 +100,22 @@ export default function AccountPage() {
       albumCardStyle: 'large',
       theme: 'system',
     },
-  })
+  });
 
   // Field array for social links
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'socialLinks',
-  })
+  });
 
   // Watch all form values for custom dirty tracking
-  const currentValues = watch()
+  const currentValues = watch();
 
   // Check if avatar has pending changes
-  const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove
+  const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove;
 
   // Track form changes
-  const { hasChanges, changeCount } = useFormChanges(currentValues, savedFormValues, {}, hasAvatarChanges)
+  const { hasChanges, changeCount } = useFormChanges(currentValues, savedFormValues, {}, hasAvatarChanges);
 
   // Stats state
   const [stats, setStats] = useState({
@@ -129,50 +129,50 @@ export default function AccountPage() {
     galleryViews: 0,
     profileViews: 0,
     lastLoggedIn: null as string | null,
-  })
+  });
 
   // Track which user ID we've loaded data for to avoid reloading on token refresh
-  const loadedUserIdRef = useRef<string | null>(null)
+  const loadedUserIdRef = useRef<string | null>(null);
 
   // Wait for theme to be available client-side
   useEffect(() => {
-    setThemeMounted(true)
-  }, [])
+    setThemeMounted(true);
+  }, []);
 
   useEffect(() => {
     // User is guaranteed by ProtectedRoute layout
-    if (!user) return
+    if (!user) return;
 
     // Only load if we haven't loaded for this user yet
-    if (loadedUserIdRef.current === user.id) return
-    loadedUserIdRef.current = user.id
+    if (loadedUserIdRef.current === user.id) return;
+    loadedUserIdRef.current = user.id;
 
     const loadData = async () => {
       try {
-        await loadProfile()
+        await loadProfile();
         // Load stats after profile is loaded (don't await - let it run in background)
         loadStats().catch(() => {
           // Silently fail - stats are optional
-        })
+        });
       } catch (err) {
-        console.error('Error loading account data:', err)
-        setIsLoading(false)
+        console.error('Error loading account data:', err);
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadData()
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user]);
 
   const loadProfile = async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin')
         .eq('id', user.id)
-        .single()
+        .single();
 
       // PGRST116 = no rows returned (profile doesn't exist yet)
       if (error) {
@@ -187,19 +187,19 @@ export default function AccountPage() {
               avatar_url: user.user_metadata?.avatar_url || null,
             })
             .select()
-            .single()
+            .single();
 
           if (newProfile) {
-            setProfile(newProfile)
-            setNickname(newProfile.nickname || '')
-            setSavedAvatarUrl(newProfile.avatar_url)
-            
+            setProfile(newProfile);
+            setNickname(newProfile.nickname || '');
+            setSavedAvatarUrl(newProfile.avatar_url);
+
             // Load saved album card style from localStorage (takes priority)
-            const storedStyle = localStorage.getItem('album-card-style')
-            const albumStyle = storedStyle === 'large' || storedStyle === 'compact' 
-              ? storedStyle 
-              : newProfile.album_card_style || 'large'
-            
+            const storedStyle = localStorage.getItem('album-card-style');
+            const albumStyle = storedStyle === 'large' || storedStyle === 'compact'
+              ? storedStyle
+              : newProfile.album_card_style || 'large';
+
             // Set form values and baseline for dirty comparison
             const formValues: AccountFormData = {
               fullName: newProfile.full_name || '',
@@ -208,14 +208,14 @@ export default function AccountPage() {
               socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
               albumCardStyle: albumStyle,
               theme: 'system',
-            }
-            reset(formValues)
-            setSavedFormValues(formValues)
+            };
+            reset(formValues);
+            setSavedFormValues(formValues);
           } else if (insertError) {
-            console.error('Error creating profile:', insertError.message || insertError)
+            console.error('Error creating profile:', insertError.message || insertError);
           }
         } else {
-          console.info('Profiles table not available, using user metadata:', error.message || error.code)
+          console.info('Profiles table not available, using user metadata:', error.message || error.code);
           setProfile({
             id: user.id,
             email: user.email || null,
@@ -228,7 +228,7 @@ export default function AccountPage() {
             album_card_style: null,
             created_at: user.created_at || new Date().toISOString(),
             last_logged_in: null,
-          })
+          });
           const formValues: AccountFormData = {
             fullName: user.user_metadata?.full_name || '',
             bio: '',
@@ -236,27 +236,27 @@ export default function AccountPage() {
             socialLinks: [],
             albumCardStyle: 'large',
             theme: 'system',
-          }
-          reset(formValues)
-          setSavedFormValues(formValues)
+          };
+          reset(formValues);
+          setSavedFormValues(formValues);
         }
       } else if (data) {
-        setProfile(data)
-        setNickname(data.nickname || '')
-        setSavedAvatarUrl(data.avatar_url)
-        
+        setProfile(data);
+        setNickname(data.nickname || '');
+        setSavedAvatarUrl(data.avatar_url);
+
         // Load saved album card style from localStorage (takes priority)
-        const storedStyle = localStorage.getItem('album-card-style')
-        const albumStyle = storedStyle === 'large' || storedStyle === 'compact' 
-          ? storedStyle 
-          : data.album_card_style || 'large'
-        
+        const storedStyle = localStorage.getItem('album-card-style');
+        const albumStyle = storedStyle === 'large' || storedStyle === 'compact'
+          ? storedStyle
+          : data.album_card_style || 'large';
+
         // Get theme from database (don't use useTheme() value as it may be undefined initially)
-        const profileTheme: 'system' | 'light' | 'dark' = 
+        const profileTheme: 'system' | 'light' | 'dark' =
           data.theme && ['light', 'dark', 'system'].includes(data.theme)
             ? data.theme as 'system' | 'light' | 'dark'
-            : 'system'
-        
+            : 'system';
+
         // Set form values and baseline for dirty comparison
         const formValues: AccountFormData = {
           fullName: data.full_name || '',
@@ -265,29 +265,29 @@ export default function AccountPage() {
           socialLinks: (data.social_links as { label: string; url: string }[]) || [],
           albumCardStyle: albumStyle,
           theme: profileTheme,
-        }
-        reset(formValues)
-        setSavedFormValues(formValues)
+        };
+        reset(formValues);
+        setSavedFormValues(formValues);
       }
     } catch (err) {
-      console.error('Unexpected error loading profile:', err)
+      console.error('Unexpected error loading profile:', err);
     }
 
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   const loadStats = async () => {
-    if (!user) return
+    if (!user) return;
 
     try {
-      const response = await fetch('/api/account/stats')
+      const response = await fetch('/api/account/stats');
       if (!response.ok) {
-        throw new Error('Failed to load stats')
+        throw new Error('Failed to load stats');
       }
-      const data = await response.json()
-      setStats(data)
+      const data = await response.json();
+      setStats(data);
     } catch (err) {
-      console.error('Error loading stats:', err)
+      console.error('Error loading stats:', err);
       setStats({
         galleries: 0,
         photos: 0,
@@ -299,114 +299,114 @@ export default function AccountPage() {
         galleryViews: 0,
         profileViews: 0,
         lastLoggedIn: null,
-      })
+      });
     }
-  }
+  };
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setAvatarError('Please upload a valid image file (JPEG, PNG, GIF, or WebP)')
-      return
+      setAvatarError('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+      return;
     }
 
     // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      setAvatarError('Image must be smaller than 5MB')
-      return
+      setAvatarError('Image must be smaller than 5MB');
+      return;
     }
 
-    setAvatarError(null)
-    
+    setAvatarError(null);
+
     // Revoke previous preview URL if exists
     if (pendingAvatarPreview) {
-      URL.revokeObjectURL(pendingAvatarPreview)
+      URL.revokeObjectURL(pendingAvatarPreview);
     }
-    
+
     // Store file and create preview - actual upload happens on save
-    setPendingAvatarFile(file)
-    setPendingAvatarPreview(URL.createObjectURL(file))
-    setPendingAvatarRemove(false)
-    
+    setPendingAvatarFile(file);
+    setPendingAvatarPreview(URL.createObjectURL(file));
+    setPendingAvatarRemove(false);
+
     // Clear the file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = '';
     }
-  }
+  };
 
   const handleRemoveAvatar = () => {
     // Revoke previous preview URL if exists
     if (pendingAvatarPreview) {
-      URL.revokeObjectURL(pendingAvatarPreview)
+      URL.revokeObjectURL(pendingAvatarPreview);
     }
-    
+
     // Mark avatar for removal - actual removal happens on save
-    setPendingAvatarFile(null)
-    setPendingAvatarPreview(null)
-    setPendingAvatarRemove(true)
-    setAvatarError(null)
-  }
-  
+    setPendingAvatarFile(null);
+    setPendingAvatarPreview(null);
+    setPendingAvatarRemove(true);
+    setAvatarError(null);
+  };
+
   const handleCancelAvatarChange = () => {
     // Revoke preview URL if exists
     if (pendingAvatarPreview) {
-      URL.revokeObjectURL(pendingAvatarPreview)
+      URL.revokeObjectURL(pendingAvatarPreview);
     }
-    
+
     // Reset pending avatar changes
-    setPendingAvatarFile(null)
-    setPendingAvatarPreview(null)
-    setPendingAvatarRemove(false)
-    setAvatarError(null)
-  }
+    setPendingAvatarFile(null);
+    setPendingAvatarPreview(null);
+    setPendingAvatarRemove(false);
+    setAvatarError(null);
+  };
 
   const onSubmit = async (data: AccountFormData) => {
-    if (!user) return
+    if (!user) return;
 
-    setIsSaving(true)
-    setSubmitError(null)
-    setSuccess(false)
+    setIsSaving(true);
+    setSubmitError(null);
+    setSuccess(false);
 
     try {
       // Handle avatar changes first
-      let newAvatarUrl: string | null = savedAvatarUrl
-      
+      let newAvatarUrl: string | null = savedAvatarUrl;
+
       if (pendingAvatarFile) {
         // Upload new avatar
-        const fileExt = pendingAvatarFile.name.split('.').pop()
-        const randomId = crypto.randomUUID()
-        const fileName = `${randomId}.${fileExt}`
-        const filePath = `${user.id}/${fileName}`
+        const fileExt = pendingAvatarFile.name.split('.').pop();
+        const randomId = crypto.randomUUID();
+        const fileName = `${randomId}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('user-avatars')
           .upload(filePath, pendingAvatarFile, {
             cacheControl: '3600',
             upsert: false,
-          })
+          });
 
         if (uploadError) {
-          setSubmitError(`Failed to upload avatar: ${uploadError.message}`)
-          setIsSaving(false)
-          return
+          setSubmitError(`Failed to upload avatar: ${uploadError.message}`);
+          setIsSaving(false);
+          return;
         }
 
         const { data: { publicUrl } } = supabase.storage
           .from('user-avatars')
-          .getPublicUrl(filePath)
-        
-        newAvatarUrl = publicUrl
+          .getPublicUrl(filePath);
+
+        newAvatarUrl = publicUrl;
       } else if (pendingAvatarRemove) {
-        newAvatarUrl = null
+        newAvatarUrl = null;
       }
 
       // Filter out empty social links
-      const validSocialLinks = data.socialLinks.filter(link => link.label.trim() && link.url.trim())
+      const validSocialLinks = data.socialLinks.filter(link => link.label.trim() && link.url.trim());
 
       const { error } = await supabase
         .from('profiles')
@@ -419,30 +419,30 @@ export default function AccountPage() {
           theme: data.theme,
           avatar_url: newAvatarUrl,
         })
-        .eq('id', user.id)
+        .eq('id', user.id);
 
       if (error) {
-        setSubmitError(error.message)
+        setSubmitError(error.message);
       } else {
         // Apply theme change
         if (data.theme !== theme) {
-          setTheme(data.theme)
+          setTheme(data.theme);
         }
         // Save album card style to localStorage
-        localStorage.setItem('album-card-style', data.albumCardStyle)
-        
+        localStorage.setItem('album-card-style', data.albumCardStyle);
+
         // Update saved avatar URL and clear pending changes
-        setSavedAvatarUrl(newAvatarUrl)
+        setSavedAvatarUrl(newAvatarUrl);
         if (pendingAvatarPreview) {
-          URL.revokeObjectURL(pendingAvatarPreview)
+          URL.revokeObjectURL(pendingAvatarPreview);
         }
-        setPendingAvatarFile(null)
-        setPendingAvatarPreview(null)
-        setPendingAvatarRemove(false)
-        
+        setPendingAvatarFile(null);
+        setPendingAvatarPreview(null);
+        setPendingAvatarRemove(false);
+
         // Update profile state
-        setProfile(prev => prev ? { ...prev, avatar_url: newAvatarUrl } : null)
-        
+        setProfile(prev => prev ? { ...prev, avatar_url: newAvatarUrl } : null);
+
         // Create the saved data with filtered social links
         const savedData: AccountFormData = {
           fullName: data.fullName || '',
@@ -451,39 +451,39 @@ export default function AccountPage() {
           socialLinks: validSocialLinks,
           albumCardStyle: data.albumCardStyle,
           theme: data.theme,
-        }
-        
+        };
+
         // Reset form to saved values and update baseline
-        reset(savedData)
-        setSavedFormValues(savedData)
-        
+        reset(savedData);
+        setSavedFormValues(savedData);
+
         // Revalidate profile pages
         if (nickname) {
-          await revalidateProfile(nickname)
+          await revalidateProfile(nickname);
         }
 
-        setSuccess(true)
-        setTimeout(() => setSuccess(false), 3000)
-        refreshAuthProfile()
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        refreshAuthProfile();
       }
     } catch (err) {
-      console.error('Unexpected error saving profile:', err)
-      setSubmitError('An unexpected error occurred')
+      console.error('Unexpected error saving profile:', err);
+      setSubmitError('An unexpected error occurred');
     }
 
-    setIsSaving(false)
-  }
+    setIsSaving(false);
+  };
 
   // Determine which avatar to display:
   // 1. If there's a pending upload, show the preview
   // 2. If pending removal, show nothing (Avatar component will show initials)
   // 3. Otherwise show saved avatar (profile.avatar_url is the single source of truth)
-  const displayAvatarUrl = pendingAvatarPreview 
-    ? pendingAvatarPreview 
-    : pendingAvatarRemove 
-      ? null 
-      : savedAvatarUrl
-  const fullName = watch('fullName')
+  const displayAvatarUrl = pendingAvatarPreview
+    ? pendingAvatarPreview
+    : pendingAvatarRemove
+      ? null
+      : savedAvatarUrl;
+  const fullName = watch('fullName');
 
   return (
     <>
@@ -501,7 +501,7 @@ export default function AccountPage() {
           <div className="rounded-xl border border-border-color bg-background-light p-6 text-center">
             <p className="text-lg font-medium mb-2">JavaScript required</p>
             <p className="text-foreground/70">
-              This page requires JavaScript to manage your account settings. 
+              This page requires JavaScript to manage your account settings.
               Please enable JavaScript in your browser to continue.
             </p>
           </div>
@@ -522,7 +522,7 @@ export default function AccountPage() {
                   <div className="mb-6 flex items-center gap-6 border-b border-border-color pb-6">
                     <div className={clsx(
                       "rounded-full border-2",
-                      hasAvatarChanges ? "border-primary" : "border-border-color"
+                      hasAvatarChanges ? "border-primary" : "border-border-color",
                     )}>
                       <Avatar
                         avatarUrl={displayAvatarUrl}
@@ -536,7 +536,7 @@ export default function AccountPage() {
                           className={clsx(
                             "inline-flex cursor-pointer items-center justify-center rounded-full border border-border-color bg-background px-4 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors",
                             "hover:border-primary hover:bg-primary/5",
-                            isSaving && "pointer-events-none opacity-50"
+                            isSaving && "pointer-events-none opacity-50",
                           )}
                         >
                           <input
@@ -674,7 +674,7 @@ export default function AccountPage() {
                       <p className="text-xs text-foreground/50 mb-2">
                         Add up to 3 links to your social profiles
                       </p>
-                      
+
                       <div className="space-y-4">
                         {fields.map((field, index) => (
                           <div key={field.id} className="flex flex-col gap-2 rounded-lg border border-border-color bg-background-light p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0">
@@ -703,12 +703,12 @@ export default function AccountPage() {
                             </button>
                           </div>
                         ))}
-                        
+
                         {fields.length < 3 && (
                           <Button
                             type="button"
                             variant="secondary"
-                            icon={<PlusIconSVG className="size-4" />}  
+                            icon={<PlusIconSVG className="size-4" />}
                             onClick={() => append({ label: '', url: '' })}
                           >
                             Add social link
@@ -743,7 +743,7 @@ export default function AccountPage() {
                                 "rounded-lg border-2 p-3 text-left transition-colors",
                                 field.value === 'large'
                                   ? "border-primary bg-primary/5"
-                                  : "border-border-color hover:border-border-color-strong"
+                                  : "border-border-color hover:border-border-color-strong",
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -751,7 +751,7 @@ export default function AccountPage() {
                                   <div className="flex items-center gap-2 mb-1">
                                     <div className={clsx(
                                       "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
-                                      field.value === 'large' ? "border-primary" : "border-border-color-strong"
+                                      field.value === 'large' ? "border-primary" : "border-border-color-strong",
                                     )}>
                                       {field.value === 'large' && (
                                         <div className="size-2 rounded-full bg-primary" />
@@ -788,7 +788,7 @@ export default function AccountPage() {
                                 "rounded-lg border-2 p-3 text-left transition-colors",
                                 field.value === 'compact'
                                   ? "border-primary bg-primary/5"
-                                  : "border-border-color hover:border-border-color-strong"
+                                  : "border-border-color hover:border-border-color-strong",
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -796,7 +796,7 @@ export default function AccountPage() {
                                   <div className="flex items-center gap-2 mb-1">
                                     <div className={clsx(
                                       "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
-                                      field.value === 'compact' ? "border-primary" : "border-border-color-strong"
+                                      field.value === 'compact' ? "border-primary" : "border-border-color-strong",
                                     )}>
                                       {field.value === 'compact' && (
                                         <div className="size-2 rounded-full bg-primary" />
@@ -867,7 +867,7 @@ export default function AccountPage() {
                                   "flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors",
                                   themeMounted && field.value === option.value
                                     ? "border-primary bg-primary/5 text-primary"
-                                    : "border-border-color hover:border-border-color-strong"
+                                    : "border-border-color hover:border-border-color-strong",
                                 )}
                               >
                                 {option.icon}
@@ -878,8 +878,8 @@ export default function AccountPage() {
                         )}
                       />
                       <p className="text-xs text-foreground/50">
-                        {themeMounted && theme === 'system' 
-                          ? `Currently using ${resolvedTheme} mode based on your system` 
+                        {themeMounted && theme === 'system'
+                          ? `Currently using ${resolvedTheme} mode based on your system`
                           : 'Choose your preferred color scheme'}
                       </p>
                     </div>
@@ -963,7 +963,7 @@ export default function AccountPage() {
           </div>
         )}
       </PageContainer>
-    
+
       {/* Sticky Save Button */}
       <StickyActionBar>
         <div className="flex items-center gap-3 text-sm">
@@ -991,5 +991,5 @@ export default function AccountPage() {
         </Button>
       </StickyActionBar>
     </>
-  )
+  );
 }

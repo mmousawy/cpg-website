@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { message: "Email and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
         { message: "Password must be at least 6 characters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,13 +42,13 @@ export async function POST(request: NextRequest) {
     // Check if email already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const emailExists = existingUsers?.users?.some(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
+      (u) => u.email?.toLowerCase() === email.toLowerCase(),
     );
 
     if (emailExists) {
       return NextResponse.json(
         { message: "An account with this email already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       if (existingProfile) {
         return NextResponse.json(
           { message: "This nickname is already taken" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       console.error("Error creating user:", createError);
       return NextResponse.json(
         { message: createError.message || "Failed to create account" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       await supabase.auth.admin.deleteUser(userData.user.id);
       return NextResponse.json(
         { message: "Failed to create account. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         VerifyEmailTemplate({
           fullName: full_name || email.split("@")[0],
           verifyLink,
-        })
+        }),
       ),
     });
 
@@ -153,14 +153,13 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Account created. Please check your email to verify.",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Signup error:", error);
     return NextResponse.json(
       { message: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

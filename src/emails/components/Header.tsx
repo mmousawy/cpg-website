@@ -25,5 +25,5 @@ export default function Header() {
       </Text>
       <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />
     </>
-  )
+  );
 }

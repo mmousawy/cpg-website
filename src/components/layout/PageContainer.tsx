@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import clsx from 'clsx'
+import { ReactNode } from 'react';
+import clsx from 'clsx';
 
 type PageContainerProps = {
   children: ReactNode
@@ -19,11 +19,11 @@ export default function PageContainer({ children, className, variant = 'default'
       'flex grow justify-center',
       variant === 'alt' ? pagePaddingAlt : pagePadding,
       variant === 'alt' && 'bg-background-light',
-      className
+      className,
     )}>
       <div className={clsx("w-full max-w-screen-md", innerClassName)}>
         {children}
       </div>
     </div>
-  )
+  );
 }

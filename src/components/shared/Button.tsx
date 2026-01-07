@@ -1,7 +1,16 @@
-// Move to shared/Button.tsx
 import clsx from 'clsx';
 import Link from 'next/link';
 import { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from 'react';
+
+// Loading spinner component - defined outside to avoid React Compiler warning
+function LoadingSpinner() {
+  return (
+    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
+}
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'custom';
 type ButtonSize = 'sm' | 'md';
@@ -83,7 +92,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = loading || ('disabled' in props && props.disabled);
-  
+
   const classes = clsx(
     // Base styles
     'group inline-flex items-center justify-center gap-2 rounded-full border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
@@ -96,14 +105,7 @@ export default function Button({
     // Disabled/loading state
     isDisabled && 'cursor-not-allowed opacity-50',
     // Custom className
-    className
-  );
-
-  const LoadingSpinner = () => (
-    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
+    className,
   );
 
   const content = (

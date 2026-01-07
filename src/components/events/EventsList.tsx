@@ -35,7 +35,7 @@ function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee
     const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`;
     return {
       ...attendee,
-      avatarUrl: customAvatar || gravatarUrl
+      avatarUrl: customAvatar || gravatarUrl,
     };
   });
 
@@ -49,7 +49,7 @@ function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee
             height={32}
             className={clsx([
               attendeesWithAvatars.length > 1 && "-mr-2",
-              "size-8 rounded-full object-cover"
+              "size-8 rounded-full object-cover",
             ])}
             src={attendee.avatarUrl}
             alt="Avatar"
@@ -75,7 +75,7 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage }: E
     return (
       <Container className="text-center">
         <p className="text-foreground/80">
-          <SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> 
+          <SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" />
           {emptyMessage || 'No events found'}
         </p>
       </Container>

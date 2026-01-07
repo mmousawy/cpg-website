@@ -21,18 +21,16 @@ export default function Modal() {
     if (modalRef.current) {
       if (isOpen) {
         modalRef.current.show();
-
         document.body.style.overflow = "hidden";
-
-        // Focus trap the dialog element
-        setTimeout(() => setIsTrapped(true), 16);
+        // Focus trap the dialog element after a brief delay
+        const timerId = setTimeout(() => setIsTrapped(true), 16);
+        return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-
         document.body.style.overflow = "auto";
-
-        // Untrap the dialog element
-        setIsTrapped(false);
+        // Untrap the dialog element (via microtask to satisfy React Compiler)
+        const timerId = setTimeout(() => setIsTrapped(false), 0);
+        return () => clearTimeout(timerId);
       }
     }
   }, [isOpen]);
@@ -44,7 +42,7 @@ export default function Modal() {
     const closeModal = () => {
       setIsOpen(false);
       console.log("closeModal");
-    }
+    };
 
     if (modal && !modal.dataset.isMounted) {
       modal.dataset.isMounted = "true";
@@ -56,7 +54,7 @@ export default function Modal() {
       if (modal) {
         modal.removeEventListener("close", closeModal);
       }
-    }
+    };
   });
 
   return (
@@ -95,5 +93,5 @@ export default function Modal() {
         </div>
       </FocusTrap>
     </dialog>
-  )
+  );
 }

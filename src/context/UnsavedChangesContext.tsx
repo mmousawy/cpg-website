@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface UnsavedChangesContextType {
   hasUnsavedChanges: boolean
@@ -9,81 +9,81 @@ interface UnsavedChangesContextType {
   confirmNavigation: (href: string) => void
 }
 
-const UnsavedChangesContext = createContext<UnsavedChangesContextType | null>(null)
+const UnsavedChangesContext = createContext<UnsavedChangesContextType | null>(null);
 
 export function UnsavedChangesProvider({ children }: { children: React.ReactNode }) {
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
-  const [showDialog, setShowDialog] = useState(false)
-  const router = useRouter()
-  const dialogRef = useRef<HTMLDialogElement>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const router = useRouter();
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Expose setter on window for useFormChanges hook to access
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__unsavedChangesContext = { setHasUnsavedChanges }
+      (window as any).__unsavedChangesContext = { setHasUnsavedChanges };
     }
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).__unsavedChangesContext
+        delete (window as any).__unsavedChangesContext;
       }
-    }
-  }, [setHasUnsavedChanges])
+    };
+  }, [setHasUnsavedChanges]);
 
   // Handle browser beforeunload (refresh, close tab, external navigation)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
-        e.preventDefault()
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?'
-        return e.returnValue
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
       }
-    }
+    };
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [hasUnsavedChanges])
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Handle browser back/forward buttons (popstate)
   useEffect(() => {
-    if (!hasUnsavedChanges) return
+    if (!hasUnsavedChanges) return;
 
     // Push a dummy state so we can intercept back navigation
-    const currentPath = window.location.pathname + window.location.search
-    window.history.pushState({ unsavedChangesGuard: true }, '', currentPath)
+    const currentPath = window.location.pathname + window.location.search;
+    window.history.pushState({ unsavedChangesGuard: true }, '', currentPath);
 
     const handlePopState = (e: PopStateEvent) => {
       if (hasUnsavedChanges) {
         // Re-push the state to prevent navigation
-        window.history.pushState({ unsavedChangesGuard: true }, '', currentPath)
+        window.history.pushState({ unsavedChangesGuard: true }, '', currentPath);
         // Show our dialog
-        setPendingNavigation('__back__')
-        setShowDialog(true)
+        setPendingNavigation('__back__');
+        setShowDialog(true);
       }
-    }
+    };
 
-    window.addEventListener('popstate', handlePopState)
-    
+    window.addEventListener('popstate', handlePopState);
+
     return () => {
-      window.removeEventListener('popstate', handlePopState)
+      window.removeEventListener('popstate', handlePopState);
       // Clean up the dummy state when unmounting or when changes are saved
       if (window.history.state?.unsavedChangesGuard) {
-        window.history.back()
+        window.history.back();
       }
-    }
-  }, [hasUnsavedChanges])
+    };
+  }, [hasUnsavedChanges]);
 
   // Intercept internal link clicks
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!hasUnsavedChanges) return
+      if (!hasUnsavedChanges) return;
 
       // Find the closest anchor tag
-      const target = (e.target as HTMLElement).closest('a')
-      if (!target) return
+      const target = (e.target as HTMLElement).closest('a');
+      if (!target) return;
 
-      const href = target.getAttribute('href')
-      if (!href) return
+      const href = target.getAttribute('href');
+      if (!href) return;
 
       // Skip external links, hash links, and non-navigation links
       if (
@@ -95,63 +95,63 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
         target.getAttribute('target') === '_blank' ||
         target.getAttribute('download') !== null
       ) {
-        return
+        return;
       }
 
       // Prevent navigation and show confirmation
-      e.preventDefault()
-      e.stopPropagation()
-      setPendingNavigation(href)
-      setShowDialog(true)
-    }
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavigation(href);
+      setShowDialog(true);
+    };
 
     // Use capture phase to intercept before Next.js handles it
-    document.addEventListener('click', handleClick, true)
-    return () => document.removeEventListener('click', handleClick, true)
-  }, [hasUnsavedChanges])
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [hasUnsavedChanges]);
 
   // Show/hide dialog
   useEffect(() => {
-    const dialog = dialogRef.current
+    const dialog = dialogRef.current;
     if (showDialog && dialog && !dialog.open) {
-      dialog.showModal()
+      dialog.showModal();
     } else if (!showDialog && dialog && dialog.open) {
-      dialog.close()
+      dialog.close();
     }
-  }, [showDialog])
+  }, [showDialog]);
 
   const handleConfirm = useCallback(() => {
-    setShowDialog(false)
-    setHasUnsavedChanges(false)
+    setShowDialog(false);
+    setHasUnsavedChanges(false);
     if (pendingNavigation) {
       if (pendingNavigation === '__back__') {
         // Go back twice: once for our guard state, once for the actual back
-        window.history.go(-2)
+        window.history.go(-2);
       } else {
-        router.push(pendingNavigation)
+        router.push(pendingNavigation);
       }
-      setPendingNavigation(null)
+      setPendingNavigation(null);
     }
-  }, [pendingNavigation, router])
+  }, [pendingNavigation, router]);
 
   const handleCancel = useCallback(() => {
-    setShowDialog(false)
-    setPendingNavigation(null)
-  }, [])
+    setShowDialog(false);
+    setPendingNavigation(null);
+  }, []);
 
   const confirmNavigation = useCallback((href: string) => {
     if (hasUnsavedChanges) {
-      setPendingNavigation(href)
-      setShowDialog(true)
+      setPendingNavigation(href);
+      setShowDialog(true);
     } else {
-      router.push(href)
+      router.push(href);
     }
-  }, [hasUnsavedChanges, router])
+  }, [hasUnsavedChanges, router]);
 
   return (
     <UnsavedChangesContext.Provider value={{ hasUnsavedChanges, setHasUnsavedChanges, confirmNavigation }}>
       {children}
-      
+
       {/* Confirmation Dialog - always rendered, visibility controlled by showModal/close */}
       <dialog
         ref={dialogRef}
@@ -182,14 +182,13 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
         </div>
       </dialog>
     </UnsavedChangesContext.Provider>
-  )
+  );
 }
 
 export function useUnsavedChanges() {
-  const context = useContext(UnsavedChangesContext)
+  const context = useContext(UnsavedChangesContext);
   if (!context) {
-    throw new Error('useUnsavedChanges must be used within UnsavedChangesProvider')
+    throw new Error('useUnsavedChanges must be used within UnsavedChangesProvider');
   }
-  return context
+  return context;
 }
-

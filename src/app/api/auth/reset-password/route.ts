@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
     if (!token || !email || !password) {
       return NextResponse.json(
         { message: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
         { message: "Password must be at least 6 characters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     if (tokenError || !authToken) {
       return NextResponse.json(
         { message: "This reset link is invalid or has already been used" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (new Date(authToken.expires_at) < new Date()) {
       return NextResponse.json(
         { message: "This reset link has expired. Please request a new one." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,14 +63,14 @@ export async function POST(request: NextRequest) {
     // Update the user's password
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       authToken.user_id!,
-      { password }
+      { password },
     );
 
     if (updateError) {
       console.error("Error updating password:", updateError);
       return NextResponse.json(
         { message: "Failed to update password. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -78,14 +78,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: "Password updated successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Reset password error:", error);
     return NextResponse.json(
       { message: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

@@ -12,7 +12,7 @@ const useMasonry = () => {
     if (items.length < 1) return;
 
     const gapSize = parseInt(
-      window.getComputedStyle(container).getPropertyValue("grid-row-gap")
+      window.getComputedStyle(container).getPropertyValue("grid-row-gap"),
     ) || 0;
 
     const elementLeft = (el: HTMLElement) => el.getBoundingClientRect().left;

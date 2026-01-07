@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   if (!token || !email) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=missing_params&message=${encodeURIComponent("Invalid verification link")}`
+      `${origin}/auth-error?error=missing_params&message=${encodeURIComponent("Invalid verification link")}`,
     );
   }
 
@@ -40,14 +40,14 @@ export async function GET(request: NextRequest) {
   if (tokenError || !authToken) {
     console.error("Token lookup error:", tokenError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_token&message=${encodeURIComponent("This verification link is invalid or has already been used")}`
+      `${origin}/auth-error?error=invalid_token&message=${encodeURIComponent("This verification link is invalid or has already been used")}`,
     );
   }
 
   // Check if token is expired
   if (new Date(authToken.expires_at) < new Date()) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=expired_token&message=${encodeURIComponent("This verification link has expired. Please sign up again.")}`
+      `${origin}/auth-error?error=expired_token&message=${encodeURIComponent("This verification link has expired. Please sign up again.")}`,
     );
   }
 
@@ -60,23 +60,23 @@ export async function GET(request: NextRequest) {
   // Confirm the user's email
   const { error: confirmError } = await supabase.auth.admin.updateUserById(
     authToken.user_id!,
-    { email_confirm: true }
+    { email_confirm: true },
   );
 
   if (confirmError) {
     console.error("Error confirming user:", confirmError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=confirm_failed&message=${encodeURIComponent("Failed to verify email. Please try again.")}`
+      `${origin}/auth-error?error=confirm_failed&message=${encodeURIComponent("Failed to verify email. Please try again.")}`,
     );
   }
 
   // Get user profile for name
   const { data: profile } = authToken.user_id
     ? await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", authToken.user_id)
-        .single()
+      .from("profiles")
+      .select("full_name")
+      .eq("id", authToken.user_id)
+      .single()
     : { data: null };
 
   const fullName = profile?.full_name || email.split("@")[0];
@@ -99,7 +99,6 @@ export async function GET(request: NextRequest) {
 
   // Redirect to login with success message
   return NextResponse.redirect(
-    `${origin}/login?verified=true`
+    `${origin}/login?verified=true`,
   );
 }
-

@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import clsx from 'clsx'
+import Link from 'next/link';
+import clsx from 'clsx';
 
-import PageContainer from '@/components/layout/PageContainer'
+import PageContainer from '@/components/layout/PageContainer';
 
-import CalendarSVG from 'public/icons/calendar2.svg'
+import CalendarSVG from 'public/icons/calendar2.svg';
 
 type AdminCard = {
   title: string
@@ -60,7 +60,7 @@ export default function AdminDashboardPage() {
       href: '#',
       enabled: false,
     },
-  ]
+  ];
 
   return (
     <PageContainer>
@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
             <>
               <div className={clsx(
                 'mb-4 inline-flex rounded-lg p-2 sm:p-3',
-                card.enabled ? 'bg-primary/10 text-primary' : 'bg-foreground/10 text-foreground/50'
+                card.enabled ? 'bg-primary/10 text-primary' : 'bg-foreground/10 text-foreground/50',
               )}>
                 {card.icon}
               </div>
@@ -84,14 +84,14 @@ export default function AdminDashboardPage() {
                 <p className="mt-3 text-xs font-medium text-foreground/50">Coming soon</p>
               )}
             </>
-          )
+          );
 
           const cardClassName = clsx(
             'rounded-lg border border-border-color bg-background-light p-6 transition-all',
             card.enabled
               ? 'cursor-pointer hover:border-primary hover:shadow-lg'
-              : 'cursor-not-allowed opacity-50'
-          )
+              : 'cursor-not-allowed opacity-50',
+          );
 
           return card.enabled ? (
             <Link
@@ -108,9 +108,9 @@ export default function AdminDashboardPage() {
             >
               {cardContent}
             </div>
-          )
+          );
         })}
       </div>
     </PageContainer>
-  )
+  );
 }

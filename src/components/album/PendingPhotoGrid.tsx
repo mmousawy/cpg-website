@@ -1,7 +1,7 @@
-import React from 'react'
-import { DndContext, closestCenter, DragEndEvent, useSensors, useSensor, PointerSensor, KeyboardSensor } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable'
-import SortablePendingPhoto from './SortablePendingPhoto'
+import React from 'react';
+import { DndContext, closestCenter, DragEndEvent, useSensors, useSensor, PointerSensor, KeyboardSensor } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import SortablePendingPhoto from './SortablePendingPhoto';
 
 interface PendingPhotoGridProps {
   pendingPhotos: File[]
@@ -14,17 +14,17 @@ const PendingPhotoGrid: React.FC<PendingPhotoGridProps> = ({ pendingPhotos, onDe
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
+    }),
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const activeIndex = parseInt(String(active.id).replace('pending-', ''))
-    const overIndex = parseInt(String(over.id).replace('pending-', ''))
-    const newPendingPhotos = arrayMove(pendingPhotos, activeIndex, overIndex)
-    onReorder(newPendingPhotos)
-  }
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const activeIndex = parseInt(String(active.id).replace('pending-', ''));
+    const overIndex = parseInt(String(over.id).replace('pending-', ''));
+    const newPendingPhotos = arrayMove(pendingPhotos, activeIndex, overIndex);
+    onReorder(newPendingPhotos);
+  };
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -41,7 +41,7 @@ const PendingPhotoGrid: React.FC<PendingPhotoGridProps> = ({ pendingPhotos, onDe
         </div>
       </SortableContext>
     </DndContext>
-  )
-}
+  );
+};
 
-export default PendingPhotoGrid
+export default PendingPhotoGrid;

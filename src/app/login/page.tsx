@@ -1,5 +1,5 @@
-import JavaScriptRequired from '@/components/shared/JavaScriptRequired'
-import LoginClient from './LoginClient'
+import JavaScriptRequired from '@/components/shared/JavaScriptRequired';
+import LoginClient from './LoginClient';
 
 export default function LoginPage() {
   return (
@@ -9,5 +9,5 @@ export default function LoginPage() {
         <LoginClient />
       </div>
     </>
-  )
+  );
 }

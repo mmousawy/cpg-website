@@ -82,4 +82,3 @@ export const VerifyEmailTemplate = ({
 };
 
 export default VerifyEmailTemplate;
-

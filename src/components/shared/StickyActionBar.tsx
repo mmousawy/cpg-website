@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
-import clsx from 'clsx'
+import { ReactNode } from 'react';
+import clsx from 'clsx';
 
 type StickyActionBarProps = {
   children: ReactNode
@@ -10,10 +10,10 @@ type StickyActionBarProps = {
   position?: 'top' | 'bottom'
 }
 
-export default function StickyActionBar({ 
-  children, 
+export default function StickyActionBar({
+  children,
   className,
-  position = 'bottom' 
+  position = 'bottom',
 }: StickyActionBarProps) {
   return (
     <div
@@ -25,17 +25,12 @@ export default function StickyActionBar({
         // Top shadow of a few pixels
         'border-t-[0.0625rem] border-border-color-strong bg-background-light',
         'px-4 py-3 sm:px-6 sm:py-4',
-        className
+        className,
       )}>
         <div className="mx-auto flex max-w-screen-md items-center justify-between gap-4">
           {children}
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-
-
-
-

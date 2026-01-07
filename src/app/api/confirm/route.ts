@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   // Confirm the RSVP in the database
   const result = await supabase.from('events_rsvps')
     .update({
-      confirmed_at: new Date().toISOString()
+      confirmed_at: new Date().toISOString(),
     })
     .eq('uuid', uuid);
 

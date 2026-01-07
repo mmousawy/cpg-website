@@ -1,15 +1,15 @@
-import { createClient } from '@/utils/supabase/server'
-import { NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const stats = {
@@ -23,7 +23,7 @@ export async function GET() {
       galleryViews: 0,
       profileViews: 0,
       lastLoggedIn: null as string | null,
-    }
+    };
 
     // Load profile to get last_logged_in
     try {
@@ -31,11 +31,11 @@ export async function GET() {
         .from('profiles')
         .select('last_logged_in')
         .eq('id', user.id)
-        .single()
+        .single();
 
-      const data = profileData as { last_logged_in: string | null } | null
+      const data = profileData as { last_logged_in: string | null } | null;
       if (data?.last_logged_in) {
-        stats.lastLoggedIn = data.last_logged_in
+        stats.lastLoggedIn = data.last_logged_in;
       }
     } catch {
       // Profiles table might not exist or last_logged_in column might not exist
@@ -46,14 +46,14 @@ export async function GET() {
       const { data: rsvpsData } = await supabase
         .from('events_rsvps')
         .select('id, confirmed_at, canceled_at')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
       type RSVPData = { id: string; confirmed_at: string | null; canceled_at: string | null }[]
-      const rsvps = rsvpsData as RSVPData | null
+      const rsvps = rsvpsData as RSVPData | null;
 
       if (rsvps) {
-        stats.rsvpsConfirmed = rsvps.filter(r => r.confirmed_at && !r.canceled_at).length
-        stats.rsvpsCanceled = rsvps.filter(r => r.canceled_at).length
+        stats.rsvpsConfirmed = rsvps.filter(r => r.confirmed_at && !r.canceled_at).length;
+        stats.rsvpsCanceled = rsvps.filter(r => r.canceled_at).length;
 
         // Try to get attended count separately (in case attended_at column doesn't exist)
         try {
@@ -61,13 +61,13 @@ export async function GET() {
           const { data: allRSVPsData, error: attendedError } = await supabase
             .from('events_rsvps')
             .select('id, attended_at')
-            .eq('user_id', user.id)
+            .eq('user_id', user.id);
 
-          const allRSVPs = allRSVPsData as { id: string; attended_at: string | null }[] | null
+          const allRSVPs = allRSVPsData as { id: string; attended_at: string | null }[] | null;
 
           if (!attendedError && allRSVPs) {
             // Filter for RSVPs with attended_at set
-            stats.eventsAttended = allRSVPs.filter(r => r.attended_at !== null).length
+            stats.eventsAttended = allRSVPs.filter(r => r.attended_at !== null).length;
           }
         } catch {
           // attended_at column might not exist yet - that's okay
@@ -82,10 +82,10 @@ export async function GET() {
       const { count } = await supabase
         .from('albums')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
       if (count !== null) {
-        stats.galleries = count
+        stats.galleries = count;
       }
     } catch {
       // Albums table doesn't exist yet
@@ -96,19 +96,19 @@ export async function GET() {
       const { data: albumsData } = await supabase
         .from('albums')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
 
-      const albums = albumsData as { id: string }[] | null
+      const albums = albumsData as { id: string }[] | null;
 
       if (albums && albums.length > 0) {
-        const albumIds = albums.map(a => a.id)
+        const albumIds = albums.map(a => a.id);
         const { count } = await supabase
           .from('album_photos')
           .select('*', { count: 'exact', head: true })
-          .in('album_id', albumIds)
+          .in('album_id', albumIds);
 
         if (count !== null) {
-          stats.photos = count
+          stats.photos = count;
         }
       }
     } catch {
@@ -182,12 +182,12 @@ export async function GET() {
     //   // Profile views table doesn't exist yet
     // }
 
-    return NextResponse.json(stats)
+    return NextResponse.json(stats);
   } catch (error) {
-    console.error('Error loading stats:', error)
+    console.error('Error loading stats:', error);
     return NextResponse.json(
       { error: 'Failed to load stats' },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

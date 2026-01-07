@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useAdmin } from '@/hooks/useAdmin'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import ErrorMessage from '@/components/shared/ErrorMessage'
-import SuccessMessage from '@/components/shared/SuccessMessage'
+import { useState } from 'react';
+import { useAdmin } from '@/hooks/useAdmin';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 
-import TrashSVG from 'public/icons/trash.svg'
+import TrashSVG from 'public/icons/trash.svg';
 
 // Predefined moderation reasons
 const MODERATION_REASONS = [
@@ -17,7 +17,7 @@ const MODERATION_REASONS = [
   'Harassment or bullying',
   'Misleading or false information',
   'Violates community guidelines',
-] as const
+] as const;
 
 type AlbumModerationPanelProps = {
   albumId: string
@@ -34,46 +34,46 @@ export default function AlbumModerationPanel({
   isSuspended = false,
   suspensionReason = null,
 }: AlbumModerationPanelProps) {
-  const { isAdmin, isLoading } = useAdmin()
+  const { isAdmin, isLoading } = useAdmin();
 
-  const [actionType, setActionType] = useState<'suspend' | 'delete' | null>(null)
-  const [selectedReason, setSelectedReason] = useState<string>('')
-  const [customReason, setCustomReason] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [currentSuspendedState, setCurrentSuspendedState] = useState(isSuspended)
+  const [actionType, setActionType] = useState<'suspend' | 'delete' | null>(null);
+  const [selectedReason, setSelectedReason] = useState<string>('');
+  const [customReason, setCustomReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [currentSuspendedState, setCurrentSuspendedState] = useState(isSuspended);
 
   // Get the final reason (either selected preset or custom "Other" reason)
   const getFinalReason = () => {
     if (selectedReason === 'other') {
-      return customReason.trim()
+      return customReason.trim();
     }
-    return selectedReason
-  }
+    return selectedReason;
+  };
 
   // Reset form state
   const resetForm = () => {
-    setActionType(null)
-    setSelectedReason('')
-    setCustomReason('')
-    setError(null)
-  }
+    setActionType(null);
+    setSelectedReason('');
+    setCustomReason('');
+    setError(null);
+  };
 
   // Don't render anything if not an admin or still loading
   if (isLoading || !isAdmin) {
-    return null
+    return null;
   }
 
   const handleSuspend = async () => {
-    const reason = getFinalReason()
+    const reason = getFinalReason();
     if (!reason) {
-      setError('Please select or provide a reason for suspension')
-      return
+      setError('Please select or provide a reason for suspension');
+      return;
     }
 
-    setIsSubmitting(true)
-    setError(null)
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/admin/albums/suspend', {
@@ -83,57 +83,57 @@ export default function AlbumModerationPanel({
           albumId,
           reason,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to suspend album')
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to suspend album');
       }
 
-      setSuccess('Album has been suspended')
-      setCurrentSuspendedState(true)
-      resetForm()
+      setSuccess('Album has been suspended');
+      setCurrentSuspendedState(true);
+      resetForm();
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || 'An error occurred');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleUnsuspend = async () => {
-    setIsSubmitting(true)
-    setError(null)
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/admin/albums/unsuspend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ albumId }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to unsuspend album')
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to unsuspend album');
       }
 
-      setSuccess('Album has been unsuspended')
-      setCurrentSuspendedState(false)
+      setSuccess('Album has been unsuspended');
+      setCurrentSuspendedState(false);
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || 'An error occurred');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    const reason = getFinalReason()
+    const reason = getFinalReason();
     if (!reason) {
-      setError('Please select or provide a reason for deletion')
-      return
+      setError('Please select or provide a reason for deletion');
+      return;
     }
 
-    setIsSubmitting(true)
-    setError(null)
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/admin/albums/delete', {
@@ -143,23 +143,23 @@ export default function AlbumModerationPanel({
           albumId,
           reason,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to delete album')
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete album');
       }
 
-      setSuccess('Album has been deleted. Redirecting...')
+      setSuccess('Album has been deleted. Redirecting...');
       setTimeout(() => {
-        window.location.href = '/admin'
-      }, 2000)
+        window.location.href = '/admin';
+      }, 2000);
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || 'An error occurred');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Container className="border-orange-500/30 bg-orange-500/5">
@@ -276,7 +276,7 @@ export default function AlbumModerationPanel({
               />
             )}
             <p className="mt-2 text-xs text-foreground/50">
-              {actionType === 'suspend' 
+              {actionType === 'suspend'
                 ? 'This reason may be shown to the album owner.'
                 : 'This reason will be logged for moderation records.'}
             </p>
@@ -310,6 +310,5 @@ export default function AlbumModerationPanel({
         </div>
       )}
     </Container>
-  )
+  );
 }
-

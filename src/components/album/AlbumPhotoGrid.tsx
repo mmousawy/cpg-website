@@ -1,10 +1,10 @@
-import React from 'react'
-import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable'
-import { useSensors, useSensor, PointerSensor, KeyboardSensor } from '@dnd-kit/core'
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import SortablePhoto from './SortablePhoto'
-import type { AlbumPhoto } from '@/types/albums'
+import React from 'react';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { useSensors, useSensor, PointerSensor, KeyboardSensor } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import SortablePhoto from './SortablePhoto';
+import type { AlbumPhoto } from '@/types/albums';
 
 interface AlbumPhotoGridProps {
   photos: AlbumPhoto[]
@@ -33,17 +33,17 @@ const AlbumPhotoGrid: React.FC<AlbumPhotoGridProps> = ({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
+    }),
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const oldIndex = photos.findIndex((p) => p.id === active.id)
-    const newIndex = photos.findIndex((p) => p.id === over.id)
-    const newPhotos = arrayMove(photos, oldIndex, newIndex)
-    onReorder(newPhotos)
-  }
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = photos.findIndex((p) => p.id === active.id);
+    const newIndex = photos.findIndex((p) => p.id === over.id);
+    const newPhotos = arrayMove(photos, oldIndex, newIndex);
+    onReorder(newPhotos);
+  };
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -84,7 +84,7 @@ const AlbumPhotoGrid: React.FC<AlbumPhotoGridProps> = ({
         </div>
       </SortableContext>
     </DndContext>
-  )
-}
+  );
+};
 
-export default AlbumPhotoGrid
+export default AlbumPhotoGrid;

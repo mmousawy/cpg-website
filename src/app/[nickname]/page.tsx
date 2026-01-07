@@ -1,85 +1,85 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { createPublicClient } from '@/utils/supabase/server'
-import AlbumGrid from '@/components/album/AlbumGrid'
-import ClickableAvatar from '@/components/shared/ClickableAvatar'
-import PageContainer from '@/components/layout/PageContainer'
-import { getSocialIcon, getDomain } from '@/utils/socialIcons'
-import type { AlbumWithPhotos } from '@/types/albums'
-import type { Tables } from '@/database.types'
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { createPublicClient } from '@/utils/supabase/server';
+import AlbumGrid from '@/components/album/AlbumGrid';
+import ClickableAvatar from '@/components/shared/ClickableAvatar';
+import PageContainer from '@/components/layout/PageContainer';
+import { getSocialIcon, getDomain } from '@/utils/socialIcons';
+import type { AlbumWithPhotos } from '@/types/albums';
+import type { Tables } from '@/database.types';
 
 // Cache indefinitely - revalidated on-demand when data changes
 
 type SocialLink = { label: string; url: string }
 
-type ProfileData = Pick<Tables<'profiles'>, 
-  | 'id' 
-  | 'full_name' 
-  | 'nickname' 
-  | 'avatar_url' 
-  | 'bio' 
-  | 'website' 
+type ProfileData = Pick<Tables<'profiles'>,
+  | 'id'
+  | 'full_name'
+  | 'nickname'
+  | 'avatar_url'
+  | 'bio'
+  | 'website'
   | 'created_at'
 > & {
   social_links: SocialLink[] | null
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
-  const resolvedParams = await params
+  const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
-  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '')
-  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
+  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
+  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
 
   if (!nickname) {
     return {
       title: 'Profile Not Found',
-    }
+    };
   }
 
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, nickname, bio')
     .eq('nickname', nickname)
-    .single()
+    .single();
 
   if (!profile) {
     return {
       title: 'Profile Not Found',
-    }
+    };
   }
 
   return {
     title: `${profile.full_name || `@${profile.nickname}`}`,
     description: profile.bio || `View the profile and photo albums of @${profile.nickname}`,
-  }
+  };
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
-  const resolvedParams = await params
+  const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
-  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '')
-  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
+  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
+  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
 
   if (!nickname) {
-    notFound()
+    notFound();
   }
 
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   // Fetch profile first (needed for albums query)
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id, full_name, nickname, avatar_url, bio, website, social_links, created_at')
     .eq('nickname', nickname)
-    .single()
+    .single();
 
   if (profileError || !profile) {
-    notFound()
+    notFound();
   }
 
-  const typedProfile = profile as unknown as ProfileData
+  const typedProfile = profile as unknown as ProfileData;
 
   // Fetch user's public albums (profile.id is now available)
   const { data: albums } = await supabase
@@ -98,14 +98,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(50);
 
-  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[]
+  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
 
   // Get total photo count
-  const totalPhotos = albumsWithPhotos.reduce((acc, album) => acc + (album.photos?.length || 0), 0)
+  const totalPhotos = albumsWithPhotos.reduce((acc, album) => acc + (album.photos?.length || 0), 0);
 
-  const socialLinks = (typedProfile.social_links || []) as SocialLink[]
+  const socialLinks = (typedProfile.social_links || []) as SocialLink[];
 
   return (
     <>
@@ -249,6 +249,5 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </p>
       </PageContainer>
     </>
-  )
+  );
 }
-

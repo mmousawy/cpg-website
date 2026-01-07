@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { message: "Email is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Find the user
     const { data: users } = await supabase.auth.admin.listUsers();
     const user = users?.users?.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
+      (u) => u.email?.toLowerCase() === email.toLowerCase(),
     );
 
     // Always return success to prevent email enumeration
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       console.log(`Password reset requested for non-existent email: ${email}`);
       return NextResponse.json(
         { success: true, message: "If an account exists, you will receive an email" },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       console.error("Error storing reset token:", tokenError);
       return NextResponse.json(
         { message: "Failed to process request. Please try again." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         ResetPasswordTemplate({
           fullName: profile?.full_name || email.split("@")[0],
           resetLink,
-        })
+        }),
       ),
     });
 
@@ -107,14 +107,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: "If an account exists, you will receive an email" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Password reset error:", error);
     return NextResponse.json(
       { message: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

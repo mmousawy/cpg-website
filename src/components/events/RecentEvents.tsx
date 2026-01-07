@@ -1,47 +1,47 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { createClient } from '@/utils/supabase/server'
-import type { CPGEvent } from '@/types/events'
+import Link from 'next/link';
+import Image from 'next/image';
+import { createClient } from '@/utils/supabase/server';
+import type { CPGEvent } from '@/types/events';
 
-import CalendarSVG from 'public/icons/calendar2.svg'
-import LocationSVG from 'public/icons/location.svg'
-import TimeSVG from 'public/icons/time.svg'
+import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationSVG from 'public/icons/location.svg';
+import TimeSVG from 'public/icons/time.svg';
 
 export default async function RecentEvents() {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // Fetch 3 most recent events by date (descending)
   const { data: events, error } = await supabase
     .from('events')
     .select('id, title, date, location, time, cover_image, image_url, slug')
     .order('date', { ascending: false })
-    .limit(3)
+    .limit(3);
 
   if (error || !events || events.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border-color p-6 text-center">
         <p className="text-foreground/70">No events yet. Check back soon!</p>
       </div>
-    )
+    );
   }
 
   // Check which events are past/upcoming
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
   const eventsWithStatus = events.map((event) => {
-    const eventDate = event.date ? new Date(event.date) : null
-    if (eventDate) eventDate.setHours(0, 0, 0, 0)
-    const isPast = eventDate ? eventDate < now : false
-    
-    return { ...event, isPast }
-  })
+    const eventDate = event.date ? new Date(event.date) : null;
+    if (eventDate) eventDate.setHours(0, 0, 0, 0);
+    const isPast = eventDate ? eventDate < now : false;
+
+    return { ...event, isPast };
+  });
 
   return (
     <div className="space-y-3">
       {eventsWithStatus.map((event) => (
-        <Link 
-          key={event.id} 
+        <Link
+          key={event.id}
           href={`/events/${event.slug}`}
           className="block rounded-xl border border-border-color bg-background p-3 sm:p-4 transition-colors hover:border-primary group"
         >
@@ -60,7 +60,7 @@ export default async function RecentEvents() {
                 />
               </div>
             )}
-            
+
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -68,14 +68,14 @@ export default async function RecentEvents() {
                   {event.title}
                 </h4>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  event.isPast 
-                    ? 'bg-foreground/10 text-foreground/60' 
+                  event.isPast
+                    ? 'bg-foreground/10 text-foreground/60'
                     : 'bg-primary/10 text-primary'
                 }`}>
                   {event.isPast ? 'Past' : 'Upcoming'}
                 </span>
               </div>
-              
+
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/70">
                 {event.date && (
                   <span className="flex items-center gap-1">
@@ -105,7 +105,7 @@ export default async function RecentEvents() {
         </Link>
       ))}
     </div>
-  )
+  );
 }
 
 export function RecentEventsLoading() {
@@ -123,5 +123,5 @@ export function RecentEventsLoading() {
         </div>
       ))}
     </div>
-  )
+  );
 }

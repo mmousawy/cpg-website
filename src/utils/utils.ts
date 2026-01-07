@@ -33,14 +33,14 @@ export default async function getImgDimensions(url: string): Promise<ImageDimens
 
       response.on('data', (chunk) => {
         if (receivedBytes >= MAX_BYTES) return; // Stop processing new data
-        
+
         const remainingBytes = MAX_BYTES - receivedBytes;
         chunks.push(chunk.slice(0, remainingBytes)); // Only take what’s needed
         receivedBytes += chunk.length;
 
         if (receivedBytes >= MAX_BYTES) {
           response.destroy(); // Stop receiving further data
-          
+
           try {
             const buffer = Buffer.concat(chunks);
             const dimensions = sizeOf(buffer);

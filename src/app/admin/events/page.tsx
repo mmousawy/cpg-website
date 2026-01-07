@@ -1,46 +1,46 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
-import type { Tables } from '@/database.types'
-import { createClient } from '@/utils/supabase/client'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import Button from '@/components/shared/Button'
-import SadSVG from 'public/icons/sad.svg'
-import CalendarSVG from 'public/icons/calendar2.svg'
-import LocationSVG from 'public/icons/location.svg'
-import TimeSVG from 'public/icons/time.svg'
-import PlusSVG from 'public/icons/plus.svg'
+import type { Tables } from '@/database.types';
+import { createClient } from '@/utils/supabase/client';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
+import SadSVG from 'public/icons/sad.svg';
+import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationSVG from 'public/icons/location.svg';
+import TimeSVG from 'public/icons/time.svg';
+import PlusSVG from 'public/icons/plus.svg';
 
 type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image'>
 
 export default function AdminEventsPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
-  const supabase = createClient()
+  const supabase = createClient();
 
-  const [events, setEvents] = useState<Event[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadEvents()
+    loadEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   const loadEvents = async () => {
     const { data } = await supabase
       .from('events')
       .select('id, slug, title, date, time, location, description, cover_image')
-      .order('date', { ascending: false })
+      .order('date', { ascending: false });
 
-    setEvents(data || [])
-    setIsLoading(false)
-  }
+    setEvents(data || []);
+    setIsLoading(false);
+  };
 
-  const upcomingEvents = events.filter(e => e.date && new Date(e.date) >= new Date())
-  const pastEvents = events.filter(e => e.date && new Date(e.date) < new Date())
+  const upcomingEvents = events.filter(e => e.date && new Date(e.date) >= new Date());
+  const pastEvents = events.filter(e => e.date && new Date(e.date) < new Date());
 
   return (
     <PageContainer>
@@ -192,5 +192,5 @@ export default function AdminEventsPage() {
         </div>
       )}
     </PageContainer>
-  )
+  );
 }

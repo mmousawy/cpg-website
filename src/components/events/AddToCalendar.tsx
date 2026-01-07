@@ -9,7 +9,7 @@ import {
 
 import AddSVG from "public/icons/add.svg";
 
-export default function AddToCalendar({ event, render, }: { event: CPGEvent, render?: 'email' }) {
+export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = dayjs(`${event.date}T${event.time}`);
 
   const calendarDetails = {
@@ -42,7 +42,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
     return (
       <Section className="mt-[30px]">
         <Text className="!mt-0 text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
-  
+
         <div className="flex flex-col items-start gap-2">
           {/* Google */}
           <Button
@@ -51,7 +51,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           >
             Google Calendar
           </Button>
-  
+
           {/* Outlook */}
           <Button
             href={calendarLinks.outlook}
@@ -59,7 +59,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           >
             Outlook Calendar
           </Button>
-  
+
           {/* Apple */}
           <Button
             href={calendarLinks.apple}
@@ -70,7 +70,7 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
           </Button>
         </div>
       </Section>
-    )
+    );
   }
 
   return (
@@ -111,5 +111,5 @@ export default function AddToCalendar({ event, render, }: { event: CPGEvent, ren
         </a>
       </div>
     </div>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import React from 'react'
-import Image from 'next/image'
-import EditSVG from 'public/icons/edit.svg'
-import TrashSVG from 'public/icons/trash.svg'
-import Button from '../shared/Button'
-import type { AlbumPhoto } from '@/types/albums'
+import React from 'react';
+import Image from 'next/image';
+import EditSVG from 'public/icons/edit.svg';
+import TrashSVG from 'public/icons/trash.svg';
+import Button from '../shared/Button';
+import type { AlbumPhoto } from '@/types/albums';
 
 interface SortablePhotoProps {
   photo: AlbumPhoto
@@ -89,6 +89,6 @@ const SortablePhoto: React.FC<SortablePhotoProps> = ({
       )}
     </div>
   </div>
-)
+);
 
-export default SortablePhoto
+export default SortablePhoto;

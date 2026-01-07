@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode } from 'react';
 
 type SocialIconConfig = {
   keywords: string[]
@@ -222,14 +222,14 @@ const socialIcons: SocialIconConfig[] = [
       </svg>
     ),
   },
-]
+];
 
 // Default link icon for unknown platforms
 const defaultIcon = (
   <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
   </svg>
-)
+);
 
 /**
  * Get the appropriate social media icon for a given label or URL
@@ -237,15 +237,15 @@ const defaultIcon = (
  * @returns ReactNode containing the SVG icon
  */
 export function getSocialIcon(labelOrUrl: string): ReactNode {
-  const lowerInput = labelOrUrl.toLowerCase()
-  
+  const lowerInput = labelOrUrl.toLowerCase();
+
   for (const config of socialIcons) {
     if (config.keywords.some(keyword => lowerInput.includes(keyword))) {
-      return config.icon
+      return config.icon;
     }
   }
-  
-  return defaultIcon
+
+  return defaultIcon;
 }
 
 /**
@@ -255,11 +255,10 @@ export function getSocialIcon(labelOrUrl: string): ReactNode {
  */
 export function getDomain(url: string): string {
   try {
-    const hostname = new URL(url).hostname
+    const hostname = new URL(url).hostname;
     // Remove www. prefix if present
-    return hostname.replace(/^www\./, '')
+    return hostname.replace(/^www\./, '');
   } catch {
-    return 'Website'
+    return 'Website';
   }
 }
-

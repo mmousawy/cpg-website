@@ -1,5 +1,5 @@
-import Image from 'next/image'
-import type { AlbumPhoto } from '@/types/albums'
+import Image from 'next/image';
+import type { AlbumPhoto } from '@/types/albums';
 
 export default function AlbumFullSizeList({ photos }: { photos: AlbumPhoto[] }) {
   if (!photos || photos.length === 0) return null;
@@ -22,5 +22,5 @@ export default function AlbumFullSizeList({ photos }: { photos: AlbumPhoto[] }) 
         </div>
       ))}
     </div>
-  )
+  );
 }

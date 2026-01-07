@@ -1,5 +1,5 @@
-import JavaScriptRequired from '@/components/shared/JavaScriptRequired'
-import SignupClient from './SignupClient'
+import JavaScriptRequired from '@/components/shared/JavaScriptRequired';
+import SignupClient from './SignupClient';
 
 export default function SignupPage() {
   return (
@@ -9,5 +9,5 @@ export default function SignupPage() {
         <SignupClient />
       </div>
     </>
-  )
+  );
 }

@@ -1,82 +1,82 @@
-'use client'
+'use client';
 
-import { useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
-import { useAuth } from '@/hooks/useAuth'
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import { routes } from '@/config/routes'
-import ErrorMessage from '@/components/shared/ErrorMessage'
-import SuccessMessage from '@/components/shared/SuccessMessage'
+import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import { routes } from '@/config/routes';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 
-import DiscordSVG from 'public/icons/discord2.svg'
+import DiscordSVG from 'public/icons/discord2.svg';
 
 // Pages that should redirect to user dashboard after login
-const PUBLIC_LISTING_PAGES = ['/', '/events']
+const PUBLIC_LISTING_PAGES = ['/', '/events'];
 
 // Determine the final redirect destination after login
 function getPostLoginRedirect(redirectTo: string | null): string {
   // If no explicit redirect or it's a public listing page, go to user dashboard
   if (!redirectTo || PUBLIC_LISTING_PAGES.includes(redirectTo)) {
-    return '/account/events'
+    return '/account/events';
   }
-  
+
   // Otherwise, return to the requested page (specific album, event, etc.)
-  return redirectTo
+  return redirectTo;
 }
 
 function LoginForm() {
-  const searchParams = useSearchParams()
-  const redirectToParam = searchParams.get('redirectTo')
-  const verified = searchParams.get('verified')
-  const finalRedirect = getPostLoginRedirect(redirectToParam)
+  const searchParams = useSearchParams();
+  const redirectToParam = searchParams.get('redirectTo');
+  const verified = searchParams.get('verified');
+  const finalRedirect = getPostLoginRedirect(redirectToParam);
 
-  const { signInWithEmail, signInWithGoogle, signInWithDiscord } = useAuth()
+  const { signInWithEmail, signInWithGoogle, signInWithDiscord } = useAuth();
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    const { error } = await signInWithEmail(email, password)
+    const { error } = await signInWithEmail(email, password);
 
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     } else {
-      window.location.href = finalRedirect
+      window.location.href = finalRedirect;
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     // Pass the original param so auth-callback can apply its own logic
-    const { error } = await signInWithGoogle(redirectToParam || undefined)
+    const { error } = await signInWithGoogle(redirectToParam || undefined);
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDiscordSignIn = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     // Pass the original param so auth-callback can apply its own logic
-    const { error } = await signInWithDiscord(redirectToParam || undefined)
+    const { error } = await signInWithDiscord(redirectToParam || undefined);
     if (error) {
-      setError(error.message)
-      setIsLoading(false)
+      setError(error.message);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <PageContainer className="items-center justify-center">
@@ -207,7 +207,7 @@ function LoginForm() {
         </p>
       </Container>
     </PageContainer>
-  )
+  );
 }
 
 export default function LoginClient() {
@@ -215,6 +215,5 @@ export default function LoginClient() {
     <Suspense fallback={<PageContainer><Container><p>Loading...</p></Container></PageContainer>}>
       <LoginForm />
     </Suspense>
-  )
+  );
 }
-

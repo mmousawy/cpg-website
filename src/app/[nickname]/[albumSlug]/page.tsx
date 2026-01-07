@@ -1,41 +1,41 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { createPublicClient } from '@/utils/supabase/server'
-import AlbumFullSizeGallery from '@/components/album/AlbumFullSizeGallery'
-import Comments from '@/components/shared/Comments'
-import Avatar from '@/components/auth/Avatar'
-import PageContainer from '@/components/layout/PageContainer'
-import AlbumModerationPanel from '@/components/admin/AlbumModerationPanel'
-import type { AlbumWithPhotos } from '@/types/albums'
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { createPublicClient } from '@/utils/supabase/server';
+import AlbumFullSizeGallery from '@/components/album/AlbumFullSizeGallery';
+import Comments from '@/components/shared/Comments';
+import Avatar from '@/components/auth/Avatar';
+import PageContainer from '@/components/layout/PageContainer';
+import AlbumModerationPanel from '@/components/admin/AlbumModerationPanel';
+import type { AlbumWithPhotos } from '@/types/albums';
 
 // Cache indefinitely - revalidated on-demand when data changes
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
-  const resolvedParams = await params
+  const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
-  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '')
-  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
-  const albumSlug = resolvedParams?.albumSlug || ''
+  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
+  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
+  const albumSlug = resolvedParams?.albumSlug || '';
 
   if (!nickname || !albumSlug) {
     return {
       title: 'Album Not Found',
-    }
+    };
   }
 
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   // First get the user by nickname
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
     .eq('nickname', nickname)
-    .single()
+    .single();
 
   if (!profile) {
     return {
       title: 'Album Not Found',
-    }
+    };
   }
 
   const { data: album } = await supabase
@@ -44,38 +44,38 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
     .eq('is_public', true)
-    .single()
+    .single();
 
   if (!album) {
     return {
       title: 'Album Not Found',
-    }
+    };
   }
 
   return {
     title: `${album.title} by @${nickname}`,
     description: album.description || `Photo album "${album.title}" by @${nickname}`,
-  }
+  };
 }
 
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
-  const resolvedParams = await params
+  const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
-  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '')
-  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname
-  const albumSlug = resolvedParams?.albumSlug || ''
+  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
+  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
+  const albumSlug = resolvedParams?.albumSlug || '';
 
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   // First get the user by nickname
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
     .eq('nickname', nickname)
-    .single()
+    .single();
 
   if (profileError || !profile) {
-    notFound()
+    notFound();
   }
 
   // Single query for album with photos and moderation data
@@ -104,21 +104,21 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
     .eq('is_public', true)
-    .single()
+    .single();
 
   if (error || !album) {
     notFound();
   }
-  
+
   const moderationData = {
     is_suspended: (album as any)?.is_suspended || false,
     suspension_reason: (album as any)?.suspension_reason || null,
-  }
+  };
 
-  const albumWithPhotos = album as unknown as AlbumWithPhotos
+  const albumWithPhotos = album as unknown as AlbumWithPhotos;
 
   // Sort photos by sort_order
-  const sortedPhotos = [...albumWithPhotos.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  const sortedPhotos = [...albumWithPhotos.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   return (
     <>
@@ -126,7 +126,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
         {/* Album Header */}
         <div className="mb-8">
           <h1 className="mb-4 text-3xl font-bold">{albumWithPhotos.title}</h1>
-          <Link 
+          <Link
             href={albumWithPhotos.profile?.nickname ? `/@${albumWithPhotos.profile.nickname}` : '#'}
             className="mb-4 flex items-center gap-3 w-fit group rounded-lg"
           >
@@ -177,10 +177,10 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
           />
         </div>
       </PageContainer>
-      
+
       <PageContainer variant="alt" className="border-t border-t-border-color">
         <Comments albumId={albumWithPhotos.id} />
       </PageContainer>
     </>
-  )
+  );
 }

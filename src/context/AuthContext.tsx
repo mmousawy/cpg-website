@@ -29,25 +29,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const currentUserIdRef = useRef<string | null>(null);
   const fetchingProfileRef = useRef<string | null>(null);
   const lastLoggedInUpdatedRef = useRef<string | null>(null);
-  
+
   const isAdmin = useMemo(() => !!profile?.is_admin, [profile]);
 
   const fetchProfile = useCallback(async (userId: string, force = false) => {
     if (!force && fetchingProfileRef.current === userId) return null;
-    
+
     fetchingProfileRef.current = userId;
-    
+
     try {
       const { data, error } = await createClient()
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      
+
       setProfile(error ? null : data);
       return data;
     } catch {
@@ -69,24 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     const supabase = createClient();
-    
+
     const updateLastLoggedIn = (userId: string): void => {
       if (lastLoggedInUpdatedRef.current === userId) return;
       lastLoggedInUpdatedRef.current = userId;
       // Fire and forget - don't block auth flow if this fails
       supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => {});
     };
-    
+
     // Initialize session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
-      
+
       const userId = session?.user?.id ?? null;
       setUser(session?.user ?? null);
       setSession(session);
       currentUserIdRef.current = userId;
       setIsLoading(false);
-      
+
       if (userId) {
         updateLastLoggedIn(userId);
         fetchProfile(userId);
@@ -94,18 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }).catch(() => {
       if (mounted) setIsLoading(false);
     });
-    
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted || event === 'INITIAL_SESSION') return;
-      
+
       const userId = session?.user?.id ?? null;
       const userChanged = userId !== currentUserIdRef.current;
-      
+
       setUser(session?.user ?? null);
       setSession(session);
       currentUserIdRef.current = userId;
-      
+
       if (userChanged) {
         if (userId) {
           if (event === 'SIGNED_IN') {
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     });
-    
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -162,13 +162,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nickname: metadata?.nickname,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         return { error: { message: data.message || 'Failed to create account' } };
       }
-      
+
       return { error: null };
     } catch {
       return { error: { message: 'An unexpected error occurred' } };
@@ -182,13 +182,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         return { error: { message: data.message || 'Failed to send reset email' } };
       }
-      
+
       return { error: null };
     } catch {
       return { error: { message: 'An unexpected error occurred' } };
@@ -203,10 +203,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({
     user, session, profile, isLoading, isAdmin, refreshProfile,
     signOut, signInWithGoogle, signInWithDiscord, signInWithEmail,
-    signUpWithEmail, resetPassword, updatePassword
+    signUpWithEmail, resetPassword, updatePassword,
   }), [user, session, profile, isLoading, isAdmin, refreshProfile, signOut,
-      signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail,
-      resetPassword, updatePassword]);
+    signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail,
+    resetPassword, updatePassword]);
 
   return (
     <AuthContext.Provider value={value}>

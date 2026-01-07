@@ -1,8 +1,8 @@
-import Link from 'next/link'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import { routes } from '@/config/routes'
-import ArrowLink from './ArrowLink'
+import Link from 'next/link';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import { routes } from '@/config/routes';
+import ArrowLink from './ArrowLink';
 
 interface JavaScriptRequiredProps {
   /** Additional CSS class to hide JS content when noscript is active */
@@ -11,11 +11,11 @@ interface JavaScriptRequiredProps {
 
 /**
  * A reusable component that displays a friendly message when JavaScript is disabled.
- * 
+ *
  * Usage:
  * 1. Wrap your client component in a div with the contentClass
  * 2. Place this component as a sibling (it renders a <noscript> tag)
- * 
+ *
  * Example:
  * ```tsx
  * <JavaScriptRequired contentClass="js-content" />
@@ -43,6 +43,5 @@ export default function JavaScriptRequired({ contentClass = 'js-content' }: Java
         </Container>
       </PageContainer>
     </noscript>
-  )
+  );
 }
-

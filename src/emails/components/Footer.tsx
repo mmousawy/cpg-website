@@ -15,5 +15,5 @@ export default function Footer({ fullName }: { fullName: string }) {
         this email to get in touch with us.
       </Text>
     </>
-  )
+  );
 }

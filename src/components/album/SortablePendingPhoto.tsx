@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 interface SortablePendingPhotoProps {
   file: File
@@ -46,6 +46,6 @@ const SortablePendingPhoto: React.FC<SortablePendingPhotoProps> = ({
       </div>
     </div>
   </div>
-)
+);
 
-export default SortablePendingPhoto
+export default SortablePendingPhoto;

@@ -43,6 +43,6 @@ export const routes = {
     label: 'Admin',
     url: '/admin',
   },
-} as const
+} as const;
 
 export type RouteKey = keyof typeof routes

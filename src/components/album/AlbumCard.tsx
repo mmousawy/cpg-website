@@ -1,9 +1,9 @@
-import Link from 'next/link'
-import Image from 'next/image'
+import Link from 'next/link';
+import Image from 'next/image';
 
-import type { AlbumWithPhotos } from '@/types/albums'
+import type { AlbumWithPhotos } from '@/types/albums';
 
-import Avatar from '../auth/Avatar'
+import Avatar from '../auth/Avatar';
 
 export type AlbumCardVariant = 'large' | 'compact'
 
@@ -14,12 +14,12 @@ type AlbumCardProps = {
 }
 
 export default function AlbumCard({ album, isOwner = false, variant = 'large' }: AlbumCardProps) {
-  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || '/placeholder-album.jpg'
-  const photoCount = album.photos?.length || 0
+  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || '/placeholder-album.jpg';
+  const photoCount = album.photos?.length || 0;
 
   const albumUrl = isOwner
     ? `/account/galleries/${album.slug}`
-    : `/@${album.profile?.nickname || 'unknown'}/${album.slug}`
+    : `/@${album.profile?.nickname || 'unknown'}/${album.slug}`;
 
   return (
     <Link href={albumUrl} className="group block rounded-lg">
@@ -34,39 +34,39 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large' }:
             fill
             className="object-cover transition-transform duration-200"
           />
-          
+
           {/* Compact variant: hover overlays */}
           {variant === 'compact' && (
             <>
               {/* Top blur layer with gradient mask */}
-              <div 
+              <div
                 className="absolute inset-x-0 top-0 h-24 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
-                style={{ 
+                style={{
                   WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-                  maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
+                  maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
                 }}
               />
               {/* Top gradient overlay */}
               <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
-              
+
               {/* Bottom blur layer with gradient mask */}
-              <div 
+              <div
                 className="absolute inset-x-0 bottom-0 h-24 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
-                style={{ 
+                style={{
                   WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
-                  maskImage: 'linear-gradient(to top, black 0%, transparent 100%)'
+                  maskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
                 }}
               />
               {/* Bottom gradient overlay */}
               <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
-              
+
               {/* Title - top left, visible on hover */}
               <div className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
                 <h3 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md">
                   {album.title}
                 </h3>
               </div>
-              
+
               {/* Bottom info bar - visible on hover */}
               <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
                 {/* Nickname - bottom left */}
@@ -76,7 +76,7 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large' }:
                     <span>@{album.profile.nickname}</span>
                   </div>
                 )}
-                
+
                 {/* Photo count - bottom right */}
                 {photoCount > 0 && (
                   <div className="text-xs text-white/90">
@@ -86,7 +86,7 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large' }:
               </div>
             </>
           )}
-          
+
           {/* Private badge - on image for compact variant */}
           {variant === 'compact' && !album.is_public && isOwner && (
             <div className="absolute top-2 right-2">
@@ -123,5 +123,5 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large' }:
         )}
       </div>
     </Link>
-  )
+  );
 }

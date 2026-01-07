@@ -29,7 +29,7 @@ export default function LoadingSpinner({ size = 'md', centered = false, classNam
       className={clsx(
         'animate-spin rounded-full border-2 border-primary border-t-transparent',
         sizeClasses[size],
-        className
+        className,
       )}
     />
   );

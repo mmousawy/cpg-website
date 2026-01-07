@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import { useAuth } from '@/hooks/useAuth'
-import clsx from 'clsx'
+import Image from 'next/image';
+import { useAuth } from '@/hooks/useAuth';
+import { useMounted } from '@/hooks/useMounted';
+import clsx from 'clsx';
 
 type AvatarProps = {
   // For static mode: provide user data directly
@@ -22,39 +22,35 @@ const SIZE_MAP = {
   md: { wrapper: 'w-12 h-12', icon: 'w-6 h-6', fontSize: 24 },
   lg: { wrapper: 'w-16 h-16', icon: 'w-8 h-8', fontSize: 32 },
   xl: { wrapper: 'w-24 h-24', icon: 'w-12 h-12', fontSize: 48 },
-} as const
+} as const;
 
 export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, size = 'md', className, hoverEffect = false }: AvatarProps) {
-  const { user, profile, isLoading } = useAuth()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const { user, profile, isLoading } = useAuth();
+  const mounted = useMounted();
 
   // Determine if we're in static mode (props provided) or dynamic mode (using current user)
-  const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined
+  const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined;
 
   // Get size config
-  const sizeConfig = SIZE_MAP[size]
+  const sizeConfig = SIZE_MAP[size];
 
   // Get avatar data - profile.avatar_url is the single source of truth
-  const avatarUrl = isStaticMode ? staticAvatarUrl : profile?.avatar_url
-  const fullName = isStaticMode ? staticFullName : profile?.full_name
+  const avatarUrl = isStaticMode ? staticAvatarUrl : profile?.avatar_url;
+  const fullName = isStaticMode ? staticFullName : profile?.full_name;
 
   // For initials, also check user email as fallback
   const initials = fullName
     ? fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : (user?.email?.slice(0, 2).toUpperCase()) || null
+    : (user?.email?.slice(0, 2).toUpperCase()) || null;
 
   // Loading state (dynamic mode only, and only after JS mounts)
   // Without JS: mounted stays false, so we skip loading and show fallback icon
-  const showLoading = mounted && !isStaticMode && isLoading
+  const showLoading = mounted && !isStaticMode && isLoading;
 
   // Render content based on state
   const renderContent = () => {
     if (showLoading) {
-      return <div className="w-full h-full animate-pulse bg-border-color" />
+      return <div className="w-full h-full animate-pulse bg-border-color" />;
     }
 
     if (avatarUrl) {
@@ -69,18 +65,18 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
           quality={95}
           className="object-cover w-full h-full"
         />
-      )
+      );
     }
 
     if (initials) {
       return (
-        <div 
+        <div
           className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none"
           style={{ fontSize: sizeConfig.fontSize * 0.875 }}
         >
           {initials}
         </div>
-      )
+      );
     }
 
     // Fallback: person icon
@@ -90,12 +86,12 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
         </svg>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className={clsx("relative overflow-hidden rounded-full shrink-0", sizeConfig.wrapper, className)}>
-      {hoverEffect && 
+      {hoverEffect &&
         <div className="z-10 rounded-full absolute w-full h-full shadow-[inset_0_0_0_2px_var(--primary),inset_0_0_0_2.5px_#00000030] scale-130 group-focus-visible:scale-100 group-hover:scale-100 transition-all duration-200" />
       }
       {renderContent()}
@@ -103,5 +99,5 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
         <div className="z-10 rounded-full absolute w-full h-full border-2 border-primary bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200" />
       )}
     </div>
-  )
+  );
 }

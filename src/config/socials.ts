@@ -1,6 +1,6 @@
-import DiscordSVG from 'public/icons/discord.svg'
-import InstagramSVG from 'public/icons/instagram.svg'
-import WhatsAppSVG from 'public/icons/whatsapp.svg'
+import DiscordSVG from 'public/icons/discord.svg';
+import InstagramSVG from 'public/icons/instagram.svg';
+import WhatsAppSVG from 'public/icons/whatsapp.svg';
 
 export type SocialLink = {
   name: string
@@ -36,5 +36,4 @@ export const socialLinks: SocialLink[] = [
     handle: 'Join the chat',
     description: 'meetup updates & practical info',
   },
-]
-
+];

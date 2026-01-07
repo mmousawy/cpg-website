@@ -1,7 +1,7 @@
-import React from 'react'
-import type { ChangeEvent, KeyboardEvent } from 'react'
-import Button from '../shared/Button'
-import Container from '../layout/Container'
+import React from 'react';
+import type { ChangeEvent, KeyboardEvent } from 'react';
+import Button from '../shared/Button';
+import Container from '../layout/Container';
 
 interface AlbumDetailsFormProps {
   title: string
@@ -139,6 +139,6 @@ const AlbumDetailsForm: React.FC<AlbumDetailsFormProps> = ({
       </Button>
     </div>
   </Container>
-)
+);
 
-export default AlbumDetailsForm
+export default AlbumDetailsForm;

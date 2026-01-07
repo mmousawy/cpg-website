@@ -1,74 +1,74 @@
-'use client'
+'use client';
 
-import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import Button from '@/components/shared/Button'
-import Container from '@/components/layout/Container'
-import PageContainer from '@/components/layout/PageContainer'
-import ErrorMessage from '@/components/shared/ErrorMessage'
-import { routes } from '@/config/routes'
+import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import { routes } from '@/config/routes';
 
-import CheckSVG from 'public/icons/check.svg'
+import CheckSVG from 'public/icons/check.svg';
 
 function ResetPasswordForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  
-  const token = searchParams.get('token')
-  const email = searchParams.get('email')
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const token = searchParams.get('token');
+  const email = searchParams.get('email');
+
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // Check if we have a valid token
-  const hasToken = Boolean(token && email)
+  const hasToken = Boolean(token && email);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+      setError('Passwords do not match');
+      return;
     }
 
     if (!token || !email) {
-      setError('Invalid reset link')
-      return
+      setError('Invalid reset link');
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, email, password }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || 'Failed to reset password')
-        setIsLoading(false)
-        return
+        setError(data.message || 'Failed to reset password');
+        setIsLoading(false);
+        return;
       }
 
-      setSuccess(true)
-      setIsLoading(false)
+      setSuccess(true);
+      setIsLoading(false);
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+        router.push('/login');
+      }, 2000);
     } catch {
-      setError('An unexpected error occurred')
-      setIsLoading(false)
+      setError('An unexpected error occurred');
+      setIsLoading(false);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -83,7 +83,7 @@ function ResetPasswordForm() {
           </p>
         </Container>
       </PageContainer>
-    )
+    );
   }
 
   if (!hasToken) {
@@ -99,7 +99,7 @@ function ResetPasswordForm() {
           </Button>
         </Container>
       </PageContainer>
-    )
+    );
   }
 
   return (
@@ -158,7 +158,7 @@ function ResetPasswordForm() {
         </form>
       </Container>
     </PageContainer>
-  )
+  );
 }
 
 export default function ResetPasswordClient() {
@@ -166,6 +166,5 @@ export default function ResetPasswordClient() {
     <Suspense fallback={<PageContainer><Container><p>Loading...</p></Container></PageContainer>}>
       <ResetPasswordForm />
     </Suspense>
-  )
+  );
 }
-

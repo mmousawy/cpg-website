@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import PageLoading from '@/components/shared/PageLoading'
-import PageContainer from '@/components/layout/PageContainer'
+import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import PageLoading from '@/components/shared/PageLoading';
+import PageContainer from '@/components/layout/PageContainer';
 
 type ProtectedRouteProps = {
   children: React.ReactNode
@@ -20,55 +20,55 @@ type ProtectedRouteProps = {
  * Wrapper component for protected routes.
  * Handles authentication checking, loading states, and redirects.
  * Also redirects users without a nickname to the onboarding page.
- * 
+ *
  * Usage in layout.tsx:
  * ```tsx
  * import ProtectedRoute from '@/components/auth/ProtectedRoute'
- * 
+ *
  * export default function AccountLayout({ children }) {
  *   return <ProtectedRoute>{children}</ProtectedRoute>
  * }
  * ```
  */
-export default function ProtectedRoute({ 
-  children, 
+export default function ProtectedRoute({
+  children,
   requireAdmin = false,
   redirectTo = '/login',
-  skipOnboardingCheck = false
+  skipOnboardingCheck = false,
 }: ProtectedRouteProps) {
-  const { user, profile, isAdmin, isLoading } = useAuth()
-  const router = useRouter()
-  const pathname = usePathname()
+  const { user, profile, isAdmin, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (isLoading) return
+    if (isLoading) return;
 
     if (!user) {
-      const currentPath = window.location.pathname
-      router.push(`${redirectTo}?redirectTo=${encodeURIComponent(currentPath)}`)
-      return
+      const currentPath = window.location.pathname;
+      router.push(`${redirectTo}?redirectTo=${encodeURIComponent(currentPath)}`);
+      return;
     }
 
     // Check if user needs to complete onboarding (no nickname set)
     // Skip this check if we're already on the onboarding page or if skipOnboardingCheck is true
     if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
-      router.push('/onboarding')
-      return
+      router.push('/onboarding');
+      return;
     }
 
     if (requireAdmin && !isAdmin) {
-      router.push('/')
+      router.push('/');
     }
-  }, [user, profile, isAdmin, isLoading, requireAdmin, redirectTo, router, skipOnboardingCheck, pathname])
+  }, [user, profile, isAdmin, isLoading, requireAdmin, redirectTo, router, skipOnboardingCheck, pathname]);
 
   // Show loading while checking auth or redirecting
   if (isLoading || !user) {
-    return <PageLoading />
+    return <PageLoading />;
   }
 
   // Show loading while redirecting to onboarding
   if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
-    return <PageLoading />
+    return <PageLoading />;
   }
 
   // Check admin access
@@ -80,9 +80,8 @@ export default function ProtectedRoute({
           <p className="text-foreground/70">You don&apos;t have permission to access this page.</p>
         </div>
       </PageContainer>
-    )
+    );
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
-

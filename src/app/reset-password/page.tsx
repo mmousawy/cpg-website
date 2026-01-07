@@ -1,5 +1,5 @@
-import JavaScriptRequired from '@/components/shared/JavaScriptRequired'
-import ResetPasswordClient from './ResetPasswordClient'
+import JavaScriptRequired from '@/components/shared/JavaScriptRequired';
+import ResetPasswordClient from './ResetPasswordClient';
 
 export default function ResetPasswordPage() {
   return (
@@ -9,5 +9,5 @@ export default function ResetPasswordPage() {
         <ResetPasswordClient />
       </div>
     </>
-  )
+  );
 }

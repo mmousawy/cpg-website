@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { createPublicClient } from '@/utils/supabase/server'
+import Link from 'next/link';
+import Image from 'next/image';
+import { createPublicClient } from '@/utils/supabase/server';
 
 // Hero images - using URL paths instead of static imports to avoid bundling blur placeholders
 const heroImages = [
@@ -11,41 +11,41 @@ const heroImages = [
   '/gallery/home-hero5.jpg',
   '/gallery/home-hero6.jpg',
   '/gallery/home-hero7.jpg',
-]
+];
 
 function getHeroImage() {
   const index = Math.floor(Math.random() * heroImages.length);
-  return heroImages[index]
+  return heroImages[index];
 }
 
-import PageContainer from '@/components/layout/PageContainer'
-import Container from '@/components/layout/Container'
-import RecentEventsList from '@/components/events/RecentEventsList'
-import AlbumGrid from '@/components/album/AlbumGrid'
-import Avatar from '@/components/auth/Avatar'
-import Button from '@/components/shared/Button'
-import ArrowLink from '@/components/shared/ArrowLink'
-import ActivitiesSlider from '@/components/shared/ActivitiesSlider'
-import { socialLinks } from '@/config/socials'
-import type { AlbumWithPhotos } from '@/types/albums'
+import PageContainer from '@/components/layout/PageContainer';
+import Container from '@/components/layout/Container';
+import RecentEventsList from '@/components/events/RecentEventsList';
+import AlbumGrid from '@/components/album/AlbumGrid';
+import Avatar from '@/components/auth/Avatar';
+import Button from '@/components/shared/Button';
+import ArrowLink from '@/components/shared/ArrowLink';
+import ActivitiesSlider from '@/components/shared/ActivitiesSlider';
+import { socialLinks } from '@/config/socials';
+import type { AlbumWithPhotos } from '@/types/albums';
 
-import DiscordSVG from 'public/icons/discord.svg'
-import InstagramSVG from 'public/icons/instagram.svg'
-import WhatsAppSVG from 'public/icons/whatsapp.svg'
-import CameraWithFlash from 'public/camera-with-flash.png'
+import DiscordSVG from 'public/icons/discord.svg';
+import InstagramSVG from 'public/icons/instagram.svg';
+import WhatsAppSVG from 'public/icons/whatsapp.svg';
+import CameraWithFlash from 'public/camera-with-flash.png';
 
 // Map for social icons
 const socialIconMap: Record<string, typeof DiscordSVG> = {
   Discord: DiscordSVG,
   Instagram: InstagramSVG,
   WhatsApp: WhatsAppSVG,
-}
+};
 
 // Revalidate every 60 seconds
 // Cache indefinitely - revalidated on-demand when data changes
 
 export default async function Home() {
-  const supabase = createPublicClient()
+  const supabase = createPublicClient();
 
   // Fetch all data in parallel for faster page load and no-JS compatibility
   const [
@@ -90,9 +90,9 @@ export default async function Home() {
       .select('id, title, date, location, time, cover_image, image_url, slug')
       .order('date', { ascending: false })
       .limit(3),
-  ])
+  ]);
 
-  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[]
+  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
 
   return (
     <>
@@ -108,13 +108,13 @@ export default async function Home() {
           sizes="60vw"
           quality={95}
         />
-        
+
         {/* Frosted glass blur layer - starts higher on desktop */}
         <div className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong" />
-        
+
         {/* Gradient overlay */}
         <div className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong" />
-        
+
         {/* Content overlay */}
         <div className="absolute inset-x-0 bottom-0 pb-4 px-4 sm:px-8 sm:pb-0">
           <div className="mx-auto max-w-screen-md text-center">
@@ -132,14 +132,14 @@ export default async function Home() {
       <PageContainer innerClassName="space-y-8">
         <Container>
           <h2 className="text-2xl font-bold mb-4">What&apos;s Creative Photography Group?</h2>
-          
+
           <p className="max-w-[50ch] text-foreground/90 leading-relaxed mb-4">
-            We are a community of photographers who love to create and share our work with others. 
-            Our goal is to inspire and support each other in our photographic journeys. 
+            We are a community of photographers who love to create and share our work with others.
+            Our goal is to inspire and support each other in our photographic journeys.
             We welcome photographers of all skill levels and backgrounds to join us!
           </p>
           <p className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6">
-            Join our community for monthly meetups, photo challenges, skill-sharing talks, and more. 
+            Join our community for monthly meetups, photo challenges, skill-sharing talks, and more.
             Whether you&apos;re just starting out or have been shooting for years, you&apos;ll find a welcoming space here.
           </p>
 
@@ -147,7 +147,7 @@ export default async function Home() {
             <h3 className="text-lg font-semibold mb-4">Connect with us</h3>
             <div className="flex flex-wrap gap-3">
               {socialLinks.map((social) => {
-                const Icon = socialIconMap[social.name]
+                const Icon = socialIconMap[social.name];
                 return (
                   <a
                     key={social.name}
@@ -155,7 +155,7 @@ export default async function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-2 text-sm font-medium font-[family-name:var(--font-geist-mono)] text-foreground transition-colors hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
-                    style={{ 
+                    style={{
                       '--hover-color': social.color,
                       '--hover-bg': `${social.color}15`,
                     } as React.CSSProperties}
@@ -163,7 +163,7 @@ export default async function Home() {
                     <Icon className="size-6 shrink-0 transition-colors group-hover:fill-[var(--hover-color)]" />
                     <span>{social.name}</span>
                   </a>
-                )
+                );
               })}
             </div>
           </div>
@@ -177,10 +177,10 @@ export default async function Home() {
         </div>
       </div>
 
-        {/* Explore Section - Events & Galleries */}
+      {/* Explore Section - Events & Galleries */}
       <PageContainer innerClassName='space-y-6 md:space-y-8'>
         <Container>
-          <h2 className="text-2xl font-bold mb-4">Explore what we're up to</h2>
+          <h2 className="text-2xl font-bold mb-4">Explore what we&apos;re up to</h2>
           <p className="text-foreground/90 leading-relaxed mb-8">
             Join our meetups and discover photos from the community.
           </p>
@@ -206,7 +206,6 @@ export default async function Home() {
           )}
         </Container>
 
-      
         <Container>
           <h2 className="text-2xl font-bold mb-4">Meet the community</h2>
           <p className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6">
@@ -281,5 +280,5 @@ export default async function Home() {
         </Container>
       </PageContainer>
     </>
-  )
+  );
 }

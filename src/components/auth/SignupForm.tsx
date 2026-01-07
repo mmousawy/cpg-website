@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useCallback, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -75,7 +75,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       setIsCanceling(false);
       setError('An error occurred while canceling your RSVP');
     }
-  }, [event, user, rsvpUuid, onRSVPChange, modalContext]);
+  }, [event, user, rsvpUuid, onRSVPChange]);
 
   const submitForm = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -113,7 +113,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
     if (data.message) {
       setError(data.message);
     }
-  }, [event, user]);
+  }, [event, user, onRSVPChange]);
 
   if (!event) {
     return null;
@@ -173,7 +173,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
           onSubmit={submitForm}
           className={clsx([
             "flex flex-col gap-4 transition-opacity",
-            isSubmitting && "pointer-events-none opacity-50"
+            isSubmitting && "pointer-events-none opacity-50",
           ])}
         >
           <div className='flex gap-2 rounded-md bg-foreground/5 p-4 font-semibold leading-6 text-foreground'>

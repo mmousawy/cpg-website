@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath } from 'next/cache'
-import { createClient } from '@/utils/supabase/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if user is admin
@@ -17,16 +17,16 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
-      .single()
+      .single();
 
     if (!profile?.is_admin) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { albumId } = await request.json()
+    const { albumId } = await request.json();
 
     if (!albumId) {
-      return NextResponse.json({ error: 'Album ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Album ID is required' }, { status: 400 });
     }
 
     // Unsuspend the album
@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
         suspended_by: null,
         suspension_reason: null,
       } as any)
-      .eq('id', albumId)
+      .eq('id', albumId);
 
     if (updateError) {
-      console.error('Error unsuspending album:', updateError)
-      return NextResponse.json({ error: 'Failed to unsuspend album' }, { status: 500 })
+      console.error('Error unsuspending album:', updateError);
+      return NextResponse.json({ error: 'Failed to unsuspend album' }, { status: 500 });
     }
 
     // Get album info for revalidation
@@ -51,26 +51,25 @@ export async function POST(request: NextRequest) {
       .from('albums')
       .select('slug, user_id')
       .eq('id', albumId)
-      .single()
+      .single();
 
     if (album) {
       const { data: owner } = await supabase
         .from('profiles')
         .select('nickname')
         .eq('id', album.user_id)
-        .single()
+        .single();
 
       if (owner?.nickname) {
-        revalidatePath(`/@${owner.nickname}/${album.slug}`)
-        revalidatePath(`/@${owner.nickname}`)
+        revalidatePath(`/@${owner.nickname}/${album.slug}`);
+        revalidatePath(`/@${owner.nickname}`);
       }
     }
-    revalidatePath('/galleries')
+    revalidatePath('/galleries');
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

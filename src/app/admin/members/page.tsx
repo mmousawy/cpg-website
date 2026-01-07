@@ -1,46 +1,46 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import clsx from 'clsx'
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import clsx from 'clsx';
 
-import type { Tables } from '@/database.types'
-import Button from '@/components/shared/Button'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import type { Tables } from '@/database.types';
+import Button from '@/components/shared/Button';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
-type Member = Pick<Tables<'profiles'>, 
-  | 'id' 
-  | 'email' 
-  | 'full_name' 
-  | 'nickname' 
-  | 'avatar_url' 
-  | 'is_admin' 
-  | 'created_at' 
-  | 'last_logged_in' 
-  | 'suspended_at' 
+type Member = Pick<Tables<'profiles'>,
+  | 'id'
+  | 'email'
+  | 'full_name'
+  | 'nickname'
+  | 'avatar_url'
+  | 'is_admin'
+  | 'created_at'
+  | 'last_logged_in'
+  | 'suspended_at'
   | 'suspended_reason'
 >
 
 type SortField = 'email' | 'full_name' | 'nickname' | 'created_at' | 'last_logged_in' | 'suspended_at'
 
 export default function AdminMembersPage() {
-  const [members, setMembers] = useState<Member[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all' | 'active' | 'suspended'>('all')
-  const [sortBy, setSortBy] = useState<SortField>('created_at')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [confirmDialog, setConfirmDialog] = useState<{ type: 'suspend' | 'delete' | 'unsuspend'; member: Member } | null>(null)
-  const [suspendReason, setSuspendReason] = useState('')
+  const [members, setMembers] = useState<Member[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [sortBy, setSortBy] = useState<SortField>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ type: 'suspend' | 'delete' | 'unsuspend'; member: Member } | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
 
   const fetchMembers = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       const params = new URLSearchParams({
@@ -50,59 +50,59 @@ export default function AdminMembersPage() {
         sortOrder,
         page: page.toString(),
         limit: '50',
-      })
+      });
 
-      const response = await fetch(`/api/admin/members?${params}`)
-      const data = await response.json()
+      const response = await fetch(`/api/admin/members?${params}`);
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch members')
+        throw new Error(data.error || 'Failed to fetch members');
       }
 
-      setMembers(data.members)
-      setTotalPages(data.totalPages)
-      setTotal(data.total)
+      setMembers(data.members);
+      setTotalPages(data.totalPages);
+      setTotal(data.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [search, filter, sortBy, sortOrder, page])
+  }, [search, filter, sortBy, sortOrder, page]);
 
   useEffect(() => {
-    fetchMembers()
-  }, [fetchMembers])
+    fetchMembers();
+  }, [fetchMembers]);
 
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPage(1)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [search])
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortBy(field)
-      setSortOrder('desc')
+      setSortBy(field);
+      setSortOrder('desc');
     }
-    setPage(1)
-  }
+    setPage(1);
+  };
 
   const handleAction = async (action: 'suspend' | 'unsuspend' | 'delete', member: Member) => {
-    setActionLoading(member.id)
+    setActionLoading(member.id);
 
     try {
       if (action === 'delete') {
         const response = await fetch(`/api/admin/members?userId=${member.id}`, {
           method: 'DELETE',
-        })
+        });
 
         if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || 'Failed to delete user')
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to delete user');
         }
       } else {
         const response = await fetch('/api/admin/members', {
@@ -113,44 +113,44 @@ export default function AdminMembersPage() {
             action,
             reason: action === 'suspend' ? suspendReason : undefined,
           }),
-        })
+        });
 
         if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || `Failed to ${action} user`)
+          const data = await response.json();
+          throw new Error(data.error || `Failed to ${action} user`);
         }
       }
 
       // Refresh the list
-      await fetchMembers()
-      setConfirmDialog(null)
-      setSuspendReason('')
+      await fetchMembers();
+      setConfirmDialog(null);
+      setSuspendReason('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return '—'
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    })
-  }
+    });
+  };
 
   const formatDateTime = (dateString: string | null) => {
-    if (!dateString) return '—'
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
-  }
+    });
+  };
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortBy !== field) {
@@ -158,7 +158,7 @@ export default function AdminMembersPage() {
         <svg className="ml-1 h-4 w-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
         </svg>
-      )
+      );
     }
     return sortOrder === 'asc' ? (
       <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,8 +168,8 @@ export default function AdminMembersPage() {
       <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
-    )
-  }
+    );
+  };
 
   return (
     <div className="bg-background px-4 py-8">
@@ -200,8 +200,8 @@ export default function AdminMembersPage() {
           <select
             value={filter}
             onChange={(e) => {
-              setFilter(e.target.value as 'all' | 'active' | 'suspended')
-              setPage(1)
+              setFilter(e.target.value as 'all' | 'active' | 'suspended');
+              setPage(1);
             }}
             className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm font-[family-name:var(--font-geist-sans)] focus:border-primary focus:outline-none"
           >
@@ -237,7 +237,7 @@ export default function AdminMembersPage() {
             <thead className="border-b border-border-color bg-background text-xs uppercase text-foreground/60">
               <tr>
                 <th className="px-4 py-3">Member</th>
-                <th 
+                <th
                   className="cursor-pointer px-4 py-3 hover:text-foreground"
                   onClick={() => handleSort('email')}
                 >
@@ -246,7 +246,7 @@ export default function AdminMembersPage() {
                     <SortIcon field="email" />
                   </div>
                 </th>
-                <th 
+                <th
                   className="cursor-pointer px-4 py-3 hover:text-foreground"
                   onClick={() => handleSort('nickname')}
                 >
@@ -255,7 +255,7 @@ export default function AdminMembersPage() {
                     <SortIcon field="nickname" />
                   </div>
                 </th>
-                <th 
+                <th
                   className="cursor-pointer px-4 py-3 hover:text-foreground"
                   onClick={() => handleSort('created_at')}
                 >
@@ -264,7 +264,7 @@ export default function AdminMembersPage() {
                     <SortIcon field="created_at" />
                   </div>
                 </th>
-                <th 
+                <th
                   className="cursor-pointer px-4 py-3 hover:text-foreground"
                   onClick={() => handleSort('last_logged_in')}
                 >
@@ -279,11 +279,11 @@ export default function AdminMembersPage() {
             </thead>
             <tbody className="divide-y divide-border-color">
               {members.map((member) => (
-                <tr 
-                  key={member.id} 
+                <tr
+                  key={member.id}
                   className={clsx(
                     'hover:bg-background/50',
-                    member.suspended_at && 'bg-red-500/5'
+                    member.suspended_at && 'bg-red-500/5',
                   )}
                 >
                   {/* Avatar + Name */}
@@ -325,7 +325,7 @@ export default function AdminMembersPage() {
                   {/* Nickname */}
                   <td className="whitespace-nowrap px-4 py-3">
                     {member.nickname ? (
-                      <Link 
+                      <Link
                         href={`/@${member.nickname}`}
                         className="text-primary hover:underline"
                         target="_blank"
@@ -485,8 +485,8 @@ export default function AdminMembersPage() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  setConfirmDialog(null)
-                  setSuspendReason('')
+                  setConfirmDialog(null);
+                  setSuspendReason('');
                 }}
                 disabled={actionLoading === confirmDialog.member.id}
               >
@@ -506,6 +506,5 @@ export default function AdminMembersPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

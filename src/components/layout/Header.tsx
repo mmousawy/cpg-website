@@ -1,28 +1,29 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import clsx from 'clsx'
-import LogoSVG from 'public/cpg-logo.svg'
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import clsx from 'clsx';
+import LogoSVG from 'public/cpg-logo.svg';
 
-import UserMenu from './UserMenu'
-import Avatar from '../auth/Avatar'
-import MobileMenu from './MobileMenu'
-import { routes } from '@/config/routes'
-import { useAuth } from '@/hooks/useAuth'
+import UserMenu from './UserMenu';
+import Avatar from '../auth/Avatar';
+import MobileMenu from './MobileMenu';
+import { routes } from '@/config/routes';
+import { useAuth } from '@/hooks/useAuth';
+import { useMounted } from '@/hooks/useMounted';
 
 // Navigation link component with active state
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  const pathname = usePathname()
-  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
+  const pathname = usePathname();
+  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   return (
     <Link
       href={href}
       className={clsx(
         "relative py-1 font-medium transition-colors hover:text-primary rounded",
-        isActive ? "text-primary" : "text-foreground"
+        isActive ? "text-primary" : "text-foreground",
       )}
     >
       {children}
@@ -30,18 +31,13 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
         <span className="absolute -bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />
       )}
     </Link>
-  )
+  );
 }
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const { profile } = useAuth()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mounted = useMounted();
+  const { profile } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-2 text-foreground shadow-md shadow-[#00000005]">
@@ -80,8 +76,8 @@ export default function Header() {
               className="flex items-center justify-center overflow-hidden rounded-full"
               aria-label="Open menu"
             >
-              <Avatar 
-                size="sm" 
+              <Avatar
+                size="sm"
                 avatarUrl={profile?.avatar_url}
                 fullName={profile?.full_name}
               />
@@ -92,7 +88,7 @@ export default function Header() {
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${mobileMenuOpen ? 'border-primary' : 'border-border-color hover:border-primary'
-                  }`}
+                }`}
                 aria-label="Toggle menu"
               >
                 <svg className="h-5 w-5 fill-foreground" viewBox="0 0 24 24">
@@ -110,5 +106,5 @@ export default function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }
