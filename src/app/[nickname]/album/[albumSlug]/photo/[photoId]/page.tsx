@@ -80,18 +80,27 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Get album
-  const { data: album, error: albumError } = await supabase
+  // Get album with photo count
+  const { data: albumData, error: albumError } = await supabase
     .from('albums')
-    .select('id, title, slug, description, cover_image_url')
+    .select('id, title, slug, description, cover_image_url, album_photos(count)')
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
     .eq('is_public', true)
     .single();
 
-  if (albumError || !album) {
+  if (albumError || !albumData) {
     notFound();
   }
+
+  const album = {
+    id: albumData.id,
+    title: albumData.title,
+    slug: albumData.slug,
+    description: albumData.description,
+    cover_image_url: albumData.cover_image_url,
+    photo_count: (albumData.album_photos as any)?.[0]?.count ?? 0,
+  };
 
   // Get photo (don't require is_public since it's part of a public album)
   const { data: photo, error: photoError } = await supabase
@@ -116,15 +125,25 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Get all albums this photo is in
-  const { data: albumPhotos } = await supabase
+  // Get all albums this photo is in (with photo counts)
+  const { data: albumPhotosData } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url)')
+    .select('album_id, albums(id, title, slug, cover_image_url, album_photos(count))')
     .eq('photo_id', photo.id);
 
-  const albums = (albumPhotos || [])
-    .map((ap) => ap.albums)
-    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null } => a !== null);
+  const albums = (albumPhotosData || [])
+    .map((ap) => {
+      const albumData = ap.albums as any;
+      if (!albumData) return null;
+      return {
+        id: albumData.id,
+        title: albumData.title,
+        slug: albumData.slug,
+        cover_image_url: albumData.cover_image_url,
+        photo_count: albumData.album_photos?.[0]?.count ?? 0,
+      };
+    })
+    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
 
   return (
     <PhotoPageContent

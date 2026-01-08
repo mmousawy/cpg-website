@@ -3,6 +3,7 @@
 import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
 import Image from 'next/image';
+import FolderSVG from 'public/icons/folder.svg';
 
 interface AlbumCardProps {
   album: AlbumWithPhotos;
@@ -15,13 +16,13 @@ export default function AlbumCard({
   isSelected = false,
   isHovered = false,
 }: AlbumCardProps) {
-  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || '/placeholder-album.jpg';
+  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url;
   const photoCount = album.photos?.length || 0;
 
   return (
     <div
       className={clsx(
-        'cursor-pointer overflow-hidden bg-background-light transition-all',
+        'cursor-pointer overflow-hidden bg-background-light transition-all border border-border-color',
         isSelected
           ? 'ring-2 ring-primary ring-offset-2'
           : isHovered
@@ -30,16 +31,20 @@ export default function AlbumCard({
       )}
     >
       {/* Cover image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-background">
-        <Image
-          src={coverImage}
-          alt={album.title}
-          fill
-          sizes="250px"
-          quality={85}
-          className="object-cover"
-          draggable={false}
-        />
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background">
+        {coverImage ? (
+          <Image
+            src={coverImage}
+            alt={album.title}
+            fill
+            sizes="250px"
+            quality={85}
+            className="object-cover"
+            draggable={false}
+          />
+        ) : (
+          <FolderSVG className="size-12 text-foreground/20" />
+        )}
 
         {/* Private badge */}
         {!album.is_public && (

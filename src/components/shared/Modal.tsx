@@ -9,12 +9,19 @@ import CloseSVG from "public/icons/close.svg";
 import { ModalContext } from "@/app/providers/ModalProvider";
 
 export default function Modal() {
-  const { isOpen, setIsOpen, title, content } = useContext(ModalContext);
+  const { isOpen, setIsOpen, title, content, size } = useContext(ModalContext);
   const modalRef = useRef<HTMLDialogElement>(null);
   const [isTrapped, setIsTrapped] = useState(false);
 
   const closeModal = () => {
     setIsOpen(false);
+  };
+
+  // Size-specific classes for the modal container
+  const sizeClasses = {
+    default: 'max-w-[30rem]',
+    large: 'max-w-6xl w-[90vw]',
+    fullscreen: 'max-w-[95vw] w-[95vw] max-h-[90vh]',
   };
 
   useEffect(() => {
@@ -79,10 +86,12 @@ export default function Modal() {
         <div
           className={clsx([
             isOpen ? "scale-100" : "scale-95",
-            "w-full max-w-[30rem]",
+            "w-full",
+            sizeClasses[size],
             "relative m-auto",
             "rounded-2xl border-[0.0625rem] border-border-color bg-background-light p-6 shadow-xl shadow-black/25",
             "transition-transform duration-300",
+            size === 'fullscreen' && "overflow-hidden",
           ])}
         >
           <button className="absolute right-6 top-6 rounded-full border border-border-color p-1 hover:bg-background" onClick={closeModal}>

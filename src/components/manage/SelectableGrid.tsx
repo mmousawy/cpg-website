@@ -130,7 +130,7 @@ function SortableItem<T>({
         data-no-select
         className={clsx('absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all cursor-pointer',
           showCheckbox
-            ? 'border-primary bg-primary text-white opacity-100 shadow-[0_0_0_1px_#0000005a]'
+            ? 'border-primary bg-primary text-white opacity-100 shadow-[0_0_0_2px_#ffffff8a]'
             : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a]',
         )}
         onClick={(e) => {
@@ -160,7 +160,7 @@ export default function SelectableGrid<T>({
   onSelectMultiple,
   onReorder,
   emptyMessage = 'No items yet.',
-  className = 'grid h-full gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] p-6 content-start select-none',
+  className = '',
   sortable = false,
 }: SelectableGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -465,7 +465,7 @@ export default function SelectableGrid<T>({
   const gridContent = (
     <div
       ref={containerRef}
-      className={`relative ${className}`}
+      className={`relative grid h-full gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] p-6 content-start select-none ${className}`}
       onClick={handleGridClick}
     >
       {items.map((item) => {

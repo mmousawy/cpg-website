@@ -87,38 +87,54 @@ function PhotoRows({
 }) {
   return (
     <div className="w-full">
-      {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="mb-1 flex gap-1 last:mb-0">
-          {row.items.map((item) => {
-            const thumbnailUrl = `${item.photo.url}?width=800&quality=80`;
-            // Link to album photo page if albumSlug provided, otherwise standalone photo page
-            const photoHref = albumSlug
-              ? `/@${profileNickname}/album/${albumSlug}/photo/${item.photo.id}`
-              : `/@${profileNickname}/photo/${item.photo.id}`;
+      {rows.map((row, rowIndex) => {
+        // If row has a constrained width (single portrait photo), center it
+        const isConstrained = row.width !== undefined;
 
-            return (
-              <Link
-                key={item.photo.id}
-                href={photoHref}
-                className="group relative block overflow-hidden bg-background-light transition-all hover:brightness-110"
-                style={{
-                  flexGrow: item.photo.aspectRatio,
-                  flexBasis: 0,
-                  aspectRatio: item.photo.aspectRatio,
-                }}
-              >
-                <Image
-                  src={thumbnailUrl}
-                  alt="Photo"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                />
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+        return (
+          <div
+            key={rowIndex}
+            className="mb-1 flex gap-1 last:mb-0"
+            style={isConstrained ? { justifyContent: 'center' } : undefined}
+          >
+            {row.items.map((item) => {
+              const thumbnailUrl = `${item.photo.url}?width=800&quality=80`;
+              // Link to album photo page if albumSlug provided, otherwise standalone photo page
+              const photoHref = albumSlug
+                ? `/@${profileNickname}/album/${albumSlug}/photo/${item.photo.id}`
+                : `/@${profileNickname}/photo/${item.photo.id}`;
+
+              return (
+                <Link
+                  key={item.photo.id}
+                  href={photoHref}
+                  className="group relative block overflow-hidden bg-background-light transition-all hover:brightness-110"
+                  style={
+                    isConstrained
+                      ? {
+                          width: item.displayWidth,
+                          height: item.displayHeight,
+                        }
+                      : {
+                          flexGrow: item.photo.aspectRatio,
+                          flexBasis: 0,
+                          aspectRatio: item.photo.aspectRatio,
+                        }
+                  }
+                >
+                  <Image
+                    src={thumbnailUrl}
+                    alt="Photo"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  />
+                </Link>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }

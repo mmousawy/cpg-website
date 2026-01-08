@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import FolderSVG from 'public/icons/folder.svg';
 
 import type { AlbumWithPhotos } from '@/types/albums';
 
@@ -16,7 +17,7 @@ type AlbumCardProps = {
 }
 
 export default function AlbumCard({ album, isOwner = false, variant = 'large', onClick }: AlbumCardProps) {
-  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || '/placeholder-album.jpg';
+  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url;
   const photoCount = album.photos?.length || 0;
 
   // When isOwner but no onClick, link to the unified photos page
@@ -27,16 +28,20 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
 
   const cardContent = (
     <div className="group block overflow-hidden border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong">
-      <div className="relative aspect-[4/3] overflow-hidden bg-background">
-        <Image
-          src={coverImage}
-          alt={album.title}
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 256px"
-          loading='eager'
-          quality={95}
-          fill
-          className="object-cover transition-transform duration-200"
-        />
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background">
+        {coverImage ? (
+          <Image
+            src={coverImage}
+            alt={album.title}
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 256px"
+            loading='eager'
+            quality={95}
+            fill
+            className="object-cover transition-transform duration-200"
+          />
+        ) : (
+          <FolderSVG className="size-16 text-foreground/20" />
+        )}
 
         {/* Compact variant: hover overlays */}
         {variant === 'compact' && (

@@ -16,6 +16,8 @@ export interface PhotoLayoutItem {
 export interface PhotoRow {
   items: PhotoLayoutItem[];
   height: number;
+  /** Width of the row (may be less than container for single portrait photos) */
+  width?: number;
 }
 
 export interface LayoutOptions {
@@ -80,7 +82,24 @@ export function calculateJustifiedLayout(
 
   const n = photoData.length;
 
-  // Special case: fewer photos than minimum per row
+  // Special case: single photo - limit height to prevent super tall images
+  if (n === 1) {
+    const photo = photoData[0];
+    const maxHeight = 450; // Max height for single photo
+    // Calculate width based on max height
+    const maxWidth = maxHeight * photo.aspectRatio;
+    // Use the smaller of container width or calculated max width
+    const effectiveWidth = Math.min(containerWidth, maxWidth);
+    const rowHeight = effectiveWidth / photo.aspectRatio;
+    const row = createRow(photoData, rowHeight, effectiveWidth);
+    // Mark row as narrower than container if applicable
+    if (effectiveWidth < containerWidth) {
+      row.width = effectiveWidth;
+    }
+    return [row];
+  }
+
+  // Special case: fewer photos than minimum per row (but more than 1)
   if (n < minPhotosPerRow) {
     const rowHeight = getRowHeight(
       photoData.map((p) => p.aspectRatio),

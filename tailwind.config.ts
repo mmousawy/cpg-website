@@ -20,6 +20,7 @@ export default {
         primary: 'var(--primary)',
         'primary-alt': 'var(--primary-alt)',
         background: "var(--background)",
+        'background-medium': "var(--background-medium)",
         'background-light': "var(--background-light)",
         foreground: "var(--foreground)",
         'border-color': "var(--border-color)",

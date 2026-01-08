@@ -10,6 +10,7 @@ interface Album {
   title: string;
   slug: string;
   cover_image_url?: string | null;
+  photo_count?: number;
 }
 
 interface Profile {
@@ -107,6 +108,7 @@ export default function PhotoPageContent({
                     slug={currentAlbum.slug}
                     coverImageUrl={currentAlbum.cover_image_url}
                     href={`/@${nickname}/album/${currentAlbum.slug}`}
+                    photoCount={currentAlbum.photo_count}
                     highlighted
                   />
                 )}
@@ -117,6 +119,7 @@ export default function PhotoPageContent({
                     slug={album.slug}
                     coverImageUrl={album.cover_image_url}
                     href={`/@${nickname}/album/${album.slug}`}
+                    photoCount={album.photo_count}
                   />
                 ))}
               </div>

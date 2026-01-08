@@ -1,16 +1,19 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import Button from '@/components/shared/Button';
+import Checkbox from '@/components/shared/Checkbox';
 import type { Album } from '@/types/albums';
 import { createClient } from '@/utils/supabase/client';
 
+import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
 import TrashSVG from 'public/icons/trash.svg';
+import SidebarPanel from './SidebarPanel';
 
 // Zod schema for album form validation
 const albumFormSchema = z.object({
@@ -32,6 +35,10 @@ interface AlbumEditSidebarProps {
   onSave: (data: AlbumFormData) => Promise<void>;
   onDelete?: () => Promise<void>;
   isLoading?: boolean;
+  /** Called when dirty state changes - parent can use this to warn before deselecting */
+  onDirtyChange?: (isDirty: boolean) => void;
+  /** Ref to check if there are unsaved changes */
+  isDirtyRef?: React.MutableRefObject<boolean>;
 }
 
 export default function AlbumEditSidebar({
@@ -41,8 +48,11 @@ export default function AlbumEditSidebar({
   onSave,
   onDelete,
   isLoading = false,
+  onDirtyChange,
+  isDirtyRef,
 }: AlbumEditSidebarProps) {
   const supabase = createClient();
+  const formRef = useRef<HTMLFormElement>(null);
   const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -72,6 +82,14 @@ export default function AlbumEditSidebar({
   const watchedSlug = watch('slug');
   const watchedTags = watch('tags');
 
+  // Update dirty ref and call callback when dirty state changes
+  useEffect(() => {
+    if (isDirtyRef) {
+      isDirtyRef.current = isDirty;
+    }
+    onDirtyChange?.(isDirty);
+  }, [isDirty, isDirtyRef, onDirtyChange]);
+
   // Load album data when album changes
   useEffect(() => {
     if (!album) {
@@ -92,7 +110,7 @@ export default function AlbumEditSidebar({
         title: album.title,
         slug: album.slug,
         description: album.description || '',
-        isPublic: album.is_public,
+        isPublic: album.is_public ?? true,
         tags: albumTags,
       });
     };
@@ -140,6 +158,8 @@ export default function AlbumEditSidebar({
 
     try {
       await onSave(data);
+      // Reset form to mark as not dirty after successful save
+      reset(data);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -166,21 +186,51 @@ export default function AlbumEditSidebar({
     }
   };
 
+  const triggerSubmit = () => {
+    formRef.current?.requestSubmit();
+  };
+
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="opacity-70">Loading...</p>
-      </div>
+      <SidebarPanel title={isNewAlbum ? 'New Album' : 'Album Settings'}>
+        <div className="flex items-center justify-center py-12">
+          <p className="opacity-70">Loading...</p>
+        </div>
+      </SidebarPanel>
     );
   }
 
   return (
-    <div className="p-6">
-      <h2 className="mb-6 text-lg font-semibold">
-        {isNewAlbum ? 'New Album' : 'Album Settings'}
-      </h2>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <SidebarPanel
+      title={isNewAlbum ? 'New Album' : 'Album Settings'}
+      footer={
+        <div className="flex gap-2 w-full">
+          {!isNewAlbum && album && onDelete && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleDelete}
+              disabled={isSaving || isDeleting}
+              loading={isDeleting}
+              icon={<TrashSVG className="size-4 -ml-0.5" />}
+            >
+              Delete
+            </Button>
+          )}
+          <Button
+            onClick={triggerSubmit}
+            disabled={isSaving || (!isNewAlbum && !isDirty)}
+            loading={isSaving}
+            icon={<CheckSVG className="size-4 -ml-0.5" />}
+            className={!isNewAlbum && album && onDelete ? 'ml-auto' : ''}
+            fullWidth={isNewAlbum || !album || !onDelete}
+          >
+            {success ? 'Saved!' : isNewAlbum ? 'Create Album' : 'Save'}
+          </Button>
+        </div>
+      }
+    >
+      <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="title" className="text-sm font-medium">
             Title *
@@ -214,24 +264,18 @@ export default function AlbumEditSidebar({
           />
         </div>
 
-        <div className="flex items-center">
-          <input
-            id="isPublic"
-            type="checkbox"
-            {...register('isPublic')}
-            className="size-4 rounded border-neutral-300 text-blue-600"
-          />
-          <label htmlFor="isPublic" className="ml-2 text-sm">
-            Make this album public
-          </label>
-        </div>
+        <Checkbox
+          id="isPublic"
+          {...register('isPublic')}
+          label="Make this album public"
+        />
 
         <div className="flex flex-col gap-2">
           <label htmlFor="tags" className="text-sm font-medium">
             Tags
           </label>
           {watchedTags && watchedTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="mb-2 flex flex-wrap gap-2">
               {watchedTags.map((tag) => (
                 <span
                   key={tag}
@@ -241,7 +285,7 @@ export default function AlbumEditSidebar({
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className="rounded-full bg-background-light/70 hover:bg-background-light font-bold text-foreground size-5 flex items-center justify-center -mr-2 ml-1"
+                    className="-mr-2 ml-1 flex size-5 items-center justify-center rounded-full bg-background-light/70 font-bold text-foreground hover:bg-background-light"
                     aria-label="Remove tag"
                   >
                     <CloseSVG className="size-3.5" />
@@ -272,40 +316,7 @@ export default function AlbumEditSidebar({
         {error && (
           <p className="text-sm text-red-500">{error}</p>
         )}
-        {success && (
-          <p className="text-sm text-green-500">Album saved successfully!</p>
-        )}
-
-        {/* Save button */}
-        <Button
-          type="submit"
-          disabled={isSaving || (!isNewAlbum && !isDirty)}
-          loading={isSaving}
-          fullWidth
-        >
-          {isNewAlbum ? 'Create Album' : 'Save Changes'}
-        </Button>
       </form>
-
-      {/* Danger zone */}
-      {!isNewAlbum && album && onDelete && (
-        <div className="mt-6 rounded-lg border border-red-500/30 bg-red-500/5 p-4">
-          <h3 className="mb-2 font-semibold text-red-600">Danger zone</h3>
-          <p className="mb-4 text-sm text-foreground/70">
-            Once you delete an album, there is no going back. This will permanently delete the album and all associated photos and tags.
-          </p>
-          <Button
-            onClick={handleDelete}
-            variant="danger"
-            icon={<TrashSVG className="h-4 w-4" />}
-            disabled={isDeleting}
-            fullWidth
-          >
-            {isDeleting ? 'Deleting...' : 'Delete album'}
-          </Button>
-        </div>
-      )}
-    </div>
+    </SidebarPanel>
   );
 }
-

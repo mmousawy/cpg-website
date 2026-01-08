@@ -2,6 +2,7 @@
 
 import { revalidateAlbum } from '@/app/actions/revalidate';
 import {
+  AddPhotosToAlbumModal,
   AddToAlbumContent,
   AlbumEditEmptyState,
   AlbumEditSidebar,
@@ -11,6 +12,7 @@ import {
   PhotoEditSidebar,
   PhotoGrid,
   type AlbumFormData,
+  type BulkPhotoFormData,
   type PhotoFormData,
 } from '@/components/manage';
 import Button from '@/components/shared/Button';
@@ -20,7 +22,7 @@ import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
 import exifr from 'exifr';
 import { useRouter } from 'next/navigation';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 
@@ -38,6 +40,44 @@ export default function ManagePhotosPage() {
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalContext = useContext(ModalContext);
+
+  // Refs to track unsaved changes in sidebars
+  const photoEditDirtyRef = useRef(false);
+  const albumEditDirtyRef = useRef(false);
+
+  // Helper to confirm unsaved changes before selection change
+  const confirmUnsavedChanges = useCallback((): boolean => {
+    const isDirty = photoEditDirtyRef.current || albumEditDirtyRef.current;
+    if (!isDirty) return true;
+
+    const confirmed = window.confirm(
+      'You have unsaved changes. Are you sure you want to leave without saving?',
+    );
+
+    // If user confirmed, reset the dirty refs so we don't ask again
+    if (confirmed) {
+      photoEditDirtyRef.current = false;
+      albumEditDirtyRef.current = false;
+    }
+
+    return confirmed;
+  }, []);
+
+  // Warn user when trying to leave the page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const isDirty = photoEditDirtyRef.current || albumEditDirtyRef.current;
+      if (isDirty) {
+        e.preventDefault();
+        // Modern browsers ignore this message and show their own, but it's still required
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('photos');
@@ -91,7 +131,8 @@ export default function ManagePhotosPage() {
               title,
               slug,
               cover_image_url,
-              profile:profiles(nickname)
+              profile:profiles(nickname),
+              album_photos(count)
             )
           )
         `)
@@ -114,14 +155,15 @@ export default function ManagePhotosPage() {
         // Transform album_photos into a flat albums array
         const photosWithAlbums = (data || []).map((photo) => {
           const albums = (photo.album_photos || [])
-            .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null } | null }) => ap.album)
-            .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null } => a !== null)
-            .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null }) => ({
+            .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } | null }) => ap.album)
+            .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } => a !== null)
+            .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] }) => ({
               id: a.id,
               title: a.title,
               slug: a.slug,
               cover_image_url: a.cover_image_url,
               profile_nickname: a.profile?.nickname || null,
+              photo_count: a.album_photos?.[0]?.count ?? 0,
             }));
 
           const { album_photos: _, ...photoData } = photo;
@@ -209,6 +251,10 @@ export default function ManagePhotosPage() {
   };
 
   const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
+    // If changing selection (not adding to it) and there are unsaved changes, confirm first
+    if (!isMultiSelect && photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+      return;
+    }
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
       if (isMultiSelect) {
@@ -226,6 +272,10 @@ export default function ManagePhotosPage() {
   };
 
   const handleSelectAlbumPhoto = (photoId: string, isMultiSelect: boolean) => {
+    // If changing selection (not adding to it) and there are unsaved changes, confirm first
+    if (!isMultiSelect && photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+      return;
+    }
     setSelectedAlbumPhotoIds((prev) => {
       const newSet = new Set(prev);
       if (isMultiSelect) {
@@ -240,6 +290,34 @@ export default function ManagePhotosPage() {
       }
       return newSet;
     });
+  };
+
+  const handleClearPhotoSelection = () => {
+    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+      return;
+    }
+    setSelectedPhotoIds(new Set());
+  };
+
+  const handleClearAlbumPhotoSelection = () => {
+    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+      return;
+    }
+    setSelectedAlbumPhotoIds(new Set());
+  };
+
+  const handleSelectMultiplePhotos = (ids: string[]) => {
+    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+      return;
+    }
+    setSelectedPhotoIds(new Set(ids));
+  };
+
+  const handleSelectMultipleAlbumPhotos = (ids: string[]) => {
+    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+      return;
+    }
+    setSelectedAlbumPhotoIds(new Set(ids));
   };
 
   const handleSavePhoto = async (photoId: string, data: PhotoFormData) => {
@@ -257,6 +335,28 @@ export default function ManagePhotosPage() {
 
     if (error) {
       throw new Error(error.message || 'Failed to save photo');
+    }
+
+    await fetchPhotos();
+  };
+
+  const handleBulkSavePhotos = async (photoIds: string[], data: BulkPhotoFormData) => {
+    if (!user) return;
+
+    // Build updates array for batch function - only include non-null/non-empty values
+    const updates = photoIds.map((id) => ({
+      id,
+      ...(data.title && { title: data.title }),
+      ...(data.description && { description: data.description }),
+      ...(data.is_public !== null && { is_public: data.is_public }),
+    }));
+
+    const { error } = await supabase.rpc('batch_update_photos', {
+      photo_updates: updates,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Failed to save photos');
     }
 
     await fetchPhotos();
@@ -296,8 +396,21 @@ export default function ManagePhotosPage() {
   };
 
   const handleAddToAlbum = (photoIds: string[]) => {
-    // TODO: Open add-to-album modal
-    console.log('Add to album:', photoIds);
+    const photosToAdd = photos.filter((p) => photoIds.includes(p.id));
+    if (photosToAdd.length === 0) return;
+
+    modalContext.setTitle('Add to Album');
+    modalContext.setContent(
+      <AddPhotosToAlbumModal
+        photos={photosToAdd}
+        onClose={() => modalContext.setIsOpen(false)}
+        onSuccess={() => {
+          // Refresh photos to update album info
+          fetchPhotos();
+        }}
+      />,
+    );
+    modalContext.setIsOpen(true);
   };
 
   const handleAlbumClick = (album: AlbumWithPhotos) => {
@@ -309,6 +422,7 @@ export default function ManagePhotosPage() {
   };
 
   const handleBackToAlbums = () => {
+    if (!confirmUnsavedChanges()) return;
     setViewMode('albums');
     setSelectedAlbum(null);
     setAlbumPhotos([]);
@@ -317,6 +431,7 @@ export default function ManagePhotosPage() {
   };
 
   const handleCreateNewAlbum = () => {
+    if (!confirmUnsavedChanges()) return;
     setSelectedAlbum(null);
     setIsNewAlbum(true);
     setViewMode('album-detail');
@@ -395,21 +510,17 @@ export default function ManagePhotosPage() {
           })));
       }
 
-      // Update photo sort order
+      // Update photo sort order using batch RPC (avoids photo_id issues with upsert)
       if (albumPhotos.length > 0) {
         const updates = albumPhotos.map((photo, index) => ({
           id: photo.id,
-          album_id: photo.album_id,
-          photo_url: photo.photo_url,
-          width: photo.width,
-          height: photo.height,
           title: photo.title,
           sort_order: index,
         }));
 
-        await supabase
-          .from('album_photos')
-          .upsert(updates, { onConflict: 'id' });
+        await supabase.rpc('batch_update_album_photos', {
+          photo_updates: updates,
+        });
       }
 
       // Revalidate
@@ -527,9 +638,28 @@ export default function ManagePhotosPage() {
     await fetchAlbumPhotos(selectedAlbum.id);
   };
 
+  const handleRemovePhotosFromAlbum = async (photoIds: string[]) => {
+    if (!selectedAlbum) return;
+
+    // Delete album_photos entries for the selected photos
+    // Note: photoIds are Photo.id values, so we filter by photo_id column
+    await supabase
+      .from('album_photos')
+      .delete()
+      .eq('album_id', selectedAlbum.id)
+      .in('photo_id', photoIds);
+
+    // Clear selection
+    setSelectedAlbumPhotoIds(new Set());
+
+    await fetchAlbumPhotos(selectedAlbum.id);
+    await fetchAlbums(); // Update album photo count
+  };
+
   const handleAddPhotosToAlbum = () => {
     if (!selectedAlbum) return;
 
+    modalContext.setSize('large');
     modalContext.setTitle('Add Photos from Library');
     modalContext.setContent(
       <AddToAlbumContent
@@ -704,6 +834,7 @@ export default function ManagePhotosPage() {
               <div className="flex gap-1 rounded-lg border border-border-color bg-background-light p-1">
                 <button
                   onClick={() => {
+                    if (!confirmUnsavedChanges()) return;
                     setViewMode('photos');
                     setSelectedPhotoIds(new Set());
                   }}
@@ -718,6 +849,7 @@ export default function ManagePhotosPage() {
                 </button>
                 <button
                   onClick={() => {
+                    if (!confirmUnsavedChanges()) return;
                     setViewMode('albums');
                     setSelectedAlbum(null);
                   }}
@@ -815,8 +947,8 @@ export default function ManagePhotosPage() {
                 selectedPhotoIds={selectedPhotoIds}
                 onSelectPhoto={handleSelectPhoto}
                 onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
-                onClearSelection={() => setSelectedPhotoIds(new Set())}
-                onSelectMultiple={(ids) => setSelectedPhotoIds(new Set(ids))}
+                onClearSelection={handleClearPhotoSelection}
+                onSelectMultiple={handleSelectMultiplePhotos}
                 onReorder={handleReorderPhotos}
                 sortable
               />
@@ -850,8 +982,8 @@ export default function ManagePhotosPage() {
                 selectedPhotoIds={selectedAlbumPhotoIds}
                 onSelectPhoto={handleSelectAlbumPhoto}
                 onReorder={handleReorderAlbumPhotos}
-                onClearSelection={() => setSelectedAlbumPhotoIds(new Set())}
-                onSelectMultiple={(ids) => setSelectedAlbumPhotoIds(new Set(ids))}
+                onClearSelection={handleClearAlbumPhotoSelection}
+                onSelectMultiple={handleSelectMultipleAlbumPhotos}
               />
             )
           )}
@@ -859,15 +991,17 @@ export default function ManagePhotosPage() {
       </div>
 
       {/* Right Panel - Sidebar */}
-      <div className="w-[400px] shrink-0 overflow-y-auto bg-background-light">
+      <div className="flex h-[calc(100vh-81px)] w-[400px] shrink-0 flex-col overflow-hidden bg-background-light">
         {viewMode === 'photos' ? (
           selectedPhotos.length > 0 ? (
             <PhotoEditSidebar
               selectedPhotos={selectedPhotos}
               onSave={handleSavePhoto}
+              onBulkSave={handleBulkSavePhotos}
               onDelete={handleDeletePhoto}
               onAddToAlbum={handleAddToAlbum}
               isLoading={photosLoading}
+              isDirtyRef={photoEditDirtyRef}
             />
           ) : (
             <PhotoEditEmptyState />
@@ -881,8 +1015,9 @@ export default function ManagePhotosPage() {
               selectedPhotos={selectedAlbumPhotos}
               onSave={handleSaveAlbumPhoto}
               onDelete={handleDeleteAlbumPhoto}
-              onAddToAlbum={() => {}}
+              onRemoveFromAlbum={handleRemovePhotosFromAlbum}
               isLoading={albumPhotosLoading}
+              isDirtyRef={photoEditDirtyRef}
             />
           ) : (
             <AlbumEditSidebar
@@ -892,6 +1027,7 @@ export default function ManagePhotosPage() {
               onSave={handleSaveAlbum}
               onDelete={handleDeleteAlbum}
               isLoading={albumPhotosLoading}
+              isDirtyRef={albumEditDirtyRef}
             />
           )
         )}

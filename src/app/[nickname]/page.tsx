@@ -226,14 +226,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
         {/* Photos Section */}
         <div>
-          <h2 className="mb-2 sm:mb-4 sm:text-xl text-lg font-semibold">
+          <h2 className="mb-2 sm:text-xl text-lg font-semibold">
             Photos by @{typedProfile.nickname}
           </h2>
 
           {/* Stats */}
           <div className="mb-6 flex items-center gap-6 text-sm opacity-70">
-            <span>{albumsWithPhotos.length} {albumsWithPhotos.length === 1 ? 'album' : 'albums'}</span>
             <span>{totalPhotos} {totalPhotos === 1 ? 'photo' : 'photos'}</span>
+            <span>{albumsWithPhotos.length} {albumsWithPhotos.length === 1 ? 'album' : 'albums'}</span>
           </div>
         </div>
 

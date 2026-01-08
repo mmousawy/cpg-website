@@ -124,6 +124,7 @@ export async function uploadPhoto(
       is_public: isPublic,
       blurhash,
       short_id: shortId,
+      original_filename: file.name,
     })
     .select()
     .single();

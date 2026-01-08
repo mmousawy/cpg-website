@@ -84,15 +84,25 @@ export default async function PhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Get all albums this photo is in
+  // Get all albums this photo is in (with photo counts)
   const { data: albumPhotos } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url)')
+    .select('album_id, albums(id, title, slug, cover_image_url, album_photos(count))')
     .eq('photo_id', photo.id);
 
   const albums = (albumPhotos || [])
-    .map((ap) => ap.albums)
-    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null } => a !== null);
+    .map((ap) => {
+      const album = ap.albums as any;
+      if (!album) return null;
+      return {
+        id: album.id,
+        title: album.title,
+        slug: album.slug,
+        cover_image_url: album.cover_image_url,
+        photo_count: album.album_photos?.[0]?.count ?? 0,
+      };
+    })
+    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
 
   return (
     <PhotoPageContent

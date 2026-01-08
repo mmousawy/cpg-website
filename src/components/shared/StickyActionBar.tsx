@@ -1,37 +1,53 @@
 'use client';
 
-import { ReactNode } from 'react';
 import clsx from 'clsx';
+import { ReactNode } from 'react';
 
 type StickyActionBarProps = {
   children: ReactNode
   className?: string
   /** Position of the bar */
   position?: 'top' | 'bottom'
+  /** Whether to constrain width (for page layouts vs sidebars) */
+  constrainWidth?: boolean,
+  variant?: 'default' | 'compact'
 }
 
 export default function StickyActionBar({
   children,
   className,
   position = 'bottom',
+  constrainWidth = false,
+  variant = 'default',
 }: StickyActionBarProps) {
   return (
     <div
-      className="sticky z-40 bottom-0"
+      className={clsx(
+        'relative sticky z-40',
+        position === 'bottom' ? 'bottom-0' : 'top-0',
+        className,
+      )}
     >
       {/* Add shadow at top of bar with div element gradient with 0px at top and 20px at bottom */}
-      <div className="absolute -top-6 left-0 right-0 h-6 bg-gradient-to-b from-transparent to-background"></div>
       <div className={clsx(
-        // Top shadow of a few pixels
-        'border-t-[0.0625rem] border-border-color-strong bg-background-light',
-        'px-4 py-3 sm:px-6 sm:py-4',
-        className,
+        'absolute left-0 right-0',
+        variant === 'compact' ? 'h-4' : 'h-6',
+        position === 'bottom'
+          ? variant === 'compact' ? '-top-4 bg-gradient-to-b from-transparent to-background-light' : '-top-6 bg-gradient-to-b from-transparent to-background'
+          : variant === 'compact' ? '-bottom-4 bg-gradient-to-t from-transparent to-background-light' : '-bottom-6 bg-gradient-to-t from-transparent to-background',
+      )} />
+      <div className={clsx(
+        'border-border-color-strong bg-background-light',
+        variant === 'compact' ? 'px-4 py-3' : 'px-4 py-3 sm:px-6 sm:py-4',
+        position === 'bottom' ? 'border-t-[0.0625rem]' : 'border-b-[0.0625rem]',
       )}>
-        <div className="mx-auto flex max-w-screen-md items-center justify-between gap-4">
+        <div className={clsx(
+          'mx-auto flex items-center justify-between gap-4',
+          constrainWidth && 'max-w-screen-md',
+        )}>
           {children}
         </div>
       </div>
     </div>
   );
 }
-

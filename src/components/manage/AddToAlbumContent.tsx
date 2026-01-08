@@ -4,9 +4,8 @@ import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import type { Photo } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
-import clsx from 'clsx';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import PhotoGrid from './PhotoGrid';
 
 interface AddToAlbumContentProps {
   albumId: string;
@@ -58,6 +57,12 @@ export default function AddToAlbumContent({
     setIsLoading(false);
   };
 
+  // Filter out photos already in the album
+  const availablePhotos = useMemo(
+    () => photos.filter((p) => !existingPhotoUrls.includes(p.url)),
+    [photos, existingPhotoUrls],
+  );
+
   const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
@@ -68,9 +73,24 @@ export default function AddToAlbumContent({
           newSet.add(photoId);
         }
       } else {
-        newSet.clear();
-        newSet.add(photoId);
+        if (newSet.has(photoId)) {
+          newSet.delete(photoId);
+        } else {
+          newSet.add(photoId);
+        }
       }
+      return newSet;
+    });
+  };
+
+  const handleClearSelection = () => {
+    setSelectedPhotoIds(new Set());
+  };
+
+  const handleSelectMultiple = (ids: string[]) => {
+    setSelectedPhotoIds((prev) => {
+      const newSet = new Set(prev);
+      ids.forEach((id) => newSet.add(id));
       return newSet;
     });
   };
@@ -83,7 +103,13 @@ export default function AddToAlbumContent({
 
     try {
       const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
-      const photoUrls = selectedPhotos.map((p) => p.url);
+
+      // Get album info to check if it needs a cover image
+      const { data: albumData } = await supabase
+        .from('albums')
+        .select('cover_image_url')
+        .eq('id', albumId)
+        .single();
 
       // Get current max sort_order
       const { data: existingPhotos } = await supabase
@@ -113,6 +139,14 @@ export default function AddToAlbumContent({
         throw new Error(insertError.message || 'Failed to add photos to album');
       }
 
+      // Set cover image if album doesn't have one
+      if (!albumData?.cover_image_url && selectedPhotos.length > 0) {
+        await supabase
+          .from('albums')
+          .update({ cover_image_url: selectedPhotos[0].url })
+          .eq('id', albumId);
+      }
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -122,91 +156,50 @@ export default function AddToAlbumContent({
     }
   };
 
-  const availablePhotos = photos.filter((p) => !existingPhotoUrls.includes(p.url));
-
   return (
-    <div className="max-h-[80vh] flex flex-col">
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2">Add Photos to Album</h2>
-        <p className="text-sm text-foreground/70">
-          Select photos from your library to add to this album
-        </p>
-      </div>
-
-      {error && (
-        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
-          {error}
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto mb-4">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <p className="text-foreground/50">Loading photos...</p>
-          </div>
-        ) : availablePhotos.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-foreground/70">No photos available to add</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {availablePhotos.map((photo) => {
-              const isSelected = selectedPhotoIds.has(photo.id);
-              return (
-                <div
-                  key={photo.id}
-                  className={clsx(
-                    'relative cursor-pointer overflow-hidden transition-all group',
-                    isSelected
-                      ? 'ring-2 ring-primary ring-offset-2'
-                      : 'hover:ring-2 hover:ring-primary/50',
-                  )}
-                  onClick={() => handleSelectPhoto(photo.id, false)}
-                >
-                  {/* Checkbox */}
-                  <div
-                    className={clsx(
-                      'absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all',
-                      isSelected
-                        ? 'border-primary bg-primary text-white'
-                        : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100',
-                    )}
-                  >
-                    {isSelected && (
-                      <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="aspect-square overflow-hidden bg-background-light">
-                    <Image
-                      src={`${photo.url}?width=300&height=300&resize=cover`}
-                      alt={photo.title || 'Photo'}
-                      width={300}
-                      height={300}
-                      className="size-full object-cover"
-                      draggable={false}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+    <>
+      <div className="flex h-[calc(100vh-12rem)] md:h-[calc(100vh-13rem)] flex-col bg-background-medium border border-border-color-strong">
+        {error && (
+          <div className="shrink-0 mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+            {error}
           </div>
         )}
-      </div>
 
-      <div className="flex justify-end gap-2 border-t border-border-color pt-4">
+        <div className="flex-1 min-h-0 overflow-y-auto relative">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-foreground/50">Loading photos...</p>
+            </div>
+          ) : availablePhotos.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-foreground/70">No photos available to add</p>
+            </div>
+          ) : (
+            <PhotoGrid
+              photos={availablePhotos}
+              selectedPhotoIds={selectedPhotoIds}
+              onSelectPhoto={handleSelectPhoto}
+              onPhotoClick={(photo) => handleSelectPhoto(photo.id, true)}
+              onClearSelection={handleClearSelection}
+              onSelectMultiple={handleSelectMultiple}
+              sortable={false}
+            />
+          )}
+        </div>
+
+      </div>
+      <div className="shrink-0 flex justify-end gap-2 mt-4">
         <Button variant="secondary" onClick={onClose} disabled={isAdding}>
-          Cancel
+      Cancel
         </Button>
         <Button
           onClick={handleAddToAlbum}
           disabled={isAdding || selectedPhotoIds.size === 0}
           loading={isAdding}
         >
-          Add {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}Photo{selectedPhotoIds.size !== 1 ? 's' : ''}
+      Add {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}Photo{selectedPhotoIds.size !== 1 ? 's' : ''}
         </Button>
       </div>
-    </div>
+    </>
   );
 }

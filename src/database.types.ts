@@ -392,6 +392,7 @@ export type Database = {
           id: string
           is_public: boolean
           mime_type: string
+          original_filename: string | null
           short_id: string
           sort_order: number | null
           storage_path: string
@@ -410,6 +411,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           mime_type: string
+          original_filename?: string | null
           short_id: string
           sort_order?: number | null
           storage_path: string
@@ -428,6 +430,7 @@ export type Database = {
           id?: string
           is_public?: boolean
           mime_type?: string
+          original_filename?: string | null
           short_id?: string
           sort_order?: number | null
           storage_path?: string

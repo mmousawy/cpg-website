@@ -1,26 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useTheme } from 'next-themes';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import clsx from 'clsx';
+import { useTheme } from 'next-themes';
+import { useEffect, useRef, useState } from 'react';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { createClient } from '@/utils/supabase/client';
-import Button from '@/components/shared/Button';
-import Container from '@/components/layout/Container';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import PageContainer from '@/components/layout/PageContainer';
 
-import ErrorMessage from '@/components/shared/ErrorMessage';
-import SuccessMessage from '@/components/shared/SuccessMessage';
-import StickyActionBar from '@/components/shared/StickyActionBar';
-import Avatar from '@/components/auth/Avatar';
 import { revalidateProfile } from '@/app/actions/revalidate';
+import Avatar from '@/components/auth/Avatar';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import StickyActionBar from '@/components/shared/StickyActionBar';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 import PlusIconSVG from 'public/icons/plus.svg';
 
 // Zod schema for form validation
@@ -970,7 +970,7 @@ export default function AccountPage() {
       </PageContainer>
 
       {/* Sticky Save Button */}
-      <StickyActionBar>
+      <StickyActionBar constrainWidth>
         <div className="flex items-center gap-3 text-sm">
           {submitError && (
             <ErrorMessage variant="compact" className="text-sm py-1.5">{submitError}</ErrorMessage>

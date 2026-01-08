@@ -8,6 +8,7 @@ export type PhotoAlbumInfo = {
   slug: string;
   cover_image_url: string | null;
   profile_nickname: string | null;
+  photo_count?: number;
 };
 
 export type PhotoWithAlbums = Photo & {
