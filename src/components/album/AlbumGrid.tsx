@@ -33,6 +33,8 @@ type AlbumGridProps = {
   variant?: AlbumCardVariant
   /** Additional className for the grid container */
   className?: string
+  /** If provided, clicking an album will call this instead of navigating */
+  onAlbumClick?: (album: AlbumWithPhotos) => void
 }
 
 /**
@@ -44,6 +46,7 @@ export default function AlbumGrid({
   isOwner = false,
   variant,
   className = "grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+  onAlbumClick,
 }: AlbumGridProps) {
   const { profile } = useAuth();
 
@@ -70,6 +73,7 @@ export default function AlbumGrid({
           album={album}
           isOwner={isOwner}
           variant={effectiveVariant}
+          onClick={onAlbumClick}
         />
       ))}
     </div>

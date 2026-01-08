@@ -6,8 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import { uploadPhoto } from '@/utils/uploadPhoto';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import UploadDropzone from '@/components/photo/UploadDropzone';
-import AlbumPicker from '@/components/photo/AlbumPicker';
+import { UploadDropzone, AlbumPicker } from '@/components/manage';
 import Button from '@/components/shared/Button';
 import Image from 'next/image';
 

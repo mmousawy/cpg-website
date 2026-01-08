@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
-import PhotoCard from './PhotoCard';
 import Button from '@/components/shared/Button';
+import { useAuth } from '@/hooks/useAuth';
 import type { Photo } from '@/types/photos';
+import { createClient } from '@/utils/supabase/client';
+import clsx from 'clsx';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 interface AddToAlbumContentProps {
   albumId: string;
@@ -148,14 +149,47 @@ export default function AddToAlbumContent({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {availablePhotos.map((photo) => (
-              <PhotoCard
-                key={photo.id}
-                photo={photo}
-                isSelected={selectedPhotoIds.has(photo.id)}
-                onSelect={handleSelectPhoto}
-              />
-            ))}
+            {availablePhotos.map((photo) => {
+              const isSelected = selectedPhotoIds.has(photo.id);
+              return (
+                <div
+                  key={photo.id}
+                  className={clsx(
+                    'relative cursor-pointer overflow-hidden transition-all group',
+                    isSelected
+                      ? 'ring-2 ring-primary ring-offset-2'
+                      : 'hover:ring-2 hover:ring-primary/50',
+                  )}
+                  onClick={() => handleSelectPhoto(photo.id, false)}
+                >
+                  {/* Checkbox */}
+                  <div
+                    className={clsx(
+                      'absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all',
+                      isSelected
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100',
+                    )}
+                  >
+                    {isSelected && (
+                      <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="aspect-square overflow-hidden bg-background-light">
+                    <Image
+                      src={`${photo.url}?width=300&height=300&resize=cover`}
+                      alt={photo.title || 'Photo'}
+                      width={300}
+                      height={300}
+                      className="size-full object-cover"
+                      draggable={false}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -175,4 +209,3 @@ export default function AddToAlbumContent({
     </div>
   );
 }
-

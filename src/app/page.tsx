@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import Image from 'next/image';
 import { createPublicClient } from '@/utils/supabase/server';
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Hero images - using URL paths instead of static imports to avoid bundling blur placeholders
 const heroImages = [
@@ -18,21 +18,21 @@ function getHeroImage() {
   return heroImages[index];
 }
 
-import PageContainer from '@/components/layout/PageContainer';
-import Container from '@/components/layout/Container';
-import RecentEventsList from '@/components/events/RecentEventsList';
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Avatar from '@/components/auth/Avatar';
-import Button from '@/components/shared/Button';
-import ArrowLink from '@/components/shared/ArrowLink';
+import RecentEventsList from '@/components/events/RecentEventsList';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
 import ActivitiesSlider from '@/components/shared/ActivitiesSlider';
+import ArrowLink from '@/components/shared/ArrowLink';
+import Button from '@/components/shared/Button';
 import { socialLinks } from '@/config/socials';
 import type { AlbumWithPhotos } from '@/types/albums';
 
+import CameraWithFlash from 'public/camera-with-flash.png';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
-import CameraWithFlash from 'public/camera-with-flash.png';
 
 // Map for social icons
 const socialIconMap: Record<string, typeof DiscordSVG> = {
@@ -157,7 +157,7 @@ export default async function Home() {
           )}
         </Container>
 
-      {/* About Section */}
+        {/* About Section */}
         <Container variant="gradient">
           <h2 className="text-2xl font-bold mb-4">What&apos;s Creative Photography Group?</h2>
 
@@ -197,14 +197,14 @@ export default async function Home() {
           </div>
         </Container>
 
-      <div className='w-full max-w-screen-md mx-auto overflow-hidden'>
-        <div className='py-4 sm:py-10'>
-          <h2 className="text-2xl text-center font-bold mb-6 px-2 sm:px-4">What keeps us clicking</h2>
-          <ActivitiesSlider />
+        <div className='w-full max-w-screen-md mx-auto overflow-hidden'>
+          <div className='py-4 sm:py-10'>
+            <h2 className="text-2xl text-center font-bold mb-6 px-2 sm:px-4">What keeps us clicking</h2>
+            <ActivitiesSlider />
+          </div>
         </div>
-      </div>
 
-      {/* Meet the Community Section */}
+        {/* Meet the Community Section */}
         <Container variant="gradient">
           <h2 className="text-2xl font-bold mb-4">Meet the community</h2>
           <p className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6">

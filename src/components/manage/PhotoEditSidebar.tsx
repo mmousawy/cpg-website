@@ -122,7 +122,7 @@ export default function PhotoEditSidebar({
   }
 
   return (
-    <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border border-border-color bg-background-light p-6">
+    <div className="sticky top-4 h-[calc(100vh-81px)] overflow-y-auto bg-background-light p-6">
       <h2 className="mb-6 text-lg font-semibold">Edit Photo</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -209,3 +209,4 @@ export default function PhotoEditSidebar({
     </div>
   );
 }
+

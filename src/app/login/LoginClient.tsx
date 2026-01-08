@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +30,7 @@ function getPostLoginRedirect(redirectTo: string | null): string {
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const redirectToParam = searchParams.get('redirectTo');
   const verified = searchParams.get('verified');
   const finalRedirect = getPostLoginRedirect(redirectToParam);
@@ -52,7 +53,7 @@ function LoginForm() {
       setError(error.message);
       setIsLoading(false);
     } else {
-      window.location.href = finalRedirect;
+      router.push(finalRedirect);
     }
   };
 
