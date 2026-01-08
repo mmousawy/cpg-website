@@ -105,6 +105,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
     .eq('is_public', true)
+    .order('sort_order', { referencedTable: 'album_photos', ascending: true, nullsFirst: false })
     .single();
 
   if (error || !album) {

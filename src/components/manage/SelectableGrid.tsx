@@ -2,14 +2,19 @@
 
 import { useSelectionBox } from '@/hooks/useSelectionBox';
 import {
+  Active,
+  CollisionDetection,
   DndContext,
   DragEndEvent,
   DragMoveEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   KeyboardSensor,
+  Over,
   PointerSensor,
-  closestCenter,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -23,7 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface SelectableGridProps<T> {
   items: T[];
@@ -163,16 +168,30 @@ export default function SelectableGrid<T>({
   const [anchorId, setAnchorId] = useState<string | null>(null);
   // Track active drag for multi-select visual feedback
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  // Track where the user is hovering for drop indicator
-  const [overItemId, setOverItemId] = useState<string | null>(null);
-  // Track if dropping before or after the target item
-  const [dropPosition, setDropPosition] = useState<'before' | 'after'>('before');
+  // Track if dropping before or after the target item (ref for use in drag end)
   const dropPositionRef = useRef<'before' | 'after'>('before');
   // Track the visual position of the drop indicator
   const [dropIndicatorPos, setDropIndicatorPos] = useState<{ x: number; y: number; height: number } | null>(null);
   // Track which items should be pushed apart for the drop indicator
   const [pushLeftItemId, setPushLeftItemId] = useState<string | null>(null);
   const [pushRightItemId, setPushRightItemId] = useState<string | null>(null);
+  // Track actual mouse position during drag (not the grab offset)
+  const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Track if current drag is a multi-drag for collision detection
+  const isMultiDragRef = useRef(false);
+
+  // Custom collision detection that uses pointer position for multi-drag
+  const customCollisionDetection: CollisionDetection = useCallback((args) => {
+    // For multi-drag, use pointerWithin so collision is based on actual cursor position
+    if (isMultiDragRef.current) {
+      const pointerCollisions = pointerWithin(args);
+      if (pointerCollisions.length > 0) {
+        return pointerCollisions;
+      }
+    }
+    // Fall back to rectIntersection for single-item drag
+    return rectIntersection(args);
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -208,8 +227,28 @@ export default function SelectableGrid<T>({
 
   const hoveredIdSet = new Set(hoveredIds);
 
+  // Track actual mouse position during drag
+  useEffect(() => {
+    if (!activeDragId) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePositionRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [activeDragId]);
+
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragId(event.active.id as string);
+    const draggedId = event.active.id as string;
+    setActiveDragId(draggedId);
+    // Track if this is a multi-drag for collision detection
+    isMultiDragRef.current = selectedIds.has(draggedId) && selectedIds.size > 1;
+    // Initialize mouse position from the activator event
+    const pointerEvent = event.activatorEvent as PointerEvent;
+    if (pointerEvent) {
+      mousePositionRef.current = { x: pointerEvent.clientX, y: pointerEvent.clientY };
+    }
   };
 
   const updateDropIndicator = (
@@ -223,10 +262,7 @@ export default function SelectableGrid<T>({
     const itemCenterX = overRect.left + overRect.width / 2;
     const isAfter = currentX > itemCenterX;
 
-    const newPosition = isAfter ? 'after' : 'before';
-    setDropPosition(newPosition);
-    dropPositionRef.current = newPosition;
-    setOverItemId(overId);
+    dropPositionRef.current = isAfter ? 'after' : 'before';
 
     // Calculate indicator position relative to container
     // Center the indicator in the gap between items (gap is typically 12px)
@@ -242,22 +278,27 @@ export default function SelectableGrid<T>({
       height: overRect.height,
     });
 
-    // Find adjacent items to push apart (only unselected items)
-    const unselectedItems = items.filter((item) => !selectedIds.has(getId(item)));
-    const overIndex = unselectedItems.findIndex((item) => getId(item) === overId);
+    // Find the actual neighbors in the full list, only push if they're not selected
+    const overIndex = items.findIndex((item) => getId(item) === overId);
+    const prevItem = overIndex > 0 ? items[overIndex - 1] : null;
+    const nextItem = overIndex < items.length - 1 ? items[overIndex + 1] : null;
+    const prevItemId = prevItem ? getId(prevItem) : null;
+    const nextItemId = nextItem ? getId(nextItem) : null;
 
     if (isAfter) {
-      // Dropping after this item: push this item left, next item right
+      // Dropping after this item: push this item left, next item right (if not selected)
       setPushLeftItemId(overId);
-      setPushRightItemId(overIndex < unselectedItems.length - 1 ? getId(unselectedItems[overIndex + 1]) : null);
+      setPushRightItemId(nextItemId && !selectedIds.has(nextItemId) ? nextItemId : null);
     } else {
-      // Dropping before this item: push prev item left, this item right
-      setPushLeftItemId(overIndex > 0 ? getId(unselectedItems[overIndex - 1]) : null);
+      // Dropping before this item: push prev item left (if not selected), this item right
+      setPushLeftItemId(prevItemId && !selectedIds.has(prevItemId) ? prevItemId : null);
       setPushRightItemId(overId);
     }
   };
 
-  const handleDragMove = (event: DragMoveEvent) => {
+  const processDropIndicator = (
+    event: { active: Active; over: Over | null },
+  ) => {
     // Only show indicator during multi-drag
     const draggedId = event.active.id as string;
     const isMultiDrag = selectedIds.has(draggedId) && selectedIds.size > 1;
@@ -270,10 +311,10 @@ export default function SelectableGrid<T>({
     }
 
     const overRect = event.over.rect;
-    const pointerX = (event.activatorEvent as PointerEvent)?.clientX;
+    // Use the actual tracked mouse position, not the grab offset
+    const currentX = mousePositionRef.current.x;
 
-    if (overRect && pointerX !== undefined) {
-      const currentX = pointerX + (event.delta?.x ?? 0);
+    if (overRect) {
       const overId = event.over.id as string;
 
       // Don't show indicator on selected items
@@ -284,34 +325,6 @@ export default function SelectableGrid<T>({
         return;
       }
 
-      // Find the range of selected items in the full list
-      const selectedIndices = items
-        .map((item, index) => (selectedIds.has(getId(item)) ? index : -1))
-        .filter((i) => i !== -1);
-
-      if (selectedIndices.length > 0) {
-        const minSelectedIndex = Math.min(...selectedIndices);
-        const maxSelectedIndex = Math.max(...selectedIndices);
-        const overIndex = items.findIndex((item) => getId(item) === overId);
-
-        // Check if hovering on adjacent items
-        const isAdjacentBefore = overIndex === minSelectedIndex - 1;
-        const isAdjacentAfter = overIndex === maxSelectedIndex + 1;
-
-        // Determine if we're on the "inner" side of an adjacent item
-        const itemCenterX = overRect.left + overRect.width / 2;
-        const isAfter = currentX > itemCenterX;
-
-        // Don't allow dropping on the inner side of adjacent items
-        // (right side of item before selection, or left side of item after selection)
-        if ((isAdjacentBefore && isAfter) || (isAdjacentAfter && !isAfter)) {
-          setDropIndicatorPos(null);
-          setPushLeftItemId(null);
-          setPushRightItemId(null);
-          return;
-        }
-      }
-
       updateDropIndicator(
         { left: overRect.left, top: overRect.top, width: overRect.width, height: overRect.height },
         currentX,
@@ -320,15 +333,24 @@ export default function SelectableGrid<T>({
     }
   };
 
+  const handleDragMove = (event: DragMoveEvent) => {
+    processDropIndicator({ active: event.active, over: event.over });
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    // Also process on drag over to immediately show indicator when entering a new item
+    processDropIndicator({ active: event.active, over: event.over });
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     const finalDropPosition = dropPositionRef.current;
 
     setActiveDragId(null);
-    setOverItemId(null);
     setDropIndicatorPos(null);
     setPushLeftItemId(null);
     setPushRightItemId(null);
+    isMultiDragRef.current = false;
 
     if (!over || active.id === over.id || !onReorder) {
       return;
@@ -381,10 +403,10 @@ export default function SelectableGrid<T>({
 
   const handleDragCancel = () => {
     setActiveDragId(null);
-    setOverItemId(null);
     setDropIndicatorPos(null);
     setPushLeftItemId(null);
     setPushRightItemId(null);
+    isMultiDragRef.current = false;
   };
 
   if (items.length === 0) {
@@ -533,8 +555,9 @@ export default function SelectableGrid<T>({
     return (
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={customCollisionDetection}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
@@ -552,7 +575,7 @@ export default function SelectableGrid<T>({
         >
           {activeDragId && dragOverlayItems.length > 0 && (
             <div
-              className="relative"
+              className="relative cursor-grabbing"
               style={{
                 width: 120,
                 height: 120,
@@ -562,7 +585,7 @@ export default function SelectableGrid<T>({
               {dragOverlayItems.map((item, index) => (
                 <div
                   key={getId(item)}
-                  className="absolute inset-0 overflow-hidden ring-2 ring-primary ring-offset-2"
+                  className="absolute inset-0 overflow-hidden ring-2 ring-primary ring-offset-2 [&_*]:!cursor-grabbing"
                   style={{
                     transform: `translate(${index * 8}px, ${index * 8}px) rotate(${index * 2 - 2}deg)`,
                     zIndex: dragOverlayItems.length - index,

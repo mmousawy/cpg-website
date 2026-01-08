@@ -103,12 +103,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
 
-  // Fetch user's public photos
+  // Fetch user's public photos (ordered by user's custom sort order)
   const { data: photos } = await supabase
     .from('photos')
     .select('*')
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(50);
 

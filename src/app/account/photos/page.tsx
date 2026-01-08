@@ -424,27 +424,34 @@ export default function ManagePhotosPage() {
     handleBackToAlbums();
   };
 
-  const handleReorderAlbumPhotos = (newPhotos: AlbumPhoto[]) => {
+  const handleReorderAlbumPhotos = async (newPhotos: AlbumPhoto[]) => {
+    // Update local state immediately for responsiveness
     setAlbumPhotos(newPhotos);
+
+    // Single RPC call to batch update sort_order
+    const updates = newPhotos.map((photo, index) => ({
+      id: photo.id,
+      sort_order: index,
+    }));
+
+    await supabase.rpc('batch_update_album_photos', {
+      photo_updates: updates,
+    });
   };
 
   const handleReorderPhotos = async (newPhotos: Photo[]) => {
     // Update local state immediately for responsiveness
     setPhotos(newPhotos);
 
-    // Update sort_order in database
+    // Single RPC call to batch update sort_order
     const updates = newPhotos.map((photo, index) => ({
       id: photo.id,
       sort_order: index,
     }));
 
-    // Batch update using upsert
-    for (const update of updates) {
-      await supabase
-        .from('photos')
-        .update({ sort_order: update.sort_order })
-        .eq('id', update.id);
-    }
+    await supabase.rpc('batch_update_photos', {
+      photo_updates: updates,
+    });
   };
 
   const handleSaveAlbumPhoto = async (photoId: string, data: PhotoFormData) => {
@@ -653,7 +660,7 @@ export default function ManagePhotosPage() {
           <div className="flex items-center justify-between gap-4">
             {/* Tab buttons / Back button */}
             {viewMode === 'album-detail' ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-h-[2.875rem]">
                 <button
                   onClick={handleBackToAlbums}
                   className="flex items-center gap-2 rounded-lg border border-border-color bg-background-light px-3 py-2 text-sm font-medium transition-colors hover:border-border-color-strong hover:bg-background"

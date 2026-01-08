@@ -1,12 +1,22 @@
 'use client';
 
+import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import Button from '@/components/shared/Button';
 import type { Photo } from '@/types/photos';
+import { createClient } from '@/utils/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoEditEmptyState from './PhotoEditEmptyState';
+
+type PhotoAlbum = {
+  id: string;
+  title: string;
+  slug: string;
+  cover_image_url: string | null;
+  profile?: { nickname: string } | null;
+};
 
 const photoFormSchema = z.object({
   title: z.string().nullable(),
@@ -34,9 +44,38 @@ export default function PhotoEditSidebar({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [photoAlbums, setPhotoAlbums] = useState<PhotoAlbum[]>([]);
+  const [albumsLoading, setAlbumsLoading] = useState(false);
 
+  const supabase = createClient();
   const photo = selectedPhotos[0]; // For now, handle single photo editing
   const isMultiple = selectedPhotos.length > 1;
+
+  // Fetch albums this photo belongs to
+  useEffect(() => {
+    if (!photo?.url) {
+      setPhotoAlbums([]);
+      return;
+    }
+
+    const fetchPhotoAlbums = async () => {
+      setAlbumsLoading(true);
+      const { data: albumPhotos } = await supabase
+        .from('album_photos')
+        .select('album_id, albums(id, title, slug, cover_image_url, profile:profiles(nickname))')
+        .eq('photo_url', photo.url);
+
+      const albums = (albumPhotos || [])
+        .map((ap) => ap.albums as unknown as PhotoAlbum)
+        .filter((a): a is PhotoAlbum => a !== null);
+
+      setPhotoAlbums(albums);
+      setAlbumsLoading(false);
+    };
+
+    fetchPhotoAlbums();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photo?.url, photo?.id]);
 
   const {
     register,
@@ -63,6 +102,7 @@ export default function PhotoEditSidebar({
       setError(null);
       setSuccess(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo?.id, reset]);
 
   const onSubmit = async (data: PhotoFormData) => {
@@ -164,6 +204,32 @@ export default function PhotoEditSidebar({
           </label>
         </div>
 
+        <hr className="my-6 border-border-color" />
+
+        {/* Albums this photo belongs to */}
+        {photoAlbums.length > 0 && (
+          <div className="mb-6">
+            <h3 className="mb-3 text-sm font-medium">Part of albums</h3>
+            {albumsLoading ? (
+              <p className="text-sm text-foreground/60">Loading...</p>
+            ) : photoAlbums.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {photoAlbums.map((album) => (
+                  <AlbumMiniCard
+                    key={album.id}
+                    title={album.title}
+                    slug={album.slug}
+                    coverImageUrl={album.cover_image_url}
+                    href={`/@${album.profile?.nickname}/album/${album.slug}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-foreground/60">Not in any albums yet.</p>
+            )}
+          </div>
+        )}
+
         {error && (
           <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500">
             {error}
@@ -209,4 +275,3 @@ export default function PhotoEditSidebar({
     </div>
   );
 }
-
