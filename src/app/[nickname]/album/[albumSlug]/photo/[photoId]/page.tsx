@@ -109,7 +109,7 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     .from('album_photos')
     .select('id')
     .eq('album_id', album.id)
-    .eq('photo_url', photo.url)
+    .eq('photo_id', photo.id)
     .single();
 
   if (!albumPhoto) {
@@ -120,7 +120,7 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
   const { data: albumPhotos } = await supabase
     .from('album_photos')
     .select('album_id, albums(id, title, slug, cover_image_url)')
-    .eq('photo_url', photo.url);
+    .eq('photo_id', photo.id);
 
   const albums = (albumPhotos || [])
     .map((ap) => ap.albums)

@@ -16,7 +16,7 @@ import {
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import type { Album, AlbumPhoto, AlbumWithPhotos } from '@/types/albums';
-import type { Photo } from '@/types/photos';
+import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
 import exifr from 'exifr';
 import { useRouter } from 'next/navigation';
@@ -43,7 +43,7 @@ export default function ManagePhotosPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('photos');
 
   // Photos state
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<PhotoWithAlbums[]>([]);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [photosLoading, setPhotosLoading] = useState(true);
 
@@ -83,7 +83,18 @@ export default function ManagePhotosPage() {
     try {
       let query = supabase
         .from('photos')
-        .select('*')
+        .select(`
+          *,
+          album_photos!album_photos_photo_id_fkey(
+            album:albums(
+              id,
+              title,
+              slug,
+              cover_image_url,
+              profile:profiles(nickname)
+            )
+          )
+        `)
         .eq('user_id', user.id)
         .order('sort_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false })
@@ -100,7 +111,24 @@ export default function ManagePhotosPage() {
       if (error) {
         console.error('Error fetching photos:', error);
       } else {
-        setPhotos((data || []) as Photo[]);
+        // Transform album_photos into a flat albums array
+        const photosWithAlbums = (data || []).map((photo) => {
+          const albums = (photo.album_photos || [])
+            .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null } | null }) => ap.album)
+            .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null } => a !== null)
+            .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null }) => ({
+              id: a.id,
+              title: a.title,
+              slug: a.slug,
+              cover_image_url: a.cover_image_url,
+              profile_nickname: a.profile?.nickname || null,
+            }));
+
+          const { album_photos: _, ...photoData } = photo;
+          return { ...photoData, albums };
+        });
+
+        setPhotos(photosWithAlbums as PhotoWithAlbums[]);
       }
     } catch (err) {
       console.error('Unexpected error:', err);

@@ -136,6 +136,7 @@ export async function uploadPhoto(
   if (albumIds.length > 0 && photoData) {
     const albumPhotoInserts = albumIds.map((albumId, index) => ({
       album_id: albumId,
+      photo_id: photoData.id,
       photo_url: publicUrl,
       width: img.width,
       height: img.height,

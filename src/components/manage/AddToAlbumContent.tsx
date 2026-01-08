@@ -98,6 +98,7 @@ export default function AddToAlbumContent({
       // Insert album_photos
       const inserts = selectedPhotos.map((photo, index) => ({
         album_id: albumId,
+        photo_id: photo.id,
         photo_url: photo.url,
         width: photo.width,
         height: photo.height,

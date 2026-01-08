@@ -2,8 +2,16 @@ import type { Tables } from '@/database.types';
 
 export type Photo = Tables<'photos'>;
 
+export type PhotoAlbumInfo = {
+  id: string;
+  title: string;
+  slug: string;
+  cover_image_url: string | null;
+  profile_nickname: string | null;
+};
+
 export type PhotoWithAlbums = Photo & {
-  albums?: { id: string; title: string; slug: string }[];
+  albums?: PhotoAlbumInfo[];
 };
 
 // Extended photo with EXIF (matches AlbumPhotoExtended pattern)

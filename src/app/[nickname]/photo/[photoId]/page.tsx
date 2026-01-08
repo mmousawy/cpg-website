@@ -88,7 +88,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
   const { data: albumPhotos } = await supabase
     .from('album_photos')
     .select('album_id, albums(id, title, slug, cover_image_url)')
-    .eq('photo_url', photo.url);
+    .eq('photo_id', photo.id);
 
   const albums = (albumPhotos || [])
     .map((ap) => ap.albums)

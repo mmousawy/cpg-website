@@ -8,6 +8,7 @@ interface AlbumMiniCardProps {
   href: string;
   /** Highlight this album (e.g., current album context) */
   highlighted?: boolean;
+  className?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export default function AlbumMiniCard({
   coverImageUrl,
   href,
   highlighted = false,
+  className = '',
 }: AlbumMiniCardProps) {
   const coverImage = coverImageUrl || '/placeholder-album.jpg';
 
@@ -26,6 +28,7 @@ export default function AlbumMiniCard({
     <Link
       href={href}
       className={`group inline-flex items-center gap-3 border pr-3 text-sm transition-colors border-border-color-strong bg-background-light hover:border-primary hover:text-primary ${
+        className} ${
         highlighted
           ? ''
           : 'opacity-80'

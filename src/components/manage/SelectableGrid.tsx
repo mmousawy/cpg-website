@@ -571,11 +571,11 @@ export default function SelectableGrid<T>({
 
         <DragOverlay
           dropAnimation={null}
-          modifiers={isMultiDragActive ? [snapCenterToCursor] : undefined}
+          modifiers={[snapCenterToCursor]}
         >
           {activeDragId && dragOverlayItems.length > 0 && (
             <div
-              className="relative cursor-grabbing"
+              className="relative cursor-grabbing opacity-70"
               style={{
                 width: 120,
                 height: 120,
@@ -585,7 +585,7 @@ export default function SelectableGrid<T>({
               {dragOverlayItems.map((item, index) => (
                 <div
                   key={getId(item)}
-                  className="absolute inset-0 overflow-hidden ring-2 ring-primary ring-offset-2 [&_*]:!cursor-grabbing"
+                  className="absolute inset-0 overflow-hidden ring-2 ring-primary ring-offset-2 [&_*]:!cursor-grabbing drop-shadow-[2px_2px_3px_rgba(0,0,0,0.3)]"
                   style={{
                     transform: `translate(${index * 8}px, ${index * 8}px) rotate(${index * 2 - 2}deg)`,
                     zIndex: dragOverlayItems.length - index,
