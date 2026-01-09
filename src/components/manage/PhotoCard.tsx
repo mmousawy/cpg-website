@@ -3,6 +3,7 @@
 import type { Photo } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
+import PrivateMicroSVG from 'public/icons/private-micro.svg';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -43,6 +44,14 @@ export default function PhotoCard({
           draggable={false}
         />
         {/* Hover overlay */}
+        {/* Private badge */}
+        {!photo.is_public && (
+          <div className="absolute top-2 right-2">
+            <span className="inline-block rounded-full bg-yellow-100 px-1 py-1 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
+              <PrivateMicroSVG className="size-4" />
+            </span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity"></div>
       </div>
 

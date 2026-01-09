@@ -440,7 +440,7 @@ export default function AlbumDetailPage() {
             icon={<PlusSVG className="size-5 -ml-0.5" />}
             variant="primary"
           >
-            {isUploading ? 'Uploading...' : 'Upload new'}
+            {isUploading ? 'Uploading...' : 'Upload'}
           </Button>
           <input
             ref={fileInputRef}

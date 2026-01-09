@@ -7,6 +7,7 @@ import Image from 'next/image';
 import exifr from 'exifr';
 
 import type { Tables } from '@/database.types';
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import Button from '@/components/shared/Button';
@@ -29,6 +30,7 @@ type Event = Pick<Tables<'events'>, 'id' | 'title' | 'description' | 'date' | 't
 export default function AdminEventFormPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
   const { user } = useAuth();
+  const confirm = useConfirm();
   const router = useRouter();
   const params = useParams();
   const supabase = createClient();
@@ -163,9 +165,14 @@ export default function AdminEventFormPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this event? This action cannot be undone and will remove all RSVPs.')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete Event',
+      message: 'Are you sure you want to delete this event? This action cannot be undone and will remove all RSVPs.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     // Check if eventSlug is a numeric ID or an actual slug
     const isNumericId = /^\d+$/.test(eventSlug);

@@ -4,6 +4,7 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
 import Image from 'next/image';
 import FolderSVG from 'public/icons/folder.svg';
+import PrivateMicroSVG from 'public/icons/private-micro.svg';
 
 interface AlbumCardProps {
   album: AlbumWithPhotos;
@@ -48,9 +49,9 @@ export default function AlbumCard({
 
         {/* Private badge */}
         {!album.is_public && (
-          <div className="absolute top-2 right-8">
-            <span className="inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
-              Private
+          <div className="absolute top-2 right-2">
+            <span className="inline-block rounded-full bg-yellow-100 px-1 py-1 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
+              <PrivateMicroSVG className="size-4" />
             </span>
           </div>
         )}

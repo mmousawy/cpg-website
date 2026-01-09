@@ -4,11 +4,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import ModalProvider from "@/app/providers/ModalProvider";
+import ConfirmProvider from "@/app/providers/ConfirmProvider";
 import SupabaseProvider from "./providers/SupabaseProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
 import Layout from "@/components/layout/Layout";
 import Modal from "@/components/shared/Modal";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 import "./globals.css";
 
@@ -49,10 +51,13 @@ export default function RootLayout({
             <ThemeProvider>
               <UnsavedChangesProvider>
                 <ModalProvider>
+                <ConfirmProvider>
                   <Layout>
                     {children}
                   </Layout>
                   <Modal />
+                  <ConfirmModal />
+                </ConfirmProvider>
                 </ModalProvider>
               </UnsavedChangesProvider>
             </ThemeProvider>

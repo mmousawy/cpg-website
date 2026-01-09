@@ -209,12 +209,20 @@ export default function SelectableGrid<T>({
   }, []);
 
   const handleSelectionChange = useCallback(
-    (selectedItemIds: string[]) => {
+    (selectedItemIds: string[], isModifierKey: boolean) => {
       if (onSelectMultiple) {
-        onSelectMultiple(selectedItemIds);
+        if (isModifierKey) {
+          // Shift/Ctrl/Meta+drag: add to existing selection
+          const newSelection = new Set(selectedIds);
+          selectedItemIds.forEach((id) => newSelection.add(id));
+          onSelectMultiple(Array.from(newSelection));
+        } else {
+          // Regular drag: replace selection
+          onSelectMultiple(selectedItemIds);
+        }
       }
     },
-    [onSelectMultiple],
+    [onSelectMultiple, selectedIds],
   );
 
   const { isSelecting, boxStyle, hoveredIds, justFinishedSelecting } = useSelectionBox({
@@ -469,70 +477,70 @@ export default function SelectableGrid<T>({
         className={`relative grid h-full gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] p-6 content-start select-none ${className || ''}`}
         onClick={handleGridClick}
       >
-      {items.map((item) => {
-        const id = getId(item);
-        const isSelected = selectedIds.has(id);
-        const isHovered = hoveredIdSet.has(id);
+        {items.map((item) => {
+          const id = getId(item);
+          const isSelected = selectedIds.has(id);
+          const isHovered = hoveredIdSet.has(id);
 
-        // Check if this is a multi-drag scenario
-        const isMultiDragActive =
+          // Check if this is a multi-drag scenario
+          const isMultiDragActive =
           activeDragId !== null &&
           selectedIds.has(activeDragId) &&
           selectedIds.size > 1;
 
-        // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
-        const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
+          // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
+          const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
 
-        // Determine push direction for this item
-        const pushDirection = id === pushLeftItemId
-          ? 'left' as const
-          : id === pushRightItemId
-            ? 'right' as const
-            : null;
+          // Determine push direction for this item
+          const pushDirection = id === pushLeftItemId
+            ? 'left' as const
+            : id === pushRightItemId
+              ? 'right' as const
+              : null;
 
-        return (
-          <SortableItem
-            key={id}
-            item={item}
-            id={id}
-            isSelected={isSelected}
-            isHovered={isHovered}
-            isMultiDragging={isMultiDragging}
-            isMultiDragActive={isMultiDragActive}
-            pushDirection={pushDirection}
-            renderItem={renderItem}
-            onItemClick={handleItemClick}
-            onCheckboxClick={handleCheckboxClick}
-            sortable={sortable}
+          return (
+            <SortableItem
+              key={id}
+              item={item}
+              id={id}
+              isSelected={isSelected}
+              isHovered={isHovered}
+              isMultiDragging={isMultiDragging}
+              isMultiDragActive={isMultiDragActive}
+              pushDirection={pushDirection}
+              renderItem={renderItem}
+              onItemClick={handleItemClick}
+              onCheckboxClick={handleCheckboxClick}
+              sortable={sortable}
+            />
+          );
+        })}
+
+        {/* Drop indicator for multi-drag */}
+        {dropIndicatorPos && (
+          <div
+            className="pointer-events-none absolute w-1 bg-primary rounded-full z-40"
+            style={{
+              left: dropIndicatorPos.x - 2,
+              top: dropIndicatorPos.y,
+              height: dropIndicatorPos.height,
+              boxShadow: '0 0 0 1px white, 0 0 0 2px rgba(0,0,0,0.1)',
+            }}
           />
-        );
-      })}
+        )}
 
-      {/* Drop indicator for multi-drag */}
-      {dropIndicatorPos && (
-        <div
-          className="pointer-events-none absolute w-1 bg-primary rounded-full z-40"
-          style={{
-            left: dropIndicatorPos.x - 2,
-            top: dropIndicatorPos.y,
-            height: dropIndicatorPos.height,
-            boxShadow: '0 0 0 1px white, 0 0 0 2px rgba(0,0,0,0.1)',
-          }}
-        />
-      )}
-
-      {/* Selection box overlay */}
-      {isSelecting && boxStyle && (
-        <div
-          className="pointer-events-none absolute border-2 border-primary bg-primary/10 z-50"
-          style={{
-            left: boxStyle.left,
-            top: boxStyle.top,
-            width: boxStyle.width,
-            height: boxStyle.height,
-          }}
-        />
-      )}
+        {/* Selection box overlay */}
+        {isSelecting && boxStyle && (
+          <div
+            className="pointer-events-none absolute border-2 border-primary bg-primary/10 z-50"
+            style={{
+              left: boxStyle.left,
+              top: boxStyle.top,
+              width: boxStyle.width,
+              height: boxStyle.height,
+            }}
+          />
+        )}
       </div>
     </div>
   );

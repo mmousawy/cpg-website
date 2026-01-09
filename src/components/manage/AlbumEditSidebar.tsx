@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
-import Checkbox from '@/components/shared/Checkbox';
+import Toggle from '@/components/shared/Toggle';
 import type { Album } from '@/types/albums';
 import { createClient } from '@/utils/supabase/client';
 
@@ -52,6 +53,7 @@ export default function AlbumEditSidebar({
   isDirtyRef,
 }: AlbumEditSidebarProps) {
   const supabase = createClient();
+  const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [tagInput, setTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -119,6 +121,24 @@ export default function AlbumEditSidebar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [album?.id]);
 
+  // Handle Delete key for album deletion
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if in an input or textarea, or if it's a new album
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      if (isNewAlbum || !album || !onDelete) return;
+
+      if (e.key === 'Delete' && !isSaving && !isDeleting) {
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   const generateSlug = (text: string) => {
     return text
       .toLowerCase()
@@ -171,9 +191,15 @@ export default function AlbumEditSidebar({
 
   const handleDelete = async () => {
     if (!onDelete) return;
-    if (!confirm('Are you sure you want to delete this album? This action cannot be undone.')) {
-      return;
-    }
+
+    const confirmed = await confirm({
+      title: 'Delete Album',
+      message: 'Are you sure you want to delete this album? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     setIsDeleting(true);
     setError(null);
@@ -264,10 +290,12 @@ export default function AlbumEditSidebar({
           />
         </div>
 
-        <Checkbox
+        <Toggle
           id="isPublic"
+          leftLabel="Private"
+          rightLabel="Public"
           {...register('isPublic')}
-          label="Make this album public"
+          label="Visibility"
         />
 
         <div className="flex flex-col gap-2">

@@ -371,7 +371,7 @@ export default function PhotosPage() {
           <select
             value={photoFilter}
             onChange={(e) => setPhotoFilter(e.target.value as 'all' | 'public' | 'private')}
-            className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+            className="rounded-lg border border-border-color bg-background px-3 py-1.5 text-sm transition-colors focus:border-primary focus:outline-none"
           >
             <option value="all">All photos</option>
             <option value="public">Public</option>

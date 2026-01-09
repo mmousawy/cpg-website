@@ -159,7 +159,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
           date={albumWithPhotos.created_at || new Date().toISOString()}
           metadata={[`${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`]}
         />
-        <FullSizeGalleryButton photos={photos} className="mt-4" />
+        <FullSizeGalleryButton photos={photos} className="mt-4 text-xs" />
       </PageContainer>
 
       {/* Gallery - Wide container */}

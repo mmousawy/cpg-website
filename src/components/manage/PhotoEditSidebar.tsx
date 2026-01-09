@@ -1,8 +1,9 @@
 'use client';
 
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import Button from '@/components/shared/Button';
-import Checkbox from '@/components/shared/Checkbox';
+import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { zodResolver } from '@hookform/resolvers/zod';
 import CheckSVG from 'public/icons/check.svg';
@@ -87,6 +88,7 @@ function BulkEditForm({
   externalError?: string | null;
   externalSuccess?: boolean;
 }) {
+  const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
@@ -121,6 +123,23 @@ function BulkEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
+  // Handle Delete key for bulk deletion
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'Delete' && !isSaving && !isLoading && !isDeleting) {
+        e.preventDefault();
+        handleBulkDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   const onSubmit = async (data: BulkPhotoFormData) => {
     if (!onBulkSave) {
       setLocalError('Bulk save not supported');
@@ -144,9 +163,22 @@ function BulkEditForm({
 
   const handleBulkDelete = async () => {
     const count = selectedPhotos.length;
-    if (!confirm(`Are you sure you want to delete ${count} photos? This action cannot be undone.`)) {
-      return;
-    }
+
+    const confirmed = await confirm({
+      title: 'Delete Photos',
+      message: `Are you sure you want to delete ${count} photo${count !== 1 ? 's' : ''}? This action cannot be undone.`,
+      content: (
+        <div className="space-y-1">
+          {selectedPhotos.map((photo) => (
+            <PhotoListItem key={photo.id} photo={photo} variant="compact" />
+          ))}
+        </div>
+      ),
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     setIsDeleting(true);
     setLocalError(null);
@@ -264,11 +296,13 @@ function BulkEditForm({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
+        <div className="flex flex-col gap-2">
+          <Toggle
             id="bulk_is_public"
+            leftLabel="Private"
+            rightLabel="Public"
             {...register('is_public')}
-            label="Make photos public"
+            label="Visibility"
           />
           {mixedVisibility && (
             <span className="text-xs text-foreground/50">(currently mixed)</span>
@@ -312,6 +346,7 @@ function SinglePhotoEditForm({
   externalError?: string | null;
   externalSuccess?: boolean;
 }) {
+  const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
@@ -353,6 +388,23 @@ function SinglePhotoEditForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo.id, reset]);
 
+  // Handle Delete key for single photo deletion
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+      if (e.key === 'Delete' && !isSaving && !isLoading) {
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   const onSubmit = async (data: PhotoFormData) => {
     setLocalError(null);
     setLocalSuccess(false);
@@ -369,7 +421,17 @@ function SinglePhotoEditForm({
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this photo?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Photo',
+      message: 'Are you sure you want to delete this photo? This action cannot be undone.',
+      content: (
+        <PhotoListItem photo={photo} variant="compact" />
+      ),
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
     await onDelete(photo.id);
   };
 
@@ -458,12 +520,13 @@ function SinglePhotoEditForm({
           />
         </div>
 
-        <Checkbox
+        <Toggle
           id={`is_public-${photo.id}`}
+          leftLabel="Private"
+          rightLabel="Public"
           {...register('is_public')}
-          label="Make this photo public"
+          label="Visibility"
         />
-
         {/* Albums this photo belongs to */}
         {photoAlbums.length > 0 && (
           <>

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import Button from '@/components/shared/Button';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
 import 'photoswipe/style.css';
-import Button from '@/components/shared/Button';
 import ExpandSVG from 'public/icons/expand.svg';
+import { useEffect, useRef } from 'react';
 
 interface PhotoItem {
   url: string;
@@ -56,13 +56,12 @@ export default function FullSizeGalleryButton({
     <Button
       variant="secondary"
       className={className}
-      icon={<ExpandSVG className="size-4" />}
+      icon={<ExpandSVG className="size-4 -ml-1" />}
       onClick={() => {
         lightboxRef.current?.loadAndOpen(0);
       }}
     >
-      Full size gallery
+      View full size gallery
     </Button>
   );
 }
-

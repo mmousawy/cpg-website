@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import Button from './Button';
@@ -30,6 +31,7 @@ interface CommentsProps {
 
 export default function Comments({ albumId, photoId }: CommentsProps) {
   const { user, isAdmin } = useAuth();
+  const confirm = useConfirm();
   const supabase = createClient();
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
@@ -123,9 +125,14 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Are you sure you want to delete this comment?')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete Comment',
+      message: 'Are you sure you want to delete this comment?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     try {
       // Delete from comments table (cascade will remove junction link)

@@ -12,7 +12,7 @@ interface SelectionBox {
 interface UseSelectionBoxOptions {
   containerRef: React.RefObject<HTMLElement | null>;
   itemSelector: string;
-  onSelectionChange: (selectedIds: string[]) => void;
+  onSelectionChange: (selectedIds: string[], isModifierKey: boolean) => void;
   getItemId: (element: Element) => string | null;
   disabled?: boolean;
 }
@@ -33,6 +33,7 @@ export function useSelectionBox({
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const isSelectingRef = useRef(false);
   const hoveredIdsRef = useRef<string[]>([]);
+  const modifierKeyRef = useRef(false); // Track Shift, Ctrl, or Meta
   const onSelectionChangeRef = useRef(onSelectionChange);
   const getItemIdRef = useRef(getItemId);
   const itemSelectorRef = useRef(itemSelector);
@@ -129,6 +130,9 @@ export function useSelectionBox({
 
       if (!container.contains(target)) return;
 
+      // Track if Shift, Ctrl, or Meta is held at the start of the drag
+      modifierKeyRef.current = e.shiftKey || e.ctrlKey || e.metaKey;
+
       const containerRect = container.getBoundingClientRect();
       const x = e.clientX - containerRect.left + container.scrollLeft;
       const y = e.clientY - containerRect.top + container.scrollTop;
@@ -138,6 +142,9 @@ export function useSelectionBox({
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!startPointRef.current) return;
+
+      // Update modifier key state during drag (in case user presses/releases it)
+      modifierKeyRef.current = e.shiftKey || e.ctrlKey || e.metaKey;
 
       const containerRect = container.getBoundingClientRect();
       const currentX = e.clientX - containerRect.left + container.scrollLeft;
@@ -171,13 +178,13 @@ export function useSelectionBox({
       setHoveredIds(ids);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       // Track if we just finished a selection (to prevent click from clearing it)
       const wasSelecting = isSelectingRef.current && hoveredIdsRef.current.length > 0;
 
       if (wasSelecting) {
-        // Call the latest version of the callback
-        onSelectionChangeRef.current(hoveredIdsRef.current);
+        // Call the latest version of the callback with modifier key state
+        onSelectionChangeRef.current(hoveredIdsRef.current, modifierKeyRef.current);
 
         // Set flag to prevent the subsequent click event from clearing selection
         setJustFinishedSelecting(true);
@@ -188,6 +195,7 @@ export function useSelectionBox({
       startPointRef.current = null;
       isSelectingRef.current = false;
       hoveredIdsRef.current = [];
+      modifierKeyRef.current = false;
       setIsSelecting(false);
       setSelectionBox(null);
       setHoveredIds([]);

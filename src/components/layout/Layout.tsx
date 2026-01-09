@@ -5,7 +5,7 @@ import Header from './Header';
 import Footer from './Footer';
 
 // Pages where footer should be hidden (full-height layouts)
-const noFooterPaths = ['/account/photos'];
+const noFooterPaths = ['/account/photos', '/account/albums'];
 
 type LayoutProps = {
   children: React.ReactNode

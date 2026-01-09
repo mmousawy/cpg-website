@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 
 import type { Tables } from '@/database.types';
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import Button from '@/components/shared/Button';
@@ -29,6 +30,7 @@ type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'cance
 export default function MyEventsPage() {
   // User is guaranteed by ProtectedRoute layout
   const { user } = useAuth();
+  const confirm = useConfirm();
 
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +83,14 @@ export default function MyEventsPage() {
   }, [user]);
 
   const handleCancel = async (rsvp: RSVP) => {
-    if (!confirm('Are you sure you want to cancel this RSVP?')) return;
+    const confirmed = await confirm({
+      title: 'Cancel RSVP',
+      message: 'Are you sure you want to cancel this RSVP?',
+      confirmLabel: 'Cancel RSVP',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
 
     setCancellingId(rsvp.id);
 
