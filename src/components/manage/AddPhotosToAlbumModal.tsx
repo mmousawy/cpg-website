@@ -155,66 +155,23 @@ export default function AddPhotosToAlbumModal({
     setError(null);
 
     try {
-      // For each selected album, add all photos
-      for (const albumId of selectedAlbumIds) {
-        // Get album info to check if it needs a cover image
-        const { data: albumData } = await supabase
-          .from('albums')
-          .select('cover_image_url')
-          .eq('id', albumId)
-          .single();
+      const photoIds = photos.map((p) => p.id);
 
-        // Get current max sort_order for this album
-        const { data: existingPhotos } = await supabase
-          .from('album_photos')
-          .select('sort_order, photo_id')
-          .eq('album_id', albumId)
-          .order('sort_order', { ascending: false })
-          .limit(1);
+      // Use RPC to add photos to each selected album
+      // RPC handles deduplication and sort_order assignment
+      const promises = Array.from(selectedAlbumIds).map((albumId) =>
+        supabase.rpc('add_photos_to_album', {
+          p_album_id: albumId,
+          p_photo_ids: photoIds,
+        }),
+      );
 
-        const maxSortOrder = existingPhotos?.[0]?.sort_order ?? -1;
-        const albumIsEmpty = !existingPhotos || existingPhotos.length === 0;
+      const results = await Promise.all(promises);
 
-        // Get existing photo IDs in this album to avoid duplicates
-        const { data: albumPhotoData } = await supabase
-          .from('album_photos')
-          .select('photo_id')
-          .eq('album_id', albumId);
-
-        const existingPhotoIds = new Set(
-          (albumPhotoData || []).map((ap) => ap.photo_id),
-        );
-
-        // Filter out photos already in this album
-        const photosToAdd = photos.filter((p) => !existingPhotoIds.has(p.id));
-
-        if (photosToAdd.length === 0) continue;
-
-        // Insert album_photos
-        const inserts = photosToAdd.map((photo, index) => ({
-          album_id: albumId,
-          photo_id: photo.id,
-          photo_url: photo.url,
-          width: photo.width,
-          height: photo.height,
-          sort_order: maxSortOrder + 1 + index,
-        }));
-
-        const { error: insertError } = await supabase
-          .from('album_photos')
-          .insert(inserts);
-
-        if (insertError) {
-          throw new Error(insertError.message || 'Failed to add photos to album');
-        }
-
-        // Set cover image if album doesn't have one
-        if (!albumData?.cover_image_url && photosToAdd.length > 0) {
-          await supabase
-            .from('albums')
-            .update({ cover_image_url: photosToAdd[0].url })
-            .eq('id', albumId);
-        }
+      // Check for any errors
+      const firstError = results.find((r) => r.error);
+      if (firstError?.error) {
+        throw new Error(firstError.error.message || 'Failed to add photos to album');
       }
 
       onSuccess();

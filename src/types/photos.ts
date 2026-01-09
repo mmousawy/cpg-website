@@ -13,6 +13,10 @@ export type PhotoAlbumInfo = {
 
 export type PhotoWithAlbums = Photo & {
   albums?: PhotoAlbumInfo[];
+  /** When viewing within an album context, this is the album_photos.id for that relationship */
+  album_photo_id?: string;
+  /** The album_photos.sort_order when in album context */
+  album_sort_order?: number;
 };
 
 // Extended photo with EXIF (matches AlbumPhotoExtended pattern)

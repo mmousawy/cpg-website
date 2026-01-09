@@ -463,11 +463,12 @@ export default function SelectableGrid<T>({
   };
 
   const gridContent = (
-    <div
-      ref={containerRef}
-      className={`relative grid h-full gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] p-6 content-start select-none ${className}`}
-      onClick={handleGridClick}
-    >
+    <div className="relative h-full flex-1">
+      <div
+        ref={containerRef}
+        className={`relative grid h-full gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] p-6 content-start select-none ${className || ''}`}
+        onClick={handleGridClick}
+      >
       {items.map((item) => {
         const id = getId(item);
         const isSelected = selectedIds.has(id);
@@ -532,6 +533,7 @@ export default function SelectableGrid<T>({
           }}
         />
       )}
+      </div>
     </div>
   );
 

@@ -38,6 +38,8 @@ interface PhotoEditSidebarProps {
   onSave: (photoId: string, data: PhotoFormData) => Promise<void>;
   onBulkSave?: (photoIds: string[], data: BulkPhotoFormData) => Promise<void>;
   onDelete: (photoId: string) => Promise<void>;
+  /** Handler for bulk deletion. If provided, used for multi-select delete (more efficient). */
+  onBulkDelete?: (photoIds: string[]) => Promise<void>;
   /** Handler for adding photos to album. If not provided, the Album button is hidden. */
   onAddToAlbum?: (photoIds: string[]) => void;
   /** Handler for removing photos from the current album (only shown in album view). */
@@ -62,6 +64,7 @@ function BulkEditForm({
   selectedPhotos,
   onBulkSave,
   onDelete,
+  onBulkDelete,
   onAddToAlbum,
   onRemoveFromAlbum,
   isLoading,
@@ -74,6 +77,7 @@ function BulkEditForm({
   selectedPhotos: PhotoWithAlbums[];
   onBulkSave?: (photoIds: string[], data: BulkPhotoFormData) => Promise<void>;
   onDelete: (photoId: string) => Promise<void>;
+  onBulkDelete?: (photoIds: string[]) => Promise<void>;
   onAddToAlbum?: (photoIds: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
   isLoading?: boolean;
@@ -148,9 +152,15 @@ function BulkEditForm({
     setLocalError(null);
 
     try {
-      // Delete photos one by one (could be optimized with a bulk delete RPC later)
-      for (const photo of selectedPhotos) {
-        await onDelete(photo.id);
+      if (onBulkDelete) {
+        // Use optimized bulk delete RPC
+        const photoIds = selectedPhotos.map((p) => p.id);
+        await onBulkDelete(photoIds);
+      } else {
+        // Fallback: delete photos one by one
+        for (const photo of selectedPhotos) {
+          await onDelete(photo.id);
+        }
       }
     } catch (err: any) {
       setLocalError(err.message || 'Failed to delete photos');
@@ -467,7 +477,7 @@ function SinglePhotoEditForm({
                     title={album.title}
                     slug={album.slug}
                     coverImageUrl={album.cover_image_url}
-                    href={`/@${album.profile_nickname}/album/${album.slug}`}
+                    href={`/account/albums/${album.slug}`}
                     photoCount={album.photo_count}
                   />
                 ))}
@@ -492,6 +502,7 @@ export default function PhotoEditSidebar({
   onSave,
   onBulkSave,
   onDelete,
+  onBulkDelete,
   onAddToAlbum,
   onRemoveFromAlbum,
   isLoading = false,
@@ -519,6 +530,7 @@ export default function PhotoEditSidebar({
         selectedPhotos={selectedPhotos}
         onBulkSave={onBulkSave}
         onDelete={onDelete}
+        onBulkDelete={onBulkDelete}
         onAddToAlbum={onAddToAlbum}
         onRemoveFromAlbum={onRemoveFromAlbum}
         isLoading={isLoading}

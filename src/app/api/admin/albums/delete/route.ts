@@ -51,39 +51,12 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
-    // Delete album photos first (cascade should handle this, but being explicit)
-    await supabase
-      .from('album_photos')
-      .delete()
-      .eq('album_id', albumId);
+    // Use atomic RPC to delete album and all related data
+    const { data: success, error: deleteError } = await supabase.rpc('admin_delete_album', {
+      p_album_id: albumId,
+    });
 
-    // Delete album tags
-    await supabase
-      .from('album_tags')
-      .delete()
-      .eq('album_id', albumId);
-
-    // Delete album comments (get comment IDs first, then delete from comments table)
-    const { data: albumCommentLinks } = await supabase
-      .from('album_comments')
-      .select('comment_id')
-      .eq('album_id', albumId);
-
-    if (albumCommentLinks && albumCommentLinks.length > 0) {
-      const commentIds = albumCommentLinks.map(ac => ac.comment_id);
-      await supabase
-        .from('comments')
-        .delete()
-        .in('id', commentIds);
-    }
-
-    // Delete the album
-    const { error: deleteError } = await supabase
-      .from('albums')
-      .delete()
-      .eq('id', albumId);
-
-    if (deleteError) {
+    if (deleteError || !success) {
       console.error('Error deleting album:', deleteError);
       return NextResponse.json({ error: 'Failed to delete album' }, { status: 500 });
     }

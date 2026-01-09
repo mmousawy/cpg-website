@@ -101,35 +101,15 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
 
     setIsSubmitting(true);
     try {
-      // 1. Insert into comments table
-      const { data: commentData, error: commentError } = await supabase
-        .from('comments')
-        .insert({
-          user_id: user.id,
-          comment_text: commentText.trim(),
-        })
-        .select('id')
-        .single();
+      // Use atomic RPC function to create and link comment in one transaction
+      const { error } = await supabase.rpc('add_comment', {
+        p_entity_type: entityType,
+        p_entity_id: entityId,
+        p_comment_text: commentText.trim(),
+      });
 
-      if (commentError || !commentData) {
-        console.error('Error creating comment:', commentError);
-        alert('Failed to post comment');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 2. Link comment via appropriate junction table
-      const junctionTable = entityType === 'album' ? 'album_comments' : 'photo_comments';
-      const linkData = entityType === 'album'
-        ? { album_id: entityId, comment_id: commentData.id }
-        : { photo_id: entityId, comment_id: commentData.id };
-
-      const { error: linkError } = await supabase
-        .from(junctionTable)
-        .insert(linkData);
-
-      if (linkError) {
-        console.error(`Error linking comment to ${entityType}:`, linkError);
+      if (error) {
+        console.error('Error creating comment:', error);
         alert('Failed to post comment');
       } else {
         setCommentText('');

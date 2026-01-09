@@ -102,49 +102,14 @@ export default function AddToAlbumContent({
     setError(null);
 
     try {
-      const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
+      // Use RPC to add photos - handles sort_order assignment automatically
+      const { error: rpcError } = await supabase.rpc('add_photos_to_album', {
+        p_album_id: albumId,
+        p_photo_ids: Array.from(selectedPhotoIds),
+      });
 
-      // Get album info to check if it needs a cover image
-      const { data: albumData } = await supabase
-        .from('albums')
-        .select('cover_image_url')
-        .eq('id', albumId)
-        .single();
-
-      // Get current max sort_order
-      const { data: existingPhotos } = await supabase
-        .from('album_photos')
-        .select('sort_order')
-        .eq('album_id', albumId)
-        .order('sort_order', { ascending: false })
-        .limit(1);
-
-      const maxSortOrder = existingPhotos?.[0]?.sort_order ?? -1;
-
-      // Insert album_photos
-      const inserts = selectedPhotos.map((photo, index) => ({
-        album_id: albumId,
-        photo_id: photo.id,
-        photo_url: photo.url,
-        width: photo.width,
-        height: photo.height,
-        sort_order: maxSortOrder + 1 + index,
-      }));
-
-      const { error: insertError } = await supabase
-        .from('album_photos')
-        .insert(inserts);
-
-      if (insertError) {
-        throw new Error(insertError.message || 'Failed to add photos to album');
-      }
-
-      // Set cover image if album doesn't have one
-      if (!albumData?.cover_image_url && selectedPhotos.length > 0) {
-        await supabase
-          .from('albums')
-          .update({ cover_image_url: selectedPhotos[0].url })
-          .eq('id', albumId);
+      if (rpcError) {
+        throw new Error(rpcError.message || 'Failed to add photos to album');
       }
 
       onSuccess();

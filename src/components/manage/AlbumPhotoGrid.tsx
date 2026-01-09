@@ -65,29 +65,24 @@ export default function AlbumPhotoGrid({
   onSelectMultiple,
 }: AlbumPhotoGridProps) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto">
-        <SelectableGrid
-          items={photos}
-          selectedIds={selectedPhotoIds}
-          getId={(photo) => photo.id}
-          onSelect={onSelectPhoto}
-          onClearSelection={onClearSelection}
-          onSelectMultiple={onSelectMultiple}
-          onReorder={onReorder}
-          sortable
-          emptyMessage="No photos in this album yet. Add some photos!"
-          className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] select-none p-6 h-full content-start"
-          renderItem={(photo, isSelected, isDragging, isHovered) => (
-            <AlbumPhotoCard
-              photo={photo}
-              isSelected={isSelected}
-              isDragging={isDragging}
-              isHovered={isHovered}
-            />
-          )}
+    <SelectableGrid
+      items={photos}
+      selectedIds={selectedPhotoIds}
+      getId={(photo) => photo.id}
+      onSelect={onSelectPhoto}
+      onClearSelection={onClearSelection}
+      onSelectMultiple={onSelectMultiple}
+      onReorder={onReorder}
+      sortable
+      emptyMessage="No photos in this album yet. Add some photos!"
+      renderItem={(photo, isSelected, isDragging, isHovered) => (
+        <AlbumPhotoCard
+          photo={photo}
+          isSelected={isSelected}
+          isDragging={isDragging}
+          isHovered={isHovered}
         />
-      </div>
-    </div>
+      )}
+    />
   );
 }

@@ -17,7 +17,8 @@ export { default as AlbumCard } from './AlbumCard';
 export { default as AlbumEditEmptyState } from './AlbumEditEmptyState';
 export { default as AlbumEditSidebar, type AlbumFormData } from './AlbumEditSidebar';
 export { default as AlbumGrid } from './AlbumGrid';
-export { default as AlbumPhotoGrid } from './AlbumPhotoGrid';
 
 // Shared components
+export { default as ManageLayout } from './ManageLayout';
 export { default as SidebarPanel } from './SidebarPanel';
+
