@@ -46,6 +46,7 @@ export type Database = {
           description: string | null
           height: number | null
           id: string
+          photo_id: string
           photo_url: string
           sort_order: number | null
           title: string | null
@@ -57,6 +58,7 @@ export type Database = {
           description?: string | null
           height?: number | null
           id?: string
+          photo_id: string
           photo_url: string
           sort_order?: number | null
           title?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           description?: string | null
           height?: number | null
           id?: string
+          photo_id?: string
           photo_url?: string
           sort_order?: number | null
           title?: string | null
@@ -79,6 +82,13 @@ export type Database = {
             columns: ["album_id"]
             isOneToOne: false
             referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_photos_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
             referencedColumns: ["id"]
           },
           {
@@ -412,7 +422,7 @@ export type Database = {
           is_public?: boolean
           mime_type: string
           original_filename?: string | null
-          short_id: string
+          short_id?: string
           sort_order?: number | null
           storage_path: string
           title?: string | null
@@ -503,7 +513,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_comment: {
+        Args: {
+          p_comment_text: string
+          p_entity_id: string
+          p_entity_type: string
+        }
+        Returns: string
+      }
+      add_photos_to_album: {
+        Args: { p_album_id: string; p_photo_ids: string[] }
+        Returns: number
+      }
+      admin_delete_album: { Args: { p_album_id: string }; Returns: boolean }
+      batch_update_album_photos: {
+        Args: { photo_updates: Json }
+        Returns: undefined
+      }
+      batch_update_photos: { Args: { photo_updates: Json }; Returns: undefined }
+      bulk_delete_photos: { Args: { p_photo_ids: string[] }; Returns: number }
+      bulk_remove_from_album: {
+        Args: { p_album_photo_ids: string[] }
+        Returns: number
+      }
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
+      delete_album: { Args: { p_album_id: string }; Returns: boolean }
+      generate_short_id: { Args: { size?: number }; Returns: string }
     }
     Enums: {
       [_ in never]: never
