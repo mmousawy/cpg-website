@@ -99,7 +99,8 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
         title,
         width,
         height,
-        sort_order
+        sort_order,
+        photo:photos!album_photos_photo_id_fkey(deleted_at)
       )
     `)
     .eq('user_id', profile.id)
@@ -118,7 +119,11 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     suspension_reason: (album as any)?.suspension_reason || null,
   };
 
-  const albumWithPhotos = album as unknown as AlbumWithPhotos;
+  // Filter out deleted photos
+  const albumWithPhotos = {
+    ...album,
+    photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+  } as unknown as AlbumWithPhotos;
 
   // Sort photos by sort_order
   const sortedAlbumPhotos = [...albumWithPhotos.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));

@@ -87,7 +87,11 @@ export default function AlbumsPage() {
           is_public,
           created_at,
           user_id,
-          photos:album_photos(id, photo_url),
+          photos:album_photos(
+            id,
+            photo_url,
+            photo:photos!album_photos_photo_id_fkey(deleted_at)
+          ),
           tags:album_tags(tag)
         `)
         .eq('user_id', user.id)
@@ -98,7 +102,12 @@ export default function AlbumsPage() {
       if (error) {
         console.error('Error fetching albums:', error);
       } else {
-        setAlbums((data || []) as unknown as AlbumWithPhotos[]);
+        // Filter out deleted photos from albums
+        const albumsWithFilteredPhotos = ((data || []) as any[]).map((album) => ({
+          ...album,
+          photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+        }));
+        setAlbums(albumsWithFilteredPhotos as unknown as AlbumWithPhotos[]);
       }
     } catch (err) {
       console.error('Unexpected error:', err);

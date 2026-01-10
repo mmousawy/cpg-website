@@ -94,7 +94,11 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       is_public,
       created_at,
       profile:profiles(full_name, nickname, avatar_url),
-      photos:album_photos!inner(id, photo_url)
+      photos:album_photos!inner(
+        id,
+        photo_url,
+        photo:photos!album_photos_photo_id_fkey(deleted_at)
+      )
     `)
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)
@@ -102,7 +106,13 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .order('created_at', { ascending: false })
     .limit(50);
 
-  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
+  // Filter out albums with deleted photos
+  const albumsWithPhotos = ((albums || []) as any[])
+    .map((album) => ({
+      ...album,
+      photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+    }))
+    .filter((album) => album.photos.length > 0) as unknown as AlbumWithPhotos[];
 
   // Fetch user's public photos (ordered by user's custom sort order)
   const { data: photos } = await supabase

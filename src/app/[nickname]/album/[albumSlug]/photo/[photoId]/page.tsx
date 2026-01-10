@@ -132,14 +132,13 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
   // Get all albums this photo is in (with photo counts)
   const { data: albumPhotosData } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, album_photos(count))')
-    .eq('photo_id', photo.id)
-    .is('albums.deleted_at', null);
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos(count))')
+    .eq('photo_id', photo.id);
 
   const albums = (albumPhotosData || [])
     .map((ap) => {
       const albumData = ap.albums as any;
-      if (!albumData) return null;
+      if (!albumData || albumData.deleted_at) return null;
       return {
         id: albumData.id,
         title: albumData.title,

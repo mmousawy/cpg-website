@@ -26,7 +26,11 @@ export default async function GalleriesPage() {
       is_public,
       created_at,
       profile:profiles(full_name, nickname, avatar_url),
-      photos:album_photos!inner(id, photo_url)
+      photos:album_photos!inner(
+        id,
+        photo_url,
+        photo:photos!album_photos_photo_id_fkey(deleted_at)
+      )
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -37,7 +41,13 @@ export default async function GalleriesPage() {
     console.error('Error fetching albums:', error);
   }
 
-  const albumsWithPhotos = (albums || []) as unknown as AlbumWithPhotos[];
+  // Filter out albums with deleted photos
+  const albumsWithPhotos = ((albums || []) as any[])
+    .map((album) => ({
+      ...album,
+      photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+    }))
+    .filter((album) => album.photos.length > 0) as unknown as AlbumWithPhotos[];
 
   return (
     <PageContainer>

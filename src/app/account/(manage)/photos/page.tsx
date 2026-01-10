@@ -91,6 +91,7 @@ export default function PhotosPage() {
               title,
               slug,
               cover_image_url,
+              deleted_at,
               profile:profiles(nickname),
               album_photos(count)
             )
@@ -115,9 +116,9 @@ export default function PhotosPage() {
       } else {
         const photosWithAlbums = (data || []).map((photo) => {
           const albums = (photo.album_photos || [])
-            .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } | null }) => ap.album)
-            .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } => a !== null)
-            .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] }) => ({
+            .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } | null }) => ap.album)
+            .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } => a !== null && !(a as any).deleted_at)
+            .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] }) => ({
               id: a.id,
               title: a.title,
               slug: a.slug,
