@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { routes } from '@/config/routes';
@@ -151,14 +152,13 @@ function LoginForm() {
             <label htmlFor="email" className="text-sm font-medium">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
           </div>
 
@@ -174,7 +174,7 @@ function LoginForm() {
                 {routes.forgotPassword.label}?
               </Link>
             </div>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
@@ -182,7 +182,6 @@ function LoginForm() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
           </div>
 

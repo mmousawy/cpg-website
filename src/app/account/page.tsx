@@ -10,7 +10,9 @@ import { z } from 'zod';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
@@ -587,12 +589,11 @@ export default function AccountPage() {
                       <label htmlFor="email" className="text-sm font-medium">
                         Email
                       </label>
-                      <input
+                      <Input
                         id="email"
                         type="email"
                         value={user?.email || ''}
                         disabled
-                        className="rounded-lg border border-border-color bg-background/50 px-3 py-2 text-sm text-foreground/50"
                       />
                       <p className="text-xs text-foreground/50">Email cannot be changed</p>
                     </div>
@@ -601,12 +602,11 @@ export default function AccountPage() {
                       <label htmlFor="fullName" className="text-sm font-medium">
                         Full name
                       </label>
-                      <input
+                      <Input
                         id="fullName"
                         type="text"
                         {...register('fullName')}
                         placeholder="Your full name"
-                        className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
                       />
                     </div>
 
@@ -614,12 +614,11 @@ export default function AccountPage() {
                       <label htmlFor="nickname" className="text-sm font-medium">
                         Nickname (username)
                       </label>
-                      <input
+                      <Input
                         id="nickname"
                         type="text"
                         value={nickname}
                         disabled
-                        className="rounded-lg border border-border-color bg-background/50 px-3 py-2 text-sm text-foreground/50"
                       />
                       <p className="text-xs text-foreground/50">Your nickname is used in your gallery URLs and cannot be changed. URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{nickname || 'your-nickname'}</p>
                     </div>
@@ -639,12 +638,11 @@ export default function AccountPage() {
                       <label htmlFor="bio" className="text-sm font-medium">
                         Bio
                       </label>
-                      <textarea
+                      <Textarea
                         id="bio"
                         {...register('bio')}
                         placeholder="Tell us about yourself..."
                         rows={4}
-                        className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
                       />
                     </div>
 
@@ -652,12 +650,11 @@ export default function AccountPage() {
                       <label htmlFor="website" className="text-sm font-medium">
                         Website
                       </label>
-                      <input
+                      <Input
                         id="website"
                         type="url"
                         {...register('website')}
                         placeholder="https://yourwebsite.com"
-                        className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
                       />
                     </div>
 
@@ -678,17 +675,19 @@ export default function AccountPage() {
                       <div className="space-y-4">
                         {fields.map((field, index) => (
                           <div key={field.id} className="flex flex-col gap-2 rounded-lg border border-border-color bg-background-light p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0">
-                            <input
+                            <Input
                               type="text"
                               {...register(`socialLinks.${index}.label`)}
                               placeholder="Label (e.g., Instagram)"
-                              className="w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none sm:w-1/3"
+                              fullWidth={false}
+                              className="w-full sm:w-1/3"
                             />
-                            <input
+                            <Input
                               type="url"
                               {...register(`socialLinks.${index}.url`)}
                               placeholder="https://..."
-                              className="w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none sm:flex-1"
+                              fullWidth={false}
+                              className="w-full sm:flex-1"
                             />
                             <button
                               type="button"

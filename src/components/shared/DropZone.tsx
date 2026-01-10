@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import { useCallback, useState } from 'react';
+import CameraSVG from 'public/icons/camera.svg';
 
 interface DropZoneProps {
   children: React.ReactNode;
@@ -104,11 +105,13 @@ export default function DropZone({
       
       {/* Drag overlay */}
       {showOverlay && isDragging && (
-        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-primary/10 backdrop-blur-[2px]">
-          <div className="rounded-2xl border-2 border-dashed border-primary bg-background/90 px-8 py-6 text-center shadow-xl">
-            <div className="mb-2 text-4xl">📷</div>
-            <p className="text-lg font-semibold text-primary">{overlayMessage}</p>
-            <p className="mt-1 text-sm text-foreground/70">
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-primary/5 backdrop-blur-[2px]">
+          <div className="flex flex-col items-center rounded-xl border-2 border-dashed border-primary bg-background/95 px-10 py-8 text-center shadow-xl">
+            <div className="mb-3 flex size-12 items-center justify-center rounded-xl border border-primary/30 bg-primary/10">
+              <CameraSVG className="size-6 fill-primary" />
+            </div>
+            <p className="text-base font-medium text-primary">{overlayMessage}</p>
+            <p className="mt-1 text-sm text-foreground/60">
               Release to upload
             </p>
           </div>

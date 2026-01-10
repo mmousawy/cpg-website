@@ -4,6 +4,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import PhotoListItem from '@/components/manage/PhotoListItem';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
+import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -83,6 +84,7 @@ export default function AddPhotosToAlbumModal({
         .from('albums')
         .select('id, title, slug, cover_image_url, album_photos(count)')
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -298,12 +300,13 @@ export default function AddPhotosToAlbumModal({
           Or create a new album
         </label>
         <div className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={newAlbumTitle}
             onChange={(e) => setNewAlbumTitle(e.target.value)}
             placeholder="Album title"
-            className="flex-1 rounded-lg border border-border-color bg-background-medium px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+            fullWidth={false}
+            className="flex-1"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();

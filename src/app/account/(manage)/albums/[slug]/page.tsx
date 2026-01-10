@@ -23,6 +23,7 @@ import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
 import exifr from 'exifr';
 import { useParams, useRouter } from 'next/navigation';
+import FolderSVG from 'public/icons/folder.svg';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import PlusSVG from 'public/icons/plus.svg';
@@ -100,6 +101,7 @@ export default function AlbumDetailPage() {
         .select('*')
         .eq('user_id', user.id)
         .eq('slug', slug)
+        .is('deleted_at', null)
         .single();
 
       if (error || !data) {
@@ -140,7 +142,7 @@ export default function AlbumDetailPage() {
         console.error('Error fetching album photos:', error);
       } else if (albumPhotosData) {
         const unifiedPhotos: PhotoWithAlbums[] = albumPhotosData
-          .filter((ap) => ap.photo)
+          .filter((ap) => ap.photo && !(ap.photo as any).deleted_at)
           .map((ap) => {
             const photoData = ap.photo as unknown as Photo;
             return {
@@ -205,7 +207,8 @@ export default function AlbumDetailPage() {
         description: data.description,
         is_public: data.is_public,
       })
-      .eq('id', photoId);
+      .eq('id', photoId)
+      .is('deleted_at', null);
 
     await fetchPhotos(album.id);
   };
@@ -218,6 +221,10 @@ export default function AlbumDetailPage() {
 
     // Delete triggers automatic cover update via database trigger
     await supabase.from('album_photos').delete().eq('id', photo.album_photo_id);
+
+    // Reset dirty state after successful deletion
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(albumEditDirtyRef.current);
 
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
@@ -245,6 +252,10 @@ export default function AlbumDetailPage() {
         throw new Error(error.message || 'Failed to remove photos from album');
       }
     }
+
+    // Reset dirty state after successful removal
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(albumEditDirtyRef.current);
 
     setSelectedPhotoIds(new Set());
     await fetchPhotos(album.id);
@@ -279,7 +290,8 @@ export default function AlbumDetailPage() {
         description: data.description?.trim() || null,
         is_public: data.isPublic,
       })
-      .eq('id', albumId);
+      .eq('id', albumId)
+      .is('deleted_at', null);
 
     if (updateError) {
       throw new Error(updateError.message || 'Failed to update album');
@@ -316,6 +328,11 @@ export default function AlbumDetailPage() {
     if (error || !success) {
       throw new Error(error?.message || 'Failed to delete album');
     }
+
+    // Reset dirty state after successful deletion
+    albumEditDirtyRef.current = false;
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
 
     if (profile?.nickname) {
       await revalidateAlbum(profile.nickname, album.slug);
@@ -509,19 +526,12 @@ export default function AlbumDetailPage() {
         {photosLoading ? (
           <PageLoading message="Loading photos..." />
         ) : photos.length === 0 ? (
-          <div className="border-2 border-dashed border-border-color p-12 text-center">
-            <p className="mb-4 text-lg opacity-70">No photos in this album</p>
-            <p className="mb-4 text-sm text-foreground/50">
+          <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
+            <FolderSVG className="size-10 mb-2 inline-block" />
+            <p className="mb-2 text-lg opacity-70">No photos in this album</p>
+            <p className="text-sm text-foreground/50">
               Drag and drop photos here, or use the buttons above
             </p>
-            <div className="flex justify-center gap-2">
-              <Button onClick={handleAddFromLibrary} variant="secondary">
-                Add from library
-              </Button>
-              <Button onClick={() => fileInputRef.current?.click()} icon={<PlusSVG className="size-5 -ml-0.5" />}>
-                Upload new
-              </Button>
-            </div>
           </div>
         ) : (
           <PhotoGrid

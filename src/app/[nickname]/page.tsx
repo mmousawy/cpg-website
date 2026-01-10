@@ -98,6 +98,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     `)
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -109,6 +110,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .select('*')
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)
+    .is('deleted_at', null)
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(50);

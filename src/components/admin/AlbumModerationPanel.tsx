@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAdmin } from '@/hooks/useAdmin';
 import Button from '@/components/shared/Button';
+import Textarea from '@/components/shared/Textarea';
 import Container from '@/components/layout/Container';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
@@ -266,13 +267,13 @@ export default function AlbumModerationPanel({
               </label>
             </div>
             {selectedReason === 'other' && (
-              <textarea
+              <Textarea
                 id="moderation-reason-custom"
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 placeholder={`Explain why this album is being ${actionType === 'suspend' ? 'suspended' : 'deleted'}...`}
                 rows={3}
-                className="mt-3 w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                className="mt-3"
               />
             )}
             <p className="mt-2 text-xs text-foreground/50">

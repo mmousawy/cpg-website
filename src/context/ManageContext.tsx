@@ -33,11 +33,13 @@ export function ManageProvider({ children }: { children: React.ReactNode }) {
         supabase
           .from('photos')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
+          .eq('user_id', user.id)
+          .is('deleted_at', null),
         supabase
           .from('albums')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
+          .eq('user_id', user.id)
+          .is('deleted_at', null),
       ]);
 
       setPhotoCount(photosResult.count ?? 0);

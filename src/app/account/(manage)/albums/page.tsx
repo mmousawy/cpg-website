@@ -2,7 +2,6 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
-  AlbumEditEmptyState,
   AlbumEditSidebar,
   AlbumGrid,
   type AlbumFormData,
@@ -19,6 +18,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import FolderSVG from 'public/icons/folder.svg';
 import PlusSVG from 'public/icons/plus.svg';
 
 export default function AlbumsPage() {
@@ -91,6 +91,7 @@ export default function AlbumsPage() {
           tags:album_tags(tag)
         `)
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -110,7 +111,15 @@ export default function AlbumsPage() {
     router.push(`/account/albums/${album.slug}`);
   };
 
-  const handleSelectAlbum = (albumId: string, isMultiSelect: boolean) => {
+  const handleSelectAlbum = async (albumId: string, isMultiSelect: boolean) => {
+    // Check for unsaved changes when switching to a different single selection
+    if (!isMultiSelect && albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+      return;
+    }
+    // Close new album form when selecting an existing album
+    if (isNewAlbum) {
+      setIsNewAlbum(false);
+    }
     setSelectedAlbumIds((prev) => {
       const newSet = new Set(prev);
       if (isMultiSelect) {
@@ -130,15 +139,24 @@ export default function AlbumsPage() {
   const handleClearSelection = async () => {
     if (albumEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set());
+    // Also close new album form when clearing selection
+    if (isNewAlbum) {
+      setIsNewAlbum(false);
+    }
   };
 
   const handleSelectMultiple = async (ids: string[]) => {
     if (albumEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set(ids));
+    // Also close new album form when selecting multiple
+    if (isNewAlbum) {
+      setIsNewAlbum(false);
+    }
   };
 
   const handleCreateNewAlbum = async () => {
-    if (!(await confirmUnsavedChanges())) return;
+    // Skip confirmation if already in new album mode
+    if (!isNewAlbum && !(await confirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set());
     setIsNewAlbum(true);
   };
@@ -191,7 +209,8 @@ export default function AlbumsPage() {
         is_public: data.isPublic,
       })
       .eq('id', albumId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .is('deleted_at', null);
 
     if (updateError) {
       throw new Error(updateError.message || 'Failed to update album');
@@ -226,7 +245,8 @@ export default function AlbumsPage() {
           .from('albums')
           .update(updates)
           .in('id', albumIds)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .is('deleted_at', null);
 
         if (updateError) {
           throw new Error(updateError.message || 'Failed to update albums');
@@ -294,6 +314,10 @@ export default function AlbumsPage() {
       throw new Error(error?.message || 'Failed to delete album');
     }
 
+    // Reset dirty state after successful deletion
+    albumEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+
     // Clear selection if deleting a selected album
     setSelectedAlbumIds((prev) => {
       const newSet = new Set(prev);
@@ -319,6 +343,10 @@ export default function AlbumsPage() {
       }
     }
 
+    // Reset dirty state after successful deletion
+    albumEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+
     setSelectedAlbumIds(new Set());
     await fetchAlbums();
     refreshCounts();
@@ -334,46 +362,34 @@ export default function AlbumsPage() {
           icon={<PlusSVG className="size-5 -ml-0.5" />}
           variant="primary"
         >
-          New Album
+          New album
         </Button>
       }
       sidebar={
-        isNewAlbum ? (
-          <AlbumEditSidebar
-            selectedAlbums={[]}
-            isNewAlbum={true}
-            nickname={profile?.nickname}
-            onSave={handleSaveAlbum}
-            onBulkSave={handleBulkSaveAlbums}
-            onDelete={handleDeleteAlbum}
-            onBulkDelete={handleBulkDeleteAlbums}
-            onCreate={handleCreateAlbum}
-            onDirtyChange={handleDirtyChange}
-          />
-        ) : selectedAlbums.length > 0 ? (
-          <AlbumEditSidebar
-            selectedAlbums={selectedAlbums}
-            nickname={profile?.nickname}
-            onSave={handleSaveAlbum}
-            onBulkSave={handleBulkSaveAlbums}
-            onDelete={handleDeleteAlbum}
-            onBulkDelete={handleBulkDeleteAlbums}
-            isLoading={albumsLoading}
-            onDirtyChange={handleDirtyChange}
-          />
-        ) : (
-          <AlbumEditEmptyState />
-        )
+        <AlbumEditSidebar
+          selectedAlbums={selectedAlbums}
+          isNewAlbum={isNewAlbum}
+          nickname={profile?.nickname}
+          onSave={handleSaveAlbum}
+          onBulkSave={handleBulkSaveAlbums}
+          onDelete={handleDeleteAlbum}
+          onBulkDelete={handleBulkDeleteAlbums}
+          onCreate={handleCreateAlbum}
+          isLoading={albumsLoading}
+          onDirtyChange={handleDirtyChange}
+        />
       }
     >
       {albumsLoading ? (
         <PageLoading message="Loading albums..." />
-      ) : albums.length === 0 && !isNewAlbum ? (
-        <div className="rounded-lg border-2 border-dashed border-border-color p-12 text-center">
-          <p className="mb-4 text-lg opacity-70">No albums yet</p>
-          <Button onClick={handleCreateNewAlbum} icon={<PlusSVG className="size-5 -ml-0.5" />}>
-            Create your first album
-          </Button>
+      ) : albums.length === 0 ? (
+        <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
+          <FolderSVG className="size-10 mb-2 inline-block" />
+          <p className="mb-2 text-lg opacity-70">You don&apos;t have any albums yet</p>
+          <p className="text-sm text-foreground/50 mb-4">
+              Use the &quot;New album&quot; button to create a new album
+          </p>
+          <Button onClick={handleCreateNewAlbum} icon={<PlusSVG className="size-5 -ml-0.5" />}>New album</Button>
         </div>
       ) : (
         <AlbumGrid

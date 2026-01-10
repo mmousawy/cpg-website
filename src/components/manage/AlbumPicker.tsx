@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
 import type { Album } from '@/types/albums';
 import { createClient } from '@/utils/supabase/client';
@@ -39,6 +40,7 @@ export default function AlbumPicker({
         .from('albums')
         .select('id, title, slug')
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -137,12 +139,13 @@ export default function AlbumPicker({
           Create new album
         </label>
         <div className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={newAlbumTitle}
             onChange={(e) => setNewAlbumTitle(e.target.value)}
             placeholder="Album title"
-            className="flex-1 rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+            fullWidth={false}
+            className="flex-1"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();

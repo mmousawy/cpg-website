@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -115,7 +116,7 @@ function ResetPasswordForm() {
             <label htmlFor="password" className="text-sm font-medium">
               New password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
@@ -123,7 +124,6 @@ function ResetPasswordForm() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
           </div>
 
@@ -131,7 +131,7 @@ function ResetPasswordForm() {
             <label htmlFor="confirmPassword" className="text-sm font-medium">
               Confirm new password
             </label>
-            <input
+            <Input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
@@ -139,7 +139,6 @@ function ResetPasswordForm() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
           </div>
 

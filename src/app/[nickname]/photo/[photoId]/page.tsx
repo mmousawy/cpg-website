@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     .eq('short_id', photoId)
     .eq('user_id', profile.id)
     .eq('is_public', true)
+    .is('deleted_at', null)
     .single();
 
   if (!photo) {
@@ -78,6 +79,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
     .eq('short_id', photoId)
     .eq('user_id', profile.id)
     .eq('is_public', true)
+    .is('deleted_at', null)
     .single();
 
   if (photoError || !photo) {
@@ -88,7 +90,8 @@ export default async function PhotoPage({ params }: { params: Params }) {
   const { data: albumPhotos } = await supabase
     .from('album_photos')
     .select('album_id, albums(id, title, slug, cover_image_url, album_photos(count))')
-    .eq('photo_id', photo.id);
+    .eq('photo_id', photo.id)
+    .is('albums.deleted_at', null);
 
   const albums = (albumPhotos || [])
     .map((ap) => {

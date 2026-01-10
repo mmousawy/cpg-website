@@ -105,6 +105,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
     .eq('is_public', true)
+    .is('deleted_at', null)
     .order('sort_order', { referencedTable: 'album_photos', ascending: true, nullsFirst: false })
     .single();
 
@@ -127,7 +128,8 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   const { data: photosData } = await supabase
     .from('photos')
     .select('*')
-    .in('url', photoUrls);
+    .in('url', photoUrls)
+    .is('deleted_at', null);
 
   // Create a map of url -> photo for quick lookup
   const photosMap = new Map((photosData || []).map((p) => [p.url, p as Photo]));

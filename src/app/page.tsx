@@ -69,6 +69,7 @@ export default async function Home() {
         photos:album_photos!inner(id, photo_url)
       `)
       .eq('is_public', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(6),
     // Fetch organizers (admins)

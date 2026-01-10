@@ -46,7 +46,6 @@ export default function AlbumGrid({
       }}
       onClearSelection={onClearSelection}
       onSelectMultiple={onSelectMultiple}
-      emptyMessage="No albums yet. Create your first album!"
       className={className || 'grid gap-3 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] h-full select-none p-6 content-start'}
       renderItem={(album, isSelected, _isDragging, isHovered) => (
         <AlbumCard

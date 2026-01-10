@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { routes } from '@/config/routes';
@@ -243,14 +244,13 @@ export default function SignupClient() {
             <label htmlFor="fullName" className="text-sm font-medium">
               Full name
             </label>
-            <input
+            <Input
               id="fullName"
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="John Doe"
               required
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
           </div>
 
@@ -258,40 +258,38 @@ export default function SignupClient() {
             <label htmlFor="nickname" className="text-sm font-medium">
               Nickname (username)
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">@</span>
-              <input
-                id="nickname"
-                type="text"
-                value={nickname}
-                onChange={(e) => handleNicknameChange(e.target.value)}
-                placeholder="johndoe"
-                required
-                autoComplete="off"
-                minLength={3}
-                maxLength={30}
-                className="w-full rounded-lg border border-border-color bg-background py-2 pl-8 pr-10 text-sm transition-colors focus:border-primary focus:outline-none"
-              />
-              {/* Availability indicator */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {isCheckingNickname && (
-                  <svg className="size-4 animate-spin text-foreground/50" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                )}
-                {!isCheckingNickname && nicknameAvailable === true && nickname.length >= 3 && (
-                  <svg className="size-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-                {!isCheckingNickname && nicknameAvailable === false && (
-                  <svg className="size-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </div>
-            </div>
+            <Input
+              id="nickname"
+              type="text"
+              value={nickname}
+              onChange={(e) => handleNicknameChange(e.target.value)}
+              placeholder="johndoe"
+              required
+              autoComplete="off"
+              minLength={3}
+              maxLength={30}
+              leftAddon="@"
+              rightAddon={
+                <>
+                  {isCheckingNickname && (
+                    <svg className="size-4 animate-spin text-foreground/50" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  )}
+                  {!isCheckingNickname && nicknameAvailable === true && nickname.length >= 3 && (
+                    <svg className="size-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  {!isCheckingNickname && nicknameAvailable === false && (
+                    <svg className="size-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </>
+              }
+            />
             {nicknameError && (
               <p className="text-sm text-red-500">{nicknameError}</p>
             )}
@@ -310,14 +308,13 @@ export default function SignupClient() {
             <label htmlFor="email" className="text-sm font-medium">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
           </div>
 
@@ -325,7 +322,7 @@ export default function SignupClient() {
             <label htmlFor="password" className="text-sm font-medium">
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               value={password}
@@ -333,7 +330,6 @@ export default function SignupClient() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             />
             <p className="text-xs text-foreground/50">Must be at least 6 characters</p>
           </div>

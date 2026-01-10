@@ -37,6 +37,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             type="checkbox"
             id={id}
             className="peer sr-only"
+            aria-label={`Toggle ${leftLabel} and ${rightLabel}`}
             {...props}
           />
 

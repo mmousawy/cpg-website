@@ -2,6 +2,8 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
+import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,8 +36,6 @@ const bulkAlbumFormSchema = z.object({
 });
 
 export type BulkAlbumFormData = z.infer<typeof bulkAlbumFormSchema>;
-
-const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none w-full";
 
 interface AlbumEditSidebarProps {
   selectedAlbums: AlbumWithPhotos[];
@@ -293,14 +293,13 @@ function BulkAlbumEditForm({
               ))}
             </div>
           )}
-          <input
+          <Input
             id="bulk_tags"
             type="text"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             disabled={(watchedTags?.length || 0) >= 5}
             onKeyDown={handleAddTag}
-            className={`${inputClassName} disabled:opacity-50`}
             placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter'}
           />
           <p className="text-xs text-foreground/50">
@@ -518,7 +517,7 @@ function SingleAlbumEditForm({
 
   if (isLoading) {
     return (
-      <SidebarPanel title={isNewAlbum ? 'New Album' : 'Edit Album'}>
+      <SidebarPanel title={isNewAlbum ? 'New album' : 'Edit album'}>
         <div className="flex items-center justify-center py-12">
           <p className="opacity-70">Loading...</p>
         </div>
@@ -528,7 +527,7 @@ function SingleAlbumEditForm({
 
   return (
     <SidebarPanel
-      title={isNewAlbum ? 'New Album' : 'Edit Album'}
+      title={isNewAlbum ? 'New album' : 'Edit album'}
       footer={
         <div className="flex gap-2 w-full">
           {!isNewAlbum && album && (
@@ -568,12 +567,12 @@ function SingleAlbumEditForm({
           <label htmlFor="title" className="text-sm font-medium">
             Title *
           </label>
-          <input
+          <Input
             id="title"
             type="text"
             {...register('title')}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className={`${inputClassName} ${errors.title ? 'border-red-500' : ''}`}
+            error={!!errors.title}
             placeholder="My Amazing Photo Album"
           />
           {errors.title && (
@@ -585,7 +584,7 @@ function SingleAlbumEditForm({
           <label htmlFor="slug" className="text-sm font-medium">
             URL Slug *
           </label>
-          <input
+          <Input
             id="slug"
             type="text"
             maxLength={50}
@@ -606,7 +605,8 @@ function SingleAlbumEditForm({
               const sanitized = pastedText.toLowerCase().replace(/[^a-z0-9-]/g, '');
               handleSlugChange(sanitized);
             }}
-            className={`${inputClassName} ${errors.slug ? 'border-red-500' : ''} font-mono`}
+            error={!!errors.slug}
+            mono
             placeholder="my-album-slug"
           />
           {errors.slug && (
@@ -626,11 +626,10 @@ function SingleAlbumEditForm({
           <label htmlFor="description" className="text-sm font-medium">
             Description
           </label>
-          <textarea
+          <Textarea
             id="description"
             {...register('description')}
             rows={4}
-            className={inputClassName}
             placeholder="Tell us about this album..."
           />
         </div>
@@ -670,14 +669,13 @@ function SingleAlbumEditForm({
           {errors.tags && (
             <p className="text-xs text-red-500">{errors.tags.message}</p>
           )}
-          <input
+          <Input
             id="tags"
             type="text"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             disabled={(watchedTags?.length || 0) >= 5}
             onKeyDown={handleAddTag}
-            className={`${inputClassName} disabled:opacity-50`}
             placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter'}
           />
           <p className="text-xs text-foreground/50">
@@ -737,7 +735,7 @@ export default function AlbumEditSidebar({
   // No albums selected
   if (!album) {
     return (
-      <SidebarPanel title="Edit Album">
+      <SidebarPanel>
         <AlbumEditEmptyState />
       </SidebarPanel>
     );

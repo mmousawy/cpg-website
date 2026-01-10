@@ -6,6 +6,8 @@ import clsx from 'clsx';
 
 import type { Tables } from '@/database.types';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
+import Textarea from '@/components/shared/Textarea';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 type Member = Pick<Tables<'profiles'>,
@@ -185,12 +187,11 @@ export default function AdminMembersPage() {
       <div className="mb-6 flex flex-col gap-4 rounded-lg border border-border-color bg-background-light p-4 sm:flex-row sm:items-center">
         {/* Search */}
         <div className="flex-1">
-          <input
+          <Input
             type="text"
             placeholder="Search by name, email, or nickname..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-border-color bg-background px-4 py-2 text-sm focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -471,11 +472,10 @@ export default function AdminMembersPage() {
                 <label className="mb-2 block text-sm font-medium">
                   Reason (optional)
                 </label>
-                <textarea
+                <Textarea
                   value={suspendReason}
                   onChange={(e) => setSuspendReason(e.target.value)}
                   placeholder="Enter a reason for suspension..."
-                  className="w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
                   rows={3}
                 />
               </div>

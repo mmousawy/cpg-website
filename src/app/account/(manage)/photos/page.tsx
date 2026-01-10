@@ -4,7 +4,6 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
   AddPhotosToAlbumModal,
-  PhotoEditEmptyState,
   PhotoEditSidebar,
   PhotoGrid,
   type BulkPhotoFormData,
@@ -22,6 +21,7 @@ import { createClient } from '@/utils/supabase/client';
 import exifr from 'exifr';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+import ImageSVG from 'public/icons/image.svg';
 import PlusSVG from 'public/icons/plus.svg';
 
 export default function PhotosPage() {
@@ -97,6 +97,7 @@ export default function PhotosPage() {
           )
         `)
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .order('sort_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false })
         .limit(100);
@@ -175,7 +176,8 @@ export default function PhotosPage() {
         is_public: data.is_public,
       })
       .eq('id', photoId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .is('deleted_at', null);
 
     if (error) {
       throw new Error(error.message || 'Failed to save photo');
@@ -218,15 +220,18 @@ export default function PhotosPage() {
       await supabase.storage.from('user-photos').remove([filePath]);
     }
 
-    const { error } = await supabase
-      .from('photos')
-      .delete()
-      .eq('id', photoId)
-      .eq('user_id', user.id);
+    // Soft delete photo using RPC function
+    const { error } = await supabase.rpc('bulk_delete_photos', {
+      p_photo_ids: [photoId],
+    });
 
     if (error) {
       throw new Error(error.message || 'Failed to delete photo');
     }
+
+    // Reset dirty state after successful deletion
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
 
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
@@ -262,6 +267,10 @@ export default function PhotosPage() {
     if (error) {
       throw new Error(error.message || 'Failed to delete photos');
     }
+
+    // Reset dirty state after successful deletion
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
 
     setSelectedPhotoIds(new Set());
     await fetchPhotos();
@@ -402,20 +411,16 @@ export default function PhotosPage() {
         </>
       }
       sidebar={
-        selectedPhotos.length > 0 ? (
-          <PhotoEditSidebar
-            selectedPhotos={selectedPhotos}
-            onSave={handleSavePhoto}
-            onBulkSave={handleBulkSavePhotos}
-            onDelete={handleDeletePhoto}
-            onBulkDelete={handleBulkDeletePhotos}
-            onAddToAlbum={handleAddToAlbum}
-            isLoading={photosLoading}
-            onDirtyChange={handleDirtyChange}
-          />
-        ) : (
-          <PhotoEditEmptyState />
-        )
+        <PhotoEditSidebar
+          selectedPhotos={selectedPhotos}
+          onSave={handleSavePhoto}
+          onBulkSave={handleBulkSavePhotos}
+          onDelete={handleDeletePhoto}
+          onBulkDelete={handleBulkDeletePhotos}
+          onAddToAlbum={handleAddToAlbum}
+          isLoading={photosLoading}
+          onDirtyChange={handleDirtyChange}
+        />
       }
     >
       <DropZone
@@ -427,17 +432,13 @@ export default function PhotosPage() {
         {photosLoading ? (
           <PageLoading message="Loading photos..." />
         ) : photos.length === 0 ? (
-          <div className="border-2 border-dashed border-border-color p-12 text-center">
-            <p className="mb-4 text-lg opacity-70">No photos yet</p>
-            <p className="mb-4 text-sm text-foreground/50">
-              Drag and drop photos here, or click the button below
+          <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
+            <ImageSVG className="size-10 mb-2 inline-block" />
+            <p className="mb-2 text-lg opacity-70">You don&apos;t have any photos yet</p>
+            <p className="text-sm text-foreground/50 mb-4">
+                Drag and drop photos here, or use the &quot;Upload&quot; buttons to upload photos
             </p>
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              icon={<PlusSVG className="size-5 -ml-0.5" />}
-            >
-              Upload your first photo
-            </Button>
+            <Button onClick={() => fileInputRef.current?.click()} icon={<PlusSVG className="size-5 -ml-0.5" />}>Upload</Button>
           </div>
         ) : (
           <PhotoGrid

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import Button from './Button';
+import { createClient } from '@/utils/supabase/client';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 import Avatar from '../auth/Avatar';
+import Button from './Button';
+import Textarea from './Textarea';
 
 import SendSVG from 'public/icons/arrow-right.svg';
 import TrashSVG from 'public/icons/trash.svg';
@@ -65,6 +66,7 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
           )
         `)
         .eq(entityColumn, entityId)
+        .is('comments.deleted_at', null)
         .order('comments(created_at)', { ascending: false })
         .limit(100);
 
@@ -135,11 +137,12 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
     if (!confirmed) return;
 
     try {
-      // Delete from comments table (cascade will remove junction link)
+      // Soft delete comment
       const { error } = await supabase
         .from('comments')
-        .delete()
-        .eq('id', commentId);
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', commentId)
+        .is('deleted_at', null);
 
       if (error) {
         console.error('Error deleting comment:', error);
@@ -222,12 +225,11 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
       {/* Comment Form */}
       {user && (
         <form onSubmit={handleSubmitComment} className="space-y-3">
-          <textarea
+          <Textarea
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="Write a comment..."
             rows={3}
-            className="w-full rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             disabled={isSubmitting}
           />
           <Button

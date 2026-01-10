@@ -1,29 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
 import exifr from 'exifr';
+import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
-import type { Tables } from '@/database.types';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
-import Button from '@/components/shared/Button';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
+import Textarea from '@/components/shared/Textarea';
+import type { Tables } from '@/database.types';
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/utils/supabase/client';
 
-import ArrowLink from '@/components/shared/ArrowLink';
 import { revalidateEvent } from '@/app/actions/revalidate';
-import CheckSVG from 'public/icons/check.svg';
-import TrashSVG from 'public/icons/trash.svg';
-import clsx from 'clsx';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-
-// Shared input styling
-const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none";
+import clsx from 'clsx';
+import CheckSVG from 'public/icons/check.svg';
+import TrashSVG from 'public/icons/trash.svg';
 
 type Event = Pick<Tables<'events'>, 'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'>
 
@@ -397,14 +394,13 @@ export default function AdminEventFormPage() {
                   <label htmlFor="title" className="text-sm font-medium">
                   Event Title *
                   </label>
-                  <input
+                  <Input
                     id="title"
                     type="text"
                     value={title}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     onBlur={handleTitleBlur}
                     required
-                    className={inputClassName}
                     placeholder="e.g., Monthly Meetup at Coffee Shop"
                   />
                 </div>
@@ -413,14 +409,14 @@ export default function AdminEventFormPage() {
                   <label htmlFor="slug" className="text-sm font-medium">
                   URL Slug *
                   </label>
-                  <input
+                  <Input
                     id="slug"
                     type="text"
                     value={slug}
                     onChange={(e) => handleSlugChange(e.target.value)}
                     required
                     pattern="[-a-z0-9]+"
-                    className={inputClassName}
+                    mono
                     placeholder="url-friendly-event-name"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -432,12 +428,11 @@ export default function AdminEventFormPage() {
                   <label htmlFor="description" className="text-sm font-medium">
                   Description
                   </label>
-                  <textarea
+                  <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={6}
-                    className={inputClassName}
                     placeholder="Describe your event, what to expect, any special notes..."
                   />
                 </div>
@@ -447,13 +442,12 @@ export default function AdminEventFormPage() {
                     <label htmlFor="date" className="text-sm font-medium">
                     Date *
                     </label>
-                    <input
+                    <Input
                       id="date"
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       required
-                      className={inputClassName}
                     />
                   </div>
 
@@ -461,12 +455,11 @@ export default function AdminEventFormPage() {
                     <label htmlFor="time" className="text-sm font-medium">
                     Time
                     </label>
-                    <input
+                    <Input
                       id="time"
                       type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
-                      className={inputClassName}
                     />
                   </div>
                 </div>
@@ -475,12 +468,11 @@ export default function AdminEventFormPage() {
                   <label htmlFor="location" className="text-sm font-medium">
                   Location
                   </label>
-                  <textarea
+                  <Textarea
                     id="location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     rows={3}
-                    className={inputClassName}
                     placeholder="e.g., Central Park, New York, NY"
                   />
                 </div>

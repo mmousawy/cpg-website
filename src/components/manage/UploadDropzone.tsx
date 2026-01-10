@@ -3,6 +3,7 @@
 import { useRef, useState, DragEvent } from 'react';
 import clsx from 'clsx';
 import Button from '@/components/shared/Button';
+import CameraSVG from 'public/icons/camera.svg';
 
 interface UploadDropzoneProps {
   onFilesSelected: (files: File[]) => void;
@@ -69,10 +70,10 @@ export default function UploadDropzone({
   return (
     <div
       className={clsx(
-        'relative rounded-lg border-2 border-dashed transition-colors',
+        'relative rounded-xl border-2 border-dashed transition-colors',
         isDragging
           ? 'border-primary bg-primary/5'
-          : 'border-border-color bg-background-light',
+          : 'border-border-color bg-background',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
       onDragEnter={handleDragEnter}
@@ -80,21 +81,32 @@ export default function UploadDropzone({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="flex flex-col items-center justify-center p-12 text-center">
-        <div className="mb-4 text-5xl opacity-50">📷</div>
-        <p className="mb-2 text-lg font-medium">
-          {isDragging ? 'Drop photos here' : 'Drag photos here or click to browse'}
+      <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+        <div className={clsx(
+          'mb-4 flex size-14 items-center justify-center rounded-xl border transition-colors',
+          isDragging
+            ? 'border-primary bg-primary/10'
+            : 'border-border-color bg-background-light'
+        )}>
+          <CameraSVG className={clsx(
+            'size-7 transition-colors',
+            isDragging ? 'fill-primary' : 'fill-foreground/50'
+          )} />
+        </div>
+        <p className="mb-1 text-base font-medium">
+          {isDragging ? 'Drop photos here' : 'Drag photos here'}
         </p>
         <p className="mb-4 text-sm text-foreground/60">
-          JPEG, PNG, GIF, or WebP (max 5 MB each)
+          or click to browse • JPEG, PNG, GIF, WebP
         </p>
         <Button
           type="button"
           variant="secondary"
+          size="sm"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
         >
-          Browse
+          Browse files
         </Button>
       </div>
 
@@ -110,4 +122,3 @@ export default function UploadDropzone({
     </div>
   );
 }
-

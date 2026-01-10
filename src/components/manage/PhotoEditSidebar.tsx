@@ -3,6 +3,8 @@
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
+import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,8 +59,6 @@ interface PhotoEditSidebarProps {
   /** Success state from parent */
   externalSuccess?: boolean;
 }
-
-const inputClassName = "rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none w-full";
 
 /** Bulk edit form for multiple photos */
 function BulkEditForm({
@@ -268,11 +268,10 @@ function BulkEditForm({
           <label htmlFor="bulk_title" className="text-sm font-medium">
             Title
           </label>
-          <input
+          <Input
             id="bulk_title"
             type="text"
             {...register('title')}
-            className={inputClassName}
             placeholder="Set same title for all (leave empty to skip)"
           />
           <p className="text-xs text-foreground/50">
@@ -284,11 +283,10 @@ function BulkEditForm({
           <label htmlFor="bulk_description" className="text-sm font-medium">
             Description
           </label>
-          <textarea
+          <Textarea
             id="bulk_description"
             {...register('description')}
             rows={3}
-            className={inputClassName}
             placeholder="Set same description for all (leave empty to skip)"
           />
           <p className="text-xs text-foreground/50">
@@ -500,11 +498,10 @@ function SinglePhotoEditForm({
           <label htmlFor={`title-${photo.id}`} className="text-sm font-medium">
             Title
           </label>
-          <input
+          <Input
             id={`title-${photo.id}`}
             type="text"
             {...register('title')}
-            className={inputClassName}
             placeholder="Photo title (optional)"
           />
         </div>
@@ -513,11 +510,10 @@ function SinglePhotoEditForm({
           <label htmlFor={`description-${photo.id}`} className="text-sm font-medium">
             Description
           </label>
-          <textarea
+          <Textarea
             id={`description-${photo.id}`}
             {...register('description')}
             rows={3}
-            className={inputClassName}
             placeholder="Tell us about this photo..."
           />
         </div>
@@ -534,7 +530,7 @@ function SinglePhotoEditForm({
           <>
             <hr className="my-4 border-border-color" />
             <div>
-              <h3 className="mb-3 text-sm font-medium">Part of:</h3>
+              <h3 className="mb-2 text-sm font-medium">Part of:</h3>
               <div className="grid grid-cols-2 gap-2">
                 {photoAlbums.map((album) => (
                   <AlbumMiniCard
@@ -582,7 +578,7 @@ export default function PhotoEditSidebar({
 
   if (!photo) {
     return (
-      <SidebarPanel title="Edit Photo">
+      <SidebarPanel>
         <PhotoEditEmptyState />
       </SidebarPanel>
     );

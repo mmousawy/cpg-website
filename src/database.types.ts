@@ -133,6 +133,7 @@ export type Database = {
         Row: {
           cover_image_url: string | null
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           is_public: boolean | null
@@ -148,6 +149,7 @@ export type Database = {
         Insert: {
           cover_image_url?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_public?: boolean | null
@@ -163,6 +165,7 @@ export type Database = {
         Update: {
           cover_image_url?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_public?: boolean | null
@@ -222,6 +225,7 @@ export type Database = {
         Row: {
           comment_text: string
           created_at: string
+          deleted_at: string | null
           id: string
           updated_at: string
           user_id: string
@@ -229,6 +233,7 @@ export type Database = {
         Insert: {
           comment_text: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -236,6 +241,7 @@ export type Database = {
         Update: {
           comment_text?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -395,6 +401,7 @@ export type Database = {
         Row: {
           blurhash: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           exif_data: Json | null
           file_size: number
@@ -414,6 +421,7 @@ export type Database = {
         Insert: {
           blurhash?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           exif_data?: Json | null
           file_size: number
@@ -433,6 +441,7 @@ export type Database = {
         Update: {
           blurhash?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           exif_data?: Json | null
           file_size?: number
@@ -539,6 +548,9 @@ export type Database = {
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
       generate_short_id: { Args: { size?: number }; Returns: string }
+      restore_album: { Args: { p_album_id: string }; Returns: boolean }
+      restore_comment: { Args: { p_comment_id: string }; Returns: boolean }
+      restore_photo: { Args: { p_photo_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

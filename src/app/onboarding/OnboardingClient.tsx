@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
+import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -182,44 +183,42 @@ export default function OnboardingClient() {
               <label htmlFor="nickname" className="text-sm font-medium">
                 Choose a nickname <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">@</span>
-                <input
-                  id="nickname"
-                  type="text"
-                  {...register('nickname', {
-                    onChange: (e) => {
-                      const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                      e.target.value = value;
-                      // Debounce the availability check
-                      const timeoutId = setTimeout(() => checkNicknameAvailability(value), 500);
-                      return () => clearTimeout(timeoutId);
-                    },
-                  })}
-                  placeholder="your-nickname"
-                  autoComplete="off"
-                  className="w-full rounded-lg border border-border-color bg-background py-2 pl-8 pr-10 text-sm transition-colors focus:border-primary focus:outline-none"
-                />
-                {/* Availability indicator */}
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isCheckingNickname && (
-                    <svg className="size-4 animate-spin text-foreground/50" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  )}
-                  {!isCheckingNickname && nicknameAvailable === true && watchedNickname.length >= 3 && (
-                    <svg className="size-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                  {!isCheckingNickname && nicknameAvailable === false && (
-                    <svg className="size-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  )}
-                </div>
-              </div>
+              <Input
+                id="nickname"
+                type="text"
+                {...register('nickname', {
+                  onChange: (e) => {
+                    const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                    e.target.value = value;
+                    // Debounce the availability check
+                    const timeoutId = setTimeout(() => checkNicknameAvailability(value), 500);
+                    return () => clearTimeout(timeoutId);
+                  },
+                })}
+                placeholder="your-nickname"
+                autoComplete="off"
+                leftAddon="@"
+                rightAddon={
+                  <>
+                    {isCheckingNickname && (
+                      <svg className="size-4 animate-spin text-foreground/50" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    )}
+                    {!isCheckingNickname && nicknameAvailable === true && watchedNickname.length >= 3 && (
+                      <svg className="size-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {!isCheckingNickname && nicknameAvailable === false && (
+                      <svg className="size-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </>
+                }
+              />
               {errors.nickname && (
                 <p className="text-sm text-red-500">{errors.nickname.message}</p>
               )}
@@ -239,12 +238,11 @@ export default function OnboardingClient() {
               <label htmlFor="fullName" className="text-sm font-medium">
                 Full name
               </label>
-              <input
+              <Input
                 id="fullName"
                 type="text"
                 {...register('fullName')}
                 placeholder="Your full name"
-                className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
               />
             </div>
 
