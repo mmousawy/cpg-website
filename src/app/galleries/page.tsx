@@ -1,7 +1,7 @@
-import { createPublicClient } from '@/utils/supabase/server';
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import type { AlbumWithPhotos } from '@/types/albums';
+import { createPublicClient } from '@/utils/supabase/server';
 
 export const metadata = {
   title: 'Photo galleries',
@@ -26,7 +26,7 @@ export default async function GalleriesPage() {
       is_public,
       created_at,
       profile:profiles(full_name, nickname, avatar_url),
-      photos:album_photos(id, photo_url)
+      photos:album_photos!inner(id, photo_url)
     `)
     .eq('is_public', true)
     .order('created_at', { ascending: false })

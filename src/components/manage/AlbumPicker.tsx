@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
-import type { Album } from '@/types/albums';
 import Button from '@/components/shared/Button';
+import { useAuth } from '@/hooks/useAuth';
+import type { Album } from '@/types/albums';
+import { createClient } from '@/utils/supabase/client';
+import { useEffect, useState } from 'react';
 
 interface AlbumPickerProps {
   selectedAlbumIds: string[];
@@ -163,4 +163,3 @@ export default function AlbumPicker({
     </div>
   );
 }
-

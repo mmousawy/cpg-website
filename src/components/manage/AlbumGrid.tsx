@@ -8,6 +8,7 @@ interface AlbumGridProps {
   albums: AlbumWithPhotos[];
   selectedAlbumIds?: Set<string>;
   onAlbumClick?: (album: AlbumWithPhotos) => void;
+  onAlbumDoubleClick?: (album: AlbumWithPhotos) => void;
   onSelectAlbum?: (albumId: string, isMultiSelect: boolean) => void;
   onClearSelection?: () => void;
   onSelectMultiple?: (albumIds: string[]) => void;
@@ -18,6 +19,7 @@ export default function AlbumGrid({
   albums,
   selectedAlbumIds = new Set(),
   onAlbumClick,
+  onAlbumDoubleClick,
   onSelectAlbum,
   onClearSelection,
   onSelectMultiple,
@@ -29,15 +31,17 @@ export default function AlbumGrid({
       selectedIds={selectedAlbumIds}
       getId={(album) => album.id}
       onSelect={(id, isMulti) => {
-        if (isMulti && onSelectAlbum) {
-          onSelectAlbum(id, true);
-        } else {
-          const album = albums.find((a) => a.id === id);
-          if (album && onAlbumClick) {
-            onAlbumClick(album);
-          } else if (onSelectAlbum) {
-            onSelectAlbum(id, false);
-          }
+        // Single click: always select (don't navigate)
+        if (onSelectAlbum) {
+          onSelectAlbum(id, isMulti);
+        }
+      }}
+      onItemDoubleClick={(album) => {
+        // Double click: navigate to album
+        if (onAlbumDoubleClick) {
+          onAlbumDoubleClick(album);
+        } else if (onAlbumClick) {
+          onAlbumClick(album);
         }
       }}
       onClearSelection={onClearSelection}

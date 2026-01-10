@@ -1,5 +1,7 @@
 'use client';
 
+import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { ModalContext } from '@/app/providers/ModalProvider';
 import {
   AddPhotosToAlbumModal,
   PhotoEditEmptyState,
@@ -13,13 +15,12 @@ import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
 import { useManage } from '@/context/ManageContext';
+import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
 import exifr from 'exifr';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-
-import { ModalContext } from '@/app/providers/ModalProvider';
 
 import PlusSVG from 'public/icons/plus.svg';
 
@@ -27,33 +28,38 @@ export default function PhotosPage() {
   const { user } = useAuth();
   const supabase = createClient();
   const { refreshCounts } = useManage();
+  const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalContext = useContext(ModalContext);
 
   const photoEditDirtyRef = useRef(false);
+  const { setHasUnsavedChanges } = useUnsavedChanges();
 
-  const confirmUnsavedChanges = useCallback((): boolean => {
+  // Sync dirty state with global unsaved changes context
+  const handleDirtyChange = useCallback((isDirty: boolean) => {
+    photoEditDirtyRef.current = isDirty;
+    setHasUnsavedChanges(isDirty);
+  }, [setHasUnsavedChanges]);
+
+  // Clear unsaved changes on unmount
+  useEffect(() => {
+    return () => setHasUnsavedChanges(false);
+  }, [setHasUnsavedChanges]);
+
+  const confirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
     if (!photoEditDirtyRef.current) return true;
-    const confirmed = window.confirm(
-      'You have unsaved changes. Are you sure you want to leave without saving?',
-    );
+    const confirmed = await confirm({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Are you sure you want to leave without saving?',
+      confirmLabel: 'Leave',
+      variant: 'danger',
+    });
     if (confirmed) {
       photoEditDirtyRef.current = false;
+      setHasUnsavedChanges(false);
     }
     return confirmed;
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (photoEditDirtyRef.current) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
+  }, [confirm, setHasUnsavedChanges]);
 
   // State
   const [photos, setPhotos] = useState<PhotoWithAlbums[]>([]);
@@ -131,8 +137,8 @@ export default function PhotosPage() {
     setPhotosLoading(false);
   };
 
-  const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
-    if (!isMultiSelect && photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+  const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
+    if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
       return;
     }
     setSelectedPhotoIds((prev) => {
@@ -148,13 +154,13 @@ export default function PhotosPage() {
     });
   };
 
-  const handleClearSelection = () => {
-    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) return;
+  const handleClearSelection = async () => {
+    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set());
   };
 
-  const handleSelectMultiple = (ids: string[]) => {
-    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) return;
+  const handleSelectMultiple = async (ids: string[]) => {
+    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set(ids));
   };
 
@@ -405,7 +411,7 @@ export default function PhotosPage() {
             onBulkDelete={handleBulkDeletePhotos}
             onAddToAlbum={handleAddToAlbum}
             isLoading={photosLoading}
-            isDirtyRef={photoEditDirtyRef}
+            onDirtyChange={handleDirtyChange}
           />
         ) : (
           <PhotoEditEmptyState />

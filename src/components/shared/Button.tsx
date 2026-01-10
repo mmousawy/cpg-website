@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import Link from 'next/link';
-import { ButtonHTMLAttributes, AnchorHTMLAttributes, ReactNode } from 'react';
+import { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
 
 // Loading spinner component - defined outside to avoid React Compiler warning
 function LoadingSpinner() {

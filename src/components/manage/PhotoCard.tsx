@@ -23,11 +23,11 @@ export default function PhotoCard({
   return (
     <div
       className={clsx(
-        'cursor-grab active:cursor-grabbing overflow-hidden transition-all',
+        'cursor-pointer active:cursor-grabbing overflow-hidden transition-all',
         isSelected
-          ? 'ring-2 ring-primary ring-offset-2'
+          ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
           : isHovered
-            ? 'ring-2 ring-primary/50 ring-offset-1 [&>div>div]:opacity-80'
+            ? 'ring-2 ring-primary/50 ring-offset-0 [&>div>div]:opacity-80'
             : 'hover:ring-2 hover:ring-primary/50',
         isDragging && 'opacity-50',
       )}
@@ -43,15 +43,16 @@ export default function PhotoCard({
           className="size-full object-cover transition-transform"
           draggable={false}
         />
-        {/* Hover overlay */}
         {/* Private badge */}
         {!photo.is_public && (
           <div className="absolute top-2 right-2">
-            <span className="inline-block rounded-full bg-yellow-100 px-1 py-1 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
+            <span className="inline-block rounded-full border border-yellow-800 bg-yellow-100 px-1 py-1 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
               <PrivateMicroSVG className="size-4" />
             </span>
           </div>
         )}
+
+        {/* Hover overlay */}
         <div className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity"></div>
       </div>
 

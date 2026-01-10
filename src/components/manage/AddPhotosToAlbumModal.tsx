@@ -1,5 +1,6 @@
 'use client';
 
+import { ModalContext } from '@/app/providers/ModalProvider';
 import PhotoListItem from '@/components/manage/PhotoListItem';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
@@ -9,7 +10,7 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
 import clsx from 'clsx';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 type AlbumWithCount = Album & { photo_count?: number };
 
@@ -29,6 +30,7 @@ export default function AddPhotosToAlbumModal({
 }: AddPhotosToAlbumModalProps) {
   const { user } = useAuth();
   const supabase = createClient();
+  const modalContext = useContext(ModalContext);
   const [albums, setAlbums] = useState<AlbumWithCount[]>([]);
   const [selectedAlbumIds, setSelectedAlbumIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -183,14 +185,33 @@ export default function AddPhotosToAlbumModal({
     }
   };
 
+  // Set footer with action buttons
+  useEffect(() => {
+    modalContext.setFooter(
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose} disabled={isAdding}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleAddToAlbums}
+          disabled={isAdding || selectedAlbumIds.size === 0}
+          loading={isAdding}
+        >
+          {selectedAlbumIds.size === 0 ? 'Select an album' : `Add to ${selectedAlbumIds.size} album${selectedAlbumIds.size !== 1 ? 's' : ''}`}
+        </Button>
+      </div>,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAlbumIds.size, isAdding, onClose]);
+
   return (
-    <div className="flex max-h-[80vh] flex-col select-none">
+    <div className="flex flex-col select-none">
       <div className="mb-4">
         <p className="text-sm text-foreground/80">Selected {photos.length} photos</p>
       </div>
 
       {/* Preview of photos being added */}
-      <div className="mb-4 grid max-h-40 grid-cols-3 gap-2 overflow-y-auto">
+      <div className="mb-4 grid min-h-12.5 max-h-[30svh] grid-cols-3 gap-2 overflow-y-auto">
         {photos.map((photo) => (
           <PhotoListItem key={photo.id} photo={photo} variant="compact" />
         ))}
@@ -202,7 +223,7 @@ export default function AddPhotosToAlbumModal({
         </div>
       )}
 
-      <p className="mb-4 text-sm text-foreground/70">
+      <p className="mb-4 text-sm text-foreground/80">
           Select which album(s) to add {photos.length === 1 ? 'this photo' : `these photos`} to:
       </p>
 
@@ -213,7 +234,7 @@ export default function AddPhotosToAlbumModal({
           </div>
         ) : albums.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="mb-4 text-foreground/70">No albums yet</p>
+            <p className="mb-4 text-foreground/80">No albums yet</p>
             <p className="text-sm text-foreground/50">
               Create your first album below
             </p>
@@ -232,7 +253,7 @@ export default function AddPhotosToAlbumModal({
                     isAlreadyAdded
                       ? 'cursor-not-allowed opacity-60 ring-1 ring-border-color-strong bg-background'
                       : isSelected
-                        ? 'cursor-pointer ring-2 ring-primary ring-offset-2'
+                        ? 'cursor-pointer ring-2 ring-primary ring-offset-1 dark:ring-offset-white/50'
                         : 'cursor-pointer ring-1 ring-border-color-strong hover:ring-2 hover:ring-primary/50',
                   )}
                 >
@@ -272,8 +293,8 @@ export default function AddPhotosToAlbumModal({
       </div>
 
       {/* Create new album */}
-      <div className="mb-4 rounded-lg border border-border-color bg-background-light p-4">
-        <label className="mb-2 block text-sm font-medium">
+      <div className="pl-3 py-1 border-l-2 border-border-color-strong">
+        <label className="mb-2 block text-sm text-foreground/80">
           Or create a new album
         </label>
         <div className="flex gap-2">
@@ -282,7 +303,7 @@ export default function AddPhotosToAlbumModal({
             value={newAlbumTitle}
             onChange={(e) => setNewAlbumTitle(e.target.value)}
             placeholder="Album title"
-            className="flex-1 rounded-lg border border-border-color bg-background px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
+            className="flex-1 rounded-lg border border-border-color bg-background-medium px-3 py-2 text-sm transition-colors focus:border-primary focus:outline-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -300,19 +321,6 @@ export default function AddPhotosToAlbumModal({
             Create
           </Button>
         </div>
-      </div>
-
-      <div className="flex justify-between gap-2">
-        <Button variant="secondary" onClick={onClose} disabled={isAdding}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleAddToAlbums}
-          disabled={isAdding || selectedAlbumIds.size === 0}
-          loading={isAdding}
-        >
-          {selectedAlbumIds.size === 0 ? 'Select an album' : `Add to ${selectedAlbumIds.size} album${selectedAlbumIds.size !== 1 ? 's' : ''}`}
-        </Button>
       </div>
     </div>
   );

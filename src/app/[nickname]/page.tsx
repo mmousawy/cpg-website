@@ -94,7 +94,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       is_public,
       created_at,
       profile:profiles(full_name, nickname, avatar_url),
-      photos:album_photos(id, photo_url)
+      photos:album_photos!inner(id, photo_url)
     `)
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)

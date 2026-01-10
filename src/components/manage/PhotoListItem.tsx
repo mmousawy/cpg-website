@@ -65,14 +65,14 @@ export default function PhotoListItem({
           sizes="64px"
         />
       </div>
-      <div className="min-w-0 flex-1 py-1">
+      <div className="min-w-0 flex-1 py-1 pr-2">
         {/* Primary name (title or fallback) */}
-        <p className="mb-0.5 line-clamp-2 text-sm font-medium leading-none" title={displayName}>
+        <p className="line-clamp-2 text-sm font-medium leading-none" title={displayName}>
           {displayName}
         </p>
 
         {isDetailed ? (
-          <div className="flex flex-wrap gap-1 text-xs text-foreground/50">
+          <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mt-0.5">
             <div className="flex flex-col">
               {photo.title && photo.original_filename && (
                 <p className="flex gap-1">

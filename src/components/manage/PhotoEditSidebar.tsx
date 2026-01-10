@@ -165,12 +165,12 @@ function BulkEditForm({
     const count = selectedPhotos.length;
 
     const confirmed = await confirm({
-      title: 'Delete Photos',
+      title: 'Delete photos',
       message: `Are you sure you want to delete ${count} photo${count !== 1 ? 's' : ''}? This action cannot be undone.`,
       content: (
-        <div className="space-y-1">
+        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
           {selectedPhotos.map((photo) => (
-            <PhotoListItem key={photo.id} photo={photo} variant="compact" />
+            <PhotoListItem key={photo.id} photo={photo} variant="detailed" />
           ))}
         </div>
       ),
@@ -210,7 +210,7 @@ function BulkEditForm({
 
   return (
     <SidebarPanel
-      title={`Edit ${selectedPhotos.length} Photos`}
+      title={`Edit ${selectedPhotos.length} photos`}
       footer={
         <div className="flex gap-2 w-full">
           <Button
@@ -425,7 +425,9 @@ function SinglePhotoEditForm({
       title: 'Delete Photo',
       message: 'Are you sure you want to delete this photo? This action cannot be undone.',
       content: (
-        <PhotoListItem photo={photo} variant="compact" />
+        <div className="grid gap-2">
+          <PhotoListItem photo={photo} variant="detailed" />
+        </div>
       ),
       confirmLabel: 'Delete',
       variant: 'danger',

@@ -1,10 +1,11 @@
 'use client';
 
+import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import type { Photo } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import PhotoGrid from './PhotoGrid';
 
 interface AddToAlbumContentProps {
@@ -22,6 +23,7 @@ export default function AddToAlbumContent({
 }: AddToAlbumContentProps) {
   const { user } = useAuth();
   const supabase = createClient();
+  const modalContext = useContext(ModalContext);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -121,50 +123,54 @@ export default function AddToAlbumContent({
     }
   };
 
-  return (
-    <>
-      <div className="flex h-[calc(100vh-12rem)] md:h-[calc(100vh-13rem)] flex-col bg-background-medium border border-border-color-strong">
-        {error && (
-          <div className="shrink-0 mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
-            {error}
-          </div>
-        )}
-
-        <div className="flex-1 min-h-0 overflow-y-auto relative">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-foreground/50">Loading photos...</p>
-            </div>
-          ) : availablePhotos.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-foreground/70">No photos available to add</p>
-            </div>
-          ) : (
-            <PhotoGrid
-              photos={availablePhotos}
-              selectedPhotoIds={selectedPhotoIds}
-              onSelectPhoto={handleSelectPhoto}
-              onPhotoClick={(photo) => handleSelectPhoto(photo.id, true)}
-              onClearSelection={handleClearSelection}
-              onSelectMultiple={handleSelectMultiple}
-              sortable={false}
-            />
-          )}
-        </div>
-
-      </div>
-      <div className="shrink-0 flex justify-end gap-2 mt-4">
+  // Set footer with action buttons
+  useEffect(() => {
+    modalContext.setFooter(
+      <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose} disabled={isAdding}>
-      Cancel
+          Cancel
         </Button>
         <Button
           onClick={handleAddToAlbum}
           disabled={isAdding || selectedPhotoIds.size === 0}
           loading={isAdding}
         >
-      Add {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}Photo{selectedPhotoIds.size !== 1 ? 's' : ''}
+          Add {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}photo{selectedPhotoIds.size !== 1 ? 's' : ''}
         </Button>
+      </div>,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPhotoIds.size, isAdding, onClose]);
+
+  return (
+    <div className="flex h-[60vh] flex-col bg-background-medium border border-border-color-strong">
+      {error && (
+        <div className="shrink-0 mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+          {error}
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0 overflow-y-auto relative">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-foreground/50">Loading photos...</p>
+          </div>
+        ) : availablePhotos.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-foreground/70">No photos available to add</p>
+          </div>
+        ) : (
+          <PhotoGrid
+            photos={availablePhotos}
+            selectedPhotoIds={selectedPhotoIds}
+            onSelectPhoto={handleSelectPhoto}
+            onPhotoClick={(photo) => handleSelectPhoto(photo.id, true)}
+            onClearSelection={handleClearSelection}
+            onSelectMultiple={handleSelectMultiple}
+            sortable={false}
+          />
+        )}
       </div>
-    </>
+    </div>
   );
 }

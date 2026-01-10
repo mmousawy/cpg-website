@@ -49,17 +49,17 @@ export default function RootLayout({
         <SupabaseProvider>
           <AuthProvider>
             <ThemeProvider>
-              <UnsavedChangesProvider>
-                <ModalProvider>
-                <ConfirmProvider>
-                  <Layout>
-                    {children}
-                  </Layout>
-                  <Modal />
-                  <ConfirmModal />
-                </ConfirmProvider>
-                </ModalProvider>
-              </UnsavedChangesProvider>
+              <ConfirmProvider>
+                <UnsavedChangesProvider>
+                  <ModalProvider>
+                    <Layout>
+                      {children}
+                    </Layout>
+                    <Modal />
+                  </ModalProvider>
+                </UnsavedChangesProvider>
+                <ConfirmModal />
+              </ConfirmProvider>
             </ThemeProvider>
           </AuthProvider>
         </SupabaseProvider>

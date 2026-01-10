@@ -93,7 +93,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
       is_suspended,
       suspension_reason,
       profile:profiles(full_name, avatar_url, nickname),
-      photos:album_photos(
+      photos:album_photos!inner(
         id,
         photo_url,
         title,

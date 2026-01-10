@@ -66,7 +66,7 @@ export default async function Home() {
         is_public,
         created_at,
         profile:profiles(full_name, nickname, avatar_url),
-        photos:album_photos(id, photo_url)
+        photos:album_photos!inner(id, photo_url)
       `)
       .eq('is_public', true)
       .order('created_at', { ascending: false })

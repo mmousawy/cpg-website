@@ -61,7 +61,7 @@ export default function FullSizeGalleryButton({
         lightboxRef.current?.loadAndOpen(0);
       }}
     >
-      View full size gallery
+      View in gallery
     </Button>
   );
 }

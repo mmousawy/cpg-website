@@ -1,6 +1,7 @@
 'use client';
 
 import { revalidateAlbum } from '@/app/actions/revalidate';
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
   AddToAlbumContent,
@@ -15,6 +16,7 @@ import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
 import { useManage } from '@/context/ManageContext';
+import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
 import type { Album } from '@/types/albums';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
@@ -34,23 +36,45 @@ export default function AlbumDetailPage() {
   const supabase = createClient();
   const modalContext = useContext(ModalContext);
   const { refreshCounts } = useManage();
+  const confirm = useConfirm();
+  const { setHasUnsavedChanges } = useUnsavedChanges();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const photoEditDirtyRef = useRef(false);
   const albumEditDirtyRef = useRef(false);
 
-  const confirmUnsavedChanges = useCallback((): boolean => {
+  // Sync dirty state with global unsaved changes context
+  const handlePhotoDirtyChange = useCallback((isDirty: boolean) => {
+    photoEditDirtyRef.current = isDirty;
+    setHasUnsavedChanges(isDirty || albumEditDirtyRef.current);
+  }, [setHasUnsavedChanges]);
+
+  const handleAlbumDirtyChange = useCallback((isDirty: boolean) => {
+    albumEditDirtyRef.current = isDirty;
+    setHasUnsavedChanges(isDirty || photoEditDirtyRef.current);
+  }, [setHasUnsavedChanges]);
+
+  // Clear unsaved changes on unmount
+  useEffect(() => {
+    return () => setHasUnsavedChanges(false);
+  }, [setHasUnsavedChanges]);
+
+  const confirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
     const isDirty = photoEditDirtyRef.current || albumEditDirtyRef.current;
     if (!isDirty) return true;
-    const confirmed = window.confirm(
-      'You have unsaved changes. Are you sure you want to leave without saving?',
-    );
+    const confirmed = await confirm({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Are you sure you want to leave without saving?',
+      confirmLabel: 'Leave',
+      variant: 'danger',
+    });
     if (confirmed) {
       photoEditDirtyRef.current = false;
       albumEditDirtyRef.current = false;
+      setHasUnsavedChanges(false);
     }
     return confirmed;
-  }, []);
+  }, [confirm, setHasUnsavedChanges]);
 
   // State
   const [album, setAlbum] = useState<Album | null>(null);
@@ -134,8 +158,8 @@ export default function AlbumDetailPage() {
     setPhotosLoading(false);
   };
 
-  const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
-    if (!isMultiSelect && photoEditDirtyRef.current && !confirmUnsavedChanges()) {
+  const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
+    if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
       return;
     }
     setSelectedPhotoIds((prev) => {
@@ -151,13 +175,13 @@ export default function AlbumDetailPage() {
     });
   };
 
-  const handleClearSelection = () => {
-    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) return;
+  const handleClearSelection = async () => {
+    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set());
   };
 
-  const handleSelectMultiple = (ids: string[]) => {
-    if (photoEditDirtyRef.current && !confirmUnsavedChanges()) return;
+  const handleSelectMultiple = async (ids: string[]) => {
+    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set(ids));
   };
 
@@ -242,7 +266,7 @@ export default function AlbumDetailPage() {
     }
   };
 
-  const handleSaveAlbum = async (data: AlbumFormData) => {
+  const handleSaveAlbum = async (albumId: string, data: AlbumFormData) => {
     if (!user || !album) return;
 
     // Note: cover_image_url is managed by database trigger on album_photos changes
@@ -255,17 +279,17 @@ export default function AlbumDetailPage() {
         description: data.description?.trim() || null,
         is_public: data.isPublic,
       })
-      .eq('id', album.id);
+      .eq('id', albumId);
 
     if (updateError) {
       throw new Error(updateError.message || 'Failed to update album');
     }
 
     // Update tags
-    await supabase.from('album_tags').delete().eq('album_id', album.id);
+    await supabase.from('album_tags').delete().eq('album_id', albumId);
     if (data.tags.length > 0) {
       await supabase.from('album_tags').insert(
-        data.tags.map((tag) => ({ album_id: album.id, tag: tag.toLowerCase() })),
+        data.tags.map((tag) => ({ album_id: albumId, tag: tag.toLowerCase() })),
       );
     }
 
@@ -281,12 +305,12 @@ export default function AlbumDetailPage() {
     }
   };
 
-  const handleDeleteAlbum = async () => {
+  const handleDeleteAlbum = async (albumId: string) => {
     if (!album || !user) return;
 
     // Use atomic RPC function to delete album and all related data in one transaction
     const { data: success, error } = await supabase.rpc('delete_album', {
-      p_album_id: album.id,
+      p_album_id: albumId,
     });
 
     if (error || !success) {
@@ -414,7 +438,7 @@ export default function AlbumDetailPage() {
   if (albumLoading) {
     return (
       <ManageLayout
-        albumDetail={{ title: 'Loading...' }}
+        albumDetail={{ title: '...' }}
         sidebar={<PageLoading message="Loading..." />}
       >
         <PageLoading message="Loading album..." />
@@ -460,16 +484,18 @@ export default function AlbumDetailPage() {
             onDelete={handleDeletePhoto}
             onRemoveFromAlbum={handleRemoveFromAlbum}
             isLoading={photosLoading}
-            isDirtyRef={photoEditDirtyRef}
+            onDirtyChange={handlePhotoDirtyChange}
           />
         ) : (
           <AlbumEditSidebar
-            album={album}
+            selectedAlbums={album ? [album as any] : []}
             nickname={profile?.nickname}
             onSave={handleSaveAlbum}
             onDelete={handleDeleteAlbum}
+            onBulkSave={async () => {}}
+            onBulkDelete={async () => {}}
             isLoading={photosLoading}
-            isDirtyRef={albumEditDirtyRef}
+            onDirtyChange={handleAlbumDirtyChange}
           />
         )
       }

@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import ArrowUpLeftSVG from 'public/icons/arrow-up-left-micro.svg';
 import FolderMicroSVG from 'public/icons/folder-micro.svg';
 import PhotoMicroSVG from 'public/icons/image-micro.svg';
 
@@ -77,7 +78,16 @@ export default function ManageLayout({
 
               {/* Album title (only in album detail mode) */}
               {albumDetail && (
-                <h2 className="text-lg font-semibold">{albumDetail.title}</h2>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/account/albums"
+                    className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
+                    aria-label="Back to albums"
+                  >
+                    <ArrowUpLeftSVG className="size-4" />
+                  </Link>
+                  <h2 className="text-lg font-semibold">{albumDetail.title}</h2>
+                </div>
               )}
             </div>
 

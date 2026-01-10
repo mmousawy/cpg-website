@@ -39,6 +39,8 @@ interface SelectableGridProps<T> {
   onClearSelection?: () => void;
   onSelectMultiple?: (ids: string[]) => void;
   onReorder?: (items: T[]) => void;
+  /** Called on double-click of an item */
+  onItemDoubleClick?: (item: T) => void;
   emptyMessage?: string;
   className?: string;
   /** Enable drag-to-reorder */
@@ -55,6 +57,7 @@ interface SortableItemProps<T> {
   pushDirection: 'left' | 'right' | null; // Direction to push this item for drop indicator
   renderItem: (item: T, isSelected: boolean, isDragging: boolean, isHovered: boolean) => React.ReactNode;
   onItemClick: (item: T, e: React.MouseEvent) => void;
+  onItemDoubleClick?: (item: T) => void;
   onCheckboxClick: (id: string) => void;
   sortable: boolean;
 }
@@ -69,6 +72,7 @@ function SortableItem<T>({
   pushDirection,
   renderItem,
   onItemClick,
+  onItemDoubleClick,
   onCheckboxClick,
   sortable,
 }: SortableItemProps<T>) {
@@ -123,6 +127,12 @@ function SortableItem<T>({
           onItemClick(item, e);
         }
       }}
+      onDoubleClick={(e) => {
+        if (!isDragging && onItemDoubleClick) {
+          e.stopPropagation();
+          onItemDoubleClick(item);
+        }
+      }}
       {...(sortable ? { ...attributes, ...listeners } : {})}
     >
       {/* Selection checkbox */}
@@ -159,6 +169,7 @@ export default function SelectableGrid<T>({
   onClearSelection,
   onSelectMultiple,
   onReorder,
+  onItemDoubleClick,
   emptyMessage = 'No items yet.',
   className = '',
   sortable = false,
@@ -234,6 +245,34 @@ export default function SelectableGrid<T>({
   });
 
   const hoveredIdSet = new Set(hoveredIds);
+
+  // Handle Ctrl+A / Cmd+A to select all items
+  useEffect(() => {
+    if (!onSelectMultiple) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl+A (Windows/Linux) or Cmd+A (Mac)
+      const isSelectAll = (e.ctrlKey || e.metaKey) && e.key === 'a' && !e.shiftKey;
+
+      if (!isSelectAll) return;
+
+      // Don't trigger if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Prevent default browser "select all text" behavior
+      e.preventDefault();
+
+      // Select all items
+      const allIds = items.map((item) => getId(item));
+      onSelectMultiple(allIds);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onSelectMultiple, items, getId]);
 
   // Track actual mouse position during drag
   useEffect(() => {
@@ -510,6 +549,7 @@ export default function SelectableGrid<T>({
               pushDirection={pushDirection}
               renderItem={renderItem}
               onItemClick={handleItemClick}
+              onItemDoubleClick={onItemDoubleClick}
               onCheckboxClick={handleCheckboxClick}
               sortable={sortable}
             />

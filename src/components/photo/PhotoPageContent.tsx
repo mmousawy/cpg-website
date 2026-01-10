@@ -96,36 +96,37 @@ export default function PhotoPageContent({
           profile={profile}
           date={photo.created_at}
           metadata={exifString ? [exifString] : []}
-        >
-          {/* Albums this photo is part of */}
-          {(currentAlbum || otherAlbums.length > 0) && (
-            <div className="pt-6">
-              <p className="mb-2 text-sm font-medium">Part of:</p>
-              <div className="flex flex-wrap gap-2">
-                {currentAlbum && (
-                  <AlbumMiniCard
-                    title={currentAlbum.title}
-                    slug={currentAlbum.slug}
-                    coverImageUrl={currentAlbum.cover_image_url}
-                    href={`/@${nickname}/album/${currentAlbum.slug}`}
-                    photoCount={currentAlbum.photo_count}
-                    highlighted
-                  />
-                )}
-                {otherAlbums.map((album) => (
-                  <AlbumMiniCard
-                    key={album.id}
-                    title={album.title}
-                    slug={album.slug}
-                    coverImageUrl={album.cover_image_url}
-                    href={`/@${nickname}/album/${album.slug}`}
-                    photoCount={album.photo_count}
-                  />
-                ))}
+          leftContent={
+            /* Albums this photo is part of */
+            (currentAlbum || otherAlbums.length > 0) && (
+              <div className={photo.title || photo.description ? 'pt-6' : ''}>
+                <p className="mb-2 text-sm font-medium">Part of:</p>
+                <div className="flex flex-wrap gap-2">
+                  {currentAlbum && (
+                    <AlbumMiniCard
+                      title={currentAlbum.title}
+                      slug={currentAlbum.slug}
+                      coverImageUrl={currentAlbum.cover_image_url}
+                      href={`/@${nickname}/album/${currentAlbum.slug}`}
+                      photoCount={currentAlbum.photo_count}
+                      highlighted
+                    />
+                  )}
+                  {otherAlbums.map((album) => (
+                    <AlbumMiniCard
+                      key={album.id}
+                      title={album.title}
+                      slug={album.slug}
+                      coverImageUrl={album.cover_image_url}
+                      href={`/@${nickname}/album/${album.slug}`}
+                      photoCount={album.photo_count}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </ContentHeader>
+            )
+          }
+        />
       </PageContainer>
 
       {/* Comments section */}

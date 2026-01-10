@@ -34,14 +34,24 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   );
 }
 
+// Paths where the header should be full-width (no max-w constraint)
+const fullWidthPaths = ['/account/photos', '/account/albums'];
+
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
   const mounted = useMounted();
   const { profile } = useAuth();
 
+  // Check if current path should have full-width header
+  const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
+
   return (
     <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-2 text-foreground shadow-md shadow-[#00000005]">
-      <div className="flex w-full max-w-screen-md items-center justify-between gap-4">
+      <div className={clsx(
+        "flex w-full items-center justify-between gap-4 px-2",
+        !isFullWidth && "max-w-screen-md",
+      )}>
         {/* Left: Logo + Desktop Nav */}
         <div className="flex items-center gap-6">
           <Link href="/" className="rounded-full" aria-label="Creative Photography Group Home">
