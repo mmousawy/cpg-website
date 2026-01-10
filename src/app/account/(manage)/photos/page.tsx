@@ -13,6 +13,7 @@ import ManageLayout from '@/components/manage/ManageLayout';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
+import Select from '@/components/shared/Select';
 import { useManage } from '@/context/ManageContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -384,15 +385,17 @@ export default function PhotosPage() {
     <ManageLayout
       actions={
         <>
-          <select
+          <Select
             value={photoFilter}
-            onChange={(e) => setPhotoFilter(e.target.value as 'all' | 'public' | 'private')}
-            className="rounded-lg border border-border-color bg-background px-3 py-1.5 text-sm transition-colors focus:border-primary focus:outline-none"
-          >
-            <option value="all">All photos</option>
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-          </select>
+            onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}
+            options={[
+              { value: 'all', label: 'All photos' },
+              { value: 'public', label: 'Public' },
+              { value: 'private', label: 'Private' },
+            ]}
+            fullWidth={false}
+            className="min-w-[140px]"
+          />
           <Button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -437,7 +440,7 @@ export default function PhotosPage() {
             <ImageSVG className="size-10 mb-2 inline-block" />
             <p className="mb-2 text-lg opacity-70">You don&apos;t have any photos yet</p>
             <p className="text-sm text-foreground/50 mb-4">
-                Drag and drop photos here, or use the &quot;Upload&quot; buttons to upload photos
+                Drag and drop photos here, or use the &quot;Upload&quot; button to upload photos
             </p>
             <Button onClick={() => fileInputRef.current?.click()} icon={<PlusSVG className="size-5 -ml-0.5" />}>Upload</Button>
           </div>

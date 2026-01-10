@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import clsx from 'clsx';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 
-import type { Tables } from '@/database.types';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
-import Textarea from '@/components/shared/Textarea';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import Select from '@/components/shared/Select';
+import Textarea from '@/components/shared/Textarea';
+import type { Tables } from '@/database.types';
 
 type Member = Pick<Tables<'profiles'>,
   | 'id'
@@ -198,18 +199,20 @@ export default function AdminMembersPage() {
         {/* Filter dropdown */}
         <div className="flex items-center gap-2">
           <label className="text-sm text-foreground/60">Status:</label>
-          <select
+          <Select
             value={filter}
-            onChange={(e) => {
-              setFilter(e.target.value as 'all' | 'active' | 'suspended');
+            onValueChange={(value) => {
+              setFilter(value as 'all' | 'active' | 'suspended');
               setPage(1);
             }}
-            className="rounded-lg border border-border-color bg-background px-3 py-2 text-sm font-[family-name:var(--font-geist-sans)] focus:border-primary focus:outline-none"
-          >
-            <option value="all">All</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
-          </select>
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'suspended', label: 'Suspended' },
+            ]}
+            fullWidth={false}
+            className="min-w-[120px]"
+          />
         </div>
       </div>
 

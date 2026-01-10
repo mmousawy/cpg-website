@@ -112,14 +112,14 @@ function PhotoRows({
                   style={
                     isConstrained
                       ? {
-                          width: item.displayWidth,
-                          height: item.displayHeight,
-                        }
+                        width: item.displayWidth,
+                        height: item.displayHeight,
+                      }
                       : {
-                          flexGrow: item.photo.aspectRatio,
-                          flexBasis: 0,
-                          aspectRatio: item.photo.aspectRatio,
-                        }
+                        flexGrow: item.photo.aspectRatio,
+                        flexBasis: 0,
+                        aspectRatio: item.photo.aspectRatio,
+                      }
                   }
                 >
                   <Image
