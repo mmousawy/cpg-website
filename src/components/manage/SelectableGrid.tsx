@@ -61,6 +61,8 @@ interface SortableItemProps<T> {
   onItemDoubleClick?: (item: T) => void;
   onCheckboxClick: (id: string) => void;
   sortable: boolean;
+  isMultiSelectMode: boolean; // True when in multi-select mode (after first long-press)
+  onEnterMultiSelectMode: () => void; // Callback to enter multi-select mode
 }
 
 // Hook to detect mobile viewport
@@ -90,8 +92,16 @@ function SortableItem<T>({
   onItemDoubleClick,
   onCheckboxClick,
   sortable,
+  isMultiSelectMode,
+  onEnterMultiSelectMode,
 }: SortableItemProps<T>) {
   const isMobile = useIsMobile();
+
+  // Long-press detection for mobile multi-select
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = useRef(false);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const [isPressing, setIsPressing] = useState(false); // Visual feedback for long press
 
   const {
     attributes,
@@ -120,17 +130,111 @@ function SortableItem<T>({
   // Use dnd-kit's transition for single-item drag, custom transition for multi-drag push effect
   const customTransition = 'transform 150ms ease, opacity 150ms ease';
 
-  const style = sortable
-    ? {
-      transform: shouldTransform
-        ? CSS.Transform.toString(transform)
-        : pushTransform,
-      transition: shouldTransform ? transition : customTransition,
-      opacity: isBeingDragged ? 0.5 : 1,
+  // Calculate transform including long-press scale effect
+  const getTransform = () => {
+    const baseTransform = sortable && shouldTransform
+      ? CSS.Transform.toString(transform)
+      : pushTransform;
+
+    if (isPressing) {
+      // Apply scale during long-press
+      return baseTransform ? `${baseTransform} scale(0.95)` : 'scale(0.95)';
     }
-    : undefined;
+    return baseTransform;
+  };
+
+  const style: React.CSSProperties = {
+    transform: getTransform(),
+    transition: isPressing
+      ? 'transform 150ms ease, opacity 150ms ease'
+      : (sortable && shouldTransform ? transition : customTransition),
+    opacity: isBeingDragged ? 0.5 : 1,
+  };
 
   const showCheckbox = isSelected || isHovered;
+
+  // Long-press handlers for mobile (touch events only fire on touch devices)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    isLongPressRef.current = false;
+    setIsPressing(true); // Start visual feedback
+
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      setIsPressing(false); // End visual feedback
+      // Trigger haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      // Enter multi-select mode and select this item
+      onEnterMultiSelectMode();
+      onCheckboxClick(id);
+    }, 500); // 500ms for long press
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPosRef.current) return;
+
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+
+    // Cancel long press if moved more than 10px
+    if (dx > 10 || dy > 10) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      setIsPressing(false);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    touchStartPosRef.current = null;
+    setIsPressing(false);
+  };
+
+  // Prevent context menu on long press
+  const handleContextMenu = (e: React.MouseEvent) => {
+    // Only prevent on touch devices (context menu from long press)
+    if (isLongPressRef.current || touchStartPosRef.current) {
+      e.preventDefault();
+    }
+  };
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    e.stopPropagation();
+
+    // If it was a long press, the action was already triggered - just reset and ignore
+    if (isLongPressRef.current) {
+      isLongPressRef.current = false;
+      return;
+    }
+
+    // In multi-select mode, taps toggle selection (like checkbox)
+    if (isMultiSelectMode) {
+      onCheckboxClick(id);
+      return;
+    }
+
+    // Regular click/tap = single select
+    onItemClick(item, e);
+  };
 
   return (
     <div
@@ -138,12 +242,12 @@ function SortableItem<T>({
       style={style}
       data-item-id={id}
       className={`relative group ${isDragging && !isMultiDragActive ? 'z-50' : ''}`}
-      onClick={(e) => {
-        if (!isDragging) {
-          e.stopPropagation();
-          onItemClick(item, e);
-        }
-      }}
+      onClick={handleClick}
+      onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       onDoubleClick={(e) => {
         if (!isDragging && onItemDoubleClick) {
           e.stopPropagation();
@@ -207,6 +311,10 @@ export default function SelectableGrid<T>({
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   // Track if current drag is a multi-drag for collision detection
   const isMultiDragRef = useRef(false);
+  // Track if in multi-select mode (activated by long-press on mobile)
+  const [isMultiSelectModeActive, setIsMultiSelectModeActive] = useState(false);
+  // Multi-select mode is only active when there are selected items
+  const isMultiSelectMode = isMultiSelectModeActive && selectedIds.size > 0;
 
   // Custom collision detection that uses pointer position for multi-drag
   const customCollisionDetection: CollisionDetection = useCallback((args) => {
@@ -494,6 +602,7 @@ export default function SelectableGrid<T>({
     const hasModifier = e.shiftKey || e.metaKey || e.ctrlKey;
     if (e.target === e.currentTarget && onClearSelection && !isSelecting && !justFinishedSelecting && !hasModifier) {
       onClearSelection();
+      setIsMultiSelectModeActive(false); // Exit multi-select mode when clearing
     }
   };
 
@@ -535,67 +644,79 @@ export default function SelectableGrid<T>({
   const gridContent = (
     <div
       ref={containerRef}
-      className={clsx(
-        'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
-        'p-3 md:p-6 content-start select-none h-full',
-        className,
-      )}
+      className="relative h-full"
       onClick={handleGridClick}
     >
-      {items.map((item) => {
-        const id = getId(item);
-        const isSelected = selectedIds.has(id);
-        const isHovered = hoveredIdSet.has(id);
+      {/* Inner grid - no height constraint so spacer works */}
+      <div
+        className={clsx(
+          'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
+          'p-3 md:p-6 content-start select-none',
+          className,
+        )}
+      >
+        {items.map((item) => {
+          const id = getId(item);
+          const isSelected = selectedIds.has(id);
+          const isHovered = hoveredIdSet.has(id);
 
-        // Check if this is a multi-drag scenario
-        const isMultiDragActive =
-        activeDragId !== null &&
-        selectedIds.has(activeDragId) &&
-        selectedIds.size > 1;
+          // Check if this is a multi-drag scenario
+          const isMultiDragActive =
+          activeDragId !== null &&
+          selectedIds.has(activeDragId) &&
+          selectedIds.size > 1;
 
-        // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
-        const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
+          // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
+          const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
 
-        // Determine push direction for this item
-        const pushDirection = id === pushLeftItemId
-          ? 'left' as const
-          : id === pushRightItemId
-            ? 'right' as const
-            : null;
+          // Determine push direction for this item
+          const pushDirection = id === pushLeftItemId
+            ? 'left' as const
+            : id === pushRightItemId
+              ? 'right' as const
+              : null;
 
-        return (
-          <SortableItem
-            key={id}
-            item={item}
-            id={id}
-            isSelected={isSelected}
-            isHovered={isHovered}
-            isMultiDragging={isMultiDragging}
-            isMultiDragActive={isMultiDragActive}
-            pushDirection={pushDirection}
-            renderItem={renderItem}
-            onItemClick={handleItemClick}
-            onItemDoubleClick={onItemDoubleClick}
-            onCheckboxClick={handleCheckboxClick}
-            sortable={sortable}
+          return (
+            <SortableItem
+              key={id}
+              item={item}
+              id={id}
+              isSelected={isSelected}
+              isHovered={isHovered}
+              isMultiDragging={isMultiDragging}
+              isMultiDragActive={isMultiDragActive}
+              pushDirection={pushDirection}
+              renderItem={renderItem}
+              onItemClick={handleItemClick}
+              onItemDoubleClick={onItemDoubleClick}
+              onCheckboxClick={handleCheckboxClick}
+              sortable={sortable}
+              isMultiSelectMode={isMultiSelectMode}
+              onEnterMultiSelectMode={() => setIsMultiSelectModeActive(true)}
+            />
+          );
+        })}
+
+        {/* Drop indicator for multi-drag */}
+        {dropIndicatorPos && (
+          <div
+            className="pointer-events-none absolute w-1 bg-primary rounded-full z-40"
+            style={{
+              left: dropIndicatorPos.x - 2,
+              top: dropIndicatorPos.y,
+              height: dropIndicatorPos.height,
+              boxShadow: '0 0 0 1px white, 0 0 0 2px rgba(0,0,0,0.1)',
+            }}
           />
-        );
-      })}
+        )}
 
-      {/* Drop indicator for multi-drag */}
-      {dropIndicatorPos && (
-        <div
-          className="pointer-events-none absolute w-1 bg-primary rounded-full z-40"
-          style={{
-            left: dropIndicatorPos.x - 2,
-            top: dropIndicatorPos.y,
-            height: dropIndicatorPos.height,
-            boxShadow: '0 0 0 1px white, 0 0 0 2px rgba(0,0,0,0.1)',
-          }}
-        />
-      )}
+        {/* Spacer for mobile action bar when items are selected */}
+        {selectedIds.size > 0 && (
+          <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
+        )}
+      </div>
 
-      {/* Selection box overlay */}
+      {/* Selection box overlay - in outer container for proper positioning */}
       {isSelecting && boxStyle && (
         <div
           className="pointer-events-none absolute border-2 border-primary bg-primary/10 z-50"
@@ -606,11 +727,6 @@ export default function SelectableGrid<T>({
             height: boxStyle.height,
           }}
         />
-      )}
-
-      {/* Spacer for mobile action bar when items are selected */}
-      {selectedIds.size > 0 && (
-        <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
       )}
     </div>
   );

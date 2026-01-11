@@ -570,7 +570,7 @@ export default function AlbumDetailPage() {
               actions={
                 <Button
                   onClick={handleMobileRemoveFromAlbum}
-                  variant="danger"
+                  variant="secondary"
                   size="sm"
                   icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
                 >

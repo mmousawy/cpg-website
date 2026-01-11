@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import FolderAddMiniSVG from 'public/icons/folder-add-mini.svg';
+import FolderOpenMiniSVG from 'public/icons/folder-open-mini.svg';
 import FolderSVG from 'public/icons/folder.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
@@ -126,12 +127,8 @@ export default function AlbumsPage() {
   };
 
   const handleSelectAlbum = async (albumId: string, isMultiSelect: boolean) => {
-    // On mobile, always toggle (no need for modifier keys)
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const shouldToggle = isMobile || isMultiSelect;
-
     // Check for unsaved changes when switching to a different single selection
-    if (!shouldToggle && albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (!isMultiSelect && albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
       return;
     }
     // Close new album form when selecting an existing album
@@ -140,7 +137,7 @@ export default function AlbumsPage() {
     }
     setSelectedAlbumIds((prev) => {
       const newSet = new Set(prev);
-      if (shouldToggle) {
+      if (isMultiSelect) {
         if (newSet.has(albumId)) {
           newSet.delete(albumId);
         } else {
@@ -453,6 +450,19 @@ export default function AlbumsPage() {
                     icon={<TrashSVG className="size-5 -ml-0.5" />}
                   >
                     <span className="hidden md:inline-block">Delete</span>
+                  </Button>
+                )}
+                {selectedCount === 1 && (
+                  <Button
+                    onClick={() => {
+                      const album = selectedAlbums[0];
+                      if (album) router.push(`/account/albums/${album.slug}`);
+                    }}
+                    variant="secondary"
+                    size="sm"
+                    icon={<FolderOpenMiniSVG className="size-5 -ml-0.5" />}
+                  >
+                    <span className="hidden md:inline-block">Open</span>
                   </Button>
                 )}
               </>

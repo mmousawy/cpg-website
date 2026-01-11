@@ -147,16 +147,12 @@ export default function PhotosPage() {
   };
 
   const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
-    // On mobile, always toggle (no need for modifier keys)
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const shouldToggle = isMobile || isMultiSelect;
-
-    if (!shouldToggle && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
       return;
     }
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
-      if (shouldToggle) {
+      if (isMultiSelect) {
         if (newSet.has(photoId)) newSet.delete(photoId);
         else newSet.add(photoId);
       } else {
