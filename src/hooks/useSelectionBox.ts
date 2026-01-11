@@ -2,6 +2,23 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+// Hook to detect if we're on mobile (viewport < 768px)
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 interface SelectionBox {
   startX: number;
   startY: number;
@@ -24,10 +41,14 @@ export function useSelectionBox({
   getItemId,
   disabled = false,
 }: UseSelectionBoxOptions) {
+  const isMobile = useIsMobile();
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [hoveredIds, setHoveredIds] = useState<string[]>([]);
   const [justFinishedSelecting, setJustFinishedSelecting] = useState(false);
+  
+  // Disable box-select on mobile
+  const isDisabled = disabled || isMobile;
 
   // Use refs to avoid stale closures in event handlers
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -110,7 +131,7 @@ export function useSelectionBox({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || disabled) return;
+    if (!container || isDisabled) return;
 
     const handleMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
@@ -210,7 +231,7 @@ export function useSelectionBox({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [containerRef, disabled, calculateSelectedItems]);
+  }, [containerRef, isDisabled, calculateSelectedItems]);
 
   return {
     isSelecting,

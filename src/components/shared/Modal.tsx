@@ -81,6 +81,7 @@ export default function Modal() {
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
           onDeactivate: () => setIsOpen(false),
+          fallbackFocus: () => modalRef.current || document.body,
         }}
       >
         <div

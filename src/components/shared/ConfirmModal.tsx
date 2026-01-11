@@ -56,6 +56,7 @@ export default function ConfirmModal() {
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
           onDeactivate: handleCancel,
+          fallbackFocus: () => modalRef.current || document.body,
         }}
       >
         <div

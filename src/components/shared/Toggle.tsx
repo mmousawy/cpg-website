@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { forwardRef } from 'react';
+import { forwardRef, useCallback, useRef, useImperativeHandle } from 'react';
 
 interface ToggleProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   /** Label for the left side (unchecked state) */
@@ -21,52 +21,76 @@ interface ToggleProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 
  * Works with react-hook-form's register() function.
  */
 const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
-  ({ className, leftLabel, rightLabel, label, id, ...props }, ref) => {
+  ({ className, leftLabel, rightLabel, label, id, onChange, ...props }, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    
+    // Forward the ref
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+    
+    // Handle click on the toggle area
+    const handleToggleClick = useCallback(() => {
+      if (inputRef.current && !props.disabled) {
+        inputRef.current.click();
+      }
+    }, [props.disabled]);
+
     return (
       <div className={clsx('flex flex-col gap-2', className)}>
         {label && (
           <span className="text-sm font-medium">{label}</span>
         )}
-        <label
-          htmlFor={id}
-          className="group flex cursor-pointer items-center gap-3"
-        >
-          {/* Hidden checkbox - placed first so peer selectors work for all siblings */}
+        <div className="group flex items-center gap-3">
+          {/* Hidden checkbox */}
           <input
-            ref={ref}
+            ref={inputRef}
             type="checkbox"
             id={id}
             className="peer sr-only"
             aria-label={`Toggle ${leftLabel} and ${rightLabel}`}
+            onChange={onChange}
             {...props}
           />
 
           {/* Left label (active when unchecked) */}
-          <span className="text-sm font-medium text-foreground transition-colors peer-checked:text-foreground/40">
+          <button
+            type="button"
+            onClick={handleToggleClick}
+            className="text-sm font-medium text-foreground transition-colors peer-checked:text-foreground/40 cursor-pointer"
+            tabIndex={-1}
+          >
             {leftLabel}
-          </span>
+          </button>
 
-          {/* Toggle track */}
-          <span
+          {/* Toggle track - now directly clickable */}
+          <button
+            type="button"
+            onClick={handleToggleClick}
             className={clsx(
-              'relative h-6 w-11 rounded-full transition-colors',
+              'relative h-6 w-11 rounded-full transition-colors cursor-pointer',
               'bg-foreground/20 peer-checked:bg-primary',
             )}
+            tabIndex={-1}
+            aria-hidden="true"
           >
-            {/* Toggle knob - uses group-has since it's nested and can't use peer directly */}
+            {/* Toggle knob */}
             <span
               className={clsx(
-                'absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform',
+                'absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform pointer-events-none',
                 'group-has-[input:checked]:translate-x-5',
               )}
             />
-          </span>
+          </button>
 
           {/* Right label (active when checked) */}
-          <span className="text-sm font-medium text-foreground/40 transition-colors peer-checked:text-foreground">
+          <button
+            type="button"
+            onClick={handleToggleClick}
+            className="text-sm font-medium text-foreground/40 transition-colors peer-checked:text-foreground cursor-pointer"
+            tabIndex={-1}
+          >
             {rightLabel}
-          </span>
-        </label>
+          </button>
+        </div>
       </div>
     );
   },

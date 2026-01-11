@@ -1,6 +1,7 @@
 'use client';
 
 import type { AlbumWithPhotos } from '@/types/albums';
+import clsx from 'clsx';
 import AlbumCard from './AlbumCard';
 import SelectableGrid from './SelectableGrid';
 
@@ -46,7 +47,10 @@ export default function AlbumGrid({
       }}
       onClearSelection={onClearSelection}
       onSelectMultiple={onSelectMultiple}
-      className={className || 'grid gap-3 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] h-full select-none p-6 content-start'}
+      className={clsx(
+        'grid gap-3 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] select-none p-3 sm:p-6 content-start',
+        className,
+      )}
       renderItem={(album, isSelected, _isDragging, isHovered) => (
         <AlbumCard
           album={album}

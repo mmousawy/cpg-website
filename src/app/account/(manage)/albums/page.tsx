@@ -4,10 +4,13 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
   AlbumEditSidebar,
   AlbumGrid,
+  AlbumListItem,
   type AlbumFormData,
   type BulkAlbumFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
+import MobileActionBar from '@/components/manage/MobileActionBar';
+import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import PageLoading from '@/components/shared/PageLoading';
 import { useManage } from '@/context/ManageContext';
@@ -18,8 +21,9 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import FolderAddMiniSVG from 'public/icons/folder-add-mini.svg';
 import FolderSVG from 'public/icons/folder.svg';
-import PlusSVG from 'public/icons/plus.svg';
+import TrashSVG from 'public/icons/trash.svg';
 
 export default function AlbumsPage() {
   const { user, profile } = useAuth();
@@ -30,6 +34,7 @@ export default function AlbumsPage() {
 
   const albumEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
+  const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
 
   // Sync dirty state with global unsaved changes context
   const handleDirtyChange = useCallback((isDirty: boolean) => {
@@ -121,8 +126,12 @@ export default function AlbumsPage() {
   };
 
   const handleSelectAlbum = async (albumId: string, isMultiSelect: boolean) => {
+    // On mobile, always toggle (no need for modifier keys)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const shouldToggle = isMobile || isMultiSelect;
+
     // Check for unsaved changes when switching to a different single selection
-    if (!isMultiSelect && albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (!shouldToggle && albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
       return;
     }
     // Close new album form when selecting an existing album
@@ -131,7 +140,7 @@ export default function AlbumsPage() {
     }
     setSelectedAlbumIds((prev) => {
       const newSet = new Set(prev);
-      if (isMultiSelect) {
+      if (shouldToggle) {
         if (newSet.has(albumId)) {
           newSet.delete(albumId);
         } else {
@@ -168,6 +177,10 @@ export default function AlbumsPage() {
     if (!isNewAlbum && !(await confirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set());
     setIsNewAlbum(true);
+    // Open mobile sheet for new album creation (only on mobile)
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setIsMobileEditSheetOpen(true);
+    }
   };
 
   const handleCreateAlbum = async (data: AlbumFormData) => {
@@ -362,19 +375,121 @@ export default function AlbumsPage() {
   };
 
   const selectedAlbums = albums.filter((a) => selectedAlbumIds.has(a.id));
+  const selectedCount = selectedAlbumIds.size;
+
+  const handleMobileEdit = () => {
+    // Only open on mobile (below md breakpoint)
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setIsMobileEditSheetOpen(true);
+    }
+  };
+
+  const handleMobileEditClose = async () => {
+    if (albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+      return;
+    }
+    setIsMobileEditSheetOpen(false);
+  };
+
+  const handleMobileBulkDelete = async () => {
+    if (selectedCount === 0) return;
+
+    const confirmed = await confirm({
+      title: 'Delete Albums',
+      message: `Are you sure you want to delete ${selectedCount} album${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`,
+      content: (
+        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+          {selectedAlbums.map((album) => (
+            <AlbumListItem key={album.id} album={album} variant="compact" />
+          ))}
+        </div>
+      ),
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
+    await handleBulkDeleteAlbums(Array.from(selectedAlbumIds));
+  };
 
   return (
-    <ManageLayout
-      actions={
-        <Button
-          onClick={handleCreateNewAlbum}
-          icon={<PlusSVG className="size-5 -ml-0.5" />}
-          variant="primary"
-        >
-          New album
-        </Button>
-      }
-      sidebar={
+    <>
+      <ManageLayout
+        actions={
+          <Button
+            onClick={handleCreateNewAlbum}
+            icon={<FolderAddMiniSVG className="size-5 -ml-0.5" />}
+            variant="primary"
+          >
+            <span className="hidden md:inline-block">New album</span>
+          </Button>
+        }
+        sidebar={
+          <AlbumEditSidebar
+            selectedAlbums={selectedAlbums}
+            isNewAlbum={isNewAlbum}
+            nickname={profile?.nickname}
+            onSave={handleSaveAlbum}
+            onBulkSave={handleBulkSaveAlbums}
+            onDelete={handleDeleteAlbum}
+            onBulkDelete={handleBulkDeleteAlbums}
+            onCreate={handleCreateAlbum}
+            isLoading={albumsLoading}
+            onDirtyChange={handleDirtyChange}
+          />
+        }
+        mobileActionBar={
+          <MobileActionBar
+            selectedCount={selectedCount}
+            onEdit={handleMobileEdit}
+            onClearSelection={handleClearSelection}
+            actions={
+              <>
+                {selectedCount > 0 && (
+                  <Button
+                    onClick={handleMobileBulkDelete}
+                    variant="danger"
+                    size="sm"
+                    icon={<TrashSVG className="size-5 -ml-0.5" />}
+                  >
+                    <span className="hidden md:inline-block">Delete</span>
+                  </Button>
+                )}
+              </>
+            }
+          />
+        }
+      >
+        {albumsLoading ? (
+          <PageLoading message="Loading albums..." />
+        ) : albums.length === 0 ? (
+          <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
+            <FolderSVG className="size-10 mb-2 inline-block" />
+            <p className="mb-2 text-lg opacity-70">You don&apos;t have any albums yet</p>
+            <p className="text-sm text-foreground/50 mb-4">
+              Use the &quot;New album&quot; button to create a new album
+            </p>
+            <Button onClick={handleCreateNewAlbum} icon={<FolderAddMiniSVG className="size-5 -ml-0.5" />}>
+              New album
+            </Button>
+          </div>
+        ) : (
+          <AlbumGrid
+            albums={albums}
+            selectedAlbumIds={selectedAlbumIds}
+            onAlbumDoubleClick={handleAlbumDoubleClick}
+            onSelectAlbum={handleSelectAlbum}
+            onClearSelection={handleClearSelection}
+            onSelectMultiple={handleSelectMultiple}
+          />
+        )}
+      </ManageLayout>
+
+      {/* Mobile Edit Sheet */}
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+      >
         <AlbumEditSidebar
           selectedAlbums={selectedAlbums}
           isNewAlbum={isNewAlbum}
@@ -387,29 +502,7 @@ export default function AlbumsPage() {
           isLoading={albumsLoading}
           onDirtyChange={handleDirtyChange}
         />
-      }
-    >
-      {albumsLoading ? (
-        <PageLoading message="Loading albums..." />
-      ) : albums.length === 0 ? (
-        <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
-          <FolderSVG className="size-10 mb-2 inline-block" />
-          <p className="mb-2 text-lg opacity-70">You don&apos;t have any albums yet</p>
-          <p className="text-sm text-foreground/50 mb-4">
-              Use the &quot;New album&quot; button to create a new album
-          </p>
-          <Button onClick={handleCreateNewAlbum} icon={<PlusSVG className="size-5 -ml-0.5" />}>New album</Button>
-        </div>
-      ) : (
-        <AlbumGrid
-          albums={albums}
-          selectedAlbumIds={selectedAlbumIds}
-          onAlbumDoubleClick={handleAlbumDoubleClick}
-          onSelectAlbum={handleSelectAlbum}
-          onClearSelection={handleClearSelection}
-          onSelectMultiple={handleSelectMultiple}
-        />
-      )}
-    </ManageLayout>
+      </BottomSheet>
+    </>
   );
 }

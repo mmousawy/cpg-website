@@ -13,6 +13,7 @@ import {
   KeyboardSensor,
   Over,
   PointerSensor,
+  TouchSensor,
   pointerWithin,
   rectIntersection,
   useSensor,
@@ -208,6 +209,12 @@ export default function SelectableGrid<T>({
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8, // Require 8px movement before starting drag
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // 200ms delay to distinguish tap from drag on touch devices
+        tolerance: 5, // Allow 5px movement during delay
       },
     }),
     useSensor(KeyboardSensor, {
@@ -510,10 +517,14 @@ export default function SelectableGrid<T>({
   };
 
   const gridContent = (
-    <div className="relative h-full flex-1">
+    <div className="relative min-h-full">
       <div
         ref={containerRef}
-        className={`relative grid h-full gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] p-6 content-start select-none ${className || ''}`}
+        className={clsx(
+          'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
+          'p-3 md:p-6 content-start select-none',
+          className,
+        )}
         onClick={handleGridClick}
       >
         {items.map((item) => {
@@ -580,6 +591,11 @@ export default function SelectableGrid<T>({
               height: boxStyle.height,
             }}
           />
+        )}
+
+        {/* Spacer for mobile action bar when items are selected */}
+        {selectedIds.size > 0 && (
+          <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
         )}
       </div>
     </div>

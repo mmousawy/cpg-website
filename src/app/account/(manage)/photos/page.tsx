@@ -6,10 +6,13 @@ import {
   AddPhotosToAlbumModal,
   PhotoEditSidebar,
   PhotoGrid,
+  PhotoListItem,
   type BulkPhotoFormData,
   type PhotoFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
+import MobileActionBar from '@/components/manage/MobileActionBar';
+import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
@@ -22,8 +25,10 @@ import { createClient } from '@/utils/supabase/client';
 import exifr from 'exifr';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
 import ImageSVG from 'public/icons/image.svg';
-import PlusSVG from 'public/icons/plus.svg';
+import PlusMiniSVG from 'public/icons/plus-mini.svg';
+import TrashSVG from 'public/icons/trash.svg';
 
 export default function PhotosPage() {
   const { user } = useAuth();
@@ -35,6 +40,7 @@ export default function PhotosPage() {
 
   const photoEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
+  const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
 
   // Sync dirty state with global unsaved changes context
   const handleDirtyChange = useCallback((isDirty: boolean) => {
@@ -141,12 +147,16 @@ export default function PhotosPage() {
   };
 
   const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
-    if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    // On mobile, always toggle (no need for modifier keys)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const shouldToggle = isMobile || isMultiSelect;
+
+    if (!shouldToggle && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
       return;
     }
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
-      if (isMultiSelect) {
+      if (shouldToggle) {
         if (newSet.has(photoId)) newSet.delete(photoId);
         else newSet.add(photoId);
       } else {
@@ -380,41 +390,158 @@ export default function PhotosPage() {
   };
 
   const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
+  const selectedCount = selectedPhotoIds.size;
+
+  const handleMobileEdit = () => {
+    // Only open on mobile (below md breakpoint)
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setIsMobileEditSheetOpen(true);
+    }
+  };
+
+  const handleMobileEditClose = async () => {
+    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+      return;
+    }
+    setIsMobileEditSheetOpen(false);
+  };
+
+  const handleMobileBulkDelete = async () => {
+    if (selectedCount === 0) return;
+
+    const confirmed = await confirm({
+      title: 'Delete photos',
+      message: `Are you sure you want to delete ${selectedCount} photo${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`,
+      content: (
+        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+          {selectedPhotos.map((photo) => (
+            <PhotoListItem key={photo.id} photo={photo} variant="compact" />
+          ))}
+        </div>
+      ),
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
+    await handleBulkDeletePhotos(Array.from(selectedPhotoIds));
+  };
 
   return (
-    <ManageLayout
-      actions={
-        <>
-          <Select
-            value={photoFilter}
-            onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}
-            options={[
-              { value: 'all', label: 'All photos' },
-              { value: 'public', label: 'Public' },
-              { value: 'private', label: 'Private' },
-            ]}
-            fullWidth={false}
-            className="min-w-[140px]"
+    <>
+      <ManageLayout
+        actions={
+          <>
+            <Select
+              value={photoFilter}
+              onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'public', label: 'Public' },
+                { value: 'private', label: 'Private' },
+              ]}
+              fullWidth={false}
+              className="min-w-[80px] md:min-w-[100px]"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              icon={<PlusMiniSVG className="size-5 -ml-0.5" />}
+              variant="primary"
+            >
+              <span className="hidden md:inline-block">{isUploading ? 'Uploading...' : 'Upload'}</span>
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              onChange={handleFileInputChange}
+              className="hidden"
+            />
+          </>
+        }
+        sidebar={
+          <PhotoEditSidebar
+            selectedPhotos={selectedPhotos}
+            onSave={handleSavePhoto}
+            onBulkSave={handleBulkSavePhotos}
+            onDelete={handleDeletePhoto}
+            onBulkDelete={handleBulkDeletePhotos}
+            onAddToAlbum={handleAddToAlbum}
+            isLoading={photosLoading}
+            onDirtyChange={handleDirtyChange}
           />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            icon={<PlusSVG className="size-5 -ml-0.5" />}
-            variant="primary"
-          >
-            {isUploading ? 'Uploading...' : 'Upload'}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            multiple
-            onChange={handleFileInputChange}
-            className="hidden"
+        }
+        mobileActionBar={
+          <MobileActionBar
+            selectedCount={selectedCount}
+            onEdit={handleMobileEdit}
+            onClearSelection={handleClearSelection}
+            actions={
+              <>
+                {selectedCount > 0 && (
+                  <Button
+                    onClick={handleMobileBulkDelete}
+                    variant="danger"
+                    size="sm"
+                    icon={<TrashSVG className="size-5 -ml-0.5" />}
+                  >
+                    <span className="hidden md:inline-block">Delete</span>
+                  </Button>
+                )}
+                {selectedCount > 0 && (
+                  <Button
+                    onClick={() => handleAddToAlbum(Array.from(selectedPhotoIds))}
+                    variant="secondary"
+                    size="sm"
+                    icon={<FolderDownMiniSVG className="size-5 -ml-0.5" />}
+                  >
+                    <span className="hidden md:inline-block">Album</span>
+                  </Button>
+                )}
+              </>
+            }
           />
-        </>
-      }
-      sidebar={
+        }
+      >
+        <DropZone
+          onDrop={handleUpload}
+          disabled={isUploading}
+          className="flex-1 flex flex-col min-h-0"
+          overlayMessage="Drop to upload"
+        >
+          {photosLoading ? (
+            <PageLoading message="Loading photos..." />
+          ) : photos.length === 0 ? (
+            <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
+              <ImageSVG className="size-10 mb-2 inline-block" />
+              <p className="mb-2 text-lg opacity-70">You don&apos;t have any photos yet</p>
+              <p className="text-sm text-foreground/50 mb-4">
+                Drag and drop photos here, or use the &quot;Upload&quot; button to upload photos
+              </p>
+              <Button onClick={() => fileInputRef.current?.click()} icon={<PlusMiniSVG className="size-5 -ml-0.5" />}>Upload</Button>
+            </div>
+          ) : (
+            <PhotoGrid
+              photos={photos}
+              selectedPhotoIds={selectedPhotoIds}
+              onSelectPhoto={handleSelectPhoto}
+              onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+              onClearSelection={handleClearSelection}
+              onSelectMultiple={handleSelectMultiple}
+              onReorder={handleReorderPhotos}
+              sortable
+            />
+          )}
+        </DropZone>
+      </ManageLayout>
+
+      {/* Mobile Edit Sheet */}
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+      >
         <PhotoEditSidebar
           selectedPhotos={selectedPhotos}
           onSave={handleSavePhoto}
@@ -425,38 +552,7 @@ export default function PhotosPage() {
           isLoading={photosLoading}
           onDirtyChange={handleDirtyChange}
         />
-      }
-    >
-      <DropZone
-        onDrop={handleUpload}
-        disabled={isUploading}
-        className="flex-1 flex flex-col min-h-0"
-        overlayMessage="Drop to upload"
-      >
-        {photosLoading ? (
-          <PageLoading message="Loading photos..." />
-        ) : photos.length === 0 ? (
-          <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
-            <ImageSVG className="size-10 mb-2 inline-block" />
-            <p className="mb-2 text-lg opacity-70">You don&apos;t have any photos yet</p>
-            <p className="text-sm text-foreground/50 mb-4">
-                Drag and drop photos here, or use the &quot;Upload&quot; button to upload photos
-            </p>
-            <Button onClick={() => fileInputRef.current?.click()} icon={<PlusSVG className="size-5 -ml-0.5" />}>Upload</Button>
-          </div>
-        ) : (
-          <PhotoGrid
-            photos={photos}
-            selectedPhotoIds={selectedPhotoIds}
-            onSelectPhoto={handleSelectPhoto}
-            onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
-            onClearSelection={handleClearSelection}
-            onSelectMultiple={handleSelectMultiple}
-            onReorder={handleReorderPhotos}
-            sortable
-          />
-        )}
-      </DropZone>
-    </ManageLayout>
+      </BottomSheet>
+    </>
   );
 }

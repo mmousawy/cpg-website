@@ -7,11 +7,14 @@ import {
   AddToAlbumContent,
   AlbumEditSidebar,
   ManageLayout,
+  MobileActionBar,
   PhotoEditSidebar,
   PhotoGrid,
+  PhotoListItem,
   type AlbumFormData,
   type PhotoFormData,
 } from '@/components/manage';
+import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
@@ -26,6 +29,8 @@ import { useParams, useRouter } from 'next/navigation';
 import FolderSVG from 'public/icons/folder.svg';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+import CloseMiniSVG from 'public/icons/close-mini.svg';
+import GalleryMiniSVG from 'public/icons/gallery-mini.svg';
 import PlusSVG from 'public/icons/plus.svg';
 
 export default function AlbumDetailPage() {
@@ -43,6 +48,7 @@ export default function AlbumDetailPage() {
 
   const photoEditDirtyRef = useRef(false);
   const albumEditDirtyRef = useRef(false);
+  const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
 
   // Sync dirty state with global unsaved changes context
   const handlePhotoDirtyChange = useCallback((isDirty: boolean) => {
@@ -451,6 +457,44 @@ export default function AlbumDetailPage() {
   };
 
   const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
+  const selectedCount = selectedPhotoIds.size;
+
+  // Mobile handlers
+  const handleMobileEdit = () => {
+    // Only open on mobile (below md breakpoint)
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setIsMobileEditSheetOpen(true);
+    }
+  };
+
+  const handleMobileEditClose = async () => {
+    const isDirty = photoEditDirtyRef.current || albumEditDirtyRef.current;
+    if (isDirty && !(await confirmUnsavedChanges())) {
+      return;
+    }
+    setIsMobileEditSheetOpen(false);
+  };
+
+  const handleMobileRemoveFromAlbum = async () => {
+    if (selectedCount === 0) return;
+
+    const confirmed = await confirm({
+      title: 'Remove from Album',
+      message: `Are you sure you want to remove ${selectedCount} photo${selectedCount !== 1 ? 's' : ''} from this album?`,
+      content: (
+        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+          {selectedPhotos.map((photo) => (
+            <PhotoListItem key={photo.id} photo={photo} variant="compact" />
+          ))}
+        </div>
+      ),
+      confirmLabel: 'Remove',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
+    await handleRemoveFromAlbum(Array.from(selectedPhotoIds));
+  };
 
   if (albumLoading) {
     return (
@@ -468,33 +512,123 @@ export default function AlbumDetailPage() {
   }
 
   return (
-    <ManageLayout
-      albumDetail={{ title: album.title }}
-      actions={
-        <>
-          <Button onClick={handleAddFromLibrary} variant="secondary">
-            Add from library
-          </Button>
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            icon={<PlusSVG className="size-5 -ml-0.5" />}
-            variant="primary"
-          >
-            {isUploading ? 'Uploading...' : 'Upload'}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            multiple
-            onChange={handleUpload}
-            className="hidden"
-          />
-        </>
-      }
-      sidebar={
-        selectedPhotos.length > 0 ? (
+    <>
+      <ManageLayout
+        albumDetail={{ title: album.title }}
+        actions={
+          <>
+            <Button onClick={handleAddFromLibrary} icon={<GalleryMiniSVG className="size-5 -ml-0.5" />} variant="secondary" className="hidden md:flex">
+              <span className="hidden md:inline-block">Add from library</span>
+            </Button>
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              icon={<PlusSVG className="size-5 -ml-0.5" />}
+              variant="primary"
+            >
+              <span className="hidden md:inline">{isUploading ? 'Uploading...' : 'Upload'}</span>
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              onChange={handleUpload}
+              className="hidden"
+            />
+          </>
+        }
+        sidebar={
+          selectedPhotos.length > 0 ? (
+            <PhotoEditSidebar
+              selectedPhotos={selectedPhotos}
+              onSave={handleSavePhoto}
+              onDelete={handleDeletePhoto}
+              onRemoveFromAlbum={handleRemoveFromAlbum}
+              isLoading={photosLoading}
+              onDirtyChange={handlePhotoDirtyChange}
+            />
+          ) : (
+            <AlbumEditSidebar
+              selectedAlbums={album ? [album as any] : []}
+              nickname={profile?.nickname}
+              onSave={handleSaveAlbum}
+              onDelete={handleDeleteAlbum}
+              onBulkSave={async () => {}}
+              onBulkDelete={async () => {}}
+              isLoading={photosLoading}
+              onDirtyChange={handleAlbumDirtyChange}
+            />
+          )
+        }
+        mobileActionBar={
+          selectedCount > 0 ? (
+            <MobileActionBar
+              selectedCount={selectedCount}
+              onEdit={handleMobileEdit}
+              onClearSelection={handleClearSelection}
+              actions={
+                <Button
+                  onClick={handleMobileRemoveFromAlbum}
+                  variant="danger"
+                  size="sm"
+                  icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
+                >
+                  <span className="hidden md:inline-block">Remove</span>
+                </Button>
+              }
+            />
+          ) : (
+            // Show edit album button when no photos selected on mobile
+            <div className="md:hidden border-t border-border-color-strong bg-background-light px-4 py-3">
+              <Button
+                onClick={handleMobileEdit}
+                variant="secondary"
+                className="w-full"
+              >
+                Edit Album
+              </Button>
+            </div>
+          )
+        }
+      >
+        <DropZone
+          onDrop={handleFileDrop}
+          disabled={isUploading}
+          className="flex-1 flex flex-col min-h-0"
+          overlayMessage="Drop to add to album"
+        >
+          {photosLoading ? (
+            <PageLoading message="Loading photos..." />
+          ) : photos.length === 0 ? (
+            <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
+              <FolderSVG className="size-10 mb-2 inline-block" />
+              <p className="mb-2 text-lg opacity-70">No photos in this album</p>
+              <p className="text-sm text-foreground/50">
+                Drag and drop photos here, or use the buttons above
+              </p>
+            </div>
+          ) : (
+            <PhotoGrid
+              photos={photos}
+              selectedPhotoIds={selectedPhotoIds}
+              onSelectPhoto={handleSelectPhoto}
+              onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+              onReorder={handleReorderPhotos}
+              onClearSelection={handleClearSelection}
+              onSelectMultiple={handleSelectMultiple}
+              sortable
+            />
+          )}
+        </DropZone>
+      </ManageLayout>
+
+      {/* Mobile Edit Sheet */}
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+      >
+        {selectedPhotos.length > 0 ? (
           <PhotoEditSidebar
             selectedPhotos={selectedPhotos}
             onSave={handleSavePhoto}
@@ -514,38 +648,8 @@ export default function AlbumDetailPage() {
             isLoading={photosLoading}
             onDirtyChange={handleAlbumDirtyChange}
           />
-        )
-      }
-    >
-      <DropZone
-        onDrop={handleFileDrop}
-        disabled={isUploading}
-        className="flex-1 flex flex-col min-h-0"
-        overlayMessage="Drop to add to album"
-      >
-        {photosLoading ? (
-          <PageLoading message="Loading photos..." />
-        ) : photos.length === 0 ? (
-          <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
-            <FolderSVG className="size-10 mb-2 inline-block" />
-            <p className="mb-2 text-lg opacity-70">No photos in this album</p>
-            <p className="text-sm text-foreground/50">
-              Drag and drop photos here, or use the buttons above
-            </p>
-          </div>
-        ) : (
-          <PhotoGrid
-            photos={photos}
-            selectedPhotoIds={selectedPhotoIds}
-            onSelectPhoto={handleSelectPhoto}
-            onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
-            onReorder={handleReorderPhotos}
-            onClearSelection={handleClearSelection}
-            onSelectMultiple={handleSelectMultiple}
-            sortable
-          />
         )}
-      </DropZone>
-    </ManageLayout>
+      </BottomSheet>
+    </>
   );
 }

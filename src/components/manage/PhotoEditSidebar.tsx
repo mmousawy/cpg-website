@@ -8,16 +8,17 @@ import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { zodResolver } from '@hookform/resolvers/zod';
-import CheckSVG from 'public/icons/check.svg';
-import CloseSVG from 'public/icons/close.svg';
-import PlusSVG from 'public/icons/plus.svg';
-import TrashSVG from 'public/icons/trash.svg';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoEditEmptyState from './PhotoEditEmptyState';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
+
+import CheckMiniSVG from 'public/icons/check-mini.svg';
+import CloseMiniSVG from 'public/icons/close-mini.svg';
+import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
+import TrashSVG from 'public/icons/trash.svg';
 
 const photoFormSchema = z.object({
   title: z.string().nullable(),
@@ -219,7 +220,7 @@ function BulkEditForm({
             onClick={handleBulkDelete}
             disabled={isSaving || isLoading || isDeleting}
             loading={isDeleting}
-            icon={<TrashSVG className="size-4 -ml-0.5" />}
+            icon={<TrashSVG className="size-5 -ml-0.5" />}
           >
             Delete
           </Button>
@@ -228,7 +229,7 @@ function BulkEditForm({
               type="button"
               variant="secondary"
               onClick={() => onAddToAlbum(selectedPhotos.map((p) => p.id))}
-              icon={<PlusSVG className="size-4 -ml-0.5" />}
+              icon={<FolderDownMiniSVG className="size-5 -ml-0.5" />}
             >
               Album
             </Button>
@@ -238,7 +239,7 @@ function BulkEditForm({
               type="button"
               variant="secondary"
               onClick={() => onRemoveFromAlbum(selectedPhotos.map((p) => p.id))}
-              icon={<CloseSVG className="size-4 -ml-0.5" />}
+              icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
             >
               Remove
             </Button>
@@ -247,7 +248,7 @@ function BulkEditForm({
             onClick={triggerSubmit}
             disabled={isSaving || isLoading || !isDirty}
             loading={isSaving}
-            icon={<CheckSVG className="size-4 -ml-0.5" />}
+            icon={<CheckMiniSVG className="size-5 -ml-0.5" />}
             className="ml-auto"
           >
             {success ? 'Saved!' : 'Save'}
@@ -444,7 +445,7 @@ function SinglePhotoEditForm({
 
   return (
     <SidebarPanel
-      title="Edit Photo"
+      title="Edit photo"
       footer={
         <div className="flex gap-2 w-full">
           <Button
@@ -452,7 +453,7 @@ function SinglePhotoEditForm({
             variant="danger"
             onClick={handleDelete}
             disabled={isSaving || isLoading}
-            icon={<TrashSVG className="size-4 -ml-0.5" />}
+            icon={<TrashSVG className="size-5 -ml-0.5" />}
           >
             Delete
           </Button>
@@ -461,7 +462,7 @@ function SinglePhotoEditForm({
               type="button"
               variant="secondary"
               onClick={() => onAddToAlbum([photo.id])}
-              icon={<PlusSVG className="size-4 -ml-0.5" />}
+              icon={<FolderDownMiniSVG className="size-5 -ml-0.5" />}
             >
               Album
             </Button>
@@ -471,7 +472,7 @@ function SinglePhotoEditForm({
               type="button"
               variant="secondary"
               onClick={() => onRemoveFromAlbum([photo.id])}
-              icon={<CloseSVG className="size-4 -ml-0.5" />}
+              icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
             >
               Remove
             </Button>
@@ -480,7 +481,7 @@ function SinglePhotoEditForm({
             onClick={triggerSubmit}
             disabled={isSaving || isLoading || !isDirty}
             loading={isSaving}
-            icon={<CheckSVG className="size-4 -ml-0.5" />}
+            icon={<CheckMiniSVG className="size-5 -ml-0.5" />}
             className="ml-auto"
           >
             {success ? 'Saved!' : 'Save'}
