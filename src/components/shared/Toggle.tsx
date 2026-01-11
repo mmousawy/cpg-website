@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { forwardRef, useCallback, useRef, useImperativeHandle } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 
 interface ToggleProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   /** Label for the left side (unchecked state) */
@@ -23,10 +23,10 @@ interface ToggleProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 
 const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
   ({ className, leftLabel, rightLabel, label, id, onChange, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    
+
     // Forward the ref
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
-    
+
     // Handle click on the toggle area
     const handleToggleClick = useCallback(() => {
       if (inputRef.current && !props.disabled) {

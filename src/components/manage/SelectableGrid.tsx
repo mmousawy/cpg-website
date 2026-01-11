@@ -63,6 +63,20 @@ interface SortableItemProps<T> {
   sortable: boolean;
 }
 
+// Hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 function SortableItem<T>({
   item,
   id,
@@ -77,6 +91,8 @@ function SortableItem<T>({
   onCheckboxClick,
   sortable,
 }: SortableItemProps<T>) {
+  const isMobile = useIsMobile();
+
   const {
     attributes,
     listeners,
@@ -134,7 +150,7 @@ function SortableItem<T>({
           onItemDoubleClick(item);
         }
       }}
-      {...(sortable ? { ...attributes, ...listeners } : {})}
+      {...(sortable && !isMobile ? { ...attributes, ...listeners } : {})}
     >
       {/* Selection checkbox */}
       <div
@@ -517,78 +533,69 @@ export default function SelectableGrid<T>({
   };
 
   const gridContent = (
-    <div 
+    <div
       ref={containerRef}
-      className="relative h-full min-h-full"
+      className={clsx(
+        'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
+        'p-3 md:p-6 content-start select-none h-full',
+        className,
+      )}
       onClick={handleGridClick}
     >
-      <div
-        className={clsx(
-          'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
-          'p-3 md:p-6 content-start select-none',
-          className,
-        )}
-      >
-        {items.map((item) => {
-          const id = getId(item);
-          const isSelected = selectedIds.has(id);
-          const isHovered = hoveredIdSet.has(id);
+      {items.map((item) => {
+        const id = getId(item);
+        const isSelected = selectedIds.has(id);
+        const isHovered = hoveredIdSet.has(id);
 
-          // Check if this is a multi-drag scenario
-          const isMultiDragActive =
-          activeDragId !== null &&
-          selectedIds.has(activeDragId) &&
-          selectedIds.size > 1;
+        // Check if this is a multi-drag scenario
+        const isMultiDragActive =
+        activeDragId !== null &&
+        selectedIds.has(activeDragId) &&
+        selectedIds.size > 1;
 
-          // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
-          const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
+        // Check if this item is part of a multi-drag (selected, but not the one being dragged directly)
+        const isMultiDragging = isMultiDragActive && isSelected && activeDragId !== id;
 
-          // Determine push direction for this item
-          const pushDirection = id === pushLeftItemId
-            ? 'left' as const
-            : id === pushRightItemId
-              ? 'right' as const
-              : null;
+        // Determine push direction for this item
+        const pushDirection = id === pushLeftItemId
+          ? 'left' as const
+          : id === pushRightItemId
+            ? 'right' as const
+            : null;
 
-          return (
-            <SortableItem
-              key={id}
-              item={item}
-              id={id}
-              isSelected={isSelected}
-              isHovered={isHovered}
-              isMultiDragging={isMultiDragging}
-              isMultiDragActive={isMultiDragActive}
-              pushDirection={pushDirection}
-              renderItem={renderItem}
-              onItemClick={handleItemClick}
-              onItemDoubleClick={onItemDoubleClick}
-              onCheckboxClick={handleCheckboxClick}
-              sortable={sortable}
-            />
-          );
-        })}
-
-        {/* Drop indicator for multi-drag */}
-        {dropIndicatorPos && (
-          <div
-            className="pointer-events-none absolute w-1 bg-primary rounded-full z-40"
-            style={{
-              left: dropIndicatorPos.x - 2,
-              top: dropIndicatorPos.y,
-              height: dropIndicatorPos.height,
-              boxShadow: '0 0 0 1px white, 0 0 0 2px rgba(0,0,0,0.1)',
-            }}
+        return (
+          <SortableItem
+            key={id}
+            item={item}
+            id={id}
+            isSelected={isSelected}
+            isHovered={isHovered}
+            isMultiDragging={isMultiDragging}
+            isMultiDragActive={isMultiDragActive}
+            pushDirection={pushDirection}
+            renderItem={renderItem}
+            onItemClick={handleItemClick}
+            onItemDoubleClick={onItemDoubleClick}
+            onCheckboxClick={handleCheckboxClick}
+            sortable={sortable}
           />
-        )}
+        );
+      })}
 
-        {/* Spacer for mobile action bar when items are selected */}
-        {selectedIds.size > 0 && (
-          <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
-        )}
-      </div>
+      {/* Drop indicator for multi-drag */}
+      {dropIndicatorPos && (
+        <div
+          className="pointer-events-none absolute w-1 bg-primary rounded-full z-40"
+          style={{
+            left: dropIndicatorPos.x - 2,
+            top: dropIndicatorPos.y,
+            height: dropIndicatorPos.height,
+            boxShadow: '0 0 0 1px white, 0 0 0 2px rgba(0,0,0,0.1)',
+          }}
+        />
+      )}
 
-      {/* Selection box overlay - rendered at container level for correct positioning */}
+      {/* Selection box overlay */}
       {isSelecting && boxStyle && (
         <div
           className="pointer-events-none absolute border-2 border-primary bg-primary/10 z-50"
@@ -599,6 +606,11 @@ export default function SelectableGrid<T>({
             height: boxStyle.height,
           }}
         />
+      )}
+
+      {/* Spacer for mobile action bar when items are selected */}
+      {selectedIds.size > 0 && (
+        <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
       )}
     </div>
   );
