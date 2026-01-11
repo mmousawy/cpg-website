@@ -517,15 +517,17 @@ export default function SelectableGrid<T>({
   };
 
   const gridContent = (
-    <div className="relative min-h-full">
+    <div 
+      ref={containerRef}
+      className="relative h-full min-h-full"
+      onClick={handleGridClick}
+    >
       <div
-        ref={containerRef}
         className={clsx(
           'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
           'p-3 md:p-6 content-start select-none',
           className,
         )}
-        onClick={handleGridClick}
       >
         {items.map((item) => {
           const id = getId(item);
@@ -580,24 +582,24 @@ export default function SelectableGrid<T>({
           />
         )}
 
-        {/* Selection box overlay */}
-        {isSelecting && boxStyle && (
-          <div
-            className="pointer-events-none absolute border-2 border-primary bg-primary/10 z-50"
-            style={{
-              left: boxStyle.left,
-              top: boxStyle.top,
-              width: boxStyle.width,
-              height: boxStyle.height,
-            }}
-          />
-        )}
-
         {/* Spacer for mobile action bar when items are selected */}
         {selectedIds.size > 0 && (
           <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
         )}
       </div>
+
+      {/* Selection box overlay - rendered at container level for correct positioning */}
+      {isSelecting && boxStyle && (
+        <div
+          className="pointer-events-none absolute border-2 border-primary bg-primary/10 z-50"
+          style={{
+            left: boxStyle.left,
+            top: boxStyle.top,
+            width: boxStyle.width,
+            height: boxStyle.height,
+          }}
+        />
+      )}
     </div>
   );
 
