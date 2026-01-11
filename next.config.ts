@@ -28,9 +28,9 @@ const nextConfig: NextConfig = {
     config.module.rules.push({
       test: /\.svg$/i,
       use: ['@svgr/webpack'],
-    })
+    });
 
-    return config
+    return config;
   },
   turbopack: {
     rules: {

@@ -44,7 +44,7 @@ export default function UploadDropzone({
     if (disabled) return;
 
     const files = Array.from(e.dataTransfer.files).filter((file) =>
-      file.type.startsWith('image/')
+      file.type.startsWith('image/'),
     );
 
     if (files.length > 0) {
@@ -54,7 +54,7 @@ export default function UploadDropzone({
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((file) =>
-      file.type.startsWith('image/')
+      file.type.startsWith('image/'),
     );
 
     if (files.length > 0) {
@@ -74,7 +74,7 @@ export default function UploadDropzone({
         isDragging
           ? 'border-primary bg-primary/5'
           : 'border-border-color bg-background',
-        disabled && 'opacity-50 cursor-not-allowed'
+        disabled && 'opacity-50 cursor-not-allowed',
       )}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -86,11 +86,11 @@ export default function UploadDropzone({
           'mb-4 flex size-14 items-center justify-center rounded-xl border transition-colors',
           isDragging
             ? 'border-primary bg-primary/10'
-            : 'border-border-color bg-background-light'
+            : 'border-border-color bg-background-light',
         )}>
           <CameraSVG className={clsx(
             'size-7 transition-colors',
-            isDragging ? 'fill-primary' : 'fill-foreground/50'
+            isDragging ? 'fill-primary' : 'fill-foreground/50',
           )} />
         </div>
         <p className="mb-1 text-base font-medium">

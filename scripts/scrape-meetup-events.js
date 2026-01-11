@@ -3,7 +3,7 @@
 /**
  * Scrape Meetup.com event pages and extract event data
  * Run: node scripts/scrape-meetup-events.js
- * 
+ *
  * This script fetches event data from Meetup URLs and saves it to a JSON file.
  */
 
@@ -68,17 +68,17 @@ function decodeHtmlEntities(text) {
  */
 function parseMeetupDateTime(dateStr) {
   if (!dateStr) return { date: null, time: null };
-  
+
   // Clean the string
   dateStr = decodeHtmlEntities(dateStr).trim();
-  
+
   // Match pattern: "Sat, Nov 22, 2025 · 1:00 PM"
   // Or: "Saturday, November 22, 2025 · 1:00 PM"
   const dateMatch = dateStr.match(/(\w+),?\s+(\w+)\s+(\d+),?\s+(\d{4})/);
   const timeMatch = dateStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  
+
   if (!dateMatch) return { date: null, time: null };
-  
+
   const monthNames = {
     'jan': '01', 'january': '01',
     'feb': '02', 'february': '02',
@@ -91,27 +91,27 @@ function parseMeetupDateTime(dateStr) {
     'sep': '09', 'september': '09',
     'oct': '10', 'october': '10',
     'nov': '11', 'november': '11',
-    'dec': '12', 'december': '12'
+    'dec': '12', 'december': '12',
   };
-  
+
   const month = monthNames[dateMatch[2].toLowerCase()];
   const day = dateMatch[3].padStart(2, '0');
   const year = dateMatch[4];
-  
+
   const date = `${year}-${month}-${day}`;
-  
+
   let time = null;
   if (timeMatch) {
     let hours = parseInt(timeMatch[1]);
     const minutes = timeMatch[2];
     const ampm = timeMatch[3].toUpperCase();
-    
+
     if (ampm === 'PM' && hours !== 12) hours += 12;
     if (ampm === 'AM' && hours === 12) hours = 0;
-    
+
     time = `${hours.toString().padStart(2, '0')}:${minutes}:00`;
   }
-  
+
   return { date, time };
 }
 
@@ -159,13 +159,13 @@ function extractTitle(html) {
   if (h1Match && h1Match[1].trim() !== 'Meetup') {
     return decodeHtmlEntities(h1Match[1].trim());
   }
-  
+
   // Try og:title
   const ogMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
   if (ogMatch && !ogMatch[1].includes('| Meetup')) {
     return decodeHtmlEntities(ogMatch[1].trim());
   }
-  
+
   // Try title tag and clean it
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (titleMatch) {
@@ -174,7 +174,7 @@ function extractTitle(html) {
       return decodeHtmlEntities(title);
     }
   }
-  
+
   return null;
 }
 
@@ -192,7 +192,7 @@ function extractDateTime(html) {
     // Full weekday
     /(\w+day,?\s+\w+\s+\d+,?\s+\d{4})\s*[·•]\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i,
   ];
-  
+
   for (const pattern of timePatterns) {
     const match = html.match(pattern);
     if (match) {
@@ -200,7 +200,7 @@ function extractDateTime(html) {
       return parseMeetupDateTime(dateTimeStr);
     }
   }
-  
+
   // Try finding in JSON-LD
   const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
   if (jsonLdMatch) {
@@ -218,7 +218,7 @@ function extractDateTime(html) {
       // Failed to parse JSON-LD
     }
   }
-  
+
   return { date: null, time: null };
 }
 
@@ -228,7 +228,7 @@ function extractDateTime(html) {
 function extractLocation(html) {
   // Look for pin/location icon followed by address
   // Pattern in Meetup: venue name on one line, address on another
-  
+
   // Try to find venue block
   const venuePatterns = [
     // Location with street address
@@ -236,7 +236,7 @@ function extractLocation(html) {
     // Just venue name and city
     /<[^>]*class="[^"]*venue[^"]*"[^>]*>([\s\S]*?)<\/[^>]*>/i,
   ];
-  
+
   // Try to extract from JSON-LD first
   const jsonLdMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
   if (jsonLdMatch) {
@@ -245,10 +245,10 @@ function extractLocation(html) {
       if (jsonLd.location) {
         const loc = jsonLd.location;
         if (typeof loc === 'string') return loc;
-        
+
         const parts = [];
         if (loc.name) parts.push(loc.name);
-        
+
         const addr = loc.address;
         if (addr) {
           if (typeof addr === 'string') {
@@ -259,14 +259,14 @@ function extractLocation(html) {
             if (cityParts.length) parts.push(cityParts.join(', '));
           }
         }
-        
+
         if (parts.length) return parts.join('\n');
       }
     } catch (e) {
       // Failed to parse JSON-LD
     }
   }
-  
+
   return null;
 }
 
@@ -279,13 +279,13 @@ function extractDescription(html) {
   if (ogMatch) {
     return decodeHtmlEntities(ogMatch[1].trim());
   }
-  
+
   // Try meta description
   const metaMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
   if (metaMatch) {
     return decodeHtmlEntities(metaMatch[1].trim());
   }
-  
+
   return null;
 }
 
@@ -296,11 +296,11 @@ function extractImage(html) {
   // Try og:image
   const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
   if (ogMatch) return ogMatch[1];
-  
+
   // Try twitter:image
   const twitterMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
   if (twitterMatch) return twitterMatch[1];
-  
+
   return null;
 }
 
@@ -309,7 +309,7 @@ function extractImage(html) {
  */
 async function fetchEventData(url) {
   console.log(`  Fetching: ${url}`);
-  
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -317,7 +317,7 @@ async function fetchEventData(url) {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
         'Cache-Control': 'no-cache',
-      }
+      },
     });
 
     if (!response.ok) {
@@ -325,7 +325,7 @@ async function fetchEventData(url) {
     }
 
     const html = await response.text();
-    
+
     // Extract all data
     const title = extractTitle(html);
     const { date, time } = extractDateTime(html);
@@ -370,9 +370,9 @@ async function main() {
   for (let i = 0; i < MEETUP_URLS.length; i++) {
     const url = MEETUP_URLS[i];
     console.log(`[${i + 1}/${MEETUP_URLS.length}]`);
-    
+
     const eventData = await fetchEventData(url);
-    
+
     if (eventData) {
       events.push(eventData);
       console.log(`  ✅ ${eventData.title || 'Unknown event'}`);
@@ -380,7 +380,7 @@ async function main() {
       if (eventData.location) console.log(`     📍 ${eventData.location.split('\n')[0]}`);
       if (eventData.image_url) console.log(`     🖼️  Has image`);
     }
-    
+
     // Be nice to Meetup servers
     if (i < MEETUP_URLS.length - 1) {
       await delay(2000);

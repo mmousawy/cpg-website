@@ -38,4 +38,3 @@ export type PhotoFormData = {
   is_public: boolean;
   sort_order: number | null;
 };
-

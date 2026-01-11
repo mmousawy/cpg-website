@@ -36,7 +36,7 @@ type PhotoData = { id: string; url: string; aspectRatio: number };
  */
 function getRowHeight(
   aspectRatios: number[],
-  containerWidth: number
+  containerWidth: number,
 ): number {
   if (aspectRatios.length === 0) return DEFAULT_TARGET_ROW_HEIGHT;
   const totalAspectRatio = aspectRatios.reduce((sum, ar) => sum + ar, 0);
@@ -50,7 +50,7 @@ function getRowHeight(
 function getRowCost(
   aspectRatios: number[],
   containerWidth: number,
-  targetHeight: number
+  targetHeight: number,
 ): number {
   const height = getRowHeight(aspectRatios, containerWidth);
   return Math.abs(height - targetHeight);
@@ -63,7 +63,7 @@ function getRowCost(
 export function calculateJustifiedLayout(
   photos: Array<{ id: string; url: string; width: number; height: number }>,
   containerWidth: number,
-  options: LayoutOptions = {}
+  options: LayoutOptions = {},
 ): PhotoRow[] {
   const {
     minPhotosPerRow = 2,
@@ -103,7 +103,7 @@ export function calculateJustifiedLayout(
   if (n < minPhotosPerRow) {
     const rowHeight = getRowHeight(
       photoData.map((p) => p.aspectRatio),
-      containerWidth
+      containerWidth,
     );
     return [createRow(photoData, Math.min(rowHeight, 350), containerWidth)];
   }
@@ -156,9 +156,9 @@ export function calculateJustifiedLayout(
       const idealDiff = Math.abs(rowSize - idealPhotosPerRow);
       const idealPenalty = idealDiff > 1.5 ? (idealDiff - 1) * 10 : 0;
 
-      const rowCost = getRowCost(rowAspectRatios, containerWidth, targetRowHeight) 
-        + heightPenalty 
-        + balancePenalty 
+      const rowCost = getRowCost(rowAspectRatios, containerWidth, targetRowHeight)
+        + heightPenalty
+        + balancePenalty
         + idealPenalty;
       const totalCost = dp[j].cost + rowCost;
 
@@ -189,7 +189,7 @@ export function calculateJustifiedLayout(
     const rowPhotos = photoData.slice(start, end);
     const rowHeight = getRowHeight(
       rowPhotos.map((p) => p.aspectRatio),
-      containerWidth
+      containerWidth,
     );
     // Cap row height for single/few photo rows
     const cappedHeight = Math.min(rowHeight, 350);
@@ -203,7 +203,7 @@ export function calculateJustifiedLayout(
 function createRow(
   photos: PhotoData[],
   rowHeight: number,
-  containerWidth: number
+  containerWidth: number,
 ): PhotoRow {
   const totalGaps = (photos.length - 1) * GAP;
   const availableWidth = containerWidth - totalGaps;
@@ -222,4 +222,3 @@ function createRow(
     height: rowHeight,
   };
 }
-

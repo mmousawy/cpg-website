@@ -1,11 +1,11 @@
+import type { Photo } from '@/types/photos';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import exifr from 'exifr';
 import { customAlphabet } from 'nanoid';
+import { generateBlurhash } from './generateBlurhash';
 
 // Lowercase alphanumeric without vowels to avoid profanity
 const nanoid = customAlphabet('bcdfghjklmnpqrstvwxyz0123456789', 5);
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { generateBlurhash } from './generateBlurhash';
-import type { Photo } from '@/types/photos';
 
 export interface UploadPhotoOptions {
   albumIds?: string[]; // Can add to multiple albums
@@ -27,7 +27,7 @@ export async function uploadPhoto(
   file: File,
   userId: string,
   supabase: SupabaseClient,
-  options: UploadPhotoOptions = {}
+  options: UploadPhotoOptions = {},
 ): Promise<Photo> {
   const {
     albumIds = [],
@@ -159,4 +159,3 @@ export async function uploadPhoto(
 
   return photoData as Photo;
 }
-

@@ -22,4 +22,3 @@ export { default as AlbumListItem, getAlbumDisplayName, type AlbumListItemVarian
 // Shared components
 export { default as ManageLayout } from './ManageLayout';
 export { default as SidebarPanel } from './SidebarPanel';
-

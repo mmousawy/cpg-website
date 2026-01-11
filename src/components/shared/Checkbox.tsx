@@ -12,7 +12,7 @@ interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>
  * Custom styled checkbox component.
  * - Unchecked: Subtle border, no color
  * - Checked: Primary color with checkmark
- * 
+ *
  * Works with react-hook-form's register() function.
  */
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
@@ -56,4 +56,3 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 Checkbox.displayName = 'Checkbox';
 
 export default Checkbox;
-

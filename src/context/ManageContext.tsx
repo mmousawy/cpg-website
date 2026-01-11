@@ -74,4 +74,3 @@ export function ManageProvider({ children }: { children: React.ReactNode }) {
 export function useManage() {
   return useContext(ManageContext);
 }
-

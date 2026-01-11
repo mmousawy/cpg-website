@@ -64,7 +64,7 @@
 }
 
 :root.midnight {
-  --primary: rgb(69, 146, 116);
+  --primary: hsl(157, 36%, 42%);
   --primary-alt: #58c287;
   --background: #0d0d0e;
   --background-light: #1b1c1f;

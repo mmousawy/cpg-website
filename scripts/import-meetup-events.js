@@ -3,11 +3,11 @@
 /**
  * Import Meetup events data into Supabase database
  * Run: node scripts/import-meetup-events.js
- * 
+ *
  * Prerequisites:
  * 1. First run: node scripts/scrape-meetup-events.js
  * 2. Ensure .env.local has SUPABASE credentials (will use prod if available)
- * 
+ *
  * Options:
  *   --dry-run     Show what would be imported without making changes
  *   --prod        Force use of production database (requires SUPABASE_SERVICE_ROLE_KEY)
@@ -50,7 +50,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
  */
 function loadEventsData() {
   const dataPath = path.join(__dirname, 'meetup-events-data.json');
-  
+
   if (!fs.existsSync(dataPath)) {
     console.error('❌ Events data file not found!');
     console.error('   Please run first: node scripts/scrape-meetup-events.js');
@@ -69,12 +69,12 @@ async function eventExists(slug) {
     .select('id, slug')
     .eq('slug', slug)
     .single();
-  
+
   if (error && error.code !== 'PGRST116') {
     // PGRST116 = no rows found (that's fine)
     console.error(`  ⚠️  Error checking event existence:`, error.message);
   }
-  
+
   return data !== null;
 }
 
@@ -82,15 +82,15 @@ async function eventExists(slug) {
  * Insert a single event into the database
  */
 async function insertEvent(eventData) {
-  const { 
-    title, 
-    description, 
-    date, 
-    time, 
-    location, 
-    slug, 
+  const {
+    title,
+    description,
+    date,
+    time,
+    location,
+    slug,
     image_url,
-    meetup_url 
+    meetup_url,
   } = eventData;
 
   const insertData = {
@@ -121,7 +121,7 @@ async function insertEvent(eventData) {
 
 async function main() {
   console.log('📥 Importing Meetup events into database...\n');
-  
+
   if (dryRun) {
     console.log('🔍 DRY RUN MODE - No changes will be made\n');
   }
@@ -138,10 +138,10 @@ async function main() {
 
   for (const event of events) {
     const eventName = event.title || event.slug;
-    
+
     // Check if event already exists
     const exists = await eventExists(event.slug);
-    
+
     if (exists) {
       console.log(`⏭️  Skipping (exists): ${eventName}`);
       skipped++;
@@ -181,4 +181,3 @@ async function main() {
 }
 
 main().catch(console.error);
-

@@ -10,7 +10,7 @@ import { encode } from 'blurhash';
 export async function generateBlurhash(
   file: File,
   componentX: number = 4,
-  componentY: number = 4
+  componentY: number = 4,
 ): Promise<string | null> {
   try {
     // Create image element
@@ -43,7 +43,7 @@ export async function generateBlurhash(
       imageData.width,
       imageData.height,
       componentX,
-      componentY
+      componentY,
     );
 
     // Clean up
@@ -55,4 +55,3 @@ export async function generateBlurhash(
     return null;
   }
 }
-

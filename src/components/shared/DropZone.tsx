@@ -1,8 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
-import { useCallback, useState } from 'react';
 import CameraSVG from 'public/icons/camera.svg';
+import { useCallback, useState } from 'react';
 
 interface DropZoneProps {
   children: React.ReactNode;
@@ -79,7 +79,7 @@ export default function DropZone({
       if (disabled) return;
 
       const droppedFiles = Array.from(e.dataTransfer.files);
-      
+
       // Filter by accepted types
       const validFiles = droppedFiles.filter((file) => {
         if (accept.length === 0) return true;
@@ -102,7 +102,7 @@ export default function DropZone({
       onDrop={handleDrop}
     >
       {children}
-      
+
       {/* Drag overlay */}
       {showOverlay && isDragging && (
         <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-primary/5 backdrop-blur-[2px]">
@@ -120,4 +120,3 @@ export default function DropZone({
     </div>
   );
 }
-

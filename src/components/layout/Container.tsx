@@ -16,7 +16,7 @@ export default function Container({
   padding = 'md',
   id,
 }: ContainerProps) {
-  const baseStyles = "rounded-2xl fill-foreground text-foreground shadow-lg shadow-[#00000007]";
+  const baseStyles = "rounded-xl md:rounded-2xl fill-foreground text-foreground shadow-lg shadow-[#00000007]";
 
   const paddingStyles = {
     sm: "p-4",

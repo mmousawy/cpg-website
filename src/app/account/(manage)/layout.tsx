@@ -9,4 +9,3 @@ export default function ManageLayout({
 }) {
   return <ManageProvider>{children}</ManageProvider>;
 }
-

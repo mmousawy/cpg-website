@@ -39,7 +39,7 @@ async function exportData() {
     if (profilesError) throw profilesError;
     fs.writeFileSync(
       path.join(exportDir, 'profiles.json'),
-      JSON.stringify(profiles, null, 2)
+      JSON.stringify(profiles, null, 2),
     );
     console.log(`✅ Exported ${profiles?.length || 0} profiles`);
 
@@ -52,7 +52,7 @@ async function exportData() {
     if (eventsError) throw eventsError;
     fs.writeFileSync(
       path.join(exportDir, 'events.json'),
-      JSON.stringify(events, null, 2)
+      JSON.stringify(events, null, 2),
     );
     console.log(`✅ Exported ${events?.length || 0} events`);
 
@@ -65,7 +65,7 @@ async function exportData() {
     if (rsvpsError) throw rsvpsError;
     fs.writeFileSync(
       path.join(exportDir, 'events_rsvps.json'),
-      JSON.stringify(rsvps, null, 2)
+      JSON.stringify(rsvps, null, 2),
     );
     console.log(`✅ Exported ${rsvps?.length || 0} RSVPs`);
 
@@ -78,7 +78,7 @@ async function exportData() {
     if (albumsError) throw albumsError;
     fs.writeFileSync(
       path.join(exportDir, 'albums.json'),
-      JSON.stringify(albums, null, 2)
+      JSON.stringify(albums, null, 2),
     );
     console.log(`✅ Exported ${albums?.length || 0} albums`);
 
@@ -91,7 +91,7 @@ async function exportData() {
     if (photosError) throw photosError;
     fs.writeFileSync(
       path.join(exportDir, 'album_photos.json'),
-      JSON.stringify(photos, null, 2)
+      JSON.stringify(photos, null, 2),
     );
     console.log(`✅ Exported ${photos?.length || 0} photos`);
 
@@ -104,7 +104,7 @@ async function exportData() {
     if (tagsError) throw tagsError;
     fs.writeFileSync(
       path.join(exportDir, 'album_tags.json'),
-      JSON.stringify(tags, null, 2)
+      JSON.stringify(tags, null, 2),
     );
     console.log(`✅ Exported ${tags?.length || 0} tags`);
 
@@ -121,7 +121,7 @@ async function exportData() {
     } else {
       fs.writeFileSync(
         path.join(exportDir, 'album_comments.json'),
-        JSON.stringify(comments, null, 2)
+        JSON.stringify(comments, null, 2),
       );
       console.log(`✅ Exported ${comments?.length || 0} comments`);
     }

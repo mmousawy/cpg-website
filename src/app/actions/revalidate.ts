@@ -44,4 +44,3 @@ export async function revalidateEvent(eventSlug?: string) {
 export async function revalidateAll() {
   revalidatePath('/', 'layout');
 }
-
