@@ -1,12 +1,13 @@
 'use client';
 
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
-  AlbumEditSidebar,
-  AlbumGrid,
-  AlbumListItem,
-  type AlbumFormData,
-  type BulkAlbumFormData,
+    AlbumEditSidebar,
+    AlbumGrid,
+    AlbumListItem,
+    type AlbumFormData,
+    type BulkAlbumFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
@@ -243,6 +244,11 @@ export default function AlbumsPage() {
       );
     }
 
+    // Revalidate album pages
+    if (profile?.nickname) {
+      await revalidateAlbum(profile.nickname, data.slug);
+    }
+
     await fetchAlbums();
     refreshCounts();
   };
@@ -311,6 +317,15 @@ export default function AlbumsPage() {
         }
       }
 
+      // Revalidate album pages for all updated albums
+      if (profile?.nickname) {
+        const nickname = profile.nickname;
+        const albumsToRevalidate = albums.filter((a) => albumIds.includes(a.id));
+        await Promise.all(
+          albumsToRevalidate.map((album) => revalidateAlbum(nickname, album.slug)),
+        );
+      }
+
       await fetchAlbums();
       refreshCounts();
     } catch (err: any) {
@@ -344,12 +359,20 @@ export default function AlbumsPage() {
       return newSet;
     });
 
+    // Revalidate album pages
+    if (profile?.nickname && album) {
+      await revalidateAlbum(profile.nickname, album.slug);
+    }
+
     await fetchAlbums();
     refreshCounts();
   };
 
   const handleBulkDeleteAlbums = async (albumIds: string[]) => {
     if (!user || albumIds.length === 0) return;
+
+    // Get album slugs before deletion for revalidation
+    const albumsToDelete = albums.filter((a) => albumIds.includes(a.id));
 
     // Delete albums one by one using the RPC function
     for (const albumId of albumIds) {
@@ -365,6 +388,14 @@ export default function AlbumsPage() {
     // Reset dirty state after successful deletion
     albumEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
+
+    // Revalidate album pages for all deleted albums
+    if (profile?.nickname) {
+      const nickname = profile.nickname;
+      await Promise.all(
+        albumsToDelete.map((album) => revalidateAlbum(nickname, album.slug)),
+      );
+    }
 
     setSelectedAlbumIds(new Set());
     await fetchAlbums();

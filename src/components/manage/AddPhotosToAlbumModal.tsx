@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import clsx from 'clsx';
 import Image from 'next/image';
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -29,7 +30,7 @@ export default function AddPhotosToAlbumModal({
   onClose,
   onSuccess,
 }: AddPhotosToAlbumModalProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const supabase = createClient();
   const modalContext = useContext(ModalContext);
   const [albums, setAlbums] = useState<AlbumWithCount[]>([]);
@@ -176,6 +177,14 @@ export default function AddPhotosToAlbumModal({
       const firstError = results.find((r) => r.error);
       if (firstError?.error) {
         throw new Error(firstError.error.message || 'Failed to add photos to album');
+      }
+
+      // Revalidate all albums that photos were added to
+      if (profile?.nickname) {
+        const selectedAlbumsList = albums.filter((a) => selectedAlbumIds.has(a.id));
+        await Promise.all(
+          selectedAlbumsList.map((album) => revalidateAlbum(profile.nickname, album.slug))
+        );
       }
 
       onSuccess();

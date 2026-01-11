@@ -22,6 +22,7 @@ import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import exifr from 'exifr';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
@@ -31,7 +32,7 @@ import PlusMiniSVG from 'public/icons/plus-mini.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
 export default function PhotosPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const supabase = createClient();
   const { refreshCounts } = useManage();
   const confirm = useConfirm();
@@ -191,6 +192,14 @@ export default function PhotosPage() {
       throw new Error(error.message || 'Failed to save photo');
     }
 
+    // Revalidate albums that contain this photo
+    const photo = photos.find((p) => p.id === photoId);
+    if (profile?.nickname && photo?.albums) {
+      await Promise.all(
+        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug))
+      );
+    }
+
     await fetchPhotos();
   };
 
@@ -210,6 +219,18 @@ export default function PhotosPage() {
 
     if (error) {
       throw new Error(error.message || 'Failed to save photos');
+    }
+
+    // Collect all unique albums from the affected photos and revalidate them
+    if (profile?.nickname) {
+      const affectedPhotos = photos.filter((p) => photoIds.includes(p.id));
+      const albumSlugs = new Set<string>();
+      affectedPhotos.forEach((photo) => {
+        photo.albums?.forEach((album) => albumSlugs.add(album.slug));
+      });
+      await Promise.all(
+        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug))
+      );
     }
 
     await fetchPhotos();
@@ -240,6 +261,13 @@ export default function PhotosPage() {
     // Reset dirty state after successful deletion
     photoEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
+
+    // Revalidate albums that contained this photo
+    if (profile?.nickname && photo.albums) {
+      await Promise.all(
+        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug))
+      );
+    }
 
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
@@ -279,6 +307,17 @@ export default function PhotosPage() {
     // Reset dirty state after successful deletion
     photoEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
+
+    // Revalidate all albums that contained the deleted photos
+    if (profile?.nickname) {
+      const albumSlugs = new Set<string>();
+      photosToDelete.forEach((photo) => {
+        photo.albums?.forEach((album) => albumSlugs.add(album.slug));
+      });
+      await Promise.all(
+        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug))
+      );
+    }
 
     setSelectedPhotoIds(new Set());
     await fetchPhotos();

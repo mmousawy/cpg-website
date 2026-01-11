@@ -216,6 +216,11 @@ export default function AlbumDetailPage() {
       .eq('id', photoId)
       .is('deleted_at', null);
 
+    // Revalidate the album page
+    if (profile?.nickname) {
+      await revalidateAlbum(profile.nickname, album.slug);
+    }
+
     await fetchPhotos(album.id);
   };
 
@@ -237,6 +242,11 @@ export default function AlbumDetailPage() {
       newSet.delete(photoId);
       return newSet;
     });
+
+    // Revalidate the album page
+    if (profile?.nickname) {
+      await revalidateAlbum(profile.nickname, album.slug);
+    }
 
     await fetchPhotos(album.id);
   };
@@ -263,6 +273,11 @@ export default function AlbumDetailPage() {
     photoEditDirtyRef.current = false;
     setHasUnsavedChanges(albumEditDirtyRef.current);
 
+    // Revalidate the album page
+    if (profile?.nickname) {
+      await revalidateAlbum(profile.nickname, album.slug);
+    }
+
     setSelectedPhotoIds(new Set());
     await fetchPhotos(album.id);
   };
@@ -280,6 +295,11 @@ export default function AlbumDetailPage() {
     if (updates.length > 0) {
       // Reorder triggers automatic cover update via database trigger
       await supabase.rpc('batch_update_album_photos', { photo_updates: updates });
+
+      // Revalidate the album page after reordering
+      if (profile?.nickname && album) {
+        await revalidateAlbum(profile.nickname, album.slug);
+      }
     }
   };
 
