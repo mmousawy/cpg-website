@@ -3,11 +3,11 @@
 import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
-    AlbumEditSidebar,
-    AlbumGrid,
-    AlbumListItem,
-    type AlbumFormData,
-    type BulkAlbumFormData,
+  AlbumEditSidebar,
+  AlbumGrid,
+  AlbumListItem,
+  type AlbumFormData,
+  type BulkAlbumFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';

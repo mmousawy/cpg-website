@@ -1,5 +1,6 @@
 'use client';
 
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import PhotoListItem from '@/components/manage/PhotoListItem';
 import Button from '@/components/shared/Button';
@@ -9,7 +10,6 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
-import { revalidateAlbum } from '@/app/actions/revalidate';
 import clsx from 'clsx';
 import Image from 'next/image';
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -183,7 +183,7 @@ export default function AddPhotosToAlbumModal({
       if (profile?.nickname) {
         const selectedAlbumsList = albums.filter((a) => selectedAlbumIds.has(a.id));
         await Promise.all(
-          selectedAlbumsList.map((album) => revalidateAlbum(profile.nickname, album.slug))
+          selectedAlbumsList.map((album) => revalidateAlbum(profile.nickname, album.slug)),
         );
       }
 

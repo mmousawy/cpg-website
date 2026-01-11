@@ -1,14 +1,15 @@
 'use client';
 
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
-  AddPhotosToAlbumModal,
-  PhotoEditSidebar,
-  PhotoGrid,
-  PhotoListItem,
-  type BulkPhotoFormData,
-  type PhotoFormData,
+    AddPhotosToAlbumModal,
+    PhotoEditSidebar,
+    PhotoGrid,
+    PhotoListItem,
+    type BulkPhotoFormData,
+    type PhotoFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
@@ -22,7 +23,6 @@ import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
-import { revalidateAlbum } from '@/app/actions/revalidate';
 import exifr from 'exifr';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
@@ -196,7 +196,7 @@ export default function PhotosPage() {
     const photo = photos.find((p) => p.id === photoId);
     if (profile?.nickname && photo?.albums) {
       await Promise.all(
-        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug))
+        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug)),
       );
     }
 
@@ -229,7 +229,7 @@ export default function PhotosPage() {
         photo.albums?.forEach((album) => albumSlugs.add(album.slug));
       });
       await Promise.all(
-        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug))
+        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug)),
       );
     }
 
@@ -265,7 +265,7 @@ export default function PhotosPage() {
     // Revalidate albums that contained this photo
     if (profile?.nickname && photo.albums) {
       await Promise.all(
-        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug))
+        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug)),
       );
     }
 
@@ -315,7 +315,7 @@ export default function PhotosPage() {
         photo.albums?.forEach((album) => albumSlugs.add(album.slug));
       });
       await Promise.all(
-        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug))
+        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug)),
       );
     }
 

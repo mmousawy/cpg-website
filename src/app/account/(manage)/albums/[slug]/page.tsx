@@ -4,15 +4,15 @@ import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
-  AddToAlbumContent,
-  AlbumEditSidebar,
-  ManageLayout,
-  MobileActionBar,
-  PhotoEditSidebar,
-  PhotoGrid,
-  PhotoListItem,
-  type AlbumFormData,
-  type PhotoFormData,
+    AddToAlbumContent,
+    AlbumEditSidebar,
+    ManageLayout,
+    MobileActionBar,
+    PhotoEditSidebar,
+    PhotoGrid,
+    PhotoListItem,
+    type AlbumFormData,
+    type PhotoFormData,
 } from '@/components/manage';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
