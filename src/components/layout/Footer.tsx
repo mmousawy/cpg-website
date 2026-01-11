@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import Button from "@/components/shared/Button";
 import { socialLinks } from "@/config/socials";
 
 // Import social icons - footer uses discord2 variant
@@ -21,18 +21,17 @@ export default function Footer() {
           {socialLinks.map(({ name, url }) => {
             const Icon = iconMap[name];
             return (
-              <a
+              <Button
                 key={name}
                 href={url}
-                className={clsx(
-                  "flex items-center justify-center rounded-full border-[0.0625rem] border-border-color bg-background fill-foreground p-2 font-[family-name:var(--font-geist-mono)] text-sm font-semibold text-foreground hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950 sm:px-3 sm:py-1",
-                )}
+                variant="secondary"
+                icon={<Icon className="inline-block" />}
+                className="!p-2 sm:!px-3 sm:!py-1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Icon className="inline-block sm:mr-2" />
                 <span className="hidden sm:inline-block">{name}</span>
-              </a>
+              </Button>
             );
           })}
         </div>

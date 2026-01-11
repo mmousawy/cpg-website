@@ -23,9 +23,9 @@ export const routes = {
     label: 'Events',
     url: '/events',
   },
-  galleries: {
-    label: 'Galleries',
-    url: '/galleries',
+  gallery: {
+    label: 'Gallery',
+    url: '/gallery',
   },
   account: {
     label: 'Account',

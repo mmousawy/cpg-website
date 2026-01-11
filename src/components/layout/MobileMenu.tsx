@@ -1,14 +1,14 @@
 'use client';
 
-import { createPortal } from 'react-dom';
+import { signOutAction } from '@/app/actions/auth';
+import { routes } from '@/config/routes';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useAuth } from '@/hooks/useAuth';
+import clsx from 'clsx';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
-import clsx from 'clsx';
-import { useAuth } from '@/hooks/useAuth';
-import { useAdmin } from '@/hooks/useAdmin';
-import { routes } from '@/config/routes';
-import { signOutAction } from '@/app/actions/auth';
+import { createPortal } from 'react-dom';
 
 interface MobileMenuProps {
   isOpen: boolean
@@ -66,14 +66,14 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             {routes.home.label}
           </Link>
           <Link
-            href={routes.galleries.url}
+            href={routes.gallery.url}
             onClick={onClose}
-            className={navLinkClass(routes.galleries.url)}
+            className={navLinkClass(routes.gallery.url)}
           >
             <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            {routes.galleries.label}
+            {routes.gallery.label}
           </Link>
           <Link
             href={routes.events.url}

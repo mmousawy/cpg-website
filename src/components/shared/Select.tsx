@@ -57,12 +57,12 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
           ref={ref}
           className={clsx(
             // Base styles - matching Input component
-            'inline-flex items-center justify-between rounded-lg border bg-background px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)]',
+            'inline-flex items-center justify-between rounded border bg-background px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)]',
             'transition-colors focus:border-primary focus:outline-none',
             // Width
             fullWidth && 'w-full',
             // Border color
-            error ? 'border-red-500' : 'border-border-color',
+            error ? 'border-red-500' : 'border-border-color-strong',
             // Disabled state
             disabled && 'bg-background/50 text-foreground/50 cursor-not-allowed',
             // Hover state
@@ -94,7 +94,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content
             className={clsx(
-              'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border-color',
+              'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border-color',
               'bg-background-light shadow-lg',
             )}
             position="popper"
@@ -106,7 +106,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                   key={option.value}
                   value={option.value}
                   className={clsx(
-                    'relative flex cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)]',
+                    'relative flex cursor-pointer select-none items-center rounded-xs px-2 py-1.5 text-sm font-[family-name:var(--font-geist-mono)]',
                     'outline-none transition-colors',
                     'focus:bg-primary/10 focus:text-primary',
                     'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',

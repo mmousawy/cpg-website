@@ -4,13 +4,13 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import { createPublicClient } from '@/utils/supabase/server';
 
 export const metadata = {
-  title: 'Photo galleries',
+  title: 'Photography gallery',
   description: 'Browse photo albums created by our community members',
 };
 
 // Cache indefinitely - revalidated on-demand when data changes
 
-export default async function GalleriesPage() {
+export default async function GalleryPage() {
   const supabase = createPublicClient();
 
   // Fetch all public albums with their cover photos and user info
@@ -52,7 +52,7 @@ export default async function GalleriesPage() {
   return (
     <PageContainer>
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">Photo galleries</h1>
+        <h1 className="mb-2 text-3xl font-bold">Photography gallery</h1>
         <p className="text-lg opacity-70">
           Explore beautiful photo albums created by our community members
         </p>
@@ -61,7 +61,7 @@ export default async function GalleriesPage() {
       {albumsWithPhotos.length === 0 ? (
         <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
           <p className="text-lg opacity-70">
-            No galleries yet. Be the first to create one!
+            No photos yet. Be the first to upload some!
           </p>
         </div>
       ) : (

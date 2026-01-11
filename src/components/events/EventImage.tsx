@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { CPGEvent } from '@/types/events';
 
@@ -34,9 +34,9 @@ export default function EventImage({ event, size }: { event: CPGEvent, size?: 's
         height={640}
         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 640px"
         loading='eager'
-        quality={95}
+        quality={85}
         alt={event.title || 'Event cover image'}
-        className='size-full rounded-md object-cover'
+        className='size-full rounded-md object-cover h-48'
         src={imageSrc}
       />
     </Link>

@@ -47,7 +47,7 @@ export default function ManageLayout({
                 <Link
                   href="/account/photos"
                   className={clsx(
-                    'flex items-center gap-2 rounded-tl-full rounded-bl-full border px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
+                    'flex items-center gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
                     isPhotosActive
                       ? 'border-primary bg-primary/10 text-primary z-10'
                       : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
@@ -62,7 +62,7 @@ export default function ManageLayout({
                 <Link
                   href="/account/albums"
                   className={clsx(
-                    '-ml-[1px] flex items-center gap-2 rounded-tr-full rounded-br-full border px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
+                    '-ml-[2px] flex items-center gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
                     isAlbumsActive
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',

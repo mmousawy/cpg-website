@@ -23,6 +23,7 @@ import Avatar from '@/components/auth/Avatar';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
+import CloseSVG from 'public/icons/close.svg';
 import PlusIconSVG from 'public/icons/plus.svg';
 
 // Zod schema for form validation
@@ -534,23 +535,22 @@ export default function AccountPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex flex-wrap gap-2">
-                        <label
-                          className={clsx(
-                            "inline-flex cursor-pointer items-center justify-center rounded-full border border-border-color bg-background px-4 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors",
-                            "hover:border-primary hover:bg-primary/5",
-                            isSaving && "pointer-events-none opacity-50",
-                          )}
+                        <Button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isSaving}
+                          variant="secondary"
+                          type="button"
                         >
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/jpeg,image/png,image/gif,image/webp"
-                            onChange={handleAvatarUpload}
-                            className="hidden"
-                            disabled={isSaving}
-                          />
                           {pendingAvatarFile ? 'Choose different' : 'Upload new picture'}
-                        </label>
+                        </Button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
+                          disabled={isSaving}
+                        />
                         {/* Show Remove button if there's a saved avatar or pending upload (and not already marked for removal) */}
                         {(savedAvatarUrl || pendingAvatarFile) && !pendingAvatarRemove && (
                           <Button
@@ -689,17 +689,16 @@ export default function AccountPage() {
                               fullWidth={false}
                               className="w-full sm:flex-1"
                             />
-                            <button
+                            <Button
                               type="button"
                               onClick={() => remove(index)}
-                              className="flex w-full items-center justify-center gap-2 rounded-lg border border-border-color bg-background px-3 py-2 text-sm text-red-500 transition-colors hover:border-red-500 hover:bg-red-500/5 sm:w-auto"
+                              variant="danger"
                               aria-label="Remove link"
+                              icon={<CloseSVG className="size-4" />}
+                              className="w-full sm:w-auto !px-2 !py-2"
                             >
-                              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
                               <span className="sm:hidden">Remove</span>
-                            </button>
+                            </Button>
                           </div>
                         ))}
 
@@ -724,6 +723,63 @@ export default function AccountPage() {
                 <h2 className="mb-4 text-lg font-semibold opacity-70">App preferences</h2>
                 <Container>
                   <div className="space-y-6">
+                    {/* Theme */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">
+                        Theme
+                      </label>
+                      <Controller
+                        name="theme"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                            {[
+                              { value: 'system', label: 'Auto', icon: (
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                              )},
+                              { value: 'light', label: 'Light', icon: (
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                              )},
+                              { value: 'dark', label: 'Dark', icon: (
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                              )},
+                              { value: 'midnight', label: 'Midnight', icon: (
+                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                              )},
+                            ].map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => field.onChange(option.value)}
+                                className={clsx(
+                                  "flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors",
+                                  themeMounted && field.value === option.value
+                                    ? "border-primary bg-primary/5 text-primary"
+                                    : "border-border-color hover:border-border-color-strong",
+                                )}
+                              >
+                                {option.icon}
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      />
+                      <p className="text-xs text-foreground/50">
+                        {themeMounted && theme === 'system'
+                          ? `Currently using ${resolvedTheme} mode based on your system`
+                          : 'Choose your preferred color scheme'}
+                      </p>
+                    </div>
+
                     {/* Gallery card style */}
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium">
@@ -829,63 +885,6 @@ export default function AccountPage() {
                           </div>
                         )}
                       />
-                    </div>
-
-                    {/* Theme */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">
-                        Theme
-                      </label>
-                      <Controller
-                        name="theme"
-                        control={control}
-                        render={({ field }) => (
-                          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                            {[
-                              { value: 'system', label: 'Auto', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                              )},
-                              { value: 'light', label: 'Light', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                              )},
-                              { value: 'dark', label: 'Dark', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                              )},
-                              { value: 'midnight', label: 'Midnight', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                              )},
-                            ].map((option) => (
-                              <button
-                                key={option.value}
-                                type="button"
-                                onClick={() => field.onChange(option.value)}
-                                className={clsx(
-                                  "flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors",
-                                  themeMounted && field.value === option.value
-                                    ? "border-primary bg-primary/5 text-primary"
-                                    : "border-border-color hover:border-border-color-strong",
-                                )}
-                              >
-                                {option.icon}
-                                {option.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      />
-                      <p className="text-xs text-foreground/50">
-                        {themeMounted && theme === 'system'
-                          ? `Currently using ${resolvedTheme} mode based on your system`
-                          : 'Choose your preferred color scheme'}
-                      </p>
                     </div>
                   </div>
                 </Container>

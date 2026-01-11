@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import clsx from 'clsx';
 import LogoSVG from 'public/cpg-logo.svg';
+import { useState } from 'react';
 
-import UserMenu from './UserMenu';
-import Avatar from '../auth/Avatar';
-import MobileMenu from './MobileMenu';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
+import Avatar from '../auth/Avatar';
+import MobileMenu from './MobileMenu';
+import UserMenu from './UserMenu';
 
 // Navigation link component with active state
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -65,8 +65,8 @@ export default function Header() {
             <NavLink href={routes.events.url}>
               {routes.events.label}
             </NavLink>
-            <NavLink href={routes.galleries.url}>
-              {routes.galleries.label}
+            <NavLink href={routes.gallery.url}>
+              {routes.gallery.label}
             </NavLink>
           </nav>
         </div>

@@ -22,7 +22,7 @@
     --primary: rgb(69, 146, 116);
     --primary-alt: #58c287;
     --background: #171718;
-    --background-medium: #1f2022;
+    --background-medium: #1d1f20;
     --background-light: #2e2f31;
     --foreground: #ededed;
     --text-muted: #a3a3a3;
@@ -50,10 +50,10 @@
 
 /* Explicit dark mode (set by next-themes via JS) */
 :root.dark {
-  --primary: rgb(69, 146, 116);
+  --primary: hsl(157, 36%, 42%);
   --primary-alt: #58c287;
   --background: #171718;
-  --background-medium: #1f2022;
+  --background-medium: hsl(200, 2%, 10%);
   --background-light: #252527;
   --foreground: #ededed;
   --text-muted: #a3a3a3;
