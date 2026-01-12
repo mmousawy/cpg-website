@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import clsx from 'clsx';
+import Link from 'next/link';
 
 import PageContainer from '@/components/layout/PageContainer';
 
@@ -20,7 +20,7 @@ export default function AdminDashboardPage() {
 
   const adminCards: AdminCard[] = [
     {
-      title: 'Manage Events',
+      title: 'Manage events',
       description: 'Create, edit, and manage events',
       icon: <CalendarSVG className="h-8 w-8 fill-current" />,
       href: '/admin/events',
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
       enabled: true,
     },
     {
-      title: 'View Statistics',
+      title: 'View statistics',
       description: 'Analytics and attendance reports',
       icon: (
         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">

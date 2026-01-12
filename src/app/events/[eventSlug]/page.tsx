@@ -1,15 +1,15 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import crypto from 'crypto';
-import clsx from 'clsx';
-import { createPublicClient } from '@/utils/supabase/server';
-import PageContainer from '@/components/layout/PageContainer';
-import Container from '@/components/layout/Container';
+import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventSignupBar from '@/components/events/EventSignupBar';
-import Avatar from '@/components/auth/Avatar';
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
 import type { Tables } from '@/database.types';
+import { createPublicClient } from '@/utils/supabase/server';
+import clsx from 'clsx';
+import crypto from 'crypto';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
 
   if (!eventSlug) {
     return {
-      title: 'Event Not Found',
+      title: 'Event not found',
     };
   }
 
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
 
   if (!event) {
     return {
-      title: 'Event Not Found',
+      title: 'Event not found',
     };
   }
 

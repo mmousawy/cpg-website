@@ -10,6 +10,7 @@ import SupabaseProvider from "./providers/SupabaseProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
 import Layout from "@/components/layout/Layout";
+import NavigationProgress from "@/components/layout/NavigationProgress";
 import Modal from "@/components/shared/Modal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-geist-sans)] text-foreground antialiased`}
       >
+        <NavigationProgress />
         <SupabaseProvider>
           <QueryProvider>
             <AuthProvider>

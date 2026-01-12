@@ -82,10 +82,10 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Get album with photo count
+  // Get album with photo count (using active view to exclude deleted photos)
   const { data: albumData, error: albumError } = await supabase
     .from('albums')
-    .select('id, title, slug, description, cover_image_url, album_photos(count)')
+    .select('id, title, slug, description, cover_image_url, album_photos_active(count)')
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)
     .eq('is_public', true)
@@ -102,7 +102,7 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     slug: albumData.slug,
     description: albumData.description,
     cover_image_url: albumData.cover_image_url,
-    photo_count: (albumData.album_photos as any)?.[0]?.count ?? 0,
+    photo_count: (albumData.album_photos_active as any)?.[0]?.count ?? 0,
   };
 
   // Get photo (don't require is_public since it's part of a public album)
@@ -129,10 +129,10 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Get all albums this photo is in (with photo counts)
+  // Get all albums this photo is in (with photo counts - using active view to exclude deleted photos)
   const { data: albumPhotosData } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos(count))')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
     .eq('photo_id', photo.id);
 
   const albums = (albumPhotosData || [])
@@ -144,7 +144,7 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
         title: albumData.title,
         slug: albumData.slug,
         cover_image_url: albumData.cover_image_url,
-        photo_count: albumData.album_photos?.[0]?.count ?? 0,
+        photo_count: albumData.album_photos_active?.[0]?.count ?? 0,
       };
     })
     .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);

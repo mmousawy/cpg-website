@@ -5,7 +5,7 @@ import {
   AlbumEditSidebar,
   AlbumGrid,
   type AlbumFormData,
-  type BulkAlbumFormData
+  type BulkAlbumFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';

@@ -8,7 +8,7 @@ import {
   PhotoGrid,
   UploadingPhotoCard,
   type BulkPhotoFormData,
-  type PhotoFormData
+  type PhotoFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';

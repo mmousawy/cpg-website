@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,6 +26,7 @@ const onboardingSchema = z.object({
       message: 'Nickname cannot start or end with a hyphen',
     }),
   fullName: z.string().optional(),
+  newsletterOptIn: z.boolean(),
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>
@@ -42,6 +43,7 @@ export default function OnboardingClient() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     formState: { errors },
@@ -51,6 +53,7 @@ export default function OnboardingClient() {
     defaultValues: {
       nickname: '',
       fullName: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+      newsletterOptIn: true, // Default to checked (opt-out model)
     },
   });
 
@@ -109,6 +112,7 @@ export default function OnboardingClient() {
         .update({
           nickname: data.nickname,
           full_name: data.fullName || null,
+          newsletter_opt_in: data.newsletterOptIn,
         })
         .eq('id', user.id);
 
@@ -243,6 +247,33 @@ export default function OnboardingClient() {
                 type="text"
                 {...register('fullName')}
                 placeholder="Your full name"
+              />
+            </div>
+
+            {/* Newsletter Opt-in */}
+            <div className="rounded-lg border border-border-color bg-background-light p-4">
+              <Controller
+                name="newsletterOptIn"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="newsletterOptIn"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-border-color-strong text-primary focus:ring-primary"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="newsletterOptIn" className="text-sm font-medium cursor-pointer block">
+                        Keep me updated on events and photography tips
+                      </label>
+                      <p className="text-xs text-foreground/50 mt-1">
+                        We&apos;ll send you occasional emails about upcoming meetups, photo walks, and community updates. No spam, ever.
+                      </p>
+                    </div>
+                  </div>
+                )}
               />
             </div>
 

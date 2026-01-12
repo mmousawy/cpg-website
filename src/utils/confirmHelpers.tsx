@@ -1,8 +1,8 @@
-import type { AlbumWithPhotos } from '@/types/albums';
-import type { PhotoWithAlbums } from '@/types/photos';
 import type { ConfirmOptions } from '@/app/providers/ConfirmProvider';
 import AlbumListItem from '@/components/manage/AlbumListItem';
 import PhotoListItem from '@/components/manage/PhotoListItem';
+import type { AlbumWithPhotos } from '@/types/albums';
+import type { PhotoWithAlbums } from '@/types/photos';
 
 /**
  * Helper functions to create common confirm dialog configurations
@@ -30,7 +30,7 @@ export function confirmDeletePhotos(
 
 export function confirmDeletePhoto(photo: PhotoWithAlbums): ConfirmOptions {
   return {
-    title: 'Delete Photo',
+    title: 'Delete photo',
     message: 'Are you sure you want to delete this photo? This action cannot be undone.',
     content: (
       <div className="grid gap-2">
@@ -48,7 +48,7 @@ export function confirmDeleteAlbums(
 ): ConfirmOptions {
   const albumCount = count ?? albums.length;
   return {
-    title: 'Delete Albums',
+    title: 'Delete albums',
     message: `Are you sure you want to delete ${albumCount} album${albumCount !== 1 ? 's' : ''}? This action cannot be undone.`,
     content: (
       <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
@@ -64,9 +64,9 @@ export function confirmDeleteAlbums(
 
 export function confirmDeleteAlbum(album: AlbumWithPhotos): ConfirmOptions {
   return {
-    title: 'Delete Album',
+    title: 'Delete album',
     message: 'Are you sure you want to delete this album? This action cannot be undone.',
-    content: <AlbumListItem album={album} variant="compact" />,
+    content: <AlbumListItem album={album} variant="detailed" />,
     confirmLabel: 'Delete',
     variant: 'danger',
   };
@@ -74,7 +74,7 @@ export function confirmDeleteAlbum(album: AlbumWithPhotos): ConfirmOptions {
 
 export function confirmUnsavedChanges(): ConfirmOptions {
   return {
-    title: 'Unsaved Changes',
+    title: 'Unsaved changes',
     message: 'You have unsaved changes. Are you sure you want to leave without saving?',
     confirmLabel: 'Leave',
     variant: 'danger',
@@ -87,7 +87,7 @@ export function confirmRemoveFromAlbum(
 ): ConfirmOptions {
   const photoCount = count ?? photos.length;
   return {
-    title: 'Remove from Album',
+    title: 'Remove from album',
     message: `Are you sure you want to remove ${photoCount} photo${photoCount !== 1 ? 's' : ''} from this album?`,
     content: (
       <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
@@ -103,7 +103,7 @@ export function confirmRemoveFromAlbum(
 
 export function confirmDeleteEvent(): ConfirmOptions {
   return {
-    title: 'Delete Event',
+    title: 'Delete event',
     message: 'Are you sure you want to delete this event? This action cannot be undone and will remove all RSVPs.',
     confirmLabel: 'Delete',
     variant: 'danger',
@@ -121,7 +121,7 @@ export function confirmCancelRSVP(): ConfirmOptions {
 
 export function confirmDeleteComment(): ConfirmOptions {
   return {
-    title: 'Delete Comment',
+    title: 'Delete comment',
     message: 'Are you sure you want to delete this comment?',
     confirmLabel: 'Delete',
     variant: 'danger',

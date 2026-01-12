@@ -39,6 +39,7 @@ const accountFormSchema = z.object({
   socialLinks: z.array(socialLinkSchema).max(3, 'Maximum 3 social links allowed'),
   albumCardStyle: z.enum(['large', 'compact']),
   theme: z.enum(['system', 'light', 'dark', 'midnight']),
+  newsletterOptIn: z.boolean(),
 });
 
 type AccountFormData = z.infer<typeof accountFormSchema>
@@ -59,6 +60,7 @@ type Profile = Pick<Tables<'profiles'>,
   social_links: SocialLink[] | null
   album_card_style: 'large' | 'compact' | null
   theme?: 'light' | 'dark' | 'midnight' | 'system' | null
+  newsletter_opt_in?: boolean | null
 }
 
 export default function AccountPage() {
@@ -102,6 +104,7 @@ export default function AccountPage() {
       socialLinks: [],
       albumCardStyle: 'large',
       theme: 'system',
+      newsletterOptIn: false,
     },
   });
 
@@ -173,7 +176,7 @@ export default function AccountPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin')
+        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in')
         .eq('id', user.id)
         .single();
 
@@ -193,7 +196,10 @@ export default function AccountPage() {
             .single();
 
           if (newProfile) {
-            setProfile(newProfile);
+            setProfile({
+              ...newProfile,
+              newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
+            });
             setNickname(newProfile.nickname || '');
             setSavedAvatarUrl(newProfile.avatar_url);
 
@@ -211,6 +217,7 @@ export default function AccountPage() {
               socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
               albumCardStyle: albumStyle,
               theme: 'system',
+              newsletterOptIn: (newProfile as any).newsletter_opt_in ?? false,
             };
             reset(formValues);
             setSavedFormValues(formValues);
@@ -229,6 +236,7 @@ export default function AccountPage() {
             website: null,
             social_links: null,
             album_card_style: null,
+            newsletter_opt_in: false,
             created_at: user.created_at || new Date().toISOString(),
             last_logged_in: null,
           });
@@ -239,6 +247,7 @@ export default function AccountPage() {
             socialLinks: [],
             albumCardStyle: 'large',
             theme: 'system',
+            newsletterOptIn: false,
           };
           reset(formValues);
           setSavedFormValues(formValues);
@@ -268,6 +277,7 @@ export default function AccountPage() {
           socialLinks: (data.social_links as { label: string; url: string }[]) || [],
           albumCardStyle: albumStyle,
           theme: profileTheme,
+          newsletterOptIn: data.newsletter_opt_in || false,
         };
         reset(formValues);
         setSavedFormValues(formValues);
@@ -420,6 +430,7 @@ export default function AccountPage() {
           social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
           album_card_style: data.albumCardStyle,
           theme: data.theme,
+          newsletter_opt_in: data.newsletterOptIn,
           avatar_url: newAvatarUrl,
         })
         .eq('id', user.id);
@@ -454,6 +465,7 @@ export default function AccountPage() {
           socialLinks: validSocialLinks,
           albumCardStyle: data.albumCardStyle,
           theme: data.theme,
+          newsletterOptIn: data.newsletterOptIn,
         };
 
         // Reset form to saved values and update baseline
@@ -882,6 +894,36 @@ export default function AccountPage() {
                                 </div>
                               </div>
                             </button>
+                          </div>
+                        )}
+                      />
+                    </div>
+
+                    {/* Newsletter Opt-in */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">
+                        Email notifications
+                      </label>
+                      <Controller
+                        name="newsletterOptIn"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              id="newsletterOptIn"
+                              checked={field.value}
+                              onChange={(e) => field.onChange(e.target.checked)}
+                              className="mt-0.5 h-4 w-4 rounded border-border-color-strong text-primary focus:ring-primary"
+                            />
+                            <div className="flex-1">
+                              <label htmlFor="newsletterOptIn" className="text-sm font-medium cursor-pointer">
+                                Keep me updated on events and photography tips
+                              </label>
+                              <p className="text-xs text-foreground/50 mt-1">
+                                We&apos;ll send you occasional emails about upcoming meetups, photo walks, and community updates. No spam, ever.
+                              </p>
+                            </div>
                           </div>
                         )}
                       />

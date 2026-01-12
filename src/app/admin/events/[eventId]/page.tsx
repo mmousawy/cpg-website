@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { ModalContext } from '@/app/providers/ModalProvider';
 import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
@@ -15,11 +16,13 @@ import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
+import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
 
 import { revalidateEvent } from '@/app/actions/revalidate';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import clsx from 'clsx';
+import { useContext } from 'react';
 import CheckSVG from 'public/icons/check.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
@@ -47,6 +50,11 @@ export default function AdminEventFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [markingId, setMarkingId] = useState<number | null>(null);
+  const [hasAnnouncement, setHasAnnouncement] = useState<boolean | null>(null);
+  const [isAnnouncing, setIsAnnouncing] = useState(false);
+  const [announceError, setAnnounceError] = useState<string | null>(null);
+  const [announceSuccess, setAnnounceSuccess] = useState(false);
+  const modalContext = useContext(ModalContext);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -136,6 +144,15 @@ export default function AdminEventFormPage() {
           .order('created_at', { ascending: false });
 
         setRsvps(rsvpsData || []);
+
+        // Check if announcement already sent
+        const { data: announcement } = await supabase
+          .from('event_announcements')
+          .select('id')
+          .eq('event_id', data.id)
+          .single();
+
+        setHasAnnouncement(!!announcement);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -160,6 +177,62 @@ export default function AdminEventFormPage() {
     }
 
     setMarkingId(null);
+  };
+
+  const handleAnnounceEvent = async () => {
+    if (!event) return;
+
+    const confirmed = await confirm({
+      title: 'Announce event',
+      message: `This will send an email announcement to all newsletter subscribers about "${event.title}". This can only be done once per event.`,
+      confirmLabel: 'Send announcement',
+      cancelLabel: 'Cancel',
+    });
+
+    if (!confirmed) return;
+
+    setIsAnnouncing(true);
+    setAnnounceError(null);
+    setAnnounceSuccess(false);
+
+    try {
+      const response = await fetch('/api/admin/events/announce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send announcement');
+      }
+
+      setAnnounceSuccess(true);
+      setHasAnnouncement(true);
+      setTimeout(() => setAnnounceSuccess(false), 5000);
+    } catch (err) {
+      setAnnounceError(err instanceof Error ? err.message : 'Failed to send announcement');
+    } finally {
+      setIsAnnouncing(false);
+    }
+  };
+
+  const handleEmailAttendees = () => {
+    if (!event) return;
+
+    modalContext.setTitle(`Email attendees: ${event.title}`);
+    modalContext.setContent(
+      <EmailAttendeesModal
+        eventId={event.id}
+        onClose={() => modalContext.setIsOpen(false)}
+        onSuccess={() => {
+          // Optionally refresh data
+        }}
+      />
+    );
+    modalContext.setSize('large');
+    modalContext.setIsOpen(true);
   };
 
   const handleDelete = async () => {
@@ -638,6 +711,64 @@ export default function AdminEventFormPage() {
                     </div>
                   ))
                 )}
+              </div>
+            </Container>
+          )}
+
+          {/* Notifications Section - Only show for existing events */}
+          {!isNewEvent && event && (
+            <Container>
+              <h2 className="mb-6 text-xl font-semibold">Notifications</h2>
+              
+              <div className="space-y-4">
+                {/* Announce Event Button */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold">Announce event</h3>
+                      <p className="text-xs text-foreground/70">
+                        Send a one-time announcement to all newsletter subscribers
+                      </p>
+                    </div>
+                    {hasAnnouncement && (
+                      <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
+                        Already sent
+                      </span>
+                    )}
+                  </div>
+                  {announceError && (
+                    <ErrorMessage variant="compact" className="mb-2">{announceError}</ErrorMessage>
+                  )}
+                  {announceSuccess && (
+                    <SuccessMessage variant="compact" className="mb-2">
+                      Announcement sent successfully!
+                    </SuccessMessage>
+                  )}
+                  <Button
+                    onClick={handleAnnounceEvent}
+                    disabled={isAnnouncing || hasAnnouncement === true}
+                    loading={isAnnouncing}
+                    variant="primary"
+                  >
+                    {hasAnnouncement ? 'Already announced' : 'Announce event'}
+                  </Button>
+                </div>
+
+                {/* Email Attendees Button */}
+                <div>
+                  <div className="mb-2">
+                    <h3 className="text-sm font-semibold">Email attendees</h3>
+                    <p className="text-xs text-foreground/70">
+                      Send a custom message to confirmed attendees and hosts
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleEmailAttendees}
+                    variant="secondary"
+                  >
+                    Email attendees
+                  </Button>
+                </div>
               </div>
             </Container>
           )}

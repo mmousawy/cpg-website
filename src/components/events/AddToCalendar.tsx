@@ -8,7 +8,7 @@ import {
 } from "@react-email/components";
 
 import Button from "@/components/shared/Button";
-import AddSVG from "public/icons/add.svg";
+import CalendarAddSVG from "public/icons/calendar-add-16.svg";
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = dayjs(`${event.date}T${event.time}`);
@@ -84,7 +84,7 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
           href={calendarLinks.google}
           variant="secondary"
           size="sm"
-          icon={<AddSVG className="shrink-0" />}
+          icon={<CalendarAddSVG className="shrink-0" />}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -96,7 +96,7 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
           href={calendarLinks.outlook}
           variant="secondary"
           size="sm"
-          icon={<AddSVG className="shrink-0" />}
+          icon={<CalendarAddSVG className="shrink-0" />}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -108,7 +108,7 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
           href={calendarLinks.apple}
           variant="secondary"
           size="sm"
-          icon={<AddSVG className="shrink-0" />}
+          icon={<CalendarAddSVG className="shrink-0" />}
           download={`${event.title}.ics`}
         >
           Apple Calendar

@@ -4,11 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePhotoCounts } from '@/hooks/usePhotoCounts';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 
 import ArrowUpLeftSVG from 'public/icons/arrow-up-left-micro.svg';
 import FolderMicroSVG from 'public/icons/folder-micro.svg';
 import PhotoMicroSVG from 'public/icons/image-micro.svg';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 interface ManageLayoutProps {
   children: React.ReactNode;
@@ -32,6 +34,8 @@ export default function ManageLayout({
   mobileActionBar,
 }: ManageLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const { user } = useAuth();
   const { data: counts } = usePhotoCounts(user?.id);
   const photoCount = counts?.photoCount ?? 0;
@@ -39,6 +43,17 @@ export default function ManageLayout({
 
   const isPhotosActive = pathname === '/account/photos';
   const isAlbumsActive = pathname.startsWith('/account/albums');
+
+  const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href === pathname) {
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    startTransition(() => {
+      router.push(href);
+    });
+  };
 
   return (
     <div className="flex h-[calc(100svh-61px)] md:h-[calc(100svh-81px)] w-full select-none">
@@ -53,6 +68,7 @@ export default function ManageLayout({
               <div className="flex">
                 <Link
                   href="/account/photos"
+                  onClick={(e) => handleTabClick(e, '/account/photos')}
                   className={clsx(
                     'flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
                     isPhotosActive
@@ -68,6 +84,7 @@ export default function ManageLayout({
                 </Link>
                 <Link
                   href="/account/albums"
+                  onClick={(e) => handleTabClick(e, '/account/albums')}
                   className={clsx(
                     '-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
                     isAlbumsActive
@@ -82,6 +99,13 @@ export default function ManageLayout({
                   </div>
                 </Link>
               </div>
+
+              {/* Loading indicator during tab transition */}
+              {isPending && (
+                <div className="flex items-center">
+                  <LoadingSpinner size="sm" />
+                </div>
+              )}
 
               {/* Album title (only in album detail mode - hidden on mobile) */}
               {albumDetail && (

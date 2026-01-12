@@ -83,7 +83,7 @@ export default function AddPhotosToAlbumModal({
     try {
       const { data, error } = await supabase
         .from('albums')
-        .select('id, title, slug, cover_image_url, album_photos(count)')
+        .select('id, title, slug, cover_image_url, album_photos_active(count)')
         .eq('user_id', user.id)
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
@@ -95,7 +95,7 @@ export default function AddPhotosToAlbumModal({
         // Transform to include photo_count
         const albumsWithCount = (data || []).map((album: any) => ({
           ...album,
-          photo_count: album.album_photos?.[0]?.count ?? 0,
+          photo_count: album.album_photos_active?.[0]?.count ?? 0,
         }));
         setAlbums(albumsWithCount as AlbumWithCount[]);
       }

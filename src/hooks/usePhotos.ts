@@ -19,7 +19,7 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
           cover_image_url,
           deleted_at,
           profile:profiles(nickname),
-          album_photos(count)
+          album_photos_active(count)
         )
       )
     `)
@@ -44,15 +44,15 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
 
   const photosWithAlbums = (data || []).map((photo) => {
     const albums = (photo.album_photos || [])
-      .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } | null }) => ap.album)
-      .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } => a !== null && !(a as any).deleted_at)
-      .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] }) => ({
+      .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos_active: { count: number }[] } | null }) => ap.album)
+      .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos_active: { count: number }[] } => a !== null && !(a as any).deleted_at)
+      .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos_active: { count: number }[] }) => ({
         id: a.id,
         title: a.title,
         slug: a.slug,
         cover_image_url: a.cover_image_url,
         profile_nickname: a.profile?.nickname || null,
-        photo_count: a.album_photos?.[0]?.count ?? 0,
+        photo_count: a.album_photos_active?.[0]?.count ?? 0,
       }));
 
     const { album_photos: _, ...photoData } = photo;
