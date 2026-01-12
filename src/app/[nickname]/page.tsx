@@ -96,10 +96,9 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
       is_public,
       created_at,
       profile:profiles(full_name, nickname, avatar_url),
-      photos:album_photos!inner(
+      photos:album_photos_active!inner(
         id,
-        photo_url,
-        photo:photos!album_photos_photo_id_fkey(deleted_at)
+        photo_url
       )
     `)
     .eq('user_id', typedProfile.id)
@@ -108,13 +107,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .order('created_at', { ascending: false })
     .limit(50);
 
-  // Filter out albums with deleted photos
+  // Filter out albums with no photos
+  // album_photos_active view already excludes deleted photos
   const albumsWithPhotos = ((albums || []) as any[])
-    .map((album) => ({
-      ...album,
-      photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
-    }))
-    .filter((album) => album.photos.length > 0) as unknown as AlbumWithPhotos[];
+    .filter((album) => album.photos && album.photos.length > 0) as unknown as AlbumWithPhotos[];
 
   // Fetch user's public photos (ordered by user's custom sort order)
   // Exclude event cover images (storage_path starts with 'events/')
@@ -131,9 +127,17 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   const publicPhotos = (photos || []) as Photo[];
 
-  // Get total photo count (from albums + photostream)
-  const albumPhotoCount = albumsWithPhotos.reduce((acc, album) => acc + (album.photos?.length || 0), 0);
-  const totalPhotos = albumPhotoCount + publicPhotos.length;
+  // Get total photo count using separate count queries
+  // Count all unique public photos (excluding event photos) - this represents all visible photos
+  const { count: totalPhotosCount } = await supabase
+    .from('photos')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', typedProfile.id)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%');
+
+  const totalPhotos = totalPhotosCount ?? 0;
 
   const socialLinks = (typedProfile.social_links || []) as SocialLink[];
 
@@ -265,15 +269,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         {albumsWithPhotos.length > 0 && (
           <>
             <h3 className="mb-4 max-w-screen-md text-lg font-medium mx-auto mt-6 md:mt-8">Albums</h3>
-            {albumsWithPhotos.length === 0 ? (
-              <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-                <p className="text-lg opacity-70">
-              No public albums yet.
-                </p>
-              </div>
-            ) : (
-              <AlbumGrid albums={albumsWithPhotos} />
-            )}
+            <AlbumGrid albums={albumsWithPhotos} />
           </>
         )}
       </PageContainer>

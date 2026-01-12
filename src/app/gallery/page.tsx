@@ -27,10 +27,9 @@ export default async function GalleryPage() {
       is_public,
       created_at,
       profile:profiles(full_name, nickname, avatar_url, suspended_at),
-      photos:album_photos!inner(
+      photos:album_photos_active!inner(
         id,
-        photo_url,
-        photo:photos!album_photos_photo_id_fkey(deleted_at)
+        photo_url
       )
     `)
     .eq('is_public', true)
@@ -42,16 +41,13 @@ export default async function GalleryPage() {
     console.error('Error fetching albums:', error);
   }
 
-  // Filter out albums with deleted photos and albums from suspended users
+  // Filter out albums with no photos and albums from suspended users
+  // album_photos_active view already excludes deleted photos
   const albumsWithPhotos = ((albums || []) as any[])
-    .map((album) => ({
-      ...album,
-      photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
-    }))
     .filter((album) => {
-      // Exclude albums from suspended users
+      // Exclude albums from suspended users and albums with no photos
       const profile = album.profile as any;
-      return album.photos.length > 0 && profile && !profile.suspended_at;
+      return album.photos && album.photos.length > 0 && profile && !profile.suspended_at;
     }) as unknown as AlbumWithPhotos[];
 
   return (

@@ -91,28 +91,39 @@ export async function GET() {
       // Albums table doesn't exist yet
     }
 
-    // Load photos count (album_photos)
+    // Load photos count (using optimized function with subquery)
     try {
-      const { data: albumsData } = await supabase
-        .from('albums')
-        .select('id')
-        .eq('user_id', user.id);
+      const { data, error } = await supabase
+        .rpc('get_user_album_photos_count', { user_uuid: user.id });
 
-      const albums = albumsData as { id: string }[] | null;
-
-      if (albums && albums.length > 0) {
-        const albumIds = albums.map(a => a.id);
-        const { count } = await supabase
-          .from('album_photos')
-          .select('*', { count: 'exact', head: true })
-          .in('album_id', albumIds);
-
-        if (count !== null) {
-          stats.photos = count;
-        }
+      if (!error && data !== null) {
+        stats.photos = data;
       }
     } catch {
-      // Album photos table doesn't exist yet
+      // Function might not exist yet, fallback to direct query
+      try {
+        const { data: albumsData } = await supabase
+          .from('albums')
+          .select('id')
+          .eq('user_id', user.id)
+          .is('deleted_at', null);
+
+        const albums = albumsData as { id: string }[] | null;
+
+        if (albums && albums.length > 0) {
+          const albumIds = albums.map(a => a.id);
+          const { count } = await supabase
+            .from('album_photos_active')
+            .select('*', { count: 'exact', head: true })
+            .in('album_id', albumIds);
+
+          if (count !== null) {
+            stats.photos = count;
+          }
+        }
+      } catch {
+        // Album photos table doesn't exist yet
+      }
     }
 
     // TODO: Comments feature not yet implemented
