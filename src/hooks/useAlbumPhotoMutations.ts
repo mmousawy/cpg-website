@@ -8,7 +8,12 @@ export function useRemoveFromAlbum(albumId: string | undefined, nickname: string
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { albumPhotoIds: string[]; previousPhotos: PhotoWithAlbums[] | undefined },
+    Error,
+    string[],
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async (albumPhotoIds: string[]) => {
       if (!albumId) throw new Error('Album ID required');
 
@@ -50,7 +55,12 @@ export function useReorderAlbumPhotos(albumId: string | undefined, nickname: str
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { photos: PhotoWithAlbums[]; previousPhotos: PhotoWithAlbums[] | undefined },
+    Error,
+    PhotoWithAlbums[],
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async (photos: PhotoWithAlbums[]) => {
       if (!albumId) throw new Error('Album ID required');
 
@@ -92,7 +102,12 @@ export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: strin
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { photoId: string; data: PhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined },
+    Error,
+    { photoId: string; data: PhotoFormData },
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async ({ photoId, data }: { photoId: string; data: PhotoFormData }) => {
       if (!albumId) throw new Error('Album ID required');
 
@@ -156,7 +171,12 @@ export function useDeleteAlbumPhoto(albumId: string | undefined, nickname: strin
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { albumPhotoId: string; previousPhotos: PhotoWithAlbums[] | undefined },
+    Error,
+    string,
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async (albumPhotoId: string) => {
       if (!albumId) throw new Error('Album ID required');
 

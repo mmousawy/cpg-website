@@ -40,7 +40,7 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
         const newAlbumWithPhotos: AlbumWithPhotos = {
           ...newAlbum,
           photos: [],
-          tags: data.tags?.map((tag) => ({ album_id: newAlbum.id, tag: tag.toLowerCase() })) || [],
+          tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
         } as AlbumWithPhotos;
         return old ? [newAlbumWithPhotos, ...old] : [newAlbumWithPhotos];
       });
@@ -57,7 +57,12 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { albumId: string; data: AlbumFormData; previousAlbums: AlbumWithPhotos[] | undefined },
+    Error,
+    { albumId: string; data: AlbumFormData },
+    { previousAlbums: AlbumWithPhotos[] | undefined }
+  >({
     mutationFn: async ({ albumId, data }: { albumId: string; data: AlbumFormData }) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -109,8 +114,8 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
           a.id === albumId
             ? {
                 ...a,
-                tags: data.tags?.map((tag) => ({ album_id: albumId, tag: tag.toLowerCase() })) || [],
-              }
+                tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
+              } as AlbumWithPhotos
             : a,
         );
       });
@@ -135,7 +140,12 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { albumIds: string[]; data: BulkAlbumFormData; previousAlbums: AlbumWithPhotos[] | undefined },
+    Error,
+    { albumIds: string[]; data: BulkAlbumFormData },
+    { previousAlbums: AlbumWithPhotos[] | undefined }
+  >({
     mutationFn: async ({ albumIds, data }: { albumIds: string[]; data: BulkAlbumFormData }) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -226,7 +236,12 @@ export function useDeleteAlbums(userId: string | undefined, nickname: string | n
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { albumIds: string[]; previousAlbums: AlbumWithPhotos[] | undefined },
+    Error,
+    string[],
+    { previousAlbums: AlbumWithPhotos[] | undefined }
+  >({
     mutationFn: async (albumIds: string[]) => {
       if (!userId) throw new Error('User not authenticated');
 

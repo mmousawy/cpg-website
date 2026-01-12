@@ -40,7 +40,12 @@ export function useDeletePhotos(
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { photoIds: string[]; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
+    Error,
+    { photoIds: string[]; storagePaths: string[] },
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async ({ photoIds, storagePaths }: { photoIds: string[]; storagePaths: string[] }) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -104,7 +109,12 @@ export function useUpdatePhoto(
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { photoId: string; data: PhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
+    Error,
+    { photoId: string; data: PhotoFormData },
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async ({ photoId, data }: { photoId: string; data: PhotoFormData }) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -168,7 +178,12 @@ export function useBulkUpdatePhotos(
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { photoIds: string[]; data: BulkPhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
+    Error,
+    { photoIds: string[]; data: BulkPhotoFormData },
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async ({ photoIds, data }: { photoIds: string[]; data: BulkPhotoFormData }) => {
       if (!userId) throw new Error('User not authenticated');
 
@@ -232,7 +247,12 @@ export function useReorderPhotos(userId: string | undefined, filter: PhotoFilter
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  return useMutation({
+  return useMutation<
+    { photos: PhotoWithAlbums[]; previousPhotos: PhotoWithAlbums[] | undefined },
+    Error,
+    PhotoWithAlbums[],
+    { previousPhotos: PhotoWithAlbums[] | undefined }
+  >({
     mutationFn: async (photos: PhotoWithAlbums[]) => {
       if (!userId) throw new Error('User not authenticated');
 
