@@ -68,7 +68,7 @@ export async function getEmailTypes() {
     return [];
   }
 
-  return (data || []) as Array<{ id: number; type_key: string; type_label: string; description: string | null }>;
+  return ((data || []) as unknown) as Array<{ id: number; type_key: string; type_label: string; description: string | null }>;
 }
 
 /**
@@ -87,7 +87,7 @@ export async function getUserEmailPreferences(userId: string) {
     return [];
   }
 
-  return (data || []) as Array<{
+  return ((data || []) as unknown) as Array<{
     opted_out: boolean;
     email_types: { id: number; type_key: string; type_label: string };
   }>;
