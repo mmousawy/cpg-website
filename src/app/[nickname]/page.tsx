@@ -1,7 +1,9 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
+import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
+import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
 import type { Tables } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
@@ -139,6 +141,119 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
   const totalPhotos = totalPhotosCount ?? 0;
 
+  // Fetch public stats (only positive achievements)
+  let publicStats = {
+    photos: totalPhotos,
+    albums: albumsWithPhotos.length,
+    eventsAttended: 0,
+    commentsMade: 0,
+    commentsReceived: 0,
+    memberSince: typedProfile.created_at || null,
+  };
+
+  // Get events attended count (only confirmed RSVPs with attended_at for existing events)
+  try {
+    const { data: rsvpsData } = await supabase
+      .from('events_rsvps')
+      .select('attended_at, confirmed_at, canceled_at, event_id, events!inner(id)')
+      .eq('user_id', typedProfile.id)
+      .not('attended_at', 'is', null)
+      .not('confirmed_at', 'is', null)
+      .is('canceled_at', null);
+
+    if (rsvpsData) {
+      publicStats.eventsAttended = rsvpsData.length;
+    }
+  } catch {
+    // RSVPs table might not exist or have issues - that's okay
+  }
+
+  // Get comments made count (public comments only)
+  try {
+    const { count: commentsMadeCount } = await supabase
+      .from('comments')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', typedProfile.id)
+      .is('deleted_at', null);
+
+    if (commentsMadeCount !== null) {
+      publicStats.commentsMade = commentsMadeCount;
+    }
+  } catch {
+    // Comments table might not exist or have issues - that's okay
+  }
+
+  // Get comments received count (comments on user's public albums and photos)
+  try {
+    // Get user's album IDs
+    const { data: userAlbums } = await supabase
+      .from('albums')
+      .select('id')
+      .eq('user_id', typedProfile.id)
+      .eq('is_public', true)
+      .is('deleted_at', null);
+
+    // Get user's photo IDs
+    const { data: userPhotos } = await supabase
+      .from('photos')
+      .select('id')
+      .eq('user_id', typedProfile.id)
+      .eq('is_public', true)
+      .is('deleted_at', null);
+
+    let commentsReceivedCount = 0;
+
+    // Count comments on albums
+    if (userAlbums && userAlbums.length > 0) {
+      const albumIds = userAlbums.map(a => a.id);
+      const { data: albumCommentIds } = await supabase
+        .from('album_comments')
+        .select('comment_id')
+        .in('album_id', albumIds);
+
+      if (albumCommentIds && albumCommentIds.length > 0) {
+        const commentIds = albumCommentIds.map(ac => ac.comment_id);
+        const { count: albumCommentsCount } = await supabase
+          .from('comments')
+          .select('id', { count: 'exact', head: true })
+          .in('id', commentIds)
+          .is('deleted_at', null)
+          .neq('user_id', typedProfile.id); // Exclude own comments
+
+        if (albumCommentsCount !== null) {
+          commentsReceivedCount += albumCommentsCount;
+        }
+      }
+    }
+
+    // Count comments on photos
+    if (userPhotos && userPhotos.length > 0) {
+      const photoIds = userPhotos.map(p => p.id);
+      const { data: photoCommentIds } = await supabase
+        .from('photo_comments')
+        .select('comment_id')
+        .in('photo_id', photoIds);
+
+      if (photoCommentIds && photoCommentIds.length > 0) {
+        const commentIds = photoCommentIds.map(pc => pc.comment_id);
+        const { count: photoCommentsCount } = await supabase
+          .from('comments')
+          .select('id', { count: 'exact', head: true })
+          .in('id', commentIds)
+          .is('deleted_at', null)
+          .neq('user_id', typedProfile.id); // Exclude own comments
+
+        if (photoCommentsCount !== null) {
+          commentsReceivedCount += photoCommentsCount;
+        }
+      }
+    }
+
+    publicStats.commentsReceived = commentsReceivedCount;
+  } catch {
+    // Comments tables might not exist or have issues - that's okay
+  }
+
   const socialLinks = (typedProfile.social_links || []) as SocialLink[];
 
   return (
@@ -234,47 +349,44 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
           {/* Bio */}
           {typedProfile.bio && (
-            <div className="sm:text-lg text-base opacity-80 mb-4 max-w-prose">
-              {typedProfile.bio.split('\n').map((line, index) => (
-                <p key={index} className={line.trim() === '' ? 'h-4' : 'leading-relaxed'}>
-                  {line || '\u00A0'}
-                </p>
-              ))}
+            <div className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]">
+              {typedProfile.bio}
             </div>
           )}
         </div>
 
-        {/* Photos Section */}
-        <div>
-          <h2 className="mb-2 sm:text-xl text-lg font-semibold">
-            Photos by @{typedProfile.nickname}
-          </h2>
-
-          {/* Stats */}
-          <div className="mb-6 flex items-center gap-6 text-sm opacity-70">
-            <span>{totalPhotos} {totalPhotos === 1 ? 'photo' : 'photos'}</span>
-            <span>{albumsWithPhotos.length} {albumsWithPhotos.length === 1 ? 'album' : 'albums'}</span>
-          </div>
-        </div>
-
-        {/* Photostream */}
-        {publicPhotos.length > 0 && (
-          <>
-            <h3 className="mb-4 max-w-screen-md text-lg font-medium mx-auto">Photostream</h3>
-            <JustifiedPhotoGrid photos={publicPhotos} profileNickname={typedProfile.nickname || nickname} />
-          </>
-        )}
-
-        {/* Albums */}
-        {albumsWithPhotos.length > 0 && (
-          <>
-            <h3 className="mb-4 max-w-screen-md text-lg font-medium mx-auto mt-6 md:mt-8">Albums</h3>
-            <AlbumGrid albums={albumsWithPhotos} />
-          </>
-        )}
+        {/* Stats Badges */}
+        <ProfileStatsBadges stats={publicStats} />
       </PageContainer>
+
+      {/* Photostream - Wide container */}
+      {publicPhotos.length > 0 && (
+        <WidePageContainer className="!pt-0">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold">Photostream</h2>
+            <p className="mt-1 text-sm text-foreground/60">
+              Latest photos by @{typedProfile.nickname}
+            </p>
+          </div>
+          <JustifiedPhotoGrid photos={publicPhotos} profileNickname={typedProfile.nickname || nickname} />
+        </WidePageContainer>
+      )}
+
+      {/* Albums - Wide container */}
+      {albumsWithPhotos.length > 0 && (
+        <WidePageContainer className={publicPhotos.length > 0 ? '!pt-0' : ''}>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold">Albums</h2>
+            <p className="mt-1 text-sm text-foreground/60">
+              Photo collections by @{typedProfile.nickname}
+            </p>
+          </div>
+          <AlbumGrid albums={albumsWithPhotos} />
+        </WidePageContainer>
+      )}
+
       {/* Articles/Posts Section - Coming Soon */}
-      <PageContainer variant="alt" className="border-t border-t-border-color">
+      {/* <PageContainer variant="alt" className="border-t border-t-border-color">
         <div className="mb-4 flex items-center gap-3">
           <h2 className="sm:text-xl text-lg font-semibold opacity-50">
             Articles by @{typedProfile.nickname}
@@ -286,7 +398,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         <p className="text-sm opacity-40">
           Articles and posts will be available here in a future update.
         </p>
-      </PageContainer>
+      </PageContainer> */}
     </>
   );
 }

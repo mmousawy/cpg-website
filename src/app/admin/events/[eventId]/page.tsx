@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { confirmDeleteEvent } from '@/utils/confirmHelpers';
+import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
@@ -15,16 +15,16 @@ import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
+import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 import { createClient } from '@/utils/supabase/client';
-import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
 
 import { revalidateEvent } from '@/app/actions/revalidate';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import clsx from 'clsx';
-import { useContext } from 'react';
 import CheckSVG from 'public/icons/check.svg';
 import TrashSVG from 'public/icons/trash.svg';
+import { useContext } from 'react';
 
 type Event = Pick<Tables<'events'>, 'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'>
 
@@ -184,7 +184,7 @@ export default function AdminEventFormPage() {
 
     const confirmed = await confirm({
       title: 'Announce event',
-      message: `This will send an email announcement to all newsletter subscribers about "${event.title}". This can only be done once per event.`,
+      message: `This will send an email announcement to all members who have are opted in to event announcements. This can only be done once per event.`,
       confirmLabel: 'Send announcement',
       cancelLabel: 'Cancel',
     });
@@ -229,7 +229,7 @@ export default function AdminEventFormPage() {
         onSuccess={() => {
           // Optionally refresh data
         }}
-      />
+      />,
     );
     modalContext.setSize('large');
     modalContext.setIsOpen(true);
@@ -719,7 +719,7 @@ export default function AdminEventFormPage() {
           {!isNewEvent && event && (
             <Container>
               <h2 className="mb-6 text-xl font-semibold">Notifications</h2>
-              
+
               <div className="space-y-4">
                 {/* Announce Event Button */}
                 <div>
@@ -727,7 +727,7 @@ export default function AdminEventFormPage() {
                     <div>
                       <h3 className="text-sm font-semibold">Announce event</h3>
                       <p className="text-xs text-foreground/70">
-                        Send a one-time announcement to all newsletter subscribers
+                        Send a one-time announcement to all members who have are opted in to event announcements
                       </p>
                     </div>
                     {hasAnnouncement && (

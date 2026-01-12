@@ -1,19 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
 import Avatar from '@/components/auth/Avatar';
-import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
+import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import Input from '@/components/shared/Input';
 import PageLoading from '@/components/shared/PageLoading';
+import { useAuth } from '@/hooks/useAuth';
+import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
+import { createClient } from '@/utils/supabase/client';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 // Zod schema for nickname validation
 const onboardingSchema = z.object({
@@ -26,7 +28,7 @@ const onboardingSchema = z.object({
       message: 'Nickname cannot start or end with a hyphen',
     }),
   fullName: z.string().optional(),
-  newsletterOptIn: z.boolean(),
+  emailPreferences: z.record(z.string(), z.boolean()),
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>
@@ -40,12 +42,15 @@ export default function OnboardingClient() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isCheckingNickname, setIsCheckingNickname] = useState(false);
   const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
+  const [emailTypes, setEmailTypes] = useState<EmailTypeData[]>([]);
+  const [isLoadingEmailTypes, setIsLoadingEmailTypes] = useState(true);
 
   const {
     register,
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
     setError,
   } = useForm<OnboardingFormData>({
@@ -53,9 +58,30 @@ export default function OnboardingClient() {
     defaultValues: {
       nickname: '',
       fullName: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
-      newsletterOptIn: true, // Default to checked (opt-out model)
+      emailPreferences: {},
     },
   });
+
+  // Load email types on mount
+  useEffect(() => {
+    const loadEmailTypes = async () => {
+      try {
+        const types = await getEmailTypes();
+        setEmailTypes(types);
+        // Set default values (all opted in by default)
+        const defaultPrefs: Record<string, boolean> = {};
+        types.forEach(type => {
+          defaultPrefs[type.type_key] = true;
+        });
+        setValue('emailPreferences', defaultPrefs);
+      } catch (error) {
+        console.error('Error loading email types:', error);
+      } finally {
+        setIsLoadingEmailTypes(false);
+      }
+    };
+    loadEmailTypes();
+  }, [setValue]);
 
   const watchedNickname = watch('nickname');
 
@@ -107,31 +133,51 @@ export default function OnboardingClient() {
     setSubmitError(null);
 
     try {
-      const { error } = await supabase
+      // Update profile
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           nickname: data.nickname,
           full_name: data.fullName || null,
-          newsletter_opt_in: data.newsletterOptIn,
+          // For backward compatibility, set newsletter_opt_in based on newsletter preference
+          newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
         })
         .eq('id', user.id);
 
-      if (error) {
-        if (error.code === '23505') {
+      if (profileError) {
+        if (profileError.code === '23505') {
           // Unique constraint violation
           setError('nickname', { message: 'This nickname is already taken' });
-        } else if (error.code === '23514') {
+        } else if (profileError.code === '23514') {
           // Check constraint violation
           setError('nickname', { message: 'Invalid nickname format' });
         } else {
-          setSubmitError(error.message);
+          setSubmitError(profileError.message);
         }
-      } else {
-        // Refresh profile in auth context
-        await refreshProfile();
-        // Redirect to account page
-        router.push('/account/events');
+        setIsSaving(false);
+        return;
       }
+
+      // Update email preferences in batch
+      const preferenceUpdates = emailTypes.map(type => {
+        const isOptedIn = data.emailPreferences[type.type_key] ?? true;
+        return {
+          email_type_id: type.id,
+          opted_out: !isOptedIn,
+        };
+      });
+
+      const prefError = await updateEmailPreferences(user.id, preferenceUpdates);
+      if (prefError.error) {
+        setSubmitError(`Failed to update email preferences: ${prefError.error.message}`);
+        setIsSaving(false);
+        return;
+      }
+
+      // Refresh profile in auth context
+      await refreshProfile();
+      // Redirect to account page
+      router.push('/account/events');
     } catch (err) {
       console.error('Unexpected error saving profile:', err);
       setSubmitError('An unexpected error occurred');
@@ -250,31 +296,65 @@ export default function OnboardingClient() {
               />
             </div>
 
-            {/* Newsletter Opt-in */}
+            {/* Email Preferences */}
             <div className="rounded-lg border border-border-color bg-background-light p-4">
-              <Controller
-                name="newsletterOptIn"
-                control={control}
-                render={({ field }) => (
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="newsletterOptIn"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-border-color-strong text-primary focus:ring-primary"
-                    />
-                    <div className="flex-1">
-                      <label htmlFor="newsletterOptIn" className="text-sm font-medium cursor-pointer block">
-                        Keep me updated on events and photography tips
-                      </label>
-                      <p className="text-xs text-foreground/50 mt-1">
-                        We&apos;ll send you occasional emails about upcoming meetups, photo walks, and community updates. No spam, ever.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              />
+              <label className="text-sm font-medium mb-3 block">
+                Email preferences
+              </label>
+              <p className="text-xs text-foreground/50 mb-3">
+                Choose which types of emails you&apos;d like to receive. You can change these settings anytime.
+              </p>
+              {isLoadingEmailTypes ? (
+                <p className="text-xs text-foreground/50">Loading preferences...</p>
+              ) : emailTypes.length > 0 ? (
+                <div className="space-y-3">
+                  {emailTypes.map((type) => {
+                    const fieldName = `emailPreferences.${type.type_key}` as const;
+                    return (
+                      <Controller
+                        key={type.type_key}
+                        name={fieldName}
+                        control={control}
+                        defaultValue={true}
+                        render={({ field }) => (
+                          <div className="flex items-start gap-2">
+                            <Checkbox
+                              id={`emailPref-${type.type_key}`}
+                              checked={field.value ?? true}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                field.onChange(checked);
+                                // Also update the nested object
+                                const currentPrefs = watch('emailPreferences') || {};
+                                setValue('emailPreferences', {
+                                  ...currentPrefs,
+                                  [type.type_key]: checked,
+                                });
+                              }}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <label
+                                htmlFor={`emailPref-${type.type_key}`}
+                                className="text-sm font-medium cursor-pointer"
+                              >
+                                {type.type_label}
+                              </label>
+                              {type.description && (
+                                <p className="text-xs text-foreground/50 mt-1">
+                                  {type.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-foreground/50">Unable to load email preferences</p>
+              )}
             </div>
 
             {submitError && (

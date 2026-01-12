@@ -10,6 +10,10 @@ const templates: Record<string, () => Promise<any>> = {
   'verify-email': () => import('../../../emails/auth/verify-email'),
   'reset-password': () => import('../../../emails/auth/reset-password'),
   'welcome': () => import('../../../emails/auth/welcome'),
+  // Event announcement emails
+  'event-announcement': () => import('../../../emails/event-announcement'),
+  // Attendee message emails
+  'attendee-message': () => import('../../../emails/attendee-message'),
 };
 
 export default async function Email({
@@ -44,7 +48,7 @@ export default async function Email({
 
   return (
     <iframe
-      className="size-full"
+      className="min-h-screen w-full"
       srcDoc={renderedTemplate}
     />
   );

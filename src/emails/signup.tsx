@@ -9,17 +9,17 @@ import {
   Link,
   Preview,
   Section,
-  Text,
   Tailwind,
+  Text,
 } from "@react-email/components";
 
 import { Database } from '@/database.types';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
-import EmailHeader from "./components/Header";
 import EventDetails from "./components/EventDetails";
 import Footer from "./components/Footer";
+import EmailHeader from "./components/Header";
 
 export const SignupEmail = ({
   preview,
@@ -54,8 +54,8 @@ export const SignupEmail = ({
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="m-auto bg-[#f7f7f7] p-8 font-sans">
-          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-[20px]">
+        <Body className="m-auto bg-[#f7f7f7] p-2 font-sans">
+          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5">
             <EmailHeader />
 
             <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]">

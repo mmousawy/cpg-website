@@ -104,6 +104,56 @@ body {
   }
 }
 
+/* Badge gradient - works in all themes with subtle effect in light mode */
+.badge-gradient {
+  border: 0.0625rem solid var(--border-color);
+  /* Default: subtle gradient for light mode */
+  background: linear-gradient(
+    to bottom,
+    var(--background-light) 0%,
+    var(--background-medium) 100%
+  );
+}
+
+/* Light mode: subtle gradient from background-light to background-medium */
+:root.light .badge-gradient {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--background-light), var(--background)) padding-box,
+    linear-gradient(var(--border-color), var(--border-color)) border-box;
+}
+
+/* Dark/midnight modes: same gradient effect as container */
+:root.dark .badge-gradient,
+:root.midnight .badge-gradient {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--background-light), var(--background)) padding-box,
+    linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
+}
+
+/* System dark mode when no explicit theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .badge-gradient {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--background-light), var(--background)) padding-box,
+      linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
+  }
+}
+
+/* System light mode when no explicit theme is set */
+@media (prefers-color-scheme: light) {
+  :root:not(.dark):not(.midnight) .badge-gradient {
+    border: 0.0625rem solid var(--border-color);
+    background: linear-gradient(
+      to bottom,
+      var(--background-light) 0%,
+      var(--background-medium) 100%
+    );
+  }
+}
+
 /* Fade-in animation for images */
 @keyframes fade-in {
   from {

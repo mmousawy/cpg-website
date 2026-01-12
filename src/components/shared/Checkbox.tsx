@@ -20,15 +20,15 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     return (
       <label
         htmlFor={id}
-        className={clsx('flex cursor-pointer items-center gap-2', labelClassName)}
+        className={labelClassName}
       >
-        <span className="relative flex items-center justify-center">
+        <div className="relative">
           <input
             ref={ref}
             type="checkbox"
             id={id}
             className={clsx(
-              'peer size-5 cursor-pointer appearance-none rounded border-2 transition-all',
+              'block peer size-5 cursor-pointer appearance-none rounded border-2 transition-all',
               'border-border-color-strong bg-background',
               'checked:border-primary checked:bg-primary',
               'focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none',
@@ -38,7 +38,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           />
           {/* Checkmark overlay - positioned over the input */}
           <svg
-            className="pointer-events-none absolute size-3 text-white opacity-0 transition-opacity peer-checked:opacity-100"
+            className="pointer-events-none absolute top-0.5 left-0.5 size-4 text-white opacity-0 transition-opacity peer-checked:opacity-100"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-        </span>
+        </div>
         {label && <span className="text-sm">{label}</span>}
       </label>
     );

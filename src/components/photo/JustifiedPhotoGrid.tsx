@@ -127,7 +127,9 @@ function PhotoRows({
                     alt="Photo"
                     fill
                     className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
+                    loading='lazy'
+                    quality={85}
                   />
                 </Link>
               );

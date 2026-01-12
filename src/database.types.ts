@@ -256,6 +256,66 @@ export type Database = {
           },
         ]
       }
+      email_preferences: {
+        Row: {
+          email_type_id: number
+          opted_out: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email_type_id: number
+          opted_out?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email_type_id?: number
+          opted_out?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_preferences_email_type_id_fkey"
+            columns: ["email_type_id"]
+            isOneToOne: false
+            referencedRelation: "email_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          type_key: string
+          type_label: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          type_key: string
+          type_label: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          type_key?: string
+          type_label?: string
+        }
+        Relationships: []
+      }
       event_announcements: {
         Row: {
           announced_at: string
@@ -765,4 +825,5 @@ export const Constants = {
   public: {
     Enums: {},
   },
-} as const;
+} as const
+

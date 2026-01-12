@@ -9,7 +9,6 @@ import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 import { isEventPast } from './EventCard';
 import EventImage from './EventImage';
-import EventRsvpStatus from './EventRsvpStatus';
 
 import type { CPGEvent, EventAttendee } from '@/types/events';
 
@@ -23,7 +22,7 @@ type EventsListProps = {
 function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee[], isPastEvent: boolean }) {
   if (!attendees || attendees.length === 0) {
     return (
-      <div className='text-[15px] font-semibold text-foreground/70 leading-6'>
+      <div className='text-sm font-semibold text-foreground/70 leading-6'>
         {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
       </div>
     );
@@ -91,14 +90,44 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage }: E
         return (
           <div
             key={event.id}
-            className="rounded-xl border border-border-color bg-background-light p-4 sm:p-6"
+            className={clsx(
+              "rounded-xl border bg-background-light p-4 sm:p-6 border-border-color",
+            )}
           >
-            <EventImage event={event} size='small' />
+            <div className={clsx(isPast && "grayscale")}>
+              <EventImage event={event} size='small' />
+            </div>
             <div className='mb-6 flex justify-between'>
-              <Link href={`/events/${event.slug}`} className="group">
-                <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">{event.title}</h3>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {isPast && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap">
+                      Past event
+                    </span>
+                  )}
+                </div>
+                <Link href={`/events/${event.slug}`} className="group">
+                  <h3 className={clsx(
+                    "text-2xl font-bold transition-colors md:max-w-140",
+                    isPast
+                      ? "text-foreground/70 group-hover:text-foreground/90"
+                      : "group-hover:text-primary",
+                  )}>
+                    {event.title}
+                  </h3>
+                </Link>
+              </div>
+              <Link
+                href={`/events/${event.slug}`}
+                className={clsx(
+                  "ml-2 max-sm:hidden self-start rounded-full border px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
+                  isPast
+                    ? "border-border-color-strong bg-background text-foreground/70 hover:border-border-color hover:bg-background-light"
+                    : "border-primary bg-primary text-white hover:border-primary-alt hover:bg-primary-alt hover:text-slate-950",
+                )}
+              >
+                View event
               </Link>
-              <EventRsvpStatus event={event} className="ml-2 max-sm:hidden" />
             </div>
             <div className='flex gap-6'>
               <div>
@@ -120,13 +149,23 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage }: E
                   <LocationSVG className="shrink-0 fill-foreground" />
                   {event.location}
                 </span>
-                <p className='whitespace-pre-line'>{event.description}</p>
+                <p className='whitespace-pre-line line-clamp-5'>{event.description}</p>
               </div>
               <EventImage event={event} />
             </div>
-            <div className='mt-8 flex items-center justify-between gap-4'>
+            <div className='mt-8 flex items-end justify-between gap-4'>
               <AttendeesDisplay attendees={attendees} isPastEvent={isPast} />
-              <EventRsvpStatus event={event} className="ml-2 self-end sm:hidden" />
+              <Link
+                href={`/events/${event.slug}`}
+                className={clsx(
+                  "ml-2 self-end sm:hidden rounded-full border px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
+                  isPast
+                    ? "border-border-color-strong bg-background text-foreground/70 hover:border-border-color hover:bg-background-light"
+                    : "border-primary bg-primary text-white hover:border-primary-alt hover:bg-primary-alt hover:text-slate-950",
+                )}
+              >
+                View event
+              </Link>
             </div>
           </div>
         );

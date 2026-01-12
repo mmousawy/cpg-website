@@ -60,7 +60,7 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 }) {
   if (!attendees || attendees.length === 0) {
     return (
-      <div className='text-[15px] font-semibold text-foreground/70 leading-6'>
+      <div className='text-sm font-semibold text-foreground/70 leading-6'>
         {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
       </div>
     );
@@ -245,7 +245,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           {event.description && (
             <div className="mb-8">
               <h2 className="mb-3 text-lg font-semibold">About this event</h2>
-              <p className="whitespace-pre-line text-foreground/90 leading-relaxed">{event.description}</p>
+              <p className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]">{event.description}</p>
             </div>
           )}
 

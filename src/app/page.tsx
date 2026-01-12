@@ -159,14 +159,14 @@ export default async function Home() {
             <RecentEventsList events={events || []} />
           </div>
 
-          {/* Galleries */}
+          {/* Albums */}
           {albumsWithPhotos.length > 0 && (
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Recent albums</h3>
                 <ArrowLink href={routes.gallery.url}>View all</ArrowLink>
               </div>
-              <AlbumGrid albums={albumsWithPhotos} />
+              <AlbumGrid albums={albumsWithPhotos} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
             </div>
           )}
         </Container>

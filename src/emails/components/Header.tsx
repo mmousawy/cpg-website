@@ -20,7 +20,7 @@ export default function Header() {
           className="mx-auto my-0"
         />
       </Section>
-      <Text className="mx-0 my-[30px] p-0 text-center text-[18px] font-semibold text-[#171717]">
+      <Text className="mx-0 mt-2 mb-[16px] p-0 text-center text-[18px] font-semibold text-[#171717]">
         Creative Photography Group
       </Text>
       <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />

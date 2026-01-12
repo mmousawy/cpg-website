@@ -55,9 +55,12 @@ export default async function GalleryPage() {
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-bold">Photography gallery</h1>
         <p className="text-lg opacity-70">
-          Explore beautiful photo albums created by our community members
+          Explore beautiful photos from the community
         </p>
       </div>
+
+      {/* TODO: Add community photostream  */}
+      {/* <JustifiedPhotoGrid /> */}
 
       {albumsWithPhotos.length === 0 ? (
         <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
@@ -66,7 +69,7 @@ export default async function GalleryPage() {
           </p>
         </div>
       ) : (
-        <AlbumGrid albums={albumsWithPhotos} />
+        <AlbumGrid albums={albumsWithPhotos} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
       )}
     </PageContainer>
   );

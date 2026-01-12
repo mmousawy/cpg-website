@@ -131,7 +131,7 @@ export default function PhotoListItem({
   const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
   const isOpeningRef = useRef(false);
   const [showExif, setShowExif] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState({ top: 0, right: 0 });
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; right: number } | null>(null);
   const exifData = photo.exif_data as Record<string, unknown> | null | undefined;
   const hasExif = exifData && Object.keys(exifData).length > 0;
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -151,9 +151,9 @@ export default function PhotoListItem({
     };
   }, []);
 
-  // Calculate popover position and handle click outside
+  // Update popover position on scroll/resize and handle click outside
   useEffect(() => {
-    if (!showExif || !buttonRef.current) return;
+    if (!showExif || !buttonRef.current || !popoverPosition) return;
 
     const updatePosition = () => {
       if (!buttonRef.current) return;
@@ -163,9 +163,6 @@ export default function PhotoListItem({
         right: window.innerWidth - rect.right,
       });
     };
-
-    // Calculate initial position
-    updatePosition();
 
     // Update position on scroll/resize
     window.addEventListener('scroll', updatePosition, true);
@@ -194,6 +191,13 @@ export default function PhotoListItem({
       window.removeEventListener('resize', updatePosition);
       document.removeEventListener('click', handleClickOutside, true);
     };
+  }, [showExif, popoverPosition]);
+
+  // Reset position when popover is closed
+  useEffect(() => {
+    if (!showExif) {
+      setPopoverPosition(null);
+    }
   }, [showExif]);
 
   const handleViewFullSize = (e: React.MouseEvent) => {
@@ -276,7 +280,7 @@ export default function PhotoListItem({
           <MagnifyingGlassPlusSVG className="size-5 text-white drop-shadow-md" />
         </div>
       </div>
-      <div className="min-w-0 flex-1 py-1 pr-2 space-y-0.5 relative">
+      <div className="min-w-0 flex-1 py-1 pr-1 space-y-0.5 relative">
         {/* Primary name (title or fallback) */}
         <div className="flex items-start justify-between gap-2">
           <p className="line-clamp-2 text-sm font-medium leading-tight flex-1" title={displayName}>
@@ -290,7 +294,17 @@ export default function PhotoListItem({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowExif(!showExif);
+                  if (!showExif && buttonRef.current) {
+                    // Calculate position before showing popover to prevent flash
+                    const rect = buttonRef.current.getBoundingClientRect();
+                    setPopoverPosition({
+                      top: rect.bottom + 4, // 4px gap
+                      right: window.innerWidth - rect.right,
+                    });
+                    setShowExif(true);
+                  } else {
+                    setShowExif(false);
+                  }
                 }}
                 className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground shrink-0"
                 title="View EXIF data"
@@ -301,6 +315,7 @@ export default function PhotoListItem({
 
               {/* EXIF Popover - rendered via portal outside scroll container */}
               {showExif &&
+                popoverPosition &&
                 typeof window !== 'undefined' &&
                 createPortal(
                   <div
@@ -319,7 +334,7 @@ export default function PhotoListItem({
                         if (!formattedValue) return null;
                         return (
                           <div className="table-row" key={key}>
-                            <span className="table-cell text-foreground/60 font-medium pr-2 pt-0.5">{getExifLabel(key)}:</span>
+                            <span className="table-cell text-foreground/60 font-medium pr-1 pt-0.5 whitespace-nowrap">{getExifLabel(key)}:</span>
                             <span className="table-cell text-foreground/80 truncate pt-0.5">
                               {formattedValue}
                             </span>

@@ -17,14 +17,29 @@ export function encrypt(plainText: string, keyHex: string = ENCRYPTION_KEY): str
 }
 
 export function decrypt(text: string, keyHex: string = ENCRYPTION_KEY): string {
-  const [ivHex, encryptedHex] = text.split(':');
-  if (!ivHex || !encryptedHex) {
-    throw new Error('Invalid or corrupted cipher format');
+  if (!keyHex || keyHex.length !== 64) { // 32 bytes = 64 hex characters
+    throw new Error('Encryption key is missing or invalid. ENCRYPT_KEY must be 32 bytes (64 hex characters).');
   }
 
-  const encryptedText = Buffer.from(encryptedHex, 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(keyHex, 'hex'), Buffer.from(ivHex, 'hex'));
-  const decrypted = Buffer.concat([decipher.update(encryptedText), decipher.final()]);
+  const [ivHex, encryptedHex] = text.split(':');
+  if (!ivHex || !encryptedHex) {
+    throw new Error('Invalid or corrupted cipher format - token must contain iv:encrypted format');
+  }
 
-  return decrypted.toString();
+  if (ivHex.length !== 32) { // 16 bytes = 32 hex characters
+    throw new Error('Invalid IV length');
+  }
+
+  try {
+    const encryptedText = Buffer.from(encryptedHex, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(keyHex, 'hex'), Buffer.from(ivHex, 'hex'));
+    const decrypted = Buffer.concat([decipher.update(encryptedText), decipher.final()]);
+
+    return decrypted.toString();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Decryption failed: ${error.message}`);
+    }
+    throw new Error('Decryption failed: Unknown error');
+  }
 }

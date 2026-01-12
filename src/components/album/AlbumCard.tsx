@@ -33,10 +33,10 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
           <Image
             src={coverImage}
             alt={album.title}
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 256px"
-            loading='eager'
-            quality={95}
+            sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
+            quality={85}
             fill
+            loading='lazy'
             className="object-cover transition-transform duration-200"
           />
         ) : (
@@ -118,7 +118,7 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
             )}
             {photoCount > 0 && (
               <div className="text-xs text-foreground/50">
-                {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+                {photoCount} <span className="hidden sm:inline">{photoCount === 1 ? 'photo' : 'photos'}</span>
               </div>
             )}
           </div>

@@ -1,8 +1,8 @@
 import {
+  Column,
   Heading,
   Img,
   Row,
-  Column,
   Section,
   Text,
 } from "@react-email/components";
@@ -82,7 +82,7 @@ export default function EventDetails({ event, noDescription }: { event: Database
       </Row>
 
       {!noDescription && (
-        <Text className="!mb-0 text-[14px] leading-[24px] text-[#171717]" dangerouslySetInnerHTML={{ __html: eventDescriptionFiltered }} />
+        <Text className="mb-0! text-[14px] leading-[24px] text-[#171717]" dangerouslySetInnerHTML={{ __html: eventDescriptionFiltered }} />
       )}
     </Section>
   );

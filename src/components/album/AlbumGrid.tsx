@@ -1,9 +1,9 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import AlbumCard, { type AlbumCardVariant } from './AlbumCard';
 import type { AlbumWithPhotos } from '@/types/albums';
+import { useSyncExternalStore } from 'react';
+import AlbumCard, { type AlbumCardVariant } from './AlbumCard';
 
 const STORAGE_KEY = 'album-card-style';
 
@@ -45,7 +45,7 @@ export default function AlbumGrid({
   albums,
   isOwner = false,
   variant,
-  className = "grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+  className = "grid gap-3 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]",
   onAlbumClick,
 }: AlbumGridProps) {
   const { profile } = useAuth();

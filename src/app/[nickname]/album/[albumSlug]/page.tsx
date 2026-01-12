@@ -93,7 +93,7 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
       is_suspended,
       suspension_reason,
       profile:profiles(full_name, avatar_url, nickname),
-      photos:album_photos_active!inner(
+      photos:album_photos_active(
         id,
         photo_url,
         title,
@@ -106,10 +106,10 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     .eq('slug', albumSlug)
     .eq('is_public', true)
     .is('deleted_at', null)
-    .order('sort_order', { referencedTable: 'album_photos', ascending: true, nullsFirst: false })
     .single();
 
   if (error || !album) {
+    console.error('Error fetching album:', error);
     notFound();
   }
 
@@ -121,8 +121,8 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   // album_photos_active view already excludes deleted photos
   const albumWithPhotos = album as unknown as AlbumWithPhotos;
 
-  // Sort photos by sort_order
-  const sortedAlbumPhotos = [...albumWithPhotos.photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  // Sort photos by sort_order (handle null/undefined photos array from left join)
+  const sortedAlbumPhotos = [...(albumWithPhotos.photos || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   // Fetch photo metadata for each photo_url
   const photoUrls = sortedAlbumPhotos.map((p) => p.photo_url);

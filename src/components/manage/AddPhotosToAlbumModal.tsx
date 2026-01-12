@@ -222,7 +222,7 @@ export default function AddPhotosToAlbumModal({
       </div>
 
       {/* Preview of photos being added */}
-      <div className="mb-4 grid min-h-12.5 max-h-[30svh] md:grid-cols-3 gap-2 overflow-y-auto">
+      <div className="mb-4 grid min-h-12.5 max-h-[30svh] md:grid-cols-2 gap-2 overflow-y-auto">
         {photos.map((photo) => (
           <PhotoListItem key={photo.id} photo={photo} variant="compact" />
         ))}

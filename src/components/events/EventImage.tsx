@@ -27,7 +27,7 @@ export default function EventImage({ event, size }: { event: CPGEvent, size?: 's
   return (
     <Link
       href={`/events/${event.slug}`}
-      className="block size-60 shrink-0 max-sm:hidden"
+      className="block w-60 shrink-0 max-sm:hidden"
     >
       <Image
         width={640}
@@ -36,7 +36,7 @@ export default function EventImage({ event, size }: { event: CPGEvent, size?: 's
         loading='eager'
         quality={85}
         alt={event.title || 'Event cover image'}
-        className='size-full rounded-md object-cover h-48'
+        className='size-full rounded-md object-cover h-30'
         src={imageSrc}
       />
     </Link>

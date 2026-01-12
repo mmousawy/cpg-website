@@ -26,11 +26,13 @@ export const EventAnnouncementEmail = ({
   fullName,
   event,
   eventLink,
+  optOutLink,
 }: {
   preview?: boolean;
   fullName: string,
   event: Database['public']['Tables']['events']['Row'],
   eventLink: string,
+  optOutLink?: string,
 }) => {
   if (preview) {
     fullName = "John Doe";
@@ -45,6 +47,7 @@ export const EventAnnouncementEmail = ({
     } as Database['public']['Tables']['events']['Row'];
 
     eventLink = `${baseUrl}/events/contours-compositions-and-cropping`;
+    optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
 
   const previewText = `New event: ${event?.title}`;
@@ -54,8 +57,8 @@ export const EventAnnouncementEmail = ({
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="m-auto bg-[#f7f7f7] p-8 font-sans">
-          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-[20px]">
+        <Body className="m-auto bg-[#f7f7f7] p-2 font-sans">
+          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5">
             <EmailHeader />
 
             <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]">
@@ -88,7 +91,7 @@ export const EventAnnouncementEmail = ({
 
             <EventDetails event={event} />
 
-            <Footer fullName={fullName} />
+            <Footer fullName={fullName} optOutLink={optOutLink} />
           </Container>
         </Body>
       </Tailwind>

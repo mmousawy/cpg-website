@@ -29,7 +29,7 @@ type Props = {
 
 export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, onRSVPChange }: Props) {
   const modalContext = useContext(ModalContext);
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -184,14 +184,14 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
                 className="inline-flex items-center gap-1.5 mb-2"
               >
                 <Avatar
-                  avatarUrl={user.user_metadata?.avatar_url}
-                  fullName={user.user_metadata?.full_name || user.email}
+                  avatarUrl={profile?.avatar_url}
+                  fullName={profile?.full_name || user.user_metadata?.full_name || user.email}
                   hoverEffect
                   size="xs"
                 />
                 <span className="flex flex-col leading-tight">
-                  <span className="font-medium">{user.user_metadata?.full_name || user.email}</span>
-                  <span className="text-xs opacity-70">@{user.user_metadata?.nickname || user.email}</span>
+                  <span className="font-medium">{profile?.full_name || user.user_metadata?.full_name || user.email}</span>
+                  <span className="text-xs opacity-70">@{profile?.nickname || user.user_metadata?.nickname || user.email}</span>
                 </span>
               </div>
             </div>

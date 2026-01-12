@@ -4,6 +4,7 @@ import { render } from "@react-email/render";
 
 import { createClient } from "@/utils/supabase/server";
 import { AttendeeMessageEmail } from "@/emails/attendee-message";
+import { encrypt } from "@/utils/encrypt";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -89,8 +90,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Combine RSVPs and admins, deduplicate by email
-  const recipientMap = new Map<string, { email: string; name: string }>();
+  // Combine RSVPs and admins, deduplicate by email, and get user IDs for opt-out links
+  const recipientMap = new Map<string, { email: string; name: string; userId?: string }>();
 
   // Add RSVPs
   if (rsvps) {
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
         recipientMap.set(rsvp.email.toLowerCase(), {
           email: rsvp.email,
           name: rsvp.name || rsvp.email.split('@')[0] || 'Friend',
+          userId: rsvp.user_id || undefined,
         });
       }
     });
@@ -111,12 +113,29 @@ export async function POST(request: NextRequest) {
         recipientMap.set(admin.email.toLowerCase(), {
           email: admin.email,
           name: admin.full_name || admin.email.split('@')[0] || 'Friend',
+          userId: admin.id,
         });
       }
     });
   }
 
   const recipients = Array.from(recipientMap.values());
+
+  // Note: Attendee messages are functional emails for people who have RSVP'd
+  // They should ALWAYS be sent, regardless of opt-out preferences
+  // We still generate opt-out links for users who have opted in to show them the option
+  const userIds = recipients.filter(r => r.userId).map(r => r.userId!);
+  const { data: profiles } = userIds.length > 0
+    ? await supabase
+        .from('profiles')
+        .select('id, email, newsletter_opt_in')
+        .in('id', userIds)
+        .eq('newsletter_opt_in', true)
+    : { data: null };
+
+  const optInUserIds = new Set(
+    (profiles || []).map(p => p.id)
+  );
 
   if (recipients.length === 0) {
     return NextResponse.json(
@@ -135,6 +154,23 @@ export async function POST(request: NextRequest) {
     
     const emailPromises = batch.map(async (recipient) => {
       try {
+        // Generate opt-out link for events type
+        // Note: This email is still sent even if user has opted out (it's functional for RSVP'd users)
+        // But we show the opt-out link so they can opt out of future announcements
+        // Only encrypt userId and emailType to keep token smaller (email is looked up from userId)
+        let optOutLink: string | undefined;
+        if (recipient.userId) {
+          try {
+            const encrypted = encrypt(JSON.stringify({ 
+              userId: recipient.userId, 
+              emailType: 'events'
+            }));
+            optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+          } catch (error) {
+            console.error('Error generating opt-out link:', error);
+          }
+        }
+
         const emailResult = await resend.emails.send({
           from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
           to: recipient.email,
@@ -146,6 +182,7 @@ export async function POST(request: NextRequest) {
               event,
               message: message.trim(),
               eventLink,
+              optOutLink,
             })
           ),
         });

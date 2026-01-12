@@ -7,17 +7,17 @@ import {
   Html,
   Link,
   Preview,
-  Text,
   Tailwind,
+  Text,
 } from "@react-email/components";
 
 import { Database } from '@/database.types';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 
-import EmailHeader from "./components/Header";
 import EventDetails from "./components/EventDetails";
 import Footer from "./components/Footer";
+import EmailHeader from "./components/Header";
 
 export const AttendeeMessageEmail = ({
   preview,
@@ -25,12 +25,14 @@ export const AttendeeMessageEmail = ({
   event,
   message,
   eventLink,
+  optOutLink,
 }: {
   preview?: boolean;
   fullName: string,
   event: Database['public']['Tables']['events']['Row'],
   message: string,
   eventLink: string,
+  optOutLink?: string,
 }) => {
   if (preview) {
     fullName = "John Doe";
@@ -46,6 +48,7 @@ export const AttendeeMessageEmail = ({
     } as Database['public']['Tables']['events']['Row'];
 
     eventLink = `${baseUrl}/events/contours-compositions-and-cropping`;
+    optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
 
   const previewText = `Message about: ${event?.title}`;
@@ -62,8 +65,8 @@ export const AttendeeMessageEmail = ({
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="m-auto bg-[#f7f7f7] p-8 font-sans">
-          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-[20px]">
+        <Body className="m-auto bg-[#f7f7f7] p-2 font-sans">
+          <Container className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5">
             <EmailHeader />
 
             <Heading className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]">
@@ -94,7 +97,7 @@ export const AttendeeMessageEmail = ({
 
             <EventDetails event={event} noDescription />
 
-            <Footer fullName={fullName} />
+            <Footer fullName={fullName} optOutLink={optOutLink} />
           </Container>
         </Body>
       </Tailwind>

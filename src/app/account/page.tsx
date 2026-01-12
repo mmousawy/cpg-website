@@ -10,12 +10,14 @@ import { z } from 'zod';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import Checkbox from '@/components/shared/Checkbox';
 import Input from '@/components/shared/Input';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
+import { getEmailTypes, getUserEmailPreferences, updateEmailPreferences, type EmailPreference, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { createClient } from '@/utils/supabase/client';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
@@ -39,7 +41,7 @@ const accountFormSchema = z.object({
   socialLinks: z.array(socialLinkSchema).max(3, 'Maximum 3 social links allowed'),
   albumCardStyle: z.enum(['large', 'compact']),
   theme: z.enum(['system', 'light', 'dark', 'midnight']),
-  newsletterOptIn: z.boolean(),
+  emailPreferences: z.record(z.string(), z.boolean()),
 });
 
 type AccountFormData = z.infer<typeof accountFormSchema>
@@ -78,6 +80,8 @@ export default function AccountPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [themeMounted, setThemeMounted] = useState(false);
+  const [emailTypes, setEmailTypes] = useState<EmailTypeData[]>([]);
+  const [emailPreferences, setEmailPreferences] = useState<EmailPreference[]>([]);
 
   // Avatar state - saved value and pending changes
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null);
@@ -95,6 +99,7 @@ export default function AccountPage() {
     handleSubmit,
     watch,
     reset,
+    setValue,
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
@@ -104,7 +109,7 @@ export default function AccountPage() {
       socialLinks: [],
       albumCardStyle: 'large',
       theme: 'system',
-      newsletterOptIn: false,
+      emailPreferences: {},
     },
   });
 
@@ -155,7 +160,12 @@ export default function AccountPage() {
 
     const loadData = async () => {
       try {
-        await loadProfile();
+        // Load email types first (must be loaded before profile to build preferences correctly)
+        const types = await getEmailTypes();
+        setEmailTypes(types);
+
+        // Only load profile after email types are loaded
+        await loadProfile(types);
         // Load stats after profile is loaded (don't await - let it run in background)
         loadStats().catch(() => {
           // Silently fail - stats are optional
@@ -170,10 +180,14 @@ export default function AccountPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const loadProfile = async () => {
+  const loadProfile = async (types: EmailTypeData[] = emailTypes) => {
     if (!user) return;
 
     try {
+      // Load email preferences
+      const preferences = await getUserEmailPreferences(user.id);
+      setEmailPreferences(preferences);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in')
@@ -209,6 +223,19 @@ export default function AccountPage() {
               ? storedStyle
               : newProfile.album_card_style || 'large';
 
+            // Build email preferences object from loaded preferences
+            const emailPrefs: Record<string, boolean> = {};
+            types.forEach(type => {
+              const pref = preferences.find(p => p.type_key === type.type_key);
+              // If no preference exists, default to opted in (opted_out = false)
+              // For newsletter, also check newsletter_opt_in for backward compatibility
+              if (type.type_key === 'newsletter') {
+                emailPrefs[type.type_key] = (newProfile as any).newsletter_opt_in ?? (pref ? !pref.opted_out : true);
+              } else {
+                emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
+              }
+            });
+
             // Set form values and baseline for dirty comparison
             const formValues: AccountFormData = {
               fullName: newProfile.full_name || '',
@@ -217,7 +244,7 @@ export default function AccountPage() {
               socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
               albumCardStyle: albumStyle,
               theme: 'system',
-              newsletterOptIn: (newProfile as any).newsletter_opt_in ?? false,
+              emailPreferences: emailPrefs,
             };
             reset(formValues);
             setSavedFormValues(formValues);
@@ -240,6 +267,12 @@ export default function AccountPage() {
             created_at: user.created_at || new Date().toISOString(),
             last_logged_in: null,
           });
+          // Build default email preferences (all opted in)
+          const emailPrefs: Record<string, boolean> = {};
+          types.forEach(type => {
+            emailPrefs[type.type_key] = true;
+          });
+
           const formValues: AccountFormData = {
             fullName: user.user_metadata?.full_name || '',
             bio: '',
@@ -247,7 +280,7 @@ export default function AccountPage() {
             socialLinks: [],
             albumCardStyle: 'large',
             theme: 'system',
-            newsletterOptIn: false,
+            emailPreferences: emailPrefs,
           };
           reset(formValues);
           setSavedFormValues(formValues);
@@ -269,6 +302,19 @@ export default function AccountPage() {
             ? data.theme as 'system' | 'light' | 'dark' | 'midnight'
             : 'system';
 
+        // Build email preferences object from loaded preferences
+        const emailPrefs: Record<string, boolean> = {};
+        types.forEach(type => {
+          const pref = preferences.find(p => p.type_key === type.type_key);
+          // If no preference exists, default to opted in (opted_out = false)
+          // For newsletter, also check newsletter_opt_in for backward compatibility
+          if (type.type_key === 'newsletter') {
+            emailPrefs[type.type_key] = data.newsletter_opt_in ?? (pref ? !pref.opted_out : true);
+          } else {
+            emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
+          }
+        });
+
         // Set form values and baseline for dirty comparison
         const formValues: AccountFormData = {
           fullName: data.full_name || '',
@@ -277,7 +323,7 @@ export default function AccountPage() {
           socialLinks: (data.social_links as { label: string; url: string }[]) || [],
           albumCardStyle: albumStyle,
           theme: profileTheme,
-          newsletterOptIn: data.newsletter_opt_in || false,
+          emailPreferences: emailPrefs,
         };
         reset(formValues);
         setSavedFormValues(formValues);
@@ -421,6 +467,25 @@ export default function AccountPage() {
       // Filter out empty social links
       const validSocialLinks = data.socialLinks.filter(link => link.label.trim() && link.url.trim());
 
+      // Update email preferences
+      const preferenceUpdates = emailTypes.map(type => {
+        const isOptedIn = data.emailPreferences[type.type_key] ?? true;
+        return {
+          email_type_id: type.id,
+          opted_out: !isOptedIn,
+        };
+      });
+
+      const prefError = await updateEmailPreferences(user.id, preferenceUpdates);
+      if (prefError.error) {
+        setSubmitError(`Failed to update email preferences: ${prefError.error.message}`);
+        setIsSaving(false);
+        return;
+      }
+
+      // For backward compatibility, also update newsletter_opt_in
+      const newsletterOptIn = data.emailPreferences['newsletter'] ?? true;
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -430,7 +495,7 @@ export default function AccountPage() {
           social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
           album_card_style: data.albumCardStyle,
           theme: data.theme,
-          newsletter_opt_in: data.newsletterOptIn,
+          newsletter_opt_in: newsletterOptIn,
           avatar_url: newAvatarUrl,
         })
         .eq('id', user.id);
@@ -457,6 +522,16 @@ export default function AccountPage() {
         // Update profile state
         setProfile(prev => prev ? { ...prev, avatar_url: newAvatarUrl } : null);
 
+        // Reload email preferences to get updated state
+        const updatedPreferences = await getUserEmailPreferences(user.id);
+        setEmailPreferences(updatedPreferences);
+
+        // Rebuild email preferences object to match what we saved (ensures exact match)
+        const savedEmailPrefs: Record<string, boolean> = {};
+        emailTypes.forEach(type => {
+          savedEmailPrefs[type.type_key] = data.emailPreferences[type.type_key] ?? true;
+        });
+
         // Create the saved data with filtered social links
         const savedData: AccountFormData = {
           fullName: data.fullName || '',
@@ -465,7 +540,7 @@ export default function AccountPage() {
           socialLinks: validSocialLinks,
           albumCardStyle: data.albumCardStyle,
           theme: data.theme,
-          newsletterOptIn: data.newsletterOptIn,
+          emailPreferences: savedEmailPrefs,
         };
 
         // Reset form to saved values and update baseline
@@ -744,7 +819,7 @@ export default function AccountPage() {
                         name="theme"
                         control={control}
                         render={({ field }) => (
-                          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                          <div className="grid grid-cols-3 gap-2">
                             {[
                               { value: 'system', label: 'Auto', icon: (
                                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -761,11 +836,12 @@ export default function AccountPage() {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                 </svg>
                               )},
-                              { value: 'midnight', label: 'Midnight', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                              )},
+                              // More than 2 themes not supported in the MobileMenu yet
+                              // { value: 'midnight', label: 'Midnight', icon: (
+                              //   <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              //     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                              //   </svg>
+                              // )},
                             ].map((option) => (
                               <button
                                 key={option.value}
@@ -899,34 +975,65 @@ export default function AccountPage() {
                       />
                     </div>
 
-                    {/* Newsletter Opt-in */}
-                    <div className="flex flex-col gap-2">
+                    {/* Email Preferences */}
+                    <div className="flex flex-col gap-4">
                       <label className="text-sm font-medium">
-                        Email notifications
+                        Email preferences
                       </label>
-                      <Controller
-                        name="newsletterOptIn"
-                        control={control}
-                        render={({ field }) => (
-                          <div className="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              id="newsletterOptIn"
-                              checked={field.value}
-                              onChange={(e) => field.onChange(e.target.checked)}
-                              className="mt-0.5 h-4 w-4 rounded border-border-color-strong text-primary focus:ring-primary"
-                            />
-                            <div className="flex-1">
-                              <label htmlFor="newsletterOptIn" className="text-sm font-medium cursor-pointer">
-                                Keep me updated on events and photography tips
-                              </label>
-                              <p className="text-xs text-foreground/50 mt-1">
-                                We&apos;ll send you occasional emails about upcoming meetups, photo walks, and community updates. No spam, ever.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      />
+                      <p className="text-xs text-foreground/50 -mt-2">
+                        Choose which types of emails you&apos;d like to receive. You can change these settings anytime.
+                      </p>
+                      {emailTypes.length > 0 ? (
+                        <div className="space-y-3">
+                          {emailTypes.map((type) => {
+                            const fieldName = `emailPreferences.${type.type_key}` as const;
+                            return (
+                              <Controller
+                                key={type.type_key}
+                                name={fieldName}
+                                control={control}
+                                defaultValue={true}
+                                render={({ field }) => (
+                                  <div className="flex items-start gap-2">
+                                    <Checkbox
+                                      id={`emailPref-${type.type_key}`}
+                                      checked={field.value ?? true}
+                                      onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        field.onChange(checked);
+                                        // Also update the nested object
+                                        const currentPrefs = watch('emailPreferences') || {};
+                                        setValue('emailPreferences', {
+                                          ...currentPrefs,
+                                          [type.type_key]: checked,
+                                        });
+                                      }}
+                                      labelClassName="mt-0.75"
+                                    />
+                                    <div className="flex-1">
+                                      <label
+                                        htmlFor={`emailPref-${type.type_key}`}
+                                        className="text-sm font-medium cursor-pointer"
+                                      >
+                                        {type.type_label}
+                                      </label>
+                                      {type.description && (
+                                        <p className="text-xs text-foreground/50 mt-1">
+                                          {type.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              />
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-foreground/50">
+                          Loading email preferences...
+                        </p>
+                      )}
                     </div>
                   </div>
                 </Container>
