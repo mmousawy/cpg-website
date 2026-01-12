@@ -609,11 +609,20 @@ export default function SelectableGrid<T>({
   }
 
   const handleGridClick = (e: React.MouseEvent) => {
-    // Only clear selection if clicking directly on the grid (not on an item)
+    // Only clear selection if clicking on empty space (not on an item)
     // and not currently doing a drag-select or just finished one
     // and not holding a modifier key
     const hasModifier = e.shiftKey || e.metaKey || e.ctrlKey;
-    if (e.target === e.currentTarget && onClearSelection && !isSelecting && !justFinishedSelecting && !hasModifier) {
+
+    // Check if the click target is on or inside an item
+    const clickedItem = (e.target as HTMLElement).closest('[data-item-id]');
+    const isClickOnItem = clickedItem !== null;
+
+    // Also check if clicking on a checkbox (which has data-no-select attribute)
+    const clickedCheckbox = (e.target as HTMLElement).closest('[data-no-select]');
+    const isClickOnCheckbox = clickedCheckbox !== null;
+
+    if (!isClickOnItem && !isClickOnCheckbox && onClearSelection && !isSelecting && !justFinishedSelecting && !hasModifier) {
       onClearSelection();
       setIsMultiSelectModeActive(false); // Exit multi-select mode when clearing
     }

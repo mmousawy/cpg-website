@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/utils/supabase/client';
 import { revalidateAlbum } from '@/app/actions/revalidate';
+import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { PhotoWithAlbums } from '@/types/photos';
-import type { PhotoFormData, BulkPhotoFormData } from '@/components/manage';
+import { createClient } from '@/utils/supabase/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type PhotoFilter = 'all' | 'public' | 'private';
 
@@ -125,11 +125,11 @@ export function useUpdatePhoto(
         return old.map((p) =>
           p.id === photoId
             ? {
-                ...p,
-                title: data.title,
-                description: data.description,
-                is_public: data.is_public,
-              }
+              ...p,
+              title: data.title,
+              description: data.description,
+              is_public: data.is_public,
+            }
             : p,
         );
       });
@@ -194,11 +194,11 @@ export function useBulkUpdatePhotos(
         return old.map((p) =>
           photoIds.includes(p.id)
             ? {
-                ...p,
-                ...(data.title && { title: data.title }),
-                ...(data.description && { description: data.description }),
-                ...(data.is_public !== null && { is_public: data.is_public }),
-              }
+              ...p,
+              ...(data.title && { title: data.title }),
+              ...(data.description && { description: data.description }),
+              ...(data.is_public !== null && { is_public: data.is_public }),
+            }
             : p,
         );
       });
