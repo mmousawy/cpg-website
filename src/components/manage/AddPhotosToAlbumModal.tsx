@@ -181,9 +181,10 @@ export default function AddPhotosToAlbumModal({
 
       // Revalidate all albums that photos were added to
       if (profile?.nickname) {
+        const nickname = profile.nickname;
         const selectedAlbumsList = albums.filter((a) => selectedAlbumIds.has(a.id));
         await Promise.all(
-          selectedAlbumsList.map((album) => revalidateAlbum(profile.nickname, album.slug)),
+          selectedAlbumsList.map((album) => revalidateAlbum(nickname, album.slug)),
         );
       }
 

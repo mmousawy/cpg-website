@@ -195,8 +195,9 @@ export default function PhotosPage() {
     // Revalidate albums that contain this photo
     const photo = photos.find((p) => p.id === photoId);
     if (profile?.nickname && photo?.albums) {
+      const nickname = profile.nickname;
       await Promise.all(
-        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug)),
+        photo.albums.map((album) => revalidateAlbum(nickname, album.slug)),
       );
     }
 
@@ -223,13 +224,14 @@ export default function PhotosPage() {
 
     // Collect all unique albums from the affected photos and revalidate them
     if (profile?.nickname) {
+      const nickname = profile.nickname;
       const affectedPhotos = photos.filter((p) => photoIds.includes(p.id));
       const albumSlugs = new Set<string>();
       affectedPhotos.forEach((photo) => {
         photo.albums?.forEach((album) => albumSlugs.add(album.slug));
       });
       await Promise.all(
-        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug)),
+        Array.from(albumSlugs).map((slug) => revalidateAlbum(nickname, slug)),
       );
     }
 
@@ -264,8 +266,9 @@ export default function PhotosPage() {
 
     // Revalidate albums that contained this photo
     if (profile?.nickname && photo.albums) {
+      const nickname = profile.nickname;
       await Promise.all(
-        photo.albums.map((album) => revalidateAlbum(profile.nickname, album.slug)),
+        photo.albums.map((album) => revalidateAlbum(nickname, album.slug)),
       );
     }
 
@@ -310,12 +313,13 @@ export default function PhotosPage() {
 
     // Revalidate all albums that contained the deleted photos
     if (profile?.nickname) {
+      const nickname = profile.nickname;
       const albumSlugs = new Set<string>();
       photosToDelete.forEach((photo) => {
         photo.albums?.forEach((album) => albumSlugs.add(album.slug));
       });
       await Promise.all(
-        Array.from(albumSlugs).map((slug) => revalidateAlbum(profile.nickname, slug)),
+        Array.from(albumSlugs).map((slug) => revalidateAlbum(nickname, slug)),
       );
     }
 
