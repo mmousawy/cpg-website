@@ -15,6 +15,7 @@ export default async function GalleryPage() {
 
   // Fetch all public albums with their cover photos and user info
   // Only fetch necessary fields to reduce egress
+  // Exclude albums from suspended users
   const { data: albums, error } = await supabase
     .from('albums')
     .select(`
@@ -25,7 +26,7 @@ export default async function GalleryPage() {
       cover_image_url,
       is_public,
       created_at,
-      profile:profiles(full_name, nickname, avatar_url),
+      profile:profiles(full_name, nickname, avatar_url, suspended_at),
       photos:album_photos!inner(
         id,
         photo_url,
@@ -41,13 +42,17 @@ export default async function GalleryPage() {
     console.error('Error fetching albums:', error);
   }
 
-  // Filter out albums with deleted photos
+  // Filter out albums with deleted photos and albums from suspended users
   const albumsWithPhotos = ((albums || []) as any[])
     .map((album) => ({
       ...album,
       photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
     }))
-    .filter((album) => album.photos.length > 0) as unknown as AlbumWithPhotos[];
+    .filter((album) => {
+      // Exclude albums from suspended users
+      const profile = album.profile as any;
+      return album.photos.length > 0 && profile && !profile.suspended_at;
+    }) as unknown as AlbumWithPhotos[];
 
   return (
     <PageContainer>

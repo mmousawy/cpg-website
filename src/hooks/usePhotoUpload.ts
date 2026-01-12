@@ -27,6 +27,7 @@ interface UsePhotoUploadReturn {
   uploadFiles: (files: File[], userId: string, supabase: SupabaseClient, options?: UploadPhotoOptions) => Promise<Photo[]>;
   clearCompleted: () => void;
   clearAll: () => void;
+  dismissUpload: (id: string) => void;
 }
 
 /**
@@ -218,11 +219,22 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
     });
   }, []);
 
+  const dismissUpload = useCallback((id: string) => {
+    setUploadingPhotos((prev) => {
+      const upload = prev.find((p) => p.id === id);
+      if (upload) {
+        URL.revokeObjectURL(upload.previewUrl);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
+  }, []);
+
   return {
     uploadingPhotos,
     uploadFiles,
     clearCompleted,
     clearAll,
+    dismissUpload,
   };
 }
 

@@ -56,6 +56,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
+  // Automatically add all hosts (admins) as attendees
+  const { data: admins } = await supabase
+    .from('profiles')
+    .select('id, full_name, email')
+    .eq('is_admin', true);
+
+  if (admins && admins.length > 0) {
+    const rsvpInserts = admins.map((admin) => ({
+      event_id: data.id,
+      user_id: admin.id,
+      name: admin.full_name || 'Host',
+      email: admin.email || '',
+      confirmed_at: new Date().toISOString(),
+    }));
+
+    const { error: rsvpError } = await supabase
+      .from('events_rsvps')
+      .insert(rsvpInserts);
+
+    if (rsvpError) {
+      console.error('Failed to add hosts as attendees:', rsvpError);
+      // Don't fail the event creation if RSVP insertion fails
+    }
+  }
+
   // Revalidate event pages
   revalidatePath('/events');
   revalidatePath('/');

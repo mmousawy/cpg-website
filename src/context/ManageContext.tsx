@@ -1,3 +1,8 @@
+/**
+ * @deprecated This context has been replaced by React Query hooks.
+ * Use `usePhotoCounts` hook instead for photo/album counts.
+ * This file is kept for backwards compatibility but will be removed in a future version.
+ */
 'use client';
 
 import { createClient } from '@/utils/supabase/client';
@@ -34,7 +39,8 @@ export function ManageProvider({ children }: { children: React.ReactNode }) {
           .from('photos')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id)
-          .is('deleted_at', null),
+          .is('deleted_at', null)
+          .not('storage_path', 'like', 'events/%'),
         supabase
           .from('albums')
           .select('id', { count: 'exact', head: true })

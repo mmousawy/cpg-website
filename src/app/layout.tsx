@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import ModalProvider from "@/app/providers/ModalProvider";
 import ConfirmProvider from "@/app/providers/ConfirmProvider";
+import QueryProvider from "@/app/providers/QueryProvider";
 import SupabaseProvider from "./providers/SupabaseProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
@@ -47,21 +48,23 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-geist-sans)] text-foreground antialiased`}
       >
         <SupabaseProvider>
-          <AuthProvider>
-            <ThemeProvider>
-              <ConfirmProvider>
-                <UnsavedChangesProvider>
-                  <ModalProvider>
-                    <Layout>
-                      {children}
-                    </Layout>
-                    <Modal />
-                  </ModalProvider>
-                </UnsavedChangesProvider>
-                <ConfirmModal />
-              </ConfirmProvider>
-            </ThemeProvider>
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ThemeProvider>
+                <ConfirmProvider>
+                  <UnsavedChangesProvider>
+                    <ModalProvider>
+                      <Layout>
+                        {children}
+                      </Layout>
+                      <Modal />
+                    </ModalProvider>
+                  </UnsavedChangesProvider>
+                  <ConfirmModal />
+                </ConfirmProvider>
+              </ThemeProvider>
+            </AuthProvider>
+          </QueryProvider>
         </SupabaseProvider>
         <Analytics />
       </body>

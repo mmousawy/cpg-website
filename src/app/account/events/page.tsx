@@ -1,19 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import clsx from 'clsx';
 
 import type { Tables } from '@/database.types';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
+import EventCard, { type EventCardData, isEventPast } from '@/components/events/EventCard';
 import Button from '@/components/shared/Button';
-import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 
-import CalendarSVG from 'public/icons/calendar2.svg';
-import LocationSVG from 'public/icons/location.svg';
-import TimeSVG from 'public/icons/time.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
 import SadSVG from 'public/icons/sad.svg';
@@ -134,12 +130,13 @@ export default function MyEventsPage() {
     }
   };
 
-  const upcomingRSVPs = rsvps.filter(
-    r => !r.canceled_at && r.events && new Date(r.events.date) >= new Date(),
-  );
-  const pastRSVPs = rsvps.filter(
-    r => !r.canceled_at && r.events && new Date(r.events.date) < new Date(),
-  );
+  // Sort: upcoming (soonest first), past (most recent first)
+  const upcomingRSVPs = rsvps
+    .filter(r => !r.canceled_at && r.events && !isEventPast(r.events.date))
+    .sort((a, b) => new Date(a.events.date).getTime() - new Date(b.events.date).getTime());
+  const pastRSVPs = rsvps
+    .filter(r => !r.canceled_at && r.events && isEventPast(r.events.date))
+    .sort((a, b) => new Date(b.events.date).getTime() - new Date(a.events.date).getTime());
   const canceledRSVPs = rsvps.filter(r => r.canceled_at);
 
   return (
@@ -154,24 +151,24 @@ export default function MyEventsPage() {
       {/* No-JS fallback */}
       <noscript>
         <style>{`.js-loading { display: none !important; }`}</style>
-        <Container className="text-center">
+        <div className="text-center py-12">
           <p className="text-lg font-medium mb-2">JavaScript required</p>
           <p className="text-foreground/70">
             Please enable JavaScript to view your event registrations.
           </p>
-        </Container>
+        </div>
       </noscript>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {/* Upcoming Events */}
         <section>
           <h2 className="mb-4 text-lg font-semibold opacity-70">Your upcoming events</h2>
           {isLoading ? (
-            <Container className="text-center animate-pulse js-loading">
+            <div className="text-center animate-pulse js-loading py-12">
               <p className="text-foreground/50">Loading your events...</p>
-            </Container>
+            </div>
           ) : upcomingRSVPs.length === 0 ? (
-            <Container className="text-center">
+            <div className="text-center py-8 rounded-xl border border-dashed border-border-color">
               <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No upcoming events</p>
               <Button
                 href={routes.events.url}
@@ -181,20 +178,18 @@ export default function MyEventsPage() {
               >
                 Browse events
               </Button>
-            </Container>
+            </div>
           ) : (
-            <Container>
-              <div className="space-y-3">
-                {upcomingRSVPs.map((rsvp) => (
-                  <EventCard
-                    key={rsvp.id}
-                    rsvp={rsvp}
-                    onCancel={() => handleCancel(rsvp)}
-                    isCancelling={cancellingId === rsvp.id}
-                  />
-                ))}
-              </div>
-            </Container>
+            <div className="space-y-3">
+              {upcomingRSVPs.map((rsvp) => (
+                <RsvpEventCard
+                  key={rsvp.id}
+                  rsvp={rsvp}
+                  onCancel={() => handleCancel(rsvp)}
+                  isCancelling={cancellingId === rsvp.id}
+                />
+              ))}
+            </div>
           )}
         </section>
 
@@ -202,18 +197,16 @@ export default function MyEventsPage() {
         {pastRSVPs.length > 0 && (
           <section>
             <h2 className="mb-4 text-lg font-semibold opacity-70">Past events</h2>
-            <Container>
-              <div className="space-y-3">
-                {pastRSVPs.map((rsvp) => (
-                  <EventCard
-                    key={rsvp.id}
-                    rsvp={rsvp}
-                    isPast
-                    sevenDaysAgo={sevenDaysAgo}
-                  />
-                ))}
-              </div>
-            </Container>
+            <div className="space-y-3">
+              {pastRSVPs.map((rsvp) => (
+                <RsvpEventCard
+                  key={rsvp.id}
+                  rsvp={rsvp}
+                  isPast
+                  sevenDaysAgo={sevenDaysAgo}
+                />
+              ))}
+            </div>
           </section>
         )}
 
@@ -221,13 +214,11 @@ export default function MyEventsPage() {
         {canceledRSVPs.length > 0 && (
           <section>
             <h2 className="mb-4 text-lg font-semibold opacity-70">Canceled RSVPs</h2>
-            <Container className="opacity-40">
-              <div className="space-y-3">
-                {canceledRSVPs.map((rsvp) => (
-                  <EventCard key={rsvp.id} rsvp={rsvp} isCanceled />
-                ))}
-              </div>
-            </Container>
+            <div className="space-y-3 opacity-40">
+              {canceledRSVPs.map((rsvp) => (
+                <RsvpEventCard key={rsvp.id} rsvp={rsvp} isCanceled />
+              ))}
+            </div>
           </section>
         )}
       </div>
@@ -235,7 +226,7 @@ export default function MyEventsPage() {
   );
 }
 
-function EventCard({
+function RsvpEventCard({
   rsvp,
   onCancel,
   isCancelling,
@@ -259,72 +250,53 @@ function EventCard({
     ? new Date(event.date) > new Date(sevenDaysAgo)
     : false;
 
-  return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border border-border-color p-4">
-      <div className="flex-1">
-        <h3 className="font-semibold">{event.title}</h3>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/70">
-          <span className="flex items-center gap-1">
-            <CalendarSVG className="h-4 w-4 fill-foreground/70" />
-            {new Date(event.date).toLocaleDateString('en-US', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </span>
-          <span className="flex items-center gap-1">
-            <TimeSVG className="h-4 w-4 fill-foreground/70" />
-            {event.time?.substring(0, 5)}
-          </span>
-        </div>
-        <p className="mt-1 flex items-start gap-1 text-sm text-foreground/60">
-          <LocationSVG className="mt-0.5 h-4 w-4 shrink-0 fill-foreground/60" />
-          <span className="line-clamp-1">{event.location}</span>
-        </p>
-      </div>
+  // Determine the status badge
+  const statusBadge = isCanceled ? (
+    <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap">
+      <CancelSVG className="h-3 w-3 fill-red-500" />
+      Canceled
+    </span>
+  ) : isPast ? (
+    rsvp.attended_at ? (
+      <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap">
+        <CheckSVG className="h-3 w-3 fill-green-600" />
+        Attended
+      </span>
+    ) : isWithinSevenDays ? (
+      <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 whitespace-nowrap">
+        Pending confirmation
+      </span>
+    ) : (
+      <span className="flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap">
+        Not attended
+      </span>
+    )
+  ) : (
+    <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap">
+      <CheckSVG className="h-3 w-3 fill-green-600" />
+      Confirmed
+    </span>
+  );
 
-      <div className="flex items-center gap-2">
-        {isCanceled ? (
-          <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500">
-            <CancelSVG className="h-3 w-3 fill-red-500" />
-            Canceled
-          </span>
-        ) : isPast ? (
-          rsvp.attended_at ? (
-            <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-              <CheckSVG className="h-3 w-3 fill-green-600" />
-              Attended
-            </span>
-          ) : isWithinSevenDays ? (
-            <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600">
-              Pending confirmation
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60">
-              Not attended
-            </span>
-          )
-        ) : (
-          <>
-            <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-              <CheckSVG className="h-3 w-3 fill-green-600" />
-              Confirmed
-            </span>
-            {onCancel && (
-              <Button
-                onClick={onCancel}
-                disabled={isCancelling}
-                variant="danger"
-                size="sm"
-                className="rounded-full"
-              >
-                {isCancelling ? 'Canceling...' : 'Cancel'}
-              </Button>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+  return (
+    <EventCard
+      event={event as EventCardData}
+      rightSlot={
+        <div className="flex items-center gap-2">
+          {statusBadge}
+          {!isCanceled && !isPast && onCancel && (
+            <Button
+              onClick={onCancel}
+              disabled={isCancelling}
+              variant="danger"
+              size="sm"
+              className="rounded-full"
+            >
+              {isCancelling ? 'Canceling...' : 'Cancel'}
+            </Button>
+          )}
+        </div>
+      }
+    />
   );
 }

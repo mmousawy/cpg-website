@@ -48,7 +48,9 @@ interface SelectableGridProps<T> {
   sortable?: boolean;
   /** Always show the mobile bottom spacer (for pages with persistent bottom UI) */
   alwaysShowMobileSpacer?: boolean;
-  /** Content to render after items (e.g., uploading previews) */
+  /** Content to render before items (e.g., uploading previews for newest-first lists) */
+  leadingContent?: React.ReactNode;
+  /** Content to render after items (e.g., uploading previews for oldest-first lists) */
   trailingContent?: React.ReactNode;
 }
 
@@ -303,6 +305,7 @@ export default function SelectableGrid<T>({
   className = '',
   sortable = false,
   alwaysShowMobileSpacer = false,
+  leadingContent,
   trailingContent,
 }: SelectableGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -665,6 +668,9 @@ export default function SelectableGrid<T>({
           className,
         )}
       >
+        {/* Leading content (e.g., uploading previews for newest-first lists) */}
+        {leadingContent}
+
         {items.map((item) => {
           const id = getId(item);
           const isSelected = selectedIds.has(id);

@@ -1,23 +1,24 @@
 'use client';
 
-import { useCallback, useContext, useEffect, useState } from 'react';
-import Link from 'next/link';
 import clsx from 'clsx';
+import Link from 'next/link';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { useAuth } from '@/hooks/useAuth';
 import { routes } from '@/config/routes';
+import { useAuth } from '@/hooks/useAuth';
 import { CPGEvent } from '@/types/events';
 import Button from '../shared/Button';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
-import CalendarSVG from 'public/icons/calendar2.svg';
-import LocationSVG from 'public/icons/location.svg';
-import TimeSVG from 'public/icons/time.svg';
-import CheckAddSVG from 'public/icons/check-add.svg';
-import CloseSVG from 'public/icons/close.svg';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
+import CalendarSVG from 'public/icons/calendar2.svg';
+import CheckAddSVG from 'public/icons/check-add.svg';
+import CloseSVG from 'public/icons/close.svg';
+import LocationSVG from 'public/icons/location.svg';
+import TimeSVG from 'public/icons/time.svg';
+import Avatar from './Avatar';
 
 type Props = {
   event?: CPGEvent;
@@ -176,15 +177,23 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
             isSubmitting && "pointer-events-none opacity-50",
           ])}
         >
-          <div className='flex gap-2 rounded-md bg-foreground/5 p-4 font-semibold leading-6 text-foreground'>
-            <svg className="shrink-0 h-6 w-6 fill-foreground" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-            <div>
-              <p>Signing up as</p>
-              <p className="mt-1 text-sm font-normal text-foreground/70">
-                {user.user_metadata?.full_name || user.email} ({user.email})
-              </p>
+          <div className='flex gap-2 rounded-md bg-foreground/5 px-4 py-2'>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-semibold leading-6 text-foreground">Signing up as</p>
+              <div
+                className="inline-flex items-center gap-1.5 mb-2"
+              >
+                <Avatar
+                  avatarUrl={user.user_metadata?.avatar_url}
+                  fullName={user.user_metadata?.full_name || user.email}
+                  hoverEffect
+                  size="xs"
+                />
+                <span className="flex flex-col leading-tight">
+                  <span className="font-medium">{user.user_metadata?.full_name || user.email}</span>
+                  <span className="text-xs opacity-70">@{user.user_metadata?.nickname || user.email}</span>
+                </span>
+              </div>
             </div>
           </div>
 

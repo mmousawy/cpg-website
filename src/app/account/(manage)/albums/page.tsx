@@ -1,6 +1,5 @@
 'use client';
 
-import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
   AlbumEditSidebar,
@@ -14,11 +13,15 @@ import MobileActionBar from '@/components/manage/MobileActionBar';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import PageLoading from '@/components/shared/PageLoading';
-import { useManage } from '@/context/ManageContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
-import type { AlbumWithPhotos } from '@/types/albums';
-import { createClient } from '@/utils/supabase/client';
+import { useAlbums } from '@/hooks/useAlbums';
+import {
+  useCreateAlbum,
+  useUpdateAlbum,
+  useBulkUpdateAlbums,
+  useDeleteAlbums,
+} from '@/hooks/useAlbumMutations';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -30,19 +33,29 @@ import TrashSVG from 'public/icons/trash.svg';
 export default function AlbumsPage() {
   const { user, profile } = useAuth();
   const router = useRouter();
-  const supabase = createClient();
-  const { refreshCounts } = useManage();
   const confirm = useConfirm();
 
   const albumEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
   const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
+  const [isNewAlbum, setIsNewAlbum] = useState(false);
+  const [selectedAlbumIds, setSelectedAlbumIds] = useState<Set<string>>(new Set());
+
+  // React Query hooks
+  const { data: albums = [], isLoading: albumsLoading } = useAlbums(user?.id);
+  const createAlbumMutation = useCreateAlbum(user?.id, profile?.nickname);
+  const updateAlbumMutation = useUpdateAlbum(user?.id, profile?.nickname);
+  const bulkUpdateAlbumsMutation = useBulkUpdateAlbums(user?.id, profile?.nickname);
+  const deleteAlbumsMutation = useDeleteAlbums(user?.id, profile?.nickname);
 
   // Sync dirty state with global unsaved changes context
-  const handleDirtyChange = useCallback((isDirty: boolean) => {
-    albumEditDirtyRef.current = isDirty;
-    setHasUnsavedChanges(isDirty);
-  }, [setHasUnsavedChanges]);
+  const handleDirtyChange = useCallback(
+    (isDirty: boolean) => {
+      albumEditDirtyRef.current = isDirty;
+      setHasUnsavedChanges(isDirty);
+    },
+    [setHasUnsavedChanges],
+  );
 
   // Clear unsaved changes on unmount
   useEffect(() => {
@@ -64,65 +77,7 @@ export default function AlbumsPage() {
     return confirmed;
   }, [confirm, setHasUnsavedChanges]);
 
-  // State
-  const [albums, setAlbums] = useState<AlbumWithPhotos[]>([]);
-  const [albumsLoading, setAlbumsLoading] = useState(true);
-  const [isNewAlbum, setIsNewAlbum] = useState(false);
-  const [selectedAlbumIds, setSelectedAlbumIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!user) return;
-    fetchAlbums(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const fetchAlbums = async (showLoading = false) => {
-    if (!user) return;
-
-    if (showLoading || albums.length === 0) {
-      setAlbumsLoading(true);
-    }
-    try {
-      const { data, error } = await supabase
-        .from('albums')
-        .select(`
-          id,
-          title,
-          description,
-          slug,
-          cover_image_url,
-          is_public,
-          created_at,
-          user_id,
-          photos:album_photos(
-            id,
-            photo_url,
-            photo:photos!album_photos_photo_id_fkey(deleted_at)
-          ),
-          tags:album_tags(tag)
-        `)
-        .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('Error fetching albums:', error);
-      } else {
-        // Filter out deleted photos from albums
-        const albumsWithFilteredPhotos = ((data || []) as any[]).map((album) => ({
-          ...album,
-          photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
-        }));
-        setAlbums(albumsWithFilteredPhotos as unknown as AlbumWithPhotos[]);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-    setAlbumsLoading(false);
-  };
-
-  const handleAlbumDoubleClick = async (album: AlbumWithPhotos) => {
+  const handleAlbumDoubleClick = async (album: typeof albums[0]) => {
     if (!(await confirmUnsavedChanges())) return;
     router.push(`/account/albums/${album.slug}`);
   };
@@ -182,175 +137,31 @@ export default function AlbumsPage() {
   };
 
   const handleCreateAlbum = async (data: AlbumFormData) => {
-    if (!user) return;
-
-    const { data: newAlbum, error: createError } = await supabase
-      .from('albums')
-      .insert({
-        user_id: user.id,
-        title: data.title.trim(),
-        slug: data.slug.trim(),
-        description: data.description?.trim() || null,
-        is_public: data.isPublic,
-      })
-      .select()
-      .single();
-
-    if (createError) {
-      throw new Error(createError.message || 'Failed to create album');
-    }
-
-    // Add tags for new album
-    if (data.tags.length > 0 && newAlbum) {
-      await supabase
-        .from('album_tags')
-        .insert(data.tags.map(tag => ({
-          album_id: newAlbum.id,
-          tag: tag.toLowerCase(),
-        })));
-    }
-
-    await fetchAlbums();
-    refreshCounts();
+    albumEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+    const newAlbum = await createAlbumMutation.mutateAsync(data);
     setIsNewAlbum(false);
     // Navigate to the new album
     router.push(`/account/albums/${newAlbum.slug}`);
   };
 
   const handleSaveAlbum = async (albumId: string, data: AlbumFormData) => {
-    if (!user) return;
-
-    const { error: updateError } = await supabase
-      .from('albums')
-      .update({
-        title: data.title.trim(),
-        slug: data.slug.trim(),
-        description: data.description?.trim() || null,
-        is_public: data.isPublic,
-      })
-      .eq('id', albumId)
-      .eq('user_id', user.id)
-      .is('deleted_at', null);
-
-    if (updateError) {
-      throw new Error(updateError.message || 'Failed to update album');
-    }
-
-    // Update tags
-    await supabase.from('album_tags').delete().eq('album_id', albumId);
-    if (data.tags.length > 0) {
-      await supabase.from('album_tags').insert(
-        data.tags.map((tag) => ({ album_id: albumId, tag: tag.toLowerCase() })),
-      );
-    }
-
-    // Revalidate album pages
-    if (profile?.nickname) {
-      await revalidateAlbum(profile.nickname, data.slug);
-    }
-
-    await fetchAlbums();
-    refreshCounts();
+    albumEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+    await updateAlbumMutation.mutateAsync({ albumId, data });
   };
 
   const handleBulkSaveAlbums = async (albumIds: string[], data: BulkAlbumFormData) => {
-    if (!user) return;
-
-    try {
-      const updates: { is_public?: boolean } = {};
-
-      // Update visibility if provided
-      if (data.isPublic !== null) {
-        updates.is_public = data.isPublic;
-      }
-
-      // Only update if there are changes
-      if (Object.keys(updates).length > 0) {
-        const { error: updateError } = await supabase
-          .from('albums')
-          .update(updates)
-          .in('id', albumIds)
-          .eq('user_id', user.id)
-          .is('deleted_at', null);
-
-        if (updateError) {
-          throw new Error(updateError.message || 'Failed to update albums');
-        }
-      }
-
-      // Add tags if provided
-      if (data.tags && data.tags.length > 0) {
-        // Get existing tags for each album and merge
-        const { data: existingTags } = await supabase
-          .from('album_tags')
-          .select('album_id, tag')
-          .in('album_id', albumIds);
-
-        const tagsByAlbum = new Map<string, Set<string>>();
-        existingTags?.forEach(({ album_id, tag }) => {
-          if (!tagsByAlbum.has(album_id)) {
-            tagsByAlbum.set(album_id, new Set());
-          }
-          tagsByAlbum.get(album_id)!.add(tag);
-        });
-
-        // Add new tags to each album (up to 5 total)
-        const tagInserts: { album_id: string; tag: string }[] = [];
-        albumIds.forEach((albumId) => {
-          const existing = tagsByAlbum.get(albumId) || new Set();
-          data.tags!.forEach((tag) => {
-            const currentInserts = tagInserts.filter((t) => t.album_id === albumId).length;
-            if (!existing.has(tag) && existing.size + currentInserts < 5) {
-              tagInserts.push({ album_id: albumId, tag: tag.toLowerCase() });
-            }
-          });
-        });
-
-        if (tagInserts.length > 0) {
-          const { error: tagError } = await supabase
-            .from('album_tags')
-            .insert(tagInserts);
-
-          if (tagError) {
-            throw new Error(tagError.message || 'Failed to add tags');
-          }
-        }
-      }
-
-      // Revalidate album pages for all updated albums
-      if (profile?.nickname) {
-        const nickname = profile.nickname;
-        const albumsToRevalidate = albums.filter((a) => albumIds.includes(a.id));
-        await Promise.all(
-          albumsToRevalidate.map((album) => revalidateAlbum(nickname, album.slug)),
-        );
-      }
-
-      await fetchAlbums();
-      refreshCounts();
-    } catch (err: any) {
-      throw new Error(err.message || 'Failed to save albums');
-    }
+    albumEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+    await bulkUpdateAlbumsMutation.mutateAsync({ albumIds, data });
   };
 
   const handleDeleteAlbum = async (albumId: string) => {
-    if (!user) return;
-
-    const album = albums.find((a) => a.id === albumId);
-    if (!album) return;
-
-    // Use atomic RPC function to delete album and all related data
-    const { data: success, error } = await supabase.rpc('delete_album', {
-      p_album_id: albumId,
-    });
-
-    if (error || !success) {
-      throw new Error(error?.message || 'Failed to delete album');
-    }
-
-    // Reset dirty state after successful deletion
     albumEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
+
+    await deleteAlbumsMutation.mutateAsync([albumId]);
 
     // Clear selection if deleting a selected album
     setSelectedAlbumIds((prev) => {
@@ -358,48 +169,17 @@ export default function AlbumsPage() {
       newSet.delete(albumId);
       return newSet;
     });
-
-    // Revalidate album pages
-    if (profile?.nickname && album) {
-      await revalidateAlbum(profile.nickname, album.slug);
-    }
-
-    await fetchAlbums();
-    refreshCounts();
   };
 
   const handleBulkDeleteAlbums = async (albumIds: string[]) => {
-    if (!user || albumIds.length === 0) return;
+    if (albumIds.length === 0) return;
 
-    // Get album slugs before deletion for revalidation
-    const albumsToDelete = albums.filter((a) => albumIds.includes(a.id));
-
-    // Delete albums one by one using the RPC function
-    for (const albumId of albumIds) {
-      const { data: success, error } = await supabase.rpc('delete_album', {
-        p_album_id: albumId,
-      });
-
-      if (error || !success) {
-        throw new Error(error?.message || `Failed to delete album ${albumId}`);
-      }
-    }
-
-    // Reset dirty state after successful deletion
     albumEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
 
-    // Revalidate album pages for all deleted albums
-    if (profile?.nickname) {
-      const nickname = profile.nickname;
-      await Promise.all(
-        albumsToDelete.map((album) => revalidateAlbum(nickname, album.slug)),
-      );
-    }
+    await deleteAlbumsMutation.mutateAsync(albumIds);
 
     setSelectedAlbumIds(new Set());
-    await fetchAlbums();
-    refreshCounts();
   };
 
   const selectedAlbums = albums.filter((a) => selectedAlbumIds.has(a.id));
@@ -527,10 +307,7 @@ export default function AlbumsPage() {
       </ManageLayout>
 
       {/* Mobile Edit Sheet */}
-      <BottomSheet
-        isOpen={isMobileEditSheetOpen}
-        onClose={handleMobileEditClose}
-      >
+      <BottomSheet isOpen={isMobileEditSheetOpen} onClose={handleMobileEditClose}>
         <AlbumEditSidebar
           selectedAlbums={selectedAlbums}
           isNewAlbum={isNewAlbum}

@@ -57,32 +57,78 @@ export default function PhotoListItem({
   const displayName = getPhotoDisplayName(photo);
   const isDetailed = variant === 'detailed';
   const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
+  const isOpeningRef = useRef(false);
 
-  // Initialize PhotoSwipe lightbox
+  // Cleanup on unmount
   useEffect(() => {
-    const dataSource = [{
-      src: photo.url,
-      width: photo.width || 1200,
-      height: photo.height || 800,
-    }];
-
-    lightboxRef.current = new PhotoSwipeLightbox({
-      dataSource,
-      pswpModule: () => import('photoswipe'),
-      showHideAnimationType: 'fade',
-    });
-
-    lightboxRef.current.init();
-
     return () => {
-      lightboxRef.current?.destroy();
-      lightboxRef.current = null;
+      if (lightboxRef.current) {
+        try {
+          lightboxRef.current.destroy();
+        } catch (error) {
+          // Ignore errors during cleanup
+        }
+        lightboxRef.current = null;
+      }
     };
-  }, [photo.url, photo.width, photo.height]);
+  }, []);
 
   const handleViewFullSize = (e: React.MouseEvent) => {
     e.stopPropagation();
-    lightboxRef.current?.loadAndOpen(0);
+    e.preventDefault();
+
+    // Prevent multiple simultaneous opens
+    if (isOpeningRef.current || lightboxRef.current) {
+      return;
+    }
+
+    try {
+      isOpeningRef.current = true;
+
+      // Create data source
+      const dataSource = [{
+        src: photo.url,
+        width: photo.width || 1200,
+        height: photo.height || 800,
+      }];
+
+      // Create and initialize lightbox lazily
+      const lightbox = new PhotoSwipeLightbox({
+        dataSource,
+        pswpModule: () => import('photoswipe'),
+        showHideAnimationType: 'fade',
+      });
+
+      // Clean up lightbox when it closes
+      lightbox.on('close', () => {
+        if (lightboxRef.current === lightbox) {
+          try {
+            lightboxRef.current.destroy();
+          } catch {
+            // Ignore cleanup errors
+          }
+          lightboxRef.current = null;
+          isOpeningRef.current = false;
+        }
+      });
+
+      lightbox.init();
+      lightboxRef.current = lightbox;
+
+      // Open the lightbox
+      lightbox.loadAndOpen(0);
+    } catch (error) {
+      console.error('Failed to open lightbox:', error);
+      isOpeningRef.current = false;
+      if (lightboxRef.current) {
+        try {
+          lightboxRef.current.destroy();
+        } catch {
+          // Ignore cleanup errors
+        }
+        lightboxRef.current = null;
+      }
+    }
   };
 
   return (
@@ -90,7 +136,7 @@ export default function PhotoListItem({
       <div
         className={clsx(
           'group/thumb relative shrink-0 overflow-hidden bg-background cursor-pointer',
-          variant === 'compact' ? 'size-12' : 'size-16',
+          variant === 'compact' ? 'size-12' : 'size-18',
         )}
         onClick={handleViewFullSize}
         title="View full size"
@@ -100,37 +146,48 @@ export default function PhotoListItem({
           alt={displayName}
           fill
           className="object-cover transition-transform group-hover/thumb:scale-105"
-          sizes="64px"
+          sizes="128px"
         />
         {/* Hover overlay with magnifying glass */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/thumb:opacity-100">
           <MagnifyingGlassPlusSVG className="size-5 text-white drop-shadow-md" />
         </div>
       </div>
-      <div className="min-w-0 flex-1 py-1 pr-2">
+      <div className="min-w-0 flex-1 py-1 pr-2 space-y-0.5">
         {/* Primary name (title or fallback) */}
-        <p className="line-clamp-2 text-sm font-medium leading-none" title={displayName}>
+        <p className="line-clamp-2 text-sm font-medium leading-tight" title={displayName}>
           {displayName}
         </p>
 
-        {isDetailed ? (
-          <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mt-0.5">
-            <p className="flex flex-wrap gap-1">
-              {photo.original_filename && (
-                <span className="max-w-40 overflow-hidden text-ellipsis whitespace-nowrap inline-block">{photo.original_filename}</span>
-              )}
-              {photo.created_at && formatDate(photo.created_at) && (
-                <span> • {formatDate(photo.created_at)}</span>
-              )}
-              <span className="grid-row-start-2">{photo.width} × {photo.height}</span>
-              {formatFileSize(photo.file_size) && (
-                <span>• {formatFileSize(photo.file_size)}</span>
-              )}
-              <span>ID: {photo.short_id || photo.id.slice(0, 8)}</span>
-            </p>
+        {isDetailed && (
+          <div className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/50">
+            {photo.original_filename && (
+              <div className="col-span-2 truncate">
+                <span className="text-foreground/60">Filename:</span>{' '}
+                <span title={photo.original_filename}>{photo.original_filename}</span>
+              </div>
+            )}
+            {photo.created_at && formatDate(photo.created_at) && (
+              <div className="truncate">
+                <span className="text-foreground/60">Date:</span>{' '}
+                {formatDate(photo.created_at)}
+              </div>
+            )}
+            <div className="truncate">
+              <span className="text-foreground/60">Dimensions:</span>{' '}
+              {photo.width} × {photo.height}
+            </div>
+            {formatFileSize(photo.file_size) && (
+              <div className="truncate">
+                <span className="text-foreground/60">Size:</span>{' '}
+                {formatFileSize(photo.file_size)}
+              </div>
+            )}
+            <div className="truncate">
+              <span className="text-foreground/60">ID:</span>{' '}
+              {photo.short_id || photo.id.slice(0, 8)}
+            </div>
           </div>
-        ) : (
-          <></>
         )}
       </div>
     </div>

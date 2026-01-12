@@ -1,6 +1,7 @@
 'use client';
 
-import { useManage } from '@/context/ManageContext';
+import { useAuth } from '@/hooks/useAuth';
+import { usePhotoCounts } from '@/hooks/usePhotoCounts';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -31,7 +32,10 @@ export default function ManageLayout({
   mobileActionBar,
 }: ManageLayoutProps) {
   const pathname = usePathname();
-  const { photoCount, albumCount } = useManage();
+  const { user } = useAuth();
+  const { data: counts } = usePhotoCounts(user?.id);
+  const photoCount = counts?.photoCount ?? 0;
+  const albumCount = counts?.albumCount ?? 0;
 
   const isPhotosActive = pathname === '/account/photos';
   const isAlbumsActive = pathname.startsWith('/account/albums');

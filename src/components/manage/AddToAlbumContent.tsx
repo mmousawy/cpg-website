@@ -46,6 +46,7 @@ export default function AddToAlbumContent({
         .select('*')
         .eq('user_id', user.id)
         .is('deleted_at', null)
+        .not('storage_path', 'like', 'events/%')
         .order('created_at', { ascending: false })
         .limit(100);
 

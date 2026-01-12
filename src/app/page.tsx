@@ -29,6 +29,7 @@ import Button from '@/components/shared/Button';
 import { socialLinks } from '@/config/socials';
 import type { AlbumWithPhotos } from '@/types/albums';
 
+import { routes } from '@/config/routes';
 import CameraWithFlash from 'public/camera-with-flash.png';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
@@ -65,7 +66,7 @@ export default async function Home() {
         cover_image_url,
         is_public,
         created_at,
-        profile:profiles(full_name, nickname, avatar_url),
+        profile:profiles(full_name, nickname, avatar_url, suspended_at),
         photos:album_photos!inner(
           id,
           photo_url,
@@ -76,34 +77,40 @@ export default async function Home() {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(6),
-    // Fetch organizers (admins)
+    // Fetch organizers (admins) - exclude suspended
     supabase
       .from('profiles')
       .select('id, full_name, nickname, avatar_url, bio')
       .eq('is_admin', true)
+      .is('suspended_at', null)
       .limit(5),
-    // Fetch recent members
+    // Fetch recent members - exclude suspended
     supabase
       .from('profiles')
       .select('id, full_name, nickname, avatar_url')
       .not('nickname', 'is', null)
+      .is('suspended_at', null)
       .order('created_at', { ascending: false })
       .limit(12),
-    // Fetch recent events
+    // Fetch recent events - get more to allow client-side sorting for upcoming/past mix
     supabase
       .from('events')
       .select('id, title, date, location, time, cover_image, image_url, slug')
       .order('date', { ascending: false })
-      .limit(3),
+      .limit(6),
   ]);
 
-  // Filter out albums with deleted photos
+  // Filter out albums with deleted photos and albums from suspended users
   const albumsWithPhotos = ((albums || []) as any[])
     .map((album) => ({
       ...album,
       photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
     }))
-    .filter((album) => album.photos.length > 0) as unknown as AlbumWithPhotos[];
+    .filter((album) => {
+      // Exclude albums from suspended users
+      const profile = album.profile as any;
+      return album.photos.length > 0 && profile && !profile.suspended_at;
+    }) as unknown as AlbumWithPhotos[];
 
   return (
     <>
@@ -151,7 +158,7 @@ export default async function Home() {
           <div className="mb-10">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Recent events</h3>
-              <ArrowLink href="/events">View all</ArrowLink>
+              <ArrowLink href={routes.events.url}>View all</ArrowLink>
             </div>
             <RecentEventsList events={events || []} />
           </div>
@@ -160,8 +167,8 @@ export default async function Home() {
           {albumsWithPhotos.length > 0 && (
             <div>
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Recent galleries</h3>
-                <ArrowLink href="/galleries">View all</ArrowLink>
+                <h3 className="text-lg font-semibold">Recent albums</h3>
+                <ArrowLink href={routes.gallery.url}>View all</ArrowLink>
               </div>
               <AlbumGrid albums={albumsWithPhotos} />
             </div>

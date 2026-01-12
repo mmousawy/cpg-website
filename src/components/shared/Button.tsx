@@ -122,6 +122,18 @@ export default function Button({
 
   if ('href' in props && props.href) {
     const { href, ...linkProps } = props as ButtonAsLink;
+    // Use regular <a> tag for external links or when target/download attributes are present
+    const isExternalLink = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:');
+    const hasExternalAttrs = 'target' in linkProps || 'download' in linkProps;
+    
+    if (isExternalLink || hasExternalAttrs) {
+      return (
+        <a href={href} className={classes} {...linkProps}>
+          {content}
+        </a>
+      );
+    }
+    
     return (
       <Link href={href} className={classes} {...linkProps}>
         {content}

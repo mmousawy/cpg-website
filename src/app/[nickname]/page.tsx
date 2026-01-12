@@ -70,10 +70,12 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const supabase = createPublicClient();
 
   // Fetch profile first (needed for albums query)
+  // Exclude suspended users
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id, full_name, nickname, avatar_url, bio, website, social_links, created_at')
     .eq('nickname', nickname)
+    .is('suspended_at', null)
     .single();
 
   if (profileError || !profile) {
@@ -115,12 +117,14 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     .filter((album) => album.photos.length > 0) as unknown as AlbumWithPhotos[];
 
   // Fetch user's public photos (ordered by user's custom sort order)
+  // Exclude event cover images (storage_path starts with 'events/')
   const { data: photos } = await supabase
     .from('photos')
     .select('*')
     .eq('user_id', typedProfile.id)
     .eq('is_public', true)
     .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%')
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(50);

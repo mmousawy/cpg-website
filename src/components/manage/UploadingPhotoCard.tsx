@@ -6,13 +6,14 @@ import Image from 'next/image';
 
 interface UploadingPhotoCardProps {
   upload: UploadingPhoto;
+  onDismiss?: (id: string) => void;
 }
 
 /**
  * Card showing an uploading photo with progress indicator
  */
-export default function UploadingPhotoCard({ upload }: UploadingPhotoCardProps) {
-  const { previewUrl, progress, status, error } = upload;
+export default function UploadingPhotoCard({ upload, onDismiss }: UploadingPhotoCardProps) {
+  const { id, previewUrl, progress, status, error } = upload;
 
   const isComplete = status === 'complete';
   const isError = status === 'error';
@@ -83,12 +84,20 @@ export default function UploadingPhotoCard({ upload }: UploadingPhotoCardProps) 
       {/* Error overlay */}
       {isError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-500/80 p-2">
-          <svg className="size-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="size-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <p className="mt-1 text-center text-xs font-medium text-white line-clamp-2">
             {error || 'Failed'}
           </p>
+          {onDismiss && (
+            <button
+              onClick={() => onDismiss(id)}
+              className="mt-2 rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/30"
+            >
+              Dismiss
+            </button>
+          )}
         </div>
       )}
 

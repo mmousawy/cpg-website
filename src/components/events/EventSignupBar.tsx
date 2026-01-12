@@ -11,6 +11,7 @@ import { useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
+import { formatEventDate, formatEventTime } from './EventCard';
 
 type EventSignupBarProps = {
   event: CPGEvent
@@ -67,27 +68,33 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
     : null;
 
   return (
-    <StickyActionBar>
-      <div className="flex-1">
-        {isLoading ? (
-          <div className="h-5 w-24 animate-pulse rounded bg-border-color" />
-        ) : hasRSVP ? (
-          <p className="text-sm font-medium text-primary">
+    <StickyActionBar constrainWidth>
+      <div className="flex flex-col gap-0.5">
+        <p className="text-sm text-foreground font-medium">
+          {formatEventDate(event.date || '', { includeYear: true })} at {formatEventTime(event.time || '')}
+        </p>
+
+        <div className="flex-1">
+          {isLoading ? (
+            <div className="h-5 w-24 animate-pulse rounded bg-border-color" />
+          ) : hasRSVP ? (
+            <p className="text-sm font-medium text-primary">
             ✓ You&apos;re going!
-          </p>
-        ) : spotsLeft !== null && spotsLeft > 0 ? (
-          <p className="text-sm text-foreground/70">
-            {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
-          </p>
-        ) : spotsLeft === 0 ? (
-          <p className="text-sm text-foreground/70">
+            </p>
+          ) : spotsLeft !== null && spotsLeft > 0 ? (
+            <p className="text-sm text-foreground/70">
+              {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
+            </p>
+          ) : spotsLeft === 0 ? (
+            <p className="text-sm text-foreground/70">
             Event is full
-          </p>
-        ) : (
-          <p className="text-sm text-foreground/70">
+            </p>
+          ) : (
+            <p className="text-sm text-foreground/70">
             Reserve your spot
-          </p>
-        )}
+            </p>
+          )}
+        </div>
       </div>
 
       <Button

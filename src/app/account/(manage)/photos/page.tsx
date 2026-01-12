@@ -1,6 +1,5 @@
 'use client';
 
-import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
@@ -19,12 +18,20 @@ import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
 import Select from '@/components/shared/Select';
-import { useManage } from '@/context/ManageContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
-import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import { usePhotos } from '@/hooks/usePhotos';
+import {
+  useDeletePhotos,
+  useUpdatePhoto,
+  useBulkUpdatePhotos,
+  useReorderPhotos,
+} from '@/hooks/usePhotoMutations';
+import { useQueryClient } from '@tanstack/react-query';
+import type { PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
+import { preloadImages } from '@/utils/preloadImages';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
@@ -35,7 +42,7 @@ import TrashSVG from 'public/icons/trash.svg';
 export default function PhotosPage() {
   const { user, profile } = useAuth();
   const supabase = createClient();
-  const { refreshCounts } = useManage();
+  const queryClient = useQueryClient();
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalContext = useContext(ModalContext);
@@ -43,12 +50,30 @@ export default function PhotosPage() {
   const photoEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
   const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [photoFilter, setPhotoFilter] = useState<'all' | 'public' | 'private'>('all');
+
+  // React Query hooks
+  const { data: photos = [], isLoading: photosLoading } = usePhotos(user?.id, photoFilter);
+  const deletePhotosMutation = useDeletePhotos(user?.id, photoFilter, profile?.nickname);
+  const updatePhotoMutation = useUpdatePhoto(user?.id, photoFilter, profile?.nickname);
+  const bulkUpdatePhotosMutation = useBulkUpdatePhotos(user?.id, photoFilter, profile?.nickname);
+  const reorderPhotosMutation = useReorderPhotos(user?.id, photoFilter);
+
+  // Upload hook with progress tracking
+  const { uploadingPhotos, uploadFiles, clearCompleted, dismissUpload } = usePhotoUpload();
+  const isUploading = uploadingPhotos.some(
+    (p) => p.status === 'uploading' || p.status === 'processing' || p.status === 'pending',
+  );
 
   // Sync dirty state with global unsaved changes context
-  const handleDirtyChange = useCallback((isDirty: boolean) => {
-    photoEditDirtyRef.current = isDirty;
-    setHasUnsavedChanges(isDirty);
-  }, [setHasUnsavedChanges]);
+  const handleDirtyChange = useCallback(
+    (isDirty: boolean) => {
+      photoEditDirtyRef.current = isDirty;
+      setHasUnsavedChanges(isDirty);
+    },
+    [setHasUnsavedChanges],
+  );
 
   // Clear unsaved changes on unmount
   useEffect(() => {
@@ -69,87 +94,6 @@ export default function PhotosPage() {
     }
     return confirmed;
   }, [confirm, setHasUnsavedChanges]);
-
-  // State
-  const [photos, setPhotos] = useState<PhotoWithAlbums[]>([]);
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
-  const [photosLoading, setPhotosLoading] = useState(true);
-  const [photoFilter, setPhotoFilter] = useState<'all' | 'public' | 'private'>('all');
-
-  // Upload hook with progress tracking
-  const { uploadingPhotos, uploadFiles, clearCompleted } = usePhotoUpload();
-  const isUploading = uploadingPhotos.some((p) => p.status === 'uploading' || p.status === 'processing' || p.status === 'pending');
-
-  useEffect(() => {
-    if (!user) return;
-    fetchPhotos(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, photoFilter]);
-
-  const fetchPhotos = async (showLoading = false) => {
-    if (!user) return;
-
-    if (showLoading || photos.length === 0) {
-      setPhotosLoading(true);
-    }
-    try {
-      let query = supabase
-        .from('photos')
-        .select(`
-          *,
-          album_photos!album_photos_photo_id_fkey(
-            album:albums(
-              id,
-              title,
-              slug,
-              cover_image_url,
-              deleted_at,
-              profile:profiles(nickname),
-              album_photos(count)
-            )
-          )
-        `)
-        .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .order('sort_order', { ascending: true, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (photoFilter === 'public') {
-        query = query.eq('is_public', true);
-      } else if (photoFilter === 'private') {
-        query = query.eq('is_public', false);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching photos:', error);
-      } else {
-        const photosWithAlbums = (data || []).map((photo) => {
-          const albums = (photo.album_photos || [])
-            .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } | null }) => ap.album)
-            .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] } => a !== null && !(a as any).deleted_at)
-            .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos: { count: number }[] }) => ({
-              id: a.id,
-              title: a.title,
-              slug: a.slug,
-              cover_image_url: a.cover_image_url,
-              profile_nickname: a.profile?.nickname || null,
-              photo_count: a.album_photos?.[0]?.count ?? 0,
-            }));
-
-          const { album_photos: _, ...photoData } = photo;
-          return { ...photoData, albums };
-        });
-
-        setPhotos(photosWithAlbums as PhotoWithAlbums[]);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-    setPhotosLoading(false);
-  };
 
   const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
     if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
@@ -179,67 +123,15 @@ export default function PhotosPage() {
   };
 
   const handleSavePhoto = async (photoId: string, data: PhotoFormData) => {
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('photos')
-      .update({
-        title: data.title,
-        description: data.description,
-        is_public: data.is_public,
-      })
-      .eq('id', photoId)
-      .eq('user_id', user.id)
-      .is('deleted_at', null);
-
-    if (error) {
-      throw new Error(error.message || 'Failed to save photo');
-    }
-
-    // Revalidate albums that contain this photo
-    const photo = photos.find((p) => p.id === photoId);
-    if (profile?.nickname && photo?.albums) {
-      const nickname = profile.nickname;
-      await Promise.all(
-        photo.albums.map((album) => revalidateAlbum(nickname, album.slug)),
-      );
-    }
-
-    await fetchPhotos();
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+    await updatePhotoMutation.mutateAsync({ photoId, data });
   };
 
   const handleBulkSavePhotos = async (photoIds: string[], data: BulkPhotoFormData) => {
-    if (!user) return;
-
-    const updates = photoIds.map((id) => ({
-      id,
-      ...(data.title && { title: data.title }),
-      ...(data.description && { description: data.description }),
-      ...(data.is_public !== null && { is_public: data.is_public }),
-    }));
-
-    const { error } = await supabase.rpc('batch_update_photos', {
-      photo_updates: updates,
-    });
-
-    if (error) {
-      throw new Error(error.message || 'Failed to save photos');
-    }
-
-    // Collect all unique albums from the affected photos and revalidate them
-    if (profile?.nickname) {
-      const nickname = profile.nickname;
-      const affectedPhotos = photos.filter((p) => photoIds.includes(p.id));
-      const albumSlugs = new Set<string>();
-      affectedPhotos.forEach((photo) => {
-        photo.albums?.forEach((album) => albumSlugs.add(album.slug));
-      });
-      await Promise.all(
-        Array.from(albumSlugs).map((slug) => revalidateAlbum(nickname, slug)),
-      );
-    }
-
-    await fetchPhotos();
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(false);
+    await bulkUpdatePhotosMutation.mutateAsync({ photoIds, data });
   };
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -248,47 +140,28 @@ export default function PhotosPage() {
     const photo = photos.find((p) => p.id === photoId);
     if (!photo) return;
 
+    const storagePaths: string[] = [];
     if (photo.storage_path) {
       const pathParts = photo.storage_path.split('/');
       const fileName = pathParts[pathParts.length - 1];
-      const filePath = `${user.id}/${fileName}`;
-      await supabase.storage.from('user-photos').remove([filePath]);
+      storagePaths.push(`${user.id}/${fileName}`);
     }
 
-    // Soft delete photo using RPC function
-    const { error } = await supabase.rpc('bulk_delete_photos', {
-      p_photo_ids: [photoId],
-    });
-
-    if (error) {
-      throw new Error(error.message || 'Failed to delete photo');
-    }
-
-    // Reset dirty state after successful deletion
     photoEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
 
-    // Revalidate albums that contained this photo
-    if (profile?.nickname && photo.albums) {
-      const nickname = profile.nickname;
-      await Promise.all(
-        photo.albums.map((album) => revalidateAlbum(nickname, album.slug)),
-      );
-    }
+    await deletePhotosMutation.mutateAsync({ photoIds: [photoId], storagePaths });
 
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
       newSet.delete(photoId);
       return newSet;
     });
-    await fetchPhotos();
-    refreshCounts();
   };
 
   const handleBulkDeletePhotos = async (photoIds: string[]) => {
     if (!user || photoIds.length === 0) return;
 
-    // First, delete storage files in parallel
     const photosToDelete = photos.filter((p) => photoIds.includes(p.id));
     const storagePaths = photosToDelete
       .filter((p) => p.storage_path)
@@ -298,38 +171,12 @@ export default function PhotosPage() {
         return `${user.id}/${fileName}`;
       });
 
-    if (storagePaths.length > 0) {
-      await supabase.storage.from('user-photos').remove(storagePaths);
-    }
-
-    // Then delete photo records using bulk RPC
-    const { error } = await supabase.rpc('bulk_delete_photos', {
-      p_photo_ids: photoIds,
-    });
-
-    if (error) {
-      throw new Error(error.message || 'Failed to delete photos');
-    }
-
-    // Reset dirty state after successful deletion
     photoEditDirtyRef.current = false;
     setHasUnsavedChanges(false);
 
-    // Revalidate all albums that contained the deleted photos
-    if (profile?.nickname) {
-      const nickname = profile.nickname;
-      const albumSlugs = new Set<string>();
-      photosToDelete.forEach((photo) => {
-        photo.albums?.forEach((album) => albumSlugs.add(album.slug));
-      });
-      await Promise.all(
-        Array.from(albumSlugs).map((slug) => revalidateAlbum(nickname, slug)),
-      );
-    }
+    await deletePhotosMutation.mutateAsync({ photoIds, storagePaths });
 
     setSelectedPhotoIds(new Set());
-    await fetchPhotos();
-    refreshCounts();
   };
 
   const handleAddToAlbum = (photoIds: string[]) => {
@@ -341,38 +188,39 @@ export default function PhotosPage() {
       <AddPhotosToAlbumModal
         photos={photosToAdd}
         onClose={() => modalContext.setIsOpen(false)}
-        onSuccess={() => fetchPhotos()}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['photos', user?.id, photoFilter] });
+        }}
       />,
     );
     modalContext.setIsOpen(true);
   };
 
-  const handleReorderPhotos = async (newPhotos: Photo[]) => {
-    setPhotos(newPhotos);
-
-    const updates = newPhotos.map((photo, index) => ({
-      id: photo.id,
-      sort_order: index,
-    }));
-
-    await supabase.rpc('batch_update_photos', {
-      photo_updates: updates,
-    });
+  const handleReorderPhotos = async (newPhotos: PhotoWithAlbums[]) => {
+    await reorderPhotosMutation.mutateAsync(newPhotos);
   };
 
   const handleUpload = async (files: File[]) => {
     if (!files || files.length === 0 || !user) return;
 
     try {
-      await uploadFiles(files, user.id, supabase, {
+      const uploadedPhotos = await uploadFiles(files, user.id, supabase, {
         isPublic: false,
         sortOrderStart: photos.length,
       });
 
-      // Clear completed uploads and refresh the list
+      // Preload images before refreshing the list to prevent layout shift
+      if (uploadedPhotos.length > 0) {
+        const photoUrls = uploadedPhotos.map((p) => p.url);
+        await preloadImages(photoUrls);
+      }
+
+      // Refresh the list and wait for it to refetch
+      await queryClient.refetchQueries({ queryKey: ['photos', user.id, photoFilter] });
+      queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
+      
+      // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
-      await fetchPhotos();
-      refreshCounts();
     } catch (err: any) {
       console.error('Upload error:', err);
       alert(err.message || 'Failed to upload photos');
@@ -519,7 +367,9 @@ export default function PhotosPage() {
               <p className="text-sm text-foreground/50 mb-4">
                 Drag and drop photos here, or use the &quot;Upload&quot; button to upload photos
               </p>
-              <Button onClick={() => fileInputRef.current?.click()} icon={<PlusMiniSVG className="size-5 -ml-0.5" />}>Upload</Button>
+              <Button onClick={() => fileInputRef.current?.click()} icon={<PlusMiniSVG className="size-5 -ml-0.5" />}>
+                Upload
+              </Button>
             </div>
           ) : (
             <PhotoGrid
@@ -531,11 +381,11 @@ export default function PhotosPage() {
               onSelectMultiple={handleSelectMultiple}
               onReorder={handleReorderPhotos}
               sortable
-              trailingContent={
+              leadingContent={
                 uploadingPhotos.length > 0 ? (
                   <>
                     {uploadingPhotos.map((upload) => (
-                      <UploadingPhotoCard key={upload.id} upload={upload} />
+                      <UploadingPhotoCard key={upload.id} upload={upload} onDismiss={dismissUpload} />
                     ))}
                   </>
                 ) : undefined
@@ -546,10 +396,7 @@ export default function PhotosPage() {
       </ManageLayout>
 
       {/* Mobile Edit Sheet */}
-      <BottomSheet
-        isOpen={isMobileEditSheetOpen}
-        onClose={handleMobileEditClose}
-      >
+      <BottomSheet isOpen={isMobileEditSheetOpen} onClose={handleMobileEditClose}>
         <PhotoEditSidebar
           selectedPhotos={selectedPhotos}
           onSave={handleSavePhoto}

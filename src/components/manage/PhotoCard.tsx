@@ -3,16 +3,17 @@
 import type { Photo } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
+import { memo } from 'react';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 
 interface PhotoCardProps {
-  photo: Photo;
+  photo: Photo & { isExiting?: boolean };
   isSelected: boolean;
   isHovered?: boolean;
   isDragging?: boolean;
 }
 
-export default function PhotoCard({
+function PhotoCard({
   photo,
   isSelected,
   isHovered = false,
@@ -23,13 +24,14 @@ export default function PhotoCard({
   return (
     <div
       className={clsx(
-        'cursor-pointer active:cursor-grabbing overflow-hidden transition-all',
+        'cursor-pointer active:cursor-grabbing overflow-hidden transition-all duration-300',
         isSelected
           ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
           : isHovered
             ? 'ring-2 ring-primary/50 ring-offset-0 [&>div>div]:opacity-80'
             : 'hover:ring-2 hover:ring-primary/50',
         isDragging && 'opacity-50',
+        photo.isExiting && 'opacity-0 scale-95',
       )}
     >
       {/* Image */}
@@ -65,3 +67,17 @@ export default function PhotoCard({
     </div>
   );
 }
+
+export default memo(PhotoCard, (prevProps, nextProps) => {
+  // Only re-render if photo data, selection, hover, dragging, or exit state changes
+  return (
+    prevProps.photo.id === nextProps.photo.id &&
+    prevProps.photo.url === nextProps.photo.url &&
+    prevProps.photo.title === nextProps.photo.title &&
+    prevProps.photo.is_public === nextProps.photo.is_public &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isHovered === nextProps.isHovered &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.photo.isExiting === nextProps.photo.isExiting
+  );
+});

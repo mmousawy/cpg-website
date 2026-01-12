@@ -2,11 +2,12 @@ import { CPGEvent } from "@/types/events";
 import dayjs from "dayjs";
 
 import {
-  Button,
+  Button as EmailButton,
   Section,
   Text,
 } from "@react-email/components";
 
+import Button from "@/components/shared/Button";
 import AddSVG from "public/icons/add.svg";
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
@@ -45,29 +46,29 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
 
         <div className="flex flex-col items-start gap-2">
           {/* Google */}
-          <Button
+          <EmailButton
             href={calendarLinks.google}
             className={emailButtonStyle}
           >
             Google Calendar
-          </Button>
+          </EmailButton>
 
           {/* Outlook */}
-          <Button
+          <EmailButton
             href={calendarLinks.outlook}
             className={emailButtonStyle}
           >
             Outlook Calendar
-          </Button>
+          </EmailButton>
 
           {/* Apple */}
-          <Button
+          <EmailButton
             href={calendarLinks.apple}
             download={`${event.title}.ics`}
             className={emailButtonStyle}
           >
             Apple Calendar
-          </Button>
+          </EmailButton>
         </div>
       </Section>
     );
@@ -75,40 +76,43 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
 
   return (
     <div className="flex flex-col gap-2 max-sm:gap-4">
-      <span>Add this event to your calendar:</span>
+      <span className="text-sm text-foreground font-medium">Add this event to your calendar:</span>
 
       <div className="flex items-start gap-2 max-sm:flex-col max-sm:gap-4">
         {/* Google */}
-        <a
+        <Button
           href={calendarLinks.google}
-          target='_blank'
-          rel='noopener noreferrer'
-          className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
+          variant="secondary"
+          size="sm"
+          icon={<AddSVG className="shrink-0" />}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          <AddSVG className="shrink-0" />
           Google Calendar
-        </a>
+        </Button>
 
         {/* Outlook */}
-        <a
+        <Button
           href={calendarLinks.outlook}
-          target='_blank'
-          rel='noopener noreferrer'
-          className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
+          variant="secondary"
+          size="sm"
+          icon={<AddSVG className="shrink-0" />}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          <AddSVG className="shrink-0" />
           Outlook Calendar
-        </a>
+        </Button>
 
         {/* Apple */}
-        <a
+        <Button
           href={calendarLinks.apple}
+          variant="secondary"
+          size="sm"
+          icon={<AddSVG className="shrink-0" />}
           download={`${event.title}.ics`}
-          className={`${buttonStyle} font-[family-name:var(--font-geist-mono)]`}
         >
-          <AddSVG className="shrink-0" />
           Apple Calendar
-        </a>
+        </Button>
       </div>
     </div>
   );

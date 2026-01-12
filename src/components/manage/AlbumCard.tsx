@@ -3,6 +3,7 @@
 import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
 import Image from 'next/image';
+import { memo } from 'react';
 import FolderSVG from 'public/icons/folder.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 
@@ -12,7 +13,7 @@ interface AlbumCardProps {
   isHovered?: boolean;
 }
 
-export default function AlbumCard({
+function AlbumCard({
   album,
   isSelected = false,
   isHovered = false,
@@ -70,3 +71,16 @@ export default function AlbumCard({
     </div>
   );
 }
+
+export default memo(AlbumCard, (prevProps, nextProps) => {
+  // Only re-render if album data, selection, or hover state changes
+  return (
+    prevProps.album.id === nextProps.album.id &&
+    prevProps.album.title === nextProps.album.title &&
+    prevProps.album.cover_image_url === nextProps.album.cover_image_url &&
+    prevProps.album.is_public === nextProps.album.is_public &&
+    prevProps.album.photos?.length === nextProps.album.photos?.length &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isHovered === nextProps.isHovered
+  );
+});

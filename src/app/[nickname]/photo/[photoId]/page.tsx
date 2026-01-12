@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     .eq('user_id', profile.id)
     .eq('is_public', true)
     .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%')
     .single();
 
   if (!photo) {
@@ -73,6 +74,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
   }
 
   // Get photo (must be public for standalone view)
+  // Exclude event cover images
   const { data: photo, error: photoError } = await supabase
     .from('photos')
     .select('*')
@@ -80,6 +82,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
     .eq('user_id', profile.id)
     .eq('is_public', true)
     .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%')
     .single();
 
   if (photoError || !photo) {

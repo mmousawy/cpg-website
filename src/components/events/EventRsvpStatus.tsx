@@ -7,8 +7,8 @@ import SignupForm from '../auth/SignupForm';
 import Button from '../shared/Button';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { CPGEvent } from '@/types/events';
 import { useAuth } from '@/hooks/useAuth';
+import { CPGEvent } from '@/types/events';
 import { createClient } from '@/utils/supabase/client';
 
 import CheckSVG from 'public/icons/check.svg';
@@ -94,7 +94,7 @@ export default function EventRsvpStatus({ className, event }: Props) {
     <Button
       size="sm"
       onClick={openModal}
-      className={clsx('rounded-full', className)}
+      className={clsx('rounded-full inline-flex self-start', className)}
       variant="primary"
     >
       Join event
