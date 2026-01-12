@@ -256,6 +256,45 @@ export type Database = {
           },
         ]
       }
+      event_announcements: {
+        Row: {
+          announced_at: string
+          announced_by: string | null
+          event_id: number
+          id: string
+          recipient_count: number
+        }
+        Insert: {
+          announced_at?: string
+          announced_by?: string | null
+          event_id: number
+          id?: string
+          recipient_count: number
+        }
+        Update: {
+          announced_at?: string
+          announced_by?: string | null
+          event_id?: number
+          id?: string
+          recipient_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_announcements_announced_by_fkey"
+            columns: ["announced_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_announcements_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           cover_image: string | null
@@ -471,6 +510,7 @@ export type Database = {
           id: string
           is_admin: boolean | null
           last_logged_in: string | null
+          newsletter_opt_in: boolean
           nickname: string | null
           social_links: Json | null
           suspended_at: string | null
@@ -489,6 +529,7 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           last_logged_in?: string | null
+          newsletter_opt_in?: boolean
           nickname?: string | null
           social_links?: Json | null
           suspended_at?: string | null
@@ -507,6 +548,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           last_logged_in?: string | null
+          newsletter_opt_in?: boolean
           nickname?: string | null
           social_links?: Json | null
           suspended_at?: string | null
@@ -519,7 +561,43 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      album_photos_active: {
+        Row: {
+          album_id: string | null
+          created_at: string | null
+          description: string | null
+          height: number | null
+          id: string | null
+          photo_id: string | null
+          photo_url: string | null
+          sort_order: number | null
+          title: string | null
+          width: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_photos_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_photos_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_album_photos_photo_url"
+            columns: ["photo_url"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["url"]
+          },
+        ]
+      }
     }
     Functions: {
       add_comment: {
@@ -548,6 +626,7 @@ export type Database = {
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
       generate_short_id: { Args: { size?: number }; Returns: string }
+      get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
       restore_album: { Args: { p_album_id: string }; Returns: boolean }
       restore_comment: { Args: { p_comment_id: string }; Returns: boolean }
       restore_photo: { Args: { p_photo_id: string }; Returns: boolean }
