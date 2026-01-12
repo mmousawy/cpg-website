@@ -14,6 +14,10 @@ interface PhotoGridProps {
   onReorder?: (photos: Photo[]) => void;
   sortable?: boolean;
   className?: string;
+  /** Always show the mobile bottom spacer (for pages with persistent bottom UI) */
+  alwaysShowMobileSpacer?: boolean;
+  /** Content to render after photos (e.g., uploading previews) */
+  trailingContent?: React.ReactNode;
 }
 
 export default function PhotoGrid({
@@ -26,6 +30,8 @@ export default function PhotoGrid({
   onReorder,
   sortable = false,
   className,
+  alwaysShowMobileSpacer = false,
+  trailingContent,
 }: PhotoGridProps) {
   return (
     <SelectableGrid
@@ -50,6 +56,8 @@ export default function PhotoGrid({
       sortable={sortable}
       emptyMessage="No photos yet. Upload some photos to get started!"
       className={className}
+      alwaysShowMobileSpacer={alwaysShowMobileSpacer}
+      trailingContent={trailingContent}
       renderItem={(photo, isSelected, isDragging, isHovered) => (
         <PhotoCard
           photo={photo}

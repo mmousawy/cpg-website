@@ -11,6 +11,7 @@ export { default as PhotoEditSidebar, type BulkPhotoFormData, type PhotoFormData
 export { default as PhotoGrid } from './PhotoGrid';
 export { default as PhotoListItem, getPhotoDisplayName, type PhotoListItemVariant } from './PhotoListItem';
 export { default as UploadDropzone } from './UploadDropzone';
+export { default as UploadingPhotoCard } from './UploadingPhotoCard';
 
 // Album management components
 export { default as AlbumCard } from './AlbumCard';

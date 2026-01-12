@@ -13,6 +13,9 @@ export interface UploadPhotoOptions {
   title?: string; // Optional caption
   description?: string; // Optional description
   bucketName?: string; // Default: 'user-photos'
+  pathPrefix?: string; // Custom path prefix (default: userId/)
+  sortOrder?: number; // Sort order for the photo in the library
+  albumSortOrder?: number; // Starting sort order for album_photos inserts
 }
 
 /**
@@ -35,7 +38,13 @@ export async function uploadPhoto(
     title = null,
     description = null,
     bucketName = 'user-photos',
+    pathPrefix,
+    sortOrder = null,
+    albumSortOrder = 0,
   } = options;
+
+  // Use custom path prefix or default to userId/
+  const prefix = pathPrefix ?? `${userId}/`;
 
   // 1. Validate file type
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -53,7 +62,7 @@ export async function uploadPhoto(
   const fileExt = file.name.split('.').pop();
   const randomId = crypto.randomUUID();
   const fileName = `${randomId}.${fileExt}`;
-  const filePath = `${userId}/${fileName}`;
+  const filePath = `${prefix}${fileName}`;
 
   // 4. Upload to Supabase Storage
   const { error: uploadError } = await supabase.storage
@@ -125,6 +134,7 @@ export async function uploadPhoto(
       blurhash,
       short_id: shortId,
       original_filename: file.name,
+      sort_order: sortOrder,
     })
     .select()
     .single();
@@ -141,7 +151,7 @@ export async function uploadPhoto(
       photo_url: publicUrl,
       width: img.width,
       height: img.height,
-      sort_order: index,
+      sort_order: albumSortOrder + index,
     }));
 
     const { error: albumPhotosError } = await supabase

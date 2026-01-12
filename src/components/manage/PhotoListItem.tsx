@@ -3,6 +3,10 @@
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import 'photoswipe/style.css';
+import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
+import { useEffect, useRef } from 'react';
 
 /** Get display name for a photo: title -> original_filename -> short id */
 export function getPhotoDisplayName(photo: Photo | PhotoWithAlbums): string {
@@ -43,6 +47,7 @@ interface PhotoListItemProps {
  * Reusable photo list item component.
  * - Compact: Thumbnail, name, resolution
  * - Detailed: Thumbnail, name, filename, id, resolution, file size, upload date
+ * Includes hover state with magnifying glass to view full size in PhotoSwipe.
  */
 export default function PhotoListItem({
   photo,
@@ -51,19 +56,56 @@ export default function PhotoListItem({
 }: PhotoListItemProps) {
   const displayName = getPhotoDisplayName(photo);
   const isDetailed = variant === 'detailed';
+  const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
+
+  // Initialize PhotoSwipe lightbox
+  useEffect(() => {
+    const dataSource = [{
+      src: photo.url,
+      width: photo.width || 1200,
+      height: photo.height || 800,
+    }];
+
+    lightboxRef.current = new PhotoSwipeLightbox({
+      dataSource,
+      pswpModule: () => import('photoswipe'),
+      showHideAnimationType: 'fade',
+    });
+
+    lightboxRef.current.init();
+
+    return () => {
+      lightboxRef.current?.destroy();
+      lightboxRef.current = null;
+    };
+  }, [photo.url, photo.width, photo.height]);
+
+  const handleViewFullSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    lightboxRef.current?.loadAndOpen(0);
+  };
 
   return (
-    <div className={`flex items-center gap-2 border border-border-color bg-background-medium p-0 ${className}`}>
-      <div className={clsx("relative shrink-0 overflow-hidden bg-background",
-        variant === 'compact' ? 'size-12' : 'size-16',
-      )}>
+    <div className={`flex items-start gap-2 border border-border-color bg-background-medium p-0 ${className}`}>
+      <div
+        className={clsx(
+          'group/thumb relative shrink-0 overflow-hidden bg-background cursor-pointer',
+          variant === 'compact' ? 'size-12' : 'size-16',
+        )}
+        onClick={handleViewFullSize}
+        title="View full size"
+      >
         <Image
           src={photo.url}
           alt={displayName}
           fill
-          className="object-cover"
+          className="object-cover transition-transform group-hover/thumb:scale-105"
           sizes="64px"
         />
+        {/* Hover overlay with magnifying glass */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/thumb:opacity-100">
+          <MagnifyingGlassPlusSVG className="size-5 text-white drop-shadow-md" />
+        </div>
       </div>
       <div className="min-w-0 flex-1 py-1 pr-2">
         {/* Primary name (title or fallback) */}
@@ -73,23 +115,19 @@ export default function PhotoListItem({
 
         {isDetailed ? (
           <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mt-0.5">
-            <div className="flex flex-col">
-              {photo.title && photo.original_filename && (
-                <p className="flex gap-1">
-                  <span>{photo.original_filename}</span>
-                  {photo.created_at && formatDate(photo.created_at) && (
-                    <span>• {formatDate(photo.created_at)}</span>
-                  )}
-                </p>
+            <p className="flex flex-wrap gap-1">
+              {photo.original_filename && (
+                <span className="max-w-40 overflow-hidden text-ellipsis whitespace-nowrap inline-block">{photo.original_filename}</span>
               )}
-              <p className="flex gap-1">
-                <span className="grid-row-start-2">{photo.width} × {photo.height}</span>
-                {formatFileSize(photo.file_size) && (
-                  <span>• {formatFileSize(photo.file_size)}</span>
-                )}
-                <span>ID: {photo.short_id || photo.id.slice(0, 8)}</span>
-              </p>
-            </div>
+              {photo.created_at && formatDate(photo.created_at) && (
+                <span> • {formatDate(photo.created_at)}</span>
+              )}
+              <span className="grid-row-start-2">{photo.width} × {photo.height}</span>
+              {formatFileSize(photo.file_size) && (
+                <span>• {formatFileSize(photo.file_size)}</span>
+              )}
+              <span>ID: {photo.short_id || photo.id.slice(0, 8)}</span>
+            </p>
           </div>
         ) : (
           <></>

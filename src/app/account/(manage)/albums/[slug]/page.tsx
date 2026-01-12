@@ -4,15 +4,16 @@ import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
-    AddToAlbumContent,
-    AlbumEditSidebar,
-    ManageLayout,
-    MobileActionBar,
-    PhotoEditSidebar,
-    PhotoGrid,
-    PhotoListItem,
-    type AlbumFormData,
-    type PhotoFormData,
+  AddToAlbumContent,
+  AlbumEditSidebar,
+  ManageLayout,
+  MobileActionBar,
+  PhotoEditSidebar,
+  PhotoGrid,
+  PhotoListItem,
+  UploadingPhotoCard,
+  type AlbumFormData,
+  type PhotoFormData,
 } from '@/components/manage';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
@@ -21,10 +22,10 @@ import PageLoading from '@/components/shared/PageLoading';
 import { useManage } from '@/context/ManageContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
+import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import type { Album } from '@/types/albums';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
-import exifr from 'exifr';
 import { useParams, useRouter } from 'next/navigation';
 import FolderSVG from 'public/icons/folder.svg';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -89,7 +90,10 @@ export default function AlbumDetailPage() {
   const [photos, setPhotos] = useState<PhotoWithAlbums[]>([]);
   const [photosLoading, setPhotosLoading] = useState(true);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
-  const [isUploading, setIsUploading] = useState(false);
+
+  // Upload hook with progress tracking
+  const { uploadingPhotos, uploadFiles, clearCompleted } = usePhotoUpload();
+  const isUploading = uploadingPhotos.some((p) => p.status === 'uploading' || p.status === 'processing' || p.status === 'pending');
 
   useEffect(() => {
     if (!user || !slug) return;
@@ -390,72 +394,17 @@ export default function AlbumDetailPage() {
     const files = e.target.files;
     if (!files || files.length === 0 || !user || !album) return;
 
-    setIsUploading(true);
-
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) throw new Error(`Invalid file type: ${file.name}`);
-        if (file.size > 5 * 1024 * 1024) throw new Error(`File too large: ${file.name}`);
-
-        const fileExt = file.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `${user.id}/${album.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('user-albums')
-          .upload(filePath, file, { cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(`Upload failed: ${file.name}`);
-
-        const { data: { publicUrl } } = supabase.storage.from('user-albums').getPublicUrl(filePath);
-
-        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const image = new window.Image();
-          image.onload = () => resolve(image);
-          image.onerror = reject;
-          image.src = URL.createObjectURL(file);
-        });
-
-        let exifData = null;
-        try {
-          exifData = await exifr.parse(file, {
-            pick: ['Make', 'Model', 'DateTimeOriginal', 'ExposureTime', 'FNumber', 'ISO', 'FocalLength', 'LensModel', 'GPSLatitude', 'GPSLongitude'],
-          });
-        } catch { /* ignore */ }
-
-        const { data: photoRecord, error: photoError } = await supabase
-          .from('photos')
-          .insert({
-            storage_path: filePath,
-            url: publicUrl,
-            width: img.width,
-            height: img.height,
-            file_size: file.size,
-            mime_type: file.type,
-            exif_data: exifData,
-            user_id: user.id,
-            is_public: false,
-          })
-          .select()
-          .single();
-
-        if (photoError || !photoRecord) throw new Error(`Failed to save photo: ${file.name}`);
-
-        await supabase.from('album_photos').insert({
-          album_id: album.id,
-          photo_id: photoRecord.id,
-          photo_url: publicUrl,
-          width: img.width,
-          height: img.height,
-          sort_order: photos.length,
-        });
-
-        return photoRecord;
+      await uploadFiles(Array.from(files), user.id, supabase, {
+        albumIds: [album.id],
+        isPublic: false,
+        bucketName: 'user-albums',
+        pathPrefix: `${user.id}/${album.id}/`,
+        sortOrderStart: photos.length,
       });
 
-      await Promise.all(uploadPromises);
-
+      // Clear completed uploads and refresh the list
+      clearCompleted();
       // Cover is automatically updated by database trigger on album_photos insert
       await fetchPhotos(album.id);
       refreshCounts();
@@ -464,7 +413,6 @@ export default function AlbumDetailPage() {
       alert(err.message || 'Failed to upload photos');
     }
 
-    setIsUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -620,7 +568,7 @@ export default function AlbumDetailPage() {
         >
           {photosLoading ? (
             <PageLoading message="Loading photos..." />
-          ) : photos.length === 0 ? (
+          ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
             <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
               <FolderSVG className="size-10 mb-2 inline-block" />
               <p className="mb-2 text-lg opacity-70">No photos in this album</p>
@@ -638,6 +586,16 @@ export default function AlbumDetailPage() {
               onClearSelection={handleClearSelection}
               onSelectMultiple={handleSelectMultiple}
               sortable
+              alwaysShowMobileSpacer
+              trailingContent={
+                uploadingPhotos.length > 0 ? (
+                  <>
+                    {uploadingPhotos.map((upload) => (
+                      <UploadingPhotoCard key={upload.id} upload={upload} />
+                    ))}
+                  </>
+                ) : undefined
+              }
             />
           )}
         </DropZone>

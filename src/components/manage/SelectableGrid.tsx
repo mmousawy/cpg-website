@@ -46,6 +46,10 @@ interface SelectableGridProps<T> {
   className?: string;
   /** Enable drag-to-reorder */
   sortable?: boolean;
+  /** Always show the mobile bottom spacer (for pages with persistent bottom UI) */
+  alwaysShowMobileSpacer?: boolean;
+  /** Content to render after items (e.g., uploading previews) */
+  trailingContent?: React.ReactNode;
 }
 
 interface SortableItemProps<T> {
@@ -151,7 +155,8 @@ function SortableItem<T>({
     opacity: isBeingDragged ? 0.5 : 1,
   };
 
-  const showCheckbox = isSelected || isHovered;
+  // On mobile, always show checkbox; on desktop, show on hover or when selected
+  const showCheckbox = isMobile || isSelected || isHovered;
 
   // Long-press handlers for mobile (touch events only fire on touch devices)
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -259,17 +264,20 @@ function SortableItem<T>({
       {/* Selection checkbox */}
       <div
         data-no-select
-        className={clsx('absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all cursor-pointer',
-          showCheckbox
+        className={clsx(
+          'absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all cursor-pointer',
+          isSelected
             ? 'border-primary bg-primary text-white opacity-100 shadow-[0_0_0_2px_#ffffff8a]'
-            : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a]',
+            : showCheckbox
+              ? 'border-white/80 bg-white/60 opacity-100 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a]'
+              : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a]',
         )}
         onClick={(e) => {
           e.stopPropagation();
           onCheckboxClick(id);
         }}
       >
-        {showCheckbox && (
+        {isSelected && (
           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -294,6 +302,8 @@ export default function SelectableGrid<T>({
   emptyMessage = 'No items yet.',
   className = '',
   sortable = false,
+  alwaysShowMobileSpacer = false,
+  trailingContent,
 }: SelectableGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Track the anchor item for shift-click range selection
@@ -710,8 +720,11 @@ export default function SelectableGrid<T>({
           />
         )}
 
-        {/* Spacer for mobile action bar when items are selected */}
-        {selectedIds.size > 0 && (
+        {/* Trailing content (e.g., uploading previews) */}
+        {trailingContent}
+
+        {/* Spacer for mobile action bar when items are selected or always if specified */}
+        {(selectedIds.size > 0 || alwaysShowMobileSpacer) && (
           <div className="col-span-full h-12 md:hidden" aria-hidden="true" />
         )}
       </div>

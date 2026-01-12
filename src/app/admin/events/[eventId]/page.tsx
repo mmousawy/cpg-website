@@ -287,6 +287,7 @@ export default function AdminEventFormPage() {
             mime_type: coverImageFile.type,
             exif_data: exifData,
             user_id: user?.id,
+            original_filename: coverImageFile.name,
           });
 
         if (metadataError) {

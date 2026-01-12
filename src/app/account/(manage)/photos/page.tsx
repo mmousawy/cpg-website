@@ -4,12 +4,13 @@ import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
-    AddPhotosToAlbumModal,
-    PhotoEditSidebar,
-    PhotoGrid,
-    PhotoListItem,
-    type BulkPhotoFormData,
-    type PhotoFormData,
+  AddPhotosToAlbumModal,
+  PhotoEditSidebar,
+  PhotoGrid,
+  PhotoListItem,
+  UploadingPhotoCard,
+  type BulkPhotoFormData,
+  type PhotoFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
@@ -21,9 +22,9 @@ import Select from '@/components/shared/Select';
 import { useManage } from '@/context/ManageContext';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
+import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { createClient } from '@/utils/supabase/client';
-import exifr from 'exifr';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
@@ -74,7 +75,10 @@ export default function PhotosPage() {
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [photosLoading, setPhotosLoading] = useState(true);
   const [photoFilter, setPhotoFilter] = useState<'all' | 'public' | 'private'>('all');
-  const [isUploading, setIsUploading] = useState(false);
+
+  // Upload hook with progress tracking
+  const { uploadingPhotos, uploadFiles, clearCompleted } = usePhotoUpload();
+  const isUploading = uploadingPhotos.some((p) => p.status === 'uploading' || p.status === 'processing' || p.status === 'pending');
 
   useEffect(() => {
     if (!user) return;
@@ -359,57 +363,14 @@ export default function PhotosPage() {
   const handleUpload = async (files: File[]) => {
     if (!files || files.length === 0 || !user) return;
 
-    setIsUploading(true);
-
     try {
-      const uploadPromises = files.map(async (file) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) throw new Error(`Invalid file type: ${file.name}`);
-        if (file.size > 5 * 1024 * 1024) throw new Error(`File too large: ${file.name}`);
-
-        const fileExt = file.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('user-photos')
-          .upload(filePath, file, { cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(`Upload failed: ${file.name}`);
-
-        const { data: { publicUrl } } = supabase.storage.from('user-photos').getPublicUrl(filePath);
-
-        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const image = new window.Image();
-          image.onload = () => resolve(image);
-          image.onerror = reject;
-          image.src = URL.createObjectURL(file);
-        });
-
-        let exifData = null;
-        try {
-          exifData = await exifr.parse(file, {
-            pick: ['Make', 'Model', 'DateTimeOriginal', 'ExposureTime', 'FNumber', 'ISO', 'FocalLength', 'LensModel', 'GPSLatitude', 'GPSLongitude'],
-          });
-        } catch { /* ignore */ }
-
-        const { error: insertError } = await supabase.from('photos').insert({
-          storage_path: filePath,
-          url: publicUrl,
-          width: img.width,
-          height: img.height,
-          file_size: file.size,
-          mime_type: file.type,
-          exif_data: exifData,
-          user_id: user.id,
-          is_public: false,
-          sort_order: photos.length,
-        });
-
-        if (insertError) throw new Error(`Failed to save photo: ${file.name}`);
+      await uploadFiles(files, user.id, supabase, {
+        isPublic: false,
+        sortOrderStart: photos.length,
       });
 
-      await Promise.all(uploadPromises);
+      // Clear completed uploads and refresh the list
+      clearCompleted();
       await fetchPhotos();
       refreshCounts();
     } catch (err: any) {
@@ -417,7 +378,6 @@ export default function PhotosPage() {
       alert(err.message || 'Failed to upload photos');
     }
 
-    setIsUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -552,7 +512,7 @@ export default function PhotosPage() {
         >
           {photosLoading ? (
             <PageLoading message="Loading photos..." />
-          ) : photos.length === 0 ? (
+          ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
             <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
               <ImageSVG className="size-10 mb-2 inline-block" />
               <p className="mb-2 text-lg opacity-70">You don&apos;t have any photos yet</p>
@@ -571,6 +531,15 @@ export default function PhotosPage() {
               onSelectMultiple={handleSelectMultiple}
               onReorder={handleReorderPhotos}
               sortable
+              trailingContent={
+                uploadingPhotos.length > 0 ? (
+                  <>
+                    {uploadingPhotos.map((upload) => (
+                      <UploadingPhotoCard key={upload.id} upload={upload} />
+                    ))}
+                  </>
+                ) : undefined
+              }
             />
           )}
         </DropZone>
