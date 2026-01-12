@@ -32,6 +32,12 @@ export function useRemoveFromAlbum(albumId: string | undefined, nickname: string
         throw new Error(error.message || 'Failed to remove photos from album');
       }
 
+      // Invalidate albums query to update album cards
+      const userId = queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId)?.user_id;
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
+      }
+
       // Revalidate album page
       if (nickname) {
         const album = queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId);
@@ -188,6 +194,12 @@ export function useDeleteAlbumPhoto(albumId: string | undefined, nickname: strin
       });
 
       await supabase.from('album_photos').delete().eq('id', albumPhotoId);
+
+      // Invalidate albums query to update album cards
+      const userId = queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId)?.user_id;
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
+      }
 
       // Revalidate album page
       if (nickname) {

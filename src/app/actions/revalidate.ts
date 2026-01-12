@@ -15,10 +15,27 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   }
   // Revalidate the user's profile page (shows their albums)
   revalidatePath(`/@${nickname}`);
-  // Revalidate the galleries listing page
-  revalidatePath('/galleries');
+  // Revalidate the gallery listing page
+  revalidatePath('/gallery');
   // Revalidate homepage (shows recent albums)
   revalidatePath('/');
+}
+
+// Batch revalidate multiple albums (more efficient for bulk operations)
+export async function revalidateAlbums(nickname: string, albumSlugs: string[]) {
+  // Revalidate common paths only once
+  revalidatePath(`/@${nickname}`);
+  revalidatePath('/gallery');
+  revalidatePath('/');
+
+  // Revalidate each album page (batch in chunks to avoid overwhelming the server)
+  const CHUNK_SIZE = 50;
+  for (let i = 0; i < albumSlugs.length; i += CHUNK_SIZE) {
+    const chunk = albumSlugs.slice(i, i + CHUNK_SIZE);
+    await Promise.all(
+      chunk.map((slug) => revalidatePath(`/@${nickname}/album/${slug}`)),
+    );
+  }
 }
 
 // Revalidate profile-related pages

@@ -1,7 +1,6 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
   AddToAlbumContent,
@@ -10,31 +9,31 @@ import {
   MobileActionBar,
   PhotoEditSidebar,
   PhotoGrid,
-  PhotoListItem,
   UploadingPhotoCard,
   type AlbumFormData,
-  type PhotoFormData,
+  type PhotoFormData
 } from '@/components/manage';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
-import { useAuth } from '@/hooks/useAuth';
-import { usePhotoUpload } from '@/hooks/usePhotoUpload';
-import { useAlbumBySlug } from '@/hooks/useAlbums';
-import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
+import { useDeleteAlbums, useUpdateAlbum } from '@/hooks/useAlbumMutations';
 import {
-  useUpdateAlbumPhoto,
   useDeleteAlbumPhoto,
   useRemoveFromAlbum,
   useReorderAlbumPhotos,
+  useUpdateAlbumPhoto,
 } from '@/hooks/useAlbumPhotoMutations';
-import { useUpdateAlbum, useDeleteAlbums } from '@/hooks/useAlbumMutations';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
+import { useAlbumBySlug } from '@/hooks/useAlbums';
+import { useAuth } from '@/hooks/useAuth';
+import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import type { PhotoWithAlbums } from '@/types/photos';
-import { createClient } from '@/utils/supabase/client';
+import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
+import { createClient } from '@/utils/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import FolderSVG from 'public/icons/folder.svg';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -231,6 +230,7 @@ export default function AlbumDetailPage() {
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
+          queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
           modalContext.setIsOpen(false);
         }}
       />,
@@ -260,7 +260,8 @@ export default function AlbumDetailPage() {
       // Refresh the list and wait for it to refetch
       await queryClient.refetchQueries({ queryKey: ['album-photos', album.id] });
       queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
-      
+      queryClient.invalidateQueries({ queryKey: ['albums', user.id] });
+
       // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
     } catch (err: any) {

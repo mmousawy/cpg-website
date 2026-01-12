@@ -185,6 +185,7 @@ export default function PhotosPage() {
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['photos', user?.id, photoFilter] });
+          queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
         }}
       />,
     );

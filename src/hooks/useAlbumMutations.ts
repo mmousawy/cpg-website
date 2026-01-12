@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/utils/supabase/client';
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbums } from '@/app/actions/revalidate';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { AlbumFormData, BulkAlbumFormData } from '@/components/manage';
 
@@ -215,10 +215,13 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
         }
       }
 
-      // Revalidate album pages
+      // Revalidate album pages (batch operation for efficiency)
       if (nickname) {
         const albumsToRevalidate = previousAlbums?.filter((a) => albumIds.includes(a.id)) || [];
-        await Promise.all(albumsToRevalidate.map((album) => revalidateAlbum(nickname, album.slug)));
+        if (albumsToRevalidate.length > 0) {
+          const albumSlugs = albumsToRevalidate.map((album) => album.slug);
+          await revalidateAlbums(nickname, albumSlugs);
+        }
       }
 
       return { albumIds, data, previousAlbums };
@@ -268,9 +271,10 @@ export function useDeleteAlbums(userId: string | undefined, nickname: string | n
         }
       }
 
-      // Revalidate album pages
-      if (nickname) {
-        await Promise.all(albumsToDelete.map((album) => revalidateAlbum(nickname, album.slug)));
+      // Revalidate album pages (batch operation for efficiency)
+      if (nickname && albumsToDelete.length > 0) {
+        const albumSlugs = albumsToDelete.map((album) => album.slug);
+        await revalidateAlbums(nickname, albumSlugs);
       }
 
       // Invalidate counts

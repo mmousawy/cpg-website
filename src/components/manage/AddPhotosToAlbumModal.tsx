@@ -1,6 +1,6 @@
 'use client';
 
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbums } from '@/app/actions/revalidate';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import PhotoListItem from '@/components/manage/PhotoListItem';
 import Button from '@/components/shared/Button';
@@ -179,13 +179,12 @@ export default function AddPhotosToAlbumModal({
         throw new Error(firstError.error.message || 'Failed to add photos to album');
       }
 
-      // Revalidate all albums that photos were added to
+      // Revalidate all albums that photos were added to (batch operation for efficiency)
       if (profile?.nickname) {
         const nickname = profile.nickname;
         const selectedAlbumsList = albums.filter((a) => selectedAlbumIds.has(a.id));
-        await Promise.all(
-          selectedAlbumsList.map((album) => revalidateAlbum(nickname, album.slug)),
-        );
+        const albumSlugs = selectedAlbumsList.map((album) => album.slug);
+        await revalidateAlbums(nickname, albumSlugs);
       }
 
       onSuccess();
