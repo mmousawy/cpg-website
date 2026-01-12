@@ -627,6 +627,10 @@ export type Database = {
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
       generate_short_id: { Args: { size?: number }; Returns: string }
       get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
+      get_user_album_photos_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
       restore_album: { Args: { p_album_id: string }; Returns: boolean }
       restore_comment: { Args: { p_comment_id: string }; Returns: boolean }
       restore_photo: { Args: { p_photo_id: string }; Returns: boolean }
