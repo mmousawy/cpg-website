@@ -7,6 +7,7 @@ import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { confirmDeletePhoto, confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -163,22 +164,7 @@ function BulkEditForm({
   };
 
   const handleBulkDelete = async () => {
-    const count = selectedPhotos.length;
-
-    const confirmed = await confirm({
-      title: 'Delete photos',
-      message: `Are you sure you want to delete ${count} photo${count !== 1 ? 's' : ''}? This action cannot be undone.`,
-      content: (
-        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
-          {selectedPhotos.map((photo) => (
-            <PhotoListItem key={photo.id} photo={photo} variant="detailed" />
-          ))}
-        </div>
-      ),
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-
+    const confirmed = await confirm(confirmDeletePhotos(selectedPhotos));
     if (!confirmed) return;
 
     setIsDeleting(true);
@@ -420,18 +406,7 @@ function SinglePhotoEditForm({
   };
 
   const handleDelete = async () => {
-    const confirmed = await confirm({
-      title: 'Delete Photo',
-      message: 'Are you sure you want to delete this photo? This action cannot be undone.',
-      content: (
-        <div className="grid gap-2">
-          <PhotoListItem photo={photo} variant="detailed" />
-        </div>
-      ),
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-
+    const confirmed = await confirm(confirmDeletePhoto(photo));
     if (!confirmed) return;
     await onDelete(photo.id);
   };

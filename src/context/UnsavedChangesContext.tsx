@@ -1,6 +1,7 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
@@ -80,12 +81,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
       e.preventDefault();
       e.stopPropagation();
 
-      const confirmed = await confirm({
-        title: 'Unsaved changes',
-        message: 'You have unsaved changes that will be lost. Are you sure you want to leave?',
-        confirmLabel: 'Leave',
-        variant: 'danger',
-      });
+      const confirmed = await confirm(confirmUnsavedChanges());
 
       if (confirmed) {
         // Clear state before navigation

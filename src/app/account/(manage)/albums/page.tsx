@@ -4,9 +4,8 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
   AlbumEditSidebar,
   AlbumGrid,
-  AlbumListItem,
   type AlbumFormData,
-  type BulkAlbumFormData,
+  type BulkAlbumFormData
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
@@ -14,14 +13,15 @@ import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
-import { useAuth } from '@/hooks/useAuth';
-import { useAlbums } from '@/hooks/useAlbums';
 import {
-  useCreateAlbum,
-  useUpdateAlbum,
   useBulkUpdateAlbums,
+  useCreateAlbum,
   useDeleteAlbums,
+  useUpdateAlbum,
 } from '@/hooks/useAlbumMutations';
+import { useAlbums } from '@/hooks/useAlbums';
+import { useAuth } from '@/hooks/useAuth';
+import { confirmDeleteAlbums, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -62,14 +62,9 @@ export default function AlbumsPage() {
     return () => setHasUnsavedChanges(false);
   }, [setHasUnsavedChanges]);
 
-  const confirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
+  const handleConfirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
     if (!albumEditDirtyRef.current) return true;
-    const confirmed = await confirm({
-      title: 'Unsaved Changes',
-      message: 'You have unsaved changes. Are you sure you want to leave without saving?',
-      confirmLabel: 'Leave',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmUnsavedChanges());
     if (confirmed) {
       albumEditDirtyRef.current = false;
       setHasUnsavedChanges(false);
@@ -78,13 +73,13 @@ export default function AlbumsPage() {
   }, [confirm, setHasUnsavedChanges]);
 
   const handleAlbumDoubleClick = async (album: typeof albums[0]) => {
-    if (!(await confirmUnsavedChanges())) return;
+    if (!(await handleConfirmUnsavedChanges())) return;
     router.push(`/account/albums/${album.slug}`);
   };
 
   const handleSelectAlbum = async (albumId: string, isMultiSelect: boolean) => {
     // Check for unsaved changes when switching to a different single selection
-    if (!isMultiSelect && albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (!isMultiSelect && albumEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
     // Close new album form when selecting an existing album
@@ -108,7 +103,7 @@ export default function AlbumsPage() {
   };
 
   const handleClearSelection = async () => {
-    if (albumEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
+    if (albumEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set());
     // Also close new album form when clearing selection
     if (isNewAlbum) {
@@ -117,7 +112,7 @@ export default function AlbumsPage() {
   };
 
   const handleSelectMultiple = async (ids: string[]) => {
-    if (albumEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
+    if (albumEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set(ids));
     // Also close new album form when selecting multiple
     if (isNewAlbum) {
@@ -127,7 +122,7 @@ export default function AlbumsPage() {
 
   const handleCreateNewAlbum = async () => {
     // Skip confirmation if already in new album mode
-    if (!isNewAlbum && !(await confirmUnsavedChanges())) return;
+    if (!isNewAlbum && !(await handleConfirmUnsavedChanges())) return;
     setSelectedAlbumIds(new Set());
     setIsNewAlbum(true);
     // Open mobile sheet for new album creation (only on mobile)
@@ -193,7 +188,7 @@ export default function AlbumsPage() {
   };
 
   const handleMobileEditClose = async () => {
-    if (albumEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (albumEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
     setIsMobileEditSheetOpen(false);
@@ -202,20 +197,7 @@ export default function AlbumsPage() {
   const handleMobileBulkDelete = async () => {
     if (selectedCount === 0) return;
 
-    const confirmed = await confirm({
-      title: 'Delete Albums',
-      message: `Are you sure you want to delete ${selectedCount} album${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`,
-      content: (
-        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
-          {selectedAlbums.map((album) => (
-            <AlbumListItem key={album.id} album={album} variant="compact" />
-          ))}
-        </div>
-      ),
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-
+    const confirmed = await confirm(confirmDeleteAlbums(selectedAlbums, selectedCount));
     if (!confirmed) return;
     await handleBulkDeleteAlbums(Array.from(selectedAlbumIds));
   };

@@ -968,31 +968,33 @@ export default function AccountPage() {
       </PageContainer>
 
       {/* Sticky Save Button */}
-      <StickyActionBar constrainWidth>
-        <div className="flex items-center gap-3 text-sm">
-          {submitError && (
-            <ErrorMessage variant="compact" className="text-sm py-1.5">{submitError}</ErrorMessage>
-          )}
-          {success && (
-            <SuccessMessage variant="compact" className="text-sm py-1.5">
+      {changeCount > 0 && (
+        <StickyActionBar constrainWidth>
+          <div className="flex items-center gap-3 text-sm">
+            {submitError && (
+              <ErrorMessage variant="compact" className="text-sm py-1.5">{submitError}</ErrorMessage>
+            )}
+            {success && (
+              <SuccessMessage variant="compact" className="text-sm py-1.5">
               Profile updated!
-            </SuccessMessage>
-          )}
-          {!submitError && !success && hasChanges && (
-            <span className="text-foreground/70">
-              {changeCount} unsaved {changeCount === 1 ? 'change' : 'changes'}
-            </span>
-          )}
-        </div>
-        <Button
-          type="submit"
-          form="account-form"
-          disabled={isSaving || !hasChanges}
-          loading={isSaving}
-        >
+              </SuccessMessage>
+            )}
+            {!submitError && !success && hasChanges && (
+              <span className="text-foreground/70">
+                {changeCount} unsaved {changeCount === 1 ? 'change' : 'changes'}
+              </span>
+            )}
+          </div>
+          <Button
+            type="submit"
+            form="account-form"
+            disabled={isSaving || !hasChanges}
+            loading={isSaving}
+          >
           Save changes
-        </Button>
-      </StickyActionBar>
+          </Button>
+        </StickyActionBar>
+      )}
     </>
   );
 }

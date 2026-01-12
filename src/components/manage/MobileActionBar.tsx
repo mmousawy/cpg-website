@@ -14,7 +14,7 @@ interface MobileActionBarProps {
   onEdit: () => void;
   /** Callback when selection is cleared */
   onClearSelection: () => void;
-  /** Additional action buttons (e.g., Delete, Add to Album) */
+  /** Additional action buttons (e.g., Delete, Add to album) */
   actions?: ReactNode;
   /** Whether the bar should be visible */
   visible?: boolean;

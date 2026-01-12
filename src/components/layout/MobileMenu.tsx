@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import HomeSVG from 'public/icons/home.svg';
 import { createPortal } from 'react-dom';
 
 interface MobileMenuProps {
@@ -60,9 +61,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             onClick={onClose}
             className={navLinkClass(routes.home.url)}
           >
-            <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <HomeSVG className="size-4 mr-3" />
             {routes.home.label}
           </Link>
           <Link

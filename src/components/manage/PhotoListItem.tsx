@@ -6,7 +6,8 @@ import Image from 'next/image';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
 import 'photoswipe/style.css';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 /** Get display name for a photo: title -> original_filename -> short id */
 export function getPhotoDisplayName(photo: Photo | PhotoWithAlbums): string {
@@ -34,6 +35,77 @@ function formatDate(dateString: string | null | undefined): string | null {
   });
 }
 
+/** Format EXIF data for display */
+function formatExifValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return '';
+
+  // Handle dates
+  if (key === 'DateTimeOriginal' && typeof value === 'string') {
+    try {
+      const date = new Date(value);
+      return date.toLocaleString();
+    } catch {
+      return String(value);
+    }
+  }
+
+  // Handle numbers with decimals
+  if (typeof value === 'number') {
+    if (key === 'ExposureTime') {
+      return value < 1 ? `1/${Math.round(1 / value)}s` : `${value}s`;
+    }
+    if (key === 'FNumber') {
+      return `f/${value}`;
+    }
+    if (key === 'FocalLength') {
+      return `${value}mm`;
+    }
+    if (key === 'ISO') {
+      return `ISO ${value}`;
+    }
+    if (key === 'GPSLatitude' || key === 'GPSLongitude') {
+      return value.toFixed(6);
+    }
+    return String(value);
+  }
+
+  return String(value);
+}
+
+/** Get human-readable label for EXIF key */
+function getExifLabel(key: string): string {
+  const labels: Record<string, string> = {
+    Make: 'Camera Make',
+    Model: 'Camera Model',
+    DateTimeOriginal: 'Date Taken',
+    ExposureTime: 'Exposure',
+    FNumber: 'Aperture',
+    ISO: 'ISO',
+    FocalLength: 'Focal Length',
+    LensModel: 'Lens',
+    GPSLatitude: 'Latitude',
+    GPSLongitude: 'Longitude',
+  };
+  return labels[key] || key;
+}
+
+/** Info Icon SVG Component */
+function InfoIconSVG({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="20px"
+      viewBox="0 0 24 24"
+      width="20px"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+    </svg>
+  );
+}
+
 export type PhotoListItemVariant = 'compact' | 'detailed';
 
 interface PhotoListItemProps {
@@ -58,6 +130,12 @@ export default function PhotoListItem({
   const isDetailed = variant === 'detailed';
   const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
   const isOpeningRef = useRef(false);
+  const [showExif, setShowExif] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState({ top: 0, right: 0 });
+  const exifData = photo.exif_data as Record<string, unknown> | null | undefined;
+  const hasExif = exifData && Object.keys(exifData).length > 0;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -72,6 +150,51 @@ export default function PhotoListItem({
       }
     };
   }, []);
+
+  // Calculate popover position and handle click outside
+  useEffect(() => {
+    if (!showExif || !buttonRef.current) return;
+
+    const updatePosition = () => {
+      if (!buttonRef.current) return;
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPopoverPosition({
+        top: rect.bottom + 4, // 4px gap
+        right: window.innerWidth - rect.right,
+      });
+    };
+
+    // Calculate initial position
+    updatePosition();
+
+    // Update position on scroll/resize
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(target) &&
+        popoverRef.current &&
+        !popoverRef.current.contains(target)
+      ) {
+        setShowExif(false);
+      }
+    };
+
+    // Use setTimeout to avoid immediate close on button click
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside, true);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+      document.removeEventListener('click', handleClickOutside, true);
+    };
+  }, [showExif]);
 
   const handleViewFullSize = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -153,42 +276,92 @@ export default function PhotoListItem({
           <MagnifyingGlassPlusSVG className="size-5 text-white drop-shadow-md" />
         </div>
       </div>
-      <div className="min-w-0 flex-1 py-1 pr-2 space-y-0.5">
+      <div className="min-w-0 flex-1 py-1 pr-2 space-y-0.5 relative">
         {/* Primary name (title or fallback) */}
-        <p className="line-clamp-2 text-sm font-medium leading-tight" title={displayName}>
-          {displayName}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="line-clamp-2 text-sm font-medium leading-tight flex-1" title={displayName}>
+            {displayName}
+          </p>
+          {/* EXIF Info Button - only in detailed view */}
+          {isDetailed && hasExif && (
+            <>
+              <button
+                ref={buttonRef}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowExif(!showExif);
+                }}
+                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground shrink-0"
+                title="View EXIF data"
+                aria-label="View EXIF data"
+              >
+                <InfoIconSVG className="size-3.5" />
+              </button>
 
-        {isDetailed && (
-          <div className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/50">
-            {photo.original_filename && (
-              <div className="col-span-2 truncate">
-                <span className="text-foreground/60">Filename:</span>{' '}
-                <span title={photo.original_filename}>{photo.original_filename}</span>
-              </div>
-            )}
-            {photo.created_at && formatDate(photo.created_at) && (
-              <div className="truncate">
-                <span className="text-foreground/60">Date:</span>{' '}
-                {formatDate(photo.created_at)}
-              </div>
-            )}
-            <div className="truncate">
-              <span className="text-foreground/60">Dimensions:</span>{' '}
-              {photo.width} × {photo.height}
+              {/* EXIF Popover - rendered via portal outside scroll container */}
+              {showExif &&
+                typeof window !== 'undefined' &&
+                createPortal(
+                  <div
+                    ref={popoverRef}
+                    className="fixed z-[100] w-64 bg-background-light border border-border-color rounded-lg shadow-lg p-2 max-h-96 overflow-y-auto"
+                    style={{
+                      top: `${popoverPosition.top}px`,
+                      right: `${popoverPosition.right}px`,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h4 className="text-xs font-semibold mb-1.5 text-foreground/80">Photo EXIF Data</h4>
+                    <div className="table text-[11px]">
+                      {Object.entries(exifData).map(([key, value]) => {
+                        const formattedValue = formatExifValue(key, value);
+                        if (!formattedValue) return null;
+                        return (
+                          <div className="table-row" key={key}>
+                            <span className="table-cell text-foreground/60 font-medium pr-2 pt-0.5">{getExifLabel(key)}:</span>
+                            <span className="table-cell text-foreground/80 truncate pt-0.5">
+                              {formattedValue}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>,
+                  document.body,
+                )}
+            </>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/60">
+          {photo.original_filename && (
+            <div className="col-span-2 truncate">
+              <span title={photo.original_filename}>{photo.original_filename}</span>
             </div>
-            {formatFileSize(photo.file_size) && (
+          )}
+          {isDetailed && (
+            <>
+              {photo.created_at && formatDate(photo.created_at) && (
+                <div className="truncate">
+                  {formatDate(photo.created_at)}
+                </div>
+              )}
               <div className="truncate">
-                <span className="text-foreground/60">Size:</span>{' '}
-                {formatFileSize(photo.file_size)}
+                {photo.width} × {photo.height}
               </div>
-            )}
-            <div className="truncate">
-              <span className="text-foreground/60">ID:</span>{' '}
-              {photo.short_id || photo.id.slice(0, 8)}
-            </div>
-          </div>
-        )}
+              {formatFileSize(photo.file_size) && (
+                <div className="truncate">
+                  {formatFileSize(photo.file_size)}
+                </div>
+              )}
+              <div className="truncate">
+                <span className="text-foreground/60">ID:</span>{' '}
+                {photo.short_id || photo.id.slice(0, 8)}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

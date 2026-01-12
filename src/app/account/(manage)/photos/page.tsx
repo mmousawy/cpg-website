@@ -6,10 +6,9 @@ import {
   AddPhotosToAlbumModal,
   PhotoEditSidebar,
   PhotoGrid,
-  PhotoListItem,
   UploadingPhotoCard,
   type BulkPhotoFormData,
-  type PhotoFormData,
+  type PhotoFormData
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
@@ -20,18 +19,19 @@ import PageLoading from '@/components/shared/PageLoading';
 import Select from '@/components/shared/Select';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  useBulkUpdatePhotos,
+  useDeletePhotos,
+  useReorderPhotos,
+  useUpdatePhoto,
+} from '@/hooks/usePhotoMutations';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { usePhotos } from '@/hooks/usePhotos';
-import {
-  useDeletePhotos,
-  useUpdatePhoto,
-  useBulkUpdatePhotos,
-  useReorderPhotos,
-} from '@/hooks/usePhotoMutations';
-import { useQueryClient } from '@tanstack/react-query';
 import type { PhotoWithAlbums } from '@/types/photos';
-import { createClient } from '@/utils/supabase/client';
+import { confirmDeletePhotos, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
+import { createClient } from '@/utils/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
@@ -80,14 +80,9 @@ export default function PhotosPage() {
     return () => setHasUnsavedChanges(false);
   }, [setHasUnsavedChanges]);
 
-  const confirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
+  const handleConfirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
     if (!photoEditDirtyRef.current) return true;
-    const confirmed = await confirm({
-      title: 'Unsaved Changes',
-      message: 'You have unsaved changes. Are you sure you want to leave without saving?',
-      confirmLabel: 'Leave',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmUnsavedChanges());
     if (confirmed) {
       photoEditDirtyRef.current = false;
       setHasUnsavedChanges(false);
@@ -96,7 +91,7 @@ export default function PhotosPage() {
   }, [confirm, setHasUnsavedChanges]);
 
   const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
-    if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (!isMultiSelect && photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
     setSelectedPhotoIds((prev) => {
@@ -113,12 +108,12 @@ export default function PhotosPage() {
   };
 
   const handleClearSelection = async () => {
-    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
+    if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set());
   };
 
   const handleSelectMultiple = async (ids: string[]) => {
-    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
+    if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set(ids));
   };
 
@@ -183,7 +178,7 @@ export default function PhotosPage() {
     const photosToAdd = photos.filter((p) => photoIds.includes(p.id));
     if (photosToAdd.length === 0) return;
 
-    modalContext.setTitle('Add to Album');
+    modalContext.setTitle('Add to album');
     modalContext.setContent(
       <AddPhotosToAlbumModal
         photos={photosToAdd}
@@ -218,7 +213,7 @@ export default function PhotosPage() {
       // Refresh the list and wait for it to refetch
       await queryClient.refetchQueries({ queryKey: ['photos', user.id, photoFilter] });
       queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
-      
+
       // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
     } catch (err: any) {
@@ -247,7 +242,7 @@ export default function PhotosPage() {
   };
 
   const handleMobileEditClose = async () => {
-    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
     setIsMobileEditSheetOpen(false);
@@ -256,20 +251,7 @@ export default function PhotosPage() {
   const handleMobileBulkDelete = async () => {
     if (selectedCount === 0) return;
 
-    const confirmed = await confirm({
-      title: 'Delete photos',
-      message: `Are you sure you want to delete ${selectedCount} photo${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`,
-      content: (
-        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
-          {selectedPhotos.map((photo) => (
-            <PhotoListItem key={photo.id} photo={photo} variant="compact" />
-          ))}
-        </div>
-      ),
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-
+    const confirmed = await confirm(confirmDeletePhotos(selectedPhotos, selectedCount));
     if (!confirmed) return;
     await handleBulkDeletePhotos(Array.from(selectedPhotoIds));
   };

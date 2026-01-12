@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
@@ -162,12 +163,7 @@ export default function AdminEventFormPage() {
   };
 
   const handleDelete = async () => {
-    const confirmed = await confirm({
-      title: 'Delete Event',
-      message: 'Are you sure you want to delete this event? This action cannot be undone and will remove all RSVPs.',
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmDeleteEvent());
 
     if (!confirmed) return;
 

@@ -130,7 +130,7 @@ export default function ManageLayout({
 
       {/* Mobile Action Bar (shown when items are selected) */}
       {mobileActionBar && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-20">
           {mobileActionBar}
         </div>
       )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 import type { Tables } from '@/database.types';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { confirmCancelRSVP } from '@/utils/confirmHelpers';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import EventCard, { type EventCardData, isEventPast } from '@/components/events/EventCard';
@@ -79,12 +80,7 @@ export default function MyEventsPage() {
   }, [user]);
 
   const handleCancel = async (rsvp: RSVP) => {
-    const confirmed = await confirm({
-      title: 'Cancel RSVP',
-      message: 'Are you sure you want to cancel this RSVP?',
-      confirmLabel: 'Cancel RSVP',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmCancelRSVP());
 
     if (!confirmed) return;
 

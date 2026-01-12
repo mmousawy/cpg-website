@@ -1,6 +1,7 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
   AddToAlbumContent,
@@ -105,15 +106,10 @@ export default function AlbumDetailPage() {
     return () => setHasUnsavedChanges(false);
   }, [setHasUnsavedChanges]);
 
-  const confirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
+  const handleConfirmUnsavedChanges = useCallback(async (): Promise<boolean> => {
     const isDirty = photoEditDirtyRef.current || albumEditDirtyRef.current;
     if (!isDirty) return true;
-    const confirmed = await confirm({
-      title: 'Unsaved Changes',
-      message: 'You have unsaved changes. Are you sure you want to leave without saving?',
-      confirmLabel: 'Leave',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmUnsavedChanges());
     if (confirmed) {
       photoEditDirtyRef.current = false;
       albumEditDirtyRef.current = false;
@@ -123,7 +119,7 @@ export default function AlbumDetailPage() {
   }, [confirm, setHasUnsavedChanges]);
 
   const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
-    if (!isMultiSelect && photoEditDirtyRef.current && !(await confirmUnsavedChanges())) {
+    if (!isMultiSelect && photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
     setSelectedPhotoIds((prev) => {
@@ -140,12 +136,12 @@ export default function AlbumDetailPage() {
   };
 
   const handleClearSelection = async () => {
-    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
+    if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set());
   };
 
   const handleSelectMultiple = async (ids: string[]) => {
-    if (photoEditDirtyRef.current && !(await confirmUnsavedChanges())) return;
+    if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set(ids));
   };
 
@@ -296,7 +292,7 @@ export default function AlbumDetailPage() {
 
   const handleMobileEditClose = async () => {
     const isDirty = photoEditDirtyRef.current || albumEditDirtyRef.current;
-    if (isDirty && !(await confirmUnsavedChanges())) {
+    if (isDirty && !(await handleConfirmUnsavedChanges())) {
       return;
     }
     setIsMobileEditSheetOpen(false);
@@ -305,19 +301,7 @@ export default function AlbumDetailPage() {
   const handleMobileRemoveFromAlbum = async () => {
     if (selectedCount === 0) return;
 
-    const confirmed = await confirm({
-      title: 'Remove from Album',
-      message: `Are you sure you want to remove ${selectedCount} photo${selectedCount !== 1 ? 's' : ''} from this album?`,
-      content: (
-        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
-          {selectedPhotos.map((photo) => (
-            <PhotoListItem key={photo.id} photo={photo} variant="compact" />
-          ))}
-        </div>
-      ),
-      confirmLabel: 'Remove',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmRemoveFromAlbum(selectedPhotos, selectedCount));
 
     if (!confirmed) return;
     await handleRemoveFromAlbum(Array.from(selectedPhotoIds));

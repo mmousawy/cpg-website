@@ -1,6 +1,7 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
@@ -127,12 +128,7 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    const confirmed = await confirm({
-      title: 'Delete Comment',
-      message: 'Are you sure you want to delete this comment?',
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
+    const confirmed = await confirm(confirmDeleteComment());
 
     if (!confirmed) return;
 

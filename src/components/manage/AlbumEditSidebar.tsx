@@ -6,6 +6,7 @@ import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { AlbumWithPhotos } from '@/types/albums';
+import { confirmDeleteAlbum, confirmDeleteAlbums } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
@@ -173,22 +174,7 @@ function BulkAlbumEditForm({
   };
 
   const handleBulkDelete = async () => {
-    const count = selectedAlbums.length;
-
-    const confirmed = await confirm({
-      title: 'Delete Albums',
-      message: `Are you sure you want to delete ${count} album${count !== 1 ? 's' : ''}? This action cannot be undone.`,
-      content: (
-        <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
-          {selectedAlbums.map((album) => (
-            <AlbumListItem key={album.id} album={album} variant="detailed" />
-          ))}
-        </div>
-      ),
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-
+    const confirmed = await confirm(confirmDeleteAlbums(selectedAlbums));
     if (!confirmed) return;
 
     setIsDeleting(true);
@@ -485,16 +471,7 @@ function SingleAlbumEditForm({
   const handleDelete = async () => {
     if (!album) return;
 
-    const confirmed = await confirm({
-      title: 'Delete Album',
-      message: 'Are you sure you want to delete this album? This action cannot be undone.',
-      content: (
-        <AlbumListItem album={album} variant="compact" />
-      ),
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-
+    const confirmed = await confirm(confirmDeleteAlbum(album));
     if (!confirmed) return;
 
     setIsDeleting(true);

@@ -223,7 +223,7 @@ export default function AddPhotosToAlbumModal({
       </div>
 
       {/* Preview of photos being added */}
-      <div className="mb-4 grid min-h-12.5 max-h-[30svh] grid-cols-3 gap-2 overflow-y-auto">
+      <div className="mb-4 grid min-h-12.5 max-h-[30svh] md:grid-cols-3 gap-2 overflow-y-auto">
         {photos.map((photo) => (
           <PhotoListItem key={photo.id} photo={photo} variant="compact" />
         ))}
@@ -252,7 +252,7 @@ export default function AddPhotosToAlbumModal({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid md:grid-cols-2 gap-3">
             {albums.map((album) => {
               const isAlreadyAdded = albumsWithAllPhotos.has(album.id);
               const isSelected = isAlreadyAdded || selectedAlbumIds.has(album.id);
@@ -331,7 +331,7 @@ export default function AddPhotosToAlbumModal({
             size="sm"
             icon={<PlusSVG className="size-4" />}
           >
-            Create
+            <span className="hidden md:block">Create</span>
           </Button>
         </div>
       </div>

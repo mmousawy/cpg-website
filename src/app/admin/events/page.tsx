@@ -16,7 +16,7 @@ import PlusSVG from 'public/icons/plus.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 
-type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image'>
+type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image' | 'image_url'>
 
 export default function AdminEventsPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
@@ -33,7 +33,7 @@ export default function AdminEventsPage() {
   const loadEvents = async () => {
     const { data } = await supabase
       .from('events')
-      .select('id, slug, title, date, time, location, description, cover_image')
+      .select('id, slug, title, date, time, location, description, cover_image, image_url')
       .order('date', { ascending: false });
 
     setEvents(data || []);
@@ -110,10 +110,10 @@ export default function AdminEventsPage() {
 }
 
 function AdminEventCard({ event }: { event: Event }) {
-  const imageSrc = event.cover_image;
+  const imageSrc = event.cover_image || event.image_url;
 
   return (
-    <div className="block rounded-xl border border-border-color bg-background p-3 sm:p-4 transition-colors hover:border-primary">
+    <div className="block rounded-xl border border-border-color bg-background-light p-3 sm:p-4 transition-colors hover:border-primary">
       <div className="flex items-start gap-3 sm:gap-4">
         {/* Clickable content area */}
         <Link href={`/events/${event.slug || event.id}`} className="flex-1 min-w-0">
