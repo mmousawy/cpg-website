@@ -11,7 +11,7 @@ import {
   PhotoGrid,
   UploadingPhotoCard,
   type AlbumFormData,
-  type PhotoFormData
+  type PhotoFormData,
 } from '@/components/manage';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
@@ -308,7 +308,7 @@ export default function AlbumDetailPage() {
     await handleRemoveFromAlbum(Array.from(selectedPhotoIds));
   };
 
-  if (albumLoading) {
+  if (albumLoading && !album) {
     return (
       <ManageLayout albumDetail={{ title: '...' }} sidebar={<PageLoading message="Loading..." />}>
         <PageLoading message="Loading album..." />
@@ -359,7 +359,7 @@ export default function AlbumDetailPage() {
               onSave={handleSavePhoto}
               onDelete={handleDeletePhoto}
               onRemoveFromAlbum={handleRemoveFromAlbum}
-              isLoading={photosLoading}
+              isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handlePhotoDirtyChange}
             />
           ) : (
@@ -370,7 +370,7 @@ export default function AlbumDetailPage() {
               onDelete={handleDeleteAlbum}
               onBulkSave={async () => {}}
               onBulkDelete={async () => {}}
-              isLoading={photosLoading}
+              isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handleAlbumDirtyChange}
             />
           )
@@ -408,7 +408,7 @@ export default function AlbumDetailPage() {
           className="flex-1 flex flex-col min-h-0"
           overlayMessage="Drop to add to album"
         >
-          {photosLoading ? (
+          {photosLoading && photos.length === 0 ? (
             <PageLoading message="Loading photos..." />
           ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
             <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">

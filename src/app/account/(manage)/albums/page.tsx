@@ -224,7 +224,7 @@ export default function AlbumsPage() {
             onDelete={handleDeleteAlbum}
             onBulkDelete={handleBulkDeleteAlbums}
             onCreate={handleCreateAlbum}
-            isLoading={albumsLoading}
+            isLoading={albumsLoading && albums.length === 0}
             onDirtyChange={handleDirtyChange}
           />
         }
@@ -263,7 +263,7 @@ export default function AlbumsPage() {
           />
         }
       >
-        {albumsLoading ? (
+        {albumsLoading && albums.length === 0 ? (
           <PageLoading message="Loading albums..." />
         ) : albums.length === 0 ? (
           <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">

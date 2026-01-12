@@ -299,7 +299,7 @@ export default function PhotosPage() {
             onDelete={handleDeletePhoto}
             onBulkDelete={handleBulkDeletePhotos}
             onAddToAlbum={handleAddToAlbum}
-            isLoading={photosLoading}
+            isLoading={photosLoading && photos.length === 0}
             onDirtyChange={handleDirtyChange}
           />
         }
@@ -341,7 +341,7 @@ export default function PhotosPage() {
           className="flex-1 flex flex-col min-h-0"
           overlayMessage="Drop to upload"
         >
-          {photosLoading ? (
+          {photosLoading && photos.length === 0 ? (
             <PageLoading message="Loading photos..." />
           ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
             <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">

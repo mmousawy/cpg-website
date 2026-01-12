@@ -112,6 +112,7 @@ export default function ManageLayout({
                 <div className="hidden md:flex items-center gap-2">
                   <Link
                     href="/account/albums"
+                    onClick={(e) => handleTabClick(e, '/account/albums')}
                     className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
                     aria-label="Back to albums"
                   >
@@ -131,6 +132,7 @@ export default function ManageLayout({
             <div className="flex md:hidden items-center gap-2 mt-2 px-0.5">
               <Link
                 href="/account/albums"
+                onClick={(e) => handleTabClick(e, '/account/albums')}
                 className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
                 aria-label="Back to albums"
               >
