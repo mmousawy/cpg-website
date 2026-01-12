@@ -7,10 +7,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import ArrowUpLeftSVG from 'public/icons/arrow-up-left-micro.svg';
 import FolderMicroSVG from 'public/icons/folder-micro.svg';
 import PhotoMicroSVG from 'public/icons/image-micro.svg';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 interface ManageLayoutProps {
   children: React.ReactNode;
