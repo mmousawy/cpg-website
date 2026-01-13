@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import { Resend } from "resend";
 import { render } from "@react-email/render";
+import crypto from "crypto";
+import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 
-import { createAdminClient } from "@/utils/supabase/admin";
 import VerifyEmailTemplate from "@/emails/auth/verify-email";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -20,7 +20,7 @@ function hashToken(token: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, full_name, nickname } = await request.json();
+    const { email, password } = await request.json();
 
     // Validate required fields
     if (!email || !password) {
@@ -52,32 +52,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if nickname is taken
-    if (nickname) {
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("nickname", nickname.toLowerCase())
-        .single();
-
-      if (existingProfile) {
-        return NextResponse.json(
-          { message: "This nickname is already taken" },
-          { status: 400 },
-        );
-      }
-    }
-
     // Create user with email_confirm set to false
     const { data: userData, error: createError } =
       await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: false, // Don't auto-confirm
-        user_metadata: {
-          full_name,
-          nickname: nickname?.toLowerCase(),
-        },
       });
 
     if (createError) {
@@ -112,12 +92,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create profile
+    // Create profile (only email, nickname and full_name will be null to trigger onboarding)
     const { error: profileError } = await supabase.from("profiles").insert({
       id: userData.user.id,
       email: email.toLowerCase(),
-      full_name: full_name || null,
-      nickname: nickname?.toLowerCase() || null,
+      full_name: null,
+      nickname: null,
     });
 
     if (profileError) {
@@ -135,7 +115,6 @@ export async function POST(request: NextRequest) {
       subject: "Verify your email - Creative Photography Group",
       html: await render(
         VerifyEmailTemplate({
-          fullName: full_name || email.split("@")[0],
           verifyLink,
         }),
       ),

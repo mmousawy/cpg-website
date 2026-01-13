@@ -81,6 +81,11 @@ export async function GET(request: NextRequest) {
             updateData.avatar_url = oauthAvatarUrl;
           }
 
+          // Sync email if auth email differs from profile email (e.g., after email change confirmation)
+          if (user.email && user.email.toLowerCase() !== profile.email?.toLowerCase()) {
+            updateData.email = user.email.toLowerCase();
+          }
+
           await supabase
             .from('profiles')
             .update(updateData)

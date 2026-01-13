@@ -8,16 +8,17 @@ import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
 import PageLoading from '@/components/shared/PageLoading';
+import Textarea from '@/components/shared/Textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-// Zod schema for nickname validation
+// Zod schema for onboarding validation
 const onboardingSchema = z.object({
   nickname: z
     .string()
@@ -28,6 +29,8 @@ const onboardingSchema = z.object({
       message: 'Nickname cannot start or end with a hyphen',
     }),
   fullName: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  bio: z.string().optional(),
   emailPreferences: z.record(z.string(), z.boolean()),
 });
 
@@ -45,6 +48,18 @@ export default function OnboardingClient() {
   const [emailTypes, setEmailTypes] = useState<EmailTypeData[]>([]);
   const [isLoadingEmailTypes, setIsLoadingEmailTypes] = useState(true);
 
+  // Check if user is OAuth user (not email/password)
+  const isOAuthUser = useMemo(() => {
+    if (!user) return false;
+    // Check identities - OAuth users will have identities with provider !== 'email'
+    const identities = user.identities || [];
+    if (identities.length > 0) {
+      return identities[0].provider !== 'email';
+    }
+    // Fallback: check app_metadata provider
+    return user.app_metadata?.provider !== 'email';
+  }, [user]);
+
   const {
     register,
     control,
@@ -58,6 +73,8 @@ export default function OnboardingClient() {
     defaultValues: {
       nickname: '',
       fullName: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
+      email: isOAuthUser ? (profile?.email || user?.email || '') : '',
+      bio: profile?.bio || '',
       emailPreferences: {},
     },
   });
@@ -134,14 +151,28 @@ export default function OnboardingClient() {
 
     try {
       // Update profile
+      const updateData: {
+        nickname: string;
+        full_name: string | null;
+        email?: string;
+        bio: string | null;
+        newsletter_opt_in: boolean;
+      } = {
+        nickname: data.nickname,
+        full_name: data.fullName || null,
+        bio: data.bio || null,
+        // For backward compatibility, set newsletter_opt_in based on newsletter preference
+        newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
+      };
+
+      // Only update email if OAuth user and email is provided
+      if (isOAuthUser && data.email) {
+        updateData.email = data.email.toLowerCase();
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
-          nickname: data.nickname,
-          full_name: data.fullName || null,
-          // For backward compatibility, set newsletter_opt_in based on newsletter preference
-          newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (profileError) {
@@ -283,6 +314,27 @@ export default function OnboardingClient() {
               </p>
             </div>
 
+            {/* Email Field - Only for OAuth users */}
+            {isOAuthUser && (
+              <div className="flex flex-col gap-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...register('email', { required: isOAuthUser ? 'Email is required' : false })}
+                  placeholder="you@example.com"
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
+                <p className="text-xs text-foreground/50">
+                  This email will be used for notifications and account communications.
+                </p>
+              </div>
+            )}
+
             {/* Full Name Field */}
             <div className="flex flex-col gap-2">
               <label htmlFor="fullName" className="text-sm font-medium">
@@ -293,6 +345,19 @@ export default function OnboardingClient() {
                 type="text"
                 {...register('fullName')}
                 placeholder="Your full name"
+              />
+            </div>
+
+            {/* Bio Field */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="bio" className="text-sm font-medium">
+                Bio
+              </label>
+              <Textarea
+                id="bio"
+                {...register('bio')}
+                placeholder="Tell us about yourself..."
+                rows={4}
               />
             </div>
 
@@ -364,7 +429,12 @@ export default function OnboardingClient() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isSaving || nicknameAvailable === false || !watchedNickname}
+              disabled={
+                isSaving ||
+                nicknameAvailable === false ||
+                !watchedNickname ||
+                (isOAuthUser && !watch('email'))
+              }
               loading={isSaving}
             >
               Complete setup

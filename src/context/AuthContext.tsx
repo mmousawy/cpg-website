@@ -17,7 +17,7 @@ export type AuthState = {
   signInWithGoogle: (redirectTo?: string) => Promise<{ error: any }>;
   signInWithDiscord: (redirectTo?: string) => Promise<{ error: any }>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
-  signUpWithEmail: (email: string, password: string, metadata?: { full_name?: string; nickname?: string }) => Promise<{ error: any }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
 };
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   }, []);
 
-  const signUpWithEmail = useCallback(async (email: string, password: string, metadata?: { full_name?: string; nickname?: string }) => {
+  const signUpWithEmail = useCallback(async (email: string, password: string) => {
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -157,8 +157,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           email,
           password,
-          full_name: metadata?.full_name,
-          nickname: metadata?.nickname,
         }),
       });
 

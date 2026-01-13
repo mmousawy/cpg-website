@@ -23,7 +23,7 @@ export const VerifyEmailTemplate = ({
   verifyLink,
 }: {
   preview?: boolean;
-  fullName: string;
+  fullName?: string;
   verifyLink: string;
 }) => {
   if (preview) {
@@ -32,6 +32,7 @@ export const VerifyEmailTemplate = ({
   }
 
   const previewText = `Verify your email address`;
+  const greeting = fullName ? `Hi ${fullName},` : 'Hi there,';
 
   return (
     <Html>
@@ -47,7 +48,7 @@ export const VerifyEmailTemplate = ({
             </Heading>
 
             <Text className="text-[14px] leading-[24px] text-[#171717]">
-              Hi {fullName},
+              {greeting}
             </Text>
             <Text className="text-[14px] leading-[24px] text-[#171717]">
               Thanks for signing up for Creative Photography Group! Please verify your email address by clicking the button below.
