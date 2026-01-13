@@ -91,7 +91,7 @@ export const EventAnnouncementEmail = ({
 
             <EventDetails event={event} />
 
-            <Footer fullName={fullName} optOutLink={optOutLink} />
+            <Footer fullName={fullName} optOutLink={optOutLink} emailType="events" />
           </Container>
         </Body>
       </Tailwind>

@@ -14,6 +14,8 @@ const templates: Record<string, () => Promise<any>> = {
   'event-announcement': () => import('../../../emails/event-announcement'),
   // Attendee message emails
   'attendee-message': () => import('../../../emails/attendee-message'),
+  // Comment notification emails
+  'comment-notification': () => import('../../../emails/comment-notification'),
 };
 
 export default async function Email({

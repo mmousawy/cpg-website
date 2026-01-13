@@ -106,16 +106,22 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
 
     setIsSubmitting(true);
     try {
-      // Use atomic RPC function to create and link comment in one transaction
-      const { error } = await supabase.rpc('add_comment', {
-        p_entity_type: entityType,
-        p_entity_id: entityId,
-        p_comment_text: commentText.trim(),
+      // Use API route to create comment and send notification email
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType,
+          entityId,
+          commentText: commentText.trim(),
+        }),
       });
 
-      if (error) {
-        console.error('Error creating comment:', error);
-        alert('Failed to post comment');
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Error creating comment:', data.message);
+        alert(data.message || 'Failed to post comment');
       } else {
         setCommentText('');
         await fetchComments();
@@ -166,7 +172,7 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div id="comments" className="space-y-4">
       <h3 className="text-lg font-semibold">Comments ({comments.length})</h3>
 
       {/* Comments List */}

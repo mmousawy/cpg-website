@@ -7,10 +7,25 @@ import {
 export default function Footer({
   fullName,
   optOutLink,
+  emailType,
 }: {
   fullName: string;
   optOutLink?: string;
+  emailType?: 'events' | 'notifications' | 'newsletter';
 }) {
+  const getUnsubscribeText = () => {
+    switch (emailType) {
+      case 'events':
+        return 'Unsubscribe from event updates';
+      case 'notifications':
+        return 'Unsubscribe from notifications';
+      case 'newsletter':
+        return 'Unsubscribe from newsletter';
+      default:
+        return 'Unsubscribe';
+    }
+  };
+
   return (
     <>
       <Hr className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]" />
@@ -24,7 +39,7 @@ export default function Footer({
       {optOutLink && (
         <Text className="!mt-2 !mb-0 text-[12px] leading-[24px] text-[#666666]">
           <Link href={optOutLink} className="text-[#666666] underline">
-            Unsubscribe from event updates
+            {getUnsubscribeText()}
           </Link>
         </Text>
       )}

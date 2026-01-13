@@ -123,19 +123,7 @@ export async function POST(request: NextRequest) {
 
   // Note: Attendee messages are functional emails for people who have RSVP'd
   // They should ALWAYS be sent, regardless of opt-out preferences
-  // We still generate opt-out links for users who have opted in to show them the option
-  const userIds = recipients.filter(r => r.userId).map(r => r.userId!);
-  const { data: profiles } = userIds.length > 0
-    ? await supabase
-        .from('profiles')
-        .select('id, email, newsletter_opt_in')
-        .in('id', userIds)
-        .eq('newsletter_opt_in', true)
-    : { data: null };
-
-  const optInUserIds = new Set(
-    (profiles || []).map(p => p.id)
-  );
+  // We still generate opt-out links so users can opt out of future event announcements
 
   if (recipients.length === 0) {
     return NextResponse.json(

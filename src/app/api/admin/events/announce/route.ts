@@ -67,105 +67,67 @@ export async function POST(request: NextRequest) {
   // Build event link
   const eventLink = `${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.slug || event.id}`;
 
-  // Fetch only users who have RSVP'd to this event (for testing purposes)
-  const { data: rsvps, error: rsvpsError } = await supabase
-    .from('events_rsvps')
-    .select('user_id, email, name, profiles!inner(id, email, full_name, newsletter_opt_in)')
-    .eq('event_id', eventId)
-    .not('confirmed_at', 'is', null)
-    .is('canceled_at', null)
+  // Fetch all active profiles (not suspended, with email)
+  const { data: allProfiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, email, full_name')
+    .is('suspended_at', null)
     .not('email', 'is', null);
 
-  if (rsvpsError) {
-    console.error('Error fetching RSVPs:', rsvpsError);
+  if (profilesError) {
+    console.error('Error fetching profiles:', profilesError);
     return NextResponse.json(
-      { message: "Failed to fetch RSVPs" },
+      { message: "Failed to fetch profiles" },
       { status: 500 },
     );
   }
 
-  if (!rsvps || rsvps.length === 0) {
+  if (!allProfiles || allProfiles.length === 0) {
     return NextResponse.json(
-      { message: "No confirmed RSVPs found for this event" },
+      { message: "No active members found" },
       { status: 400 },
     );
   }
 
-  // Build subscribers list from RSVPs
-  const subscribersMap = new Map<string, { id: string; email: string; full_name: string | null }>();
+  // Get the events email type ID
+  const { data: eventsEmailType } = await supabase
+    .from('email_types' as any)
+    .select('id')
+    .eq('type_key', 'events')
+    .single();
 
-  rsvps.forEach((rsvp: any) => {
-    const profile = rsvp.profiles;
-    if (profile && profile.email) {
-      // Prefer profile data, fallback to RSVP data
-      subscribersMap.set(profile.id, {
-        id: profile.id,
-        email: profile.email,
-        full_name: profile.full_name || rsvp.name || null,
-      });
-    } else if (rsvp.email) {
-      // If no profile, use RSVP email (but we need a user_id for opt-out links)
-      // For RSVPs without profiles, we'll skip opt-out links
-      if (rsvp.user_id) {
-        subscribersMap.set(rsvp.user_id, {
-          id: rsvp.user_id,
-          email: rsvp.email,
-          full_name: rsvp.name || null,
-        });
-      }
-    }
-  });
-
-  let subscribers = Array.from(subscribersMap.values());
-
-  // Filter out suspended users
-  if (subscribers.length > 0) {
-    const userIds = subscribers.map(s => s.id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .in('id', userIds)
-      .is('suspended_at', null);
-
-    if (profiles) {
-      const activeUserIds = new Set(profiles.map(p => p.id));
-      subscribers = subscribers.filter(s => activeUserIds.has(s.id));
-    }
+  if (!eventsEmailType) {
+    return NextResponse.json(
+      { message: "Events email type not found" },
+      { status: 500 },
+    );
   }
 
-  // Filter out users who have opted out of "events" email type
-  // Event announcements are the only event emails that can be opted out of
-  if (subscribers.length > 0) {
-    const userIds = subscribers.map(s => s.id);
+  const eventsEmailTypeId = (eventsEmailType as any).id;
 
-    // First get the events email type ID
-    const { data: eventsEmailType } = await supabase
-      .from('email_types' as any)
-      .select('id')
-      .eq('type_key', 'events')
-      .single();
+  // Get all users who have opted out of "events" email type
+  const { data: optedOutUsers } = await supabase
+    .from('email_preferences' as any)
+    .select('user_id')
+    .eq('email_type_id', eventsEmailTypeId)
+    .eq('opted_out', true);
 
-    if (eventsEmailType && userIds.length > 0) {
-      const eventsEmailTypeId = (eventsEmailType as any).id;
-      // Then get users who have opted out
-      const { data: optedOutUsers } = await supabase
-        .from('email_preferences' as any)
-        .select('user_id')
-        .in('user_id', userIds)
-        .eq('email_type_id', eventsEmailTypeId)
-        .eq('opted_out', true);
+  const optedOutUserIds = new Set(
+    (optedOutUsers || []).map((u: any) => u.user_id)
+  );
 
-      if (optedOutUsers && optedOutUsers.length > 0) {
-        const optedOutUserIds = new Set((optedOutUsers as any[]).map((u: any) => u.user_id));
-        // Filter out opted-out users
-        subscribers = subscribers.filter(s => !optedOutUserIds.has(s.id));
-      }
-    }
-  }
+  // Filter out users who have opted out
+  const subscribers = allProfiles
+    .filter(profile => !optedOutUserIds.has(profile.id))
+    .map(profile => ({
+      id: profile.id,
+      email: profile.email!,
+      full_name: profile.full_name || null,
+    }));
 
   if (subscribers.length === 0) {
     return NextResponse.json(
-      { message: "No subscribers found (all have opted out of event announcements or no valid RSVPs)" },
+      { message: "No subscribers found (all members have opted out of event announcements)" },
       { status: 400 },
     );
   }

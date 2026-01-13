@@ -97,7 +97,7 @@ export const AttendeeMessageEmail = ({
 
             <EventDetails event={event} noDescription />
 
-            <Footer fullName={fullName} optOutLink={optOutLink} />
+            <Footer fullName={fullName} optOutLink={optOutLink} emailType="events" />
           </Container>
         </Body>
       </Tailwind>
