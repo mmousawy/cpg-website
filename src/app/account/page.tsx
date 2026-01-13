@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import clsx from 'clsx';
 import { useTheme } from 'next-themes';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -70,6 +71,7 @@ export default function AccountPage() {
   const { user, refreshProfile: refreshAuthProfile } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const supabase = useSupabase();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -88,6 +90,20 @@ export default function AccountPage() {
   const [newEmail, setNewEmail] = useState('');
   const [emailChangeError, setEmailChangeError] = useState<string | null>(null);
   const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
+  const [emailChangedFromUrl, setEmailChangedFromUrl] = useState(false);
+
+  // Check for email_changed query param (from verification redirect)
+  useEffect(() => {
+    if (searchParams.get('email_changed') === 'true') {
+      setEmailChangedFromUrl(true);
+      // Clear the query param from URL without reload
+      window.history.replaceState({}, '', '/account');
+      // Refresh profile to get updated email
+      refreshAuthProfile();
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => setEmailChangedFromUrl(false), 5000);
+    }
+  }, [searchParams, refreshAuthProfile]);
 
   // Avatar state - saved value and pending changes
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null);
@@ -702,33 +718,33 @@ export default function AccountPage() {
                       <label htmlFor="email" className="text-sm font-medium">
                         Email
                       </label>
+                      {emailChangedFromUrl && (
+                        <SuccessMessage variant="compact">
+                          Your email has been successfully changed!
+                        </SuccessMessage>
+                      )}
                       {!isChangingEmail ? (
-                        <>
-                          <div className="flex gap-2">
-                            <Input
-                              id="email"
-                              type="email"
-                              value={profile?.email || user?.email || ''}
-                              disabled
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              onClick={() => {
-                                setIsChangingEmail(true);
-                                setNewEmail(profile?.email || user?.email || '');
-                                setEmailChangeError(null);
-                                setEmailChangeSuccess(false);
-                              }}
-                            >
-                              Change
-                            </Button>
-                          </div>
-                          <p className="text-xs text-foreground/50">
-                            {profile?.email || user?.email || 'No email set'}
-                          </p>
-                        </>
+                        <div className="flex gap-2">
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profile?.email || user?.email || ''}
+                            disabled
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                              setIsChangingEmail(true);
+                              setNewEmail('');
+                              setEmailChangeError(null);
+                              setEmailChangeSuccess(false);
+                            }}
+                          >
+                            Change
+                          </Button>
+                        </div>
                       ) : (
                         <>
                           <div className="flex flex-col gap-2">

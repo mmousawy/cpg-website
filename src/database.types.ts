@@ -194,6 +194,7 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          new_email: string | null
           token_hash: string
           token_type: string
           used_at: string | null
@@ -204,6 +205,7 @@ export type Database = {
           email: string
           expires_at: string
           id?: string
+          new_email?: string | null
           token_hash: string
           token_type: string
           used_at?: string | null
@@ -214,6 +216,7 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          new_email?: string | null
           token_hash?: string
           token_type?: string
           used_at?: string | null
