@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       .eq('id', entityId)
       .single();
 
-    if (photo) {
+    if (photo && photo.user_id) {
       ownerId = photo.user_id;
       entityTitle = photo.title || 'Untitled photo';
       entityThumbnail = photo.url;
