@@ -9,7 +9,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
     // For integration tests hitting API routes
-    testTimeout: 10000,
+    testTimeout: 30000, // Increased for server startup
+    exclude: ['node_modules', 'e2e', '**/*.e2e.spec.ts', '**/*.e2e.test.ts'],
   },
   resolve: {
     alias: {

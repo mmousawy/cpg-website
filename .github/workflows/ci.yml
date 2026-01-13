@@ -8,13 +8,19 @@ on:
 
 jobs:
   test:
-    name: Unit Tests
+    name: Integration Tests
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000' }}
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      # Mock email service for tests
+      RESEND_API_KEY: re_test_key
+      EMAIL_FROM_NAME: Test
+      EMAIL_FROM_ADDRESS: test@example.com
+      EMAIL_REPLY_TO_NAME: Test
+      EMAIL_REPLY_TO_ADDRESS: test@example.com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,4 +28,19 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      # Install Playwright browsers
+      - run: npx playwright install --with-deps chromium
+      # Run unit/integration tests (API route tests)
       - run: npm test
+      # Build the app for E2E tests
+      - run: npm run build
+      # Run E2E tests (Playwright will start the server automatically)
+      - run: npm run test:e2e
+      # Upload test results if tests fail
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

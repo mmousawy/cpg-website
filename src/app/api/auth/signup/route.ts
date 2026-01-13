@@ -93,11 +93,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create profile (only email, nickname and full_name will be null to trigger onboarding)
-    const { error: profileError } = await supabase.from("profiles").insert({
+    // Use upsert in case profile already exists (e.g., from a previous failed signup attempt)
+    const { error: profileError } = await supabase.from("profiles").upsert({
       id: userData.user.id,
       email: email.toLowerCase(),
       full_name: null,
       nickname: null,
+    }, {
+      onConflict: 'id',
     });
 
     if (profileError) {
