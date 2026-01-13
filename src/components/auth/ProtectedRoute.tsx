@@ -49,6 +49,11 @@ export default function ProtectedRoute({
       return;
     }
 
+    // If admin is required, wait for profile to load before checking
+    if (requireAdmin && profile === null) {
+      return; // Still loading profile
+    }
+
     // Check if user needs to complete onboarding (no nickname set)
     // Skip this check if we're already on the onboarding page or if skipOnboardingCheck is true
     if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
@@ -63,6 +68,11 @@ export default function ProtectedRoute({
 
   // Show loading while checking auth or redirecting
   if (isLoading || !user) {
+    return <PageLoading />;
+  }
+
+  // Show loading while profile is loading (required for admin check)
+  if (requireAdmin && profile === null) {
     return <PageLoading />;
   }
 

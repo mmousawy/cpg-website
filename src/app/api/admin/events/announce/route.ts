@@ -30,24 +30,10 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { eventId } = body;
+  const { eventId, recipientEmails } = body;
 
   if (!eventId) {
     return NextResponse.json({ message: "Event ID is required" }, { status: 400 });
-  }
-
-  // Check if announcement already sent
-  const { data: existingAnnouncement } = await supabase
-    .from('event_announcements')
-    .select('id')
-    .eq('event_id', eventId)
-    .single();
-
-  if (existingAnnouncement) {
-    return NextResponse.json(
-      { message: "This event has already been announced" },
-      { status: 400 },
-    );
   }
 
   // Get the event
@@ -89,6 +75,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  console.log(`📊 Found ${allProfiles.length} active profiles`);
+
   // Get the events email type ID
   const { data: eventsEmailType } = await supabase
     .from('email_types' as any)
@@ -106,24 +94,39 @@ export async function POST(request: NextRequest) {
   const eventsEmailTypeId = (eventsEmailType as any).id;
 
   // Get all users who have opted out of "events" email type
-  const { data: optedOutUsers } = await supabase
+  const { data: optedOutUsers, error: optedOutError } = await supabase
     .from('email_preferences' as any)
     .select('user_id')
     .eq('email_type_id', eventsEmailTypeId)
     .eq('opted_out', true);
 
+  if (optedOutError) {
+    console.error('Error fetching opted-out users:', optedOutError);
+  }
+
   const optedOutUserIds = new Set(
-    (optedOutUsers || []).map((u: any) => u.user_id)
+    (optedOutUsers || []).map((u: any) => u.user_id),
   );
 
+  console.log(`🚫 Found ${optedOutUserIds.size} users who have opted out`);
+
   // Filter out users who have opted out
-  const subscribers = allProfiles
+  // Note: Users without a preference record are considered opted IN (default behavior)
+  let allSubscribers = allProfiles
     .filter(profile => !optedOutUserIds.has(profile.id))
     .map(profile => ({
       id: profile.id,
       email: profile.email!,
       full_name: profile.full_name || null,
     }));
+
+  // If recipientEmails is provided, filter to only those recipients
+  // Otherwise, send to all subscribers (backward compatibility)
+  const subscribers = recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0
+    ? allSubscribers.filter(s => recipientEmails.includes(s.email))
+    : allSubscribers;
+
+  console.log(`✅ ${subscribers.length} subscribers after filtering (${allProfiles.length - allSubscribers.length} opted out, ${recipientEmails && Array.isArray(recipientEmails) ? `${allSubscribers.length - subscribers.length} unselected` : 'all selected'})`);
 
   if (subscribers.length === 0) {
     return NextResponse.json(
@@ -132,16 +135,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Send emails in batches (Resend has rate limits)
-  const batchSize = 50;
+  // Send emails in batches using Resend's batch API (up to 100 emails per request)
+  // This avoids rate limit issues (2 requests per second)
+  const batchSize = 100;
   let successCount = 0;
   let errorCount = 0;
+  const sendStatus: Record<string, 'success' | 'error'> = {};
+  const errorDetails: Record<string, string> = {};
 
   for (let i = 0; i < subscribers.length; i += batchSize) {
     const batch = subscribers.slice(i, i + batchSize);
 
-    const emailPromises = batch.map(async (subscriber) => {
-      try {
+    // Prepare batch emails
+    const batchEmails = await Promise.all(
+      batch.map(async (subscriber) => {
         const fullName = subscriber.full_name || subscriber.email?.split('@')[0] || 'Friend';
 
         // Generate opt-out link for events type (event announcements)
@@ -159,7 +166,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const emailResult = await resend.emails.send({
+        return {
           from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
           to: subscriber.email!,
           replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
@@ -172,49 +179,132 @@ export async function POST(request: NextRequest) {
               optOutLink,
             }),
           ),
+        };
+      }),
+    );
+
+    // Send batch using Resend's batch API
+    try {
+      const batchResult = await resend.batch.send(batchEmails);
+
+      if (batchResult.error) {
+        const error = batchResult.error as any;
+        const errorMessage = typeof error === 'string'
+          ? error
+          : error?.message || JSON.stringify(error);
+        console.error(`Failed to send batch starting at index ${i}:`, error);
+        // Mark all emails in batch as failed
+        batch.forEach((subscriber) => {
+          sendStatus[subscriber.email!] = 'error';
+          errorDetails[subscriber.email!] = errorMessage;
         });
+        errorCount += batch.length;
+      } else {
+        // Resend batch API returns: batchResult.data.data (nested data array)
+        // Each item in the array corresponds to the email at the same index
+        const resultsArray = batchResult.data?.data || batchResult.data;
 
-        if (emailResult.error) {
-          console.error(`Failed to send email to ${subscriber.email}:`, emailResult.error);
-          errorCount++;
-          return false;
+        if (resultsArray && Array.isArray(resultsArray)) {
+          resultsArray.forEach((result: any, idx: number) => {
+            const subscriber = batch[idx];
+            if (!subscriber) {
+              console.warn(`No subscriber found at index ${idx} in batch`);
+              return;
+            }
+
+            if (result && typeof result === 'object') {
+              if ('error' in result) {
+                // Error in result object
+                const error = result.error as any;
+                const errorMessage = typeof error === 'string'
+                  ? error
+                  : error?.message || JSON.stringify(error);
+                console.error(`Failed to send email to ${subscriber.email}:`, error);
+                sendStatus[subscriber.email!] = 'error';
+                errorDetails[subscriber.email!] = errorMessage;
+                errorCount++;
+              } else if ('id' in result) {
+                // Success - has an id
+                sendStatus[subscriber.email!] = 'success';
+                successCount++;
+              } else {
+                // Unknown format - log and treat as error
+                const errorMessage = `Unexpected response format: ${JSON.stringify(result)}`;
+                console.warn(`Unexpected response format for ${subscriber.email}:`, errorMessage);
+                sendStatus[subscriber.email!] = 'error';
+                errorDetails[subscriber.email!] = errorMessage;
+                errorCount++;
+              }
+            } else {
+              // Not an object - treat as error
+              const errorMessage = `Unexpected response type: ${typeof result}`;
+              console.warn(`Unexpected response type for ${subscriber.email}:`, typeof result, result);
+              sendStatus[subscriber.email!] = 'error';
+              errorDetails[subscriber.email!] = errorMessage;
+              errorCount++;
+            }
+          });
+        } else {
+          // No data array found - mark all as errors
+          const errorMessage = 'No data array found in batch response';
+          console.error(`No data array found in batch response starting at index ${i}. Response:`, JSON.stringify(batchResult, null, 2));
+          batch.forEach((subscriber) => {
+            sendStatus[subscriber.email!] = 'error';
+            errorDetails[subscriber.email!] = errorMessage;
+          });
+          errorCount += batch.length;
         }
-
-        successCount++;
-        return true;
-      } catch (err) {
-        console.error(`Error sending email to ${subscriber.email}:`, err);
-        errorCount++;
-        return false;
       }
-    });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error(`Error sending batch starting at index ${i}:`, err);
+      // Mark all emails in batch as failed
+      batch.forEach((subscriber) => {
+        sendStatus[subscriber.email!] = 'error';
+        errorDetails[subscriber.email!] = errorMessage;
+      });
+      errorCount += batch.length;
+    }
 
-    await Promise.all(emailPromises);
-
-    // Small delay between batches to respect rate limits
+    // Small delay between batches to respect rate limits (2 requests per second = 500ms delay)
     if (i + batchSize < subscribers.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
   // Record announcement in tracking table
+  // Note: We use upsert with ON CONFLICT DO NOTHING since we allow multiple announcements
+  // The unique constraint on event_id prevents duplicates, but we want to allow multiple sends
+  // So we'll just skip the insert if it already exists (this is just for tracking)
   const { error: announcementError } = await supabase
     .from('event_announcements')
     .insert({
       event_id: eventId,
       announced_by: user.id,
       recipient_count: successCount,
-    });
+    })
+    .select()
+    .single();
 
   if (announcementError) {
-    console.error('Error recording announcement:', announcementError);
+    // If it's a duplicate key error, that's fine - we allow multiple announcements
+    // For other errors, log them but don't fail the request
+    if (announcementError.code !== '23505') {
+      console.error('Error recording announcement:', announcementError);
+    }
     // Don't fail the request if tracking fails
   }
+
+  console.log(`📧 Email sending complete: ${successCount} sent, ${errorCount} failed, ${subscribers.length} total`);
 
   return NextResponse.json({
     success: true,
     sent: successCount,
     failed: errorCount,
     total: subscribers.length,
+    totalProfiles: allProfiles.length,
+    optedOut: optedOutUserIds.size,
+    sendStatus, // Per-recipient send status
+    errorDetails, // Per-recipient error details
   }, { status: 200 });
 }

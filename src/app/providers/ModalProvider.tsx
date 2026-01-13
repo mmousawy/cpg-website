@@ -2,7 +2,7 @@
 
 import { createContext, useState } from "react";
 
-export type ModalSize = 'default' | 'large' | 'fullscreen';
+export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
 
 export const ModalContext = createContext({} as {
   isOpen: boolean;

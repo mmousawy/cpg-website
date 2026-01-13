@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
+import AnnounceEventModal from '@/components/admin/AnnounceEventModal';
 import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
@@ -50,10 +51,6 @@ export default function AdminEventFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [markingId, setMarkingId] = useState<number | null>(null);
-  const [hasAnnouncement, setHasAnnouncement] = useState<boolean | null>(null);
-  const [isAnnouncing, setIsAnnouncing] = useState(false);
-  const [announceError, setAnnounceError] = useState<string | null>(null);
-  const [announceSuccess, setAnnounceSuccess] = useState(false);
   const modalContext = useContext(ModalContext);
 
   // Form state
@@ -152,7 +149,6 @@ export default function AdminEventFormPage() {
           .eq('event_id', data.id)
           .single();
 
-        setHasAnnouncement(!!announcement);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -179,43 +175,18 @@ export default function AdminEventFormPage() {
     setMarkingId(null);
   };
 
-  const handleAnnounceEvent = async () => {
-    if (!event) return;
+  const handleAnnounceEvent = () => {
+    if (!event || !modalContext) return;
 
-    const confirmed = await confirm({
-      title: 'Announce event',
-      message: `This will send an email announcement to all members who have are opted in to event announcements. This can only be done once per event.`,
-      confirmLabel: 'Send announcement',
-      cancelLabel: 'Cancel',
-    });
-
-    if (!confirmed) return;
-
-    setIsAnnouncing(true);
-    setAnnounceError(null);
-    setAnnounceSuccess(false);
-
-    try {
-      const response = await fetch('/api/admin/events/announce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId: event.id }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send announcement');
-      }
-
-      setAnnounceSuccess(true);
-      setHasAnnouncement(true);
-      setTimeout(() => setAnnounceSuccess(false), 5000);
-    } catch (err) {
-      setAnnounceError(err instanceof Error ? err.message : 'Failed to send announcement');
-    } finally {
-      setIsAnnouncing(false);
-    }
+    modalContext.setTitle(`Announce event: ${event.title}`);
+    modalContext.setContent(
+      <AnnounceEventModal
+        eventId={event.id}
+        onClose={() => modalContext.setIsOpen(false)}
+      />,
+    );
+    modalContext.setSize('large');
+    modalContext.setIsOpen(true);
   };
 
   const handleEmailAttendees = () => {
@@ -485,7 +456,7 @@ export default function AdminEventFormPage() {
                     value={slug}
                     onChange={(e) => handleSlugChange(e.target.value)}
                     required
-                    pattern="[-a-z0-9]+"
+                    pattern="[a-z0-9-]+"
                     mono
                     placeholder="url-friendly-event-name"
                   />
@@ -730,27 +701,12 @@ export default function AdminEventFormPage() {
                         Send a one-time announcement to all members who have are opted in to event announcements
                       </p>
                     </div>
-                    {hasAnnouncement && (
-                      <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-                        Already sent
-                      </span>
-                    )}
                   </div>
-                  {announceError && (
-                    <ErrorMessage variant="compact" className="mb-2">{announceError}</ErrorMessage>
-                  )}
-                  {announceSuccess && (
-                    <SuccessMessage variant="compact" className="mb-2">
-                      Announcement sent successfully!
-                    </SuccessMessage>
-                  )}
                   <Button
                     onClick={handleAnnounceEvent}
-                    disabled={isAnnouncing || hasAnnouncement === true}
-                    loading={isAnnouncing}
                     variant="primary"
                   >
-                    {hasAnnouncement ? 'Already announced' : 'Announce event'}
+                    Announce event
                   </Button>
                 </div>
 

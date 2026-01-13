@@ -1,10 +1,10 @@
+import { render } from "@react-email/render";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { render } from "@react-email/render";
 
-import { createClient } from "@/utils/supabase/server";
 import { AttendeeMessageEmail } from "@/emails/attendee-message";
 import { encrypt } from "@/utils/encrypt";
+import { createClient } from "@/utils/supabase/server";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { eventId, message } = body;
+  const { eventId, message, recipientEmails } = body;
 
   if (!eventId) {
     return NextResponse.json({ message: "Event ID is required" }, { status: 400 });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   if (eventError || !event) {
     return NextResponse.json(
       { message: "Event not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     console.error('Error fetching RSVPs:', rsvpsError);
     return NextResponse.json(
       { message: "Failed to fetch RSVPs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     console.error('Error fetching admins:', adminsError);
     return NextResponse.json(
       { message: "Failed to fetch admin profiles" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -119,7 +119,13 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const recipients = Array.from(recipientMap.values());
+  let allRecipients = Array.from(recipientMap.values());
+
+  // If recipientEmails is provided, filter to only those recipients
+  // Otherwise, send to all recipients (backward compatibility)
+  const recipients = recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0
+    ? allRecipients.filter(r => recipientEmails.includes(r.email))
+    : allRecipients;
 
   // Note: Attendee messages are functional emails for people who have RSVP'd
   // They should ALWAYS be sent, regardless of opt-out preferences
@@ -128,20 +134,24 @@ export async function POST(request: NextRequest) {
   if (recipients.length === 0) {
     return NextResponse.json(
       { message: "No recipients found for this event" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  // Send emails in batches
-  const batchSize = 50;
+  // Send emails in batches using Resend's batch API (up to 100 emails per request)
+  // This avoids rate limit issues (2 requests per second)
+  const batchSize = 100;
   let successCount = 0;
   let errorCount = 0;
+  const sendStatus: Record<string, 'success' | 'error'> = {};
+  const errorDetails: Record<string, string> = {};
 
   for (let i = 0; i < recipients.length; i += batchSize) {
     const batch = recipients.slice(i, i + batchSize);
-    
-    const emailPromises = batch.map(async (recipient) => {
-      try {
+
+    // Prepare batch emails
+    const batchEmails = await Promise.all(
+      batch.map(async (recipient) => {
         // Generate opt-out link for events type
         // Note: This email is still sent even if user has opted out (it's functional for RSVP'd users)
         // But we show the opt-out link so they can opt out of future announcements
@@ -149,9 +159,9 @@ export async function POST(request: NextRequest) {
         let optOutLink: string | undefined;
         if (recipient.userId) {
           try {
-            const encrypted = encrypt(JSON.stringify({ 
-              userId: recipient.userId, 
-              emailType: 'events'
+            const encrypted = encrypt(JSON.stringify({
+              userId: recipient.userId,
+              emailType: 'events',
             }));
             optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
           } catch (error) {
@@ -159,7 +169,7 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const emailResult = await resend.emails.send({
+        return {
           from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
           to: recipient.email,
           replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
@@ -171,30 +181,98 @@ export async function POST(request: NextRequest) {
               message: message.trim(),
               eventLink,
               optOutLink,
-            })
+            }),
           ),
+        };
+      }),
+    );
+
+    // Send batch using Resend's batch API
+    try {
+      const batchResult = await resend.batch.send(batchEmails);
+
+      if (batchResult.error) {
+        const error = batchResult.error as any;
+        const errorMessage = typeof error === 'string'
+          ? error
+          : error?.message || JSON.stringify(error);
+        console.error(`Failed to send batch starting at index ${i}:`, error);
+        // Mark all emails in batch as failed
+        batch.forEach((recipient) => {
+          sendStatus[recipient.email] = 'error';
+          errorDetails[recipient.email] = errorMessage;
         });
+        errorCount += batch.length;
+      } else {
+        // Resend batch API returns: batchResult.data.data (nested data array)
+        // Each item in the array corresponds to the email at the same index
+        const resultsArray = batchResult.data?.data || batchResult.data;
 
-        if (emailResult.error) {
-          console.error(`Failed to send email to ${recipient.email}:`, emailResult.error);
-          errorCount++;
-          return false;
+        if (resultsArray && Array.isArray(resultsArray)) {
+          resultsArray.forEach((result: any, idx: number) => {
+            const recipient = batch[idx];
+            if (!recipient) {
+              console.warn(`No recipient found at index ${idx} in batch`);
+              return;
+            }
+
+            if (result && typeof result === 'object') {
+              // Check if it's an error response
+              if ('error' in result) {
+                const error = result.error as any;
+                const errorMessage = typeof error === 'string'
+                  ? error
+                  : error?.message || JSON.stringify(error);
+                console.error(`Failed to send email to ${recipient.email}:`, error);
+                sendStatus[recipient.email] = 'error';
+                errorDetails[recipient.email] = errorMessage;
+                errorCount++;
+              } else if ('id' in result) {
+                // Success - has an id
+                sendStatus[recipient.email] = 'success';
+                successCount++;
+              } else {
+                // Unknown response format - log it and treat as error
+                const errorMessage = `Unexpected response format: ${JSON.stringify(result)}`;
+                console.warn(`Unexpected response format for ${recipient.email}:`, errorMessage);
+                sendStatus[recipient.email] = 'error';
+                errorDetails[recipient.email] = errorMessage;
+                errorCount++;
+              }
+            } else {
+              // Not an object - treat as error
+              const errorMessage = `Unexpected response type: ${typeof result}`;
+              console.warn(`Unexpected response type for ${recipient.email}:`, typeof result, result);
+              sendStatus[recipient.email] = 'error';
+              errorDetails[recipient.email] = errorMessage;
+              errorCount++;
+            }
+          });
+        } else {
+          // No data array found - mark all as errors
+          const errorMessage = 'No data array found in batch response';
+          console.error(`No data array found in batch response starting at index ${i}. Response:`, JSON.stringify(batchResult, null, 2));
+          batch.forEach((recipient) => {
+            sendStatus[recipient.email] = 'error';
+            errorDetails[recipient.email] = errorMessage;
+          });
+          errorCount += batch.length;
         }
-
-        successCount++;
-        return true;
-      } catch (err) {
-        console.error(`Error sending email to ${recipient.email}:`, err);
-        errorCount++;
-        return false;
       }
-    });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error(`Error sending batch starting at index ${i}:`, err);
+      // Mark all emails in batch as failed
+      batch.forEach((recipient) => {
+        sendStatus[recipient.email] = 'error';
+        errorDetails[recipient.email] = errorMessage;
+      });
+      errorCount += batch.length;
+    }
 
-    await Promise.all(emailPromises);
-
-    // Small delay between batches to respect rate limits
+    // Small delay between batches to respect rate limits (2 requests per second = 500ms delay)
     if (i + batchSize < recipients.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
@@ -203,5 +281,7 @@ export async function POST(request: NextRequest) {
     sent: successCount,
     failed: errorCount,
     total: recipients.length,
+    sendStatus, // Per-recipient send status
+    errorDetails, // Per-recipient error details
   }, { status: 200 });
 }
