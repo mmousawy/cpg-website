@@ -31,7 +31,7 @@ export async function getEmailTypes(): Promise<EmailTypeData[]> {
     return [];
   }
 
-  return (data || []) as EmailTypeData[];
+  return (data || []) as unknown as EmailTypeData[];
 }
 
 /**

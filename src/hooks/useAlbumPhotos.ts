@@ -34,7 +34,7 @@ async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
         ...photoData,
         title: ap.title || photoData.title,
         album_photo_id: ap.id,
-        album_sort_order: ap.sort_order,
+        album_sort_order: ap.sort_order ?? undefined,
       };
     });
 

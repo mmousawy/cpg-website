@@ -1,14 +1,14 @@
 import {
-    Body,
-    Container,
-    Head,
-    Heading,
-    Hr,
-    Html,
-    Link,
-    Preview,
-    Tailwind,
-    Text,
+  Body,
+  Container,
+  Head,
+  Heading,
+  Hr,
+  Html,
+  Link,
+  Preview,
+  Tailwind,
+  Text,
 } from "@react-email/components";
 
 import { Database } from '@/database.types';

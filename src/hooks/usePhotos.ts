@@ -43,9 +43,9 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
 
   const photosWithAlbums = (data || []).map((photo) => {
     const albums = (photo.album_photos || [])
-      .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos_active: { count: number }[] } | null }) => ap.album)
-      .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos_active: { count: number }[] } => a !== null && !(a as any).deleted_at)
-      .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string } | null; album_photos_active: { count: number }[] }) => ({
+      .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string | null } | null; album_photos_active: { count: number }[] } | null }) => ap.album)
+      .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string | null } | null; album_photos_active: { count: number }[] } => a !== null && !(a as any).deleted_at)
+      .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string | null } | null; album_photos_active: { count: number }[] }) => ({
         id: a.id,
         title: a.title,
         slug: a.slug,

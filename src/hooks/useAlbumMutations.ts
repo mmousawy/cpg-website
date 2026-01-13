@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/utils/supabase/client';
 import { revalidateAlbum, revalidateAlbums } from '@/app/actions/revalidate';
-import type { AlbumWithPhotos } from '@/types/albums';
 import type { AlbumFormData, BulkAlbumFormData } from '@/components/manage';
+import type { AlbumWithPhotos } from '@/types/albums';
+import { supabase } from '@/utils/supabase/client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useCreateAlbum(userId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
@@ -39,8 +39,8 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
         const newAlbumWithPhotos: AlbumWithPhotos = {
           ...newAlbum,
           photos: [],
-          tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
-        } as AlbumWithPhotos;
+          tags: undefined, // Tags will be loaded when album is fetched
+        };
         return old ? [newAlbumWithPhotos, ...old] : [newAlbumWithPhotos];
       });
 
@@ -71,12 +71,12 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
         return old.map((a) =>
           a.id === albumId
             ? {
-                ...a,
-                title: data.title.trim(),
-                slug: data.slug.trim(),
-                description: data.description?.trim() || null,
-                is_public: data.isPublic,
-              }
+              ...a,
+              title: data.title.trim(),
+              slug: data.slug.trim(),
+              description: data.description?.trim() || null,
+              is_public: data.isPublic,
+            }
             : a,
         );
       });
@@ -111,9 +111,9 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
         return old.map((a) =>
           a.id === albumId
             ? {
-                ...a,
-                tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
-              } as AlbumWithPhotos
+              ...a,
+              tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
+            } as AlbumWithPhotos
             : a,
         );
       });
@@ -153,9 +153,9 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
         return old.map((a) =>
           albumIds.includes(a.id)
             ? {
-                ...a,
-                ...(data.isPublic !== null && { is_public: data.isPublic }),
-              }
+              ...a,
+              ...(data.isPublic !== null && { is_public: data.isPublic }),
+            }
             : a,
         );
       });

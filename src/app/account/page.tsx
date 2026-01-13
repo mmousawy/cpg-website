@@ -212,6 +212,13 @@ export default function AccountPage() {
           if (newProfile) {
             setProfile({
               ...newProfile,
+              social_links: (newProfile.social_links as SocialLink[] | null) ?? null,
+              album_card_style: (newProfile.album_card_style === 'large' || newProfile.album_card_style === 'compact'
+                ? newProfile.album_card_style
+                : null) as 'large' | 'compact' | null,
+              theme: (newProfile.theme && ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
+                ? newProfile.theme
+                : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
               newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
             });
             setNickname(newProfile.nickname || '');
@@ -219,9 +226,11 @@ export default function AccountPage() {
 
             // Load saved album card style from localStorage (takes priority)
             const storedStyle = localStorage.getItem('album-card-style');
-            const albumStyle = storedStyle === 'large' || storedStyle === 'compact'
+            const albumStyle: 'large' | 'compact' = (storedStyle === 'large' || storedStyle === 'compact')
               ? storedStyle
-              : newProfile.album_card_style || 'large';
+              : (newProfile.album_card_style === 'large' || newProfile.album_card_style === 'compact')
+                ? newProfile.album_card_style
+                : 'large';
 
             // Build email preferences object from loaded preferences
             const emailPrefs: Record<string, boolean> = {};
@@ -286,15 +295,26 @@ export default function AccountPage() {
           setSavedFormValues(formValues);
         }
       } else if (data) {
-        setProfile(data);
+        setProfile({
+          ...data,
+          social_links: (data.social_links as SocialLink[] | null) ?? null,
+          album_card_style: (data.album_card_style === 'large' || data.album_card_style === 'compact'
+            ? data.album_card_style
+            : null) as 'large' | 'compact' | null,
+          theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
+            ? data.theme
+            : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+        });
         setNickname(data.nickname || '');
         setSavedAvatarUrl(data.avatar_url);
 
         // Load saved album card style from localStorage (takes priority)
         const storedStyle = localStorage.getItem('album-card-style');
-        const albumStyle = storedStyle === 'large' || storedStyle === 'compact'
+        const albumStyle: 'large' | 'compact' = (storedStyle === 'large' || storedStyle === 'compact')
           ? storedStyle
-          : data.album_card_style || 'large';
+          : (data.album_card_style === 'large' || data.album_card_style === 'compact')
+            ? data.album_card_style
+            : 'large';
 
         // Get theme from database (don't use useTheme() value as it may be undefined initially)
         const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =

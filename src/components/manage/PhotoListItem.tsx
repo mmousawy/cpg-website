@@ -320,7 +320,7 @@ export default function PhotoListItem({
                 createPortal(
                   <div
                     ref={popoverRef}
-                    className="fixed z-[100] w-64 bg-background-light border border-border-color rounded-lg shadow-lg p-2 max-h-96 overflow-y-auto"
+                    className="fixed z-100 w-64 bg-background-light border border-border-color rounded-lg shadow-lg p-2 max-h-96 overflow-y-auto"
                     style={{
                       top: `${popoverPosition.top}px`,
                       right: `${popoverPosition.right}px`,
