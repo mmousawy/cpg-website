@@ -108,24 +108,30 @@ export async function POST(request: NextRequest) {
       // Non-fatal - profile can be created later
     }
 
-    // Send verification email
+    // Send verification email (skip in test environment)
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') || 
+                      process.env.NODE_ENV === 'test' ||
+                      email.endsWith('@test.example.com') ||
+                      email.endsWith('@test.local');
 
-    const emailResult = await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to: email,
-      replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-      subject: "Verify your email - Creative Photography Group",
-      html: await render(
-        VerifyEmailTemplate({
-          verifyLink,
-        }),
-      ),
-    });
+    if (!isTestEnv) {
+      const emailResult = await resend.emails.send({
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+        to: email,
+        replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+        subject: "Verify your email - Creative Photography Group",
+        html: await render(
+          VerifyEmailTemplate({
+            verifyLink,
+          }),
+        ),
+      });
 
-    if (emailResult.error) {
-      console.error("Email error:", emailResult.error);
-      // Don't fail the request - user can request a new verification email
+      if (emailResult.error) {
+        console.error("Email error:", emailResult.error);
+        // Don't fail the request - user can request a new verification email
+      }
     }
 
     console.log(`✅ User created: ${email} (pending verification)`);

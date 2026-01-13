@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Memory and performance optimizations
+  experimental: {
+    webpackMemoryOptimizations: true, // For production builds (uses Webpack)
+    turbo: {
+      memoryLimit: 4096, // Limit Turbopack memory to 4GB
+    },
+  },
   images: {
     qualities: [25, 50, 75, 85, 95],
     remotePatterns: [
