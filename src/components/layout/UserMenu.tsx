@@ -1,17 +1,18 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useTheme } from 'next-themes';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 
-import { useAuth } from '@/hooks/useAuth';
-import { useAdmin } from '@/hooks/useAdmin';
-import { useMounted } from '@/hooks/useMounted';
-import Avatar from '../auth/Avatar';
-import { routes } from '@/config/routes';
 import { signOutAction } from '@/app/actions/auth';
+import { routes } from '@/config/routes';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useAuth } from '@/hooks/useAuth';
+import { useMounted } from '@/hooks/useMounted';
+import { updateThemePreference } from '@/utils/updateTheme';
+import Avatar from '../auth/Avatar';
 
 export default function UserMenu() {
   const { user, profile, isLoading, signOut } = useAuth();
@@ -141,8 +142,17 @@ export default function UserMenu() {
 
             <div className="p-2">
               <button
-                onClick={() => {
-                  setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                onClick={async () => {
+                  const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+                  setTheme(newTheme);
+                  // Save to database if user is logged in
+                  if (user?.id) {
+                    try {
+                      await updateThemePreference(user.id, newTheme);
+                    } catch (error) {
+                      console.error('Failed to save theme preference:', error);
+                    }
+                  }
                 }}
                 className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
               >
@@ -211,8 +221,10 @@ export default function UserMenu() {
 
             <div className="border-t border-border-color mt-2 pt-2">
               <button
-                onClick={() => {
-                  setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                onClick={async () => {
+                  const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+                  setTheme(newTheme);
+                  // Note: Not saving to DB when not logged in (no user profile)
                 }}
                 className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
               >

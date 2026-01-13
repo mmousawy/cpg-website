@@ -47,7 +47,7 @@ export default function Header() {
   const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
 
   return (
-    <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light p-2 text-foreground shadow-md shadow-[#00000005]">
+    <header className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-t-4 sm:border-t-8 border-b-border-color border-t-primary bg-background-light px-4 py-2 text-foreground shadow-md shadow-[#00000005]">
       <div className={clsx(
         "flex w-full items-center justify-between gap-4",
         !isFullWidth && "max-w-screen-md",

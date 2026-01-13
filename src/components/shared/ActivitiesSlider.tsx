@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, A11y } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
+import { A11y, Navigation } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/react';
 
 import 'swiper/css';
 
@@ -190,6 +190,7 @@ export default function ActivitiesSlider() {
             centeredSlides={true}
             slidesOffsetBefore={12}
             slidesOffsetAfter={12}
+            slideToClickedSlide={true}
             breakpoints={{
               640: {
                 slidesPerView: 2,

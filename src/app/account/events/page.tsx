@@ -1,25 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+import EventCard, { isEventPast, type EventCardData } from '@/components/events/EventCard';
+import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
-import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { confirmCancelRSVP } from '@/utils/confirmHelpers';
 import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@/utils/supabase/client';
-import EventCard, { type EventCardData, isEventPast } from '@/components/events/EventCard';
-import Button from '@/components/shared/Button';
-import PageContainer from '@/components/layout/PageContainer';
 
+import { routes } from '@/config/routes';
+import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
 import SadSVG from 'public/icons/sad.svg';
-import ArrowRightSVG from 'public/icons/arrow-right.svg';
-import { routes } from '@/config/routes';
 
 // RSVP with joined event data - use non-null date since we filter for valid events
 type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'> & {
-  events: Omit<Pick<Tables<'events'>, 'id' | 'title' | 'date' | 'time' | 'location' | 'cover_image'>, 'date'> & {
+  events: Omit<Pick<Tables<'events'>, 'id' | 'title' | 'slug' | 'date' | 'time' | 'location' | 'cover_image' | 'description'>, 'date'> & {
     date: string  // Non-null since we only show events with valid dates
   }
 }
@@ -27,11 +25,9 @@ type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'cance
 export default function MyEventsPage() {
   // User is guaranteed by ProtectedRoute layout
   const { user } = useAuth();
-  const confirm = useConfirm();
 
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   // Compute once on mount to avoid React Compiler purity warning
   const [sevenDaysAgo] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -55,10 +51,12 @@ export default function MyEventsPage() {
             events (
               id,
               title,
+              slug,
               date,
               time,
               location,
-              cover_image
+              cover_image,
+              description
             )
           `)
           .eq('user_id', user.id)
@@ -79,53 +77,6 @@ export default function MyEventsPage() {
     loadRSVPs();
   }, [user]);
 
-  const handleCancel = async (rsvp: RSVP) => {
-    const confirmed = await confirm(confirmCancelRSVP());
-
-    if (!confirmed) return;
-
-    setCancellingId(rsvp.id);
-
-    try {
-      const result = await fetch('/api/cancel', {
-        method: 'POST',
-        body: JSON.stringify({ uuid: rsvp.uuid }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (result.ok && user) {
-        // Reload RSVPs
-        const supabase = createClient();
-        const { data } = await supabase
-          .from('events_rsvps')
-          .select(`
-            id,
-            uuid,
-            confirmed_at,
-            canceled_at,
-            attended_at,
-            created_at,
-            events (
-              id,
-              title,
-              date,
-              time,
-              location,
-              cover_image
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (data) {
-          setRsvps((data as unknown as RSVP[]) || []);
-        }
-      }
-    } finally {
-      setCancellingId(null);
-    }
-  };
-
   // Sort: upcoming (soonest first), past (most recent first)
   const upcomingRSVPs = rsvps
     .filter(r => !r.canceled_at && r.events && !isEventPast(r.events.date))
@@ -138,8 +89,8 @@ export default function MyEventsPage() {
   return (
     <PageContainer>
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">My events</h1>
-        <p className="text-lg opacity-70">
+        <h1 className="text-3xl font-bold mb-2">My events</h1>
+        <p className="text-base sm:text-lg opacity-70">
           View and manage your event registrations
         </p>
       </div>
@@ -181,8 +132,6 @@ export default function MyEventsPage() {
                 <RsvpEventCard
                   key={rsvp.id}
                   rsvp={rsvp}
-                  onCancel={() => handleCancel(rsvp)}
-                  isCancelling={cancellingId === rsvp.id}
                 />
               ))}
             </div>
@@ -224,15 +173,11 @@ export default function MyEventsPage() {
 
 function RsvpEventCard({
   rsvp,
-  onCancel,
-  isCancelling,
   isPast,
   isCanceled,
   sevenDaysAgo,
 }: {
   rsvp: RSVP
-  onCancel?: () => void
-  isCancelling?: boolean
   isPast?: boolean
   isCanceled?: boolean
   sevenDaysAgo?: number
@@ -246,7 +191,7 @@ function RsvpEventCard({
     ? new Date(event.date) > new Date(sevenDaysAgo)
     : false;
 
-  // Determine the status badge
+  // Determine the status badge - only show for past events (attended/not attended) or canceled
   const statusBadge = isCanceled ? (
     <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap">
       <CancelSVG className="h-3 w-3 fill-red-500" />
@@ -267,32 +212,31 @@ function RsvpEventCard({
         Not attended
       </span>
     )
-  ) : (
-    <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap">
-      <CheckSVG className="h-3 w-3 fill-green-600" />
-      Confirmed
-    </span>
-  );
+  ) : null; // No badge for upcoming events - they're all confirmed by default
+
+  // Only show badge if it exists (past events or canceled)
+  if (!statusBadge) {
+    return (
+      <EventCard
+        event={event as EventCardData}
+        description={event.description}
+        className="bg-background-light"
+      />
+    );
+  }
 
   return (
-    <EventCard
-      event={event as EventCardData}
-      rightSlot={
-        <div className="flex items-center gap-2">
-          {statusBadge}
-          {!isCanceled && !isPast && onCancel && (
-            <Button
-              onClick={onCancel}
-              disabled={isCancelling}
-              variant="danger"
-              size="sm"
-              className="rounded-full"
-            >
-              {isCancelling ? 'Canceling...' : 'Cancel'}
-            </Button>
-          )}
-        </div>
-      }
-    />
+    <div>
+      <EventCard
+        event={event as EventCardData}
+        description={event.description}
+        rightSlot={<div className="hidden sm:block">{statusBadge}</div>}
+        className="bg-background-light"
+      />
+      {/* Mobile: Show status badge below card */}
+      <div className="mt-2 sm:hidden">
+        {statusBadge}
+      </div>
+    </div>
   );
 }

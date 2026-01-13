@@ -1,8 +1,8 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import { useAuth } from '@/hooks/useAuth';
+import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -166,15 +166,15 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <h3 className="text-xl font-semibold">Comments ({comments.length})</h3>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Comments ({comments.length})</h3>
 
       {/* Comments List */}
       <div className="space-y-4">
         {isLoading ? (
-          <p className="text-foreground/70">Loading comments...</p>
+          <p className="text-base text-foreground/70">Loading comments...</p>
         ) : comments.length === 0 ? (
-          <p className="text-foreground/70">
+          <p className="text-base text-foreground/70">
             No comments yet. Be the first to comment!
           </p>
         ) : (

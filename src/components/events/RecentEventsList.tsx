@@ -1,4 +1,4 @@
-import EventCard, { type EventCardData, isEventPast } from './EventCard';
+import EventCard, { isEventPast, type EventCardData } from './EventCard';
 
 interface RecentEventsListProps {
   events: EventCardData[];
@@ -43,7 +43,7 @@ export default function RecentEventsList({ events, max = 3 }: RecentEventsListPr
   return (
     <div className="space-y-3">
       {sortedEvents.map((event) => (
-        <EventCard key={event.id} event={event} showBadge />
+        <EventCard key={event.id} event={event} showBadge description={event.description} />
       ))}
     </div>
   );

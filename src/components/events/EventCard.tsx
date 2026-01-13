@@ -15,6 +15,7 @@ export type EventCardData = {
   location: string | null;
   cover_image?: string | null;
   image_url?: string | null;
+  description?: string | null;
 };
 
 type EventCardVariant = 'compact' | 'detailed';
@@ -46,6 +47,10 @@ type EventCardProps = {
    * @default true
    */
   asLink?: boolean;
+  /**
+   * Description to display
+   */
+  description?: string | null;
 };
 
 /**
@@ -101,13 +106,13 @@ export default function EventCard({
     <div className="flex items-start gap-3 sm:gap-4">
       {/* Thumbnail */}
       {(imageSrc || event.image_url) && (
-        <div className="relative h-16 w-24 sm:h-20 sm:w-32 shrink-0 overflow-hidden rounded-lg bg-background-light">
+        <div className="relative h-16 w-20 sm:h-22 sm:w-32 shrink-0 overflow-hidden rounded-md bg-background-light">
           <Image
             src={imageSrc || event.image_url || ''}
             alt={event.title || 'Event cover'}
             sizes="256px"
-            loading="eager"
-            quality={95}
+            loading="lazy"
+            quality={85}
             fill
             className="object-cover"
           />
@@ -117,7 +122,7 @@ export default function EventCard({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1.5">
-          <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
+          <h4 className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2">
             {event.title}
           </h4>
           {showBadge && (
@@ -134,7 +139,7 @@ export default function EventCard({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/70">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mb-1 text-sm text-foreground/70">
           {event.date && (
             <span className="flex items-center gap-1">
               <CalendarSVG className="size-3.5 fill-foreground/60" />
@@ -154,6 +159,10 @@ export default function EventCard({
             </span>
           )}
         </div>
+        {/* Desktop: description in content area */}
+        {event.description && (
+          <p className="max-sm:hidden w-full max-w-[50ch] text-foreground/90 text-sm line-clamp-3">{event.description}</p>
+        )}
       </div>
 
       {/* Right slot for actions */}
@@ -163,8 +172,13 @@ export default function EventCard({
     </div>
   );
 
+  // Mobile: description below image and date/time
+  const mobileDescription = event.description ? (
+    <p className="sm:hidden mt-2 text-foreground/90 text-sm leading-snug line-clamp-3">{event.description}</p>
+  ) : null;
+
   const wrapperClasses = clsx(
-    'block rounded-xl border border-border-color bg-background p-3 sm:p-4 transition-colors group',
+    'block rounded-lg border border-border-color bg-background p-3 sm:p-4 transition-colors group',
     asLink && 'hover:border-primary cursor-pointer',
     className,
   );
@@ -173,9 +187,15 @@ export default function EventCard({
     return (
       <Link href={`/events/${event.slug}`} className={wrapperClasses}>
         {cardContent}
+        {mobileDescription}
       </Link>
     );
   }
 
-  return <div className={wrapperClasses}>{cardContent}</div>;
+  return (
+    <div className={wrapperClasses}>
+      {cardContent}
+      {mobileDescription}
+    </div>
+  );
 }

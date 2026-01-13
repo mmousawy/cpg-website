@@ -70,7 +70,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
   return (
     <StickyActionBar constrainWidth>
       <div className="flex flex-col gap-0.5">
-        <p className="text-sm text-foreground font-medium">
+        <p className="text-xs sm:text-sm text-foreground font-medium">
           {formatEventDate(event.date || '', { includeYear: true })} at {formatEventTime(event.time || '')}
         </p>
 
@@ -78,8 +78,8 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
           {isLoading ? (
             <div className="h-5 w-24 animate-pulse rounded bg-border-color" />
           ) : hasRSVP ? (
-            <p className="text-sm font-medium text-primary">
-            ✓ You&apos;re going!
+            <p className="flex items-center text-sm font-medium text-primary">
+              <CheckSVG className="size-4 fill-current inline-block mr-1.5 align-top" /> You&apos;re going!
             </p>
           ) : spotsLeft !== null && spotsLeft > 0 ? (
             <p className="text-sm text-foreground/70">
@@ -100,12 +100,13 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
       <Button
         onClick={openModal}
         disabled={isLoading || (spotsLeft === 0 && !hasRSVP)}
-        icon={hasRSVP ? <CloseSVG /> : <CheckSVG />}
+        icon={hasRSVP ? <CloseSVG className="size-4 -ml-0.5 fill-current" /> : <CheckSVG className="size-4 -ml-0.5 fill-current" />}
         variant={hasRSVP ? 'secondary' : 'primary'}
         size="md"
         className="rounded-full"
       >
-        {isLoading ? '...' : hasRSVP ? 'Cancel RSVP' : 'Join this event'}
+        {isLoading ? '...' : hasRSVP ? 'Cancel RSVP' : 'Join event'}
+
       </Button>
     </StickyActionBar>
   );

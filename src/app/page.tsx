@@ -94,7 +94,7 @@ export default async function Home() {
     // Fetch recent events - get more to allow client-side sorting for upcoming/past mix
     supabase
       .from('events')
-      .select('id, title, date, location, time, cover_image, image_url, slug')
+      .select('id, title, date, location, time, cover_image, image_url, slug, description')
       .order('date', { ascending: false })
       .limit(6),
   ]);
@@ -145,8 +145,8 @@ export default async function Home() {
       {/* Explore Section - Events & Galleries */}
       <PageContainer innerClassName='space-y-6 md:space-y-8'>
         <Container variant="gradient">
-          <h2 className="text-2xl font-bold mb-4">Explore what we&apos;re up to</h2>
-          <p className="text-foreground/90 leading-relaxed mb-8">
+          <h2 className="text-2xl font-bold mb-2">Explore what we&apos;re up to</h2>
+          <p className="text-foreground/70 leading-relaxed mb-8">
             Join our meetups and discover photos from the community.
           </p>
 

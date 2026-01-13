@@ -129,16 +129,16 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
 
   return (
     <div>
-      <span className='mb-2 flex gap-4 text-[15px] font-semibold leading-6'>
+      <span className='mb-2 flex gap-4 text-md font-semibold leading-6'>
         <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground " />
           {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
         <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground " />{event.time?.substring(0, 5)}</span>
       </span>
-      <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'>
+      <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-md font-semibold leading-6 max-sm:hidden'>
         <LocationSVG className="shrink-0 fill-foreground " />{event.location?.replace(/\r\n/gm, ' • ')}
       </span>
-      <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold sm:hidden'>
+      <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-md font-semibold sm:hidden'>
         <LocationSVG className="shrink-0 fill-foreground " />{event.location}
       </span>
 
@@ -179,7 +179,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
         >
           <div className='flex gap-2 rounded-md bg-foreground/5 px-4 py-2'>
             <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold leading-6 text-foreground">Signing up as</p>
+              <p className="text-sm font-semibold leading-6 text-foreground/80">Signing up as</p>
               <div
                 className="inline-flex items-center gap-1.5 mb-2"
               >
@@ -191,14 +191,14 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
                 />
                 <span className="flex flex-col leading-tight">
                   <span className="font-medium">{profile?.full_name || user.user_metadata?.full_name || user.email}</span>
-                  <span className="text-xs opacity-70">@{profile?.nickname || user.user_metadata?.nickname || user.email}</span>
+                  <span className="text-sm opacity-70">@{profile?.nickname || user.user_metadata?.nickname || user.email}</span>
                 </span>
               </div>
             </div>
           </div>
 
           <p className="text-sm text-foreground/70">
-            Click the button below to confirm your spot. You&apos;ll receive a confirmation email with all the event details.
+            You can cancel your RSVP anytime. You&apos;ll receive a confirmation email with all the event details.
           </p>
 
           {error && (

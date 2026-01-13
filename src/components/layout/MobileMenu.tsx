@@ -4,6 +4,7 @@ import { signOutAction } from '@/app/actions/auth';
 import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
+import { updateThemePreference } from '@/utils/updateTheme';
 import clsx from 'clsx';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -160,7 +161,18 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
 
             <div className="p-2">
               <button
-                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                onClick={async () => {
+                  const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+                  setTheme(newTheme);
+                  // Save to database if user is logged in
+                  if (user?.id) {
+                    try {
+                      await updateThemePreference(user.id, newTheme);
+                    } catch (error) {
+                      console.error('Failed to save theme preference:', error);
+                    }
+                  }
+                }}
                 className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
               >
                 <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -231,7 +243,11 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             <div className="mx-2 my-2 border-t border-border-color-strong" />
 
             <button
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              onClick={async () => {
+                const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme);
+                // Note: Not saving to DB when not logged in (no user profile)
+              }}
               className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
             >
               <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
