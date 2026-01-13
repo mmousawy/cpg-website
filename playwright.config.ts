@@ -7,10 +7,10 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: process.env.CI ? 'html' : 'list',
-  
+
   // Global teardown to clean up test data
   globalTeardown: './e2e/global-teardown.ts',
-  
+
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -24,13 +24,11 @@ export default defineConfig({
     },
   ],
 
-  // Only start server in CI (locally, run `npm run dev` separately)
-  webServer: process.env.CI
-    ? {
-        command: 'npm start',
-        url: 'http://localhost:3000',
-        reuseExistingServer: false,
-        timeout: 120000,
-      }
-    : undefined,
+  // Auto-start server for tests
+  webServer: {
+    command: process.env.CI ? 'npm start' : 'npm run dev:light',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI, // Reuse existing server locally
+    timeout: 120000,
+  },
 });
