@@ -1,7 +1,7 @@
 import { revalidateAlbum } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { PhotoWithAlbums } from '@/types/photos';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type PhotoFilter = 'all' | 'public' | 'private';
@@ -38,7 +38,6 @@ export function useDeletePhotos(
   nickname?: string | null,
 ) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { photoIds: string[]; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
@@ -107,7 +106,6 @@ export function useUpdatePhoto(
   nickname?: string | null,
 ) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { photoId: string; data: PhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
@@ -176,7 +174,6 @@ export function useBulkUpdatePhotos(
   nickname?: string | null,
 ) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { photoIds: string[]; data: BulkPhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
@@ -245,7 +242,6 @@ export function useBulkUpdatePhotos(
 
 export function useReorderPhotos(userId: string | undefined, filter: PhotoFilter = 'all') {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { photos: PhotoWithAlbums[]; previousPhotos: PhotoWithAlbums[] | undefined },

@@ -15,8 +15,8 @@ import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteEvent } from '@/utils/confirmHelpers';
-import { createClient } from '@/utils/supabase/client';
 
 import { revalidateEvent } from '@/app/actions/revalidate';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -34,7 +34,7 @@ export default function AdminEventFormPage() {
   const confirm = useConfirm();
   const router = useRouter();
   const params = useParams();
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const eventSlug = params.eventId as string;
   const isNewEvent = eventSlug === 'new';

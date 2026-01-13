@@ -9,8 +9,8 @@ import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
 import PageLoading from '@/components/shared/PageLoading';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
-import { createClient } from '@/utils/supabase/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -36,7 +36,7 @@ type OnboardingFormData = z.infer<typeof onboardingSchema>
 export default function OnboardingClient() {
   const { user, profile, isLoading, refreshProfile } = useAuth();
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);

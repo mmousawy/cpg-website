@@ -27,10 +27,10 @@ import {
 } from '@/hooks/usePhotoMutations';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { usePhotos } from '@/hooks/usePhotos';
+import { useSupabase } from '@/hooks/useSupabase';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
-import { createClient } from '@/utils/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
@@ -41,7 +41,7 @@ import TrashSVG from 'public/icons/trash.svg';
 
 export default function PhotosPage() {
   const { user, profile } = useAuth();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);

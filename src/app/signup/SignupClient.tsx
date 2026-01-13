@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
@@ -18,7 +18,7 @@ import ArrowLink from '@/components/shared/ArrowLink';
 
 export default function SignupClient() {
   const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth();
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const [fullName, setFullName] = useState('');
   const [nickname, setNickname] = useState('');

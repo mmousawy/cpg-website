@@ -5,7 +5,7 @@
  */
 'use client';
 
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -25,7 +25,6 @@ const ManageContext = createContext<ManageContextType>({
 
 export function ManageProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const supabase = createClient();
   const [photoCount, setPhotoCount] = useState(0);
   const [albumCount, setAlbumCount] = useState(0);
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
@@ -55,7 +54,7 @@ export function ManageProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoadingCounts(false);
     }
-  }, [user, supabase]);
+  }, [user]);
 
   useEffect(() => {
     if (user) {

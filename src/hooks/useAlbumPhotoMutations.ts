@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { revalidateAlbum } from '@/app/actions/revalidate';
 import type { PhotoWithAlbums } from '@/types/photos';
 import type { PhotoFormData } from '@/components/manage';
 
 export function useRemoveFromAlbum(albumId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { albumPhotoIds: string[]; previousPhotos: PhotoWithAlbums[] | undefined },
@@ -59,7 +58,6 @@ export function useRemoveFromAlbum(albumId: string | undefined, nickname: string
 
 export function useReorderAlbumPhotos(albumId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { photos: PhotoWithAlbums[]; previousPhotos: PhotoWithAlbums[] | undefined },
@@ -106,7 +104,6 @@ export function useReorderAlbumPhotos(albumId: string | undefined, nickname: str
 
 export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { photoId: string; data: PhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined },
@@ -175,7 +172,6 @@ export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: strin
 
 export function useDeleteAlbumPhoto(albumId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { albumPhotoId: string; previousPhotos: PhotoWithAlbums[] | undefined },

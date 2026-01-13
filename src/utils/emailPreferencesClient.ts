@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 
 export type EmailType = 'events' | 'newsletter' | 'notifications';
 
@@ -20,7 +20,6 @@ export type EmailPreference = {
  * Get all email types from the database
  */
 export async function getEmailTypes(): Promise<EmailTypeData[]> {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from('email_types' as any)
@@ -39,7 +38,6 @@ export async function getEmailTypes(): Promise<EmailTypeData[]> {
  * Get user's email preferences for all types
  */
 export async function getUserEmailPreferences(userId: string): Promise<EmailPreference[]> {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from('email_preferences' as any)
@@ -67,7 +65,6 @@ export async function updateEmailPreferences(
   userId: string,
   preferences: Array<{ email_type_id: number; opted_out: boolean }>
 ): Promise<{ error: Error | null }> {
-  const supabase = createClient();
 
   try {
     // Batch upsert all preferences in a single operation

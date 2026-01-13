@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { Database } from '@/database.types';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchingProfileRef.current = userId;
 
     try {
-      const { data, error } = await createClient()
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -68,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    const supabase = createClient();
 
     const updateLastLoggedIn = (userId: string): void => {
       if (lastLoggedInUpdatedRef.current === userId) return;
@@ -126,11 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    await createClient().auth.signOut();
+    await supabase.auth.signOut();
   }, []);
 
   const signInWithGoogle = useCallback(async (redirectTo?: string) => {
-    const { error } = await createClient().auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth-callback${redirectTo ? `?redirectTo=${redirectTo}` : ''}` },
     });
@@ -138,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithDiscord = useCallback(async (redirectTo?: string) => {
-    const { error } = await createClient().auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: { redirectTo: `${window.location.origin}/auth-callback${redirectTo ? `?redirectTo=${redirectTo}` : ''}` },
     });
@@ -146,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const { error } = await createClient().auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   }, []);
 
@@ -196,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {
-    const { error } = await createClient().auth.updateUser({ password: newPassword });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error };
   }, []);
 

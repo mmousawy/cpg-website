@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 
 /**
  * Update user's theme preference in the database
@@ -7,9 +7,8 @@ import { createClient } from '@/utils/supabase/client';
  */
 export async function updateThemePreference(
   userId: string,
-  theme: 'light' | 'dark' | 'midnight' | 'system'
+  theme: 'light' | 'dark' | 'midnight' | 'system',
 ): Promise<{ error: Error | null }> {
-  const supabase = createClient();
 
   try {
     const { error } = await supabase

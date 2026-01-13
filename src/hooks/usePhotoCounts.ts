@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 
 type PhotoCounts = {
   photoCount: number;
@@ -7,7 +7,6 @@ type PhotoCounts = {
 };
 
 async function fetchPhotoCounts(userId: string): Promise<PhotoCounts> {
-  const supabase = createClient();
 
   const [photosResult, albumsResult] = await Promise.all([
     supabase

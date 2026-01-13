@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
 import { uploadPhoto } from '@/utils/uploadPhoto';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { UploadDropzone, AlbumPicker } from '@/components/manage';
@@ -21,7 +21,7 @@ export default function UploadPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const [files, setFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);

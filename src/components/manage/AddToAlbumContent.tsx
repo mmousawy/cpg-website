@@ -3,8 +3,8 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import type { Photo } from '@/types/photos';
-import { createClient } from '@/utils/supabase/client';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import PhotoGrid from './PhotoGrid';
 
@@ -22,7 +22,7 @@ export default function AddToAlbumContent({
   onSuccess,
 }: AddToAlbumContentProps) {
   const { user } = useAuth();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());

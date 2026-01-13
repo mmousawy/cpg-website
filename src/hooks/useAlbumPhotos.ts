@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import type { PhotoWithAlbums } from '@/types/photos';
 import type { Photo } from '@/types/photos';
 
 async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
-  const supabase = createClient();
 
   const { data: albumPhotosData, error } = await supabase
     .from('album_photos')

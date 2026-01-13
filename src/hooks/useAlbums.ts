@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import type { AlbumWithPhotos } from '@/types/albums';
 
 async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from('albums')
@@ -50,7 +49,6 @@ export function useAlbums(userId: string | undefined) {
 }
 
 async function fetchAlbumBySlug(userId: string, slug: string) {
-  const supabase = createClient();
 
   const { data, error } = await supabase
     .from('albums')

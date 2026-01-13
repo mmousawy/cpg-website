@@ -8,8 +8,8 @@ import Button from '../shared/Button';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import { CPGEvent } from '@/types/events';
-import { createClient } from '@/utils/supabase/client';
 
 import CheckSVG from 'public/icons/check.svg';
 
@@ -21,6 +21,7 @@ type Props = {
 export default function EventRsvpStatus({ className, event }: Props) {
   const modalContext = useContext(ModalContext);
   const { user } = useAuth();
+  const supabase = useSupabase();
   const [hasRSVP, setHasRSVP] = useState(false);
   const [rsvpUuid, setRsvpUuid] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,8 +42,6 @@ export default function EventRsvpStatus({ className, event }: Props) {
         setIsLoading(false);
         return;
       }
-
-      const supabase = createClient();
       const { data } = await supabase
         .from('events_rsvps')
         .select('id, uuid')

@@ -1,13 +1,15 @@
 'use client';
 
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/utils/supabase/client";
 import { createContext } from "react";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/database.types';
 
-export const SupabaseContext = createContext<{ client: ReturnType<typeof createClient> | null }>({ client: null });
+export const SupabaseContext = createContext<{ client: SupabaseClient<Database> | null }>({ client: null });
 
-export default function ThemeProviderWrapper({ children }: { children: React.ReactNode }) {
+export default function SupabaseProvider({ children }: { children: React.ReactNode }) {
   return (
-    <SupabaseContext.Provider value={{ client: createClient() }}>
+    <SupabaseContext.Provider value={{ client: supabase }}>
       {children}
     </SupabaseContext.Provider>
   );

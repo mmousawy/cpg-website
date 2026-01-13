@@ -8,7 +8,7 @@ import { formatEventDate, formatEventTime, isEventPast } from '@/components/even
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
-import { createClient } from '@/utils/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import EditSVG from 'public/icons/edit.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -20,7 +20,7 @@ type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 
 
 export default function AdminEventsPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -7,7 +7,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
-import { createClient } from '@/utils/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
 
 import { routes } from '@/config/routes';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
@@ -25,6 +25,7 @@ type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'cance
 export default function MyEventsPage() {
   // User is guaranteed by ProtectedRoute layout
   const { user } = useAuth();
+  const supabase = useSupabase();
 
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +39,6 @@ export default function MyEventsPage() {
 
     const loadRSVPs = async () => {
       try {
-        const supabase = createClient();
         const { data, error } = await supabase
           .from('events_rsvps')
           .select(`

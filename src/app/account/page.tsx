@@ -17,8 +17,8 @@ import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
+import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, getUserEmailPreferences, updateEmailPreferences, type EmailPreference, type EmailTypeData } from '@/utils/emailPreferencesClient';
-import { createClient } from '@/utils/supabase/client';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
 import Avatar from '@/components/auth/Avatar';
@@ -69,7 +69,7 @@ export default function AccountPage() {
   // User is guaranteed by ProtectedRoute layout
   const { user, refreshProfile: refreshAuthProfile } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<Profile | null>(null);

@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { revalidateAlbum, revalidateAlbums } from '@/app/actions/revalidate';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { AlbumFormData, BulkAlbumFormData } from '@/components/manage';
 
 export function useCreateAlbum(userId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation({
     mutationFn: async (data: AlbumFormData) => {
@@ -55,7 +54,6 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
 
 export function useUpdateAlbum(userId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { albumId: string; data: AlbumFormData; previousAlbums: AlbumWithPhotos[] | undefined },
@@ -138,7 +136,6 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
 
 export function useBulkUpdateAlbums(userId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { albumIds: string[]; data: BulkAlbumFormData; previousAlbums: AlbumWithPhotos[] | undefined },
@@ -237,7 +234,6 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
 
 export function useDeleteAlbums(userId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
-  const supabase = createClient();
 
   return useMutation<
     { albumIds: string[]; previousAlbums: AlbumWithPhotos[] | undefined },

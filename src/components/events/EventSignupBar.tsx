@@ -5,8 +5,8 @@ import SignupForm from '@/components/auth/SignupForm';
 import Button from '@/components/shared/Button';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import type { CPGEvent } from '@/types/events';
-import { createClient } from '@/utils/supabase/client';
 import { useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
@@ -24,14 +24,14 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
   const [rsvpUuid, setRsvpUuid] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const supabase = useSupabase();
+
   useEffect(() => {
     const checkRSVP = async () => {
       if (!user || !event) {
         setIsLoading(false);
         return;
       }
-
-      const supabase = createClient();
       const { data } = await supabase
         .from('events_rsvps')
         .select('id, uuid')

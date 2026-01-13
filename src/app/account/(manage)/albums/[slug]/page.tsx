@@ -29,10 +29,10 @@ import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
 import { useAlbumBySlug } from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
+import { useSupabase } from '@/hooks/useSupabase';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
-import { createClient } from '@/utils/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import FolderSVG from 'public/icons/folder.svg';
@@ -48,7 +48,7 @@ export default function AlbumDetailPage() {
   const slug = params.slug as string;
 
   const { user, profile } = useAuth();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const modalContext = useContext(ModalContext);
   const confirm = useConfirm();

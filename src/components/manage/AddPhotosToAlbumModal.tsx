@@ -7,9 +7,9 @@ import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
-import { createClient } from '@/utils/supabase/client';
 import clsx from 'clsx';
 import Image from 'next/image';
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -31,7 +31,7 @@ export default function AddPhotosToAlbumModal({
   onSuccess,
 }: AddPhotosToAlbumModalProps) {
   const { user, profile } = useAuth();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const [albums, setAlbums] = useState<AlbumWithCount[]>([]);
   const [selectedAlbumIds, setSelectedAlbumIds] = useState<Set<string>>(new Set());

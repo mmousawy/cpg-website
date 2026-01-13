@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
 import Button from '@/components/shared/Button';
 import Textarea from '@/components/shared/Textarea';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -25,7 +25,7 @@ export default function EmailAttendeesModal({
   onClose,
   onSuccess,
 }: EmailAttendeesModalProps) {
-  const supabase = createClient();
+  const supabase = useSupabase();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [isLoadingRecipients, setIsLoadingRecipients] = useState(true);
   const [message, setMessage] = useState('');

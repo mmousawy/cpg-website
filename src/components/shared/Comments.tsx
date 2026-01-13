@@ -2,8 +2,8 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
-import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import Avatar from '../auth/Avatar';
@@ -34,7 +34,7 @@ interface CommentsProps {
 export default function Comments({ albumId, photoId }: CommentsProps) {
   const { user, isAdmin } = useAuth();
   const confirm = useConfirm();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(true);

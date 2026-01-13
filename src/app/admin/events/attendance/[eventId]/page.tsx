@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import clsx from 'clsx';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import type { Tables } from '@/database.types';
-import { createClient } from '@/utils/supabase/client';
-import Button from '@/components/shared/Button';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
+import type { Tables } from '@/database.types';
+import { useSupabase } from '@/hooks/useSupabase';
 import SadSVG from 'public/icons/sad.svg';
 
-import CheckSVG from 'public/icons/check.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
+import CheckSVG from 'public/icons/check.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
@@ -31,7 +31,7 @@ export default function AdminEventAttendancePage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
   const params = useParams();
   const eventId = parseInt(params.eventId as string);
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const [event, setEvent] = useState<any>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);

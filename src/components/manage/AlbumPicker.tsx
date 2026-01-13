@@ -3,8 +3,8 @@
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
-import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
 
 interface AlbumPickerProps {
@@ -19,7 +19,7 @@ export default function AlbumPicker({
   onCreateNew,
 }: AlbumPickerProps) {
   const { user } = useAuth();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newAlbumTitle, setNewAlbumTitle] = useState('');
