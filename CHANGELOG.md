@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/mmousawy/cpg-website/compare/v1.2.0...v1.3.0) (2026-01-14)
+
+
+### Features
+
+* Use cache tags & Suspense fixes for random assets and dynamic routes ([a7f7ddf](https://github.com/mmousawy/cpg-website/commit/a7f7ddf93d374979527837e58a751df366f2686a))
+
+
+### Bug Fixes
+
+* enhance revalidation and loading patterns in client components ([cd9197c](https://github.com/mmousawy/cpg-website/commit/cd9197c5d75996b24bb2019daab96aaf345eb7af))
+
 ## [1.2.0](https://github.com/mmousawy/cpg-website/compare/v1.1.0...v1.2.0) (2026-01-14)
 
 
