@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/mmousawy/cpg-website/compare/v1.3.3...v1.3.4) (2026-01-14)
+
+
+### Bug Fixes
+
+* enhance caching and static params for dynamic routes ([3f0810b](https://github.com/mmousawy/cpg-website/commit/3f0810b7214172ff4d4edee56e1e751d6d281c18))
+
 ## [1.3.3](https://github.com/mmousawy/cpg-website/compare/v1.3.2...v1.3.3) (2026-01-14)
 
 
