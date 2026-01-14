@@ -5,23 +5,24 @@ import FullSizeGalleryButton from '@/components/photo/FullSizeGalleryButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import Comments from '@/components/shared/Comments';
 import ContentHeader from '@/components/shared/ContentHeader';
+import { getPhotosByUrls } from '@/lib/data/albums';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
-import { getAlbumBySlug, getPhotosByUrls } from '@/lib/data/albums';
-import { notFound } from 'next/navigation';
+import { cacheLife, cacheTag } from 'next/cache';
 
 type AlbumContentProps = {
+  album: NonNullable<Awaited<ReturnType<typeof import('@/lib/data/albums').getAlbumBySlug>>>;
   nickname: string;
   albumSlug: string;
 };
 
-export default async function AlbumContent({ nickname, albumSlug }: AlbumContentProps) {
-  // Fetch album data
-  const album = await getAlbumBySlug(nickname, albumSlug);
+export default async function AlbumContent({ album, nickname, albumSlug }: AlbumContentProps) {
+  'use cache';
 
-  if (!album) {
-    notFound();
-  }
+  // Apply cache settings
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag(`profile-${nickname}`);
 
   const moderationData = {
     is_suspended: (album as any)?.is_suspended || false,

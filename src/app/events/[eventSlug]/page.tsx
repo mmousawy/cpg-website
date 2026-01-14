@@ -102,34 +102,45 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
   );
 }
 
+// Fetch data OUTSIDE cache to handle 404 properly
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
-  'use cache';
-
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
-
-  // Apply cache settings after extracting params
-  cacheLife('max');
-  cacheTag('events');
 
   if (!eventSlug) {
     notFound();
   }
 
-  // Fetch event and hosts in parallel using cached functions
-  const [eventData, hosts] = await Promise.all([
-    getEventBySlug(eventSlug),
-    getOrganizers(5),
-  ]);
-
+  // Fetch event outside cache to handle 404
+  const eventData = await getEventBySlug(eventSlug);
   const { event, serverNow } = eventData;
 
   if (!event) {
     notFound();
   }
 
-  // Fetch attendees using cached function
-  const attendees = await getEventAttendeesForEvent(event.id);
+  // Pass to cached content component
+  return <CachedEventContent event={event} serverNow={serverNow} />;
+}
+
+// Separate cached component for the content
+async function CachedEventContent({
+  event,
+  serverNow,
+}: {
+  event: NonNullable<Awaited<ReturnType<typeof getEventBySlug>>['event']>;
+  serverNow: number;
+}) {
+  'use cache';
+
+  cacheLife('max');
+  cacheTag('events');
+
+  // Fetch hosts and attendees using cached functions
+  const [hosts, attendees] = await Promise.all([
+    getOrganizers(5),
+    getEventAttendeesForEvent(event.id),
+  ]);
 
   // Format the event date
   const eventDate = event.date ? new Date(event.date) : null;

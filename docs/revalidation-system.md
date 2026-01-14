@@ -34,10 +34,10 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 │                  (src/app/actions/revalidate.ts)                    │
 │                                                                     │
 │  revalidateTag('events', 'max')        → Invalidates event cache    │
-│  revalidateTag('event-attendees'...)   → Invalidates RSVP data      │
+│  revalidateTag('event-attendees', ..)  → Invalidates RSVP data      │
 │  revalidateTag('albums', 'max')        → Invalidates album cache    │
 │  revalidateTag('profiles', 'max')      → Invalidates profiles cache │
-│  revalidateTag('profile-nick', 'max')  → Invalidates specific user  │
+│  revalidateTag('profile-[nick]', ..)   → Invalidates specific user  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 

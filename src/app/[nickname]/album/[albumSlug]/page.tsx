@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import { getAlbumBySlug } from '@/lib/data/albums';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
@@ -34,22 +33,24 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   };
 }
 
+// Page fetches album OUTSIDE cache to handle 404 properly
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
-  'use cache';
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
   const albumSlug = resolvedParams?.albumSlug || '';
 
-  // Apply cache settings after extracting params
-  cacheLife('max');
-  cacheTag('albums');
-  cacheTag(`profile-${nickname}`);
-
   if (!nickname || !albumSlug) {
     notFound();
   }
 
-  return <AlbumContent nickname={nickname} albumSlug={albumSlug} />;
+  // Fetch album outside cache to handle 404
+  const album = await getAlbumBySlug(nickname, albumSlug);
+
+  if (!album) {
+    notFound();
+  }
+
+  // Pass album data to cached content component
+  return <AlbumContent album={album} nickname={nickname} albumSlug={albumSlug} />;
 }

@@ -11,10 +11,10 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import {
-  getProfileByNickname,
-  getProfileStats,
-  getUserPublicPhotoCount,
-  getUserPublicPhotos,
+    getProfileByNickname,
+    getProfileStats,
+    getUserPublicPhotoCount,
+    getUserPublicPhotos,
 } from '@/lib/data/profiles';
 
 type SocialLink = { label: string; url: string };
@@ -52,28 +52,34 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
-  'use cache';
-
   const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
 
-  // Apply cache settings after extracting params
-  cacheLife('max');
-  cacheTag('profiles');
-  cacheTag(`profile-${nickname}`);
-
   if (!nickname) {
     notFound();
   }
 
-  // Fetch profile using cached data function
+  // Fetch profile first (outside cache) to handle 404 properly
   const profile = await getProfileByNickname(nickname);
 
   if (!profile) {
     notFound();
   }
+
+  // Now render the cached content
+  return <ProfileContent profile={profile} nickname={nickname} />;
+}
+
+// Separate cached component for the profile content
+async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>; nickname: string }) {
+  'use cache';
+
+  // Apply cache settings
+  cacheLife('max');
+  cacheTag('profiles');
+  cacheTag(`profile-${nickname}`);
 
   // Fetch user's albums and photos using cached data functions
   const [albums, publicPhotos, totalPhotos] = await Promise.all([

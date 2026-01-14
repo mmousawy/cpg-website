@@ -38,30 +38,42 @@ export async function generateMetadata({ params }: { params: Params }) {
   };
 }
 
+// Fetch data OUTSIDE cache to handle 404 properly
 export default async function AlbumPhotoPage({ params }: { params: Params }) {
-  'use cache';
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
   const albumSlug = resolvedParams?.albumSlug || '';
   const photoId = resolvedParams?.photoId || '';
 
-  // Apply cache settings after extracting params
-  cacheLife('max');
-  cacheTag('albums');
-  cacheTag(`profile-${nickname}`);
-
   if (!nickname || !albumSlug || !photoId) {
     notFound();
   }
 
-  // Use cached function
+  // Fetch data outside cache to handle 404
   const result = await getAlbumPhotoByShortId(nickname, albumSlug, photoId);
 
   if (!result) {
     notFound();
   }
+
+  // Pass to cached content component
+  return <CachedAlbumPhotoContent result={result} nickname={nickname} />;
+}
+
+// Separate cached component for the content
+async function CachedAlbumPhotoContent({
+  result,
+  nickname,
+}: {
+  result: NonNullable<Awaited<ReturnType<typeof getAlbumPhotoByShortId>>>;
+  nickname: string;
+}) {
+  'use cache';
+
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag(`profile-${nickname}`);
 
   return (
     <PhotoPageContent
