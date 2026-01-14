@@ -448,10 +448,11 @@ Note: Since client components run on the client after hydration, `new Date()` is
 
 ### Dynamic Route Pattern
 
-Dynamic routes with Cache Components require `generateStaticParams` and `loading.tsx`:
+Dynamic routes with Cache Components require `'use cache'`, `generateStaticParams`, and `loading.tsx`:
 
 ```typescript
 // src/app/[nickname]/album/[albumSlug]/page.tsx
+import { cacheLife, cacheTag } from 'next/cache';
 
 // Required: Return at least one sample path for build-time validation
 export async function generateStaticParams() {
@@ -465,10 +466,23 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function Page({ params }) {
+  'use cache';  // <-- CRITICAL: Cache the entire RSC payload
+
   const { nickname, albumSlug } = await params;
+
+  // Apply cache settings after extracting params
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag(`profile-${nickname}`);
+
   return <AlbumContent nickname={nickname} albumSlug={albumSlug} />;
 }
 ```
+
+**Why page-level `'use cache'` is essential:**
+- Without it, only the data fetches are cached, but the page is still re-rendered on every request
+- With it, the entire RSC (React Server Component) payload is cached
+- The page will be served instantly from cache until a `revalidateTag()` call invalidates it
 
 ```typescript
 // src/app/[nickname]/album/[albumSlug]/loading.tsx

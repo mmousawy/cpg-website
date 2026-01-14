@@ -82,6 +82,7 @@ export async function getPastEvents(limit = 5) {
 /**
  * Get a single event by slug
  * Tagged with 'events' for granular cache invalidation
+ * Returns event with a server timestamp for date comparisons
  */
 export async function getEventBySlug(slug: string) {
   'use cache';
@@ -96,7 +97,10 @@ export async function getEventBySlug(slug: string) {
     .eq('slug', slug)
     .single();
 
-  return event as CPGEvent | null;
+  return {
+    event: event as CPGEvent | null,
+    serverNow: Date.now(),
+  };
 }
 
 /**

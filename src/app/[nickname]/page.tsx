@@ -5,6 +5,7 @@ import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
@@ -17,6 +18,11 @@ import {
 } from '@/lib/data/profiles';
 
 type SocialLink = { label: string; url: string };
+
+// Required for build-time validation with cacheComponents
+export async function generateStaticParams() {
+  return [{ nickname: 'sample' }];
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
@@ -46,10 +52,17 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
+  'use cache';
+
   const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
+
+  // Apply cache settings after extracting params
+  cacheLife('max');
+  cacheTag('profiles');
+  cacheTag(`profile-${nickname}`);
 
   if (!nickname) {
     notFound();

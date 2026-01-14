@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventSignupBar from '@/components/events/EventSignupBar';
@@ -23,6 +24,11 @@ type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
   profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null
 }
 
+// Required for build-time validation with cacheComponents
+export async function generateStaticParams() {
+  return [{ eventSlug: 'sample' }];
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
@@ -34,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   }
 
   // Use cached function for metadata
-  const event = await getEventBySlug(eventSlug);
+  const { event } = await getEventBySlug(eventSlug);
 
   if (!event) {
     return {
@@ -97,18 +103,26 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
+  'use cache';
+
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
+
+  // Apply cache settings after extracting params
+  cacheLife('max');
+  cacheTag('events');
 
   if (!eventSlug) {
     notFound();
   }
 
   // Fetch event and hosts in parallel using cached functions
-  const [event, hosts] = await Promise.all([
+  const [eventData, hosts] = await Promise.all([
     getEventBySlug(eventSlug),
     getOrganizers(5),
   ]);
+
+  const { event, serverNow } = eventData;
 
   if (!event) {
     notFound();
@@ -131,10 +145,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   // Format time
   const formattedTime = event.time ? event.time.substring(0, 5) : 'Time TBD';
 
-  // Check if event is in the past
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const isPastEvent = eventDate ? eventDate < now : false;
+  // Check if event is in the past using server timestamp from cache
+  const serverDate = new Date(serverNow);
+  serverDate.setHours(0, 0, 0, 0);
+  const isPastEvent = eventDate ? eventDate < serverDate : false;
 
   return (
     <>

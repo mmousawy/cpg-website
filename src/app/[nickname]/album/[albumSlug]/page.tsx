@@ -1,12 +1,10 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import { getAlbumBySlug } from '@/lib/data/albums';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
 
-// Provide sample params for build-time validation
-// This allows awaiting params directly without Suspense warning
+// Required for build-time validation with cacheComponents
 export async function generateStaticParams() {
-  // Return at least one sample path for build-time validation
-  // This is required when using Cache Components
   return [{ nickname: 'sample', albumSlug: 'sample' }];
 }
 
@@ -37,10 +35,17 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 }
 
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
+  'use cache';
+
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
   const albumSlug = resolvedParams?.albumSlug || '';
+
+  // Apply cache settings after extracting params
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag(`profile-${nickname}`);
 
   if (!nickname || !albumSlug) {
     notFound();
