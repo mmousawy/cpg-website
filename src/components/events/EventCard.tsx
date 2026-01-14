@@ -51,18 +51,27 @@ type EventCardProps = {
    * Description to display
    */
   description?: string | null;
+  /**
+   * Server timestamp for determining if event is past.
+   * REQUIRED when using Cache Components to avoid Date.now() during render.
+   */
+  serverNow?: number;
 };
 
 /**
  * Check if an event date is in the past
+ * @param date - Event date string
+ * @param now - Current timestamp. REQUIRED for server components with Cache Components.
+ *              Optional for client components (defaults to Date.now()).
  */
-export function isEventPast(date: string | null): boolean {
+export function isEventPast(date: string | null, now?: number): boolean {
   if (!date) return false;
   const eventDate = new Date(date);
   eventDate.setHours(0, 0, 0, 0);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return eventDate < now;
+  // Client components can use the default; server components must pass now
+  const nowDate = new Date(now ?? Date.now());
+  nowDate.setHours(0, 0, 0, 0);
+  return eventDate < nowDate;
 }
 
 /**
@@ -98,8 +107,10 @@ export default function EventCard({
   rightSlot,
   className,
   asLink = true,
+  serverNow,
 }: EventCardProps) {
-  const isPast = isEventPast(event.date);
+  // Use serverNow if provided, otherwise assume client-side rendering
+  const isPast = serverNow !== undefined ? isEventPast(event.date, serverNow) : false;
   const imageSrc = event.cover_image || event.image_url;
 
   const cardContent = (

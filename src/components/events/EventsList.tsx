@@ -16,6 +16,11 @@ type EventsListProps = {
   events: CPGEvent[]
   attendeesByEvent: Record<number, EventAttendee[]>
   emptyMessage?: string
+  /**
+   * Server timestamp for determining if events are past.
+   * REQUIRED when using Cache Components to avoid Date.now() during render.
+   */
+  serverNow: number
 }
 
 // Inline attendees display component (no data fetching)
@@ -69,7 +74,7 @@ function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee
   );
 }
 
-export default function EventsList({ events, attendeesByEvent, emptyMessage }: EventsListProps) {
+export default function EventsList({ events, attendeesByEvent, emptyMessage, serverNow }: EventsListProps) {
   if (!events || events.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border border-dashed border-border-color">
@@ -84,7 +89,7 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage }: E
   return (
     <>
       {events.map((event) => {
-        const isPast = isEventPast(event.date);
+        const isPast = isEventPast(event.date, serverNow);
         const attendees = attendeesByEvent[event.id] || [];
 
         return (

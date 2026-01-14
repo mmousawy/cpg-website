@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import EventsList from './EventsList';
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { useEffect, useState, useTransition } from 'react';
 import Button from '../shared/Button';
+import EventsList from './EventsList';
 
 type PastEventsPaginatedProps = {
   initialEvents: CPGEvent[];
@@ -21,6 +21,13 @@ export default function PastEventsPaginated({
   const [events, setEvents] = useState<CPGEvent[]>(initialEvents);
   const [attendeesByEvent, setAttendeesByEvent] = useState<Record<number, EventAttendee[]>>(initialAttendees);
   const [isPending, startTransition] = useTransition();
+
+  // Start with a fixed timestamp for SSR (Jan 1, 2026), update on client
+  const [clientNow, setClientNow] = useState(1767225600000);
+
+  useEffect(() => {
+    setClientNow(Date.now());
+  }, []);
 
   const hasMore = events.length < totalCount;
   const remainingCount = totalCount - events.length;
@@ -45,12 +52,12 @@ export default function PastEventsPaginated({
   };
 
   if (events.length === 0) {
-    return <EventsList events={[]} attendeesByEvent={{}} emptyMessage="No past events yet" />;
+    return <EventsList events={[]} attendeesByEvent={{}} emptyMessage="No past events yet" serverNow={clientNow} />;
   }
 
   return (
     <>
-      <EventsList events={events} attendeesByEvent={attendeesByEvent} />
+      <EventsList events={events} attendeesByEvent={attendeesByEvent} serverNow={clientNow} />
 
       {hasMore && (
         <div className="flex justify-center pt-4">

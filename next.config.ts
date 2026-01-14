@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable 'use cache' directive for data layer caching
+  cacheComponents: true,
   // Memory optimization for Webpack builds (production)
   experimental: {
     webpackMemoryOptimizations: true,

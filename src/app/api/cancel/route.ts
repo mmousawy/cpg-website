@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { render } from "@react-email/render";
 
 import { createClient } from "@/utils/supabase/server";
 import { CancelEmail } from "../../../emails/cancel";
+import { revalidateEventAttendees } from "@/app/actions/revalidate";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -73,11 +73,8 @@ export async function POST(request: NextRequest) {
   // Log the cancellation
   console.log(`❌ RSVP canceled with UUID: ${uuid}`);
 
-  // Revalidate event pages (attendee count may have changed)
-  if (event.slug) {
-    revalidatePath(`/events/${event.slug}`);
-  }
-  revalidatePath('/events');
+  // Revalidate event attendee cache
+  await revalidateEventAttendees();
 
   return NextResponse.json({}, { status: 200 });
 }

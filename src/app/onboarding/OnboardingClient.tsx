@@ -1,5 +1,6 @@
 'use client';
 
+import { revalidateProfile } from '@/app/actions/revalidate';
 import Avatar from '@/components/auth/Avatar';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
@@ -318,6 +319,10 @@ export default function OnboardingClient() {
 
       // Refresh profile in auth context
       await refreshProfile();
+
+      // Revalidate profile pages (homepage shows new members)
+      await revalidateProfile(data.nickname);
+
       // Redirect to account page
       router.push('/account/events');
     } catch (err) {

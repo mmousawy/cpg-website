@@ -4,6 +4,7 @@ import { render } from "@react-email/render";
 
 import { createClient } from "@/utils/supabase/server";
 import { ConfirmEmail } from "../../../emails/confirm";
+import { revalidateEventAttendees } from "@/app/actions/revalidate";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -89,6 +90,9 @@ export async function POST(request: NextRequest) {
 
   // Log the signup
   console.log(`✅ RSVP confirmed for user ${user.id} to event ${event_id}`);
+
+  // Revalidate event attendee cache
+  await revalidateEventAttendees();
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

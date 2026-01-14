@@ -47,6 +47,11 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
       // Invalidate counts
       queryClient.invalidateQueries({ queryKey: ['counts', userId] });
 
+      // Revalidate album pages if album is public
+      if (nickname && data.isPublic && newAlbum) {
+        await revalidateAlbum(nickname, newAlbum.slug);
+      }
+
       return newAlbum;
     },
   });

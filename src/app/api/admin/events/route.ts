@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { revalidateEvents, revalidateEventAttendees } from "@/app/actions/revalidate";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Revalidate event pages
-  revalidatePath('/events');
-  revalidatePath('/');
+  // Revalidate event cache
+  await revalidateEvents();
+  await revalidateEventAttendees();
 
   return NextResponse.json(data, { status: 201 });
 }
@@ -139,12 +139,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  // Revalidate event pages
-  if (data?.slug) {
-    revalidatePath(`/events/${data.slug}`);
-  }
-  revalidatePath('/events');
-  revalidatePath('/');
+  // Revalidate event cache
+  await revalidateEvents();
 
   return NextResponse.json(data, { status: 200 });
 }
@@ -192,12 +188,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  // Revalidate event pages
-  if (slug) {
-    revalidatePath(`/events/${slug}`);
-  }
-  revalidatePath('/events');
-  revalidatePath('/');
+  // Revalidate event cache
+  await revalidateEvents();
+  await revalidateEventAttendees();
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

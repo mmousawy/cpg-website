@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { NextRequest, NextResponse } from 'next/server';
 import type { Tables } from '@/database.types';
+import { revalidateAll } from '@/app/actions/revalidate';
 
 type Profile = Pick<Tables<'profiles'>,
   | 'id'
@@ -140,6 +141,9 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to suspend user' }, { status: 500 });
       }
 
+      // Revalidate all pages (suspended users affect homepage, profiles, galleries, etc.)
+      await revalidateAll();
+
       return NextResponse.json({ success: true, message: 'User suspended' });
     } else if (action === 'unsuspend') {
       // Unsuspend user
@@ -155,6 +159,9 @@ export async function PATCH(request: NextRequest) {
         console.error('Error unsuspending user:', updateError);
         return NextResponse.json({ error: 'Failed to unsuspend user' }, { status: 500 });
       }
+
+      // Revalidate all pages (unsuspended users affect homepage, profiles, galleries, etc.)
+      await revalidateAll();
 
       return NextResponse.json({ success: true, message: 'User unsuspended' });
     } else {

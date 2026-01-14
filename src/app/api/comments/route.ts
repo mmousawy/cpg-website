@@ -5,6 +5,7 @@ import { render } from "@react-email/render";
 import { createClient } from "@/utils/supabase/server";
 import { CommentNotificationEmail } from "@/emails/comment-notification";
 import { encrypt } from "@/utils/encrypt";
+import { revalidateAlbum } from "@/app/actions/revalidate";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -145,6 +146,19 @@ export async function POST(request: NextRequest) {
           entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
         }
       }
+    }
+  }
+
+  // Revalidate album page if comment is on an album
+  if (entityType === 'album' && ownerProfile?.nickname) {
+    const { data: album } = await supabase
+      .from('albums')
+      .select('slug')
+      .eq('id', entityId)
+      .single();
+    
+    if (album?.slug) {
+      await revalidateAlbum(ownerProfile.nickname, album.slug);
     }
   }
 

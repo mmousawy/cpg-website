@@ -1,35 +1,24 @@
-import { createPublicClient } from '@/utils/supabase/server';
 import Image from 'next/image';
 import Link from 'next/link';
-
-// Hero images - using URL paths instead of static imports to avoid bundling blur placeholders
-const heroImages = [
-  '/gallery/home-hero1.jpg',
-  '/gallery/home-hero2.jpg',
-  '/gallery/home-hero3.jpg',
-  '/gallery/home-hero4.jpg',
-  '/gallery/home-hero5.jpg',
-  '/gallery/home-hero6.jpg',
-  '/gallery/home-hero7.jpg',
-];
-
-function getHeroImage() {
-  const index = Math.floor(Math.random() * heroImages.length);
-  return heroImages[index];
-}
+import { Suspense } from 'react';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Avatar from '@/components/auth/Avatar';
 import RecentEventsList from '@/components/events/RecentEventsList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import ActivitiesSlider from '@/components/shared/ActivitiesSlider';
+import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
-import { socialLinks } from '@/config/socials';
-import type { AlbumWithPhotos } from '@/types/albums';
-
+import RandomHeroImage from '@/components/shared/RandomHeroImage';
 import { routes } from '@/config/routes';
+import { socialLinks } from '@/config/socials';
+
+// Cached data functions
+import { getRecentAlbums } from '@/lib/data/albums';
+import { getRecentEvents } from '@/lib/data/events';
+import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
+
 import CameraWithFlash from 'public/camera-with-flash.png';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
@@ -42,86 +31,25 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
   WhatsApp: WhatsAppSVG,
 };
 
-// Revalidate every 60 seconds
-// Cache indefinitely - revalidated on-demand when data changes
-
 export default async function Home() {
-  const supabase = createPublicClient();
-
-  // Fetch all data in parallel for faster page load and no-JS compatibility
-  const [
-    { data: albums },
-    { data: organizers },
-    { data: members },
-    { data: events },
-  ] = await Promise.all([
-    // Fetch recent public albums
-    supabase
-      .from('albums')
-      .select(`
-        id,
-        title,
-        description,
-        slug,
-        cover_image_url,
-        is_public,
-        created_at,
-        profile:profiles(full_name, nickname, avatar_url, suspended_at),
-        photos:album_photos_active!inner(
-          id,
-          photo_url
-        )
-      `)
-      .eq('is_public', true)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(6),
-    // Fetch organizers (admins) - exclude suspended
-    supabase
-      .from('profiles')
-      .select('id, full_name, nickname, avatar_url, bio')
-      .eq('is_admin', true)
-      .is('suspended_at', null)
-      .limit(5),
-    // Fetch recent members - exclude suspended
-    supabase
-      .from('profiles')
-      .select('id, full_name, nickname, avatar_url')
-      .not('nickname', 'is', null)
-      .is('suspended_at', null)
-      .order('created_at', { ascending: false })
-      .limit(12),
-    // Fetch recent events - get more to allow client-side sorting for upcoming/past mix
-    supabase
-      .from('events')
-      .select('id, title, date, location, time, cover_image, image_url, slug, description')
-      .order('date', { ascending: false })
-      .limit(6),
+  // Fetch all data in parallel using cached data functions
+  const [albums, organizers, members, eventsData] = await Promise.all([
+    getRecentAlbums(6),
+    getOrganizers(5),
+    getRecentMembers(12),
+    getRecentEvents(6),
   ]);
 
-  // Filter out albums with no photos and albums from suspended users
-  // album_photos_active view already excludes deleted photos
-  const albumsWithPhotos = ((albums || []) as any[])
-    .filter((album) => {
-      // Exclude albums from suspended users and albums with no photos
-      const profile = album.profile as any;
-      return album.photos && album.photos.length > 0 && profile && !profile.suspended_at;
-    }) as unknown as AlbumWithPhotos[];
+  const { events, serverNow } = eventsData;
 
   return (
     <>
       {/* Hero Section */}
       <div className="relative h-[clamp(16rem,25svw,24rem)] w-full overflow-hidden bg-background-light">
-        {/* Background image */}
-        <Image
-          src={getHeroImage()}
-          alt="Creative Photography Group meetup"
-          fill
-          className="object-cover object-[center_30%] brightness-75 animate-fade-in"
-          priority
-          sizes="60vw"
-          quality={95}
-        />
+        {/* Background image - client component for random selection */}
+        <Suspense fallback={<div className="absolute inset-0 bg-background-light" />}>
+          <RandomHeroImage />
+        </Suspense>
 
         {/* Frosted glass blur layer - starts higher on desktop */}
         <div className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong" />
@@ -156,17 +84,17 @@ export default async function Home() {
               <h3 className="text-lg font-semibold">Recent events</h3>
               <ArrowLink href={routes.events.url}>View all</ArrowLink>
             </div>
-            <RecentEventsList events={events || []} />
+            <RecentEventsList events={events} serverNow={serverNow} />
           </div>
 
           {/* Albums */}
-          {albumsWithPhotos.length > 0 && (
+          {albums.length > 0 && (
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Recent albums</h3>
                 <ArrowLink href={routes.gallery.url}>View all</ArrowLink>
               </div>
-              <AlbumGrid albums={albumsWithPhotos} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
+              <AlbumGrid albums={albums} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
             </div>
           )}
         </Container>
@@ -214,7 +142,7 @@ export default async function Home() {
         <div className='w-full max-w-screen-md mx-auto overflow-hidden'>
           <div className='py-4 sm:py-10'>
             <h2 className="text-2xl text-center font-bold mb-6 px-2 sm:px-4">What keeps us clicking</h2>
-            <ActivitiesSlider />
+            <ActivitiesSliderWrapper />
           </div>
         </div>
 

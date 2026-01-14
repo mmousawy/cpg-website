@@ -7,9 +7,14 @@ interface RecentEventsListProps {
    * @default 3
    */
   max?: number;
+  /**
+   * Server timestamp for determining if events are past.
+   * REQUIRED when using Cache Components to avoid Date.now() during render.
+   */
+  serverNow: number;
 }
 
-export default function RecentEventsList({ events, max = 3 }: RecentEventsListProps) {
+export default function RecentEventsList({ events, max = 3, serverNow }: RecentEventsListProps) {
   if (!events || events.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border-color p-6 text-center">
@@ -23,8 +28,8 @@ export default function RecentEventsList({ events, max = 3 }: RecentEventsListPr
     .sort((a, b) => {
       const aDate = a.date ? new Date(a.date) : null;
       const bDate = b.date ? new Date(b.date) : null;
-      const aIsPast = isEventPast(a.date);
-      const bIsPast = isEventPast(b.date);
+      const aIsPast = isEventPast(a.date, serverNow);
+      const bIsPast = isEventPast(b.date, serverNow);
 
       // Upcoming events come first
       if (!aIsPast && bIsPast) return -1;
@@ -43,7 +48,13 @@ export default function RecentEventsList({ events, max = 3 }: RecentEventsListPr
   return (
     <div className="space-y-3">
       {sortedEvents.map((event) => (
-        <EventCard key={event.id} event={event} showBadge description={event.description} />
+        <EventCard
+          key={event.id}
+          event={event}
+          showBadge
+          description={event.description}
+          serverNow={serverNow}
+        />
       ))}
     </div>
   );

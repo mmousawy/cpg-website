@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Button from "@/components/shared/Button";
 import { socialLinks } from "@/config/socials";
 
@@ -14,6 +17,13 @@ const iconMap: Record<string, typeof DiscordSVG> = {
 };
 
 export default function Footer() {
+  // Start with static year for SSR, then update on client
+  const [currentYear, setCurrentYear] = useState(2026);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
   return (
     <footer className="mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light p-4 py-4 text-foreground">
       <div className="flex w-full max-w-screen-md flex-col items-center gap-3">
@@ -35,8 +45,8 @@ export default function Footer() {
             );
           })}
         </div>
-        <p className="text-center opacity-70">&copy; {new Date().getFullYear()} Creative Photography Group</p>
+        <p className="text-center opacity-70">&copy; {currentYear} Creative Photography Group</p>
       </div>
     </footer>
   );
-};
+}
