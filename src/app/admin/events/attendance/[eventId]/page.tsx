@@ -13,6 +13,7 @@ import SadSVG from 'public/icons/sad.svg';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import CheckSVG from 'public/icons/check.svg';
+import CheckCircleSVG from 'public/icons/check-circle.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
@@ -179,6 +180,7 @@ export default function AdminEventAttendancePage() {
                         size="sm"
                         className="rounded-full border-green-500/30 text-green-600 hover:border-green-500 hover:bg-green-500/10"
                       >
+                        <CheckCircleSVG className="size-4" />
                         {markingId === rsvp.id ? 'Marking...' : 'Mark attended'}
                       </Button>
                     )}

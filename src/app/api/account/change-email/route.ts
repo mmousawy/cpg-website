@@ -124,19 +124,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send confirmation email to the NEW email address
+    // Send confirmation email to the CURRENT (old) email address for security
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email-change?token=${token}&email=${encodeURIComponent(newEmail)}`;
 
     // Skip email in test environment
     const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') || 
                       process.env.NODE_ENV === 'test' ||
-                      newEmail.endsWith('@test.example.com') ||
-                      newEmail.endsWith('@test.local');
+                      currentEmail?.endsWith('@test.example.com') ||
+                      currentEmail?.endsWith('@test.local');
 
-    if (!isTestEnv) {
+    if (!isTestEnv && currentEmail) {
       const emailResult = await resend.emails.send({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-        to: newEmail,
+        to: currentEmail,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
         subject: "Confirm your email change - Creative Photography Group",
         html: await render(
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "Please check your new email address for a confirmation link.",
+        message: "Please check your current email for a confirmation link.",
       },
       { status: 200 },
     );

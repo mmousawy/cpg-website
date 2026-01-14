@@ -22,6 +22,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, getUserEmailPreferences, updateEmailPreferences, type EmailPreference, type EmailTypeData } from '@/utils/emailPreferencesClient';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
+import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import Avatar from '@/components/auth/Avatar';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import StickyActionBar from '@/components/shared/StickyActionBar';
@@ -86,10 +87,7 @@ export default function AccountPage() {
   const [emailPreferences, setEmailPreferences] = useState<EmailPreference[]>([]);
 
   // Email change state
-  const [isChangingEmail, setIsChangingEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
-  const [emailChangeError, setEmailChangeError] = useState<string | null>(null);
-  const [emailChangeSuccess, setEmailChangeSuccess] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailChangedFromUrl, setEmailChangedFromUrl] = useState(false);
 
   // Check for email_changed query param (from verification redirect)
@@ -723,110 +721,22 @@ export default function AccountPage() {
                           Your email has been successfully changed!
                         </SuccessMessage>
                       )}
-                      {!isChangingEmail ? (
-                        <div className="flex gap-2">
-                          <Input
-                            id="email"
-                            type="email"
-                            value={profile?.email || user?.email || ''}
-                            disabled
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => {
-                              setIsChangingEmail(true);
-                              setNewEmail('');
-                              setEmailChangeError(null);
-                              setEmailChangeSuccess(false);
-                            }}
-                          >
-                            Change
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex flex-col gap-2">
-                            <Input
-                              id="newEmail"
-                              type="email"
-                              value={newEmail}
-                              onChange={(e) => {
-                                setNewEmail(e.target.value);
-                                setEmailChangeError(null);
-                                setEmailChangeSuccess(false);
-                              }}
-                              placeholder="new@example.com"
-                            />
-                            {emailChangeError && (
-                              <ErrorMessage variant="compact">{emailChangeError}</ErrorMessage>
-                            )}
-                            {emailChangeSuccess && (
-                              <SuccessMessage variant="compact">
-                                Email change initiated. Please check your new email address to confirm.
-                              </SuccessMessage>
-                            )}
-                            <div className="flex gap-2">
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={async () => {
-                                  if (!newEmail) {
-                                    setEmailChangeError('Email is required');
-                                    return;
-                                  }
-
-                                  setEmailChangeError(null);
-                                  setEmailChangeSuccess(false);
-
-                                  try {
-                                    const response = await fetch('/api/account/change-email', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ newEmail }),
-                                    });
-
-                                    const data = await response.json();
-
-                                    if (!response.ok) {
-                                      setEmailChangeError(data.message || 'Failed to change email');
-                                    } else {
-                                      setEmailChangeSuccess(true);
-                                      // Refresh profile to get updated email
-                                      await refreshAuthProfile();
-                                      // Close the change form after a delay
-                                      setTimeout(() => {
-                                        setIsChangingEmail(false);
-                                        setEmailChangeSuccess(false);
-                                      }, 3000);
-                                    }
-                                  } catch (err) {
-                                    setEmailChangeError('An unexpected error occurred');
-                                  }
-                                }}
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => {
-                                  setIsChangingEmail(false);
-                                  setNewEmail('');
-                                  setEmailChangeError(null);
-                                  setEmailChangeSuccess(false);
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                            <p className="text-xs text-foreground/50">
-                              You&apos;ll need to confirm the new email address. Both your old and new email will receive confirmation links.
-                            </p>
-                          </div>
-                        </>
-                      )}
+                      <div className="flex gap-2">
+                        <Input
+                          id="email"
+                          type="email"
+                          value={profile?.email || user?.email || ''}
+                          disabled
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => setIsEmailModalOpen(true)}
+                        >
+                          Change
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -1288,6 +1198,16 @@ export default function AccountPage() {
           </Button>
         </StickyActionBar>
       )}
+
+      {/* Email Change Modal */}
+      <ChangeEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        currentEmail={profile?.email || user?.email || ''}
+        onSuccess={() => {
+          // Optionally refresh profile after email change initiated
+        }}
+      />
     </>
   );
 }

@@ -87,8 +87,9 @@ export async function GET(request: NextRequest) {
 
   console.log(`✅ Email changed for user ${userId}: ${authToken.email} → ${newEmail}`);
 
-  // Redirect to account page with success message
+  // Redirect to a success page that doesn't require authentication
+  // The user can then log in with their new email
   return NextResponse.redirect(
-    `${origin}/account?email_changed=true`,
+    `${origin}/email/changed?success=true&email=${encodeURIComponent(newEmail)}`,
   );
 }

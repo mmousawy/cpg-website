@@ -16,6 +16,7 @@ import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
+import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 
@@ -23,11 +24,20 @@ import { revalidateEvent } from '@/app/actions/revalidate';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import clsx from 'clsx';
-import CheckSVG from 'public/icons/check.svg';
+import CheckCircleSVG from 'public/icons/check-circle.svg';
+import CloseSVG from 'public/icons/close.svg';
+import EmailForwardSVG from 'public/icons/email-forward.svg';
+import MegaphoneSVG from 'public/icons/megaphone.svg';
 import TrashSVG from 'public/icons/trash.svg';
 import { useContext } from 'react';
 
 type Event = Pick<Tables<'events'>, 'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'>
+
+type RSVPWithProfile = Pick<Tables<'events_rsvps'>,
+  'id' | 'uuid' | 'name' | 'email' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'
+> & {
+  profiles: Pick<Tables<'profiles'>, 'nickname'> | Pick<Tables<'profiles'>, 'nickname'>[] | null;
+};
 
 export default function AdminEventFormPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
@@ -49,7 +59,7 @@ export default function AdminEventFormPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rsvps, setRsvps] = useState<any[]>([]);
+  const [rsvps, setRsvps] = useState<RSVPWithProfile[]>([]);
   const [markingId, setMarkingId] = useState<number | null>(null);
   const modalContext = useContext(ModalContext);
 
@@ -62,6 +72,15 @@ export default function AdminEventFormPage() {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [savedFormValues, setSavedFormValues] = useState<{
+    title: string;
+    slug: string;
+    description: string;
+    date: string;
+    time: string;
+    location: string;
+    coverImage: string;
+  } | null>(null);
 
   // Auto-generate slug from title
   const generateSlug = (text: string) => {
@@ -89,6 +108,24 @@ export default function AdminEventFormPage() {
     setSlug(sanitized);
     setIsSlugManuallyEdited(true);
   };
+
+  // Track form changes for unsaved changes warning
+  const currentFormValues = {
+    title,
+    slug,
+    description,
+    date,
+    time,
+    location,
+    coverImage,
+  };
+
+  useFormChanges(
+    currentFormValues,
+    savedFormValues,
+    {},
+    !!coverImageFile, // Track if a new cover image file is selected
+  );
 
   useEffect(() => {
     // Admin access is guaranteed by ProtectedRoute layout
@@ -133,10 +170,21 @@ export default function AdminEventFormPage() {
         setCoverImage(data.cover_image || '');
         setCoverImagePreview(data.cover_image || null);
 
+        // Set saved form values for change tracking
+        setSavedFormValues({
+          title: data.title || '',
+          slug: data.slug || '',
+          description: data.description || '',
+          date: data.date || '',
+          time: data.time || '',
+          location: data.location || '',
+          coverImage: data.cover_image || '',
+        });
+
         // Load RSVPs for this event
         const { data: rsvpsData } = await supabase
           .from('events_rsvps')
-          .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at')
+          .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)')
           .eq('event_id', data.id)
           .order('created_at', { ascending: false });
 
@@ -157,19 +205,24 @@ export default function AdminEventFormPage() {
     setIsLoading(false);
   };
 
-  const handleMarkAttended = async (rsvpId: number) => {
+  const handleMarkAttended = async (rsvpId: number, unmark: boolean = false) => {
     setMarkingId(rsvpId);
 
     const result = await fetch('/api/admin/mark-attendance', {
       method: 'POST',
-      body: JSON.stringify({ rsvp_id: rsvpId }),
+      body: JSON.stringify({ rsvp_id: rsvpId, unmark }),
       headers: { 'Content-Type': 'application/json' },
     });
 
     if (result.ok) {
-      if (!isNewEvent) {
-        await fetchEvent();
-      }
+      // Update local state instead of refetching everything
+      setRsvps((prevRsvps) =>
+        prevRsvps.map((rsvp) =>
+          rsvp.id === rsvpId
+            ? { ...rsvp, attended_at: unmark ? null : new Date().toISOString() }
+            : rsvp,
+        ),
+      );
     }
 
     setMarkingId(null);
@@ -359,6 +412,17 @@ export default function AdminEventFormPage() {
           return;
         }
 
+        // Update saved form values after successful creation
+        setSavedFormValues({
+          title: title.trim(),
+          slug: finalSlug,
+          description: description.trim() || '',
+          date,
+          time: time || '',
+          location: location.trim() || '',
+          coverImage: coverImageUrl,
+        });
+
         // Revalidate event pages
         await revalidateEvent(finalSlug);
 
@@ -392,6 +456,17 @@ export default function AdminEventFormPage() {
         setCoverImage(coverImageUrl);
         setCoverImagePreview(coverImageUrl);
         setCoverImageFile(null);
+
+        // Update saved form values after successful save
+        setSavedFormValues({
+          title: title.trim(),
+          slug: finalSlug,
+          description: description.trim() || '',
+          date,
+          time: time || '',
+          location: location.trim() || '',
+          coverImage: coverImageUrl,
+        });
 
         // Revalidate event pages
         await revalidateEvent(finalSlug);
@@ -650,37 +725,48 @@ export default function AdminEventFormPage() {
                 {rsvps.filter(r => r.confirmed_at && !r.canceled_at).length === 0 ? (
                   <p className="text-center text-sm text-foreground/70 py-4">No confirmed RSVPs yet</p>
                 ) : (
-                  rsvps.filter(r => r.confirmed_at && !r.canceled_at).map((rsvp) => (
-                    <div
-                      key={rsvp.id}
-                      className={clsx(
-                        "flex items-center justify-between rounded-lg border border-border-color p-3",
-                        rsvp.attended_at && "text-green-600 border-green-600/30 bg-green-500/5",
-                      )}
-                    >
-                      <div>
-                        <p className="font-medium">{rsvp.name || 'Unknown'}</p>
-                        <p className="text-sm text-foreground/60">{rsvp.email}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {rsvp.attended_at ? (
-                          <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-                            <CheckSVG className="h-3 w-3 fill-green-600" />
-                          Attended
-                          </span>
-                        ) : (
-                          <Button
-                            onClick={() => handleMarkAttended(rsvp.id)}
-                            disabled={markingId === rsvp.id}
-                            size="sm"
-                            className="rounded-full border-green-500/30 text-green-600 hover:border-green-500 hover:bg-green-500/10"
-                          >
-                            {markingId === rsvp.id ? 'Marking...' : 'Mark attended'}
-                          </Button>
+                  rsvps.filter(r => r.confirmed_at && !r.canceled_at).map((rsvp) => {
+                    const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
+                    const nickname = profile?.nickname;
+                    return (
+                      <div
+                        key={rsvp.id}
+                        className={clsx(
+                          "flex items-center justify-between rounded-lg border border-border-color p-3",
+                          rsvp.attended_at && "text-primary border-green-600/30 bg-green-500/5",
                         )}
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{rsvp.name} {nickname && `(@${nickname})`}</p>
+                          <p className="text-xs text-foreground/60">{rsvp.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {rsvp.attended_at ? (
+                            <Button
+                              onClick={() => handleMarkAttended(rsvp.id, true)}
+                              disabled={markingId === rsvp.id}
+                              variant="danger"
+                              type="button"
+                              size="sm"
+                              icon={<CloseSVG className="size-4" />}
+                            >
+                              <span className="hidden sm:inline">{markingId === rsvp.id ? 'Unmarking...' : 'Unmark attended'}</span>
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => handleMarkAttended(rsvp.id)}
+                              disabled={markingId === rsvp.id}
+                              type="button"
+                              size="sm"
+                              icon={<CheckCircleSVG className="size-4" />}
+                            >
+                              <span className="hidden sm:inline">{markingId === rsvp.id ? 'Marking...' : 'Mark attended'}</span>
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </Container>
@@ -706,6 +792,7 @@ export default function AdminEventFormPage() {
                     onClick={handleAnnounceEvent}
                     variant="primary"
                   >
+                    <MegaphoneSVG className="size-5" />
                     Announce event
                   </Button>
                 </div>
@@ -722,6 +809,7 @@ export default function AdminEventFormPage() {
                     onClick={handleEmailAttendees}
                     variant="secondary"
                   >
+                    <EmailForwardSVG className="size-5" />
                     Email attendees
                   </Button>
                 </div>

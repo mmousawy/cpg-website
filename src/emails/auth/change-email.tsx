@@ -54,8 +54,8 @@ export const ChangeEmailTemplate = ({
               {greeting}
             </Text>
             <Text className="text-[14px] leading-[24px] text-[#171717]">
-              You requested to change your email address to{" "}
-              <strong>{newEmail}</strong>. Please confirm this change by clicking the button below.
+              Someone requested to change your account email to{" "}
+              <strong>{newEmail}</strong>. If this was you, please confirm this change by clicking the button below.
             </Text>
 
             <Section className="my-[20px]">
