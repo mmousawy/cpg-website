@@ -195,7 +195,11 @@ export async function GET() {
 
     return NextResponse.json(stats);
   } catch (error) {
-    console.error('Error loading stats:', error);
+    // Don't log prerendering errors (expected during build)
+    const isPrerender = error instanceof Error && error.message.includes('prerender');
+    if (!isPrerender) {
+      console.error('Error loading stats:', error);
+    }
     return NextResponse.json(
       { error: 'Failed to load stats' },
       { status: 500 },
