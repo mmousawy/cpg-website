@@ -154,7 +154,9 @@ export async function POST(request: NextRequest) {
 | `getRecentEvents(limit)` | `events` | Recent events for homepage |
 | `getUpcomingEvents()` | `events` | All upcoming events |
 | `getPastEvents(limit)` | `events` | Paginated past events |
-| `getEventAttendees(ids)` | `event-attendees` | Attendees for specific events |
+| `getEventBySlug(slug)` | `events` | Single event by slug |
+| `getEventAttendeesForEvent(id)` | `event-attendees` | Attendees for one event |
+| `getEventAttendees(ids)` | `event-attendees` | Attendees for multiple events |
 
 ### Album Functions (`src/lib/data/albums.ts`)
 
@@ -162,6 +164,8 @@ export async function POST(request: NextRequest) {
 |----------|------|-------------|
 | `getRecentAlbums(limit)` | `albums` | Recent public albums |
 | `getPublicAlbums(limit)` | `albums` | All public albums |
+| `getAlbumBySlug(nick, slug)` | `albums`, `profile-[nick]` | Single album by slug |
+| `getPhotosByUrls(urls)` | `albums` | Photo metadata by URLs |
 | `getUserPublicAlbums(...)` | `albums`, `profile-[nick]` | User's public albums |
 
 ### Profile Functions (`src/lib/data/profiles.ts`)
@@ -172,7 +176,12 @@ export async function POST(request: NextRequest) {
 | `getRecentMembers(limit)` | `profiles` | Recent members |
 | `getProfileByNickname(nick)` | `profiles`, `profile-[nick]` | Specific user profile |
 | `getUserPublicPhotos(...)` | `profile-[nick]` | User's public photos |
+| `getUserPublicPhotoCount(...)` | `profile-[nick]` | User's photo count |
 | `getProfileStats(...)` | `profile-[nick]` | User's stats |
+| `getPhotoByShortId(nick, id)` | `profile-[nick]` | Single photo by short_id |
+| `getAlbumPhotoByShortId(...)` | `profile-[nick]`, `albums` | Photo in album context |
+
+> **Cache Duration**: All functions use `cacheLife('max')` - data is cached indefinitely until invalidated via `revalidateTag()`.
 
 ### Revalidation Functions (`src/app/actions/revalidate.ts`)
 
@@ -192,11 +201,12 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // src/lib/data/yourEntity.ts
-import { cacheTag } from 'next/cache';
+import { cacheTag, cacheLife } from 'next/cache';
 import { createPublicClient } from '@/utils/supabase/server';
 
 export async function getYourData() {
   'use cache';
+  cacheLife('max'); // Cache forever until tag is invalidated
   cacheTag('your-tag');
 
   const supabase = createPublicClient();

@@ -39,15 +39,39 @@ import {
 
 ## Cached Data Functions
 
+All functions use `cacheLife('max')` - cached indefinitely until tags are invalidated.
+
 ```typescript
 // Events
-import { getRecentEvents, getUpcomingEvents, getPastEvents, getEventAttendees } from '@/lib/data';
+import {
+  getRecentEvents,
+  getUpcomingEvents,
+  getPastEvents,
+  getEventBySlug,
+  getEventAttendeesForEvent,
+  getEventAttendees,
+} from '@/lib/data';
 
 // Albums
-import { getRecentAlbums, getPublicAlbums, getUserPublicAlbums } from '@/lib/data';
+import {
+  getRecentAlbums,
+  getPublicAlbums,
+  getAlbumBySlug,
+  getPhotosByUrls,
+  getUserPublicAlbums,
+} from '@/lib/data';
 
-// Profiles
-import { getOrganizers, getRecentMembers, getProfileByNickname, getUserPublicPhotos } from '@/lib/data';
+// Profiles & Photos
+import {
+  getOrganizers,
+  getRecentMembers,
+  getProfileByNickname,
+  getUserPublicPhotos,
+  getUserPublicPhotoCount,
+  getProfileStats,
+  getPhotoByShortId,
+  getAlbumPhotoByShortId,
+} from '@/lib/data';
 ```
 
 ## Adding New Cached Data
@@ -56,6 +80,7 @@ import { getOrganizers, getRecentMembers, getProfileByNickname, getUserPublicPho
 ```typescript
 export async function getYourData() {
   'use cache';
+  cacheLife('max'); // Cache forever until tag is invalidated
   cacheTag('your-tag');
   // fetch data...
 }
@@ -77,10 +102,12 @@ export async function revalidateYourData() {
 | Issue | Solution |
 |-------|----------|
 | `Math.random()` in client component | `useState` lazy initializer + wrap in `<Suspense>` |
-| `new Date()` in client component | `useState` + `useEffect` with `requestAnimationFrame` |
+| `new Date()` in client component | Just use it directly - client components are safe |
 | Dynamic route blocking error | Add `generateStaticParams` returning at least one sample |
 | Route needs loading skeleton | Add `loading.tsx` to route folder |
 | Third-party lib uses Date | Dynamic import with `ssr: false` in wrapper |
+| Authenticated routes | Use `unstable_noStore()` in layout + `'use client'` pages |
+
 > Note: With `cacheComponents: true`, client components that call `Math.random()` must sit under a `<Suspense>` boundary or Next.js will warn.
 
 ## Files

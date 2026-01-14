@@ -5,7 +5,6 @@ import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
-import { createPublicClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
@@ -31,13 +30,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     };
   }
 
-  const supabase = createPublicClient();
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, nickname, bio')
-    .eq('nickname', nickname)
-    .single();
+  // Use cached function for metadata (same cache as page)
+  const profile = await getProfileByNickname(nickname);
 
   if (!profile) {
     return {

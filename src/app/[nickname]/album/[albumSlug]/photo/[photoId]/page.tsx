@@ -1,6 +1,5 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import type { Photo } from '@/types/photos';
-import { createPublicClient } from '@/utils/supabase/server';
+import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -20,41 +19,16 @@ export async function generateMetadata({ params }: { params: Params }) {
     return { title: 'Photo Not Found' };
   }
 
-  const supabase = createPublicClient();
+  // Use cached function
+  const result = await getAlbumPhotoByShortId(nickname, albumSlug, photoId);
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('nickname', nickname)
-    .single();
-
-  if (!profile) {
-    return { title: 'Photo Not Found' };
-  }
-
-  const { data: album } = await supabase
-    .from('albums')
-    .select('title')
-    .eq('user_id', profile.id)
-    .eq('slug', albumSlug)
-    .eq('is_public', true)
-    .is('deleted_at', null)
-    .single();
-
-  const { data: photo } = await supabase
-    .from('photos')
-    .select('title')
-    .eq('short_id', photoId)
-    .is('deleted_at', null)
-    .single();
-
-  if (!album || !photo) {
+  if (!result) {
     return { title: 'Photo Not Found' };
   }
 
   return {
-    title: `${photo.title || 'Photo'} - ${album.title} by @${nickname}`,
-    description: `Photo from album "${album.title}" by @${nickname}`,
+    title: `${result.photo.title || 'Photo'} - ${result.currentAlbum.title} by @${nickname}`,
+    description: `Photo from album "${result.currentAlbum.title}" by @${nickname}`,
   };
 }
 
@@ -69,97 +43,19 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  const supabase = createPublicClient();
+  // Use cached function
+  const result = await getAlbumPhotoByShortId(nickname, albumSlug, photoId);
 
-  // Get profile
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
-    .eq('nickname', nickname)
-    .single();
-
-  if (profileError || !profile || !profile.nickname) {
+  if (!result) {
     notFound();
   }
-
-  // Get album with photo count (using active view to exclude deleted photos)
-  const { data: albumData, error: albumError } = await supabase
-    .from('albums')
-    .select('id, title, slug, description, cover_image_url, album_photos_active(count)')
-    .eq('user_id', profile.id)
-    .eq('slug', albumSlug)
-    .eq('is_public', true)
-    .is('deleted_at', null)
-    .single();
-
-  if (albumError || !albumData) {
-    notFound();
-  }
-
-  const album = {
-    id: albumData.id,
-    title: albumData.title,
-    slug: albumData.slug,
-    description: albumData.description,
-    cover_image_url: albumData.cover_image_url,
-    photo_count: (albumData.album_photos_active as any)?.[0]?.count ?? 0,
-  };
-
-  // Get photo (don't require is_public since it's part of a public album)
-  const { data: photo, error: photoError } = await supabase
-    .from('photos')
-    .select('*')
-    .eq('short_id', photoId)
-    .is('deleted_at', null)
-    .single();
-
-  if (photoError || !photo) {
-    notFound();
-  }
-
-  // Verify photo is part of this album
-  const { data: albumPhoto } = await supabase
-    .from('album_photos')
-    .select('id')
-    .eq('album_id', album.id)
-    .eq('photo_id', photo.id)
-    .single();
-
-  if (!albumPhoto) {
-    notFound();
-  }
-
-  // Get all albums this photo is in (with photo counts - using active view to exclude deleted photos)
-  const { data: albumPhotosData } = await supabase
-    .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
-    .eq('photo_id', photo.id);
-
-  const albums = (albumPhotosData || [])
-    .map((ap) => {
-      const albumData = ap.albums as any;
-      if (!albumData || albumData.deleted_at) return null;
-      return {
-        id: albumData.id,
-        title: albumData.title,
-        slug: albumData.slug,
-        cover_image_url: albumData.cover_image_url,
-        photo_count: albumData.album_photos_active?.[0]?.count ?? 0,
-      };
-    })
-    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
 
   return (
     <PhotoPageContent
-      photo={photo as Photo}
-      profile={{
-        id: profile.id,
-        full_name: profile.full_name,
-        nickname: profile.nickname,
-        avatar_url: profile.avatar_url,
-      }}
-      currentAlbum={album}
-      albums={albums}
+      photo={result.photo}
+      profile={result.profile}
+      currentAlbum={result.currentAlbum}
+      albums={result.albums}
     />
   );
 }

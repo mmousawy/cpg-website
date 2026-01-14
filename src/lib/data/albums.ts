@@ -8,6 +8,7 @@ import type { AlbumWithPhotos } from '@/types/albums';
  */
 export async function getRecentAlbums(limit = 6) {
   'use cache';
+  cacheLife('max'); // Cache forever until 'albums' tag is invalidated
   cacheTag('albums');
 
   const supabase = createPublicClient();
@@ -49,6 +50,7 @@ export async function getRecentAlbums(limit = 6) {
  */
 export async function getPublicAlbums(limit = 50) {
   'use cache';
+  cacheLife('max');
   cacheTag('albums');
 
   const supabase = createPublicClient();
@@ -90,7 +92,7 @@ export async function getPublicAlbums(limit = 50) {
  */
 export async function getAlbumBySlug(nickname: string, albumSlug: string) {
   'use cache';
-  cacheLife('hours'); // Cache for at least 1 hour to enable prerendering
+  cacheLife('max');
   cacheTag('albums');
   cacheTag(`profile-${nickname}`);
 
@@ -148,6 +150,7 @@ export async function getAlbumBySlug(nickname: string, albumSlug: string) {
  */
 export async function getPhotosByUrls(photoUrls: string[]) {
   'use cache';
+  cacheLife('max');
   cacheTag('albums');
 
   if (photoUrls.length === 0) {
@@ -171,6 +174,7 @@ export async function getPhotosByUrls(photoUrls: string[]) {
  */
 export async function getUserPublicAlbums(userId: string, nickname: string, limit = 50) {
   'use cache';
+  cacheLife('max');
   cacheTag('albums');
   cacheTag(`profile-${nickname}`);
 

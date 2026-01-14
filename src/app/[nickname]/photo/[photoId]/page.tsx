@@ -1,6 +1,5 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import type { Photo } from '@/types/photos';
-import { createPublicClient } from '@/utils/supabase/server';
+import { getPhotoByShortId } from '@/lib/data/profiles';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -18,35 +17,16 @@ export async function generateMetadata({ params }: { params: Params }) {
     return { title: 'Photo Not Found' };
   }
 
-  const supabase = createPublicClient();
+  // Use cached function
+  const result = await getPhotoByShortId(nickname, photoId);
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('nickname', nickname)
-    .single();
-
-  if (!profile) {
-    return { title: 'Photo Not Found' };
-  }
-
-  const { data: photo } = await supabase
-    .from('photos')
-    .select('title, description')
-    .eq('short_id', photoId)
-    .eq('user_id', profile.id)
-    .eq('is_public', true)
-    .is('deleted_at', null)
-    .not('storage_path', 'like', 'events/%')
-    .single();
-
-  if (!photo) {
+  if (!result) {
     return { title: 'Photo Not Found' };
   }
 
   return {
-    title: `${photo.title || 'Photo'} by @${nickname}`,
-    description: photo.description || `Photo by @${nickname}`,
+    title: `${result.photo.title || 'Photo'} by @${nickname}`,
+    description: result.photo.description || `Photo by @${nickname}`,
   };
 }
 
@@ -60,65 +40,18 @@ export default async function PhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  const supabase = createPublicClient();
+  // Use cached function
+  const result = await getPhotoByShortId(nickname, photoId);
 
-  // Get profile
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
-    .eq('nickname', nickname)
-    .single();
-
-  if (profileError || !profile || !profile.nickname) {
+  if (!result) {
     notFound();
   }
-
-  // Get photo (must be public for standalone view)
-  // Exclude event cover images
-  const { data: photo, error: photoError } = await supabase
-    .from('photos')
-    .select('*')
-    .eq('short_id', photoId)
-    .eq('user_id', profile.id)
-    .eq('is_public', true)
-    .is('deleted_at', null)
-    .not('storage_path', 'like', 'events/%')
-    .single();
-
-  if (photoError || !photo) {
-    notFound();
-  }
-
-  // Get all albums this photo is in (with photo counts - using active view to exclude deleted photos)
-  const { data: albumPhotos } = await supabase
-    .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
-    .eq('photo_id', photo.id);
-
-  const albums = (albumPhotos || [])
-    .map((ap) => {
-      const album = ap.albums as any;
-      if (!album || album.deleted_at) return null;
-      return {
-        id: album.id,
-        title: album.title,
-        slug: album.slug,
-        cover_image_url: album.cover_image_url,
-        photo_count: album.album_photos_active?.[0]?.count ?? 0,
-      };
-    })
-    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
 
   return (
     <PhotoPageContent
-      photo={photo as Photo}
-      profile={{
-        id: profile.id,
-        full_name: profile.full_name,
-        nickname: profile.nickname,
-        avatar_url: profile.avatar_url,
-      }}
-      albums={albums}
+      photo={result.photo}
+      profile={result.profile}
+      albums={result.albums}
     />
   );
 }

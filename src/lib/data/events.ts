@@ -1,4 +1,4 @@
-import { cacheTag } from 'next/cache';
+import { cacheTag, cacheLife } from 'next/cache';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { CPGEvent, EventAttendee } from '@/types/events';
 
@@ -9,6 +9,7 @@ import type { CPGEvent, EventAttendee } from '@/types/events';
  */
 export async function getRecentEvents(limit = 6) {
   'use cache';
+  cacheLife('max');
   cacheTag('events');
 
   const supabase = createPublicClient();
@@ -31,6 +32,7 @@ export async function getRecentEvents(limit = 6) {
  */
 export async function getUpcomingEvents() {
   'use cache';
+  cacheLife('max');
   cacheTag('events');
 
   const supabase = createPublicClient();
@@ -56,6 +58,7 @@ export async function getUpcomingEvents() {
  */
 export async function getPastEvents(limit = 5) {
   'use cache';
+  cacheLife('max');
   cacheTag('events');
 
   const supabase = createPublicClient();
@@ -77,11 +80,55 @@ export async function getPastEvents(limit = 5) {
 }
 
 /**
+ * Get a single event by slug
+ * Tagged with 'events' for granular cache invalidation
+ */
+export async function getEventBySlug(slug: string) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('events');
+
+  const supabase = createPublicClient();
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
+    .eq('slug', slug)
+    .single();
+
+  return event as CPGEvent | null;
+}
+
+/**
+ * Get attendees for a single event
+ * Tagged with 'event-attendees' for granular cache invalidation on RSVP changes
+ */
+export async function getEventAttendeesForEvent(eventId: number) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('event-attendees');
+
+  const supabase = createPublicClient();
+
+  const { data: attendees } = await supabase
+    .from('events_rsvps')
+    .select(`id, user_id, email, confirmed_at, profiles (avatar_url)`)
+    .eq('event_id', eventId)
+    .not('confirmed_at', 'is', null)
+    .is('canceled_at', null)
+    .order('confirmed_at', { ascending: true })
+    .limit(100);
+
+  return attendees || [];
+}
+
+/**
  * Get attendees for a list of events
  * Tagged with 'event-attendees' for granular cache invalidation on RSVP changes
  */
 export async function getEventAttendees(eventIds: number[]) {
   'use cache';
+  cacheLife('max');
   cacheTag('event-attendees');
 
   if (eventIds.length === 0) {

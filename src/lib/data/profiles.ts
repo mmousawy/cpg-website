@@ -1,4 +1,4 @@
-import { cacheTag } from 'next/cache';
+import { cacheTag, cacheLife } from 'next/cache';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
 import type { Photo } from '@/types/photos';
@@ -26,6 +26,7 @@ export type ProfileData = Pick<Tables<'profiles'>,
  */
 export async function getOrganizers(limit = 5) {
   'use cache';
+  cacheLife('max');
   cacheTag('profiles');
 
   const supabase = createPublicClient();
@@ -46,6 +47,7 @@ export async function getOrganizers(limit = 5) {
  */
 export async function getRecentMembers(limit = 12) {
   'use cache';
+  cacheLife('max');
   cacheTag('profiles');
 
   const supabase = createPublicClient();
@@ -67,6 +69,7 @@ export async function getRecentMembers(limit = 12) {
  */
 export async function getProfileByNickname(nickname: string) {
   'use cache';
+  cacheLife('max');
   cacheTag(`profile-${nickname}`);
   cacheTag('profiles');
 
@@ -92,6 +95,7 @@ export async function getProfileByNickname(nickname: string) {
  */
 export async function getUserPublicPhotos(userId: string, nickname: string, limit = 50) {
   'use cache';
+  cacheLife('max');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -116,6 +120,7 @@ export async function getUserPublicPhotos(userId: string, nickname: string, limi
  */
 export async function getUserPublicPhotoCount(userId: string, nickname: string) {
   'use cache';
+  cacheLife('max');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -137,6 +142,7 @@ export async function getUserPublicPhotoCount(userId: string, nickname: string) 
  */
 export async function getProfileStats(userId: string, nickname: string, albumCount: number, photoCount: number, memberSince: string | null) {
   'use cache';
+  cacheLife('max');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -251,5 +257,179 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
     commentsMade,
     commentsReceived,
     memberSince,
+  };
+}
+
+/**
+ * Get a photo within an album context by short_id
+ * Tagged with profile and albums tags for granular invalidation
+ */
+export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string, photoShortId: string) {
+  'use cache';
+  cacheLife('max');
+  cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
+
+  const supabase = createPublicClient();
+
+  // Get profile first
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, full_name, nickname, avatar_url')
+    .eq('nickname', nickname)
+    .is('suspended_at', null)
+    .single();
+
+  if (!profile || !profile.nickname) {
+    return null;
+  }
+
+  // Get album with photo count
+  const { data: albumData } = await supabase
+    .from('albums')
+    .select('id, title, slug, description, cover_image_url, album_photos_active(count)')
+    .eq('user_id', profile.id)
+    .eq('slug', albumSlug)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .single();
+
+  if (!albumData) {
+    return null;
+  }
+
+  const album = {
+    id: albumData.id,
+    title: albumData.title,
+    slug: albumData.slug,
+    description: albumData.description,
+    cover_image_url: albumData.cover_image_url,
+    photo_count: (albumData.album_photos_active as any)?.[0]?.count ?? 0,
+  };
+
+  // Get photo
+  const { data: photo } = await supabase
+    .from('photos')
+    .select('*')
+    .eq('short_id', photoShortId)
+    .is('deleted_at', null)
+    .single();
+
+  if (!photo) {
+    return null;
+  }
+
+  // Verify photo is part of this album
+  const { data: albumPhoto } = await supabase
+    .from('album_photos')
+    .select('id')
+    .eq('album_id', album.id)
+    .eq('photo_id', photo.id)
+    .single();
+
+  if (!albumPhoto) {
+    return null;
+  }
+
+  // Get all albums this photo is in
+  const { data: albumPhotosData } = await supabase
+    .from('album_photos')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
+    .eq('photo_id', photo.id);
+
+  const albums = (albumPhotosData || [])
+    .map((ap) => {
+      const albumInfo = ap.albums as any;
+      if (!albumInfo || albumInfo.deleted_at) return null;
+      return {
+        id: albumInfo.id,
+        title: albumInfo.title,
+        slug: albumInfo.slug,
+        cover_image_url: albumInfo.cover_image_url,
+        photo_count: albumInfo.album_photos_active?.[0]?.count ?? 0,
+      };
+    })
+    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
+
+  return {
+    photo: photo as Photo,
+    profile: {
+      id: profile.id,
+      full_name: profile.full_name,
+      nickname: profile.nickname!, // We already checked nickname is not null above
+      avatar_url: profile.avatar_url,
+    },
+    currentAlbum: album,
+    albums,
+  };
+}
+
+/**
+ * Get a single public photo by short_id and nickname
+ * Tagged with profile tag for granular invalidation
+ */
+export async function getPhotoByShortId(nickname: string, photoShortId: string) {
+  'use cache';
+  cacheLife('max');
+  cacheTag(`profile-${nickname}`);
+
+  const supabase = createPublicClient();
+
+  // Get profile first
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, full_name, nickname, avatar_url')
+    .eq('nickname', nickname)
+    .is('suspended_at', null)
+    .single();
+
+  if (!profile || !profile.nickname) {
+    return null;
+  }
+
+  // Get photo (must be public, exclude event cover images)
+  const { data: photo } = await supabase
+    .from('photos')
+    .select('*')
+    .eq('short_id', photoShortId)
+    .eq('user_id', profile.id)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%')
+    .single();
+
+  if (!photo) {
+    return null;
+  }
+
+  // Get all albums this photo is in
+  const { data: albumPhotos } = await supabase
+    .from('album_photos')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
+    .eq('photo_id', photo.id);
+
+  const albums = (albumPhotos || [])
+    .map((ap) => {
+      const album = ap.albums as any;
+      if (!album || album.deleted_at) return null;
+      return {
+        id: album.id,
+        title: album.title,
+        slug: album.slug,
+        cover_image_url: album.cover_image_url,
+        photo_count: album.album_photos_active?.[0]?.count ?? 0,
+      };
+    })
+    .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
+
+  return {
+    photo: photo as Photo,
+    profile: {
+      id: profile.id,
+      full_name: profile.full_name,
+      nickname: profile.nickname!, // We already checked nickname is not null above
+      avatar_url: profile.avatar_url,
+    },
+    albums,
   };
 }

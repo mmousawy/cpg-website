@@ -4,12 +4,15 @@ import EventSignupBar from '@/components/events/EventSignupBar';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import type { Tables } from '@/database.types';
-import { createPublicClient } from '@/utils/supabase/server';
 import clsx from 'clsx';
 import crypto from 'crypto';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
+// Cached data functions
+import { getEventBySlug, getEventAttendeesForEvent } from '@/lib/data/events';
+import { getOrganizers } from '@/lib/data/profiles';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -19,9 +22,6 @@ import TimeSVG from 'public/icons/time.svg';
 type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
   profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null
 }
-
-// Revalidate every 60 seconds
-// Cache indefinitely - revalidated on-demand when data changes
 
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {
   const resolvedParams = await params;
@@ -33,13 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
     };
   }
 
-  const supabase = createPublicClient();
-
-  const { data: event } = await supabase
-    .from('events')
-    .select('title, description')
-    .eq('slug', eventSlug)
-    .single();
+  // Use cached function for metadata
+  const event = await getEventBySlug(eventSlug);
 
   if (!event) {
     return {
@@ -109,35 +104,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     notFound();
   }
 
-  const supabase = createPublicClient();
-
-  // Fetch event and hosts in parallel (hosts don't depend on event data)
-  const [{ data: event, error }, { data: hosts }] = await Promise.all([
-    supabase
-      .from('events')
-      .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
-      .eq('slug', eventSlug)
-      .single(),
-    supabase
-      .from('profiles')
-      .select('id, full_name, nickname, avatar_url')
-      .eq('is_admin', true)
-      .limit(5),
+  // Fetch event and hosts in parallel using cached functions
+  const [event, hosts] = await Promise.all([
+    getEventBySlug(eventSlug),
+    getOrganizers(5),
   ]);
 
-  if (error || !event) {
+  if (!event) {
     notFound();
   }
 
-  // Fetch attendees (depends on event.id)
-  const { data: attendees } = await supabase
-    .from('events_rsvps')
-    .select(`id, user_id, email, confirmed_at, profiles (avatar_url)`)
-    .eq('event_id', event.id)
-    .not('confirmed_at', 'is', null)
-    .is('canceled_at', null)
-    .order('confirmed_at', { ascending: true })
-    .limit(100);
+  // Fetch attendees using cached function
+  const attendees = await getEventAttendeesForEvent(event.id);
 
   // Format the event date
   const eventDate = event.date ? new Date(event.date) : null;
