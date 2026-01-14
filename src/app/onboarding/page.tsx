@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import JavaScriptRequired from '@/components/shared/JavaScriptRequired';
+import PageLoading from '@/components/shared/PageLoading';
 import OnboardingClient from './OnboardingClient';
 
 export default function OnboardingPage() {
@@ -6,7 +8,9 @@ export default function OnboardingPage() {
     <>
       <JavaScriptRequired />
       <div className="js-content">
-        <OnboardingClient />
+        <Suspense fallback={<PageLoading />}>
+          <OnboardingClient />
+        </Suspense>
       </div>
     </>
   );

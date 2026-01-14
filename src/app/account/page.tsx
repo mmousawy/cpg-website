@@ -761,7 +761,18 @@ export default function AccountPage() {
                         value={nickname}
                         disabled
                       />
-                      <p className="text-xs text-foreground/50">Your nickname is used in your gallery URLs and cannot be changed. URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{nickname || 'your-nickname'}</p>
+                      <p className="text-xs text-foreground/50">
+                        Your nickname is used in your gallery URLs and cannot be changed.
+                        <br />
+                        URL:{' '}
+                        <span className="break-words">
+                          {(() => {
+                            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+                            const url = `${baseUrl}/@${nickname || 'your-nickname'}`;
+                            return url.replace(/^https?:\/\//, '');
+                          })()}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </Container>

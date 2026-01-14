@@ -1,46 +1,48 @@
 'use client';
 
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import Button from '@/components/shared/Button';
+import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 
-export default function EmailChangedPage() {
+function EmailChangedContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get('success') === 'true';
   const email = searchParams.get('email');
 
   if (!success) {
     return (
-      <PageContainer centered>
-        <div className="text-center max-w-md mx-auto">
-          <div className="mb-6 mx-auto w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <PageContainer className="items-center justify-center">
+        <Container padding="lg" className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
+            <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold mb-3">Something went wrong</h1>
+          <h1 className="mb-2 text-3xl font-bold">Something went wrong</h1>
           <p className="text-foreground/70 mb-6">
             We couldn&apos;t verify your email change. The link may be invalid or expired.
           </p>
           <Link href="/account">
             <Button>Go to account settings</Button>
           </Link>
-        </div>
+        </Container>
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer centered>
-      <div className="text-center max-w-md mx-auto">
-        <div className="mb-6 mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <PageContainer className="items-center justify-center">
+      <Container padding="lg" className="text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+          <svg className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold mb-3">Email changed successfully!</h1>
+        <h1 className="mb-2 text-3xl font-bold">Email changed successfully!</h1>
         <p className="text-foreground/70 mb-2">
           Your email has been updated to:
         </p>
@@ -58,7 +60,21 @@ export default function EmailChangedPage() {
             <Button variant="secondary">Go to homepage</Button>
           </Link>
         </div>
-      </div>
+      </Container>
     </PageContainer>
+  );
+}
+
+export default function EmailChangedPage() {
+  return (
+    <Suspense fallback={
+      <PageContainer className="items-center justify-center">
+        <Container padding="lg" className="text-center">
+          <p className="text-foreground/70">Loading...</p>
+        </Container>
+      </PageContainer>
+    }>
+      <EmailChangedContent />
+    </Suspense>
   );
 }

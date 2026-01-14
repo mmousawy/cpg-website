@@ -595,7 +595,15 @@ function SingleAlbumEditForm({
             </p>
           )}
           <p className="text-xs text-foreground/50">
-            URL: {process.env.NEXT_PUBLIC_SITE_URL}/@{nickname || 'your-nickname'}/album/{watchedSlug || 'your-slug'}
+            URL:
+            <br />
+            <span className="break-words">
+              {(() => {
+                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+                const url = `${baseUrl}/@${nickname || 'your-nickname'}/album/${watchedSlug || 'your-slug'}`;
+                return url.replace(/^https?:\/\//, '');
+              })()}
+            </span>
           </p>
         </div>
 
