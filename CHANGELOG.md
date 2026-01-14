@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/mmousawy/cpg-website/compare/v1.3.2...v1.3.3) (2026-01-14)
+
+
+### Bug Fixes
+
+* remove unused cache directives and static params from profile, album, and event pages ([9b6d95f](https://github.com/mmousawy/cpg-website/commit/9b6d95fc2d1b33626f39a6af741b2674c14f97e3))
+
 ## [1.3.2](https://github.com/mmousawy/cpg-website/compare/v1.3.1...v1.3.2) (2026-01-14)
 
 
