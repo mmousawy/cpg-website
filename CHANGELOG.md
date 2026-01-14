@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.5](https://github.com/mmousawy/cpg-website/compare/v1.3.4...v1.3.5) (2026-01-14)
+
+
+### Bug Fixes
+
+* adjust height calculations in loading components ([74716db](https://github.com/mmousawy/cpg-website/commit/74716dba888ac2103666a2d50f3e4eed01e6b0be))
+* update loading components and caching guidelines ([8078967](https://github.com/mmousawy/cpg-website/commit/8078967f281d79a6ba5ce165e5f9eac6a2bce99f))
+
 ## [1.3.4](https://github.com/mmousawy/cpg-website/compare/v1.3.3...v1.3.4) (2026-01-14)
 
 
