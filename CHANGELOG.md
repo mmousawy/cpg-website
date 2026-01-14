@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.6](https://github.com/mmousawy/cpg-website/compare/v1.3.5...v1.3.6) (2026-01-14)
+
+
+### Bug Fixes
+
+* refine caching strategy and improve error handling in dynamic routes ([4f56f78](https://github.com/mmousawy/cpg-website/commit/4f56f7893a0233c71a9b52349a28db14677c3f83))
+
 ## [1.3.5](https://github.com/mmousawy/cpg-website/compare/v1.3.4...v1.3.5) (2026-01-14)
 
 
