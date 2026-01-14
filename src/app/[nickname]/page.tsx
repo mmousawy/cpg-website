@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
@@ -15,6 +16,11 @@ import {
   getProfileStats,
 } from '@/lib/data/profiles';
 import { getUserPublicAlbums } from '@/lib/data/albums';
+
+// Provide sample params for build-time validation
+export async function generateStaticParams() {
+  return [{ nickname: 'sample' }];
+}
 
 type SocialLink = { label: string; url: string };
 
@@ -46,10 +52,17 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
+  'use cache';
+  
   const resolvedParams = await params;
   // Decode URL parameters and remove @ prefix from nickname if present
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
+
+  // Apply cache settings after we have the nickname
+  cacheLife('max');
+  cacheTag('profiles');
+  cacheTag(`profile-${nickname}`);
 
   if (!nickname) {
     notFound();

@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { notFound } from 'next/navigation';
@@ -7,6 +8,11 @@ type Params = Promise<{
   albumSlug: string;
   photoId: string;
 }>;
+
+// Provide sample params for build-time validation
+export async function generateStaticParams() {
+  return [{ nickname: 'sample', albumSlug: 'sample', photoId: 'sample' }];
+}
 
 export async function generateMetadata({ params }: { params: Params }) {
   const resolvedParams = await params;
@@ -33,11 +39,18 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function AlbumPhotoPage({ params }: { params: Params }) {
+  'use cache';
+  
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
   const albumSlug = resolvedParams?.albumSlug || '';
   const photoId = resolvedParams?.photoId || '';
+
+  // Apply cache settings
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag(`profile-${nickname}`);
 
   if (!nickname || !albumSlug || !photoId) {
     notFound();

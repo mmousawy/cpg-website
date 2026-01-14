@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventSignupBar from '@/components/events/EventSignupBar';
@@ -13,6 +14,11 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import { getEventBySlug, getEventAttendeesForEvent } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
+
+// Provide sample params for build-time validation
+export async function generateStaticParams() {
+  return [{ eventSlug: 'sample' }];
+}
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -97,8 +103,15 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 }
 
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
+  'use cache';
+  
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
+
+  // Apply cache settings
+  cacheLife('max');
+  cacheTag('events');
+  cacheTag('event-attendees');
 
   if (!eventSlug) {
     notFound();

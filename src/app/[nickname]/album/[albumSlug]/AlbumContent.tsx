@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import AlbumModerationPanel from '@/components/admin/AlbumModerationPanel';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
@@ -16,6 +17,10 @@ type AlbumContentProps = {
 };
 
 export default async function AlbumContent({ nickname, albumSlug }: AlbumContentProps) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag(`profile-${nickname}`);
   // Fetch album data
   const album = await getAlbumBySlug(nickname, albumSlug);
 

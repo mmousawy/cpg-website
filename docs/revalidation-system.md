@@ -127,6 +127,46 @@ export default async function Home() {
 }
 ```
 
+### 3b. Caching Dynamic Route Pages
+
+For dynamic routes (e.g., `/[nickname]`, `/events/[eventSlug]`), add `'use cache'` directly to the page component to cache the entire RSC payload:
+
+```typescript
+// src/app/[nickname]/page.tsx
+import { cacheLife, cacheTag } from 'next/cache';
+import { getProfileByNickname } from '@/lib/data/profiles';
+
+// Required for build-time validation with cacheComponents
+export async function generateStaticParams() {
+  return [{ nickname: 'sample' }];
+}
+
+export default async function ProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
+  'use cache';
+  
+  const resolvedParams = await params;
+  const nickname = resolvedParams.nickname;
+
+  // Apply cache settings after extracting params
+  cacheLife('max');  // Cache for 30 days stale, 1 year max
+  cacheTag('profiles');
+  cacheTag(`profile-${nickname}`);
+
+  const profile = await getProfileByNickname(nickname);
+  // ...
+}
+```
+
+**Why this matters:**
+- Without page-level `'use cache'`, even if data functions are cached, the RSC payload is regenerated every ~5 minutes
+- With page-level caching, the entire rendered component tree is cached
+- `generateStaticParams` is required for build-time validation when using `cacheComponents: true`
+
+**Cache durations with `cacheLife('max')`:**
+- Stale time: 30 days (served from cache, revalidates in background after this)
+- Max age: 1 year (hard expiry)
+- Manual invalidation: Call `revalidateTag('profile-nickname')` anytime
+
 ### 4. Triggering Revalidation
 
 Call revalidation functions after data mutations:
