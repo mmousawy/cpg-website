@@ -56,7 +56,7 @@ export default function ManageLayout({
   };
 
   return (
-    <div className="flex h-[calc(100svh-61px)] md:h-[calc(100svh-81px)] w-full select-none">
+    <div className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none">
       {/* Left Panel - Content */}
       <div className="flex flex-1 flex-col overflow-y-auto border-r border-border-color md:border-r">
         {/* Header */}
@@ -150,7 +150,7 @@ export default function ManageLayout({
       </div>
 
       {/* Right Panel - Sidebar (hidden on mobile) */}
-      <div className="hidden md:flex h-[calc(100vh-81px)] w-[400px] shrink-0 flex-col overflow-hidden bg-background-light">
+      <div className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col overflow-hidden bg-background-light">
         {sidebar}
       </div>
 

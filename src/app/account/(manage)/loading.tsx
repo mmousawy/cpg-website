@@ -33,7 +33,7 @@ export default function ManageLoading() {
   const isAlbumsActive = pathname.startsWith('/account/albums');
 
   return (
-    <div className="flex h-[calc(100svh-61px)] md:h-[calc(100svh-81px)] w-full select-none">
+    <div className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none">
       {/* Left Panel - Content */}
       <div className="flex flex-1 flex-col overflow-y-auto border-r border-border-color md:border-r">
         {/* Header - show actual tabs, not skeleton */}
@@ -95,7 +95,7 @@ export default function ManageLoading() {
       </div>
 
       {/* Right Panel - Sidebar skeleton (hidden on mobile) */}
-      <div className="hidden md:flex h-[calc(100vh-81px)] w-[400px] shrink-0 flex-col items-center justify-center bg-background-light p-10 text-center">
+      <div className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col items-center justify-center bg-background-light p-10 text-center">
         <Skeleton className="mb-2 size-10 rounded" />
         <Skeleton className="mb-2 h-6 w-48 rounded" />
         <Skeleton className="h-4 w-56 rounded" />
