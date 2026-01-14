@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 
-import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
-import ModalProvider from "@/app/providers/ModalProvider";
 import ConfirmProvider from "@/app/providers/ConfirmProvider";
+import ModalProvider from "@/app/providers/ModalProvider";
 import QueryProvider from "@/app/providers/QueryProvider";
-import SupabaseProvider from "./providers/SupabaseProvider";
-import { AuthProvider } from "@/context/AuthContext";
-import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
+import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import Layout from "@/components/layout/Layout";
 import NavigationProgress from "@/components/layout/NavigationProgress";
-import Modal from "@/components/shared/Modal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import Modal from "@/components/shared/Modal";
 import PageLoading from "@/components/shared/PageLoading";
+import { AuthProvider } from "@/context/AuthContext";
+import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
+import SupabaseProvider from "./providers/SupabaseProvider";
 
 import "./globals.css";
 
@@ -50,7 +50,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-geist-sans)] text-foreground antialiased`}
       >
-        <NavigationProgress />
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <SupabaseProvider>
           <QueryProvider>
             <AuthProvider>

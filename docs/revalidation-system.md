@@ -484,14 +484,11 @@ export default async function Page({ params }) {
 - With it, the entire RSC (React Server Component) payload is cached
 - The page will be served instantly from cache until a `revalidateTag()` call invalidates it
 
-```typescript
-// src/app/[nickname]/album/[albumSlug]/loading.tsx
-import AlbumSkeleton from './AlbumSkeleton';
+**Important:** Do NOT add `loading.tsx` to cached pages. With PPR (Partial Prerender), Next.js will show the loading skeleton during navigation even when content is cached, causing an unnecessary flash. Without `loading.tsx`, cached pages will load instantly.
 
-export default function Loading() {
-  return <AlbumSkeleton />;
-}
-```
+Only use `loading.tsx` for:
+- Truly dynamic pages that always fetch fresh data
+- Pages where network latency is expected (e.g., user-specific dashboards with real-time data)
 
 ### Authenticated Routes Pattern (Client-Only)
 
