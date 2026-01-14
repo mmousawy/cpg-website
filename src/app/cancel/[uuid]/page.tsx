@@ -3,12 +3,21 @@ import PageContainer from "@/components/layout/PageContainer";
 import { createClient } from '@/utils/supabase/server';
 import CancelBlock from "./CancelBlock";
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import { unstable_noStore } from 'next/cache';
+
+// Provide sample params for build-time validation (required with cacheComponents)
+export async function generateStaticParams() {
+  return [{ uuid: 'sample-uuid' }];
+}
 
 export default async function Cancel({
   params,
 }: {
   params: Promise<{ uuid: string }>
 }) {
+  // Opt out of static generation - this route requires cookies/auth
+  unstable_noStore();
+
   const supabase = await createClient();
   const { uuid } = await params;
 

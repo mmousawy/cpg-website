@@ -301,7 +301,7 @@ With Cache Components enabled, Next.js enforces strict rules about `new Date()` 
 
 | Component | Issue | Solution |
 |-----------|-------|----------|
-| `Footer` | `new Date().getFullYear()` | Client component with `useState` + `useEffect` |
+| `Footer` | `new Date().getFullYear()` | Client component - use `new Date()` directly |
 | `RandomHeroImage` | `Math.random()` | `useState` lazy initializer + Suspense boundary + `onLoad` fade-in |
 | `ActivitiesSlider` | Swiper library uses Date | Wrapped in `ActivitiesSliderWrapper` with dynamic import `ssr: false` |
 | `EventCard` | `isEventPast()` | Accepts `serverNow` prop from data layer |
@@ -381,26 +381,20 @@ export default function Page() {
 
 ### Client Component Pattern for Date Values
 
-For client components needing current date, use `useState` + `useEffect`:
+For client components needing current date, simply use `new Date()` directly:
 
 ```typescript
 'use client';
-import { useState, useEffect } from 'react';
 
 export default function Footer() {
-  const [year, setYear] = useState(2024); // Static default for SSR
+  // Safe in client components - runs on client only
+  const currentYear = new Date().getFullYear();
 
-  useEffect(() => {
-    // Defer to avoid sync setState in effect
-    const frame = requestAnimationFrame(() => {
-      setYear(new Date().getFullYear());
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  return <p>© {year} My Company</p>;
+  return <p>© {currentYear} My Company</p>;
 }
 ```
+
+Note: Since client components run on the client after hydration, `new Date()` is safe to use directly without `useState`/`useEffect`.
 
 ### Dynamic Route Pattern
 
@@ -434,6 +428,51 @@ export default function Loading() {
   return <AlbumSkeleton />;
 }
 ```
+
+### Authenticated Routes Pattern (Client-Only)
+
+Routes that require authentication (e.g., `/account/*`) should never be cached. Use `unstable_noStore()` in the layout and make all page components client components:
+
+```typescript
+// src/app/account/layout.tsx
+import { redirect } from 'next/navigation';
+import { getServerAuth } from '@/utils/supabase/getServerAuth';
+import { unstable_noStore } from 'next/cache';
+
+export default async function AccountLayout({ children }) {
+  // Opt out of static generation - account pages require authentication
+  unstable_noStore();
+
+  const { user, profile } = await getServerAuth();
+
+  if (!user) {
+    redirect('/login?redirectTo=/account');
+  }
+
+  return <>{children}</>;
+}
+```
+
+```typescript
+// src/app/account/page.tsx (and all other account pages)
+'use client';
+
+import { useAuth } from '@/hooks/useAuth';
+
+export default function AccountPage() {
+  const { user, profile } = useAuth(); // Client-side auth hook
+
+  // All data fetching via React Query hooks
+  // No server-side caching, fully dynamic
+}
+```
+
+**Key points for authenticated routes:**
+- Layout uses `unstable_noStore()` to opt out of static generation
+- All page components use `'use client'` directive
+- Data is fetched client-side using React Query hooks
+- Auth check in layout redirects unauthenticated users
+- `generateStaticParams` is only needed for dynamic route segments (e.g., `[slug]`) to satisfy build-time validation, but the routes are still dynamic at runtime
 
 ### Third-Party Library Pattern
 

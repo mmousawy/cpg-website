@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 
 import { ThemeProviderWrapper as ThemeProvider } from "@/app/providers/ThemeProvider";
 import ModalProvider from "@/app/providers/ModalProvider";
@@ -13,6 +14,7 @@ import Layout from "@/components/layout/Layout";
 import NavigationProgress from "@/components/layout/NavigationProgress";
 import Modal from "@/components/shared/Modal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import PageLoading from "@/components/shared/PageLoading";
 
 import "./globals.css";
 
@@ -56,9 +58,11 @@ export default function RootLayout({
                 <ConfirmProvider>
                   <UnsavedChangesProvider>
                     <ModalProvider>
-                      <Layout>
-                        {children}
-                      </Layout>
+                      <Suspense fallback={<PageLoading />}>
+                        <Layout>
+                          {children}
+                        </Layout>
+                      </Suspense>
                       <Modal />
                     </ModalProvider>
                   </UnsavedChangesProvider>

@@ -37,10 +37,18 @@ export async function getServerAuth(): Promise<ServerAuth> {
       profile: profile as ServerProfile | null,
     };
   } catch (error) {
-    // Silently fail during static generation (no cookies available)
+    // Silently fail during static generation/prerendering (no cookies available)
     // This is expected behavior, not an error
-    if (error instanceof Error && error.message.includes('Dynamic server usage')) {
-      return { user: null, profile: null };
+    if (error instanceof Error) {
+      const errorWithDigest = error as Error & { digest?: string };
+      if (
+        error.message.includes('Dynamic server usage') ||
+        error.message.includes('prerender') ||
+        error.message.includes('cookies() rejects') ||
+        errorWithDigest.digest === 'HANGING_PROMISE_REJECTION'
+      ) {
+        return { user: null, profile: null };
+      }
     }
     // Log actual errors
     console.error('Error getting server auth:', error);

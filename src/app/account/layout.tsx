@@ -1,11 +1,15 @@
 import { redirect } from 'next/navigation';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
+import { unstable_noStore } from 'next/cache';
 
 export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Opt out of static generation - account pages require authentication
+  unstable_noStore();
+
   const { user, profile } = await getServerAuth();
 
   // Redirect to login if not authenticated

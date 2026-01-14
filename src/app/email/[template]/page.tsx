@@ -1,5 +1,10 @@
 import { render } from "@react-email/render";
 
+// Provide sample params for build-time validation (required with cacheComponents)
+export async function generateStaticParams() {
+  return [{ template: 'signup' }];
+}
+
 // Email template mapping
 const templates: Record<string, () => Promise<any>> = {
   // Event emails
