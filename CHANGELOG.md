@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/mmousawy/cpg-website/compare/v1.3.0...v1.3.1) (2026-01-14)
+
+
+### Bug Fixes
+
+* enhance caching and data fetching for events, albums, and profiles ([78f3163](https://github.com/mmousawy/cpg-website/commit/78f31639707f7449f5ab603b6bb89fbc614cf32b))
+* improve error handling in stats API route ([cee2305](https://github.com/mmousawy/cpg-website/commit/cee2305717944e5c3edc799d796d6f7d8de694de))
+
 ## [1.3.0](https://github.com/mmousawy/cpg-website/compare/v1.2.0...v1.3.0) (2026-01-14)
 
 
