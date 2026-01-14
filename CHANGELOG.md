@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/mmousawy/cpg-website/compare/v1.1.0...v1.2.0) (2026-01-14)
+
+
+### Features
+
+* implement email change modal in account page ([a170283](https://github.com/mmousawy/cpg-website/commit/a1702833529bccf4d524f1771a03835fc0a96ca5))
+
+
+### Bug Fixes
+
+* enhance account and onboarding pages with improved URL display and avatar upload functionality ([ccefd12](https://github.com/mmousawy/cpg-website/commit/ccefd12c4aa00b7266a9182838500cb1a6039c51))
+
 ## [1.1.0](https://github.com/mmousawy/cpg-website/compare/v1.0.0...v1.1.0) (2026-01-13)
 
 
