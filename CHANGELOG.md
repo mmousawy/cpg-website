@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/mmousawy/cpg-website/compare/v1.3.1...v1.3.2) (2026-01-14)
+
+
+### Bug Fixes
+
+* implement page-level caching for dynamic routes ([92eac92](https://github.com/mmousawy/cpg-website/commit/92eac9232cb2dcc0a77c7c41cb8a8506fff7c5a1))
+
 ## [1.3.1](https://github.com/mmousawy/cpg-website/compare/v1.3.0...v1.3.1) (2026-01-14)
 
 
