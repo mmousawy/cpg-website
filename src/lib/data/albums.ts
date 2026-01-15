@@ -1,6 +1,6 @@
-import { cacheTag, cacheLife } from 'next/cache';
-import { createPublicClient } from '@/utils/supabase/server';
 import type { AlbumWithPhotos } from '@/types/albums';
+import { createPublicClient } from '@/utils/supabase/server';
+import { cacheLife, cacheTag } from 'next/cache';
 
 /**
  * Get all public album paths (nickname + slug) for static generation

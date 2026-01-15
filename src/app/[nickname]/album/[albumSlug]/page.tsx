@@ -1,4 +1,4 @@
-import { getAllAlbumPaths, getAlbumBySlug } from '@/lib/data/albums';
+import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
 
