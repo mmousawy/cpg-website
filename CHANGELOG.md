@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.8](https://github.com/mmousawy/cpg-website/compare/v1.3.7...v1.3.8) (2026-01-15)
+
+
+### Bug Fixes
+
+* enhance album and photo revalidation process ([692b9df](https://github.com/mmousawy/cpg-website/commit/692b9df46790141b310891d3043aeba703365dda))
+
 ## [1.3.7](https://github.com/mmousawy/cpg-website/compare/v1.3.6...v1.3.7) (2026-01-15)
 
 
