@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.7](https://github.com/mmousawy/cpg-website/compare/v1.3.6...v1.3.7) (2026-01-15)
+
+
+### Bug Fixes
+
+* improve caching for dynamic pages ([2ad9b3f](https://github.com/mmousawy/cpg-website/commit/2ad9b3f8c803ad765cadd9817e8b0a07d959c0e0))
+* reorder import statements for consistency ([b7db0d5](https://github.com/mmousawy/cpg-website/commit/b7db0d58665819f32098a3c5b5f2f99f254bd43a))
+
 ## [1.3.6](https://github.com/mmousawy/cpg-website/compare/v1.3.5...v1.3.6) (2026-01-14)
 
 
