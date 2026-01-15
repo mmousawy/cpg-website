@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import {
+    getAllProfileNicknames,
     getProfileByNickname,
     getProfileStats,
     getUserPublicPhotoCount,
@@ -19,9 +20,10 @@ import {
 
 type SocialLink = { label: string; url: string };
 
-// Required for build-time validation with cacheComponents
+// Pre-render all public profiles at build time for optimal caching
 export async function generateStaticParams() {
-  return [{ nickname: 'sample' }];
+  const nicknames = await getAllProfileNicknames();
+  return nicknames.map((nickname) => ({ nickname }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
@@ -53,7 +55,6 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
-  // Decode URL parameters and remove @ prefix from nickname if present
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
 

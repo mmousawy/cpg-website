@@ -21,6 +21,27 @@ export type ProfileData = Pick<Tables<'profiles'>,
 };
 
 /**
+ * Get all profile nicknames for static generation
+ * Used in generateStaticParams to pre-render profile pages
+ * No caching needed - only called at build time
+ * Returns '@nickname' format (canonical URL format)
+ */
+export async function getAllProfileNicknames() {
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('nickname')
+    .not('nickname', 'is', null)
+    .is('suspended_at', null);
+
+  const nicknames = (data || []).map((p) => p.nickname).filter((n): n is string => n !== null);
+  
+  // Return with @ prefix (canonical URL format)
+  return nicknames.map((n) => `@${n}`);
+}
+
+/**
  * Get organizers (admins) for homepage
  * Tagged with 'profiles' for granular cache invalidation
  */

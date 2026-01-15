@@ -1,10 +1,11 @@
-import { getAlbumBySlug } from '@/lib/data/albums';
+import { getAllAlbumPaths, getAlbumBySlug } from '@/lib/data/albums';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
 
-// Required for build-time validation with cacheComponents
+// Pre-render all public albums at build time for optimal caching
 export async function generateStaticParams() {
-  return [{ nickname: 'sample', albumSlug: 'sample' }];
+  const paths = await getAllAlbumPaths();
+  return paths;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {

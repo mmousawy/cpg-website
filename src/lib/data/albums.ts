@@ -3,6 +3,28 @@ import { createPublicClient } from '@/utils/supabase/server';
 import type { AlbumWithPhotos } from '@/types/albums';
 
 /**
+ * Get all public album paths (nickname + slug) for static generation
+ * Used in generateStaticParams to pre-render album pages
+ * No caching needed - only called at build time
+ */
+export async function getAllAlbumPaths() {
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('albums')
+    .select('slug, profile:profiles!inner(nickname)')
+    .eq('is_public', true)
+    .is('deleted_at', null);
+
+  return (data || [])
+    .filter((a) => a.slug && (a.profile as any)?.nickname)
+    .map((a) => ({
+      nickname: (a.profile as any).nickname as string,
+      albumSlug: a.slug as string,
+    }));
+}
+
+/**
  * Get recent public albums for homepage
  * Tagged with 'albums' for granular cache invalidation
  */

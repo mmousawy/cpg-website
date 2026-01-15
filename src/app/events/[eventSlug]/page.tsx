@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
-import { getEventBySlug, getEventAttendeesForEvent } from '@/lib/data/events';
+import { getAllEventSlugs, getEventBySlug, getEventAttendeesForEvent } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -24,9 +24,10 @@ type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
   profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null
 }
 
-// Required for build-time validation with cacheComponents
+// Pre-render all events at build time for optimal caching
 export async function generateStaticParams() {
-  return [{ eventSlug: 'sample' }];
+  const slugs = await getAllEventSlugs();
+  return slugs.map((eventSlug) => ({ eventSlug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {

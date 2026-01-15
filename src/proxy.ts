@@ -71,12 +71,27 @@ export default async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder assets
+     * Only run middleware on routes that need auth:
+     * - /account/* (protected - user dashboard)
+     * - /admin/* (protected - admin pages)
+     * - /login, /signup (auth pages - redirect if already logged in)
+     * - /auth-callback (OAuth callback)
+     * - /onboarding (needs auth check)
+     * - /api/* (API routes that may need auth)
+     *
+     * Public routes are EXCLUDED to allow full caching:
+     * - / (homepage)
+     * - /events/* (public event pages)
+     * - /gallery (public gallery)
+     * - /@* and /[nickname] (public profiles)
+     * - Static assets
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/account/:path*',
+    '/admin/:path*',
+    '/login',
+    '/signup',
+    '/auth-callback',
+    '/onboarding',
+    '/api/:path*',
   ],
 };

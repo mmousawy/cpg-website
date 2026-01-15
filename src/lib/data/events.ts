@@ -3,6 +3,22 @@ import { createPublicClient } from '@/utils/supabase/server';
 import type { CPGEvent, EventAttendee } from '@/types/events';
 
 /**
+ * Get all event slugs for static generation
+ * Used in generateStaticParams to pre-render event pages
+ * No caching needed - only called at build time
+ */
+export async function getAllEventSlugs() {
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('events')
+    .select('slug')
+    .not('slug', 'is', null);
+
+  return (data || []).map((e) => e.slug).filter((s): s is string => s !== null);
+}
+
+/**
  * Get recent events for homepage
  * Tagged with 'events' for granular cache invalidation
  * Returns events with a server timestamp for date comparisons
