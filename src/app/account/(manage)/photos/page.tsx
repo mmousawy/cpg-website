@@ -58,7 +58,7 @@ export default function PhotosPage() {
   const deletePhotosMutation = useDeletePhotos(user?.id, photoFilter, profile?.nickname);
   const updatePhotoMutation = useUpdatePhoto(user?.id, photoFilter, profile?.nickname);
   const bulkUpdatePhotosMutation = useBulkUpdatePhotos(user?.id, photoFilter, profile?.nickname);
-  const reorderPhotosMutation = useReorderPhotos(user?.id, photoFilter);
+  const reorderPhotosMutation = useReorderPhotos(user?.id, photoFilter, profile?.nickname);
 
   // Upload hook with progress tracking
   const { uploadingPhotos, uploadFiles, clearCompleted, dismissUpload } = usePhotoUpload();

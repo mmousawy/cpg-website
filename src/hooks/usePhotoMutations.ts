@@ -1,4 +1,4 @@
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { supabase } from '@/utils/supabase/client';
@@ -92,9 +92,12 @@ export function useDeletePhotos(
         queryClient.invalidateQueries({ queryKey: ['counts', userId] });
       }
 
-      // Revalidate affected albums
-      if (nickname && data.affectedAlbums) {
-        await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+      // Revalidate profile (photostream) and affected albums
+      if (nickname) {
+        await revalidateProfile(nickname);
+        if (data.affectedAlbums.length > 0) {
+          await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+        }
       }
     },
   });
@@ -160,9 +163,12 @@ export function useUpdatePhoto(
       }
     },
     onSuccess: async (data) => {
-      // Revalidate affected albums
-      if (nickname && data.affectedAlbums) {
-        await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+      // Revalidate profile (photostream) and affected albums
+      if (nickname) {
+        await revalidateProfile(nickname);
+        if (data.affectedAlbums.length > 0) {
+          await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+        }
       }
     },
   });
@@ -232,15 +238,22 @@ export function useBulkUpdatePhotos(
       }
     },
     onSuccess: async (data) => {
-      // Revalidate affected albums
-      if (nickname && data.affectedAlbums) {
-        await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+      // Revalidate profile (photostream) and affected albums
+      if (nickname) {
+        await revalidateProfile(nickname);
+        if (data.affectedAlbums.length > 0) {
+          await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+        }
       }
     },
   });
 }
 
-export function useReorderPhotos(userId: string | undefined, filter: PhotoFilter = 'all') {
+export function useReorderPhotos(
+  userId: string | undefined,
+  filter: PhotoFilter = 'all',
+  nickname?: string | null,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -275,6 +288,12 @@ export function useReorderPhotos(userId: string | undefined, filter: PhotoFilter
       // Rollback on error
       if (userId && context?.previousPhotos) {
         queryClient.setQueryData(['photos', userId, filter], context.previousPhotos);
+      }
+    },
+    onSuccess: async () => {
+      // Revalidate profile page (photostream order changed)
+      if (nickname) {
+        await revalidateProfile(nickname);
       }
     },
   });

@@ -18,6 +18,7 @@ import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useDeleteAlbums, useUpdateAlbum } from '@/hooks/useAlbumMutations';
 import {
   useDeleteAlbumPhoto,
@@ -228,9 +229,13 @@ export default function AlbumDetailClient() {
         albumId={album.id}
         existingPhotoUrls={photos.map((p) => p.url)}
         onClose={() => modalContext.setIsOpen(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
           queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
+          // Revalidate server-side cache for public pages
+          if (profile?.nickname && album.is_public) {
+            await revalidateAlbum(profile.nickname, album.slug);
+          }
           modalContext.setIsOpen(false);
         }}
       />,
@@ -261,6 +266,11 @@ export default function AlbumDetailClient() {
       await queryClient.refetchQueries({ queryKey: ['album-photos', album.id] });
       queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
       queryClient.invalidateQueries({ queryKey: ['albums', user.id] });
+
+      // Revalidate server-side cache for public pages
+      if (profile?.nickname && album.is_public) {
+        await revalidateAlbum(profile.nickname, album.slug);
+      }
 
       // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
