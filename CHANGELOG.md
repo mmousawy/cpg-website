@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/mmousawy/cpg-website/compare/v1.4.0...v1.5.0) (2026-01-16)
+
+
+### Features
+
+* add interests system, member discovery, event comments, and reminder cron ([1d8520d](https://github.com/mmousawy/cpg-website/commit/1d8520d8fc6de5f893ffedf799290204670164d1))
+
+
+### Bug Fixes
+
+* enhance event reminder queries and improve data handling ([5a55ba5](https://github.com/mmousawy/cpg-website/commit/5a55ba58cc789dd5953f7ec42698e7acf88d9380))
+
 ## [1.4.0](https://github.com/mmousawy/cpg-website/compare/v1.3.8...v1.4.0) (2026-01-16)
 
 
