@@ -45,7 +45,7 @@ export default function AlbumGrid({
   albums,
   isOwner = false,
   variant,
-  className = "grid gap-3 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]",
+  className = "grid gap-3 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
   onAlbumClick,
 }: AlbumGridProps) {
   const { profile } = useAuth();

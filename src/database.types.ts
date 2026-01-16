@@ -361,8 +361,39 @@ export type Database = {
           },
         ]
       }
+      event_comments: {
+        Row: {
+          comment_id: string
+          event_id: number
+        }
+        Insert: {
+          comment_id: string
+          event_id: number
+        }
+        Update: {
+          comment_id?: string
+          event_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_comments_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_comments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
+          attendee_reminder_sent_at: string | null
           cover_image: string | null
           created_at: string | null
           date: string | null
@@ -375,11 +406,13 @@ export type Database = {
           location: string | null
           max_attendees: number | null
           rsvp_count: number | null
+          rsvp_reminder_sent_at: string | null
           slug: string
           time: string | null
           title: string | null
         }
         Insert: {
+          attendee_reminder_sent_at?: string | null
           cover_image?: string | null
           created_at?: string | null
           date?: string | null
@@ -392,11 +425,13 @@ export type Database = {
           location?: string | null
           max_attendees?: number | null
           rsvp_count?: number | null
+          rsvp_reminder_sent_at?: string | null
           slug: string
           time?: string | null
           title?: string | null
         }
         Update: {
+          attendee_reminder_sent_at?: string | null
           cover_image?: string | null
           created_at?: string | null
           date?: string | null
@@ -409,6 +444,7 @@ export type Database = {
           location?: string | null
           max_attendees?: number | null
           rsvp_count?: number | null
+          rsvp_reminder_sent_at?: string | null
           slug?: string
           time?: string | null
           title?: string | null
@@ -472,6 +508,27 @@ export type Database = {
           },
         ]
       }
+      interests: {
+        Row: {
+          count: number | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       photo_comments: {
         Row: {
           comment_id: string
@@ -504,22 +561,22 @@ export type Database = {
       }
       photo_tags: {
         Row: {
+          created_at: string | null
           id: string
           photo_id: string
           tag: string
-          created_at: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
           photo_id: string
           tag: string
-          created_at?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: string
           photo_id?: string
           tag?: string
-          created_at?: string | null
         }
         Relationships: [
           {
@@ -530,27 +587,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      tags: {
-        Row: {
-          id: string
-          name: string
-          count: number
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          count?: number
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          count?: number
-          created_at?: string | null
-        }
-        Relationships: []
       }
       photos: {
         Row: {
@@ -615,6 +651,35 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_interests: {
+        Row: {
+          created_at: string | null
+          id: string
+          interest: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interest: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interest?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_interests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           album_card_style: string | null
@@ -675,6 +740,27 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          count: number | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       album_photos_active: {
@@ -722,6 +808,10 @@ export type Database = {
           p_entity_id: string
           p_entity_type: string
         }
+        Returns: string
+      }
+      add_event_comment: {
+        Args: { p_comment_text: string; p_event_id: number }
         Returns: string
       }
       add_photos_to_album: {

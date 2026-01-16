@@ -26,6 +26,7 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 │           ▼                    ▼                    ▼               │
 │  Tags: events,         Tags: albums,        Tags: profiles,         │
 │        event-attendees       profile-[nick]       profile-[nick]    │
+│                              gallery              tag-[tagname]     │
 └─────────────────────────────────────────────────────────────────────┘
                                  │
                                  ▼
@@ -36,6 +37,7 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 │  revalidateTag('events', 'max')        → Invalidates event cache    │
 │  revalidateTag('event-attendees', ..)  → Invalidates RSVP data      │
 │  revalidateTag('albums', 'max')        → Invalidates album cache    │
+│  revalidateTag('gallery', 'max')       → Invalidates photostream    │
 │  revalidateTag('profiles', 'max')      → Invalidates profiles cache │
 │  revalidateTag('profile-[nick]', ..)   → Invalidates specific user  │
 └─────────────────────────────────────────────────────────────────────┘
@@ -48,8 +50,10 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 | `events` | All event data (upcoming, past, details) | Event created/updated/deleted |
 | `event-attendees` | RSVP and attendee lists | RSVP signup/confirm/cancel |
 | `albums` | All album listings | Album created/updated/deleted |
+| `gallery` | Community photostream, popular tags | Photo created/updated/deleted, tags modified |
 | `profiles` | Members list, organizers | New user onboarding, profile changes |
 | `profile-[nickname]` | Specific user's data | User updates profile, creates content |
+| `tag-[tagname]` | Photos with a specific tag | Photos tagged/untagged |
 
 ## Configuration
 
@@ -221,6 +225,15 @@ export async function POST(request: NextRequest) {
 | `getPhotoByShortId(nick, id)` | `profile-[nick]` | Single photo by short_id |
 | `getAlbumPhotoByShortId(...)` | `profile-[nick]`, `albums` | Photo in album context |
 
+### Gallery Functions (`src/lib/data/gallery.ts`)
+
+| Function | Tags | Description |
+|----------|------|-------------|
+| `getPublicPhotostream(limit)` | `gallery` | Community photo stream |
+| `getPopularTags(limit)` | `gallery` | Popular tags by usage count |
+| `getPhotosByTag(tag, limit)` | `gallery`, `tag-[tagname]` | Photos with specific tag |
+| `getAllTagNames()` | None (build-time only) | Tag names for static generation |
+
 > **Cache Duration**: All functions use `cacheLife('max')` - data is cached indefinitely until invalidated via `revalidateTag()`.
 
 ### Revalidation Functions (`src/app/actions/revalidate.ts`)
@@ -229,8 +242,10 @@ export async function POST(request: NextRequest) {
 |----------|-------------|----------|
 | `revalidateEvents()` | `events` | Event CRUD |
 | `revalidateEventAttendees()` | `event-attendees` | RSVP changes |
-| `revalidateAlbum(nick, slug)` | `albums`, `profile-[nick]` | Album update |
-| `revalidateAlbums(nick, slugs)` | `albums`, `profile-[nick]` | Bulk album ops |
+| `revalidateAlbum(nick, slug)` | `albums`, `profile-[nick]`, `gallery` | Album update |
+| `revalidateAlbums(nick, slugs)` | `albums`, `profile-[nick]`, `gallery` | Bulk album ops |
+| `revalidateGalleryData()` | `gallery` | Photo CRUD |
+| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]` | Photo tagged/untagged |
 | `revalidateProfile(nick)` | `profiles`, `profile-[nick]` | Profile update |
 | `revalidateProfiles()` | `profiles` | Member list changes |
 | `revalidateAll()` | All tags | Admin operations |

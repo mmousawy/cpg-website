@@ -218,6 +218,16 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           });
 
           results.push(photoData as Photo);
+
+          // Revalidate cache for members page (recently active)
+          // Note: This is called per photo, but revalidation is idempotent
+          if (photoData.is_public) {
+            const { revalidateProfiles, revalidateGalleryData } = await import('@/app/actions/revalidate');
+            await Promise.all([
+              revalidateProfiles(),
+              revalidateGalleryData(),
+            ]);
+          }
         } catch (err: any) {
           console.error('Upload error:', err);
           updateUploadingPhoto(upload.id, {

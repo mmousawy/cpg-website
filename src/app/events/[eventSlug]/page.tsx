@@ -20,6 +20,8 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
+import EventComments from './EventComments';
+
 // Type for attendee with joined profile data
 type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
   profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null
@@ -314,17 +316,9 @@ async function CachedEventContent({
       {/* Sticky Action Bar - only show for upcoming events */}
       {!isPastEvent && <EventSignupBar event={event} />}
 
-      {/* Comments Section - Coming Soon */}
+      {/* Comments Section */}
       <PageContainer variant="alt" className="border-t border-t-border-color">
-        <div className="flex items-center gap-3 mb-2">
-          <h2 className="text-lg font-semibold opacity-50">Comments</h2>
-          <span className="rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium opacity-50">
-            Coming soon
-          </span>
-        </div>
-        <p className="text-sm opacity-40">
-          Comments for events will be available in a future update.
-        </p>
+        <EventComments eventId={String(event.id)} />
       </PageContainer>
 
     </>

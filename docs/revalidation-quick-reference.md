@@ -7,8 +7,10 @@
 | `events` | Event listings, details |
 | `event-attendees` | RSVP lists per event |
 | `albums` | Album listings (gallery, homepage) |
+| `gallery` | Community photostream, popular tags |
 | `profiles` | Members/organizers lists |
 | `profile-[nick]` | Specific user's data |
+| `tag-[tagname]` | Photos with a specific tag |
 
 ## When to Revalidate
 
@@ -18,6 +20,8 @@
 | RSVP signup/confirm/cancel | `revalidateEventAttendees()` |
 | Album created/updated/deleted | `revalidateAlbum(nickname, slug)` |
 | Bulk album operations | `revalidateAlbums(nickname, slugs)` |
+| Photo created/updated/deleted | `revalidateGalleryData()` |
+| Photo tagged/untagged | `revalidateTagPhotos(tagName)` |
 | User profile updated | `revalidateProfile(nickname)` |
 | User onboarding complete | `revalidateProfile(nickname)` |
 | Photo added to album | `revalidateAlbum(nickname, slug)` |
@@ -31,6 +35,8 @@ import {
   revalidateEventAttendees,
   revalidateAlbum,
   revalidateAlbums,
+  revalidateGalleryData,
+  revalidateTagPhotos,
   revalidateProfile,
   revalidateProfiles,
   revalidateAll,
@@ -71,6 +77,14 @@ import {
   getProfileStats,
   getPhotoByShortId,
   getAlbumPhotoByShortId,
+} from '@/lib/data';
+
+// Gallery (Community Photostream & Tags)
+import {
+  getPublicPhotostream,
+  getPopularTags,
+  getPhotosByTag,
+  getAllTagNames,
 } from '@/lib/data';
 ```
 

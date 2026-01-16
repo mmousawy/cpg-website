@@ -27,6 +27,10 @@ export const routes = {
     label: 'Gallery',
     url: '/gallery',
   },
+  members: {
+    label: 'Members',
+    url: '/members',
+  },
   account: {
     label: 'Account',
     url: '/account',

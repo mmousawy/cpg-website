@@ -12,8 +12,12 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  * - 'events' - All event data
  * - 'event-attendees' - RSVP/attendee data
  * - 'albums' - All album data
+ * - 'gallery' - Community photostream and tag data
  * - 'profiles' - All profile data (organizers, members list)
  * - 'profile-[nickname]' - Specific user profile data
+ * - 'tag-[tagname]' - Photos with a specific tag
+ * - 'interests' - All interests data
+ * - 'interest-[name]' - Members with a specific interest
  *
  * @see docs/revalidation-system.md for usage details
  */
@@ -52,6 +56,8 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   revalidateTag('albums', 'max');
   // Revalidate the specific user's profile data
   revalidateTag(`profile-${nickname}`, 'max');
+  // Revalidate gallery (photostream shows all public photos)
+  revalidateTag('gallery', 'max');
 
   // Revalidate the profile page (shows albums list)
   // Note: Profile URLs use @ prefix format: /@nickname
@@ -71,9 +77,34 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   // With tag-based caching, we just need to invalidate the tags
   revalidateTag('albums', 'max');
   revalidateTag(`profile-${nickname}`, 'max');
+  // Revalidate gallery (photostream shows all public photos)
+  revalidateTag('gallery', 'max');
   // Revalidate the profile page (shows albums list)
   // Note: Profile URLs use @ prefix format: /@nickname
   revalidatePath(`/@${nickname}`);
+}
+
+// ============================================================================
+// Gallery Revalidation
+// ============================================================================
+
+/**
+ * Revalidate gallery page data (photostream and tags)
+ * Use when: Photo is created, updated, or deleted; tags are modified
+ */
+export async function revalidateGalleryData() {
+  revalidateTag('gallery', 'max');
+}
+
+/**
+ * Revalidate a specific tag's photo listing and member pages
+ * Use when: Photos are tagged/untagged
+ */
+export async function revalidateTagPhotos(tagName: string) {
+  revalidateTag('gallery', 'max');
+  revalidateTag(`tag-${tagName}`, 'max');
+  // Also revalidate members by tag page
+  revalidateTag('profiles', 'max');
 }
 
 // ============================================================================
@@ -99,6 +130,27 @@ export async function revalidateProfile(nickname: string) {
 }
 
 // ============================================================================
+// Interests Revalidation
+// ============================================================================
+
+/**
+ * Revalidate all interests-related cached data
+ * Use when: Interests are added/removed from profiles
+ */
+export async function revalidateInterests() {
+  revalidateTag('interests', 'max');
+}
+
+/**
+ * Revalidate a specific interest's member listing
+ * Use when: Members add/remove a specific interest
+ */
+export async function revalidateInterest(interestName: string) {
+  revalidateTag('interests', 'max');
+  revalidateTag(`interest-${interestName}`, 'max');
+}
+
+// ============================================================================
 // Bulk/Utility Functions
 // ============================================================================
 
@@ -111,7 +163,9 @@ export async function revalidateAll() {
   revalidateTag('events', 'max');
   revalidateTag('event-attendees', 'max');
   revalidateTag('albums', 'max');
+  revalidateTag('gallery', 'max');
   revalidateTag('profiles', 'max');
+  revalidateTag('interests', 'max');
   // Also revalidate the layout for any non-cached data
   revalidatePath('/', 'layout');
 }
@@ -134,8 +188,9 @@ export async function revalidateEvent(eventSlug?: string) {
 }
 
 /**
- * @deprecated Use revalidateAlbums() instead
+ * @deprecated Use revalidateAlbums() or revalidateGalleryData() instead
  */
 export async function revalidateGallery() {
   revalidateTag('albums', 'max');
+  revalidateTag('gallery', 'max');
 }

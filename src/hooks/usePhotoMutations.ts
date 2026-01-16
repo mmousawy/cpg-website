@@ -151,6 +151,11 @@ export function useUpdatePhoto(
         throw new Error(error.message || 'Failed to update photo');
       }
 
+      // Get previous tags before updating
+      const previousPhoto = previousPhotos?.find((p) => p.id === photoId);
+      const previousTags = previousPhoto?.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+      const newTags = data.tags?.map((t) => t.toLowerCase()) || [];
+
       // Update tags - delete existing and insert new ones
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
       if (data.tags && data.tags.length > 0) {
@@ -161,6 +166,11 @@ export function useUpdatePhoto(
 
       // Invalidate global tags cache
       queryClient.invalidateQueries({ queryKey: ['global-tags'] });
+
+      // Revalidate tag-specific member pages for changed tags
+      const { revalidateTagPhotos } = await import('@/app/actions/revalidate');
+      const allAffectedTags = [...new Set([...previousTags, ...newTags])];
+      await Promise.all(allAffectedTags.map((tag) => revalidateTagPhotos(tag)));
 
       // Get affected albums for revalidation and cache invalidation
       const photo = previousPhotos?.find((p) => p.id === photoId);

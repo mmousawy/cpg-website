@@ -3,6 +3,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
+import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -206,6 +207,13 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
           {profile.bio && (
             <div className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]">
               {profile.bio}
+            </div>
+          )}
+
+          {/* Interests */}
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="mb-4">
+              <InterestCloud interests={profile.interests} />
             </div>
           )}
         </div>

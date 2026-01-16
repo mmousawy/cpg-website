@@ -11,6 +11,10 @@
 
 - **[metadata.md](./metadata.md)** - Metadata, OpenGraph, and Twitter card implementation
 
+### Email Notifications
+
+- **[email-notifications.md](./email-notifications.md)** - Email notification system, automated reminders, and manual sending
+
 ## Key Concepts
 
 ### `use cache` Directive
@@ -22,8 +26,12 @@ The project uses Next.js's `use cache` directive for component-level caching. Da
 - `events` - Event listings and details
 - `event-attendees` - RSVP/attendee data (separate for granular control)
 - `albums` - Album listings
-- `profiles` - Member/organizer lists
+- `gallery` - Community photostream and popular tags
+- `profiles` - Member/organizer lists and member discovery data
 - `profile-[nickname]` - Specific user profile data
+- `tag-[tagname]` - Photos with a specific tag
+- `interests` - All interests data
+- `interest-[name]` - Members with a specific interest
 
 ### Key Files
 
@@ -38,21 +46,27 @@ The project uses Next.js's `use cache` directive for component-level caching. Da
 ### Fetching Cached Data
 
 ```typescript
-import { getRecentEvents, getRecentAlbums } from '@/lib/data';
+import { getRecentEvents, getRecentAlbums, getPopularInterests, getRecentlyActiveMembers } from '@/lib/data';
 
-const [events, albums] = await Promise.all([
+const [events, albums, interests, activeMembers] = await Promise.all([
   getRecentEvents(6),
   getRecentAlbums(6),
+  getPopularInterests(20),
+  getRecentlyActiveMembers(12),
 ]);
 ```
 
 ### Invalidating Cache
 
 ```typescript
-import { revalidateEventAttendees } from '@/app/actions/revalidate';
+import { revalidateEventAttendees, revalidateInterests, revalidateInterest } from '@/app/actions/revalidate';
 
 // After RSVP change
 await revalidateEventAttendees();
+
+// After interests are added/removed
+await revalidateInterests();
+await revalidateInterest('photography');
 ```
 
 ## Further Reading

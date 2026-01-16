@@ -18,6 +18,7 @@ export type ProfileData = Pick<Tables<'profiles'>,
   | 'created_at'
 > & {
   social_links: SocialLink[] | null;
+  interests?: Array<{ id: string; name: string; count: number | null }>;
 };
 
 /**
@@ -85,6 +86,38 @@ export async function getRecentMembers(limit = 12) {
 }
 
 /**
+ * Get profile interests for a user
+ * Tagged with specific profile tag for granular invalidation
+ */
+export async function getProfileInterests(userId: string, nickname: string) {
+  'use cache';
+  cacheLife('max');
+  cacheTag(`profile-${nickname}`);
+  cacheTag('interests');
+
+  const supabase = createPublicClient();
+
+  const { data: profileInterests } = await supabase
+    .from('profile_interests')
+    .select('interest')
+    .eq('profile_id', userId);
+
+  if (!profileInterests || profileInterests.length === 0) {
+    return [];
+  }
+
+  const interestNames = profileInterests.map((pi) => pi.interest);
+
+  // Fetch full interest data with counts
+  const { data: interests } = await supabase
+    .from('interests')
+    .select('id, name, count')
+    .in('name', interestNames);
+
+  return (interests || []) as Array<{ id: string; name: string; count: number | null }>;
+}
+
+/**
  * Get a public profile by nickname
  * Tagged with specific profile tag for granular invalidation
  */
@@ -107,7 +140,13 @@ export async function getProfileByNickname(nickname: string) {
     return null;
   }
 
-  return profile as unknown as ProfileData;
+  // Load interests for this profile
+  const interests = await getProfileInterests(profile.id, nickname);
+
+  return {
+    ...profile,
+    interests,
+  } as unknown as ProfileData;
 }
 
 /**

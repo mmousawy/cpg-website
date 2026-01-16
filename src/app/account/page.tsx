@@ -21,10 +21,11 @@ import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, getUserEmailPreferences, updateEmailPreferences, type EmailPreference, type EmailTypeData } from '@/utils/emailPreferencesClient';
 
-import { revalidateProfile } from '@/app/actions/revalidate';
+import { revalidateInterest, revalidateInterests, revalidateProfile } from '@/app/actions/revalidate';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import Avatar from '@/components/auth/Avatar';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import InterestInput from '@/components/shared/InterestInput';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import CloseSVG from 'public/icons/close.svg';
@@ -41,6 +42,7 @@ const accountFormSchema = z.object({
   bio: z.string().optional(),
   website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   socialLinks: z.array(socialLinkSchema).max(3, 'Maximum 3 social links allowed'),
+  interests: z.array(z.string()).max(10, 'Maximum 10 interests allowed'),
   albumCardStyle: z.enum(['large', 'compact']),
   theme: z.enum(['system', 'light', 'dark', 'midnight']),
   emailPreferences: z.record(z.string(), z.boolean()),
@@ -127,6 +129,7 @@ export default function AccountPage() {
       bio: '',
       website: '',
       socialLinks: [],
+      interests: [],
       albumCardStyle: 'large',
       theme: 'system',
       emailPreferences: {},
@@ -208,6 +211,14 @@ export default function AccountPage() {
       const preferences = await getUserEmailPreferences(user.id);
       setEmailPreferences(preferences);
 
+      // Load profile interests
+      const { data: interestsData } = await supabase
+        .from('profile_interests')
+        .select('interest')
+        .eq('profile_id', user.id);
+
+      const userInterests = (interestsData || []).map((pi) => pi.interest);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in')
@@ -271,6 +282,7 @@ export default function AccountPage() {
               bio: newProfile.bio || '',
               website: newProfile.website || '',
               socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
+              interests: userInterests,
               albumCardStyle: albumStyle,
               theme: 'system',
               emailPreferences: emailPrefs,
@@ -307,6 +319,7 @@ export default function AccountPage() {
             bio: '',
             website: '',
             socialLinks: [],
+            interests: [],
             albumCardStyle: 'large',
             theme: 'system',
             emailPreferences: emailPrefs,
@@ -361,6 +374,7 @@ export default function AccountPage() {
           bio: data.bio || '',
           website: data.website || '',
           socialLinks: (data.social_links as { label: string; url: string }[]) || [],
+          interests: userInterests,
           albumCardStyle: albumStyle,
           theme: profileTheme,
           emailPreferences: emailPrefs,
@@ -507,6 +521,48 @@ export default function AccountPage() {
       // Filter out empty social links
       const validSocialLinks = data.socialLinks.filter(link => link.label.trim() && link.url.trim());
 
+      // Sync interests: get current interests, delete removed ones, insert new ones
+      const { data: currentInterests } = await supabase
+        .from('profile_interests')
+        .select('interest')
+        .eq('profile_id', user.id);
+
+      const currentInterestNames = (currentInterests || []).map((pi) => pi.interest);
+      const newInterestNames = data.interests.map((i) => i.toLowerCase().trim()).filter(Boolean);
+
+      // Delete removed interests
+      const interestsToRemove = currentInterestNames.filter((i) => !newInterestNames.includes(i));
+      if (interestsToRemove.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('profile_interests')
+          .delete()
+          .eq('profile_id', user.id)
+          .in('interest', interestsToRemove);
+
+        if (deleteError) {
+          setSubmitError(`Failed to remove interests: ${deleteError.message}`);
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Insert new interests
+      const interestsToAdd = newInterestNames.filter((i) => !currentInterestNames.includes(i));
+      if (interestsToAdd.length > 0) {
+        const { error: insertError } = await supabase
+          .from('profile_interests')
+          .insert(interestsToAdd.map((interest) => ({
+            profile_id: user.id,
+            interest,
+          })));
+
+        if (insertError) {
+          setSubmitError(`Failed to add interests: ${insertError.message}`);
+          setIsSaving(false);
+          return;
+        }
+      }
+
       // Update email preferences
       const preferenceUpdates = emailTypes.map(type => {
         const isOptedIn = data.emailPreferences[type.type_key] ?? true;
@@ -572,12 +628,13 @@ export default function AccountPage() {
           savedEmailPrefs[type.type_key] = data.emailPreferences[type.type_key] ?? true;
         });
 
-        // Create the saved data with filtered social links
+        // Create the saved data with filtered social links and interests
         const savedData: AccountFormData = {
           fullName: data.fullName || '',
           bio: data.bio || '',
           website: data.website || '',
           socialLinks: validSocialLinks,
+          interests: newInterestNames,
           albumCardStyle: data.albumCardStyle,
           theme: data.theme,
           emailPreferences: savedEmailPrefs,
@@ -587,9 +644,17 @@ export default function AccountPage() {
         reset(savedData);
         setSavedFormValues(savedData);
 
-        // Revalidate profile pages
+        // Revalidate profile pages and interests
         if (nickname) {
           await revalidateProfile(nickname);
+          // Revalidate interests if they changed
+          if (interestsToAdd.length > 0 || interestsToRemove.length > 0) {
+            await revalidateInterests();
+            // Revalidate each changed interest
+            for (const interest of [...interestsToAdd, ...interestsToRemove]) {
+              await revalidateInterest(interest);
+            }
+          }
         }
 
         setSuccess(true);
@@ -865,6 +930,36 @@ export default function AccountPage() {
                           </Button>
                         )}
                       </div>
+                    </div>
+
+                    {/* Interests */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">
+                        Interests
+                      </label>
+                      <Controller
+                        name="interests"
+                        control={control}
+                        render={({ field }) => (
+                          <InterestInput
+                            id="interests"
+                            interests={field.value || []}
+                            onAddInterest={(interest) => {
+                              const current = field.value || [];
+                              if (!current.includes(interest) && current.length < 10) {
+                                field.onChange([...current, interest]);
+                              }
+                            }}
+                            onRemoveInterest={(interest) => {
+                              const current = field.value || [];
+                              field.onChange(current.filter((i) => i !== interest));
+                            }}
+                            maxInterests={10}
+                            helperText="Add up to 10 interests to help others discover you"
+                            disabled={isSaving}
+                          />
+                        )}
+                      />
                     </div>
                   </div>
                 </Container>

@@ -1,9 +1,13 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
+import WidePageContainer from '@/components/layout/WidePageContainer';
+import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import PopularTagsSection from '@/components/shared/PopularTagsSection';
 import { createMetadata } from '@/utils/metadata';
 
-// Cached data function
+// Cached data functions
 import { getPublicAlbums } from '@/lib/data/albums';
+import { getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
   title: 'Gallery & Community Photo Albums',
@@ -13,30 +17,59 @@ export const metadata = createMetadata({
 });
 
 export default async function GalleryPage() {
-  // Fetch albums using cached data function
-  const albums = await getPublicAlbums(50);
+  // Fetch data in parallel
+  const [albums, photos] = await Promise.all([
+    getPublicAlbums(50),
+    getPublicPhotostream(100),
+  ]);
 
   return (
-    <PageContainer>
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">Photography gallery</h1>
-        <p className="text-lg opacity-70">
-          Explore beautiful photos from the community
-        </p>
-      </div>
-
-      {/* TODO: Add community photostream  */}
-      {/* <JustifiedPhotoGrid /> */}
-
-      {albums.length === 0 ? (
-        <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
+    <>
+      <PageContainer>
+        <div className="mb-8">
+          <h1 className="mb-2 text-3xl font-bold">Photography gallery</h1>
           <p className="text-lg opacity-70">
-            No photos yet. Be the first to upload some!
+            Explore beautiful photos from the community
           </p>
         </div>
-      ) : (
-        <AlbumGrid albums={albums} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
-      )}
-    </PageContainer>
+
+        <PopularTagsSection />
+      </PageContainer>
+
+      <WidePageContainer className="!pt-0">
+        {/* Community photostream */}
+        {photos.length > 0 && (
+          <div className="mb-12">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold">Recent photos</h2>
+              <p className="mt-1 text-sm text-foreground/60">
+                Latest uploads from the community
+              </p>
+            </div>
+            <JustifiedPhotoGrid photos={photos} showAttribution />
+          </div>
+        )}
+
+        {/* Album grid */}
+        <div>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold">Albums</h2>
+            <p className="mt-1 text-sm text-foreground/60">
+              Photo collections from community members
+            </p>
+          </div>
+
+          {albums.length === 0 ? (
+            <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
+              <p className="text-lg opacity-70">
+                No photos yet. Be the first to upload some!
+              </p>
+            </div>
+          ) : (
+            <AlbumGrid albums={albums} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
+          )}
+        </div>
+      </WidePageContainer>
+    </>
   );
 }

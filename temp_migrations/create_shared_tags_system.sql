@@ -21,19 +21,22 @@ CREATE INDEX IF NOT EXISTS idx_tags_name_prefix ON tags(name text_pattern_ops);
 ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
 
 -- Tags are viewable by everyone (for autocomplete)
+DROP POLICY IF EXISTS "Tags are viewable by everyone" ON tags;
 CREATE POLICY "Tags are viewable by everyone"
   ON tags FOR SELECT
   USING (true);
 
 -- Only authenticated users can create tags (via triggers)
+DROP POLICY IF EXISTS "Authenticated users can insert tags" ON tags;
 CREATE POLICY "Authenticated users can insert tags"
   ON tags FOR INSERT
-  WITH CHECK (auth.uid() IS NOT NULL);
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL);
 
 -- Tags can be updated by authenticated users (for count updates via triggers)
+DROP POLICY IF EXISTS "Authenticated users can update tags" ON tags;
 CREATE POLICY "Authenticated users can update tags"
   ON tags FOR UPDATE
-  USING (auth.uid() IS NOT NULL);
+  USING ((SELECT auth.uid()) IS NOT NULL);
 
 -- 2. Create photo_tags junction table
 CREATE TABLE IF NOT EXISTS photo_tags (
@@ -51,45 +54,43 @@ CREATE INDEX IF NOT EXISTS idx_photo_tags_tag ON photo_tags(tag);
 -- Enable RLS for photo_tags
 ALTER TABLE photo_tags ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for photo_tags
-CREATE POLICY "Tags from public photos are viewable by everyone"
+-- RLS Policies for photo_tags (single consolidated SELECT policy for performance)
+DROP POLICY IF EXISTS "Tags from public photos are viewable by everyone" ON photo_tags;
+DROP POLICY IF EXISTS "Users can view tags from their own photos" ON photo_tags;
+DROP POLICY IF EXISTS "Users can view tags from public photos or their own photos" ON photo_tags;
+
+CREATE POLICY "Users can view tags from public photos or their own photos"
   ON photo_tags FOR SELECT
   USING (
     EXISTS (
       SELECT 1 FROM photos
       WHERE photos.id = photo_tags.photo_id
-      AND photos.is_public = true
-      AND photos.deleted_at IS NULL
+      AND (
+        (photos.is_public = true AND photos.deleted_at IS NULL)
+        OR photos.user_id = (SELECT auth.uid())
+      )
     )
   );
 
-CREATE POLICY "Users can view tags from their own photos"
-  ON photo_tags FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM photos
-      WHERE photos.id = photo_tags.photo_id
-      AND photos.user_id = auth.uid()
-    )
-  );
-
+DROP POLICY IF EXISTS "Users can add tags to their own photos" ON photo_tags;
 CREATE POLICY "Users can add tags to their own photos"
   ON photo_tags FOR INSERT
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM photos
       WHERE photos.id = photo_tags.photo_id
-      AND photos.user_id = auth.uid()
+      AND photos.user_id = (SELECT auth.uid())
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete tags from their own photos" ON photo_tags;
 CREATE POLICY "Users can delete tags from their own photos"
   ON photo_tags FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM photos
       WHERE photos.id = photo_tags.photo_id
-      AND photos.user_id = auth.uid()
+      AND photos.user_id = (SELECT auth.uid())
     )
   );
 

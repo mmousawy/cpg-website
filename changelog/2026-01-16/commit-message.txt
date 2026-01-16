@@ -1,0 +1,105 @@
+feat: add interests system, member discovery, event comments, and reminder cron
+
+Add a shared interests system for member profiles, comprehensive member
+discovery pages, event commenting functionality, gallery tag browsing,
+and automated event reminder emails via cron job.
+
+Interests system:
+- Database migration for interests and profile_interests tables with
+  automatic usage count tracking via triggers
+- Account settings integration with InterestInput component for adding
+  and removing interests
+- Public profile display showing member interests below bio
+- InterestCloud component for displaying interests with size-based
+  styling similar to TagCloud
+- Interest discovery page at /members/interest/[interest] showing all
+  members with a specific interest
+
+Members discovery:
+- Main members page at /members (authenticated users only) with multiple
+  discovery sections:
+  - Popular interests cloud
+  - Featured interests with member samples
+  - Recently active members (uploaded photos/albums in last 30 days)
+  - New members (recently joined)
+  - Explore by photo style (tags with member counts)
+- Members by tag page at /members/tag/[tag] showing members who
+  frequently use a specific photo tag
+- MemberCard component for consistent member display across discovery
+  pages
+
+Data layer:
+- New interests.ts module with getPopularInterests and
+  getMembersByInterest functions
+- New members.ts module with getRecentlyActiveMembers, getNewMembers,
+  getRandomInterestsWithMembers, and getMembersByTag functions
+- getPopularTagsWithMemberCounts in gallery.ts for tag-based discovery
+- All functions use 'use cache' with appropriate cache tags
+
+Caching and revalidation:
+- Added revalidateInterests and revalidateInterest functions
+- Integrated interests revalidation into profile updates and account
+  settings save flow
+- Fixed randomization in getRandomInterestsWithMembers to use
+  deterministic selection for cache consistency
+- Added page-level caching to interest and tag member pages
+- Photo uploads now invalidate profiles and gallery tags for recently
+  active members
+- Tag updates invalidate tag-specific member pages
+- Updated revalidate-all API to include interests tag
+
+UI improvements:
+- Fixed avatar rounding for members without profile pictures using
+  Avatar component instead of ClickableAvatar
+- Added hover effects to member cards
+- Aligned interest tag styling with TagCloud component
+- Improved spacing and typography consistency across discovery pages
+
+Event comments:
+- Added event_comments junction table linking events to comments
+- EventComments component for displaying comments on event pages
+- Updated comments API to support event entity type with separate RPC
+  function (events use INTEGER IDs vs UUID)
+- Admin notifications for event comments (instead of single owner)
+- Comments component updated to handle event comments
+
+Gallery tag browsing:
+- New gallery tag pages at /gallery/tag/[tag] for browsing photos by tag
+- TagCloud component for displaying tags with size-based styling
+- PopularTagsSection server component for tag browsing sections
+- Gallery page updated to include popular tags section
+- JustifiedPhotoGrid enhanced with profile attribution display
+- Static generation for all tag pages via generateStaticParams
+
+Event reminders (cron):
+- Added database columns rsvp_reminder_sent_at and
+  attendee_reminder_sent_at to events table for tracking sent reminders
+- Implemented cron job endpoint at /api/cron/event-reminders
+- Automated RSVP reminders sent 5 days before events to users who
+  haven't RSVP'd (respects email preferences)
+- Automated attendee reminders sent 1 day before events to confirmed
+  attendees
+- Cron job configured in vercel.json to run daily at 8:00 AM UTC
+- Protected by CRON_SECRET environment variable authentication
+- Uses batch email sending via Resend API with rate limiting
+
+Database migrations:
+- Consolidated temp migrations into baseline migration
+- Added event_comments table migration
+- Added event reminder tracking columns migration
+- Added interests system migration
+- Cleaned up old temp migration files
+
+Documentation:
+- Updated docs/README.md with interests cache tags and examples
+- Updated docs/revalidation-quick-reference.md and
+  docs/revalidation-system.md with new cache tags
+- Added docs/email-notifications.md with cron job documentation
+- Updated main README.md with completed discovery features and new
+  database tables
+- Added exports for interests and members modules in data layer index
+
+Configuration:
+- Added CRON_SECRET to .env.example for cron job authentication
+- Updated vercel.json with cron job configuration
+- Updated .cursorrules with project conventions

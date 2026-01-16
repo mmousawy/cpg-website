@@ -23,7 +23,7 @@ export default function StickyActionBar({
   return (
     <div
       className={clsx(
-        'sticky z-40',
+        'sticky z-30',
         position === 'bottom' ? 'bottom-0' : 'top-0',
         className,
       )}

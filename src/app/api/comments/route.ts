@@ -29,19 +29,41 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (entityType !== 'album' && entityType !== 'photo') {
+  if (entityType !== 'album' && entityType !== 'photo' && entityType !== 'event') {
     return NextResponse.json(
-      { message: "Invalid entity type. Must be 'album' or 'photo'" },
+      { message: "Invalid entity type. Must be 'album', 'photo', or 'event'" },
       { status: 400 }
     );
   }
 
-  // Create the comment using the RPC function
-  const { data: commentId, error: commentError } = await supabase.rpc('add_comment', {
-    p_entity_type: entityType,
-    p_entity_id: entityId,
-    p_comment_text: commentText.trim(),
-  });
+  // Create the comment using the appropriate RPC function
+  let commentId: string | null = null;
+  let commentError: { message: string } | null = null;
+
+  if (entityType === 'event') {
+    // Events use a separate RPC since event_id is INTEGER, not UUID
+    const eventIdNum = parseInt(entityId, 10);
+    if (isNaN(eventIdNum)) {
+      return NextResponse.json(
+        { message: "Invalid event ID" },
+        { status: 400 }
+      );
+    }
+    const { data, error } = await supabase.rpc('add_event_comment', {
+      p_event_id: eventIdNum,
+      p_comment_text: commentText.trim(),
+    });
+    commentId = data ?? null;
+    commentError = error;
+  } else {
+    const { data, error } = await supabase.rpc('add_comment', {
+      p_entity_type: entityType,
+      p_entity_id: entityId,
+      p_comment_text: commentText.trim(),
+    });
+    commentId = data ?? null;
+    commentError = error;
+  }
 
   if (commentError) {
     console.error('Error creating comment:', commentError);
@@ -146,6 +168,106 @@ export async function POST(request: NextRequest) {
           entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
         }
       }
+    }
+  } else if (entityType === 'event') {
+    // For events, we notify all admins instead of a single owner
+    const eventIdNum = parseInt(entityId, 10);
+    const { data: event } = await supabase
+      .from('events')
+      .select('id, title, slug, cover_image, image_url')
+      .eq('id', eventIdNum)
+      .single();
+
+    if (event) {
+      entityTitle = event.title || 'Event';
+      entityThumbnail = event.cover_image || event.image_url;
+      entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.slug}#comments`;
+
+      // Get all admins (excluding the commenter)
+      const { data: admins } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, nickname')
+        .eq('is_admin', true)
+        .is('suspended_at', null)
+        .neq('id', user.id);
+
+      if (admins && admins.length > 0) {
+        // Check notification preferences and send emails to all admins
+        const { data: notificationsEmailType } = await supabase
+          .from('email_types' as any)
+          .select('id')
+          .eq('type_key', 'notifications')
+          .single();
+
+        for (const admin of admins) {
+          if (!admin.email) continue;
+
+          // Check if this admin has opted out
+          if (notificationsEmailType) {
+            const notificationsEmailTypeId = (notificationsEmailType as any).id;
+            const { data: preference } = await supabase
+              .from('email_preferences' as any)
+              .select('opted_out')
+              .eq('user_id', admin.id)
+              .eq('email_type_id', notificationsEmailTypeId)
+              .single();
+
+            if (preference && (preference as any).opted_out === true) {
+              continue;
+            }
+          }
+
+          // Generate opt-out link for this admin
+          let adminOptOutLink: string | undefined;
+          try {
+            const encrypted = encrypt(JSON.stringify({
+              userId: admin.id,
+              emailType: 'notifications',
+            }));
+            adminOptOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+          } catch (error) {
+            console.error('Error generating opt-out link:', error);
+          }
+
+          // Send notification email to this admin
+          const adminName = admin.full_name || admin.email.split('@')[0] || 'Admin';
+
+          try {
+            const emailResult = await resend.emails.send({
+              from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+              to: admin.email,
+              replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+              subject: `${commenterName} commented on the event "${entityTitle}"`,
+              html: await render(
+                CommentNotificationEmail({
+                  ownerName: adminName,
+                  commenterName,
+                  commenterNickname,
+                  commenterAvatarUrl,
+                  commenterProfileLink,
+                  commentText: commentText.trim(),
+                  entityType: 'event',
+                  entityTitle,
+                  entityThumbnail,
+                  entityLink,
+                  optOutLink: adminOptOutLink,
+                })
+              ),
+            });
+
+            if (emailResult.error) {
+              console.error(`Error sending event comment notification to ${admin.email}:`, emailResult.error);
+            } else {
+              console.log(`📨 Event comment notification sent to admin ${admin.email}`);
+            }
+          } catch (err) {
+            console.error(`Error sending event comment notification to ${admin.email}:`, err);
+          }
+        }
+      }
+
+      // Return early for events since we've handled all notifications
+      return NextResponse.json({ success: true, commentId }, { status: 200 });
     }
   }
 

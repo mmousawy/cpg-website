@@ -102,7 +102,7 @@ export default async function Home() {
                 <h3 className="text-lg font-semibold">Recent albums</h3>
                 <ArrowLink href={routes.gallery.url}>View all</ArrowLink>
               </div>
-              <AlbumGrid albums={albums} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]" />
+              <AlbumGrid albums={albums} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]" />
             </div>
           )}
         </Container>

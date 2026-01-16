@@ -133,6 +133,8 @@ DECLARE
   v_max_sort_order INTEGER;
   v_inserted_count INTEGER := 0;
   v_current_sort INTEGER;
+  v_first_photo_url TEXT;
+  v_has_cover BOOLEAN;
 BEGIN
   -- Get the current user
   v_user_id := auth.uid();
@@ -153,6 +155,11 @@ BEGIN
     RAISE EXCEPTION 'Not authorized to modify this album';
   END IF;
 
+  -- Check if album already has a cover
+  SELECT cover_image_url IS NOT NULL INTO v_has_cover
+  FROM albums
+  WHERE id = p_album_id;
+
   -- Get current max sort_order
   SELECT COALESCE(MAX(sort_order), -1) INTO v_max_sort_order
   FROM album_photos
@@ -160,23 +167,38 @@ BEGIN
 
   v_current_sort := v_max_sort_order + 1;
 
-  -- Insert photos that don't already exist in the album
+  -- Insert photos that don't already exist in the album, preserving input order
   FOR v_photo IN 
     SELECT p.id, p.url, p.width, p.height
-    FROM photos p
-    WHERE p.id = ANY(p_photo_ids)
-      AND p.user_id = v_user_id
+    FROM unnest(p_photo_ids) WITH ORDINALITY AS input_photo(id, input_order)
+    JOIN photos p ON p.id = input_photo.id
+    WHERE p.user_id = v_user_id
       AND NOT EXISTS (
         SELECT 1 FROM album_photos ap 
         WHERE ap.album_id = p_album_id AND ap.photo_id = p.id
       )
+    ORDER BY input_photo.input_order
   LOOP
     INSERT INTO album_photos (album_id, photo_id, photo_url, width, height, sort_order)
     VALUES (p_album_id, v_photo.id, v_photo.url, v_photo.width, v_photo.height, v_current_sort);
     
+    -- Set first photo as manual cover if album doesn't have a cover yet
+    IF v_inserted_count = 0 AND NOT v_has_cover THEN
+      v_first_photo_url := v_photo.url;
+    END IF;
+    
     v_current_sort := v_current_sort + 1;
     v_inserted_count := v_inserted_count + 1;
   END LOOP;
+
+  -- Set first photo as manual cover if we inserted photos and album had no cover
+  IF v_inserted_count > 0 AND NOT v_has_cover AND v_first_photo_url IS NOT NULL THEN
+    UPDATE albums
+    SET cover_image_url = v_first_photo_url,
+        cover_is_manual = true,
+        updated_at = NOW()
+    WHERE id = p_album_id;
+  END IF;
 
   RETURN v_inserted_count;
 END;
@@ -186,7 +208,7 @@ $$;
 ALTER FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) OWNER TO "supabase_admin";
 
 
-COMMENT ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) IS 'Efficiently adds multiple photos to an album, handling deduplication and sort_order';
+COMMENT ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) IS 'Efficiently adds multiple photos to an album, handling deduplication and sort_order. Sets first photo as manual cover if album has no cover.';
 
 
 
@@ -725,35 +747,40 @@ CREATE OR REPLACE FUNCTION "public"."update_album_cover"() RETURNS "trigger"
 DECLARE
   target_album_id UUID;
   new_cover_url TEXT;
+  deleted_photo_url TEXT;
 BEGIN
-  -- Determine which album to update
-  IF TG_OP = 'DELETE' THEN
-    target_album_id := OLD.album_id;
-  ELSE
-    target_album_id := NEW.album_id;
-  END IF;
-
-  -- Get the first photo by sort_order for this album (excluding deleted photos)
-  SELECT ap.photo_url INTO new_cover_url
-  FROM public.album_photos ap
-  JOIN public.photos p ON p.id = ap.photo_id
-  WHERE ap.album_id = target_album_id
-    AND p.deleted_at IS NULL
-  ORDER BY ap.sort_order ASC NULLS LAST, ap.created_at ASC
-  LIMIT 1;
-
-  -- Update the album's cover image (set to NULL if no photos found)
-  UPDATE public.albums
-  SET cover_image_url = new_cover_url,
-      updated_at = NOW()
-  WHERE id = target_album_id;
-
-  -- Return appropriate value based on operation
-  IF TG_OP = 'DELETE' THEN
-    RETURN OLD;
-  ELSE
+  -- Only handle DELETE operations (when a photo is removed from an album)
+  IF TG_OP != 'DELETE' THEN
     RETURN NEW;
   END IF;
+
+  target_album_id := OLD.album_id;
+  deleted_photo_url := OLD.photo_url;
+
+  -- Check if the deleted photo was the cover photo
+  IF EXISTS (
+    SELECT 1 FROM public.albums
+    WHERE id = target_album_id
+      AND cover_image_url = deleted_photo_url
+  ) THEN
+    -- Get the first photo by sort_order for this album (excluding deleted photos)
+    SELECT ap.photo_url INTO new_cover_url
+    FROM public.album_photos ap
+    JOIN public.photos p ON p.id = ap.photo_id
+    WHERE ap.album_id = target_album_id
+      AND p.deleted_at IS NULL
+    ORDER BY ap.sort_order ASC NULLS LAST, ap.created_at ASC
+    LIMIT 1;
+
+    -- Update the album's cover image (set to NULL if no photos found)
+    -- Keep cover_is_manual = true since we're just replacing a deleted manual cover
+    UPDATE public.albums
+    SET cover_image_url = new_cover_url,
+        updated_at = NOW()
+    WHERE id = target_album_id;
+  END IF;
+
+  RETURN OLD;
 END;
 $$;
 
@@ -761,7 +788,7 @@ $$;
 ALTER FUNCTION "public"."update_album_cover"() OWNER TO "supabase_admin";
 
 
-COMMENT ON FUNCTION "public"."update_album_cover"() IS 'Automatically updates album cover_image_url to the first non-deleted photo by sort_order whenever album_photos are added, removed, or reordered';
+COMMENT ON FUNCTION "public"."update_album_cover"() IS 'Updates album cover_image_url only when the cover photo is deleted from the album. Covers are always set as manual.';
 
 
 
@@ -777,6 +804,30 @@ $$;
 
 
 ALTER FUNCTION "public"."update_comments_updated_at"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_tag_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    -- Insert tag if it doesn't exist, or increment count
+    INSERT INTO tags (name, count)
+    VALUES (NEW.tag, 1)
+    ON CONFLICT (name) DO UPDATE SET count = tags.count + 1;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    -- Decrement count (don't delete tag even if count reaches 0, for history)
+    UPDATE tags SET count = GREATEST(count - 1, 0) WHERE name = OLD.tag;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_tag_count"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
@@ -892,7 +943,8 @@ CREATE TABLE IF NOT EXISTS "public"."albums" (
     "suspended_at" timestamp with time zone,
     "suspended_by" "uuid",
     "suspension_reason" "text",
-    "deleted_at" timestamp with time zone
+    "deleted_at" timestamp with time zone,
+    "cover_is_manual" boolean DEFAULT false
 );
 
 
@@ -1061,6 +1113,17 @@ CREATE TABLE IF NOT EXISTS "public"."photo_comments" (
 ALTER TABLE "public"."photo_comments" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."photo_tags" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "photo_id" "uuid" NOT NULL,
+    "tag" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."photo_tags" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "id" "uuid" NOT NULL,
     "email" "text",
@@ -1092,6 +1155,17 @@ ALTER TABLE "public"."profiles" OWNER TO "postgres";
 
 COMMENT ON COLUMN "public"."profiles"."social_links" IS 'Array of social links (max 3). Format: [{ "label": string, "url": string }]';
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."tags" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "count" integer DEFAULT 0,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."tags" OWNER TO "supabase_admin";
 
 
 ALTER TABLE ONLY "public"."email_types" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."email_types_id_seq"'::"regclass");
@@ -1221,6 +1295,16 @@ ALTER TABLE ONLY "public"."photo_comments"
 
 
 
+ALTER TABLE ONLY "public"."photo_tags"
+    ADD CONSTRAINT "photo_tags_photo_id_tag_key" UNIQUE ("photo_id", "tag");
+
+
+
+ALTER TABLE ONLY "public"."photo_tags"
+    ADD CONSTRAINT "photo_tags_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_nickname_key" UNIQUE ("nickname");
 
@@ -1228,6 +1312,16 @@ ALTER TABLE ONLY "public"."profiles"
 
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."tags"
+    ADD CONSTRAINT "tags_name_key" UNIQUE ("name");
+
+
+
+ALTER TABLE ONLY "public"."tags"
+    ADD CONSTRAINT "tags_pkey" PRIMARY KEY ("id");
 
 
 
@@ -1367,6 +1461,14 @@ CREATE INDEX "idx_photo_comments_photo" ON "public"."photo_comments" USING "btre
 
 
 
+CREATE INDEX "idx_photo_tags_photo_id" ON "public"."photo_tags" USING "btree" ("photo_id");
+
+
+
+CREATE INDEX "idx_photo_tags_tag" ON "public"."photo_tags" USING "btree" ("tag");
+
+
+
 CREATE INDEX "idx_photos_deleted_at" ON "public"."photos" USING "btree" ("deleted_at") WHERE ("deleted_at" IS NULL);
 
 
@@ -1411,6 +1513,18 @@ CREATE INDEX "idx_profiles_suspended_at" ON "public"."profiles" USING "btree" ("
 
 
 
+CREATE INDEX "idx_tags_count" ON "public"."tags" USING "btree" ("count" DESC);
+
+
+
+CREATE INDEX "idx_tags_name" ON "public"."tags" USING "btree" ("name");
+
+
+
+CREATE INDEX "idx_tags_name_prefix" ON "public"."tags" USING "btree" ("name" "text_pattern_ops");
+
+
+
 CREATE INDEX "profiles_email_idx" ON "public"."profiles" USING "btree" ("email");
 
 
@@ -1423,7 +1537,15 @@ CREATE OR REPLACE TRIGGER "photo_sort_order_trigger" BEFORE INSERT ON "public"."
 
 
 
+CREATE OR REPLACE TRIGGER "trigger_album_tags_count" AFTER INSERT OR DELETE ON "public"."album_tags" FOR EACH ROW EXECUTE FUNCTION "public"."update_tag_count"();
+
+
+
 CREATE OR REPLACE TRIGGER "trigger_auto_assign_sort_order" BEFORE INSERT ON "public"."album_photos" FOR EACH ROW EXECUTE FUNCTION "public"."auto_assign_album_photo_sort_order"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_photo_tags_count" AFTER INSERT OR DELETE ON "public"."photo_tags" FOR EACH ROW EXECUTE FUNCTION "public"."update_tag_count"();
 
 
 
@@ -1543,6 +1665,11 @@ ALTER TABLE ONLY "public"."photo_comments"
 
 
 
+ALTER TABLE ONLY "public"."photo_tags"
+    ADD CONSTRAINT "photo_tags_photo_id_fkey" FOREIGN KEY ("photo_id") REFERENCES "public"."photos"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -1561,6 +1688,14 @@ CREATE POLICY "Admins can view all event announcements" ON "public"."event_annou
 
 
 CREATE POLICY "Anyone can create RSVPs" ON "public"."events_rsvps" FOR INSERT WITH CHECK (true);
+
+
+
+CREATE POLICY "Authenticated users can insert tags" ON "public"."tags" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can update tags" ON "public"."tags" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
 
 
 
@@ -1666,6 +1801,10 @@ CREATE POLICY "Service role only" ON "public"."auth_tokens" USING (false) WITH C
 
 
 
+CREATE POLICY "Tags are viewable by everyone" ON "public"."tags" FOR SELECT USING (true);
+
+
+
 CREATE POLICY "Update RSVPs policy" ON "public"."events_rsvps" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
@@ -1696,6 +1835,12 @@ CREATE POLICY "Users can add tags to their own albums" ON "public"."album_tags" 
 
 
 
+CREATE POLICY "Users can add tags to their own photos" ON "public"."photo_tags" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_tags"."photo_id") AND ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
+
+
+
 CREATE POLICY "Users can create their own albums" ON "public"."albums" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
@@ -1719,6 +1864,12 @@ CREATE POLICY "Users can delete photos from their own albums" ON "public"."album
 CREATE POLICY "Users can delete tags from their own albums" ON "public"."album_tags" FOR DELETE USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
   WHERE (("albums"."id" = "album_tags"."album_id") AND ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
+
+
+
+CREATE POLICY "Users can delete tags from their own photos" ON "public"."photo_tags" FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_tags"."photo_id") AND ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
 
 
 
@@ -1751,6 +1902,12 @@ CREATE POLICY "Users can update own profile" ON "public"."profiles" FOR UPDATE U
 CREATE POLICY "Users can update photos in their own albums" ON "public"."album_photos" FOR UPDATE USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
   WHERE (("albums"."id" = "album_photos"."album_id") AND ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
+
+
+
+CREATE POLICY "Users can view tags from public photos or their own photos" ON "public"."photo_tags" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_tags"."photo_id") AND ((("photos"."is_public" = true) AND ("photos"."deleted_at" IS NULL)) OR ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
 
@@ -1812,10 +1969,16 @@ ALTER TABLE "public"."events_rsvps" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."photo_comments" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."photo_tags" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."photos" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."tags" ENABLE ROW LEVEL SECURITY;
 
 
 
@@ -2183,6 +2346,13 @@ GRANT ALL ON FUNCTION "public"."update_comments_updated_at"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
@@ -2322,9 +2492,23 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "service_role";
 
 
 

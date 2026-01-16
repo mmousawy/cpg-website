@@ -29,9 +29,10 @@ interface Comment {
 interface CommentsProps {
   albumId?: string
   photoId?: string
+  eventId?: string
 }
 
-export default function Comments({ albumId, photoId }: CommentsProps) {
+export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
   const { user, isAdmin } = useAuth();
   const confirm = useConfirm();
   const supabase = useSupabase();
@@ -41,8 +42,8 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Determine which entity we're commenting on
-  const entityType = albumId ? 'album' : 'photo';
-  const entityId = albumId || photoId;
+  const entityType = albumId ? 'album' : eventId ? 'event' : 'photo';
+  const entityId = albumId || eventId || photoId;
 
   const fetchComments = useCallback(async () => {
     if (!entityId) return;
@@ -50,8 +51,8 @@ export default function Comments({ albumId, photoId }: CommentsProps) {
     setIsLoading(true);
     try {
       // Query through appropriate junction table
-      const junctionTable = entityType === 'album' ? 'album_comments' : 'photo_comments';
-      const entityColumn = entityType === 'album' ? 'album_id' : 'photo_id';
+      const junctionTable = entityType === 'album' ? 'album_comments' : entityType === 'event' ? 'event_comments' : 'photo_comments';
+      const entityColumn = entityType === 'album' ? 'album_id' : entityType === 'event' ? 'event_id' : 'photo_id';
 
       const { data, error } = await supabase
         .from(junctionTable)

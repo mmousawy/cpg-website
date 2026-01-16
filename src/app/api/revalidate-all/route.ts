@@ -32,11 +32,13 @@ export async function GET(request: NextRequest) {
     revalidateTag('events', 'max');
     revalidateTag('event-attendees', 'max');
     revalidateTag('albums', 'max');
+    revalidateTag('gallery', 'max');
     revalidateTag('profiles', 'max');
+    revalidateTag('interests', 'max');
 
     return NextResponse.json({
       success: true,
-      revalidated: ['events', 'event-attendees', 'albums', 'profiles'],
+      revalidated: ['events', 'event-attendees', 'albums', 'gallery', 'profiles', 'interests'],
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

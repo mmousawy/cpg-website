@@ -7,6 +7,9 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 ### Events
 - Event listings (upcoming/past)
 - RSVP system with email confirmation
+- Automated email reminders:
+  - RSVP reminders (5 days before) for non-attendees
+  - Attendee reminders (1 day before) for confirmed RSVPs
 - Calendar integration (Google, Outlook, Apple/iCal)
 - Attendee list with Gravatar fallback
 - Attendance tracking for admins
@@ -26,6 +29,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Public profile pages (`/@username`)
 - Custom avatar uploads
 - Bio, website, social links (with auto-detected icons)
+- Interests (up to 10 per profile)
 - Activity stats
 
 ### Authentication
@@ -46,6 +50,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Loading skeletons
 - Custom 404 page
 - Email notifications (React Email + Resend)
+- Automated cron jobs (Vercel Cron)
 
 ## Tech Stack
 
@@ -58,6 +63,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 | Storage | Supabase Storage |
 | Styling | Tailwind CSS 4 |
 | Email | React Email + Resend |
+| Cron Jobs | Vercel Cron |
 | Gallery | PhotoSwipe |
 | Drag & Drop | dnd-kit |
 | Analytics | Vercel Analytics |
@@ -84,6 +90,7 @@ See `.env.example` for all required variables. Key ones:
 - `RESEND_API_KEY` - From your Resend dashboard
 - `EMAIL_ASSETS_URL` - Your production URL (for email images to work)
 - `ENCRYPTION_KEY` - Generate with `openssl rand -hex 32`
+- `CRON_SECRET` - Secret token for cron job authentication (generate a secure random string)
 
 ### OAuth Configuration
 
@@ -139,7 +146,8 @@ src/
 │   ├── admin/              # Admin dashboard
 │   ├── api/                # API routes
 │   ├── events/             # Event pages
-│   ├── galleries/          # Public galleries
+│   ├── gallery/            # Public gallery and tag pages
+│   ├── members/            # Member discovery pages
 │   └── ...
 ├── components/
 │   ├── admin/              # Admin components
@@ -171,8 +179,11 @@ supabase/
 | `albums` | Photo albums |
 | `album_photos` | Album-photo junction |
 | `photos` | Photo metadata + EXIF |
+| `photo_tags` | Photo tags |
 | `comments` | Album/photo comments |
 | `album_tags` | Album tags |
+| `interests` | Central interests table with usage counts |
+| `profile_interests` | Profile-interests junction |
 | `auth_tokens` | Email verification & password reset tokens |
 
 ### Storage Buckets
@@ -198,21 +209,22 @@ ssh user@domain "npx supabase gen types typescript --db-url 'postgresql://postgr
 Deploy to Vercel:
 
 1. Connect repository
-2. Set environment variables
+2. Set environment variables (including `CRON_SECRET` for reminder emails)
 3. Configure Supabase OAuth redirect URLs for production
 4. Set up RLS and storage policies
+5. Cron jobs are automatically configured via `vercel.json` (runs daily at 8:00 AM UTC)
 
 ## Roadmap
 
 ### In Progress
 
-- [ ] Event comments
-- [ ] Articles/posts on user profiles
+- [x] Event comments
 
 ### Admin
 
-- [ ] Member management
+- [x] Member management
 - [ ] Statistics/analytics dashboard
+- [ ] Admin tools
 
 ### Photos
 
@@ -225,9 +237,7 @@ Deploy to Vercel:
 
 ### Events
 
-- [ ] Waitlist when event is full
-- [ ] Email reminders before events
-- [ ] Recurring events
+- [x] Email reminders before events
 
 ### Engagement
 
@@ -239,8 +249,17 @@ Deploy to Vercel:
 
 ### Discovery
 
-- [ ] Search (albums, photos, users, events)
-- [ ] Member directory
+- [x] Member interests in profile
+- [x] Members page (only for logged-in users)
+- [x] Browse by tags (`/gallery/tag/[tag]`, `/members/tag/[tag]`)
+- [x] Browse by interests (`/members/interest/[interest]`)
+- [x] Member discovery sections:
+  - Popular interests
+  - Recently active members
+  - New members
+  - Explore by photo style (tags with member counts)
+  - Random interests with member samples
+- [ ] Search (albums, photos, users, events, tags)
 - [ ] Featured/trending galleries
 
 ### Sharing
@@ -251,4 +270,3 @@ Deploy to Vercel:
 ### Moderation
 
 - [ ] Report content
-- [ ] User blocking
