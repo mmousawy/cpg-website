@@ -54,7 +54,7 @@ export async function getRecentlyActiveMembers(limit = 12) {
   const userActivity = new Map<string, { count: number; lastActivity: string }>();
 
   (recentPhotos || []).forEach((photo) => {
-    if (!photo.user_id) return;
+    if (!photo.user_id || !photo.created_at) return;
     const existing = userActivity.get(photo.user_id);
     if (existing) {
       existing.count += 1;
@@ -67,7 +67,7 @@ export async function getRecentlyActiveMembers(limit = 12) {
   });
 
   (recentAlbums || []).forEach((album) => {
-    if (!album.user_id) return;
+    if (!album.user_id || !album.created_at) return;
     const existing = userActivity.get(album.user_id);
     if (existing) {
       existing.count += 1;

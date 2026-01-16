@@ -21,8 +21,8 @@ export default function TagCloud({ tags, activeTag, className }: TagCloudProps) 
   }
 
   // Calculate size classes based on count relative to max
-  const maxCount = Math.max(...tags.map((t) => t.count));
-  const minCount = Math.min(...tags.map((t) => t.count));
+  const maxCount = Math.max(...tags.map((t) => t.count || 0));
+  const minCount = Math.min(...tags.map((t) => t.count || 0));
   const range = maxCount - minCount || 1;
 
   function getSizeClass(count: number): string {

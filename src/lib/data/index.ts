@@ -12,11 +12,16 @@
  * - 'profiles' - All profile data (organizers, members)
  * - 'profile-[nickname]' - Specific user profile data
  * - 'tag-[tagname]' - Photos with a specific tag
+ * - 'interests' - All interests data
+ * - 'interest-[name]' - Members with a specific interest
  *
  * @see docs/revalidation-system.md for usage details
  */
 
-export * from './events';
 export * from './albums';
+export * from './events';
 export * from './gallery';
+export * from './interests';
+export * from './members';
 export * from './profiles';
+

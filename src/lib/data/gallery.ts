@@ -1,6 +1,6 @@
-import { cacheTag, cacheLife } from 'next/cache';
-import { createPublicClient } from '@/utils/supabase/server';
 import type { Photo, Tag } from '@/types/photos';
+import { createPublicClient } from '@/utils/supabase/server';
+import { cacheLife, cacheTag } from 'next/cache';
 
 /** Photo with owner profile info for display in community stream */
 export type StreamPhoto = Photo & {
@@ -48,7 +48,7 @@ export async function getPublicPhotostream(limit = 100) {
 
   // Create a map for quick lookup
   const profileMap = new Map(
-    (profiles || []).map((p) => [p.id, p])
+    (profiles || []).map((p) => [p.id, p]),
   );
 
   // Filter out photos from suspended users and merge with profile data
@@ -174,7 +174,7 @@ export async function getPopularTagsWithMemberCounts(limit = 20) {
       if (b.memberCount !== a.memberCount) {
         return b.memberCount - a.memberCount;
       }
-      return b.count - a.count;
+      return (b.count || 0) - (a.count || 0);
     })
     .slice(0, limit);
 
@@ -231,7 +231,7 @@ export async function getPhotosByTag(tagName: string, limit = 100) {
 
   // Create a map for quick lookup
   const profileMap = new Map(
-    (profiles || []).map((p) => [p.id, p])
+    (profiles || []).map((p) => [p.id, p]),
   );
 
   // Filter out photos from suspended users and merge with profile data

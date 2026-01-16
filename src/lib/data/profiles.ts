@@ -1,7 +1,8 @@
-import { cacheTag, cacheLife } from 'next/cache';
-import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
+import type { Interest } from '@/types/interests';
 import type { Photo } from '@/types/photos';
+import { createPublicClient } from '@/utils/supabase/server';
+import { cacheLife, cacheTag } from 'next/cache';
 
 type Organizer = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url' | 'bio'>;
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
@@ -18,7 +19,7 @@ export type ProfileData = Pick<Tables<'profiles'>,
   | 'created_at'
 > & {
   social_links: SocialLink[] | null;
-  interests?: Array<{ id: string; name: string; count: number | null }>;
+  interests?: Interest[] | null;
 };
 
 /**
@@ -37,7 +38,7 @@ export async function getAllProfileNicknames() {
     .is('suspended_at', null);
 
   const nicknames = (data || []).map((p) => p.nickname).filter((n): n is string => n !== null);
-  
+
   // Return with @ prefix (canonical URL format)
   return nicknames.map((n) => `@${n}`);
 }
@@ -111,10 +112,10 @@ export async function getProfileInterests(userId: string, nickname: string) {
   // Fetch full interest data with counts
   const { data: interests } = await supabase
     .from('interests')
-    .select('id, name, count')
+    .select('id, name, count, created_at')
     .in('name', interestNames);
 
-  return (interests || []) as Array<{ id: string; name: string; count: number | null }>;
+  return (interests || []) as Interest[];
 }
 
 /**
