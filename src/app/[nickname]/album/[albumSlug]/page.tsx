@@ -1,4 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
+import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
 
@@ -15,23 +16,39 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   const albumSlug = resolvedParams?.albumSlug || '';
 
   if (!nickname || !albumSlug) {
-    return {
+    return createMetadata({
       title: 'Album Not Found',
-    };
+      description: 'The requested album could not be found',
+    });
   }
 
   const album = await getAlbumBySlug(nickname, albumSlug);
 
   if (!album) {
-    return {
+    return createMetadata({
       title: 'Album Not Found',
-    };
+      description: 'The requested album could not be found',
+    });
   }
 
-  return {
-    title: `${album.title} by @${nickname}`,
-    description: album.description || `Photo album "${album.title}" by @${nickname}`,
-  };
+  const albumTitle = `${album.title} by @${nickname}`;
+  const albumDescription = album.description || `Photo album "${album.title}" by @${nickname}`;
+
+  // Get first photo from album (sorted by sort_order) for og:image
+  const albumWithPhotos = album as any;
+  const photos = albumWithPhotos.photos || [];
+  const sortedPhotos = [...photos].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+  const firstPhoto = sortedPhotos.length > 0 ? sortedPhotos[0] : null;
+  const albumImage = firstPhoto?.photo_url || null;
+
+  return createMetadata({
+    title: albumTitle,
+    description: albumDescription,
+    image: albumImage,
+    canonical: `/${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}`,
+    type: 'article',
+    keywords: ['photo album', 'photography', album.title, nickname],
+  });
 }
 
 // Page fetches album OUTSIDE cache to handle 404 properly

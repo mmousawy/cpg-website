@@ -1,11 +1,19 @@
 import PageContainer from '@/components/layout/PageContainer';
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
+import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
 import { getUpcomingEvents, getPastEvents, getEventAttendees } from '@/lib/data/events';
 
 const PAST_EVENTS_PER_PAGE = 5;
+
+export const metadata = createMetadata({
+  title: 'Events & Meetups',
+  description: 'Browse upcoming and past photography meetups and photo walks. Join us for monthly events in the Netherlands.',
+  canonical: '/events',
+  keywords: ['photography events', 'meetups', 'photo walks', 'Netherlands', 'photography meetups'],
+});
 
 export default async function EventsPage() {
   // Fetch events using cached data functions

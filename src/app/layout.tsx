@@ -14,6 +14,7 @@ import Modal from "@/components/shared/Modal";
 import PageLoading from "@/components/shared/PageLoading";
 import { AuthProvider } from "@/context/AuthContext";
 import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
+import { siteConfig, defaultOgImage, defaultTwitterImage, getAbsoluteUrl, truncateDescription } from "@/utils/metadata";
 import SupabaseProvider from "./providers/SupabaseProvider";
 
 import "./globals.css";
@@ -29,12 +30,46 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://creativephotographygroup.com'),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Creative Photography Group",
+    default: siteConfig.name,
     template: "%s - Creative Photography Group",
   },
-  description: "Shoot, share, explore! 📸 Hosting monthly photography meetups and photo walks in and around Rotterdam.",
+  description: truncateDescription(siteConfig.description),
+  keywords: ['photography', 'photography meetups', 'photo walks', 'Netherlands', 'creative photography', 'photography community'],
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    description: truncateDescription(siteConfig.description),
+    images: [
+      {
+        url: getAbsoluteUrl(defaultOgImage),
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteConfig.name,
+    description: truncateDescription(siteConfig.description),
+    images: [getAbsoluteUrl(defaultTwitterImage)],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({

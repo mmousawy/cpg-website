@@ -4,6 +4,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
+import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -20,11 +21,13 @@ import CheckMiniSVG from 'public/icons/check-mini.svg';
 import CloseMiniSVG from 'public/icons/close-mini.svg';
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
 import TrashSVG from 'public/icons/trash.svg';
+import WallArtSVG from 'public/icons/wall-art.svg';
 
 const photoFormSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   is_public: z.boolean(),
+  tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed'),
 });
 
 export type PhotoFormData = z.infer<typeof photoFormSchema>;
@@ -34,6 +37,7 @@ const bulkPhotoFormSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   is_public: z.boolean().nullable(),
+  tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed').optional(),
 });
 
 export type BulkPhotoFormData = z.infer<typeof bulkPhotoFormSchema>;
@@ -49,6 +53,10 @@ interface PhotoEditSidebarProps {
   onAddToAlbum?: (photoIds: string[]) => void;
   /** Handler for removing photos from the current album (only shown in album view). */
   onRemoveFromAlbum?: (photoIds: string[]) => void;
+  /** Handler for setting photo as album cover. If provided with currentAlbum, shows the button. */
+  onSetAsCover?: (photoUrl: string, albumId: string) => Promise<void>;
+  /** Current album context - used to show "Set as cover" option */
+  currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
   isLoading?: boolean;
   /** Called when dirty state changes - parent can use this to warn before deselecting */
   onDirtyChange?: (isDirty: boolean) => void;
@@ -101,10 +109,53 @@ function BulkEditForm({
   const allPrivate = selectedPhotos.every((p) => !p.is_public);
   const mixedVisibility = !allPublic && !allPrivate;
 
+  // Find tags that are common across ALL selected photos
+  const getCommonTags = (photos: PhotoWithAlbums[]): string[] => {
+    if (photos.length === 0) return [];
+
+    const tagSets = photos.map((p) => {
+      const tags = p.tags?.map((t) => t.tag.toLowerCase()) || [];
+      return new Set(tags);
+    });
+
+    if (tagSets.length === 0) return [];
+
+    // Start with tags from first photo, then intersect with others
+    const commonTags = Array.from(tagSets[0]).filter((tag) =>
+      tagSets.every((tagSet) => tagSet.has(tag)),
+    );
+
+    return commonTags.sort();
+  };
+
+  // Calculate tag counts across all selected photos
+  const getTagCounts = (photos: PhotoWithAlbums[]): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    photos.forEach((photo) => {
+      const tags = photo.tags?.map((t) => t.tag.toLowerCase()) || [];
+      tags.forEach((tag) => {
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return counts;
+  };
+
+  const commonTags = getCommonTags(selectedPhotos);
+  const tagCounts = getTagCounts(selectedPhotos);
+  // Get all unique tags sorted by count (descending), then alphabetically (for display only)
+  const allTags = Object.keys(tagCounts)
+    .sort((a, b) => {
+      const countDiff = tagCounts[b] - tagCounts[a];
+      if (countDiff !== 0) return countDiff;
+      return a.localeCompare(b);
+    });
+
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { isDirty, isSubmitting },
   } = useForm<BulkPhotoFormData>({
     resolver: zodResolver(bulkPhotoFormSchema),
@@ -112,10 +163,36 @@ function BulkEditForm({
       title: null,
       description: null,
       is_public: mixedVisibility ? null : allPublic,
+      tags: commonTags, // Only include fully shared tags in form
     },
   });
 
+  const watchedTags = watch('tags');
   const isSaving = isSubmitting || externalIsSaving;
+
+  // Reset form when selection changes to update tags (only common tags)
+  useEffect(() => {
+    const newCommonTags = getCommonTags(selectedPhotos);
+    reset({
+      title: null,
+      description: null,
+      is_public: mixedVisibility ? null : allPublic,
+      tags: newCommonTags, // Only reset to common tags
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPhotos.map((p) => p.id).join(',')]);
+
+  const handleAddTag = (tag: string) => {
+    const currentTags = watchedTags || [];
+    if (currentTags.length < 5 && !currentTags.includes(tag)) {
+      setValue('tags', [...currentTags, tag], { shouldDirty: true });
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const currentTags = watchedTags || [];
+    setValue('tags', currentTags.filter((t) => t !== tagToRemove), { shouldDirty: true });
+  };
 
   // Update dirty ref and call callback when dirty state changes
   useEffect(() => {
@@ -294,6 +371,20 @@ function BulkEditForm({
           )}
         </div>
 
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium">Tags</label>
+          <TagInput
+            id="bulk_tags"
+            tags={watchedTags || []}
+            onAddTag={handleAddTag}
+            onRemoveTag={handleRemoveTag}
+            tagCounts={tagCounts}
+            totalCount={selectedPhotos.length}
+            readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
+            helperText="Tags will be synced to match the form. Partially shared tags are shown but won't be added to other items."
+          />
+        </div>
+
         {error && (
           <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500">
             {error}
@@ -312,6 +403,8 @@ function SinglePhotoEditForm({
   onDelete,
   onAddToAlbum,
   onRemoveFromAlbum,
+  onSetAsCover,
+  currentAlbum,
   isLoading,
   onDirtyChange,
   isDirtyRef,
@@ -324,6 +417,8 @@ function SinglePhotoEditForm({
   onDelete: (photoId: string) => Promise<void>;
   onAddToAlbum?: (photoIds: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
+  onSetAsCover?: (photoUrl: string, albumId: string) => Promise<void>;
+  currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   isDirtyRef?: React.MutableRefObject<boolean>;
@@ -335,12 +430,18 @@ function SinglePhotoEditForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
+  const [isSettingCover, setIsSettingCover] = useState(false);
   const photoAlbums = photo.albums || [];
+
+  // Check if this photo is already the cover of the current album
+  const isCurrentCover = currentAlbum?.cover_image_url === photo.url;
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { isDirty, isSubmitting },
   } = useForm<PhotoFormData>({
     resolver: zodResolver(photoFormSchema),
@@ -348,10 +449,36 @@ function SinglePhotoEditForm({
       title: photo.title || null,
       description: photo.description || null,
       is_public: photo.is_public ?? true,
+      tags: photo.tags?.map((t) => t.tag) || [],
     },
   });
 
+  const watchedTags = watch('tags');
   const isSaving = isSubmitting || externalIsSaving;
+
+  const handleAddTag = (tag: string) => {
+    const currentTags = watchedTags || [];
+    if (currentTags.length < 5 && !currentTags.includes(tag)) {
+      setValue('tags', [...currentTags, tag], { shouldDirty: true });
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const currentTags = watchedTags || [];
+    setValue('tags', currentTags.filter((t) => t !== tagToRemove), { shouldDirty: true });
+  };
+
+  const handleSetAsCover = async () => {
+    if (!currentAlbum || !onSetAsCover) return;
+    setIsSettingCover(true);
+    try {
+      await onSetAsCover(photo.url, currentAlbum.id);
+    } catch {
+      setLocalError('Failed to set as cover');
+    } finally {
+      setIsSettingCover(false);
+    }
+  };
 
   // Update dirty ref and call callback when dirty state changes
   useEffect(() => {
@@ -367,6 +494,7 @@ function SinglePhotoEditForm({
       title: photo.title || null,
       description: photo.description || null,
       is_public: photo.is_public ?? true,
+      tags: photo.tags?.map((t) => t.tag) || [],
     });
     setLocalError(null);
     setLocalSuccess(false);
@@ -501,6 +629,42 @@ function SinglePhotoEditForm({
           {...register('is_public')}
           label="Visibility"
         />
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium">Tags</label>
+          <TagInput
+            id={`tags-${photo.id}`}
+            tags={watchedTags || []}
+            onAddTag={handleAddTag}
+            onRemoveTag={handleRemoveTag}
+            helperText="Add up to 5 tags to help people discover your photo"
+          />
+        </div>
+
+        {/* Album cover section - only show when in album context */}
+        {currentAlbum && onSetAsCover && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Album cover</label>
+            {isCurrentCover ? (
+              <p className="text-sm text-foreground/70">
+                This photo is the current cover of this album
+              </p>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSetAsCover}
+                loading={isSettingCover}
+                disabled={isSettingCover}
+                icon={<WallArtSVG className="size-4" />}
+                className="self-start"
+              >
+                Set as album cover
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Albums this photo belongs to */}
         {photoAlbums.length > 0 && (
           <>
@@ -542,6 +706,8 @@ export default function PhotoEditSidebar({
   onBulkDelete,
   onAddToAlbum,
   onRemoveFromAlbum,
+  onSetAsCover,
+  currentAlbum,
   isLoading = false,
   onDirtyChange,
   isDirtyRef,
@@ -588,6 +754,8 @@ export default function PhotoEditSidebar({
       onDelete={onDelete}
       onAddToAlbum={onAddToAlbum}
       onRemoveFromAlbum={onRemoveFromAlbum}
+      onSetAsCover={onSetAsCover}
+      currentAlbum={currentAlbum}
       isLoading={isLoading}
       onDirtyChange={onDirtyChange}
       isDirtyRef={isDirtyRef}

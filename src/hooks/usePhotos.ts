@@ -10,6 +10,7 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
     .from('photos')
     .select(`
       *,
+      photo_tags(tag),
       album_photos!album_photos_photo_id_fkey(
         album:albums(
           id,
@@ -54,8 +55,10 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
         photo_count: a.album_photos_active?.[0]?.count ?? 0,
       }));
 
-    const { album_photos: _, ...photoData } = photo;
-    return { ...photoData, albums } as PhotoWithAlbums;
+    const tags = (photo.photo_tags || []).map((t: { tag: string }) => ({ tag: t.tag }));
+
+    const { album_photos: _, photo_tags: __, ...photoData } = photo;
+    return { ...photoData, albums, tags } as PhotoWithAlbums;
   });
 
   return photosWithAlbums;

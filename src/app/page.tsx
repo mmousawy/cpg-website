@@ -13,11 +13,19 @@ import Button from '@/components/shared/Button';
 import RandomHeroImage from '@/components/shared/RandomHeroImage';
 import { routes } from '@/config/routes';
 import { socialLinks } from '@/config/socials';
+import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
 import { getRecentAlbums } from '@/lib/data/albums';
 import { getRecentEvents } from '@/lib/data/events';
 import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
+
+export const metadata = createMetadata({
+  title: 'Photography Meetups & Community - Creative Photography Group',
+  description: 'A community for analog and digital photography enthusiasts. Join us for monthly meetups, photo challenges, and skill-sharing talks in the Netherlands.',
+  canonical: '/',
+  keywords: ['photography', 'photography meetups', 'Netherlands', 'photo walks', 'photography community'],
+});
 
 import CameraWithFlash from 'public/camera-with-flash.png';
 import DiscordSVG from 'public/icons/discord.svg';

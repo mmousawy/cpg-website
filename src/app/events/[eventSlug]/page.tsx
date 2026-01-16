@@ -14,6 +14,7 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import { getAllEventSlugs, getEventBySlug, getEventAttendeesForEvent } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
+import { createMetadata } from '@/utils/metadata';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -35,24 +36,33 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   const eventSlug = resolvedParams?.eventSlug || '';
 
   if (!eventSlug) {
-    return {
+    return createMetadata({
       title: 'Event not found',
-    };
+      description: 'The requested event could not be found',
+    });
   }
 
   // Use cached function for metadata
   const { event } = await getEventBySlug(eventSlug);
 
   if (!event) {
-    return {
+    return createMetadata({
       title: 'Event not found',
-    };
+      description: 'The requested event could not be found',
+    });
   }
 
-  return {
-    title: `${event.title} - Creative Photography Group`,
-    description: event.description || `Join us for ${event.title}`,
-  };
+  // Use event cover image or image_url if available, otherwise fall back to default
+  const eventImage = event.cover_image || event.image_url || null;
+
+  return createMetadata({
+    title: event.title || 'Event',
+    description: event.description || `Join us for ${event.title || 'this event'}`,
+    image: eventImage,
+    canonical: `/events/${eventSlug}`,
+    type: 'article',
+    keywords: ['photography event', 'meetup', 'photo walk', event.location || '', event.title || ''],
+  });
 }
 
 // Inline attendees display component

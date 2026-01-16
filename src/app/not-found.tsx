@@ -1,4 +1,10 @@
 import PageContainer from "@/components/layout/PageContainer";
+import { createNoIndexMetadata } from '@/utils/metadata';
+
+export const metadata = createNoIndexMetadata({
+  title: 'Page not found',
+  description: 'The page you are looking for could not be found',
+});
 
 export default function Custom404() {
   return (

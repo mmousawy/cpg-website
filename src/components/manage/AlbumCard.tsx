@@ -1,11 +1,12 @@
 'use client';
 
+import CardBadges from '@/components/shared/CardBadges';
 import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
 import Image from 'next/image';
-import { memo } from 'react';
 import FolderSVG from 'public/icons/folder.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
+import { memo, useMemo } from 'react';
 
 interface AlbumCardProps {
   album: AlbumWithPhotos;
@@ -21,10 +22,23 @@ function AlbumCard({
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url;
   const photoCount = album.photos?.length || 0;
 
+  const badges = useMemo(() => {
+    if (!album.is_public) {
+      return [
+        {
+          icon: <PrivateMicroSVG className="size-4" />,
+          variant: 'private' as const,
+          tooltip: 'Private (only visible to you)',
+        },
+      ];
+    }
+    return [];
+  }, [album.is_public]);
+
   return (
     <div
       className={clsx(
-        'cursor-pointer overflow-hidden bg-background-light transition-all border border-border-color',
+        'relative cursor-pointer overflow-hidden bg-background-light transition-all border border-border-color',
         isSelected
           ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
           : isHovered
@@ -48,14 +62,8 @@ function AlbumCard({
           <FolderSVG className="size-12 text-foreground/20" />
         )}
 
-        {/* Private badge */}
-        {!album.is_public && (
-          <div className="absolute top-2 right-2">
-            <span className="inline-block rounded-full border border-yellow-800 bg-yellow-100 px-1 py-1 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
-              <PrivateMicroSVG className="size-4" />
-            </span>
-          </div>
-        )}
+        {/* Badges */}
+        <CardBadges badges={badges} />
       </div>
 
       {/* Info section */}
@@ -67,7 +75,7 @@ function AlbumCard({
       </div>
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity"></div>
+      <div className="absolute inset-0 z-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"></div>
     </div>
   );
 }

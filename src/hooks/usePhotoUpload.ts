@@ -70,6 +70,22 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 
       const results: Photo[] = [];
 
+      // Check if albums have covers (for setting first photo as manual cover)
+      const albumCoverChecks: Record<string, boolean> = {};
+      if (albumIds.length > 0) {
+        const { data: albumsData } = await supabase
+          .from('albums')
+          .select('id, cover_image_url')
+          .in('id', albumIds)
+          .eq('user_id', userId);
+        
+        if (albumsData) {
+          albumsData.forEach((album) => {
+            albumCoverChecks[album.id] = album.cover_image_url !== null;
+          });
+        }
+      }
+
       // Upload files sequentially to maintain order and show progress clearly
       for (let i = 0; i < newUploads.length; i++) {
         const upload = newUploads[i];
@@ -84,7 +100,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           if (!allowedTypes.includes(file.type)) {
             throw new Error(`Invalid file type: ${file.name}`);
           }
-          if (file.size > 5 * 1024 * 1024) {
+          if (file.size > 10 * 1024 * 1024) {
             throw new Error(`File too large: ${file.name}`);
           }
 
@@ -178,6 +194,21 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
             }));
 
             await supabase.from('album_photos').insert(albumPhotoInserts);
+
+            // Set first photo as manual cover for albums that don't have a cover yet
+            if (i === 0) {
+              const albumsWithoutCover = albumIds.filter((albumId) => !albumCoverChecks[albumId]);
+              if (albumsWithoutCover.length > 0) {
+                await supabase
+                  .from('albums')
+                  .update({
+                    cover_image_url: publicUrl,
+                    cover_is_manual: true,
+                  })
+                  .in('id', albumsWithoutCover)
+                  .eq('user_id', userId);
+              }
+            }
           }
 
           // Mark as complete

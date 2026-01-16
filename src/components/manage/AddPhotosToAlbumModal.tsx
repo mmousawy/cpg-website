@@ -12,6 +12,7 @@ import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
+import { useQueryClient } from '@tanstack/react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 type AlbumWithCount = Album & { photo_count?: number };
@@ -32,6 +33,7 @@ export default function AddPhotosToAlbumModal({
 }: AddPhotosToAlbumModalProps) {
   const { user, profile } = useAuth();
   const supabase = useSupabase();
+  const queryClient = useQueryClient();
   const modalContext = useContext(ModalContext);
   const [albums, setAlbums] = useState<AlbumWithCount[]>([]);
   const [selectedAlbumIds, setSelectedAlbumIds] = useState<Set<string>>(new Set());
@@ -179,10 +181,22 @@ export default function AddPhotosToAlbumModal({
         throw new Error(firstError.error.message || 'Failed to add photos to album');
       }
 
-      // Revalidate all albums that photos were added to (batch operation for efficiency)
+      // Invalidate client-side caches for albums that photos were added to
+      const selectedAlbumsList = albums.filter((a) => selectedAlbumIds.has(a.id));
+      selectedAlbumsList.forEach((album) => {
+        queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
+      });
+
+      // Invalidate albums, photos, and counts caches
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['albums', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['photos', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
+      }
+
+      // Revalidate server-side cache for all albums that photos were added to
       if (profile?.nickname) {
         const nickname = profile.nickname;
-        const selectedAlbumsList = albums.filter((a) => selectedAlbumIds.has(a.id));
         const albumSlugs = selectedAlbumsList.map((album) => album.slug);
         await revalidateAlbums(nickname, albumSlugs);
       }

@@ -130,6 +130,7 @@ export function useUpdatePhoto(
               title: data.title,
               description: data.description,
               is_public: data.is_public,
+              tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
             }
             : p,
         );
@@ -150,9 +151,26 @@ export function useUpdatePhoto(
         throw new Error(error.message || 'Failed to update photo');
       }
 
-      // Get affected albums for revalidation
+      // Update tags - delete existing and insert new ones
+      await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+      if (data.tags && data.tags.length > 0) {
+        await supabase.from('photo_tags').insert(
+          data.tags.map((tag) => ({ photo_id: photoId, tag: tag.toLowerCase() })),
+        );
+      }
+
+      // Invalidate global tags cache
+      queryClient.invalidateQueries({ queryKey: ['global-tags'] });
+
+      // Get affected albums for revalidation and cache invalidation
       const photo = previousPhotos?.find((p) => p.id === photoId);
       const affectedAlbums = photo?.albums?.map((a) => a.slug) || [];
+      const affectedAlbumIds = photo?.albums?.map((a) => a.id) || [];
+
+      // Invalidate album photos caches to ensure tags show up when viewing photos in albums
+      affectedAlbumIds.forEach((albumId) => {
+        queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
+      });
 
       return { photoId, data, previousPhotos, affectedAlbums };
     },
@@ -201,6 +219,9 @@ export function useBulkUpdatePhotos(
               ...(data.title && { title: data.title }),
               ...(data.description && { description: data.description }),
               ...(data.is_public !== null && { is_public: data.is_public }),
+              ...(data.tags !== undefined && {
+                tags: data.tags.map((tag) => ({ tag: tag.toLowerCase() })),
+              }),
             }
             : p,
         );
@@ -221,12 +242,87 @@ export function useBulkUpdatePhotos(
         throw new Error(error.message || 'Failed to update photos');
       }
 
-      // Get affected albums for revalidation
+      // Sync tags: add missing tags and remove tags not in the form
+      if (data.tags !== undefined) {
+        const desiredTags = new Set(data.tags.map((t) => t.toLowerCase()));
+
+        // Fetch existing tags for these photos
+        const { data: existingTags } = await supabase
+          .from('photo_tags')
+          .select('photo_id, tag')
+          .in('photo_id', photoIds);
+
+        const tagsByPhoto = new Map<string, Set<string>>();
+        existingTags?.forEach(({ photo_id, tag }) => {
+          if (!tagsByPhoto.has(photo_id)) {
+            tagsByPhoto.set(photo_id, new Set());
+          }
+          tagsByPhoto.get(photo_id)!.add(tag.toLowerCase());
+        });
+
+        // Determine which tags to add and which to remove
+        const tagInserts: { photo_id: string; tag: string }[] = [];
+        const tagDeletes: { photo_id: string; tag: string }[] = [];
+
+        photoIds.forEach((photoId) => {
+          const existing = tagsByPhoto.get(photoId) || new Set();
+
+          // Add tags that are in desired list but not in existing
+          desiredTags.forEach((tag) => {
+            if (!existing.has(tag) && existing.size + tagInserts.filter((t) => t.photo_id === photoId).length < 5) {
+              tagInserts.push({ photo_id: photoId, tag });
+            }
+          });
+
+          // Remove tags that are in existing but not in desired list
+          existing.forEach((tag) => {
+            if (!desiredTags.has(tag)) {
+              tagDeletes.push({ photo_id: photoId, tag });
+            }
+          });
+        });
+
+        // Delete tags that need to be removed
+        if (tagDeletes.length > 0) {
+          for (const { photo_id, tag } of tagDeletes) {
+            const { error: deleteError } = await supabase
+              .from('photo_tags')
+              .delete()
+              .eq('photo_id', photo_id)
+              .eq('tag', tag);
+            if (deleteError) {
+              throw new Error(deleteError.message || 'Failed to remove tags');
+            }
+          }
+        }
+
+        // Add tags that need to be added
+        if (tagInserts.length > 0) {
+          const { error: tagError } = await supabase.from('photo_tags').insert(tagInserts);
+          if (tagError) {
+            throw new Error(tagError.message || 'Failed to add tags');
+          }
+        }
+
+        // Invalidate global tags cache
+        queryClient.invalidateQueries({ queryKey: ['global-tags'] });
+      }
+
+      // Get affected albums for revalidation and cache invalidation
       const affectedAlbums = new Set<string>();
+      const affectedAlbumIds = new Set<string>();
       previousPhotos?.forEach((p) => {
         if (photoIds.includes(p.id)) {
-          p.albums?.forEach((a) => affectedAlbums.add(a.slug));
+          p.albums?.forEach((a) => {
+            affectedAlbums.add(a.slug);
+            affectedAlbumIds.add(a.id);
+          });
         }
+      });
+
+      // Invalidate album photos caches to ensure tags show up when viewing photos in albums
+      affectedAlbumIds.forEach((albumId) => {
+        queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
       });
 
       return { photoIds, data, previousPhotos, affectedAlbums: Array.from(affectedAlbums) };

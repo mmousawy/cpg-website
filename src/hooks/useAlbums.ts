@@ -48,11 +48,26 @@ export function useAlbums(userId: string | undefined) {
   });
 }
 
-async function fetchAlbumBySlug(userId: string, slug: string) {
+async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWithPhotos> {
 
   const { data, error } = await supabase
     .from('albums')
-    .select('*')
+    .select(`
+      id,
+      title,
+      description,
+      slug,
+      cover_image_url,
+      is_public,
+      created_at,
+      user_id,
+      photos:album_photos(
+        id,
+        photo_url,
+        photo:photos!album_photos_photo_id_fkey(deleted_at)
+      ),
+      tags:album_tags(tag)
+    `)
     .eq('user_id', userId)
     .eq('slug', slug)
     .is('deleted_at', null)
@@ -62,7 +77,13 @@ async function fetchAlbumBySlug(userId: string, slug: string) {
     throw new Error(error.message || 'Failed to fetch album');
   }
 
-  return data;
+  // Filter out deleted photos from album
+  const albumWithFilteredPhotos = {
+    ...data,
+    photos: ((data as any).photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+  };
+
+  return albumWithFilteredPhotos as unknown as AlbumWithPhotos;
 }
 
 export function useAlbumBySlug(userId: string | undefined, slug: string | undefined) {

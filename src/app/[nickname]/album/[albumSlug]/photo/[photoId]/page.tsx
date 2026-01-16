@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
+import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -22,20 +23,34 @@ export async function generateMetadata({ params }: { params: Params }) {
   const photoId = resolvedParams?.photoId || '';
 
   if (!nickname || !albumSlug || !photoId) {
-    return { title: 'Photo Not Found' };
+    return createMetadata({
+      title: 'Photo Not Found',
+      description: 'The requested photo could not be found',
+    });
   }
 
   // Use cached function
   const result = await getAlbumPhotoByShortId(nickname, albumSlug, photoId);
 
   if (!result) {
-    return { title: 'Photo Not Found' };
+    return createMetadata({
+      title: 'Photo Not Found',
+      description: 'The requested photo could not be found',
+    });
   }
 
-  return {
-    title: `${result.photo.title || 'Photo'} - ${result.currentAlbum.title} by @${nickname}`,
-    description: `Photo from album "${result.currentAlbum.title}" by @${nickname}`,
-  };
+  const photoTitle = `${result.photo.title || 'Photo'} - ${result.currentAlbum.title} by @${nickname}`;
+  const photoDescription = result.photo.description || `Photo from album "${result.currentAlbum.title}" by @${nickname}`;
+  const photoImage = result.photo.url || null;
+
+  return createMetadata({
+    title: photoTitle,
+    description: photoDescription,
+    image: photoImage,
+    canonical: `/${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}/photo/${encodeURIComponent(photoId)}`,
+    type: 'article',
+    keywords: ['photography', 'photo', result.photo.title || '', result.currentAlbum.title, nickname],
+  });
 }
 
 // Fetch data OUTSIDE cache to handle 404 properly

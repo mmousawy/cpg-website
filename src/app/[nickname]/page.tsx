@@ -17,6 +17,7 @@ import {
     getUserPublicPhotoCount,
     getUserPublicPhotos,
 } from '@/lib/data/profiles';
+import { createMetadata } from '@/utils/metadata';
 
 type SocialLink = { label: string; url: string };
 
@@ -33,24 +34,34 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
 
   if (!nickname) {
-    return {
+    return createMetadata({
       title: 'Profile Not Found',
-    };
+      description: 'The requested profile could not be found',
+    });
   }
 
   // Use cached function for metadata (same cache as page)
   const profile = await getProfileByNickname(nickname);
 
   if (!profile) {
-    return {
+    return createMetadata({
       title: 'Profile Not Found',
-    };
+      description: 'The requested profile could not be found',
+    });
   }
 
-  return {
-    title: `${profile.full_name || `@${profile.nickname}`}`,
-    description: profile.bio || `View the profile and photo albums of @${profile.nickname}`,
-  };
+  const profileTitle = profile.full_name || `@${profile.nickname}`;
+  const profileDescription = profile.bio || `View the profile and photo albums of @${profile.nickname}`;
+  const profileImage = profile.avatar_url || null;
+
+  return createMetadata({
+    title: profileTitle,
+    description: profileDescription,
+    image: profileImage,
+    canonical: `/${encodeURIComponent(nickname)}`,
+    type: 'profile',
+    keywords: ['photography', 'photographer', profile.nickname || '', profile.full_name || ''],
+  });
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {

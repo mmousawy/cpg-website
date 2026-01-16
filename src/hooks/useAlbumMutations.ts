@@ -160,6 +160,9 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
             ? {
               ...a,
               ...(data.isPublic !== null && { is_public: data.isPublic }),
+              ...(data.tags !== undefined && {
+                tags: data.tags.map((tag) => ({ id: '', album_id: a.id, tag: tag.toLowerCase(), created_at: null })),
+              }),
             }
             : a,
         );
@@ -183,8 +186,11 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
         }
       }
 
-      // Add tags if provided
-      if (data.tags && data.tags.length > 0) {
+      // Sync tags: add missing tags and remove tags not in the form
+      if (data.tags !== undefined) {
+        const desiredTags = new Set(data.tags.map((t) => t.toLowerCase()));
+
+        // Fetch existing tags for these albums
         const { data: existingTags } = await supabase
           .from('album_tags')
           .select('album_id, tag')
@@ -195,26 +201,55 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
           if (!tagsByAlbum.has(album_id)) {
             tagsByAlbum.set(album_id, new Set());
           }
-          tagsByAlbum.get(album_id)!.add(tag);
+          tagsByAlbum.get(album_id)!.add(tag.toLowerCase());
         });
 
+        // Determine which tags to add and which to remove
         const tagInserts: { album_id: string; tag: string }[] = [];
+        const tagDeletes: { album_id: string; tag: string }[] = [];
+
         albumIds.forEach((albumId) => {
           const existing = tagsByAlbum.get(albumId) || new Set();
-          data.tags!.forEach((tag) => {
-            const currentInserts = tagInserts.filter((t) => t.album_id === albumId).length;
-            if (!existing.has(tag) && existing.size + currentInserts < 5) {
-              tagInserts.push({ album_id: albumId, tag: tag.toLowerCase() });
+
+          // Add tags that are in desired list but not in existing
+          desiredTags.forEach((tag) => {
+            if (!existing.has(tag) && existing.size + tagInserts.filter((t) => t.album_id === albumId).length < 5) {
+              tagInserts.push({ album_id: albumId, tag });
+            }
+          });
+
+          // Remove tags that are in existing but not in desired list
+          existing.forEach((tag) => {
+            if (!desiredTags.has(tag)) {
+              tagDeletes.push({ album_id: albumId, tag });
             }
           });
         });
 
+        // Delete tags that need to be removed
+        if (tagDeletes.length > 0) {
+          for (const { album_id, tag } of tagDeletes) {
+            const { error: deleteError } = await supabase
+              .from('album_tags')
+              .delete()
+              .eq('album_id', album_id)
+              .eq('tag', tag);
+            if (deleteError) {
+              throw new Error(deleteError.message || 'Failed to remove tags');
+            }
+          }
+        }
+
+        // Add tags that need to be added
         if (tagInserts.length > 0) {
           const { error: tagError } = await supabase.from('album_tags').insert(tagInserts);
           if (tagError) {
             throw new Error(tagError.message || 'Failed to add tags');
           }
         }
+
+        // Invalidate global tags cache
+        queryClient.invalidateQueries({ queryKey: ['global-tags'] });
       }
 
       // Revalidate album pages (batch operation for efficiency)

@@ -1,16 +1,23 @@
 'use client';
 
-import type { Photo } from '@/types/photos';
+import CardBadges from '@/components/shared/CardBadges';
+import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
-import { memo } from 'react';
+import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
+import WallArtSVG from 'public/icons/wall-art.svg';
+import { memo, useMemo } from 'react';
 
 interface PhotoCardProps {
-  photo: Photo & { isExiting?: boolean };
+  photo: (Photo | PhotoWithAlbums) & { isExiting?: boolean };
   isSelected: boolean;
   isHovered?: boolean;
   isDragging?: boolean;
+  /** URL of the album cover image (if photo is in album context) */
+  albumCoverUrl?: string | null;
+  /** Current album title (if viewing in album context) */
+  currentAlbumTitle?: string | null;
 }
 
 function PhotoCard({
@@ -18,8 +25,50 @@ function PhotoCard({
   isSelected,
   isHovered = false,
   isDragging = false,
+  albumCoverUrl,
+  currentAlbumTitle,
 }: PhotoCardProps) {
   const thumbnailUrl = `${photo.url}?width=400&height=400&resize=cover`;
+  const isAlbumCover = albumCoverUrl === photo.url;
+
+  const photoWithAlbums = photo as PhotoWithAlbums;
+  const isInAlbum = photoWithAlbums.albums && photoWithAlbums.albums.length > 0;
+
+  // Find which albums this photo is the cover of
+  const coverAlbums = photoWithAlbums.albums?.filter((a) => a.cover_image_url === photo.url) || [];
+  const coverAlbumNames = coverAlbums.map((a) => a.title).join(', ');
+
+  const badges = useMemo(() => {
+    const badgeList = [];
+    if (isAlbumCover) {
+      const tooltipText = currentAlbumTitle
+        ? `Used as cover of "${currentAlbumTitle}"`
+        : coverAlbumNames
+          ? `Used as cover of: ${coverAlbumNames}`
+          : 'Used as album cover';
+      badgeList.push({
+        icon: <WallArtSVG className="size-4 fill-current" />,
+        variant: 'album-cover' as const,
+        tooltip: tooltipText,
+      });
+    }
+    if (isInAlbum && !isAlbumCover) {
+      const albumNames = photoWithAlbums.albums?.map((a) => a.title).join(', ') || '';
+      badgeList.push({
+        icon: <FolderInAlbumSVG className="size-4 fill-current" />,
+        variant: 'in-album' as const,
+        tooltip: albumNames ? `In albums: ${albumNames}` : 'In album',
+      });
+    }
+    if (!photo.is_public) {
+      badgeList.push({
+        icon: <PrivateMicroSVG className="size-4" />,
+        variant: 'private' as const,
+        tooltip: 'Private (only visible to you)',
+      });
+    }
+    return badgeList;
+  }, [isAlbumCover, isInAlbum, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames]);
 
   return (
     <div
@@ -45,17 +94,11 @@ function PhotoCard({
           className="size-full object-cover transition-transform"
           draggable={false}
         />
-        {/* Private badge */}
-        {!photo.is_public && (
-          <div className="absolute top-2 right-2">
-            <span className="inline-block rounded-full border border-yellow-800 bg-yellow-100 px-1 py-1 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
-              <PrivateMicroSVG className="size-4" />
-            </span>
-          </div>
-        )}
+        {/* Badges */}
+        <CardBadges badges={badges} />
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity"></div>
+        <div className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"></div>
       </div>
 
       {/* Title overlay on hover */}
@@ -69,15 +112,23 @@ function PhotoCard({
 }
 
 export default memo(PhotoCard, (prevProps, nextProps) => {
-  // Only re-render if photo data, selection, hover, dragging, or exit state changes
+  // Only re-render if photo data, selection, hover, dragging, exit state, album cover, albums, or current album title change
+  const prevPhoto = prevProps.photo as PhotoWithAlbums;
+  const nextPhoto = nextProps.photo as PhotoWithAlbums;
+  const prevAlbumsLength = prevPhoto.albums?.length || 0;
+  const nextAlbumsLength = nextPhoto.albums?.length || 0;
+
   return (
     prevProps.photo.id === nextProps.photo.id &&
     prevProps.photo.url === nextProps.photo.url &&
     prevProps.photo.title === nextProps.photo.title &&
     prevProps.photo.is_public === nextProps.photo.is_public &&
+    prevAlbumsLength === nextAlbumsLength &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isHovered === nextProps.isHovered &&
     prevProps.isDragging === nextProps.isDragging &&
-    prevProps.photo.isExiting === nextProps.photo.isExiting
+    prevProps.photo.isExiting === nextProps.photo.isExiting &&
+    prevProps.albumCoverUrl === nextProps.albumCoverUrl &&
+    prevProps.currentAlbumTitle === nextProps.currentAlbumTitle
   );
 });

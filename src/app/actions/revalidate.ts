@@ -53,6 +53,10 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   // Revalidate the specific user's profile data
   revalidateTag(`profile-${nickname}`, 'max');
 
+  // Revalidate the profile page (shows albums list)
+  // Note: Profile URLs use @ prefix format: /@nickname
+  revalidatePath(`/@${nickname}`);
+
   // Also revalidate the specific album page path for any non-cached data
   if (albumSlug) {
     revalidatePath(`/@${nickname}/album/${albumSlug}`);
@@ -67,6 +71,9 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   // With tag-based caching, we just need to invalidate the tags
   revalidateTag('albums', 'max');
   revalidateTag(`profile-${nickname}`, 'max');
+  // Revalidate the profile page (shows albums list)
+  // Note: Profile URLs use @ prefix format: /@nickname
+  revalidatePath(`/@${nickname}`);
 }
 
 // ============================================================================

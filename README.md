@@ -42,7 +42,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 ### Other
 - Dark/light/system theme
 - Responsive design with mobile menu
-- ISR caching (60s revalidation)
+- Tag-based caching with `use cache`
 - Loading skeletons
 - Custom 404 page
 - Email notifications (React Email + Resend)
@@ -169,10 +169,10 @@ supabase/
 | `events` | Events/meetups |
 | `events_rsvps` | RSVPs and attendance |
 | `albums` | Photo albums |
-| `album_photos` | Photos |
-| `album_comments` | Comments |
-| `album_tags` | Tags |
-| `images` | Image metadata + EXIF |
+| `album_photos` | Album-photo junction |
+| `photos` | Photo metadata + EXIF |
+| `comments` | Album/photo comments |
+| `album_tags` | Album tags |
 | `auth_tokens` | Email verification & password reset tokens |
 
 ### Storage Buckets
@@ -213,18 +213,15 @@ Deploy to Vercel:
 
 - [ ] Member management
 - [ ] Statistics/analytics dashboard
-- [ ] Admin tools
 
 ### Photos
 
-- [ ] Display EXIF data to viewers
-- [ ] Photo download button
-- [ ] Manual album cover selection
-- [ ] Bulk photo actions (delete, edit)
-- [ ] Tags on individual photos
-- [ ] More metadata for images if not visible/available in EXIF data (camera brand, model, lens, location, etc.)
-- [ ] Member profile photo stream of individual photos
-- [ ] Mobile-friendly drag/drop to manage photos
+- [x] Display EXIF data to viewers
+- [x] Bulk photo actions (delete, edit)
+- [x] Member profile photo stream
+- [x] Manual album cover selection
+- [x] Tags on individual photos
+- [ ] Mobile-friendly drag/drop
 
 ### Events
 
@@ -238,10 +235,7 @@ Deploy to Vercel:
 - [ ] Follow photographers
 - [ ] Activity feed
 - [ ] In-app notifications
-- [ ] Community photo albums (event-specific/collaboration projects)
-- [ ] Monthly challenges
-- [ ] Member badges (skills/interests/photography style)
-- [ ] Member interests (things they are open to do with other members)
+- [ ] Community photo albums
 
 ### Discovery
 
@@ -258,4 +252,3 @@ Deploy to Vercel:
 
 - [ ] Report content
 - [ ] User blocking
-- [ ] Email notification on album suspension/deletion

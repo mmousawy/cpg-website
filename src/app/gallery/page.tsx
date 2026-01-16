@@ -1,13 +1,16 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
+import { createMetadata } from '@/utils/metadata';
 
 // Cached data function
 import { getPublicAlbums } from '@/lib/data/albums';
 
-export const metadata = {
-  title: 'Photography gallery',
-  description: 'Browse photo albums created by our community members',
-};
+export const metadata = createMetadata({
+  title: 'Gallery & Community Photo Albums',
+  description: 'Browse photo albums created by our community members. Explore beautiful photos from our photography meetups and community events.',
+  canonical: '/gallery',
+  keywords: ['photography gallery', 'photo albums', 'photography portfolio', 'community photos'],
+});
 
 export default async function GalleryPage() {
   // Fetch albums using cached data function

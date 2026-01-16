@@ -600,7 +600,7 @@ export default function SelectableGrid<T>({
     isMultiDragRef.current = false;
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !leadingContent && !trailingContent) {
     return (
       <div className="rounded-lg border-2 border-dashed border-border-color p-12 text-center">
         <p className="opacity-70">{emptyMessage}</p>
@@ -680,7 +680,12 @@ export default function SelectableGrid<T>({
         {/* Leading content (e.g., uploading previews for newest-first lists) */}
         {leadingContent}
 
-        {items.map((item) => {
+        {items.length === 0 && !leadingContent && !trailingContent ? (
+          <div className="col-span-full rounded-lg border-2 border-dashed border-border-color p-12 text-center">
+            <p className="opacity-70">{emptyMessage}</p>
+          </div>
+        ) : (
+          items.map((item) => {
           const id = getId(item);
           const isSelected = selectedIds.has(id);
           const isHovered = hoveredIdSet.has(id);
@@ -720,7 +725,8 @@ export default function SelectableGrid<T>({
               onEnterMultiSelectMode={() => setIsMultiSelectModeActive(true)}
             />
           );
-        })}
+          })
+        )}
 
         {/* Drop indicator for multi-drag */}
         {dropIndicatorPos && (

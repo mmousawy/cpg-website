@@ -11,6 +11,7 @@ import {
   PhotoGrid,
   UploadingPhotoCard,
   type AlbumFormData,
+  type BulkPhotoFormData,
   type PhotoFormData,
 } from '@/components/manage';
 import BottomSheet from '@/components/shared/BottomSheet';
@@ -21,9 +22,11 @@ import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useDeleteAlbums, useUpdateAlbum } from '@/hooks/useAlbumMutations';
 import {
+  useBulkUpdateAlbumPhotos,
   useDeleteAlbumPhoto,
   useRemoveFromAlbum,
   useReorderAlbumPhotos,
+  useSetAlbumCover,
   useUpdateAlbumPhoto,
 } from '@/hooks/useAlbumPhotoMutations';
 import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
@@ -65,11 +68,13 @@ export default function AlbumDetailClient() {
   const { data: album, isLoading: albumLoading, error: albumError } = useAlbumBySlug(user?.id, slug);
   const { data: photos = [], isLoading: photosLoading } = useAlbumPhotos(album?.id);
   const updateAlbumPhotoMutation = useUpdateAlbumPhoto(album?.id, profile?.nickname);
-  const deleteAlbumPhotoMutation = useDeleteAlbumPhoto(album?.id, profile?.nickname);
-  const removeFromAlbumMutation = useRemoveFromAlbum(album?.id, profile?.nickname);
+  const bulkUpdateAlbumPhotosMutation = useBulkUpdateAlbumPhotos(album?.id, profile?.nickname);
+  const deleteAlbumPhotoMutation = useDeleteAlbumPhoto(album?.id, user?.id, profile?.nickname);
+  const removeFromAlbumMutation = useRemoveFromAlbum(album?.id, user?.id, profile?.nickname);
   const reorderAlbumPhotosMutation = useReorderAlbumPhotos(album?.id, profile?.nickname);
   const updateAlbumMutation = useUpdateAlbum(user?.id, profile?.nickname);
   const deleteAlbumsMutation = useDeleteAlbums(user?.id, profile?.nickname);
+  const setAlbumCoverMutation = useSetAlbumCover(user?.id, profile?.nickname);
 
   // Upload hook with progress tracking
   const { uploadingPhotos, uploadFiles, clearCompleted, dismissUpload } = usePhotoUpload();
@@ -154,6 +159,15 @@ export default function AlbumDetailClient() {
     await updateAlbumPhotoMutation.mutateAsync({ photoId, data });
   };
 
+  const handleBulkSavePhotos = async (photoIds: string[], data: BulkPhotoFormData) => {
+    if (!album) return;
+
+    photoEditDirtyRef.current = false;
+    setHasUnsavedChanges(albumEditDirtyRef.current);
+
+    await bulkUpdateAlbumPhotosMutation.mutateAsync({ photoIds, data });
+  };
+
   const handleDeletePhoto = async (photoId: string) => {
     if (!album) return;
 
@@ -175,6 +189,12 @@ export default function AlbumDetailClient() {
   const handleRemoveFromAlbum = async (photoIds: string[]) => {
     if (!album) return;
 
+    const photosToRemove = photos.filter((p) => photoIds.includes(p.id));
+    if (photosToRemove.length === 0) return;
+
+    const confirmed = await confirm(confirmRemoveFromAlbum(photosToRemove, photoIds.length));
+    if (!confirmed) return;
+
     const albumPhotoIds = photoIds
       .map((id) => photos.find((p) => p.id === id)?.album_photo_id)
       .filter((id): id is string => !!id);
@@ -191,6 +211,10 @@ export default function AlbumDetailClient() {
 
   const handleReorderPhotos = async (newPhotos: PhotoWithAlbums[]) => {
     await reorderAlbumPhotosMutation.mutateAsync(newPhotos);
+  };
+
+  const handleSetAsCover = async (photoUrl: string, albumId: string) => {
+    await setAlbumCoverMutation.mutateAsync({ albumId, photoUrl });
   };
 
   const handleSaveAlbum = async (albumId: string, data: AlbumFormData) => {
@@ -232,6 +256,8 @@ export default function AlbumDetailClient() {
         onSuccess={async () => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
           queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['photos', user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['counts', user?.id] });
           // Revalidate server-side cache for public pages
           if (profile?.nickname && album.is_public) {
             await revalidateAlbum(profile.nickname, album.slug);
@@ -251,8 +277,6 @@ export default function AlbumDetailClient() {
       const uploadedPhotos = await uploadFiles(Array.from(files), user.id, supabase, {
         albumIds: [album.id],
         isPublic: false,
-        bucketName: 'user-albums',
-        pathPrefix: `${user.id}/${album.id}/`,
         sortOrderStart: photos.length,
       });
 
@@ -311,10 +335,6 @@ export default function AlbumDetailClient() {
 
   const handleMobileRemoveFromAlbum = async () => {
     if (selectedCount === 0) return;
-
-    const confirmed = await confirm(confirmRemoveFromAlbum(selectedPhotos, selectedCount));
-
-    if (!confirmed) return;
     await handleRemoveFromAlbum(Array.from(selectedPhotoIds));
   };
 
@@ -367,14 +387,17 @@ export default function AlbumDetailClient() {
             <PhotoEditSidebar
               selectedPhotos={selectedPhotos}
               onSave={handleSavePhoto}
+              onBulkSave={handleBulkSavePhotos}
               onDelete={handleDeletePhoto}
               onRemoveFromAlbum={handleRemoveFromAlbum}
+              onSetAsCover={handleSetAsCover}
+              currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
               isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handlePhotoDirtyChange}
             />
           ) : (
             <AlbumEditSidebar
-              selectedAlbums={album ? [album as any] : []}
+              selectedAlbums={album ? [album] : []}
               nickname={profile?.nickname}
               onSave={handleSaveAlbum}
               onDelete={handleDeleteAlbum}
@@ -437,6 +460,8 @@ export default function AlbumDetailClient() {
               onSelectMultiple={handleSelectMultiple}
               sortable
               alwaysShowMobileSpacer
+              albumCoverUrl={album?.cover_image_url}
+              currentAlbumTitle={album?.title}
               leadingContent={
                 uploadingPhotos.length > 0 ? (
                   <>
@@ -457,8 +482,11 @@ export default function AlbumDetailClient() {
           <PhotoEditSidebar
             selectedPhotos={selectedPhotos}
             onSave={handleSavePhoto}
+            onBulkSave={handleBulkSavePhotos}
             onDelete={handleDeletePhoto}
             onRemoveFromAlbum={handleRemoveFromAlbum}
+            onSetAsCover={handleSetAsCover}
+            currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
             isLoading={photosLoading}
             onDirtyChange={handlePhotoDirtyChange}
           />

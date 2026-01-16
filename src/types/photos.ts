@@ -1,6 +1,8 @@
 import type { Tables } from '@/database.types';
 
 export type Photo = Tables<'photos'>;
+export type PhotoTag = Tables<'photo_tags'>;
+export type Tag = Tables<'tags'>;
 
 export type PhotoAlbumInfo = {
   id: string;
@@ -11,8 +13,12 @@ export type PhotoAlbumInfo = {
   photo_count?: number;
 };
 
+/** Simplified tag object returned from queries (only need the tag name) */
+export type SimpleTag = { tag: string };
+
 export type PhotoWithAlbums = Photo & {
   albums?: PhotoAlbumInfo[];
+  tags?: SimpleTag[];
   /** When viewing within an album context, this is the album_photos.id for that relationship */
   album_photo_id?: string;
   /** The album_photos.sort_order when in album context */

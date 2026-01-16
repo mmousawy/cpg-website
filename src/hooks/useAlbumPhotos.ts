@@ -13,7 +13,10 @@ async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
       photo_url,
       title,
       sort_order,
-      photo:photos!album_photos_photo_id_fkey(*)
+      photo:photos!album_photos_photo_id_fkey(
+        *,
+        photo_tags(tag)
+      )
     `)
     .eq('album_id', albumId)
     .order('sort_order', { ascending: true });
@@ -29,12 +32,15 @@ async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
   const unifiedPhotos: PhotoWithAlbums[] = albumPhotosData
     .filter((ap) => ap.photo && !(ap.photo as any).deleted_at)
     .map((ap) => {
-      const photoData = ap.photo as unknown as Photo;
+      const photoData = ap.photo as unknown as Photo & { photo_tags?: { tag: string }[] };
+      const tags = (photoData.photo_tags || []).map((t) => ({ tag: t.tag }));
+      const { photo_tags: _, ...cleanPhotoData } = photoData;
       return {
-        ...photoData,
-        title: ap.title || photoData.title,
+        ...cleanPhotoData,
+        title: ap.title || cleanPhotoData.title,
         album_photo_id: ap.id,
         album_sort_order: ap.sort_order ?? undefined,
+        tags,
       };
     });
 

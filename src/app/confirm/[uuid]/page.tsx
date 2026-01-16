@@ -3,12 +3,18 @@ import PageContainer from "@/components/layout/PageContainer";
 import { createClient } from '@/utils/supabase/server';
 import ConfirmBlock from "./ConfirmBlock";
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import { createNoIndexMetadata } from '@/utils/metadata';
 import { unstable_noStore } from 'next/cache';
 
 // Provide sample params for build-time validation (required with cacheComponents)
 export async function generateStaticParams() {
   return [{ uuid: 'sample-uuid' }];
 }
+
+export const metadata = createNoIndexMetadata({
+  title: 'Confirm sign up',
+  description: 'Confirm your event sign up',
+});
 
 export default async function Confirm({
   params,

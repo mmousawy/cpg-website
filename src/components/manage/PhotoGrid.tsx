@@ -20,6 +20,10 @@ interface PhotoGridProps {
   leadingContent?: React.ReactNode;
   /** Content to render after photos (e.g., uploading previews for oldest-first lists) */
   trailingContent?: React.ReactNode;
+  /** URL of the album cover image (if photos are in album context) */
+  albumCoverUrl?: string | null;
+  /** Current album title (if viewing in album context) */
+  currentAlbumTitle?: string | null;
 }
 
 export default function PhotoGrid({
@@ -35,6 +39,8 @@ export default function PhotoGrid({
   alwaysShowMobileSpacer = false,
   leadingContent,
   trailingContent,
+  albumCoverUrl,
+  currentAlbumTitle,
 }: PhotoGridProps) {
   return (
     <SelectableGrid
@@ -68,6 +74,8 @@ export default function PhotoGrid({
           isSelected={isSelected}
           isHovered={isHovered}
           isDragging={isDragging}
+          albumCoverUrl={albumCoverUrl}
+          currentAlbumTitle={currentAlbumTitle}
         />
       )}
     />

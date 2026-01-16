@@ -3,13 +3,13 @@
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
+import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbum, confirmDeleteAlbums } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import CheckSVG from 'public/icons/check.svg';
-import CloseSVG from 'public/icons/close.svg';
+import CheckMiniSVG from 'public/icons/check-mini.svg';
 import TrashSVG from 'public/icons/trash.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 import { useEffect, useRef, useState } from 'react';
@@ -86,12 +86,52 @@ function BulkAlbumEditForm({
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tagInput, setTagInput] = useState('');
 
   // Check if all albums have the same is_public value
   const allPublic = selectedAlbums.every((a) => a.is_public);
   const allPrivate = selectedAlbums.every((a) => !a.is_public);
   const mixedVisibility = !allPublic && !allPrivate;
+
+  // Find tags that are common across ALL selected albums
+  const getCommonTags = (albums: AlbumWithPhotos[]): string[] => {
+    if (albums.length === 0) return [];
+
+    const tagSets = albums.map((a) => {
+      const tags = a.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+      return new Set(tags);
+    });
+
+    if (tagSets.length === 0) return [];
+
+    // Start with tags from first album, then intersect with others
+    const commonTags = Array.from(tagSets[0]).filter((tag) =>
+      tagSets.every((tagSet) => tagSet.has(tag)),
+    );
+
+    return commonTags.sort();
+  };
+
+  // Calculate tag counts across all selected albums
+  const getTagCounts = (albums: AlbumWithPhotos[]): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    albums.forEach((album) => {
+      const tags = album.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+      tags.forEach((tag) => {
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return counts;
+  };
+
+  const commonTags = getCommonTags(selectedAlbums);
+  const tagCounts = getTagCounts(selectedAlbums);
+  // Get all unique tags sorted by count (descending), then alphabetically (for display only)
+  const allTags = Object.keys(tagCounts)
+    .sort((a, b) => {
+      const countDiff = tagCounts[b] - tagCounts[a];
+      if (countDiff !== 0) return countDiff;
+      return a.localeCompare(b);
+    });
 
   const {
     watch,
@@ -103,13 +143,23 @@ function BulkAlbumEditForm({
     resolver: zodResolver(bulkAlbumFormSchema),
     defaultValues: {
       isPublic: mixedVisibility ? null : allPublic,
-      tags: [],
+      tags: commonTags, // Only include fully shared tags in form
     },
   });
 
   const watchedTags = watch('tags');
   const watchedIsPublic = watch('isPublic');
   const isSaving = isSubmitting || externalIsSaving;
+
+  // Reset form when selection changes to update tags (only common tags)
+  useEffect(() => {
+    const newCommonTags = getCommonTags(selectedAlbums);
+    reset({
+      isPublic: mixedVisibility ? null : allPublic,
+      tags: newCommonTags, // Only reset to common tags
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAlbums.map((a) => a.id).join(',')]);
 
   // Update dirty ref and call callback when dirty state changes
   useEffect(() => {
@@ -135,22 +185,16 @@ function BulkAlbumEditForm({
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      const newTag = tagInput.trim().toLowerCase();
-      const currentTags = watchedTags || [];
-
-      if (currentTags.length < 5 && !currentTags.includes(newTag)) {
-        setValue('tags', [...currentTags, newTag], { shouldDirty: true });
-      }
-      setTagInput('');
+  const handleAddTag = (tag: string) => {
+    const currentTags = watchedTags || [];
+    if (currentTags.length < 5 && !currentTags.includes(tag)) {
+      setValue('tags', [...currentTags, tag], { shouldDirty: true });
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
     const currentTags = watchedTags || [];
-    setValue('tags', currentTags.filter((tag) => tag !== tagToRemove), { shouldDirty: true });
+    setValue('tags', currentTags.filter((t) => t !== tagToRemove), { shouldDirty: true });
   };
 
   const onSubmit = async (data: BulkAlbumFormData) => {
@@ -222,7 +266,7 @@ function BulkAlbumEditForm({
             onClick={triggerSubmit}
             disabled={isSaving || isLoading || !isDirty}
             loading={isSaving}
-            icon={<CheckSVG className="size-4 -ml-0.5" />}
+            icon={<CheckMiniSVG className="size-5 -ml-0.5" />}
             className="ml-auto"
           >
             {success ? 'Saved!' : 'Save'}
@@ -256,41 +300,17 @@ function BulkAlbumEditForm({
         </div>
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="bulk_tags" className="text-sm font-medium">
-            Add Tags
-          </label>
-          {watchedTags && watchedTags.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-2">
-              {watchedTags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="-mr-2 ml-1 flex size-5 items-center justify-center rounded-full bg-background-light/70 font-bold text-foreground hover:bg-background-light"
-                    aria-label="Remove tag"
-                  >
-                    <CloseSVG className="size-3.5 fill-foreground" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <Input
+          <label className="text-sm font-medium">Tags</label>
+          <TagInput
             id="bulk_tags"
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            disabled={(watchedTags?.length || 0) >= 5}
-            onKeyDown={handleAddTag}
-            placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter'}
+            tags={watchedTags || []}
+            onAddTag={handleAddTag}
+            onRemoveTag={handleRemoveTag}
+            tagCounts={tagCounts}
+            totalCount={selectedAlbums.length}
+            readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
+            helperText="Tags will be synced to match the form. Partially shared tags are shown but won't be added to other items."
           />
-          <p className="text-xs text-foreground/50">
-            Tags will be added to existing tags on each album
-          </p>
         </div>
 
         {error && (
@@ -333,7 +353,6 @@ function SingleAlbumEditForm({
 }) {
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
-  const [tagInput, setTagInput] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -361,6 +380,7 @@ function SingleAlbumEditForm({
 
   const watchedSlug = watch('slug');
   const watchedTags = watch('tags');
+  const watchedIsPublic = watch('isPublic');
   const isSaving = isSubmitting || externalIsSaving;
 
   // Update dirty ref and call callback when dirty state changes
@@ -432,22 +452,16 @@ function SingleAlbumEditForm({
     setHasEditedSlug(true);
   };
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && tagInput.trim()) {
-      e.preventDefault();
-      const newTag = tagInput.trim().toLowerCase();
-      const currentTags = watchedTags || [];
-
-      if (currentTags.length < 5 && !currentTags.includes(newTag)) {
-        setValue('tags', [...currentTags, newTag], { shouldDirty: true });
-      }
-      setTagInput('');
+  const handleAddTag = (tag: string) => {
+    const currentTags = watchedTags || [];
+    if (currentTags.length < 5 && !currentTags.includes(tag)) {
+      setValue('tags', [...currentTags, tag], { shouldDirty: true });
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
     const currentTags = watchedTags || [];
-    setValue('tags', currentTags.filter(tag => tag !== tagToRemove), { shouldDirty: true });
+    setValue('tags', currentTags.filter((t) => t !== tagToRemove), { shouldDirty: true });
   };
 
   const onSubmit = async (data: AlbumFormData) => {
@@ -523,7 +537,7 @@ function SingleAlbumEditForm({
             onClick={triggerSubmit}
             disabled={isSaving || (!isNewAlbum && !isDirty)}
             loading={isSaving}
-            icon={<CheckSVG className="size-4 -ml-0.5" />}
+            icon={<CheckMiniSVG className="size-5 -ml-0.5" />}
             className={!isNewAlbum && album ? 'ml-auto' : ''}
             fullWidth={isNewAlbum || !album}
           >
@@ -626,46 +640,24 @@ function SingleAlbumEditForm({
           {...register('isPublic')}
           label="Visibility"
         />
+        {watchedIsPublic === false && (
+          <p className="text-xs text-amber-600 dark:text-amber-500">
+            <WarningMicroSVG className="size-4 fill-amber-600 dark:fill-amber-500 inline-block" /> Making an album private doesn&apos;t make photos inside it private. Set individual photos to private if needed.
+          </p>
+        )}
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="tags" className="text-sm font-medium">
-            Tags
-          </label>
-          {watchedTags && watchedTags.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-2">
-              {watchedTags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="-mr-2 ml-1 flex size-5 items-center justify-center rounded-full bg-background-light/70 font-bold text-foreground hover:bg-background-light"
-                    aria-label="Remove tag"
-                  >
-                    <CloseSVG className="size-3.5 fill-foreground" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
+          <label className="text-sm font-medium">Tags</label>
+          <TagInput
+            id="tags"
+            tags={watchedTags || []}
+            onAddTag={handleAddTag}
+            onRemoveTag={handleRemoveTag}
+            helperText="Add up to 5 tags to help people discover your album"
+          />
           {errors.tags && (
             <p className="text-xs text-red-500">{errors.tags.message}</p>
           )}
-          <Input
-            id="tags"
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            disabled={(watchedTags?.length || 0) >= 5}
-            onKeyDown={handleAddTag}
-            placeholder={(watchedTags?.length || 0) >= 5 ? 'Maximum of 5 tags reached' : 'Type a tag and press Enter'}
-          />
-          <p className="text-xs text-foreground/50">
-            Add up to 5 tags to help people discover your album
-          </p>
         </div>
 
         {error && (

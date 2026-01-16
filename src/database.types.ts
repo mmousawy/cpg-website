@@ -132,6 +132,7 @@ export type Database = {
       albums: {
         Row: {
           cover_image_url: string | null
+          cover_is_manual: boolean | null
           created_at: string | null
           deleted_at: string | null
           description: string | null
@@ -148,6 +149,7 @@ export type Database = {
         }
         Insert: {
           cover_image_url?: string | null
+          cover_is_manual?: boolean | null
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
@@ -164,6 +166,7 @@ export type Database = {
         }
         Update: {
           cover_image_url?: string | null
+          cover_is_manual?: boolean | null
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
@@ -498,6 +501,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      photo_tags: {
+        Row: {
+          id: string
+          photo_id: string
+          tag: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          photo_id: string
+          tag: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          photo_id?: string
+          tag?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_tags_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          id: string
+          name: string
+          count: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          count?: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          count?: number
+          created_at?: string | null
+        }
+        Relationships: []
       }
       photos: {
         Row: {

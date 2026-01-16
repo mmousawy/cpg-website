@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getPhotoByShortId } from '@/lib/data/profiles';
+import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -20,20 +21,34 @@ export async function generateMetadata({ params }: { params: Params }) {
   const photoId = resolvedParams?.photoId || '';
 
   if (!nickname || !photoId) {
-    return { title: 'Photo Not Found' };
+    return createMetadata({
+      title: 'Photo Not Found',
+      description: 'The requested photo could not be found',
+    });
   }
 
   // Use cached function
   const result = await getPhotoByShortId(nickname, photoId);
 
   if (!result) {
-    return { title: 'Photo Not Found' };
+    return createMetadata({
+      title: 'Photo Not Found',
+      description: 'The requested photo could not be found',
+    });
   }
 
-  return {
-    title: `${result.photo.title || 'Photo'} by @${nickname}`,
-    description: result.photo.description || `Photo by @${nickname}`,
-  };
+  const photoTitle = `${result.photo.title || 'Photo'} by @${nickname}`;
+  const photoDescription = result.photo.description || `Photo by @${nickname}`;
+  const photoImage = result.photo.url || null;
+
+  return createMetadata({
+    title: photoTitle,
+    description: photoDescription,
+    image: photoImage,
+    canonical: `/${encodeURIComponent(nickname)}/photo/${encodeURIComponent(photoId)}`,
+    type: 'article',
+    keywords: ['photography', 'photo', result.photo.title || '', nickname],
+  });
 }
 
 // Fetch data OUTSIDE cache to handle 404 properly

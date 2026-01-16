@@ -5,6 +5,7 @@ import FolderSVG from 'public/icons/folder.svg';
 import type { AlbumWithPhotos } from '@/types/albums';
 
 import Avatar from '../auth/Avatar';
+import CardBadges from '../shared/CardBadges';
 
 export type AlbumCardVariant = 'large' | 'compact'
 
@@ -95,13 +96,9 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
           </>
         )}
 
-        {/* Private badge - on image for compact variant */}
+        {/* Badges - on image for compact variant */}
         {variant === 'compact' && !album.is_public && isOwner && (
-          <div className="absolute top-2 right-2">
-            <span className="inline-block rounded-full border border-yellow-800 bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800 dark:bg-yellow-900/80 dark:text-yellow-200">
-              Private
-            </span>
-          </div>
+          <CardBadges badges={[{ label: 'Private', className: 'px-2 py-0.5', variant: 'private' }]} />
         )}
       </div>
 

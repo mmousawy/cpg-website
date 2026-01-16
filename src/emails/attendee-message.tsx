@@ -43,7 +43,7 @@ export const AttendeeMessageEmail = ({
       description: `Let's kick off the new year with inspiration and creativity at our first meetup of 2025! Join us as Murtada hosts and delivers an engaging short talk on "Contours, Compositions, and Cropping," exploring essential techniques to refine your photography. \r\n\r\nLet's make 2025 the year of stunning shots and creative growth—see you there!`,
       date: "2025-01-25",
       time: "13:00:00",
-      location: "The Tea Lab\r\nNieuwe Binnenweg 178 A\r\nRotterdam",
+      location: "The Tea Lab\r\nNieuwe Binnenweg 178 A\r\nNetherlands",
       cover_image: `https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/Murtada-al-Mousawy-20241214-DC4A4303.jpg`,
     } as Database['public']['Tables']['events']['Row'];
 

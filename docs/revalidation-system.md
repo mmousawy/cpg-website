@@ -358,7 +358,7 @@ With Cache Components enabled, Next.js enforces strict rules about `new Date()` 
 | `RecentEventsList` | Sorting by date | Requires `serverNow` prop |
 | `EventsList` | `isEventPast()` | Requires `serverNow` prop |
 | `PastEventsPaginated` | Client-side date | Uses `useState` + `useEffect` for `clientNow` |
-| Album page | Dynamic route params | `generateStaticParams` + `loading.tsx` |
+| Album page | Dynamic route params | `generateStaticParams` (no `loading.tsx` for cached pages) |
 
 ### The `serverNow` Pattern
 

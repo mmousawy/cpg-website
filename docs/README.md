@@ -7,6 +7,10 @@
 - **[revalidation-system.md](./revalidation-system.md)** - Complete guide to the tag-based caching and revalidation system
 - **[revalidation-quick-reference.md](./revalidation-quick-reference.md)** - Quick reference for cache tags and revalidation functions
 
+### SEO & Metadata
+
+- **[metadata.md](./metadata.md)** - Metadata, OpenGraph, and Twitter card implementation
+
 ## Key Concepts
 
 ### `use cache` Directive

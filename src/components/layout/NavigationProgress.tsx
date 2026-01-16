@@ -143,7 +143,7 @@ export default function NavigationProgress() {
   if (!isLoading) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[9999] h-1.5 bg-primary/30">
+    <div className="fixed inset-x-0 top-0 z-[9999] h-1 bg-primary/30">
       <div
         className="h-full origin-left bg-primary transition-transform duration-150 ease-out"
         style={{ transform: `scaleX(${progress / 100})` }}

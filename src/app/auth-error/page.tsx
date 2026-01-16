@@ -2,8 +2,14 @@ import Link from 'next/link';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { routes } from '@/config/routes';
+import { createNoIndexMetadata } from '@/utils/metadata';
 
 import ErrorSVG from 'public/icons/error.svg';
+
+export const metadata = createNoIndexMetadata({
+  title: 'Authentication error',
+  description: 'Something went wrong during the authentication process',
+});
 
 export default function AuthErrorPage() {
   return (
