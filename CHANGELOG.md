@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/mmousawy/cpg-website/compare/v1.5.0...v1.5.1) (2026-01-16)
+
+
+### Bug Fixes
+
+* always render member links ([b24903a](https://github.com/mmousawy/cpg-website/commit/b24903ab69982def685bf9b49715ecc9d2de13cc))
+
 ## [1.5.0](https://github.com/mmousawy/cpg-website/compare/v1.4.0...v1.5.0) (2026-01-16)
 
 
