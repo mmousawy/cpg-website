@@ -68,11 +68,9 @@ export default function Header() {
             <NavLink href={routes.gallery.url}>
               {routes.gallery.label}
             </NavLink>
-            {profile && (
-              <NavLink href={routes.members.url}>
-                {routes.members.label}
-              </NavLink>
-            )}
+            <NavLink href={routes.members.url}>
+              {routes.members.label}
+            </NavLink>
           </nav>
         </div>
 
