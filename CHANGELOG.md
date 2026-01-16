@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/mmousawy/cpg-website/compare/v1.3.8...v1.4.0) (2026-01-16)
+
+
+### Features
+
+* Add photo badges with tooltips and fix album cover cache invalidation ([762cbb6](https://github.com/mmousawy/cpg-website/commit/762cbb6ec83b32f8f815c7a5342343daaf9153b0))
+
 ## [1.3.8](https://github.com/mmousawy/cpg-website/compare/v1.3.7...v1.3.8) (2026-01-15)
 
 
