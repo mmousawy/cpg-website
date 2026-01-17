@@ -69,7 +69,14 @@ export default async function Home() {
         <div className="absolute inset-x-0 bottom-0 pb-4 px-4 sm:px-8 sm:pb-0">
           <div className="mx-auto max-w-screen-md text-center">
             <h1 className="text-5xl font-bold md:text-6xl mb-4">
-              Shoot, Share & Explore <Image src={CameraWithFlash} quality={95} height={60} width={60} alt="Camera with flash" className="inline-block ml-2 align-top h-12 w-auto md:h-[3.75rem]" />
+              Shoot, Share & Explore <Image
+                src={CameraWithFlash}
+                quality={95}
+                height={60}
+                width={60}
+                alt="Camera with flash"
+                className="inline-block ml-2 align-top h-12 w-auto md:h-[3.75rem]"
+              />
             </h1>
             <p className="text-lg sm:text-xl opacity-80 max-w-2xl mx-auto">
               A community for analog and digital photography enthusiasts
@@ -90,9 +97,12 @@ export default async function Home() {
           <div className="mb-10">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Recent events</h3>
-              <ArrowLink href={routes.events.url}>View all</ArrowLink>
+              <ArrowLink href={routes.events.url}>View all events</ArrowLink>
             </div>
-            <RecentEventsList events={events} serverNow={serverNow} />
+            <RecentEventsList
+              events={events}
+              serverNow={serverNow}
+            />
           </div>
 
           {/* Albums */}
@@ -100,9 +110,12 @@ export default async function Home() {
             <div>
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Recent albums</h3>
-                <ArrowLink href={routes.gallery.url}>View all</ArrowLink>
+                <ArrowLink href={routes.gallery.url}>View all albums</ArrowLink>
               </div>
-              <AlbumGrid albums={albums} className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]" />
+              <AlbumGrid
+                albums={albums}
+                className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]"
+              />
             </div>
           )}
         </Container>

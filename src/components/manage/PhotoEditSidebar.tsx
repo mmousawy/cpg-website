@@ -38,6 +38,8 @@ const bulkPhotoFormSchema = z.object({
   description: z.string().nullable(),
   is_public: z.boolean().nullable(),
   tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed').optional(),
+  // Original common tags when form was loaded - used to determine which tags were removed
+  originalCommonTags: z.array(z.string()).optional(),
 });
 
 export type BulkPhotoFormData = z.infer<typeof bulkPhotoFormSchema>;
@@ -230,7 +232,8 @@ function BulkEditForm({
 
     try {
       const photoIds = selectedPhotos.map((p) => p.id);
-      await onBulkSave(photoIds, data);
+      // Include original common tags so mutation knows which tags were removed vs partially shared
+      await onBulkSave(photoIds, { ...data, originalCommonTags: commonTags });
       // Reset form to mark as not dirty after successful save
       reset(data);
       setLocalSuccess(true);

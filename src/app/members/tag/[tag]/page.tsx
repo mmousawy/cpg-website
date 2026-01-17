@@ -1,19 +1,20 @@
 import PageContainer from '@/components/layout/PageContainer';
 import MemberCard from '@/components/shared/MemberCard';
-import PopularTagsSection from '@/components/shared/PopularTagsSection';
+import Tag from '@/components/shared/Tag';
 import { createMetadata } from '@/utils/metadata';
-import { notFound } from 'next/navigation';
 import { cacheLife, cacheTag } from 'next/cache';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 // Cached data functions
-import { getPopularTags } from '@/lib/data/gallery';
+import { getPopularTagsWithMemberCounts } from '@/lib/data/gallery';
 import { getMembersByTag } from '@/lib/data/members';
 
 type Params = Promise<{ tag: string }>;
 
 // Pre-render all tag pages at build time
 export async function generateStaticParams() {
-  const popularTags = await getPopularTags(100);
+  const popularTags = await getPopularTagsWithMemberCounts(100);
   return popularTags.map((tag) => ({ tag: encodeURIComponent(tag.name) }));
 }
 
@@ -51,8 +52,22 @@ export default async function TagMembersPage({ params }: { params: Params }) {
 
   const { members } = await getMembersByTag(tagName);
 
-  // Get popular tags for sidebar
-  const popularTags = await getPopularTags(20);
+  // Get popular tags with member counts (same as members page)
+  const popularTags = await getPopularTagsWithMemberCounts(20);
+
+  // Calculate size based on memberCount relative to max (same logic as members page)
+  const maxCount = Math.max(...popularTags.map((t) => t.memberCount || 0));
+  const minCount = Math.min(...popularTags.map((t) => t.memberCount || 0));
+  const range = maxCount - minCount || 1;
+
+  function getSize(count: number): 'xs' | 'sm' | 'base' | 'lg' {
+    const normalized = (count - minCount) / range;
+
+    if (normalized > 0.8) return 'lg';
+    if (normalized > 0.6) return 'base';
+    if (normalized > 0.3) return 'sm';
+    return 'xs';
+  }
 
   return (
     <>
@@ -66,7 +81,34 @@ export default async function TagMembersPage({ params }: { params: Params }) {
           </p>
         </div>
 
-        <PopularTagsSection activeTag={tagName} />
+        {/* Explore by Photo Style (Tags) */}
+        {popularTags.length > 0 && (
+          <div className="mb-10">
+            <h2 className="mb-1 text-lg font-semibold">Explore by photo style</h2>
+            <p className="mb-6 text-sm text-foreground/60">
+              Discover members who frequently use these photo tags
+            </p>
+            <div className="flex flex-wrap gap-2 items-center">
+              {popularTags.map((tag) => {
+                const count = tag.memberCount || 0;
+                const isActive = tag.name.toLowerCase() === tagName.toLowerCase();
+                return (
+                  <Link
+                    key={tag.id}
+                    href={`/members/tag/${encodeURIComponent(tag.name)}`}
+                  >
+                    <Tag
+                      text={tag.name}
+                      count={count}
+                      size={getSize(count)}
+                      isActive={isActive}
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {members.length === 0 ? (
           <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
@@ -77,7 +119,10 @@ export default async function TagMembersPage({ params }: { params: Params }) {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {members.map((member) => (
-              <MemberCard key={member.id} member={member} />
+              <MemberCard
+                key={member.id}
+                member={member}
+              />
             ))}
           </div>
         )}

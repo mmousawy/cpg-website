@@ -5,9 +5,11 @@ import FullSizeGalleryButton from '@/components/photo/FullSizeGalleryButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import Comments from '@/components/shared/Comments';
 import ContentHeader from '@/components/shared/ContentHeader';
+import DetailLikesSection from '@/components/shared/DetailLikesSection';
+import TagsSection from '@/components/shared/TagsSection';
 import { getPhotosByUrls } from '@/lib/data/albums';
 import type { AlbumWithPhotos } from '@/types/albums';
-import type { Photo } from '@/types/photos';
+import type { Photo, SimpleTag } from '@/types/photos';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type AlbumContentProps = {
@@ -55,7 +57,9 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
   return (
     <>
-      <PageContainer className="!pb-0">
+      <PageContainer
+        className="!pb-0"
+      >
         <ContentHeader
           title={albumWithPhotos.title}
           description={albumWithPhotos.description}
@@ -66,24 +70,55 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           }}
           date={albumWithPhotos.created_at || ''}
           metadata={[`${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}`]}
+          leftContent={
+            <>
+              {/* Likes section - loads likers on demand */}
+              <div
+                className="flex items-center justify-between"
+              >
+                <DetailLikesSection
+                  entityType="album"
+                  entityId={albumWithPhotos.id}
+                  initialCount={(albumWithPhotos as any).likes_count ?? 0}
+                />
+                <FullSizeGalleryButton
+                  photos={photos}
+                  className="mt-4 text-xs"
+                />
+              </div>
+              <TagsSection
+                tags={((albumWithPhotos as any).tags || []) as SimpleTag[]}
+              />
+            </>
+          }
         />
-        <FullSizeGalleryButton photos={photos} className="mt-4 text-xs" />
+
       </PageContainer>
 
       {/* Gallery - Wide container */}
       <WidePageContainer>
         {photos.length === 0 ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-            <p className="opacity-70">
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+          >
+            <p
+              className="opacity-70"
+            >
               This album doesn&apos;t have any photos yet.
             </p>
           </div>
         ) : (
-          <JustifiedPhotoGrid photos={photos} profileNickname={nickname} albumSlug={albumSlug} />
+          <JustifiedPhotoGrid
+            photos={photos}
+            profileNickname={nickname}
+            albumSlug={albumSlug}
+          />
         )}
       </WidePageContainer>
 
-      <PageContainer className="!pt-0">
+      <PageContainer
+        className="!pt-0"
+      >
         {/* Admin Moderation Panel */}
         <AlbumModerationPanel
           albumId={albumWithPhotos.id}
@@ -94,8 +129,13 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
         />
       </PageContainer>
 
-      <PageContainer variant="alt" className="border-t border-t-border-color">
-        <Comments albumId={albumWithPhotos.id} />
+      <PageContainer
+        variant="alt"
+        className="border-t border-t-border-color"
+      >
+        <Comments
+          albumId={albumWithPhotos.id}
+        />
       </PageContainer>
     </>
   );

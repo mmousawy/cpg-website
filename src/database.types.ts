@@ -39,6 +39,39 @@ export type Database = {
           },
         ]
       }
+      album_likes: {
+        Row: {
+          album_id: string
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_likes_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       album_photos: {
         Row: {
           album_id: string
@@ -139,6 +172,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           is_suspended: boolean | null
+          likes_count: number
           slug: string
           suspended_at: string | null
           suspended_by: string | null
@@ -156,6 +190,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           is_suspended?: boolean | null
+          likes_count?: number
           slug: string
           suspended_at?: string | null
           suspended_by?: string | null
@@ -173,6 +208,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           is_suspended?: boolean | null
+          likes_count?: number
           slug?: string
           suspended_at?: string | null
           suspended_by?: string | null
@@ -559,6 +595,39 @@ export type Database = {
           },
         ]
       }
+      photo_likes: {
+        Row: {
+          created_at: string | null
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_likes_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photo_tags: {
         Row: {
           created_at: string | null
@@ -599,6 +668,7 @@ export type Database = {
           height: number
           id: string
           is_public: boolean
+          likes_count: number
           mime_type: string
           original_filename: string | null
           short_id: string
@@ -619,6 +689,7 @@ export type Database = {
           height: number
           id?: string
           is_public?: boolean
+          likes_count?: number
           mime_type: string
           original_filename?: string | null
           short_id?: string
@@ -639,6 +710,7 @@ export type Database = {
           height?: number
           id?: string
           is_public?: boolean
+          likes_count?: number
           mime_type?: string
           original_filename?: string | null
           short_id?: string
@@ -971,4 +1043,5 @@ export const Constants = {
   public: {
     Enums: {},
   },
-} as const;
+} as const
+

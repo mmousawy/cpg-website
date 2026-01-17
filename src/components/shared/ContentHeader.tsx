@@ -49,10 +49,10 @@ export default function ContentHeader({
         {/* Left column: Title, Description & optional content */}
         <div className="flex-1">
           {title && (
-            <h1 className="text-3xl font-bold">{title}</h1>
+            <h1 className="text-3xl font-bold mb-3">{title}</h1>
           )}
           {description && (
-            <p className="text-base md:text-lg opacity-80 max-w-[50ch] whitespace-pre-wrap mt-3">
+            <p className="text-base md:text-lg opacity-80 max-w-[50ch] whitespace-pre-wrap">
               {description}
             </p>
           )}
@@ -84,7 +84,10 @@ export default function ContentHeader({
 
             {/* Additional metadata */}
             {metadata.map((meta, i) => (
-              <p key={i} className="text-sm opacity-80">{meta}</p>
+              <p
+                key={i}
+                className="text-sm opacity-80"
+              >{meta}</p>
             ))}
           </div>
         </div>

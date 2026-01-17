@@ -8,6 +8,7 @@ import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
+import InterestInput from '@/components/shared/InterestInput';
 import PageLoading from '@/components/shared/PageLoading';
 import Textarea from '@/components/shared/Textarea';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,6 +34,7 @@ const onboardingSchema = z.object({
   fullName: z.string().optional(),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   bio: z.string().optional(),
+  interests: z.array(z.string()),
   emailPreferences: z.record(z.string(), z.boolean()),
 });
 
@@ -91,6 +93,7 @@ export default function OnboardingClient() {
       fullName: profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '',
       email: isOAuthUser ? (profile?.email || user?.email || '') : '',
       bio: profile?.bio || '',
+      interests: [],
       emailPreferences: {},
     },
   });
@@ -124,6 +127,23 @@ export default function OnboardingClient() {
       }
     };
   }, [avatarPreview]);
+
+  // Handle redirects in useEffect to avoid setState during render
+  useEffect(() => {
+    if (isLoading) return;
+
+    // Redirect if not logged in (unless in test mode)
+    if (!user && !isTestMode) {
+      router.push('/login');
+      return;
+    }
+
+    // Redirect if already has nickname (unless in test mode)
+    if (profile?.nickname && !isTestMode) {
+      router.push('/account/events');
+      return;
+    }
+  }, [user, profile, isLoading, isTestMode, router]);
 
   const watchedNickname = watch('nickname');
 
@@ -212,6 +232,20 @@ export default function OnboardingClient() {
   };
 
   const onSubmit = async (data: OnboardingFormData) => {
+    // In test mode without a user, just validate the form and show success message
+    if (isTestMode && !user) {
+      // Double-check nickname availability
+      if (nicknameAvailable === false) {
+        setError('nickname', { message: 'This nickname is already taken' });
+        return;
+      }
+
+      // Show a test mode success message
+      setSubmitError(null);
+      alert('Test Mode: Form validation passed! All fields are valid.\n\nIn production, this would save your profile.');
+      return;
+    }
+
     if (!user) return;
 
     // Double-check nickname availability
@@ -317,6 +351,28 @@ export default function OnboardingClient() {
         return;
       }
 
+      // Save interests
+      const interestsToSave = data.interests ?? [];
+      if (interestsToSave.length > 0) {
+        const normalizedInterests = interestsToSave.map((i) => i.toLowerCase().trim()).filter(Boolean);
+
+        // Insert interests (database will handle duplicates via unique constraint)
+        const { error: interestsError } = await supabase
+          .from('profile_interests')
+          .insert(normalizedInterests.map((interest) => ({
+            profile_id: user.id,
+            interest,
+          })));
+
+        if (interestsError) {
+          // Ignore duplicate key errors (23505) - user might have already added some
+          if (interestsError.code !== '23505') {
+            console.error('Error saving interests:', interestsError);
+            // Don't fail the whole onboarding if interests fail
+          }
+        }
+      }
+
       // Refresh profile in auth context
       await refreshProfile();
 
@@ -333,20 +389,13 @@ export default function OnboardingClient() {
     setIsSaving(false);
   };
 
-  // Show loading while checking auth
+  // Show loading while checking auth or during redirect
   if (isLoading) {
     return <PageLoading />;
   }
 
-  // Redirect if not logged in (unless in test mode)
-  if (!user && !isTestMode) {
-    router.push('/login');
-    return <PageLoading />;
-  }
-
-  // Redirect if already has nickname (unless in test mode)
-  if (profile?.nickname && !isTestMode) {
-    router.push('/account/events');
+  // Show loading if redirecting (handled in useEffect)
+  if ((!user && !isTestMode) || (profile?.nickname && !isTestMode)) {
     return <PageLoading />;
   }
 
@@ -356,18 +405,27 @@ export default function OnboardingClient() {
 
   return (
     <PageContainer className="items-center justify-center">
-      <Container padding="lg" className="mx-auto max-w-md">
+      <Container
+        padding="lg"
+        className="mx-auto max-w-lg"
+      >
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold">Welcome{displayName ? `, ${displayName.split(' ')[0]}` : ''}!</h1>
+          <h1 className="mb-1 text-3xl font-bold">Welcome{displayName ? `, ${displayName.split(' ')[0]}` : ''}!</h1>
           <p className="text-lg opacity-70 mb-8">
             Let&apos;s set up your profile
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6 mt-6"
+        >
           {/* Nickname Field */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="nickname" className="text-sm font-medium">
+            <label
+              htmlFor="nickname"
+              className="text-sm font-medium"
+            >
                 Choose a nickname <span className="text-red-500">*</span>
             </label>
             <Input
@@ -388,19 +446,54 @@ export default function OnboardingClient() {
               rightAddon={
                 <>
                   {isCheckingNickname && (
-                    <svg className="size-4 animate-spin text-foreground/50" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="size-4 animate-spin text-foreground/70"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                   )}
                   {!isCheckingNickname && nicknameAvailable === true && watchedNickname.length >= 3 && (
-                    <svg className="size-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="size-4 text-primary"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
                   {!isCheckingNickname && nicknameAvailable === false && (
-                    <svg className="size-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="size-4 text-red-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   )}
                 </>
@@ -415,7 +508,7 @@ export default function OnboardingClient() {
             {!errors.nickname && nicknameAvailable === true && watchedNickname.length >= 3 && (
               <p className="text-sm text-primary">Nickname is available!</p>
             )}
-            <p className="text-xs text-foreground/50">
+            <p className="text-xs text-foreground/70">
                 Your profile URL will be:
               <br />
               <span className="break-words">
@@ -437,7 +530,8 @@ export default function OnboardingClient() {
               <div className={clsx(
                 "rounded-full border-2 transition-colors flex-shrink-0",
                 avatarFile ? "border-primary" : "border-border-color",
-              )}>
+              )}
+              >
                 <Avatar
                   avatarUrl={displayAvatarUrl}
                   fullName={displayName}
@@ -485,7 +579,10 @@ export default function OnboardingClient() {
           {/* Email Field - Only for OAuth users */}
           {isOAuthUser && (
             <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium"
+              >
                   Email <span className="text-red-500">*</span>
               </label>
               <Input
@@ -497,7 +594,7 @@ export default function OnboardingClient() {
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
-              <p className="text-xs text-foreground/50">
+              <p className="text-xs text-foreground/70">
                   This email will be used for notifications and account communications.
               </p>
             </div>
@@ -505,7 +602,10 @@ export default function OnboardingClient() {
 
           {/* Full Name Field */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="fullName" className="text-sm font-medium">
+            <label
+              htmlFor="fullName"
+              className="text-sm font-medium"
+            >
                 Full name
             </label>
             <Input
@@ -518,7 +618,10 @@ export default function OnboardingClient() {
 
           {/* Bio Field */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="bio" className="text-sm font-medium">
+            <label
+              htmlFor="bio"
+              className="text-sm font-medium"
+            >
                 Bio
             </label>
             <Textarea
@@ -529,16 +632,44 @@ export default function OnboardingClient() {
             />
           </div>
 
+          {/* Interests Field */}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="interests"
+              className="text-sm font-medium"
+            >
+                Interests
+            </label>
+            <InterestInput
+              id="interests"
+              interests={watch('interests') || []}
+              onAddInterest={(interest) => {
+                const currentInterests = watch('interests') || [];
+                if (!currentInterests.includes(interest) && currentInterests.length < 10) {
+                  setValue('interests', [...currentInterests, interest]);
+                }
+              }}
+              onRemoveInterest={(interest) => {
+                const currentInterests = watch('interests') || [];
+                setValue('interests', currentInterests.filter((i) => i !== interest));
+              }}
+              maxInterests={10}
+              placeholder="Type an interest and press Enter"
+              helperText="Add up to 10 interests to help others discover your profile. Click the input to see popular interests."
+              disabled={isSaving}
+            />
+          </div>
+
           {/* Email Preferences */}
           <div className="rounded-lg border border-border-color bg-background-light p-4">
-            <label className="text-sm font-medium mb-3 block">
+            <label className="text-sm font-medium mb-1 block">
                 Email preferences
             </label>
-            <p className="text-xs text-foreground/50 mb-3">
+            <p className="text-xs text-foreground/70 mb-4">
                 Choose which types of emails you&apos;d like to receive. You can change these settings anytime.
             </p>
             {isLoadingEmailTypes ? (
-              <p className="text-xs text-foreground/50">Loading preferences...</p>
+              <p className="text-xs text-foreground/70">Loading preferences...</p>
             ) : emailTypes.length > 0 ? (
               <div className="space-y-3">
                 {emailTypes.map((type) => {
@@ -574,7 +705,7 @@ export default function OnboardingClient() {
                               {type.type_label}
                             </label>
                             {type.description && (
-                              <p className="text-xs text-foreground/50 mt-1">
+                              <p className="text-xs text-foreground/70 mt-1">
                                 {type.description}
                               </p>
                             )}
@@ -586,7 +717,7 @@ export default function OnboardingClient() {
                 })}
               </div>
             ) : (
-              <p className="text-xs text-foreground/50">Unable to load email preferences</p>
+              <p className="text-xs text-foreground/70">Unable to load email preferences</p>
             )}
           </div>
 
@@ -596,7 +727,7 @@ export default function OnboardingClient() {
 
           {isTestMode && !user && (
             <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              <strong>Test Mode:</strong> You are not logged in. Form submission will be disabled.
+              <strong>Test Mode:</strong> You are not logged in. Form validation will work, but submission will only show a test message.
             </div>
           )}
 
@@ -607,16 +738,15 @@ export default function OnboardingClient() {
               isSaving ||
                 nicknameAvailable === false ||
                 !watchedNickname ||
-                (isOAuthUser && !watch('email')) ||
-                (isTestMode && !user)
+                (isOAuthUser && !watch('email') && !isTestMode)
             }
             loading={isSaving}
           >
-              Complete setup
+            {isTestMode && !user ? 'Test Form Validation' : 'Complete setup'}
           </Button>
 
-          <p className="text-center text-xs text-foreground/50">
-              You can update your profile picture and other details later in your account settings.
+          <p className="text-center text-xs text-foreground/70">
+            You can update your profile picture and other details later in your account settings.
           </p>
         </form>
       </Container>

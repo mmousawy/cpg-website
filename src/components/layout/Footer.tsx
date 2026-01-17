@@ -20,7 +20,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light p-4 py-4 text-foreground">
+    <footer className="mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light p-4 py-4 sm:py-6 text-foreground">
       <div className="flex w-full max-w-screen-md flex-col items-center gap-3">
         <div className="flex items-center gap-4 max-md:justify-center">
           {socialLinks.map(({ name, url }) => {
@@ -30,17 +30,17 @@ export default function Footer() {
                 key={name}
                 href={url}
                 variant="secondary"
-                icon={<Icon className="inline-block" />}
+                icon={<Icon className="inline-block size-4" />}
                 className="!p-2 sm:!px-3 sm:!py-1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span className="hidden sm:inline-block">{name}</span>
+                <span className="hidden sm:inline-block text-sm">{name}</span>
               </Button>
             );
           })}
         </div>
-        <p className="text-center opacity-70">&copy; {currentYear} Creative Photography Group</p>
+        <p className="text-sm text-center opacity-70">&copy; {currentYear} Creative Photography Group</p>
       </div>
     </footer>
   );

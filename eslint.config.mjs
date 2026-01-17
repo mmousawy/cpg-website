@@ -4,23 +4,25 @@ const eslintConfig = [
   ...nextConfig,
   {
     rules: {
-      // Always require semicolons
+      // General formatting
       "semi": ["error", "always"],
-
-      // Always require trailing commas in multiline
+      "quotes": ["error", "single", { "avoidEscape": true }],
       "comma-dangle": ["error", "always-multiline"],
-
-      // Use 2 spaces for indentation
       "indent": ["error", 2, { "SwitchCase": 1 }],
-
-      // No trailing whitespace
       "no-trailing-spaces": "error",
-
-      // Maximum 1 consecutive empty line
-      "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 0, "maxBOF": 0 }],
-
-      // Ensure newline at end of file
       "eol-last": ["error", "always"],
+
+      // JSX formatting - props on newlines
+      // If element has 1+ props, first prop on new line
+      "react/jsx-first-prop-new-line": ["error", "always"],
+      // Max 1 prop per line always
+      "react/jsx-max-props-per-line": ["error", { "maximum": 1, "when": "always" }],
+      "react/jsx-closing-bracket-location": ["error", "line-aligned"],
+      "react/jsx-indent-props": ["error", 2],
+      // Indent JSX children
+      "react/jsx-indent": ["error", 2, { "checkAttributes": true, "indentLogicalExpressions": true }],
+      // Put children/content on their own line
+      "react/jsx-one-expression-per-line": ["error", { "allow": "none" }],
     },
   },
 ];

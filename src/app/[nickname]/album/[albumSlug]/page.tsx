@@ -66,9 +66,15 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   const album = await getAlbumBySlug(nickname, albumSlug);
 
   if (!album) {
+    // Log for debugging
+    console.error(`Album not found: nickname=${nickname}, albumSlug=${albumSlug}`);
     notFound();
   }
 
   // Pass album data to cached content component
-  return <AlbumContent album={album} nickname={nickname} albumSlug={albumSlug} />;
+  return <AlbumContent
+    album={album}
+    nickname={nickname}
+    albumSlug={albumSlug}
+  />;
 }

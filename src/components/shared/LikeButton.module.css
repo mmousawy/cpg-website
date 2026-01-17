@@ -1,0 +1,181 @@
+/* Like button animation - bubble ring + sparkles effect */
+/* Based on: 7 groups × 2 sparkles, zig-zag pattern with 60° offset */
+
+.likeWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.likeWrapper::before,
+.likeWrapper::after {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+}
+
+/* Bubble - starts as filled circle, border shrinks to create expanding ring */
+.likeWrapper::before {
+  box-sizing: border-box;
+  width: 3rem;
+  height: 3rem;
+  margin-left: -1.5rem;
+  margin-top: -1.5rem;
+  border: solid 1.5rem #e2264d;
+  transform: scale(0);
+}
+
+/* Sparkles - 7 groups × 2 sparkles in zig-zag pattern */
+/* Each group at 51.43° intervals, sparkles offset ±60° from radial */
+.likeWrapper::after {
+  width: 0.375rem;
+  height: 0.375rem;
+  margin-left: -0.1875rem;
+  margin-top: -0.1875rem;
+  background: transparent;
+  /* k=1: r=1.875rem (1.25 × bubble-r), spread=-0.1875rem */
+  box-shadow:
+    /* Group 0 at -90° */
+    0.22rem -2rem 0 -0.19rem hsl(0, 100%, 75%),
+    -0.22rem -1.75rem 0 -0.19rem hsl(51, 100%, 75%),
+    /* Group 1 at -38.57° */
+    1.76rem -1.06rem 0 -0.19rem hsl(51, 100%, 75%),
+    1.18rem -1.28rem 0 -0.19rem hsl(103, 100%, 75%),
+    /* Group 2 at 12.86° */
+    1.93rem 0.71rem 0 -0.19rem hsl(103, 100%, 75%),
+    1.74rem 0.13rem 0 -0.19rem hsl(154, 100%, 75%),
+    /* Group 3 at 64.29° */
+    0.64rem 1.95rem 0 -0.19rem hsl(154, 100%, 75%),
+    0.99rem 1.43rem 0 -0.19rem hsl(206, 100%, 75%),
+    /* Group 4 at 115.71° */
+    -1.13rem 1.72rem 0 -0.19rem hsl(206, 100%, 75%),
+    -0.50rem 1.66rem 0 -0.19rem hsl(257, 100%, 75%),
+    /* Group 5 at 167.14° */
+    -2.04rem 0.20rem 0 -0.19rem hsl(257, 100%, 75%),
+    -1.61rem 0.64rem 0 -0.19rem hsl(309, 100%, 75%),
+    /* Group 6 at 218.57° */
+    -1.51rem -1.47rem 0 -0.19rem hsl(309, 100%, 75%),
+    -1.41rem -0.86rem 0 -0.19rem hsl(0, 100%, 75%);
+  opacity: 0;
+}
+
+/* Animating state */
+.likeWrapper.animating::before {
+  animation: bubble 1s ease-out forwards;
+}
+
+.likeWrapper.animating::after {
+  animation: sparkles 1s ease-out forwards;
+}
+
+.animateHeartPop {
+  animation: heart 1s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards;
+}
+
+/* Heart scales from 0 with bounce */
+@keyframes heart {
+  0%, 17.5% {
+    transform: scale(0);
+  }
+  45% {
+    transform: scale(1.15);
+  }
+  80% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Bubble: scale up, then border shrinks creating outward wave */
+@keyframes bubble {
+  0% {
+    transform: scale(0);
+    border-color: #e2264d;
+    border-width: 1.5rem;
+  }
+  15% {
+    transform: scale(1);
+    border-color: #cc8ef5;
+    border-width: 1.5rem;
+  }
+  30%, 100% {
+    transform: scale(1);
+    border-color: #cc8ef5;
+    border-width: 0;
+  }
+}
+
+/* Sparkles: appear at k=0 positions, fade out at k=1 positions */
+@keyframes sparkles {
+  0%, 20% {
+    opacity: 0;
+    /* k=0: r=1.5rem, spread=0 */
+    box-shadow:
+      /* Group 0 at -90° */
+      0.22rem -1.63rem 0 0 hsl(0, 100%, 75%),
+      -0.22rem -1.38rem 0 0 hsl(51, 100%, 75%),
+      /* Group 1 at -38.57° */
+      1.41rem -0.85rem 0 0 hsl(51, 100%, 75%),
+      0.94rem -1.03rem 0 0 hsl(103, 100%, 75%),
+      /* Group 2 at 12.86° */
+      1.54rem 0.57rem 0 0 hsl(103, 100%, 75%),
+      1.39rem 0.10rem 0 0 hsl(154, 100%, 75%),
+      /* Group 3 at 64.29° */
+      0.51rem 1.56rem 0 0 hsl(154, 100%, 75%),
+      0.79rem 1.14rem 0 0 hsl(206, 100%, 75%),
+      /* Group 4 at 115.71° */
+      -0.90rem 1.38rem 0 0 hsl(206, 100%, 75%),
+      -0.40rem 1.33rem 0 0 hsl(257, 100%, 75%),
+      /* Group 5 at 167.14° */
+      -1.63rem 0.16rem 0 0 hsl(257, 100%, 75%),
+      -1.29rem 0.51rem 0 0 hsl(309, 100%, 75%),
+      /* Group 6 at 218.57° */
+      -1.21rem -1.18rem 0 0 hsl(309, 100%, 75%),
+      -1.13rem -0.69rem 0 0 hsl(0, 100%, 75%);
+  }
+  25% {
+    opacity: 1;
+    /* k=0: r=1.5rem, spread=0 - visible at inner radius */
+    box-shadow:
+      0.22rem -1.63rem 0 0 hsl(0, 100%, 75%),
+      -0.22rem -1.38rem 0 0 hsl(51, 100%, 75%),
+      1.41rem -0.85rem 0 0 hsl(51, 100%, 75%),
+      0.94rem -1.03rem 0 0 hsl(103, 100%, 75%),
+      1.54rem 0.57rem 0 0 hsl(103, 100%, 75%),
+      1.39rem 0.10rem 0 0 hsl(154, 100%, 75%),
+      0.51rem 1.56rem 0 0 hsl(154, 100%, 75%),
+      0.79rem 1.14rem 0 0 hsl(206, 100%, 75%),
+      -0.90rem 1.38rem 0 0 hsl(206, 100%, 75%),
+      -0.40rem 1.33rem 0 0 hsl(257, 100%, 75%),
+      -1.63rem 0.16rem 0 0 hsl(257, 100%, 75%),
+      -1.29rem 0.51rem 0 0 hsl(309, 100%, 75%),
+      -1.21rem -1.18rem 0 0 hsl(309, 100%, 75%),
+      -1.13rem -0.69rem 0 0 hsl(0, 100%, 75%);
+  }
+  100% {
+    opacity: 0;
+    /* k=1: r=1.875rem, spread=-0.1875rem - shrink and spread out */
+    box-shadow:
+      0.22rem -2rem 0 -0.19rem hsl(0, 100%, 75%),
+      -0.22rem -1.75rem 0 -0.19rem hsl(51, 100%, 75%),
+      1.76rem -1.06rem 0 -0.19rem hsl(51, 100%, 75%),
+      1.18rem -1.28rem 0 -0.19rem hsl(103, 100%, 75%),
+      1.93rem 0.71rem 0 -0.19rem hsl(103, 100%, 75%),
+      1.74rem 0.13rem 0 -0.19rem hsl(154, 100%, 75%),
+      0.64rem 1.95rem 0 -0.19rem hsl(154, 100%, 75%),
+      0.99rem 1.43rem 0 -0.19rem hsl(206, 100%, 75%),
+      -1.13rem 1.72rem 0 -0.19rem hsl(206, 100%, 75%),
+      -0.50rem 1.66rem 0 -0.19rem hsl(257, 100%, 75%),
+      -2.04rem 0.20rem 0 -0.19rem hsl(257, 100%, 75%),
+      -1.61rem 0.64rem 0 -0.19rem hsl(309, 100%, 75%),
+      -1.51rem -1.47rem 0 -0.19rem hsl(309, 100%, 75%),
+      -1.41rem -0.86rem 0 -0.19rem hsl(0, 100%, 75%);
+  }
+}

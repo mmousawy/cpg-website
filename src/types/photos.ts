@@ -44,3 +44,15 @@ export type PhotoFormData = {
   is_public: boolean;
   sort_order: number | null;
 };
+
+// Photo like with profile info
+export type PhotoLike = {
+  photo_id: string;
+  user_id: string;
+  created_at: string;
+  profile?: {
+    nickname: string;
+    avatar_url: string | null;
+    full_name: string | null;
+  };
+};

@@ -3,7 +3,9 @@ import PageContainer from '@/components/layout/PageContainer';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import Comments from '@/components/shared/Comments';
 import ContentHeader from '@/components/shared/ContentHeader';
-import type { Photo } from '@/types/photos';
+import DetailLikesSection from '@/components/shared/DetailLikesSection';
+import TagsSection from '@/components/shared/TagsSection';
+import type { Photo, SimpleTag } from '@/types/photos';
 
 interface Album {
   id: string;
@@ -21,7 +23,7 @@ interface Profile {
 }
 
 interface PhotoPageContentProps {
-  photo: Photo;
+  photo: Photo & { tags?: SimpleTag[] };
   profile: Profile;
   /** The album this photo is being viewed from (for back link context) */
   currentAlbum?: Album;
@@ -80,7 +82,9 @@ export default function PhotoPageContent({
     <>
       <PageContainer>
         {/* Photo with lightbox */}
-        <div className="mb-6">
+        <div
+          className="mb-6"
+        >
           <PhotoWithLightbox
             url={photo.url}
             title={photo.title}
@@ -97,41 +101,64 @@ export default function PhotoPageContent({
           date={photo.created_at}
           metadata={exifString ? [exifString] : []}
           leftContent={
-            /* Albums this photo is part of */
-            (currentAlbum || otherAlbums.length > 0) && (
-              <div className={photo.title || photo.description ? 'pt-6' : ''}>
-                <p className="mb-2 text-sm font-medium">Part of:</p>
-                <div className="flex flex-wrap gap-2">
-                  {currentAlbum && (
-                    <AlbumMiniCard
-                      title={currentAlbum.title}
-                      slug={currentAlbum.slug}
-                      coverImageUrl={currentAlbum.cover_image_url}
-                      href={`/@${nickname}/album/${currentAlbum.slug}`}
-                      photoCount={currentAlbum.photo_count}
-                      highlighted
-                    />
-                  )}
-                  {otherAlbums.map((album) => (
-                    <AlbumMiniCard
-                      key={album.id}
-                      title={album.title}
-                      slug={album.slug}
-                      coverImageUrl={album.cover_image_url}
-                      href={`/@${nickname}/album/${album.slug}`}
-                      photoCount={album.photo_count}
-                    />
-                  ))}
+            <>
+              <DetailLikesSection
+                entityType="photo"
+                className={photo.title || photo.description ? 'mt-5 sm:mt-6' : ''}
+                entityId={photo.id}
+                initialCount={(photo as any).likes_count ?? 0}
+              />
+              <TagsSection
+                tags={photo.tags || []}
+              />
+              {(currentAlbum || otherAlbums.length > 0) && (
+                <div
+                  className="mt-5 sm:mt-6"
+                >
+                  <p
+                    className="mb-2 text-sm font-medium"
+                  >
+                    Part of:
+                  </p>
+                  <div
+                    className="flex flex-wrap gap-2"
+                  >
+                    {currentAlbum && (
+                      <AlbumMiniCard
+                        title={currentAlbum.title}
+                        slug={currentAlbum.slug}
+                        coverImageUrl={currentAlbum.cover_image_url}
+                        href={`/@${nickname}/album/${currentAlbum.slug}`}
+                        photoCount={currentAlbum.photo_count}
+                        highlighted
+                      />
+                    )}
+                    {otherAlbums.map((album) => (
+                      <AlbumMiniCard
+                        key={album.id}
+                        title={album.title}
+                        slug={album.slug}
+                        coverImageUrl={album.cover_image_url}
+                        href={`/@${nickname}/album/${album.slug}`}
+                        photoCount={album.photo_count}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )
+              )}
+            </>
           }
         />
       </PageContainer>
 
       {/* Comments section */}
-      <PageContainer variant="alt" className="border-t border-t-border-color">
-        <Comments photoId={photo.id} />
+      <PageContainer
+        variant="alt"
+        className="border-t border-t-border-color"
+      >
+        <Comments
+          photoId={photo.id}
+        />
       </PageContainer>
     </>
   );

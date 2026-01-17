@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
       {
         hostname: 'secure.meetupstatic.com',
       },
+      {
+        hostname: 'i.pravatar.cc',
+      },
     ],
   },
   webpack(config) {

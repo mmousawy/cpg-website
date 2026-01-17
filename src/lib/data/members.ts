@@ -5,6 +5,10 @@ import type { Interest } from '@/types/interests';
 
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
 
+export type MemberWithCreatedAt = Member & {
+  created_at: string;
+};
+
 export type MemberWithActivity = Member & {
   recent_activity_count?: number;
   last_activity_at?: string | null;
@@ -136,13 +140,13 @@ export async function getNewMembers(limit = 12) {
 
   const { data } = await supabase
     .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
+    .select('id, full_name, nickname, avatar_url, created_at')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  return (data || []) as Member[];
+  return (data || []) as MemberWithCreatedAt[];
 }
 
 /**

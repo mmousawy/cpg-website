@@ -1,10 +1,10 @@
 'use client';
 
 import { filterTagsByPrefix, useGlobalTags } from '@/hooks/useGlobalTags';
-import type { Tag } from '@/types/photos';
-import CloseSVG from 'public/icons/close.svg';
+import type { Tag as TagType } from '@/types/photos';
 import { useEffect, useRef, useState } from 'react';
 import Input from './Input';
+import Tag from './Tag';
 
 interface TagInputProps {
   id: string;
@@ -104,7 +104,7 @@ export default function TagInput({
     }
   };
 
-  const handleSuggestionClick = (tag: Tag) => {
+  const handleSuggestionClick = (tag: TagType) => {
     handleAddTag(tag.name);
     inputRef.current?.focus();
   };
@@ -115,6 +115,13 @@ export default function TagInput({
       {tagCounts && Object.keys(tagCounts).length > 0 && (
         <div className="flex flex-wrap gap-2">
           {Object.keys(tagCounts)
+            .filter((tag) => {
+              // Only show tags that are in the form OR are read-only (partially shared)
+              const count = tagCounts[tag];
+              const isInForm = tags.includes(tag);
+              const isPartiallyShared = !isInForm && count !== undefined && count < (totalCount || 0);
+              return isInForm || isPartiallyShared || readOnlyTags.includes(tag);
+            })
             .sort((a, b) => {
               const countDiff = (tagCounts[b] || 0) - (tagCounts[a] || 0);
               if (countDiff !== 0) return countDiff;
@@ -122,33 +129,20 @@ export default function TagInput({
             })
             .map((tag) => {
               const count = tagCounts[tag];
-              const isFullyShared = totalCount && count === totalCount;
               const isInForm = tags.includes(tag);
               const isReadOnly = readOnlyTags.includes(tag) || (!isInForm && count < (totalCount || 0));
 
+              const showPartial = totalCount && count !== undefined && count < totalCount;
+
               return (
-                <span
+                <Tag
                   key={tag}
-                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium ${
-                    isFullyShared ? 'bg-foreground/10' : 'bg-foreground/5'
-                  }`}
-                >
-                  <span>{tag}</span>
-                  {totalCount && count !== undefined && count < totalCount && (
-                    <span className="text-xs text-foreground/60 font-normal">({count}/{totalCount})</span>
-                  )}
-                  {!isReadOnly && (
-                    <button
-                      type="button"
-                      onClick={() => onRemoveTag(tag)}
-                      className="-mr-2 ml-1 flex size-5 items-center justify-center rounded-full bg-background-light/70 font-bold text-foreground hover:bg-background-light"
-                      aria-label={`Remove ${tag} tag`}
-                      disabled={disabled}
-                    >
-                      <CloseSVG className="size-3.5 fill-foreground" />
-                    </button>
-                  )}
-                </span>
+                  text={tag}
+                  size="xs"
+                  count={showPartial ? count : undefined}
+                  partialTotal={showPartial ? totalCount : undefined}
+                  onRemove={!isReadOnly && !disabled ? () => onRemoveTag(tag) : undefined}
+                />
               );
             })}
         </div>
@@ -157,21 +151,12 @@ export default function TagInput({
       {(!tagCounts || Object.keys(tagCounts).length === 0) && tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <span
+            <Tag
               key={tag}
-              className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-sm font-medium"
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={() => onRemoveTag(tag)}
-                className="-mr-2 ml-1 flex size-5 items-center justify-center rounded-full bg-background-light/70 font-bold text-foreground hover:bg-background-light"
-                aria-label={`Remove ${tag} tag`}
-                disabled={disabled}
-              >
-                <CloseSVG className="size-3.5 fill-foreground" />
-              </button>
-            </span>
+              text={tag}
+              size="xs"
+              onRemove={!disabled ? () => onRemoveTag(tag) : undefined}
+            />
           ))}
         </div>
       )}
@@ -199,9 +184,9 @@ export default function TagInput({
         {showSuggestions && suggestions.length > 0 && inputValue.trim() && !isMaxReached && (
           <div
             ref={suggestionsRef}
-            className="absolute z-50 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
+            className="absolute z-30 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
           >
-            <ul className="max-h-48 overflow-y-auto py-1">
+            <ul className="max-h-48 overflow-y-auto p-1">
               {suggestions.map((tag, index) => (
                 <li key={tag.id}>
                   <button
@@ -212,7 +197,7 @@ export default function TagInput({
                     onClick={() => handleSuggestionClick(tag)}
                     onMouseEnter={() => setHighlightedIndex(index)}
                   >
-                    <span className="font-medium">{tag.name}</span>
+                    <span className="font-medium uppercase">{tag.name}</span>
                     <span className="ml-2 text-foreground/50">({tag.count})</span>
                   </button>
                 </li>

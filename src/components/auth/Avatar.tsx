@@ -90,7 +90,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
   };
 
   return (
-    <div className={clsx("relative overflow-hidden rounded-full shrink-0", sizeConfig.wrapper, className)}>
+    <div className={clsx("relative overflow-hidden rounded-full shrink-0 bg-border-color", sizeConfig.wrapper, className)}>
       {hoverEffect &&
         <div className="z-10 rounded-full absolute w-full h-full shadow-[inset_0_0_0_2px_var(--primary),inset_0_0_0_2.5px_#00000030] scale-130 group-focus-visible:scale-100 group-hover:scale-100 transition-all duration-200" />
       }

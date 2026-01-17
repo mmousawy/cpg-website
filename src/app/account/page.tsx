@@ -19,9 +19,19 @@ import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
-import { getEmailTypes, getUserEmailPreferences, updateEmailPreferences, type EmailPreference, type EmailTypeData } from '@/utils/emailPreferencesClient';
+import {
+  getEmailTypes,
+  getUserEmailPreferences,
+  updateEmailPreferences,
+  type EmailPreference,
+  type EmailTypeData,
+} from '@/utils/emailPreferencesClient';
 
-import { revalidateInterest, revalidateInterests, revalidateProfile } from '@/app/actions/revalidate';
+import {
+  revalidateInterest,
+  revalidateInterests,
+  revalidateProfile,
+} from '@/app/actions/revalidate';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import Avatar from '@/components/auth/Avatar';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -34,7 +44,10 @@ import PlusIconSVG from 'public/icons/plus.svg';
 // Zod schema for form validation
 const socialLinkSchema = z.object({
   label: z.string().min(1, 'Label is required'),
-  url: z.string().url('Must be a valid URL starting with https://').startsWith('https://', 'URL must start with https://'),
+  url: z
+    .string()
+    .url('Must be a valid URL starting with https://')
+    .startsWith('https://', 'URL must start with https://'),
 });
 
 const accountFormSchema = z.object({
@@ -48,11 +61,12 @@ const accountFormSchema = z.object({
   emailPreferences: z.record(z.string(), z.boolean()),
 });
 
-type AccountFormData = z.infer<typeof accountFormSchema>
+type AccountFormData = z.infer<typeof accountFormSchema>;
 
-type SocialLink = { label: string; url: string }
+type SocialLink = { label: string; url: string };
 
-type Profile = Pick<Tables<'profiles'>,
+type Profile = Pick<
+  Tables<'profiles'>,
   | 'id'
   | 'email'
   | 'full_name'
@@ -63,11 +77,11 @@ type Profile = Pick<Tables<'profiles'>,
   | 'created_at'
   | 'last_logged_in'
 > & {
-  social_links: SocialLink[] | null
-  album_card_style: 'large' | 'compact' | null
-  theme?: 'light' | 'dark' | 'midnight' | 'system' | null
-  newsletter_opt_in?: boolean | null
-}
+  social_links: SocialLink[] | null;
+  album_card_style: 'large' | 'compact' | null;
+  theme?: 'light' | 'dark' | 'midnight' | 'system' | null;
+  newsletter_opt_in?: boolean | null;
+};
 
 export default function AccountPage() {
   // User is guaranteed by ProtectedRoute layout
@@ -115,14 +129,7 @@ export default function AccountPage() {
   const [savedFormValues, setSavedFormValues] = useState<AccountFormData | null>(null);
 
   // React Hook Form setup
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    reset,
-    setValue,
-  } = useForm<AccountFormData>({
+  const { register, control, handleSubmit, watch, reset, setValue } = useForm<AccountFormData>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
       fullName: '',
@@ -149,7 +156,12 @@ export default function AccountPage() {
   const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove;
 
   // Track form changes
-  const { hasChanges, changeCount } = useFormChanges(currentValues, savedFormValues, {}, hasAvatarChanges);
+  const { hasChanges, changeCount } = useFormChanges(
+    currentValues,
+    savedFormValues,
+    {},
+    hasAvatarChanges,
+  );
 
   // Stats state
   const [stats, setStats] = useState({
@@ -221,7 +233,9 @@ export default function AccountPage() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in')
+        .select(
+          'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in',
+        )
         .eq('id', user.id)
         .single();
 
@@ -244,10 +258,12 @@ export default function AccountPage() {
             setProfile({
               ...newProfile,
               social_links: (newProfile.social_links as SocialLink[] | null) ?? null,
-              album_card_style: (newProfile.album_card_style === 'large' || newProfile.album_card_style === 'compact'
+              album_card_style: (newProfile.album_card_style === 'large' ||
+              newProfile.album_card_style === 'compact'
                 ? newProfile.album_card_style
                 : null) as 'large' | 'compact' | null,
-              theme: (newProfile.theme && ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
+              theme: (newProfile.theme &&
+              ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
                 ? newProfile.theme
                 : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
               newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
@@ -257,20 +273,23 @@ export default function AccountPage() {
 
             // Load saved album card style from localStorage (takes priority)
             const storedStyle = localStorage.getItem('album-card-style');
-            const albumStyle: 'large' | 'compact' = (storedStyle === 'large' || storedStyle === 'compact')
-              ? storedStyle
-              : (newProfile.album_card_style === 'large' || newProfile.album_card_style === 'compact')
-                ? newProfile.album_card_style
-                : 'large';
+            const albumStyle: 'large' | 'compact' =
+              storedStyle === 'large' || storedStyle === 'compact'
+                ? storedStyle
+                : newProfile.album_card_style === 'large' ||
+                    newProfile.album_card_style === 'compact'
+                  ? newProfile.album_card_style
+                  : 'large';
 
             // Build email preferences object from loaded preferences
             const emailPrefs: Record<string, boolean> = {};
-            types.forEach(type => {
-              const pref = preferences.find(p => p.type_key === type.type_key);
+            types.forEach((type) => {
+              const pref = preferences.find((p) => p.type_key === type.type_key);
               // If no preference exists, default to opted in (opted_out = false)
               // For newsletter, also check newsletter_opt_in for backward compatibility
               if (type.type_key === 'newsletter') {
-                emailPrefs[type.type_key] = (newProfile as any).newsletter_opt_in ?? (pref ? !pref.opted_out : true);
+                emailPrefs[type.type_key] =
+                  (newProfile as any).newsletter_opt_in ?? (pref ? !pref.opted_out : true);
               } else {
                 emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
               }
@@ -293,7 +312,10 @@ export default function AccountPage() {
             console.error('Error creating profile:', insertError.message || insertError);
           }
         } else {
-          console.info('Profiles table not available, using user metadata:', error.message || error.code);
+          console.info(
+            'Profiles table not available, using user metadata:',
+            error.message || error.code,
+          );
           setProfile({
             id: user.id,
             email: user.email || null,
@@ -310,7 +332,7 @@ export default function AccountPage() {
           });
           // Build default email preferences (all opted in)
           const emailPrefs: Record<string, boolean> = {};
-          types.forEach(type => {
+          types.forEach((type) => {
             emailPrefs[type.type_key] = true;
           });
 
@@ -331,7 +353,8 @@ export default function AccountPage() {
         setProfile({
           ...data,
           social_links: (data.social_links as SocialLink[] | null) ?? null,
-          album_card_style: (data.album_card_style === 'large' || data.album_card_style === 'compact'
+          album_card_style: (data.album_card_style === 'large' ||
+          data.album_card_style === 'compact'
             ? data.album_card_style
             : null) as 'large' | 'compact' | null,
           theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
@@ -343,22 +366,23 @@ export default function AccountPage() {
 
         // Load saved album card style from localStorage (takes priority)
         const storedStyle = localStorage.getItem('album-card-style');
-        const albumStyle: 'large' | 'compact' = (storedStyle === 'large' || storedStyle === 'compact')
-          ? storedStyle
-          : (data.album_card_style === 'large' || data.album_card_style === 'compact')
-            ? data.album_card_style
-            : 'large';
+        const albumStyle: 'large' | 'compact' =
+          storedStyle === 'large' || storedStyle === 'compact'
+            ? storedStyle
+            : data.album_card_style === 'large' || data.album_card_style === 'compact'
+              ? data.album_card_style
+              : 'large';
 
         // Get theme from database (don't use useTheme() value as it may be undefined initially)
         const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =
           data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
-            ? data.theme as 'system' | 'light' | 'dark' | 'midnight'
+            ? (data.theme as 'system' | 'light' | 'dark' | 'midnight')
             : 'system';
 
         // Build email preferences object from loaded preferences
         const emailPrefs: Record<string, boolean> = {};
-        types.forEach(type => {
-          const pref = preferences.find(p => p.type_key === type.type_key);
+        types.forEach((type) => {
+          const pref = preferences.find((p) => p.type_key === type.type_key);
           // If no preference exists, default to opted in (opted_out = false)
           // For newsletter, also check newsletter_opt_in for backward compatibility
           if (type.type_key === 'newsletter') {
@@ -509,9 +533,9 @@ export default function AccountPage() {
           return;
         }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('user-avatars')
-          .getPublicUrl(filePath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
 
         newAvatarUrl = publicUrl;
       } else if (pendingAvatarRemove) {
@@ -519,7 +543,9 @@ export default function AccountPage() {
       }
 
       // Filter out empty social links
-      const validSocialLinks = data.socialLinks.filter(link => link.label.trim() && link.url.trim());
+      const validSocialLinks = data.socialLinks.filter(
+        (link) => link.label.trim() && link.url.trim(),
+      );
 
       // Sync interests: get current interests, delete removed ones, insert new ones
       const { data: currentInterests } = await supabase
@@ -549,12 +575,12 @@ export default function AccountPage() {
       // Insert new interests
       const interestsToAdd = newInterestNames.filter((i) => !currentInterestNames.includes(i));
       if (interestsToAdd.length > 0) {
-        const { error: insertError } = await supabase
-          .from('profile_interests')
-          .insert(interestsToAdd.map((interest) => ({
+        const { error: insertError } = await supabase.from('profile_interests').insert(
+          interestsToAdd.map((interest) => ({
             profile_id: user.id,
             interest,
-          })));
+          })),
+        );
 
         if (insertError) {
           setSubmitError(`Failed to add interests: ${insertError.message}`);
@@ -564,7 +590,7 @@ export default function AccountPage() {
       }
 
       // Update email preferences
-      const preferenceUpdates = emailTypes.map(type => {
+      const preferenceUpdates = emailTypes.map((type) => {
         const isOptedIn = data.emailPreferences[type.type_key] ?? true;
         return {
           email_type_id: type.id,
@@ -616,7 +642,7 @@ export default function AccountPage() {
         setPendingAvatarRemove(false);
 
         // Update profile state
-        setProfile(prev => prev ? { ...prev, avatar_url: newAvatarUrl } : null);
+        setProfile((prev) => (prev ? { ...prev, avatar_url: newAvatarUrl } : null));
 
         // Reload email preferences to get updated state
         const updatedPreferences = await getUserEmailPreferences(user.id);
@@ -624,7 +650,7 @@ export default function AccountPage() {
 
         // Rebuild email preferences object to match what we saved (ensures exact match)
         const savedEmailPrefs: Record<string, boolean> = {};
-        emailTypes.forEach(type => {
+        emailTypes.forEach((type) => {
           savedEmailPrefs[type.type_key] = data.emailPreferences[type.type_key] ?? true;
         });
 
@@ -685,19 +711,17 @@ export default function AccountPage() {
       <PageContainer>
         <div className="mb-8">
           <h1 className="mb-2 text-3xl font-bold">Account settings</h1>
-          <p className="text-lg opacity-70">
-            Manage your profile information and preferences
-          </p>
+          <p className="text-lg opacity-70">Manage your profile information and preferences</p>
         </div>
 
         {/* No-JS fallback: show message and hide loading spinner */}
         <noscript>
           <style>{`.js-loading { display: none !important; }`}</style>
-          <div className="rounded-xl border border-border-color bg-background-light p-6 text-center">
-            <p className="text-lg font-medium mb-2">JavaScript required</p>
+          <div className="border-border-color bg-background-light rounded-xl border p-6 text-center">
+            <p className="mb-2 text-lg font-medium">JavaScript required</p>
             <p className="text-foreground/70">
-              This page requires JavaScript to manage your account settings.
-              Please enable JavaScript in your browser to continue.
+              This page requires JavaScript to manage your account settings. Please enable
+              JavaScript in your browser to continue.
             </p>
           </div>
         </noscript>
@@ -714,11 +738,13 @@ export default function AccountPage() {
                 <h2 className="mb-4 text-lg font-semibold opacity-70">Basic info</h2>
                 <Container>
                   {/* Profile Picture */}
-                  <div className="mb-6 flex items-center gap-6 border-b border-border-color pb-6">
-                    <div className={clsx(
-                      "rounded-full border-2",
-                      hasAvatarChanges ? "border-primary" : "border-border-color",
-                    )}>
+                  <div className="border-border-color mb-6 flex items-center gap-6 border-b pb-6">
+                    <div
+                      className={clsx(
+                        'rounded-full border-2',
+                        hasAvatarChanges ? 'border-primary' : 'border-border-color',
+                      )}
+                    >
                       <Avatar
                         avatarUrl={displayAvatarUrl}
                         fullName={fullName || user?.email}
@@ -733,7 +759,7 @@ export default function AccountPage() {
                           variant="secondary"
                           type="button"
                         >
-                          {pendingAvatarFile ? 'Choose different' : 'Upload new picture'}
+                          {pendingAvatarFile ? 'Choose different' : 'Upload new'}
                         </Button>
                         <input
                           ref={fileInputRef}
@@ -766,12 +792,7 @@ export default function AccountPage() {
                           </Button>
                         )}
                       </div>
-                      <p className="mt-2 text-xs text-foreground/50">
-                        JPG, PNG, GIF or WebP. Max 5MB.
-                      </p>
-                      {avatarError && (
-                        <p className="mt-2 text-sm text-red-500">{avatarError}</p>
-                      )}
+                      {avatarError && <p className="mt-2 text-sm text-red-500">{avatarError}</p>}
                     </div>
                   </div>
 
@@ -820,13 +841,8 @@ export default function AccountPage() {
                       <label htmlFor="nickname" className="text-sm font-medium">
                         Nickname (username)
                       </label>
-                      <Input
-                        id="nickname"
-                        type="text"
-                        value={nickname}
-                        disabled
-                      />
-                      <p className="text-xs text-foreground/50">
+                      <Input id="nickname" type="text" value={nickname} disabled />
+                      <p className="text-foreground/50 text-xs">
                         Your nickname is used in your gallery URLs and cannot be changed.
                         <br />
                         URL:{' '}
@@ -847,7 +863,7 @@ export default function AccountPage() {
               <div className="mt-8">
                 <h2 className="mb-4 text-lg font-semibold opacity-70">Your public profile</h2>
                 <Container>
-                  <p className="text-sm text-foreground/60 mb-4">
+                  <p className="text-foreground/60 mb-4 text-sm">
                     This information will be visible on your public profile page.
                   </p>
                   <div className="space-y-4">
@@ -878,20 +894,19 @@ export default function AccountPage() {
                     {/* Social Links */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">
-                          Social links
-                        </label>
-                        <span className="text-xs text-foreground/50">
-                          {fields.length}/3
-                        </span>
+                        <label className="text-sm font-medium">Social links</label>
+                        <span className="text-foreground/50 text-xs">{fields.length}/3</span>
                       </div>
-                      <p className="text-xs text-foreground/50 mb-2">
+                      <p className="text-foreground/50 mb-2 text-xs">
                         Add up to 3 links to your social profiles
                       </p>
 
                       <div className="space-y-4">
                         {fields.map((field, index) => (
-                          <div key={field.id} className="flex flex-col gap-2 rounded-lg border border-border-color bg-background-light p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0">
+                          <div
+                            key={field.id}
+                            className="border-border-color bg-background-light flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0"
+                          >
                             <Input
                               type="text"
                               {...register(`socialLinks.${index}.label`)}
@@ -912,7 +927,7 @@ export default function AccountPage() {
                               variant="danger"
                               aria-label="Remove link"
                               icon={<CloseSVG className="size-4" />}
-                              className="w-full sm:w-auto !px-2 !py-2"
+                              className="w-full !px-2 !py-2 sm:w-auto"
                             >
                               <span className="sm:hidden">Remove</span>
                             </Button>
@@ -934,9 +949,7 @@ export default function AccountPage() {
 
                     {/* Interests */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">
-                        Interests
-                      </label>
+                      <label className="text-sm font-medium">Interests</label>
                       <Controller
                         name="interests"
                         control={control}
@@ -955,7 +968,7 @@ export default function AccountPage() {
                               field.onChange(current.filter((i) => i !== interest));
                             }}
                             maxInterests={10}
-                            helperText="Add up to 10 interests to help others discover you"
+                            helperText="Add up to 10 interests to help others discover you. Click the input to see popular interests."
                             disabled={isSaving}
                           />
                         )}
@@ -972,30 +985,70 @@ export default function AccountPage() {
                   <div className="space-y-6">
                     {/* Theme */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">
-                        Theme
-                      </label>
+                      <label className="text-sm font-medium">Theme</label>
                       <Controller
                         name="theme"
                         control={control}
                         render={({ field }) => (
                           <div className="grid grid-cols-3 gap-2">
                             {[
-                              { value: 'system', label: 'Auto', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                              )},
-                              { value: 'light', label: 'Light', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                              )},
-                              { value: 'dark', label: 'Dark', icon: (
-                                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                              )},
+                              {
+                                value: 'system',
+                                label: 'Auto',
+                                icon: (
+                                  <svg
+                                    className="size-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                ),
+                              },
+                              {
+                                value: 'light',
+                                label: 'Light',
+                                icon: (
+                                  <svg
+                                    className="size-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                                    />
+                                  </svg>
+                                ),
+                              },
+                              {
+                                value: 'dark',
+                                label: 'Dark',
+                                icon: (
+                                  <svg
+                                    className="size-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                                    />
+                                  </svg>
+                                ),
+                              },
                               // More than 2 themes not supported in the MobileMenu yet
                               // { value: 'midnight', label: 'Midnight', icon: (
                               //   <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1008,10 +1061,10 @@ export default function AccountPage() {
                                 type="button"
                                 onClick={() => field.onChange(option.value)}
                                 className={clsx(
-                                  "flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors",
+                                  'flex flex-1 items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors',
                                   themeMounted && field.value === option.value
-                                    ? "border-primary bg-primary/5 text-primary"
-                                    : "border-border-color hover:border-border-color-strong",
+                                    ? 'border-primary bg-primary/5 text-primary'
+                                    : 'border-border-color hover:border-border-color-strong',
                                 )}
                               >
                                 {option.icon}
@@ -1021,7 +1074,7 @@ export default function AccountPage() {
                           </div>
                         )}
                       />
-                      <p className="text-xs text-foreground/50">
+                      <p className="text-foreground/50 text-xs">
                         {themeMounted && theme === 'system'
                           ? `Currently using ${resolvedTheme} mode based on your system`
                           : 'Choose your preferred color scheme'}
@@ -1030,53 +1083,55 @@ export default function AccountPage() {
 
                     {/* Gallery card style */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">
-                        Gallery card style
-                      </label>
+                      <label className="text-sm font-medium">Gallery card style</label>
                       <Controller
                         name="albumCardStyle"
                         control={control}
                         render={({ field }) => (
-                          <div className="grid sm:grid-cols-2 gap-3">
+                          <div className="grid gap-3 sm:grid-cols-2">
                             {/* Large option */}
                             <button
                               type="button"
                               onClick={() => field.onChange('large')}
                               className={clsx(
-                                "rounded-lg border-2 p-3 text-left transition-colors",
+                                'rounded-lg border-2 p-3 text-left transition-colors',
                                 field.value === 'large'
-                                  ? "border-primary bg-primary/5"
-                                  : "border-border-color hover:border-border-color-strong",
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border-color hover:border-border-color-strong',
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <div className={clsx(
-                                      "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
-                                      field.value === 'large' ? "border-primary" : "border-border-color-strong",
-                                    )}>
+                                  <div className="mb-1 flex items-center gap-2">
+                                    <div
+                                      className={clsx(
+                                        'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
+                                        field.value === 'large'
+                                          ? 'border-primary'
+                                          : 'border-border-color-strong',
+                                      )}
+                                    >
                                       {field.value === 'large' && (
-                                        <div className="size-2 rounded-full bg-primary" />
+                                        <div className="bg-primary size-2 rounded-full" />
                                       )}
                                     </div>
-                                    <span className="font-medium text-sm">Large</span>
+                                    <span className="text-sm font-medium">Large</span>
                                   </div>
-                                  <p className="text-xs text-foreground/50 ml-6">
+                                  <p className="text-foreground/50 ml-6 text-xs">
                                     Info visible below image
                                   </p>
                                 </div>
                                 {/* Wireframe - top right */}
-                                <div className="w-20 shrink-0 rounded border border-border-color-strong overflow-hidden bg-background">
-                                  <div className="h-12 bg-foreground/5" />
-                                  <div className="p-1.5 bg-background-light border-t border-border-color-strong">
-                                    <div className="h-1 w-4/5 bg-foreground/20 rounded mb-1.5" />
+                                <div className="border-border-color-strong bg-background w-20 shrink-0 overflow-hidden rounded border">
+                                  <div className="bg-foreground/5 h-12" />
+                                  <div className="bg-background-light border-border-color-strong border-t p-1.5">
+                                    <div className="bg-foreground/20 mb-1.5 h-1 w-4/5 rounded" />
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center gap-1">
-                                        <div className="size-2 rounded-full bg-foreground/15" />
-                                        <div className="h-1 w-6 bg-foreground/10 rounded" />
+                                        <div className="bg-foreground/15 size-2 rounded-full" />
+                                        <div className="bg-foreground/10 h-1 w-6 rounded" />
                                       </div>
-                                      <div className="h-1 w-4 bg-foreground/10 rounded" />
+                                      <div className="bg-foreground/10 h-1 w-4 rounded" />
                                     </div>
                                   </div>
                                 </div>
@@ -1088,42 +1143,46 @@ export default function AccountPage() {
                               type="button"
                               onClick={() => field.onChange('compact')}
                               className={clsx(
-                                "rounded-lg border-2 p-3 text-left transition-colors",
+                                'rounded-lg border-2 p-3 text-left transition-colors',
                                 field.value === 'compact'
-                                  ? "border-primary bg-primary/5"
-                                  : "border-border-color hover:border-border-color-strong",
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border-color hover:border-border-color-strong',
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <div className={clsx(
-                                      "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
-                                      field.value === 'compact' ? "border-primary" : "border-border-color-strong",
-                                    )}>
+                                  <div className="mb-1 flex items-center gap-2">
+                                    <div
+                                      className={clsx(
+                                        'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
+                                        field.value === 'compact'
+                                          ? 'border-primary'
+                                          : 'border-border-color-strong',
+                                      )}
+                                    >
                                       {field.value === 'compact' && (
-                                        <div className="size-2 rounded-full bg-primary" />
+                                        <div className="bg-primary size-2 rounded-full" />
                                       )}
                                     </div>
-                                    <span className="font-medium text-sm">Compact</span>
+                                    <span className="text-sm font-medium">Compact</span>
                                   </div>
-                                  <p className="text-xs text-foreground/50 ml-6">
+                                  <p className="text-foreground/50 ml-6 text-xs">
                                     Info shown on hover
                                   </p>
                                 </div>
                                 {/* Wireframe - top right */}
-                                <div className="w-20 shrink-0 rounded border border-border-color-strong overflow-hidden bg-background">
-                                  <div className="h-[4.75rem] bg-foreground/5 relative">
-                                    <div className="absolute inset-x-0 top-0 p-1.5 bg-gradient-to-b from-background-light to-transparent">
-                                      <div className="h-1 w-3/4 bg-foreground/25 rounded" />
+                                <div className="border-border-color-strong bg-background w-20 shrink-0 overflow-hidden rounded border">
+                                  <div className="bg-foreground/5 relative h-[4.75rem]">
+                                    <div className="from-background-light absolute inset-x-0 top-0 bg-gradient-to-b to-transparent p-1.5">
+                                      <div className="bg-foreground/25 h-1 w-3/4 rounded" />
                                     </div>
-                                    <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-background-light to-transparent">
+                                    <div className="from-background-light absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent p-1.5">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-1">
-                                          <div className="size-2 rounded-full bg-foreground/20" />
-                                          <div className="h-1 w-5 bg-foreground/15 rounded" />
+                                          <div className="bg-foreground/20 size-2 rounded-full" />
+                                          <div className="bg-foreground/15 h-1 w-5 rounded" />
                                         </div>
-                                        <div className="h-1 w-4 bg-foreground/15 rounded" />
+                                        <div className="bg-foreground/15 h-1 w-4 rounded" />
                                       </div>
                                     </div>
                                   </div>
@@ -1137,11 +1196,10 @@ export default function AccountPage() {
 
                     {/* Email Preferences */}
                     <div className="flex flex-col gap-4">
-                      <label className="text-sm font-medium">
-                        Email preferences
-                      </label>
-                      <p className="text-xs text-foreground/50 -mt-2">
-                        Choose which types of emails you&apos;d like to receive. You can change these settings anytime.
+                      <label className="text-sm font-medium">Email preferences</label>
+                      <p className="text-foreground/50 -mt-2 text-xs">
+                        Choose which types of emails you&apos;d like to receive. You can change
+                        these settings anytime.
                       </p>
                       {emailTypes.length > 0 ? (
                         <div className="space-y-3">
@@ -1173,12 +1231,12 @@ export default function AccountPage() {
                                     <div className="flex-1">
                                       <label
                                         htmlFor={`emailPref-${type.type_key}`}
-                                        className="text-sm font-medium cursor-pointer"
+                                        className="cursor-pointer text-sm font-medium"
                                       >
                                         {type.type_label}
                                       </label>
                                       {type.description && (
-                                        <p className="text-xs text-foreground/50 mt-1">
+                                        <p className="text-foreground/50 mt-1 text-xs">
                                           {type.description}
                                         </p>
                                       )}
@@ -1190,9 +1248,7 @@ export default function AccountPage() {
                           })}
                         </div>
                       ) : (
-                        <p className="text-xs text-foreground/50">
-                          Loading email preferences...
-                        </p>
+                        <p className="text-foreground/50 text-xs">Loading email preferences...</p>
                       )}
                     </div>
                   </div>
@@ -1207,63 +1263,87 @@ export default function AccountPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="font-medium text-foreground">Member since</p>
-                      <p className="text-foreground/70">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
+                      <p className="text-foreground font-medium">Member since</p>
+                      <p className="text-foreground/70">
+                        {profile?.created_at
+                          ? new Date(profile.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })
+                          : 'N/A'}
+                      </p>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Last logged in</p>
+                      <p className="text-foreground font-medium">Last logged in</p>
                       <p className="text-foreground/70">
                         {stats.lastLoggedIn
-                          ? new Date(stats.lastLoggedIn).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                          ? new Date(stats.lastLoggedIn).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })
                           : 'Never'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="border-t border-border-color-strong pt-4">
-                    <p className="mb-3 text-sm font-medium text-foreground">Activity</p>
+                  <div className="border-border-color-strong border-t pt-4">
+                    <p className="text-foreground mb-3 text-sm font-medium">Activity</p>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-foreground/70">Galleries</p>
-                        <p className="text-lg font-semibold text-foreground">{stats.galleries}</p>
+                        <p className="text-foreground text-lg font-semibold">{stats.galleries}</p>
                       </div>
                       <div>
                         <p className="text-foreground/70">Photos</p>
-                        <p className="text-lg font-semibold text-foreground">{stats.photos}</p>
+                        <p className="text-foreground text-lg font-semibold">{stats.photos}</p>
                       </div>
                       <div>
                         <p className="text-foreground/70">Comments made</p>
-                        <p className="text-lg font-semibold text-foreground">{stats.commentsMade}</p>
+                        <p className="text-foreground text-lg font-semibold">
+                          {stats.commentsMade}
+                        </p>
                       </div>
                       <div>
                         <p className="text-foreground/70">Comments received</p>
-                        <p className="text-lg font-semibold text-foreground">{stats.commentsReceived}</p>
+                        <p className="text-foreground text-lg font-semibold">
+                          {stats.commentsReceived}
+                        </p>
                       </div>
                       <div>
                         <p className="text-foreground/70">Events attended</p>
-                        <p className="text-lg font-semibold text-foreground">{stats.eventsAttended}</p>
+                        <p className="text-foreground text-lg font-semibold">
+                          {stats.eventsAttended}
+                        </p>
                       </div>
                       <div>
                         <p className="text-foreground/70">RSVPs</p>
-                        <p className="text-lg font-semibold text-foreground">{stats.rsvpsConfirmed} / {stats.rsvpsCanceled}</p>
+                        <p className="text-foreground text-lg font-semibold">
+                          {stats.rsvpsConfirmed} / {stats.rsvpsCanceled}
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   {(stats.galleryViews > 0 || stats.profileViews > 0) && (
-                    <div className="border-t border-border-color pt-4">
-                      <p className="mb-3 text-sm font-medium text-foreground">Engagement</p>
+                    <div className="border-border-color border-t pt-4">
+                      <p className="text-foreground mb-3 text-sm font-medium">Engagement</p>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         {stats.galleryViews > 0 && (
                           <div>
                             <p className="text-foreground/70">Gallery views</p>
-                            <p className="text-lg font-semibold text-foreground">{stats.galleryViews}</p>
+                            <p className="text-foreground text-lg font-semibold">
+                              {stats.galleryViews}
+                            </p>
                           </div>
                         )}
                         {stats.profileViews > 0 && (
                           <div>
                             <p className="text-foreground/70">Profile views</p>
-                            <p className="text-lg font-semibold text-foreground">{stats.profileViews}</p>
+                            <p className="text-foreground text-lg font-semibold">
+                              {stats.profileViews}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -1281,11 +1361,13 @@ export default function AccountPage() {
         <StickyActionBar constrainWidth>
           <div className="flex items-center gap-3 text-sm">
             {submitError && (
-              <ErrorMessage variant="compact" className="text-sm py-1.5">{submitError}</ErrorMessage>
+              <ErrorMessage variant="compact" className="py-1.5 text-sm">
+                {submitError}
+              </ErrorMessage>
             )}
             {success && (
-              <SuccessMessage variant="compact" className="text-sm py-1.5">
-              Profile updated!
+              <SuccessMessage variant="compact" className="py-1.5 text-sm">
+                Profile updated!
               </SuccessMessage>
             )}
             {!submitError && !success && hasChanges && (
@@ -1300,7 +1382,7 @@ export default function AccountPage() {
             disabled={isSaving || !hasChanges}
             loading={isSaving}
           >
-          Save changes
+            Save changes
           </Button>
         </StickyActionBar>
       )}

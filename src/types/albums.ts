@@ -26,3 +26,15 @@ export type AlbumFormData = {
   is_public: boolean
   tags?: string[]
 }
+
+// Album like with profile info
+export type AlbumLike = {
+  album_id: string;
+  user_id: string;
+  created_at: string;
+  profile?: {
+    nickname: string;
+    avatar_url: string | null;
+    full_name: string | null;
+  };
+};

@@ -15,12 +15,14 @@ export const pagePaddingAlt = 'px-4 pb-5 pt-4 md:p-10 md:pt-8';
 
 export default function PageContainer({ children, className, variant = 'default', innerClassName }: PageContainerProps) {
   return (
-    <div className={clsx(
-      'flex grow justify-center',
-      variant === 'alt' ? pagePaddingAlt : pagePadding,
-      variant === 'alt' && 'bg-background-light',
-      className,
-    )}>
+    <div
+      className={clsx(
+        'flex justify-center',
+        variant === 'alt' ? pagePaddingAlt : pagePadding,
+        variant === 'alt' && 'bg-background-light',
+        className,
+      )}
+    >
       <div className={clsx("w-full max-w-screen-md", innerClassName)}>
         {children}
       </div>

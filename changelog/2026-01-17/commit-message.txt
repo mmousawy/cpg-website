@@ -1,0 +1,78 @@
+feat: Add interests to onboarding, likes system, tags display, and code quality improvements
+
+Add interests input to onboarding flow with popular interests integration,
+implement comprehensive likes system for photos and albums, add tags display
+to photo and album detail pages, refactor Tag component, switch from Prettier
+to ESLint for code formatting, and add test mode support for onboarding.
+
+Onboarding flow enhancements:
+- Add interests input field to onboarding form with support for up to 10
+  interests
+- Integrate popular interests dropdown in InterestInput component (shows
+  top 10 when focused)
+- Add test mode support via `?test=true` query parameter for form
+  validation testing
+- Increase onboarding form max width from `max-w-md` to `max-w-lg` for
+  better UX
+- Save user interests to `profile_interests` table during onboarding
+
+Interests system improvements:
+- Update InterestInput component to show popular interests dropdown when
+  input is focused (even without typing)
+- Increase maximum interests limit from default to 10 in account page
+- Update account page to use same InterestInput component with popular
+  interests integration
+- Improve helper text to guide users to click input for popular interests
+
+Gallery page enhancements:
+- Add "Recently liked" section to main gallery page (max 10 photos)
+- Reduce initial photo/album display to 10 items per section on main
+  gallery page
+- Add "View all" call-to-action buttons using Button component for each
+  section
+- Create dedicated paginated pages: `/gallery/photos`,
+  `/gallery/recent-likes`, `/gallery/albums`
+- Implement accurate infinite "Load more" pagination with `hasMore`
+  detection
+- Create API endpoints for paginated gallery data:
+  `/api/gallery/photos`, `/api/gallery/recent-likes`,
+  `/api/gallery/albums`
+- Add PhotosPaginated and AlbumsPaginated client components for infinite
+  scroll
+
+Likes system implementation:
+- Add photo and album likes functionality with database migrations
+- Create LikeButton component with heart icon (filled/unfilled states)
+- Add CardLikes component for displaying like counts on cards
+- Add DetailLikesSection for showing full list of likers
+- Add LikerAvatars component for displaying avatars of users who liked
+- Implement likes_count columns for photos and albums tables
+- Add server-side data fetching functions: `getPhotoLikes`,
+  `getAlbumLikes`
+- Add client-side hooks: `usePhotoLikes`, `useAlbumLikes`,
+  `useBatchPhotoLikeCounts`, `useBatchAlbumLikeCounts`
+- Add likes received badge to ProfileStatsBadges component
+
+Tags display on detail pages:
+- Add TagsSection component for photo and album detail pages
+- Display clickable tags below likes section linking to gallery tag pages
+- Update getAlbumBySlug to fetch album_tags
+- Update getPhotoByShortId and getAlbumPhotoByShortId to fetch photo_tags
+
+UI/UX improvements:
+- Fix attribution display in JustifiedPhotoGrid on profile pages
+- Refactor Tag component: extract SVG to TagShape, use CSS custom
+  properties, remove useId hook dependency
+- Improve MemberCard with "joined X ago" badge
+- Enhance ProfileStatsBadges with likes received count
+- Update various components for better consistency and accessibility
+
+Code formatting and quality:
+- Remove Prettier, switch to ESLint-only formatting
+- Add JSX formatting rules: props on new lines, content on own line
+- Update lint-staged to use ESLint only
+- Fix TypeScript errors related to `created_at` null handling in likes
+  system
+- Update EventImage component prop types to handle href internally
+- Improve error handling and type safety across components
+- Add proper null checks and fallbacks for database fields

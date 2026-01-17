@@ -18,7 +18,7 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
           slug,
           cover_image_url,
           deleted_at,
-          profile:profiles(nickname),
+          profile:profiles!albums_user_id_fkey(nickname),
           album_photos_active(count)
         )
       )

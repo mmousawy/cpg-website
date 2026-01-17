@@ -151,6 +151,26 @@ export async function revalidateInterest(interestName: string) {
 }
 
 // ============================================================================
+// Likes Revalidation
+// ============================================================================
+
+/**
+ * Revalidate after a like/unlike on a photo
+ * Use when: User likes or unlikes a photo
+ */
+export async function revalidatePhotoLikes(ownerNickname: string) {
+  revalidateTag(`profile-${ownerNickname}`, 'max');
+}
+
+/**
+ * Revalidate after a like/unlike on an album
+ * Use when: User likes or unlikes an album
+ */
+export async function revalidateAlbumLikes(ownerNickname: string) {
+  revalidateTag(`profile-${ownerNickname}`, 'max');
+}
+
+// ============================================================================
 // Bulk/Utility Functions
 // ============================================================================
 

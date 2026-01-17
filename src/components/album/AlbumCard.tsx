@@ -6,6 +6,7 @@ import type { AlbumWithPhotos } from '@/types/albums';
 
 import Avatar from '../auth/Avatar';
 import CardBadges from '../shared/CardBadges';
+import CardLikes from '../shared/CardLikes';
 
 export type AlbumCardVariant = 'large' | 'compact'
 
@@ -15,9 +16,17 @@ type AlbumCardProps = {
   variant?: AlbumCardVariant
   /** If provided, clicking the album will call this instead of navigating */
   onClick?: (album: AlbumWithPhotos) => void
+  /** Like count to display */
+  likesCount?: number
 }
 
-export default function AlbumCard({ album, isOwner = false, variant = 'large', onClick }: AlbumCardProps) {
+export default function AlbumCard({
+  album,
+  isOwner = false,
+  variant = 'large',
+  onClick,
+  likesCount,
+}: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url;
   const photoCount = album.photos?.length || 0;
 
@@ -43,6 +52,9 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
         ) : (
           <FolderSVG className="size-16 text-foreground/20" />
         )}
+
+        {/* Likes overlay */}
+        <CardLikes likesCount={likesCount ?? (album as any).likesCount ?? 0} />
 
         {/* Compact variant: hover overlays */}
         {variant === 'compact' && (
@@ -74,22 +86,25 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
               <h3 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md">
                 {album.title}
               </h3>
-            </div>
-
-            {/* Bottom info bar - visible on hover */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 flex items-center justify-between opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
-              {/* Nickname - bottom left */}
-              {album.profile && (
-                <div className="flex items-center gap-1.5 text-sm text-white drop-shadow-md">
-                  <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="xxs" />
-                  <span>@{album.profile.nickname}</span>
+              {/* Photo count - top right, visible on hover */}
+              {photoCount > 0 && (
+                <div className="text-xs text-white opacity-70">
+                  {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
                 </div>
               )}
+            </div>
 
-              {/* Photo count - bottom right */}
-              {photoCount > 0 && (
-                <div className="text-xs text-white/90">
-                  {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+            {/* Bottom info bar - visible on hover, with right padding for likes */}
+            <div className="absolute bottom-0 left-0 right-12 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
+              {/* Nickname - bottom left */}
+              {album.profile && (
+                <div className="flex items-center gap-1 text-xs text-white drop-shadow-md">
+                  <Avatar
+                    avatarUrl={album.profile.avatar_url}
+                    fullName={album.profile.full_name}
+                    size="xxs"
+                  />
+                  <span>@{album.profile.nickname}</span>
                 </div>
               )}
             </div>
@@ -104,12 +119,16 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
 
       {/* Large variant: info section below image */}
       {variant === 'large' && (
-        <div className="p-3">
+        <div className="p-2.5">
           <h3 className="text-sm font-semibold line-clamp-1">{album.title}</h3>
           <div className="flex items-center justify-between mt-1.5">
             {album.profile && (
               <div className="flex items-center gap-1.5 text-xs text-foreground/70">
-                <Avatar avatarUrl={album.profile.avatar_url} fullName={album.profile.full_name} size="xxs" />
+                <Avatar
+                  avatarUrl={album.profile.avatar_url}
+                  fullName={album.profile.full_name}
+                  size="xxs"
+                />
                 <span>@{album.profile.nickname}</span>
               </div>
             )}
@@ -132,14 +151,20 @@ export default function AlbumCard({ album, isOwner = false, variant = 'large', o
   // If onClick is provided, use a button instead of Link
   if (onClick) {
     return (
-      <button onClick={() => onClick(album)} className="group block w-full text-left">
+      <button
+        onClick={() => onClick(album)}
+        className="group block w-full text-left"
+      >
         {cardContent}
       </button>
     );
   }
 
   return (
-    <Link href={albumUrl} className="group block">
+    <Link
+      href={albumUrl}
+      className="group block"
+    >
       {cardContent}
     </Link>
   );

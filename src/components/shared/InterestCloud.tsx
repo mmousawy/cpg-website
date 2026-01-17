@@ -15,7 +15,11 @@ interface InterestCloudProps {
  * Interest cloud showing interests with size based on usage count
  * Interests link to /members/interest/<interest>
  */
-export default function InterestCloud({ interests, activeInterest, className }: InterestCloudProps) {
+export default function InterestCloud({
+  interests,
+  activeInterest,
+  className,
+}: InterestCloudProps) {
   if (interests.length === 0) {
     return null;
   }
@@ -36,7 +40,7 @@ export default function InterestCloud({ interests, activeInterest, className }: 
   }
 
   return (
-    <div className={clsx('flex flex-wrap gap-2 items-center', className)}>
+    <div className={clsx('flex flex-wrap items-center gap-2', className)}>
       {interests.map((interest) => {
         const isActive = activeInterest === interest.name;
         const count = interest.count || 0;
@@ -46,18 +50,18 @@ export default function InterestCloud({ interests, activeInterest, className }: 
             key={interest.id}
             href={`/members/interest/${encodeURIComponent(interest.name)}`}
             className={clsx(
-              'inline-flex items-center gap-[0.5em] rounded-full border px-[1em] py-[.75em] leading-none transition-colors',
+              'border-border-color bg-background-light inline-flex items-center gap-2 rounded-full border px-3 py-2 leading-none transition-colors',
+              'hover:border-primary hover:text-primary',
               getSizeClass(count),
               isActive
                 ? 'border-primary bg-primary text-white'
                 : 'border-border-color bg-background-light hover:border-primary hover:text-primary',
             )}
           >
-            <span className="leading-none -mt-[0.15em] font-medium">{interest.name}</span>
-            <span className={clsx(
-              'text-[0.75em] leading-none opacity-60',
-              isActive && 'opacity-80',
-            )}>
+            <span className="-mt-[0.15em] leading-none font-medium">{interest.name}</span>
+            <span
+              className={clsx('text-[0.75em] leading-none opacity-60', isActive && 'opacity-80')}
+            >
               {count}
             </span>
           </Link>

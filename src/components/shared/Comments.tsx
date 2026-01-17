@@ -2,6 +2,7 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
   const { user, isAdmin } = useAuth();
   const confirm = useConfirm();
   const supabase = useSupabase();
+  const showAuthPrompt = useAuthPrompt();
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -173,8 +175,11 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
   };
 
   return (
-    <div id="comments" className="space-y-4">
-      <h3 className="text-lg font-semibold">Comments ({comments.length})</h3>
+    <div
+      id="comments"
+      className="space-y-4"
+    >
+      <h3 className="text-lg font-semibold">{comments.length > 0 ? `${comments.length} Comments` : 'Comments'}</h3>
 
       {/* Comments List */}
       <div className="space-y-4">
@@ -186,7 +191,10 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
           </p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="dark:bg-foreground/10 rounded-lg shadow-md shadow-[#00000007] border border-border-color-strong p-4">
+            <div
+              key={comment.id}
+              className="dark:bg-foreground/10 rounded-lg shadow-md shadow-[#00000007] border border-border-color-strong p-4"
+            >
               <div className="flex items-start justify-between gap-2">
                 <Link
                   href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
@@ -226,31 +234,41 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
       </div>
 
       {/* Comment Form */}
-      {user && (
-        <form onSubmit={handleSubmitComment} className="space-y-3">
-          <Textarea
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Write a comment..."
-            rows={3}
-            disabled={isSubmitting}
-          />
-          <Button
-            type="submit"
-            size="sm"
-            iconRight={<SendSVG />}
-            disabled={isSubmitting || !commentText.trim()}
-          >
-            {isSubmitting ? 'Posting...' : 'Post comment'}
-          </Button>
-        </form>
-      )}
-
-      {!user && (
-        <p className="text-sm text-foreground/70">
-          Please log in to leave a comment.
-        </p>
-      )}
+      <form
+        onSubmit={handleSubmitComment}
+        className="space-y-3"
+      >
+        <Textarea
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          onFocus={(e) => {
+            if (!user) {
+              // Blur immediately to prevent re-triggering when modal closes
+              e.target.blur();
+              showAuthPrompt({ feature: 'leave comments' });
+            }
+          }}
+          placeholder="Write a comment..."
+          rows={3}
+          disabled={isSubmitting}
+          className="block max-w-[70ch]"
+          readOnly={!user}
+        />
+        <Button
+          type="submit"
+          size="sm"
+          iconRight={<SendSVG className="size-4" />}
+          disabled={isSubmitting || !commentText.trim()}
+          onClick={(e) => {
+            if (!user) {
+              e.preventDefault();
+              showAuthPrompt({ feature: 'leave comments' });
+            }
+          }}
+        >
+          {isSubmitting ? 'Posting...' : 'Add comment'}
+        </Button>
+      </form>
     </div>
   );
 }

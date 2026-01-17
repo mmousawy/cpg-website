@@ -22,6 +22,7 @@ export * from './albums';
 export * from './events';
 export * from './gallery';
 export * from './interests';
+export * from './likes';
 export * from './members';
 export * from './profiles';
 

@@ -36,9 +36,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
 
     return (
       <div className={clsx('flex flex-col gap-2', className)}>
-        {label && (
-          <span className="text-sm font-medium">{label}</span>
-        )}
+        {label && <span className="text-sm font-medium">{label}</span>}
         <div className="group flex items-center gap-3">
           {/* Hidden checkbox */}
           <input
@@ -55,7 +53,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           <button
             type="button"
             onClick={handleToggleClick}
-            className="text-sm font-medium text-foreground transition-colors peer-checked:text-foreground/40 cursor-pointer"
+            className="text-foreground peer-checked:text-foreground/40 cursor-pointer text-sm font-medium transition-colors"
             tabIndex={-1}
           >
             {leftLabel}
@@ -66,7 +64,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             type="button"
             onClick={handleToggleClick}
             className={clsx(
-              'relative h-6 w-11 rounded-full transition-colors cursor-pointer',
+              'relative h-6 w-11 cursor-pointer rounded-full transition-colors',
               'bg-foreground/20 peer-checked:bg-primary',
             )}
             tabIndex={-1}
@@ -75,7 +73,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             {/* Toggle knob */}
             <span
               className={clsx(
-                'absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform pointer-events-none',
+                'pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform',
                 'group-has-[input:checked]:translate-x-5',
               )}
             />
@@ -85,7 +83,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           <button
             type="button"
             onClick={handleToggleClick}
-            className="text-sm font-medium text-foreground/40 transition-colors peer-checked:text-foreground cursor-pointer"
+            className="text-foreground/40 peer-checked:text-foreground cursor-pointer text-sm font-medium transition-colors"
             tabIndex={-1}
           >
             {rightLabel}

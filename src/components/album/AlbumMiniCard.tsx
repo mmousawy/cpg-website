@@ -42,7 +42,7 @@ export default function AlbumMiniCard({
             src={coverImageUrl}
             alt={title}
             fill
-            sizes="64px"
+            sizes="76px"
             className="object-cover"
           />
         ) : (

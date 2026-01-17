@@ -25,7 +25,7 @@ export default function MemberCard({ member, badge, className }: MemberCardProps
   return (
     <Link
       href={`/@${member.nickname}`}
-      className={`group flex flex-col items-center gap-2 rounded-lg border border-border-color bg-background-light p-4 transition-colors hover:border-primary hover:bg-background ${className || ''}`}
+      className={`group flex flex-col items-center gap-2 rounded-lg border border-border-color bg-background-light px-2 py-3 transition-colors hover:border-primary hover:bg-background ${className || ''}`}
     >
       <Avatar
         avatarUrl={member.avatar_url}
@@ -33,13 +33,13 @@ export default function MemberCard({ member, badge, className }: MemberCardProps
         size="lg"
         hoverEffect
       />
-      <div className="text-center">
-        <p className="font-medium text-sm">{member.full_name || `@${member.nickname}`}</p>
+      <div className="flex grow flex-col items-center text-center">
+        <p className="font-medium text-sm leading-tight">{member.full_name || `@${member.nickname}`}</p>
         {member.full_name && (
-          <p className="text-xs text-foreground/60">@{member.nickname}</p>
+          <p className="mt-0.5 text-xs text-foreground/60">@{member.nickname}</p>
         )}
         {badge && (
-          <p className="mt-1 text-xs text-foreground/50">{badge}</p>
+          <p className="mt-auto pt-2 text-xs text-foreground/90">{badge}</p>
         )}
       </div>
     </Link>

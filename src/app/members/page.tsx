@@ -2,8 +2,10 @@ import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
+import Tag from '@/components/shared/Tag';
 import { createMetadata } from '@/utils/metadata';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
+import { formatJoinedDate } from '@/utils/utils';
 import Link from 'next/link';
 
 // Cached data functions
@@ -35,8 +37,18 @@ export default async function MembersPage() {
 
         <div className="rounded-xl border border-border-color bg-background-light p-8 text-center">
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
-            <svg className="size-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <svg
+              className="size-8 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
           </div>
           <h2 className="mb-2 text-xl font-semibold">Join our community</h2>
@@ -47,7 +59,10 @@ export default async function MembersPage() {
             <Button href={`${routes.login.url}?redirectTo=/members`}>
               Log in
             </Button>
-            <Button href={`${routes.signup.url}?redirectTo=/members`} variant="secondary">
+            <Button
+              href={`${routes.signup.url}?redirectTo=/members`}
+              variant="secondary"
+            >
               Sign up
             </Button>
           </div>
@@ -107,7 +122,10 @@ export default async function MembersPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {members.map((member) => (
-                      <MemberCard key={member.id} member={member} />
+                      <MemberCard
+                        key={member.id}
+                        member={member}
+                      />
                     ))}
                   </div>
                 </div>
@@ -141,19 +159,18 @@ export default async function MembersPage() {
 
         {/* Explore by Photo Style (Tags) */}
         {popularTags.length > 0 && (() => {
-          // Calculate size classes based on memberCount relative to max (same logic as TagCloud)
+          // Calculate size based on memberCount relative to max (same logic as TagCloud)
           const maxCount = Math.max(...popularTags.map((t) => t.memberCount || 0));
           const minCount = Math.min(...popularTags.map((t) => t.memberCount || 0));
           const range = maxCount - minCount || 1;
 
-          function getSizeClass(count: number): string {
+          function getSize(count: number): 'xs' | 'sm' | 'base' | 'lg' {
             const normalized = (count - minCount) / range;
 
-            if (normalized > 0.8) return 'text-lg font-semibold';
-            if (normalized > 0.6) return 'text-base font-medium';
-            if (normalized > 0.4) return 'text-sm font-medium';
-            if (normalized > 0.2) return 'text-sm';
-            return 'text-sm';
+            if (normalized > 0.8) return 'lg';
+            if (normalized > 0.6) return 'base';
+            if (normalized > 0.3) return 'sm';
+            return 'xs';
           }
 
           return (
@@ -169,12 +186,12 @@ export default async function MembersPage() {
                     <Link
                       key={tag.id}
                       href={`/members/tag/${encodeURIComponent(tag.name)}`}
-                      className={`inline-flex items-center gap-[0.5em] rounded-full border px-[1em] py-[.75em] leading-none transition-colors border-border-color bg-background-light hover:border-primary hover:text-primary ${getSizeClass(count)}`}
                     >
-                      <span className="leading-none -mt-[0.15em] font-medium">{tag.name}</span>
-                      <span className="text-[0.75em] leading-none opacity-60">
-                        {count} {count === 1 ? 'member' : 'members'}
-                      </span>
+                      <Tag
+                        text={tag.name}
+                        count={count}
+                        size={getSize(count)}
+                      />
                     </Link>
                   );
                 })}
@@ -192,7 +209,11 @@ export default async function MembersPage() {
             </p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {newMembers.map((member) => (
-                <MemberCard key={member.id} member={member} />
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  badge={member.created_at ? formatJoinedDate(member.created_at) : undefined}
+                />
               ))}
             </div>
           </div>

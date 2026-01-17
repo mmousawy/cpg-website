@@ -153,19 +153,45 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
 
       // Optimistically update cache
       const previousAlbums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId]);
+
+      // Pre-compute tag sets for optimistic update
+      const desiredTagsForCache = data.tags !== undefined
+        ? new Set(data.tags.map((t) => t.toLowerCase()))
+        : null;
+      const originalCommonTagsForCache = data.originalCommonTags
+        ? new Set(data.originalCommonTags.map((t) => t.toLowerCase()))
+        : new Set<string>();
+      const explicitlyRemovedTagsForCache = desiredTagsForCache
+        ? new Set([...originalCommonTagsForCache].filter((tag) => !desiredTagsForCache.has(tag)))
+        : new Set<string>();
+
       queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
         if (!old) return old;
-        return old.map((a) =>
-          albumIds.includes(a.id)
-            ? {
-              ...a,
-              ...(data.isPublic !== null && { is_public: data.isPublic }),
-              ...(data.tags !== undefined && {
-                tags: data.tags.map((tag) => ({ id: '', album_id: a.id, tag: tag.toLowerCase(), created_at: null })),
-              }),
-            }
-            : a,
-        );
+        return old.map((a) => {
+          if (!albumIds.includes(a.id)) return a;
+
+          // For tags, we need to preserve partial tags (not in originalCommonTags)
+          // and only apply changes to common tags
+          let newTags = a.tags;
+          if (desiredTagsForCache !== null) {
+            const existingTags = a.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+            // Keep tags that are: (1) in desired set, OR (2) not explicitly removed (partial tags)
+            const keptTags = existingTags.filter(
+              (tag) => desiredTagsForCache.has(tag) || !explicitlyRemovedTagsForCache.has(tag),
+            );
+            // Add new tags from desired set that don't exist yet
+            const tagsToAdd = [...desiredTagsForCache].filter((tag) => !existingTags.includes(tag));
+            newTags = [...new Set([...keptTags, ...tagsToAdd])].map((tag) => ({
+              id: '', album_id: a.id, tag, created_at: null,
+            }));
+          }
+
+          return {
+            ...a,
+            ...(data.isPublic !== null && { is_public: data.isPublic }),
+            ...(desiredTagsForCache !== null && { tags: newTags }),
+          };
+        });
       });
 
       const updates: { is_public?: boolean } = {};
@@ -186,9 +212,17 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
         }
       }
 
-      // Sync tags: add missing tags and remove tags not in the form
+      // Sync tags: add missing tags and remove only tags that were explicitly removed
       if (data.tags !== undefined) {
         const desiredTags = new Set(data.tags.map((t) => t.toLowerCase()));
+        // Original common tags - only these were in the form, so only these can be "removed"
+        const originalCommonTags = new Set(
+          (data.originalCommonTags || []).map((t) => t.toLowerCase()),
+        );
+        // Tags that user explicitly removed = originalCommonTags - desiredTags
+        const explicitlyRemovedTags = new Set(
+          [...originalCommonTags].filter((tag) => !desiredTags.has(tag)),
+        );
 
         // Fetch existing tags for these albums
         const { data: existingTags } = await supabase
@@ -218,9 +252,11 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
             }
           });
 
-          // Remove tags that are in existing but not in desired list
+          // Remove only tags that were explicitly removed by the user
+          // (i.e., were in originalCommonTags but no longer in desiredTags)
+          // This preserves partial tags that the user never had control over
           existing.forEach((tag) => {
-            if (!desiredTags.has(tag)) {
+            if (explicitlyRemovedTags.has(tag)) {
               tagDeletes.push({ album_id: albumId, tag });
             }
           });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useBatchAlbumLikeCounts } from '@/hooks/useLikes';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { useSyncExternalStore } from 'react';
 import AlbumCard, { type AlbumCardVariant } from './AlbumCard';
@@ -65,17 +66,30 @@ export default function AlbumGrid({
   // Use explicit variant if provided, otherwise localStorage, then profile, default to 'large'
   const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? profileVariant ?? 'large';
 
+  // Collect all album slugs for batch fetching
+  const slugs = albums.map((a) => a.slug).filter((slug): slug is string => !!slug);
+
+  // Batch fetch like counts client-side for real-time updates
+  const batchLikesQuery = useBatchAlbumLikeCounts(slugs);
+  const batchLikesMap = batchLikesQuery.data || new Map<string, number>();
+
   return (
     <div className={className}>
-      {albums.map((album) => (
-        <AlbumCard
-          key={album.id}
-          album={album}
-          isOwner={isOwner}
-          variant={effectiveVariant}
-          onClick={onAlbumClick}
-        />
-      ))}
+      {albums.map((album) => {
+        // Get likes count from client-side batch fetch, fallback to server-provided column
+        const likesCount = batchLikesMap.get(album.slug) ?? (album as any).likes_count ?? 0;
+
+        return (
+          <AlbumCard
+            key={album.id}
+            album={album}
+            isOwner={isOwner}
+            variant={effectiveVariant}
+            onClick={onAlbumClick}
+            likesCount={likesCount}
+          />
+        );
+      })}
     </div>
   );
 }

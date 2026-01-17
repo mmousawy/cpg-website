@@ -45,7 +45,10 @@ function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee
 
   return (
     <div className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'>
-      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
+      <div
+        className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44'
+        dir="rtl"
+      >
         {attendeesWithAvatars.map((attendee, attendeeIndex) => (
           <Image
             key={`${attendee.id}_${attendeeIndex}`}
@@ -99,31 +102,39 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage, ser
               "rounded-xl border bg-background-light p-4 sm:p-6 border-border-color",
             )}
           >
-            <div className={clsx(isPast && "grayscale")}>
-              <EventImage event={event} size='small' />
+            <div className={clsx(isPast && "grayscale", "sm:hidden")}>
+              <EventImage
+                event={event}
+                size='small'
+              />
             </div>
             <div className='mb-6 flex justify-between'>
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  {isPast && (
+                {isPast && (
+                  <div className="flex items-center gap-2 mb-1">
                     <span className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap">
                       Past event
                     </span>
-                  )}
-                </div>
-                <Link href={`/events/${event.slug}`} className="group">
+                  </div>
+                )}
+                <Link
+                  href={`/events/${event.slug}`}
+                  className="group"
+                >
                   <h3 className={clsx(
                     "text-2xl font-bold transition-colors md:max-w-140",
                     isPast
                       ? "text-foreground/70 group-hover:text-foreground/90"
                       : "group-hover:text-primary",
-                  )}>
+                  )}
+                  >
                     {event.title}
                   </h3>
                 </Link>
               </div>
               <Link
                 href={`/events/${event.slug}`}
+                tabIndex={-1}
                 className={clsx(
                   "ml-2 max-sm:hidden self-start rounded-full border px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap",
                   isPast
@@ -156,10 +167,16 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage, ser
                 </span>
                 <p className='whitespace-pre-line line-clamp-5'>{event.description}</p>
               </div>
-              <EventImage event={event} />
+              <EventImage
+                event={event}
+                tabIndex={-1}
+              />
             </div>
             <div className='mt-8 flex items-end justify-between gap-4'>
-              <AttendeesDisplay attendees={attendees} isPastEvent={isPast} />
+              <AttendeesDisplay
+                attendees={attendees}
+                isPastEvent={isPast}
+              />
               <Link
                 href={`/events/${event.slug}`}
                 className={clsx(

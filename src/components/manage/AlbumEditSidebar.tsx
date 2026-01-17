@@ -34,6 +34,8 @@ export type AlbumFormData = z.infer<typeof albumFormSchema>;
 const bulkAlbumFormSchema = z.object({
   isPublic: z.boolean().nullable(),
   tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed').optional(),
+  // Original common tags when form was loaded - used to determine which tags were removed
+  originalCommonTags: z.array(z.string()).optional(),
 });
 
 export type BulkAlbumFormData = z.infer<typeof bulkAlbumFormSchema>;
@@ -208,7 +210,8 @@ function BulkAlbumEditForm({
 
     try {
       const albumIds = selectedAlbums.map((a) => a.id);
-      await onBulkSave(albumIds, data);
+      // Include original common tags so mutation knows which tags were removed vs partially shared
+      await onBulkSave(albumIds, { ...data, originalCommonTags: commonTags });
       reset(data);
       setLocalSuccess(true);
       setTimeout(() => setLocalSuccess(false), 3000);

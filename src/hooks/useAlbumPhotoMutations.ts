@@ -275,21 +275,45 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
 
       // Optimistically update cache
       const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['album-photos', albumId]);
+
+      // Pre-compute tag sets for optimistic update
+      const desiredTagsForCache = data.tags !== undefined
+        ? new Set(data.tags.map((t) => t.toLowerCase()))
+        : null;
+      const originalCommonTagsForCache = data.originalCommonTags
+        ? new Set(data.originalCommonTags.map((t) => t.toLowerCase()))
+        : new Set<string>();
+      const explicitlyRemovedTagsForCache = desiredTagsForCache
+        ? new Set([...originalCommonTagsForCache].filter((tag) => !desiredTagsForCache.has(tag)))
+        : new Set<string>();
+
       queryClient.setQueryData<PhotoWithAlbums[]>(['album-photos', albumId], (old) => {
         if (!old) return old;
-        return old.map((p) =>
-          photoIds.includes(p.id)
-            ? {
-                ...p,
-                ...(data.title !== null && { title: data.title }),
-                ...(data.description !== null && { description: data.description }),
-                ...(data.is_public !== null && { is_public: data.is_public }),
-                ...(data.tags !== undefined && {
-                  tags: data.tags.map((tag) => ({ tag: tag.toLowerCase() })),
-                }),
-              }
-            : p,
-        );
+        return old.map((p) => {
+          if (!photoIds.includes(p.id)) return p;
+
+          // For tags, we need to preserve partial tags (not in originalCommonTags)
+          // and only apply changes to common tags
+          let newTags = p.tags;
+          if (desiredTagsForCache !== null) {
+            const existingTags = p.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+            // Keep tags that are: (1) in desired set, OR (2) not explicitly removed (partial tags)
+            const keptTags = existingTags.filter(
+              (tag) => desiredTagsForCache.has(tag) || !explicitlyRemovedTagsForCache.has(tag),
+            );
+            // Add new tags from desired set that don't exist yet
+            const tagsToAdd = [...desiredTagsForCache].filter((tag) => !existingTags.includes(tag));
+            newTags = [...new Set([...keptTags, ...tagsToAdd])].map((tag) => ({ tag }));
+          }
+
+          return {
+            ...p,
+            ...(data.title !== null && { title: data.title }),
+            ...(data.description !== null && { description: data.description }),
+            ...(data.is_public !== null && { is_public: data.is_public }),
+            ...(desiredTagsForCache !== null && { tags: newTags }),
+          };
+        });
       });
 
       // Update album_photos titles if provided
@@ -322,9 +346,17 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
         }
       }
 
-      // Sync tags: add missing tags and remove tags not in the form
+      // Sync tags: add missing tags and remove only tags that were explicitly removed
       if (data.tags !== undefined) {
         const desiredTags = new Set(data.tags.map((t) => t.toLowerCase()));
+        // Original common tags - only these were in the form, so only these can be "removed"
+        const originalCommonTags = new Set(
+          (data.originalCommonTags || []).map((t) => t.toLowerCase()),
+        );
+        // Tags that user explicitly removed = originalCommonTags - desiredTags
+        const explicitlyRemovedTags = new Set(
+          [...originalCommonTags].filter((tag) => !desiredTags.has(tag)),
+        );
 
         // Fetch existing tags for these photos
         const { data: existingTags } = await supabase
@@ -354,9 +386,11 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
             }
           });
 
-          // Remove tags that are in existing but not in desired list
+          // Remove only tags that were explicitly removed by the user
+          // (i.e., were in originalCommonTags but no longer in desiredTags)
+          // This preserves partial tags that the user never had control over
           existing.forEach((tag) => {
-            if (!desiredTags.has(tag)) {
+            if (explicitlyRemovedTags.has(tag)) {
               tagDeletes.push({ photo_id: photoId, tag });
             }
           });

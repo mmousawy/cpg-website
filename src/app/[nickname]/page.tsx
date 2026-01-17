@@ -11,12 +11,13 @@ import { notFound } from 'next/navigation';
 
 // Cached data functions
 import { getUserPublicAlbums } from '@/lib/data/albums';
+import type { StreamPhoto } from '@/lib/data/gallery';
 import {
-    getAllProfileNicknames,
-    getProfileByNickname,
-    getProfileStats,
-    getUserPublicPhotoCount,
-    getUserPublicPhotos,
+  getAllProfileNicknames,
+  getProfileByNickname,
+  getProfileStats,
+  getUserPublicPhotoCount,
+  getUserPublicPhotos,
 } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
 
@@ -82,7 +83,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   }
 
   // Now render the cached content
-  return <ProfileContent profile={profile} nickname={nickname} />;
+  return <ProfileContent
+    profile={profile}
+    nickname={nickname}
+  />;
 }
 
 // Separate cached component for the profile content
@@ -149,8 +153,18 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2 py-1 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
                     >
-                      <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      <svg
+                        className="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                        />
                       </svg>
                       {getDomain(profile.website)}
                     </a>
@@ -182,8 +196,18 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
                 >
-                  <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  <svg
+                    className="size-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                    />
                   </svg>
                   {getDomain(profile.website)}
                 </a>
@@ -231,7 +255,18 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
               Latest photos by @{profile.nickname}
             </p>
           </div>
-          <JustifiedPhotoGrid photos={publicPhotos} profileNickname={profile.nickname || nickname} />
+          <JustifiedPhotoGrid
+            photos={publicPhotos.map((photo) => ({
+              ...photo,
+              profile: {
+                nickname: profile.nickname || nickname,
+                full_name: profile.full_name,
+                avatar_url: profile.avatar_url,
+              },
+            })) as StreamPhoto[]}
+            profileNickname={profile.nickname || nickname}
+            showAttribution
+          />
         </WidePageContainer>
       )}
 

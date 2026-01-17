@@ -145,12 +145,12 @@ export default function InterestInput({
         />
 
         {/* Suggestions dropdown */}
-        {showSuggestions && suggestions.length > 0 && inputValue.trim() && !isMaxReached && (
+        {showSuggestions && suggestions.length > 0 && !isMaxReached && (
           <div
             ref={suggestionsRef}
-            className="absolute z-50 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
+            className="absolute z-30 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
           >
-            <ul className="max-h-48 overflow-y-auto py-1">
+            <ul className="max-h-48 overflow-y-auto p-1">
               {suggestions.map((interest, index) => (
                 <li key={interest.id}>
                   <button

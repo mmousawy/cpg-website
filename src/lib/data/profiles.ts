@@ -161,6 +161,7 @@ export async function getUserPublicPhotos(userId: string, nickname: string, limi
 
   const supabase = createPublicClient();
 
+  // Note: likes_count is now a column on the photos table (updated via triggers)
   const { data: photos } = await supabase
     .from('photos')
     .select('*')
@@ -172,7 +173,8 @@ export async function getUserPublicPhotos(userId: string, nickname: string, limi
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  return (photos || []) as Photo[];
+  // likes_count is already included in the photo object from the database
+  return photos || [];
 }
 
 /**
@@ -211,6 +213,7 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
   let eventsAttended = 0;
   let commentsMade = 0;
   let commentsReceived = 0;
+  let likesReceived = 0;
 
   // Get events attended count
   try {
@@ -242,6 +245,35 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
     }
   } catch {
     // Comments table might not exist
+  }
+
+  // Get likes received count (sum of likes_count from photos and albums)
+  try {
+    // Get user's photos with likes_count
+    const { data: userPhotos } = await supabase
+      .from('photos')
+      .select('likes_count')
+      .eq('user_id', userId)
+      .eq('is_public', true)
+      .is('deleted_at', null) as { data: Array<{ likes_count: number }> | null };
+
+    // Get user's albums with likes_count
+    const { data: userAlbums } = await supabase
+      .from('albums')
+      .select('likes_count')
+      .eq('user_id', userId)
+      .eq('is_public', true)
+      .is('deleted_at', null) as { data: Array<{ likes_count: number }> | null };
+
+    if (userPhotos) {
+      likesReceived += userPhotos.reduce((sum, photo) => sum + (photo.likes_count || 0), 0);
+    }
+
+    if (userAlbums) {
+      likesReceived += userAlbums.reduce((sum, album) => sum + (album.likes_count || 0), 0);
+    }
+  } catch {
+    // Likes tables might not exist
   }
 
   // Get comments received count
@@ -317,6 +349,7 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
     eventsAttended,
     commentsMade,
     commentsReceived,
+    likesReceived,
     memberSince,
   };
 }
@@ -368,10 +401,10 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     photo_count: (albumData.album_photos_active as any)?.[0]?.count ?? 0,
   };
 
-  // Get photo
+  // Get photo with tags
   const { data: photo } = await supabase
     .from('photos')
-    .select('*')
+    .select('*, tags:photo_tags(tag)')
     .eq('short_id', photoShortId)
     .is('deleted_at', null)
     .single();
@@ -448,10 +481,10 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
     return null;
   }
 
-  // Get photo (must be public, exclude event cover images)
+  // Get photo with tags (must be public, exclude event cover images)
   const { data: photo } = await supabase
     .from('photos')
-    .select('*')
+    .select('*, tags:photo_tags(tag)')
     .eq('short_id', photoShortId)
     .eq('user_id', profile.id)
     .eq('is_public', true)

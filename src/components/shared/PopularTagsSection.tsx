@@ -18,9 +18,12 @@ export default async function PopularTagsSection({ activeTag }: PopularTagsSecti
   }
 
   return (
-    <div className="mb-8">
+    <div className="">
       <h2 className="mb-3 text-xl font-semibold">Browse by tag</h2>
-      <TagCloud tags={popularTags} activeTag={activeTag} />
+      <TagCloud
+        tags={popularTags}
+        activeTag={activeTag}
+      />
     </div>
   );
 }

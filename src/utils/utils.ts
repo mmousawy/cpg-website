@@ -24,6 +24,28 @@ export function encodedRedirect(
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
 
+/**
+ * Format a date as "joined X days/months/years ago"
+ */
+export function formatJoinedDate(createdAt: string): string {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffMs = now.getTime() - created.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 1) {
+    return 'joined today';
+  } else if (diffDays < 30) {
+    return `joined ${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+  } else if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return `joined ${months} ${months === 1 ? 'month' : 'months'} ago`;
+  } else {
+    const years = Math.floor(diffDays / 365);
+    return `joined ${years} ${years === 1 ? 'year' : 'years'} ago`;
+  }
+}
+
 export default async function getImgDimensions(url: string): Promise<ImageDimensions> {
   return new Promise((resolve, reject) => {
     https.get(url, (response) => {

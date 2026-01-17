@@ -4,6 +4,7 @@
 /* Base/fallback: use system preference when JS is disabled */
 :root {
   --primary: #38785f;
+  --primary-light: #5a9c83;
   --primary-alt: #a6db93;
   --background: #f0f1f3;
   --background-medium: #f5f6f8;
@@ -20,6 +21,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     --primary: rgb(69, 146, 116);
+    --primary-light: rgb(95, 160, 135);
     --primary-alt: #58c287;
     --background: #171718;
     --background-medium: #1d1f20;
@@ -36,6 +38,7 @@
 /* Explicit light mode (set by next-themes via JS) */
 :root.light {
   --primary: #38785f;
+  --primary-light: #5a9c83;
   --primary-alt: #a6db93;
   --background: #f0f1f3;
   --background-medium: #f8f8f8;
@@ -51,6 +54,7 @@
 /* Explicit dark mode (set by next-themes via JS) */
 :root.dark {
   --primary: hsl(157, 36%, 42%);
+  --primary-light: rgb(95, 160, 135);
   --primary-alt: #58c287;
   --background: #171718;
   --background-medium: hsl(200, 2%, 10%);
@@ -65,6 +69,7 @@
 
 :root.midnight {
   --primary: hsl(157, 36%, 42%);
+  --primary-light: rgb(95, 160, 135);
   --primary-alt: #58c287;
   --background: #0d0d0e;
   --background-light: #1b1c1f;
