@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/mmousawy/cpg-website/compare/v1.5.1...v1.6.0) (2026-01-17)
+
+
+### Features
+
+* Add interests to onboarding, likes system, tags display, and code quality improvements ([f809be3](https://github.com/mmousawy/cpg-website/commit/f809be3f821acc12d2a5ebe22a6e0b68dcc6199c))
+
+
+### Bug Fixes
+
+* clean up package dependencies and remove husky integration ([11105a9](https://github.com/mmousawy/cpg-website/commit/11105a994b8e33826090f354b6b913c55568e12f))
+
 ## [1.5.1](https://github.com/mmousawy/cpg-website/compare/v1.5.0...v1.5.1) (2026-01-16)
 
 
