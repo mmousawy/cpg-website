@@ -44,7 +44,7 @@
 ### Configuration
 - `.vscode/settings.json` - Switched to ESLint for formatting (removed Prettier)
 - `eslint.config.mjs` - Added JSX formatting rules for props on new lines
-- `package.json` - Removed Prettier, updated lint-staged to use ESLint only
+- `package.json` - Removed Prettier
 
 ## Modified Files
 

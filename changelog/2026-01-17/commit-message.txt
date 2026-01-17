@@ -70,7 +70,6 @@ UI/UX improvements:
 Code formatting and quality:
 - Remove Prettier, switch to ESLint-only formatting
 - Add JSX formatting rules: props on new lines, content on own line
-- Update lint-staged to use ESLint only
 - Fix TypeScript errors related to `created_at` null handling in likes
   system
 - Update EventImage component prop types to handle href internally
