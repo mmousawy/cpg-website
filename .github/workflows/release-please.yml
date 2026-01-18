@@ -13,11 +13,16 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           release-type: node
           target-branch: main
+          config-file: release-please-config.json
           # Use PAT to allow the created PR to trigger CI workflow
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
