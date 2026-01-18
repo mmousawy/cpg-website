@@ -433,6 +433,7 @@ export function useAccountForm() {
         commentsMade: 0,
         commentsReceived: 0,
         likesReceived: 0,
+        viewsReceived: 0,
         likesMade: 0,
         rsvpsConfirmed: 0,
         rsvpsCanceled: 0,
