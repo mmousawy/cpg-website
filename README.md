@@ -145,11 +145,11 @@ npm run analyze   # Bundle analysis (webpack)
 
 The project uses [husky](https://typicode.github.io/husky/) to run checks before each commit:
 
-1. **Lint staged files** - ESLint runs on staged `.ts` and `.tsx` files
-2. **Type check** - Full TypeScript check (`tsc --noEmit`)
+1. **Lint staged files** - ESLint runs on staged `.ts` and `.tsx` files (warnings allowed, errors block)
+2. **Type check** - Full TypeScript check (`tsc --noEmit`) - warnings allowed, errors block
 3. **Unit tests** - Runs all Vitest tests
 
-If any check fails, the commit is blocked. To bypass (not recommended):
+Warnings are allowed, but errors will block the commit. To bypass (not recommended):
 
 ```bash
 git commit --no-verify -m "message"
@@ -157,12 +157,11 @@ git commit --no-verify -m "message"
 
 ### CI Pipeline
 
-On pull requests, GitHub Actions runs:
+On pull requests, GitHub Actions runs jobs in sequence:
 
-1. **Lint & Type Check** - Must pass before tests run
-2. **Unit Tests** - Vitest tests
-3. **Build** - Production build
-4. **E2E Tests** - Playwright tests
+1. **Lint & Type Check** - ESLint and TypeScript validation
+2. **Unit Tests** - Vitest tests (runs after lint/typecheck)
+3. **E2E Tests** - Playwright tests with production build (runs after unit tests)
 
 ## Project Structure
 
@@ -270,6 +269,11 @@ Deploy to Vercel:
 3. Configure Supabase OAuth redirect URLs for production
 4. Set up RLS and storage policies
 5. Cron jobs are automatically configured via `vercel.json` (runs daily at 8:00 AM UTC)
+
+**Deployment Strategy:**
+- Production deployments only occur from `release/*` branches
+- Main branch commits and PR previews do not trigger deployments
+- Release branches are automatically created when releases are published via release-please
 
 ## Roadmap
 
