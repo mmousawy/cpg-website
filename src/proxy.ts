@@ -1,14 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
-const blacklist = process.env.BLACKLIST_IPS?.split(",") || [];
+const blacklist = process.env.BLACKLIST_IPS?.split(',') || [];
 
 export default async function proxy(request: NextRequest) {
-  const ipAddress = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for");
+  const ipAddress = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for');
 
   // If IP address exists in blacklist, return 403
-  if (blacklist.includes(ipAddress || "")) {
-    return NextResponse.json({ message: "Blacklisted" }, { status: 403 });
+  if (blacklist.includes(ipAddress || '')) {
+    return NextResponse.json({ message: 'Blacklisted' }, { status: 403 });
   }
 
   let supabaseResponse = NextResponse.next({

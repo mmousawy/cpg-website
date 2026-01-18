@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useState } from "react";
+import { createContext, useState } from 'react';
 
 export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
 
@@ -19,8 +19,10 @@ export const ModalContext = createContext({} as {
 
 export default function ModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [title, setTitle] = useState<string>("Modal Title");
-  const [content, setContent] = useState<React.ReactNode>(<>Modal content</>);
+  const [title, setTitle] = useState<string>('Modal Title');
+  const [content, setContent] = useState<React.ReactNode>(<>
+    Modal content
+  </>);
   const [footer, setFooter] = useState<React.ReactNode>(null);
   const [size, setSize] = useState<ModalSize>('default');
 
@@ -50,7 +52,9 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   };
 
   return (
-    <ModalContext.Provider value={defaultValues}>
+    <ModalContext.Provider
+      value={defaultValues}
+    >
       {children}
     </ModalContext.Provider>
   );

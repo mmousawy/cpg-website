@@ -46,7 +46,7 @@ export default function AlbumGrid({
   albums,
   isOwner = false,
   variant,
-  className = "grid gap-3 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]",
+  className = 'grid gap-3 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]',
   onAlbumClick,
 }: AlbumGridProps) {
   const { profile } = useAuth();
@@ -74,10 +74,12 @@ export default function AlbumGrid({
   const batchLikesMap = batchLikesQuery.data || new Map<string, number>();
 
   return (
-    <div className={className}>
+    <div
+      className={className}
+    >
       {albums.map((album) => {
         // Get likes count from client-side batch fetch, fallback to server-provided column
-        const likesCount = batchLikesMap.get(album.slug) ?? (album as any).likes_count ?? 0;
+        const likesCount = batchLikesMap.get(album.slug) ?? album.likes_count ?? 0;
 
         return (
           <AlbumCard

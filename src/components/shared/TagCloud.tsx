@@ -36,7 +36,9 @@ export default function TagCloud({ tags, activeTag, className }: TagCloudProps) 
   }
 
   return (
-    <div className={clsx('flex flex-wrap gap-2 items-center', className)}>
+    <div
+      className={clsx('flex flex-wrap gap-2 items-center', className)}
+    >
       {tags.map((tag) => {
         const isActive = activeTag === tag.name;
 

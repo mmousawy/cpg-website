@@ -1,14 +1,14 @@
-import { CPGEvent } from "@/types/events";
-import dayjs from "dayjs";
+import { CPGEvent } from '@/types/events';
+import dayjs from 'dayjs';
 
 import {
   Button as EmailButton,
   Section,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-import Button from "@/components/shared/Button";
-import CalendarAddSVG from "public/icons/calendar-add-16.svg";
+import Button from '@/components/shared/Button';
+import CalendarAddSVG from 'public/icons/calendar-add-16.svg';
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = dayjs(`${event.date}T${event.time}`);
@@ -41,10 +41,18 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
 
   if (render === 'email') {
     return (
-      <Section className="mt-[30px]">
-        <Text className="!mt-0 text-[14px] leading-[24px] text-[#171717]">Add this event to your calendar:</Text>
+      <Section
+        className="mt-[30px]"
+      >
+        <Text
+          className="!mt-0 text-[14px] leading-[24px] text-[#171717]"
+        >
+          Add this event to your calendar:
+        </Text>
 
-        <div className="flex flex-col items-start gap-2">
+        <div
+          className="flex flex-col items-start gap-2"
+        >
           {/* Google */}
           <EmailButton
             href={calendarLinks.google}
@@ -75,16 +83,26 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
   }
 
   return (
-    <div className="flex flex-col gap-2 max-sm:gap-4">
-      <span className="text-sm text-foreground font-medium">Add this event to your calendar:</span>
+    <div
+      className="flex flex-col gap-2 max-sm:gap-4"
+    >
+      <span
+        className="text-sm text-foreground font-medium"
+      >
+        Add this event to your calendar:
+      </span>
 
-      <div className="flex items-start gap-2 max-sm:flex-col max-sm:gap-4">
+      <div
+        className="flex items-start gap-2 max-sm:flex-col max-sm:gap-4"
+      >
         {/* Google */}
         <Button
           href={calendarLinks.google}
           variant="secondary"
           size="sm"
-          icon={<CalendarAddSVG className="shrink-0" />}
+          icon={<CalendarAddSVG
+            className="shrink-0"
+          />}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -96,7 +114,9 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
           href={calendarLinks.outlook}
           variant="secondary"
           size="sm"
-          icon={<CalendarAddSVG className="shrink-0" />}
+          icon={<CalendarAddSVG
+            className="shrink-0"
+          />}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -108,7 +128,9 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
           href={calendarLinks.apple}
           variant="secondary"
           size="sm"
-          icon={<CalendarAddSVG className="shrink-0" />}
+          icon={<CalendarAddSVG
+            className="shrink-0"
+          />}
           download={`${event.title}.ics`}
         >
           Apple Calendar

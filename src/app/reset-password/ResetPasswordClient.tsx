@@ -73,13 +73,28 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <PageContainer className="items-center justify-center">
-        <Container padding="lg" className="mx-auto max-w-md text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-            <CheckSVG className="h-8 w-8 fill-green-500" />
+      <PageContainer
+        className="items-center justify-center"
+      >
+        <Container
+          padding="lg"
+          className="mx-auto max-w-md text-center"
+        >
+          <div
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10"
+          >
+            <CheckSVG
+              className="h-8 w-8 fill-green-500"
+            />
           </div>
-          <h1 className="mb-2 text-3xl font-bold">Password updated!</h1>
-          <p className="text-foreground/70">
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Password updated!
+          </h1>
+          <p
+            className="text-foreground/70"
+          >
             Your password has been successfully updated. Redirecting you to login...
           </p>
         </Container>
@@ -89,13 +104,26 @@ function ResetPasswordForm() {
 
   if (!hasToken) {
     return (
-      <PageContainer className="items-center justify-center">
-        <Container padding="lg" className="mx-auto max-w-md text-center">
-          <h1 className="mb-2 text-3xl font-bold">Invalid reset link</h1>
-          <p className="mb-6 text-foreground/70">
+      <PageContainer
+        className="items-center justify-center"
+      >
+        <Container
+          padding="lg"
+          className="mx-auto max-w-md text-center"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Invalid reset link
+          </h1>
+          <p
+            className="mb-6 text-foreground/70"
+          >
             This password reset link is invalid or has expired.
           </p>
-          <Button href={routes.forgotPassword.url}>
+          <Button
+            href={routes.forgotPassword.url}
+          >
             Request a new link
           </Button>
         </Container>
@@ -104,16 +132,35 @@ function ResetPasswordForm() {
   }
 
   return (
-    <PageContainer className="items-center justify-center">
-      <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-3xl font-bold">Set new password</h1>
-        <p className="mb-8 text-center text-sm text-foreground/70">
+    <PageContainer
+      className="items-center justify-center"
+    >
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
+        <h1
+          className="mb-2 text-center text-3xl font-bold"
+        >
+          Set new password
+        </h1>
+        <p
+          className="mb-8 text-center text-sm text-foreground/70"
+        >
           Enter your new password below.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-sm font-medium">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="password"
+              className="text-sm font-medium"
+            >
               New password
             </label>
             <Input
@@ -127,8 +174,13 @@ function ResetPasswordForm() {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="confirmPassword" className="text-sm font-medium">
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="confirmPassword"
+              className="text-sm font-medium"
+            >
               Confirm new password
             </label>
             <Input
@@ -143,7 +195,11 @@ function ResetPasswordForm() {
           </div>
 
           {error && (
-            <ErrorMessage variant="compact">{error}</ErrorMessage>
+            <ErrorMessage
+              variant="compact"
+            >
+              {error}
+            </ErrorMessage>
           )}
 
           <Button
@@ -162,7 +218,15 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordClient() {
   return (
-    <Suspense fallback={<PageContainer><Container><p>Loading...</p></Container></PageContainer>}>
+    <Suspense
+      fallback={<PageContainer>
+        <Container>
+          <p>
+            Loading...
+          </p>
+        </Container>
+      </PageContainer>}
+    >
       <ResetPasswordForm />
     </Suspense>
   );

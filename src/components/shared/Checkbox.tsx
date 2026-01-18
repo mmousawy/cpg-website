@@ -22,7 +22,9 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         htmlFor={id}
         className={labelClassName}
       >
-        <div className="relative">
+        <div
+          className="relative"
+        >
           <input
             ref={ref}
             type="checkbox"
@@ -44,10 +46,18 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             viewBox="0 0 24 24"
             strokeWidth={3}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
-        {label && <span className="text-sm">{label}</span>}
+        {label && <span
+          className="text-sm"
+        >
+          {label}
+        </span>}
       </label>
     );
   },

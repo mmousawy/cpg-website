@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { AlbumWithPhotos } from '@/types/albums';
+import type { Tables } from '@/database.types';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -61,15 +62,25 @@ export async function GET(request: NextRequest) {
   }
 
   // Filter out albums with no photos
-  const albumsWithPhotos = ((albums || []) as any[])
-    .filter((album) => album.photos && album.photos.length > 0);
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url'>;
+  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'>;
+  type AlbumQueryResult = AlbumRow & {
+    profile: ProfileRow | null;
+    photos: Array<AlbumPhotoActive> | null;
+  };
+
+  const albumsWithPhotos = (albums || [])
+    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { photos: Array<AlbumPhotoActive> } => {
+      return !!album.photos && album.photos.length > 0;
+    });
 
   // Check if there are more by seeing if we got more than requested
   const hasMore = albumsWithPhotos.length > limit;
   const albumsToReturn = hasMore ? albumsWithPhotos.slice(0, limit) : albumsWithPhotos;
 
   return NextResponse.json({
-    albums: albumsToReturn as unknown as AlbumWithPhotos[],
+    albums: albumsToReturn as AlbumWithPhotos[],
     hasMore,
   });
 }

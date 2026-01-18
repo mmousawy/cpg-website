@@ -1,10 +1,12 @@
 'use client';
 
 import Input from '@/components/shared/Input';
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingNicknameSectionProps {
-  register: any;
-  errors: any;
+  register: UseFormRegister<OnboardingFormData>;
+  errors: FieldErrors<OnboardingFormData>;
   watchedNickname: string;
   isCheckingNickname: boolean;
   nicknameAvailable: boolean | null;

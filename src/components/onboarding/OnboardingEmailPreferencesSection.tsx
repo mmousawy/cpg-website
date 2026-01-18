@@ -1,13 +1,14 @@
 'use client';
 
-import { Controller } from 'react-hook-form';
+import { Controller, Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import Checkbox from '@/components/shared/Checkbox';
 import type { EmailTypeData } from '@/utils/emailPreferencesClient';
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingEmailPreferencesSectionProps {
-  control: any;
-  watch: (name: string) => any;
-  setValue: any;
+  control: Control<OnboardingFormData>;
+  watch: UseFormWatch<OnboardingFormData>;
+  setValue: UseFormSetValue<OnboardingFormData>;
   emailTypes: EmailTypeData[];
   isLoadingEmailTypes: boolean;
 }

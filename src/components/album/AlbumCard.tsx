@@ -37,8 +37,12 @@ export default function AlbumCard({
     : `/@${album.profile?.nickname || 'unknown'}/album/${album.slug}`;
 
   const cardContent = (
-    <div className="group block overflow-hidden border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong">
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background">
+    <div
+      className="group block overflow-hidden border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong"
+    >
+      <div
+        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
+      >
         {coverImage ? (
           <Image
             src={coverImage}
@@ -50,11 +54,15 @@ export default function AlbumCard({
             className="object-cover transition-transform duration-200"
           />
         ) : (
-          <FolderSVG className="size-16 text-foreground/20" />
+          <FolderSVG
+            className="size-16 text-foreground/20"
+          />
         )}
 
         {/* Likes overlay */}
-        <CardLikes likesCount={likesCount ?? (album as any).likesCount ?? 0} />
+        <CardLikes
+          likesCount={likesCount ?? album.likes_count ?? 0}
+        />
 
         {/* Compact variant: hover overlays */}
         {variant === 'compact' && (
@@ -68,7 +76,9 @@ export default function AlbumCard({
               }}
             />
             {/* Top gradient overlay */}
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
+            <div
+              className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+            />
 
             {/* Bottom blur layer with gradient mask */}
             <div
@@ -79,32 +89,49 @@ export default function AlbumCard({
               }}
             />
             {/* Bottom gradient overlay */}
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100" />
+            <div
+              className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+            />
 
             {/* Title - top left, visible on hover */}
-            <div className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
-              <h3 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md">
+            <div
+              className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+            >
+              <h3
+                className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
+              >
                 {album.title}
               </h3>
               {/* Photo count - top right, visible on hover */}
               {photoCount > 0 && (
-                <div className="text-xs text-white opacity-70">
-                  {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+                <div
+                  className="text-xs text-white opacity-70"
+                >
+                  {photoCount}
+                  {' '}
+                  {photoCount === 1 ? 'photo' : 'photos'}
                 </div>
               )}
             </div>
 
             {/* Bottom info bar - visible on hover, with right padding for likes */}
-            <div className="absolute bottom-0 left-0 right-12 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100">
+            <div
+              className="absolute bottom-0 left-0 right-12 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+            >
               {/* Nickname - bottom left */}
               {album.profile && (
-                <div className="flex items-center gap-1 text-xs text-white drop-shadow-md">
+                <div
+                  className="flex items-center gap-1 text-xs text-white drop-shadow-md"
+                >
                   <Avatar
                     avatarUrl={album.profile.avatar_url}
                     fullName={album.profile.full_name}
                     size="xxs"
                   />
-                  <span>@{album.profile.nickname}</span>
+                  <span>
+                    @
+                    {album.profile.nickname}
+                  </span>
                 </div>
               )}
             </div>
@@ -113,33 +140,58 @@ export default function AlbumCard({
 
         {/* Badges - on image for compact variant */}
         {variant === 'compact' && !album.is_public && isOwner && (
-          <CardBadges badges={[{ label: 'Private', className: 'px-2 py-0.5', variant: 'private' }]} />
+          <CardBadges
+            badges={[{ label: 'Private', className: 'px-2 py-0.5', variant: 'private' }]}
+          />
         )}
       </div>
 
       {/* Large variant: info section below image */}
       {variant === 'large' && (
-        <div className="p-2.5">
-          <h3 className="text-sm font-semibold line-clamp-1">{album.title}</h3>
-          <div className="flex items-center justify-between mt-1.5">
+        <div
+          className="p-2.5"
+        >
+          <h3
+            className="text-sm font-semibold line-clamp-1"
+          >
+            {album.title}
+          </h3>
+          <div
+            className="flex items-center justify-between mt-1.5"
+          >
             {album.profile && (
-              <div className="flex items-center gap-1.5 text-xs text-foreground/70">
+              <div
+                className="flex items-center gap-1.5 text-xs text-foreground/70"
+              >
                 <Avatar
                   avatarUrl={album.profile.avatar_url}
                   fullName={album.profile.full_name}
                   size="xxs"
                 />
-                <span>@{album.profile.nickname}</span>
+                <span>
+                  @
+                  {album.profile.nickname}
+                </span>
               </div>
             )}
             {photoCount > 0 && (
-              <div className="text-xs text-foreground/50">
-                {photoCount} <span className="hidden sm:inline">{photoCount === 1 ? 'photo' : 'photos'}</span>
+              <div
+                className="text-xs text-foreground/50"
+              >
+                {photoCount}
+                {' '}
+                <span
+                  className="hidden sm:inline"
+                >
+                  {photoCount === 1 ? 'photo' : 'photos'}
+                </span>
               </div>
             )}
           </div>
           {!album.is_public && isOwner && (
-            <span className="mt-2 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+            <span
+              className="mt-2 inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200"
+            >
               Private
             </span>
           )}

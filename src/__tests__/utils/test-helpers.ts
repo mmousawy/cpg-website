@@ -16,13 +16,24 @@ export function createTestSupabaseClient() {
   return createAdminClient();
 }
 
+type TestUser = {
+  id: string;
+  email: string;
+  [key: string]: unknown;
+};
+
 /**
  * Get test user by email
  */
-export async function getTestUserByEmail(email: string) {
+export async function getTestUserByEmail(email: string): Promise<TestUser | undefined> {
   const adminSupabase = createTestSupabaseClient();
   const { data: users } = await adminSupabase.auth.admin.listUsers();
-  return users?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  const user = users?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  if (!user) return undefined;
+  return {
+    email: user.email || '',
+    ...user,
+  };
 }
 
 /**
@@ -55,8 +66,8 @@ export async function cleanupTestUser(userId: string): Promise<void> {
 export async function waitForUserCreation(
   email: string,
   maxAttempts = 10,
-  delayMs = 500
-): Promise<any> {
+  delayMs = 500,
+): Promise<TestUser> {
   for (let i = 0; i < maxAttempts; i++) {
     const user = await getTestUserByEmail(email);
     if (user) {

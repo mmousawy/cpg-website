@@ -36,7 +36,9 @@ export default function LoadingSpinner({ size = 'md', centered = false, classNam
 
   if (centered) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div
+        className="flex items-center justify-center py-12"
+      >
         {spinner}
       </div>
     );

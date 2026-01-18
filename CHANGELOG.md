@@ -12,6 +12,11 @@
 
 * Update types. ([eff66c1](https://github.com/mmousawy/cpg-website/commit/eff66c12c231685708439ae2ddf93ae9e5f0cc7a))
 
+
+### Code Quality
+
+* Eliminate all `any` types and fix eslint-disable comments - Remove all 147 instances of `any` types, fix 18 eslint-disable comments, add proper types for Supabase queries, React Hook Form props, error handling, and callback parameters. Result: 0 TypeScript errors, improved type safety throughout.
+
 ## [1.6.1](https://github.com/mmousawy/cpg-website/compare/v1.6.0...v1.6.1) (2026-01-18)
 
 

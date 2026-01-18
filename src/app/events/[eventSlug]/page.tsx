@@ -74,7 +74,9 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 }) {
   if (!attendees || attendees.length === 0) {
     return (
-      <div className='text-sm font-semibold text-foreground/70 leading-6'>
+      <div
+        className='text-sm font-semibold text-foreground/70 leading-6'
+      >
         {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
       </div>
     );
@@ -82,35 +84,45 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 
   const attendeesWithAvatars = attendees.map((attendee) => {
     const customAvatar = attendee.profiles?.avatar_url;
-    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest("hex")}?s=64`;
+    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
     return { ...attendee, avatarUrl: customAvatar || gravatarUrl };
   });
 
   return (
-    <div className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'>
-      <div className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44' dir="rtl">
+    <div
+      className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'
+    >
+      <div
+        className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44'
+        dir="rtl"
+      >
         {attendeesWithAvatars.map((attendee, idx) => (
           <Image
             key={`${attendee.id}_${idx}`}
             width={32}
             height={32}
             className={clsx([
-              attendeesWithAvatars.length > 1 && "-mr-2",
-              "size-8 rounded-full object-cover",
+              attendeesWithAvatars.length > 1 && '-mr-2',
+              'size-8 rounded-full object-cover',
             ])}
             src={attendee.avatarUrl}
             alt="Avatar"
           />
         ))}
-        <div className={clsx([
-          "absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light",
-          attendeesWithAvatars.length < 20 && "invisible",
-          attendeesWithAvatars.length > 7 && "max-xs:visible",
-          attendeesWithAvatars.length > 12 && "max-md:visible",
-          attendeesWithAvatars.length > 16 && "!visible",
-        ])} />
+        <div
+          className={clsx([
+            'absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light',
+            attendeesWithAvatars.length < 20 && 'invisible',
+            attendeesWithAvatars.length > 7 && 'max-xs:visible',
+            attendeesWithAvatars.length > 12 && 'max-md:visible',
+            attendeesWithAvatars.length > 16 && '!visible',
+          ])}
+        />
       </div>
-      {attendeesWithAvatars.length} attendee{attendeesWithAvatars.length === 1 ? '' : 's'}
+      {attendeesWithAvatars.length}
+      {' '}
+      attendee
+      {attendeesWithAvatars.length === 1 ? '' : 's'}
     </div>
   );
 }
@@ -133,7 +145,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   }
 
   // Pass to cached content component
-  return <CachedEventContent event={event} serverNow={serverNow} />;
+  return <CachedEventContent
+    event={event}
+    serverNow={serverNow}
+  />;
 }
 
 // Separate cached component for the content
@@ -178,34 +193,52 @@ async function CachedEventContent({
     <>
       {/* Hero Section with Cover Image */}
       {(event.cover_image || event.image_url) && (
-        <div className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div
+          className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden"
+        >
+          <Image
             src={event.cover_image || event.image_url!}
             alt={event.title || 'Event cover'}
-            className="absolute inset-0 size-full object-cover"
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
           />
 
           {/* Frosted glass blur layer with eased gradient mask */}
-          <div className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong" />
+          <div
+            className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
+          />
 
           {/* Eased gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong" />
+          <div
+            className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"
+          />
 
           {/* Title overlay */}
-          <div className="absolute inset-x-0 bottom-0 px-4 pb-0 sm:px-8 sm:pb-4">
-            <div className="mx-auto max-w-screen-md">
+          <div
+            className="absolute inset-x-0 bottom-0 px-4 pb-0 sm:px-8 sm:pb-4"
+          >
+            <div
+              className="mx-auto max-w-screen-md"
+            >
               {isPastEvent && (
-                <span className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
+                <span
+                  className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm"
+                >
                   Past event
                 </span>
               )}
               {!isPastEvent && (
-                <span className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary backdrop-blur-sm">
+                <span
+                  className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary backdrop-blur-sm"
+                >
                   Upcoming event
                 </span>
               )}
-              <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">
+              <h1
+                className="text-3xl font-bold sm:text-4xl md:text-5xl"
+              >
                 {event.title}
               </h1>
             </div>
@@ -213,63 +246,118 @@ async function CachedEventContent({
         </div>
       )}
 
-      <PageContainer className={(event.cover_image || event.image_url) ? '!pt-6 sm:!pt-8' : ''}>
+      <PageContainer
+        className={(event.cover_image || event.image_url) ? '!pt-6 sm:!pt-8' : ''}
+      >
         <Container>
           {/* Title (if no cover image) */}
           {!(event.cover_image || event.image_url) && (
-            <div className="mb-6">
+            <div
+              className="mb-6"
+            >
               {isPastEvent && (
-                <span className="mb-2 inline-block rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium">
+                <span
+                  className="mb-2 inline-block rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium"
+                >
                   Past event
                 </span>
               )}
-              <h1 className="text-3xl font-bold sm:text-4xl">{event.title}</h1>
+              <h1
+                className="text-3xl font-bold sm:text-4xl"
+              >
+                {event.title}
+              </h1>
             </div>
           )}
 
           {/* Event Info - Date, Time, Location */}
-          <div className="mb-8 space-y-3">
+          <div
+            className="mb-8 space-y-3"
+          >
             {/* Date & Time */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <span className="flex items-center gap-2 text-[15px] font-semibold">
-                <CalendarSVG className="size-5 shrink-0 fill-foreground" />
+            <div
+              className="flex flex-wrap items-center gap-x-6 gap-y-2"
+            >
+              <span
+                className="flex items-center gap-2 text-[15px] font-semibold"
+              >
+                <CalendarSVG
+                  className="size-5 shrink-0 fill-foreground"
+                />
                 {formattedDate}
               </span>
-              <span className="flex items-center gap-2 text-[15px] font-semibold">
-                <TimeSVG className="size-5 shrink-0 fill-foreground" />
+              <span
+                className="flex items-center gap-2 text-[15px] font-semibold"
+              >
+                <TimeSVG
+                  className="size-5 shrink-0 fill-foreground"
+                />
                 {formattedTime}
               </span>
             </div>
 
             {/* Location */}
             {event.location && (
-              <div className="flex items-start gap-2 text-[15px] font-semibold">
-                <LocationSVG className="size-5 shrink-0 fill-foreground mt-0.5" />
-                <span className="whitespace-pre-wrap">{event.location}</span>
+              <div
+                className="flex items-start gap-2 text-[15px] font-semibold"
+              >
+                <LocationSVG
+                  className="size-5 shrink-0 fill-foreground mt-0.5"
+                />
+                <span
+                  className="whitespace-pre-wrap"
+                >
+                  {event.location}
+                </span>
               </div>
             )}
 
             {/* Capacity info */}
             {event.max_attendees && (
-              <p className="text-sm text-foreground/70">
-                {event.rsvp_count || 0} / {event.max_attendees} spots filled
+              <p
+                className="text-sm text-foreground/70"
+              >
+                {event.rsvp_count || 0}
+                {' '}
+                /
+                {event.max_attendees}
+                {' '}
+                spots filled
               </p>
             )}
           </div>
 
           {/* Description Section */}
           {event.description && (
-            <div className="mb-8">
-              <h2 className="mb-3 text-lg font-semibold">About this event</h2>
-              <p className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]">{event.description}</p>
+            <div
+              className="mb-8"
+            >
+              <h2
+                className="mb-3 text-lg font-semibold"
+              >
+                About this event
+              </h2>
+              <p
+                className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]"
+              >
+                {event.description}
+              </p>
             </div>
           )}
 
           {/* Hosts Section */}
           {hosts && hosts.length > 0 && (
-            <div className="mb-8">
-              <h2 className="mb-3 text-lg font-semibold">Hosts</h2>
-              <div className="flex flex-wrap gap-4">
+            <div
+              className="mb-8"
+            >
+              <h2
+                className="mb-3 text-lg font-semibold"
+              >
+                Hosts
+              </h2>
+              <div
+                className="flex flex-wrap gap-4"
+              >
                 {hosts.map((host) => (
                   <Link
                     key={host.id}
@@ -283,12 +371,17 @@ async function CachedEventContent({
                       hoverEffect
                     />
                     <div>
-                      <p className="font-medium group-hover:text-primary transition-colors">
+                      <p
+                        className="font-medium group-hover:text-primary transition-colors"
+                      >
                         {host.full_name || 'Host'}
                       </p>
                       {host.nickname && (
-                        <p className="text-sm opacity-70 group-hover:opacity-100 group-hover:text-primary transition-colors">
-                          @{host.nickname}
+                        <p
+                          className="text-sm opacity-70 group-hover:opacity-100 group-hover:text-primary transition-colors"
+                        >
+                          @
+                          {host.nickname}
                         </p>
                       )}
                     </div>
@@ -300,25 +393,43 @@ async function CachedEventContent({
 
           {/* Add to Calendar */}
           {!isPastEvent && (
-            <div className="mb-8">
-              <AddToCalendar event={event} />
+            <div
+              className="mb-8"
+            >
+              <AddToCalendar
+                event={event}
+              />
             </div>
           )}
 
           {/* Attendees Section */}
           <div>
-            <h2 className="mb-3 text-lg font-semibold">Attendees</h2>
-            <AttendeesDisplay attendees={attendees || []} isPastEvent={isPastEvent} />
+            <h2
+              className="mb-3 text-lg font-semibold"
+            >
+              Attendees
+            </h2>
+            <AttendeesDisplay
+              attendees={attendees || []}
+              isPastEvent={isPastEvent}
+            />
           </div>
         </Container>
       </PageContainer>
 
       {/* Sticky Action Bar - only show for upcoming events */}
-      {!isPastEvent && <EventSignupBar event={event} />}
+      {!isPastEvent && <EventSignupBar
+        event={event}
+      />}
 
       {/* Comments Section */}
-      <PageContainer variant="alt" className="border-t border-t-border-color">
-        <EventComments eventId={String(event.id)} />
+      <PageContainer
+        variant="alt"
+        className="border-t border-t-border-color"
+      >
+        <EventComments
+          eventId={String(event.id)}
+        />
       </PageContainer>
 
     </>

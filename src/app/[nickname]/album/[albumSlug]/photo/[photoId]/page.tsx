@@ -73,7 +73,10 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
   }
 
   // Pass to cached content component
-  return <CachedAlbumPhotoContent result={result} nickname={nickname} />;
+  return <CachedAlbumPhotoContent
+    result={result}
+    nickname={nickname}
+  />;
 }
 
 // Separate cached component for the content

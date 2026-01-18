@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase/client';
 import type { AlbumWithPhotos } from '@/types/albums';
+import type { Tables } from '@/database.types';
 
 async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
 
@@ -31,10 +32,22 @@ async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
     throw new Error(error.message || 'Failed to fetch albums');
   }
 
+  type AlbumPhotoRow = Pick<Tables<'album_photos'>, 'id' | 'photo_url'>;
+  type PhotoRow = Pick<Tables<'photos'>, 'deleted_at'>;
+  type AlbumPhotoWithPhoto = AlbumPhotoRow & {
+    photo: PhotoRow | null;
+  };
+
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'user_id'>;
+  type AlbumQueryResult = AlbumRow & {
+    photos: AlbumPhotoWithPhoto[] | null;
+    tags: Array<{ tag: string }> | null;
+  };
+
   // Filter out deleted photos from albums
-  const albumsWithFilteredPhotos = ((data || []) as any[]).map((album) => ({
+  const albumsWithFilteredPhotos = (data || []).map((album: AlbumQueryResult) => ({
     ...album,
-    photos: (album.photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+    photos: (album.photos || []).filter((ap) => !ap.photo?.deleted_at),
   }));
 
   return albumsWithFilteredPhotos as unknown as AlbumWithPhotos[];
@@ -77,10 +90,23 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
     throw new Error(error.message || 'Failed to fetch album');
   }
 
+  type AlbumPhotoRow = Pick<Tables<'album_photos'>, 'id' | 'photo_url'>;
+  type PhotoRow = Pick<Tables<'photos'>, 'deleted_at'>;
+  type AlbumPhotoWithPhoto = AlbumPhotoRow & {
+    photo: PhotoRow | null;
+  };
+
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'user_id'>;
+  type AlbumQueryResult = AlbumRow & {
+    photos: AlbumPhotoWithPhoto[] | null;
+    tags: Array<{ tag: string }> | null;
+  };
+
   // Filter out deleted photos from album
+  const typedData = data as AlbumQueryResult;
   const albumWithFilteredPhotos = {
-    ...data,
-    photos: ((data as any).photos || []).filter((ap: any) => !ap.photo?.deleted_at),
+    ...typedData,
+    photos: (typedData.photos || []).filter((ap) => !ap.photo?.deleted_at),
   };
 
   return albumWithFilteredPhotos as unknown as AlbumWithPhotos;

@@ -1,6 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { Tables } from '@/database.types';
 import Button from '@/components/shared/Button';
@@ -231,10 +232,11 @@ export default function MemberTable({
                         className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-primary/20"
                       >
                         {member.avatar_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={member.avatar_url}
                             alt=""
+                            width={40}
+                            height={40}
                             className="h-full w-full object-cover"
                           />
                         ) : (

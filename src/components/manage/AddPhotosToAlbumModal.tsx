@@ -72,40 +72,37 @@ export default function AddPhotosToAlbumModal({
   useEffect(() => {
     setSelectedAlbumIds(new Set());
     setError(null);
-    if (user) {
-      fetchAlbums();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photos, user]);
-
-  const fetchAlbums = async () => {
     if (!user) return;
 
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('albums')
-        .select('id, title, slug, cover_image_url, album_photos_active(count)')
-        .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(50);
+    const fetchAlbums = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('albums')
+          .select('id, title, slug, cover_image_url, album_photos_active(count)')
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      if (error) {
-        console.error('Error fetching albums:', error);
-      } else {
-        // Transform to include photo_count
-        const albumsWithCount = (data || []).map((album: any) => ({
-          ...album,
-          photo_count: album.album_photos_active?.[0]?.count ?? 0,
-        }));
-        setAlbums(albumsWithCount as AlbumWithCount[]);
+        if (error) {
+          console.error('Error fetching albums:', error);
+        } else {
+          // Transform to include photo_count
+          const albumsWithCount = (data || []).map((album) => ({
+            ...album,
+            photo_count: (album.album_photos_active as Array<{ count: number }>)?.[0]?.count ?? 0,
+          })) as unknown as AlbumWithCount[];
+          setAlbums(albumsWithCount);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
       }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-    setIsLoading(false);
-  };
+      setIsLoading(false);
+    };
+
+    fetchAlbums();
+  }, [photos, user, supabase]);
 
   const handleToggleAlbum = (albumId: string) => {
     setSelectedAlbumIds((prev) => {
@@ -147,9 +144,10 @@ export default function AddPhotosToAlbumModal({
       setAlbums([newAlbum as Album, ...albums]);
       setSelectedAlbumIds((prev) => new Set([...prev, newAlbum.id]));
       setNewAlbumTitle('');
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create album';
       console.error('Error creating album:', err);
-      setError(err.message || 'Failed to create album');
+      setError(message);
     } finally {
       setIsCreatingAlbum(false);
     }
@@ -203,8 +201,9 @@ export default function AddPhotosToAlbumModal({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add photos to albums');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add photos to albums';
+      setError(message);
     } finally {
       setIsAdding(false);
     }
@@ -213,8 +212,14 @@ export default function AddPhotosToAlbumModal({
   // Set footer with action buttons
   useEffect(() => {
     modalContext.setFooter(
-      <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={onClose} disabled={isAdding}>
+      <div
+        className="flex justify-end gap-2"
+      >
+        <Button
+          variant="secondary"
+          onClick={onClose}
+          disabled={isAdding}
+        >
           Cancel
         </Button>
         <Button
@@ -226,46 +231,88 @@ export default function AddPhotosToAlbumModal({
         </Button>
       </div>,
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAlbumIds.size, isAdding, onClose]);
+  }, [selectedAlbumIds.size, isAdding, onClose, modalContext]);
 
   return (
-    <div className="flex flex-col select-none">
-      <div className="mb-4">
-        <p className="text-sm text-foreground/80">Selected {photos.length} photos</p>
+    <div
+      className="flex flex-col select-none"
+    >
+      <div
+        className="mb-4"
+      >
+        <p
+          className="text-sm text-foreground/80"
+        >
+          Selected
+          {photos.length}
+          {' '}
+          photos
+        </p>
       </div>
 
       {/* Preview of photos being added */}
-      <div className="mb-4 grid min-h-12.5 max-h-[30svh] md:grid-cols-2 gap-2 overflow-y-auto">
+      <div
+        className="mb-4 grid min-h-12.5 max-h-[30svh] md:grid-cols-2 gap-2 overflow-y-auto"
+      >
         {photos.map((photo) => (
-          <PhotoListItem key={photo.id} photo={photo} variant="compact" />
+          <PhotoListItem
+            key={photo.id}
+            photo={photo}
+            variant="compact"
+          />
         ))}
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+        <div
+          className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500"
+        >
           {error}
         </div>
       )}
 
-      <p className="mb-4 text-sm text-foreground/80">
-          Select which album(s) to add {photos.length === 1 ? 'this photo' : `these photos`} to:
+      <p
+        className="mb-4 text-sm text-foreground/80"
+      >
+        Select which album(s) to add
+        {' '}
+        {photos.length === 1 ? 'this photo' : 'these photos'}
+        {' '}
+        to:
       </p>
 
-      <div className="mb-4 flex-1">
+      <div
+        className="mb-4 flex-1"
+      >
         {isLoading ? (
-          <div className="h-14 flex items-center justify-center text-center">
-            <p className="text-foreground/50">Loading albums...</p>
+          <div
+            className="h-14 flex items-center justify-center text-center"
+          >
+            <p
+              className="text-foreground/50"
+            >
+              Loading albums...
+            </p>
           </div>
         ) : albums.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="mb-4 text-foreground/80">No albums yet</p>
-            <p className="text-sm text-foreground/50">
+          <div
+            className="py-8 text-center"
+          >
+            <p
+              className="mb-4 text-foreground/80"
+            >
+              No albums yet
+            </p>
+            <p
+              className="text-sm text-foreground/50"
+            >
               Create your first album below
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-3">
+          <div
+            className="grid md:grid-cols-2 gap-3"
+          >
             {albums.map((album) => {
               const isAlreadyAdded = albumsWithAllPhotos.has(album.id);
               const isSelected = isAlreadyAdded || selectedAlbumIds.has(album.id);
@@ -283,7 +330,9 @@ export default function AddPhotosToAlbumModal({
                   )}
                 >
                   {/* Album thumbnail - matches AlbumMiniCard */}
-                  <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background">
+                  <div
+                    className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background"
+                  >
                     {album.cover_image_url ? (
                       <Image
                         src={album.cover_image_url}
@@ -293,14 +342,27 @@ export default function AddPhotosToAlbumModal({
                         sizes="56px"
                       />
                     ) : (
-                      <FolderSVG className="size-6 text-foreground/30" />
+                      <FolderSVG
+                        className="size-6 text-foreground/30"
+                      />
                     )}
                   </div>
-                  <div className="ml-2 flex flex-1 flex-col gap-0.5">
-                    <span className="text-sm font-medium line-clamp-2 leading-none">{album.title}</span>
+                  <div
+                    className="ml-2 flex flex-1 flex-col gap-0.5"
+                  >
+                    <span
+                      className="text-sm font-medium line-clamp-2 leading-none"
+                    >
+                      {album.title}
+                    </span>
                     {album.photo_count !== undefined && (
-                      <span className="text-xs text-foreground/50">
-                        {album.photo_count} photo{album.photo_count !== 1 ? 's' : ''}
+                      <span
+                        className="text-xs text-foreground/50"
+                      >
+                        {album.photo_count}
+                        {' '}
+                        photo
+                        {album.photo_count !== 1 ? 's' : ''}
                       </span>
                     )}
                   </div>
@@ -318,11 +380,17 @@ export default function AddPhotosToAlbumModal({
       </div>
 
       {/* Create new album */}
-      <div className="pl-3 py-1 border-l-2 border-border-color-strong">
-        <label className="mb-2 block text-sm text-foreground/80">
+      <div
+        className="pl-3 py-1 border-l-2 border-border-color-strong"
+      >
+        <label
+          className="mb-2 block text-sm text-foreground/80"
+        >
           Or create a new album
         </label>
-        <div className="flex gap-2">
+        <div
+          className="flex gap-2"
+        >
           <Input
             type="text"
             value={newAlbumTitle}
@@ -342,9 +410,15 @@ export default function AddPhotosToAlbumModal({
             disabled={!newAlbumTitle.trim() || isCreatingAlbum}
             loading={isCreatingAlbum}
             size="sm"
-            icon={<PlusSVG className="size-4" />}
+            icon={<PlusSVG
+              className="size-4"
+            />}
           >
-            <span className="hidden md:block">Create</span>
+            <span
+              className="hidden md:block"
+            >
+              Create
+            </span>
           </Button>
         </div>
       </div>

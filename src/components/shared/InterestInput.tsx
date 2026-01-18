@@ -101,10 +101,14 @@ export default function InterestInput({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div
+      className="flex flex-col gap-2"
+    >
       {/* Selected interests */}
       {interests.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div
+          className="flex flex-wrap gap-2"
+        >
           {interests.map((interest) => (
             <span
               key={interest}
@@ -118,7 +122,9 @@ export default function InterestInput({
                 aria-label={`Remove ${interest} interest`}
                 disabled={disabled}
               >
-                <CloseSVG className="size-3.5 fill-foreground" />
+                <CloseSVG
+                  className="size-3.5 fill-foreground"
+                />
               </button>
             </span>
           ))}
@@ -126,7 +132,9 @@ export default function InterestInput({
       )}
 
       {/* Input with autocomplete */}
-      <div className="relative">
+      <div
+        className="relative"
+      >
         <Input
           ref={inputRef}
           id={id}
@@ -150,9 +158,13 @@ export default function InterestInput({
             ref={suggestionsRef}
             className="absolute z-30 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
           >
-            <ul className="max-h-48 overflow-y-auto p-1">
+            <ul
+              className="max-h-48 overflow-y-auto p-1"
+            >
               {suggestions.map((interest, index) => (
-                <li key={interest.id}>
+                <li
+                  key={interest.id}
+                >
                   <button
                     type="button"
                     className={`w-full px-3 py-2 text-left text-sm hover:bg-foreground/5 ${
@@ -161,8 +173,18 @@ export default function InterestInput({
                     onClick={() => handleSuggestionClick(interest)}
                     onMouseEnter={() => setHighlightedIndex(index)}
                   >
-                    <span className="font-medium">{interest.name}</span>
-                    <span className="ml-2 text-foreground/50">({interest.count || 0})</span>
+                    <span
+                      className="font-medium"
+                    >
+                      {interest.name}
+                    </span>
+                    <span
+                      className="ml-2 text-foreground/50"
+                    >
+                      (
+                      {interest.count || 0}
+                      )
+                    </span>
                   </button>
                 </li>
               ))}
@@ -172,7 +194,11 @@ export default function InterestInput({
       </div>
 
       {/* Helper text */}
-      {helperText && <p className="text-xs text-foreground/50">{helperText}</p>}
+      {helperText && <p
+        className="text-xs text-foreground/50"
+      >
+        {helperText}
+      </p>}
     </div>
   );
 }

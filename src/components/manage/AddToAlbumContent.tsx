@@ -32,34 +32,32 @@ export default function AddToAlbumContent({
 
   useEffect(() => {
     if (!user) return;
-    fetchPhotos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
-  const fetchPhotos = async () => {
-    if (!user) return;
+    const fetchPhotos = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('photos')
+          .select('*')
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .not('storage_path', 'like', 'events/%')
+          .order('created_at', { ascending: false })
+          .limit(100);
 
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('*')
-        .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .not('storage_path', 'like', 'events/%')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) {
-        console.error('Error fetching photos:', error);
-      } else {
-        setPhotos((data || []) as Photo[]);
+        if (error) {
+          console.error('Error fetching photos:', error);
+        } else {
+          setPhotos((data || []) as Photo[]);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
       }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-    setIsLoading(false);
-  };
+      setIsLoading(false);
+    };
+
+    fetchPhotos();
+  }, [user, supabase]);
 
   // Filter out photos already in the album
   const availablePhotos = useMemo(
@@ -118,8 +116,9 @@ export default function AddToAlbumContent({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add photos to album');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add photos to album';
+      setError(message);
     } finally {
       setIsAdding(false);
     }
@@ -128,8 +127,14 @@ export default function AddToAlbumContent({
   // Set footer with action buttons
   useEffect(() => {
     modalContext.setFooter(
-      <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={onClose} disabled={isAdding}>
+      <div
+        className="flex justify-end gap-2"
+      >
+        <Button
+          variant="secondary"
+          onClick={onClose}
+          disabled={isAdding}
+        >
           Cancel
         </Button>
         <Button
@@ -137,29 +142,50 @@ export default function AddToAlbumContent({
           disabled={isAdding || selectedPhotoIds.size === 0}
           loading={isAdding}
         >
-          Add {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}photo{selectedPhotoIds.size !== 1 ? 's' : ''}
+          Add
+          {' '}
+          {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}
+          photo
+          {selectedPhotoIds.size !== 1 ? 's' : ''}
         </Button>
       </div>,
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPhotoIds.size, isAdding, onClose]);
+  }, [selectedPhotoIds.size, isAdding, onClose, modalContext]);
 
   return (
-    <div className="flex h-[60vh] flex-col bg-background-medium border border-border-color-strong">
+    <div
+      className="flex h-[60vh] flex-col bg-background-medium border border-border-color-strong"
+    >
       {error && (
-        <div className="shrink-0 mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+        <div
+          className="shrink-0 mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500"
+        >
           {error}
         </div>
       )}
 
-      <div className="flex-1 min-h-0 overflow-y-auto relative">
+      <div
+        className="flex-1 min-h-0 overflow-y-auto relative"
+      >
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-foreground/50">Loading photos...</p>
+          <div
+            className="flex items-center justify-center h-full"
+          >
+            <p
+              className="text-foreground/50"
+            >
+              Loading photos...
+            </p>
           </div>
         ) : availablePhotos.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-foreground/70">No photos available to add</p>
+          <div
+            className="flex items-center justify-center h-full"
+          >
+            <p
+              className="text-foreground/70"
+            >
+              No photos available to add
+            </p>
           </div>
         ) : (
           <PhotoGrid

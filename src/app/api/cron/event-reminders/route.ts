@@ -1,11 +1,11 @@
-import { render } from "@react-email/render";
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { render } from '@react-email/render';
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
-import { AttendeeReminderEmail } from "@/emails/attendee-reminder";
-import { RsvpReminderEmail } from "@/emails/rsvp-reminder";
-import { encrypt } from "@/utils/encrypt";
-import { createClient } from "@/utils/supabase/server";
+import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
+import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
+import { encrypt } from '@/utils/encrypt';
+import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -17,14 +17,14 @@ export async function GET(request: NextRequest) {
   if (!cronSecret) {
     console.error('CRON_SECRET environment variable is not set');
     return NextResponse.json(
-      { message: "Cron secret not configured" },
+      { message: 'Cron secret not configured' },
       { status: 500 },
     );
   }
 
   if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json(
-      { message: "Unauthorized" },
+      { message: 'Unauthorized' },
       { status: 401 },
     );
   }
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get the events email type ID for filtering
     const { data: eventsEmailType } = await supabase
-      .from('email_types' as any)
+      .from('email_types')
       .select('id')
       .eq('type_key', 'events')
       .single();
@@ -59,22 +59,22 @@ export async function GET(request: NextRequest) {
     if (!eventsEmailType) {
       console.error('Events email type not found');
       return NextResponse.json(
-        { message: "Events email type not found", ...results },
+        { message: 'Events email type not found', ...results },
         { status: 500 },
       );
     }
 
-    const eventsEmailTypeId = (eventsEmailType as any).id;
+    const eventsEmailTypeId = eventsEmailType.id;
 
     // Get users who have opted out of "events" email type
     const { data: optedOutUsers } = await supabase
-      .from('email_preferences' as any)
+      .from('email_preferences')
       .select('user_id')
       .eq('email_type_id', eventsEmailTypeId)
       .eq('opted_out', true);
 
     const optedOutUserIds = new Set(
-      (optedOutUsers || []).map((u: any) => u.user_id),
+      (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
     );
 
     // ===== RSVP REMINDERS (5 days before) =====
@@ -196,9 +196,14 @@ export async function GET(request: NextRequest) {
                 errorCount += batch.length;
               } else {
                 const resultsArray = batchResult.data?.data || batchResult.data;
+                type ResendBatchResult = {
+                  id?: string;
+                  error?: string | { message?: string } | Error;
+                };
+
                 if (resultsArray && Array.isArray(resultsArray)) {
-                  resultsArray.forEach((result: any) => {
-                    if (result && typeof result === 'object' && 'error' in result) {
+                  resultsArray.forEach((result: ResendBatchResult) => {
+                    if (result && typeof result === 'object' && 'error' in result && result.error) {
                       errorCount++;
                     } else if (result && typeof result === 'object' && 'id' in result) {
                       successCount++;
@@ -311,9 +316,14 @@ export async function GET(request: NextRequest) {
                 errorCount += batch.length;
               } else {
                 const resultsArray = batchResult.data?.data || batchResult.data;
+                type ResendBatchResult = {
+                  id?: string;
+                  error?: string | { message?: string } | Error;
+                };
+
                 if (resultsArray && Array.isArray(resultsArray)) {
-                  resultsArray.forEach((result: any) => {
-                    if (result && typeof result === 'object' && 'error' in result) {
+                  resultsArray.forEach((result: ResendBatchResult) => {
+                    if (result && typeof result === 'object' && 'error' in result && result.error) {
                       errorCount++;
                     } else if (result && typeof result === 'object' && 'id' in result) {
                       successCount++;
@@ -360,7 +370,7 @@ export async function GET(request: NextRequest) {
     console.error('Error in event reminders cron:', error);
     return NextResponse.json(
       {
-        message: "Internal server error",
+        message: 'Internal server error',
         error: error instanceof Error ? error.message : 'Unknown error',
         ...results,
       },

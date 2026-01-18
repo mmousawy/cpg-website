@@ -208,21 +208,39 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
   }
 
   return (
-    <div className="">
-      <h2 className="mb-4 text-md font-semibold opacity-70">Achievements</h2>
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-5">
+    <div
+      className=""
+    >
+      <h2
+        className="mb-4 text-md font-semibold opacity-70"
+      >
+        Achievements
+      </h2>
+      <div
+        className="grid gap-3 grid-cols-2 sm:grid-cols-5"
+      >
         {badges.map((badge, index) => (
           <div
             key={index}
             className="badge-gradient rounded-md px-3 py-4 flex flex-col items-center text-center shadow-xl shadow-foreground/3 hover:shadow-primary/20 dark:hover:shadow-primary-alt/20 transition-all duration-300"
           >
-            <div className="mb-2">
-              <div className="size-6 sm:size-8 text-primary flex items-center justify-center">
+            <div
+              className="mb-2"
+            >
+              <div
+                className="size-6 sm:size-8 text-primary flex items-center justify-center"
+              >
                 {badge.icon}
               </div>
             </div>
-            <p className="text-base sm:text-lg font-bold text-foreground mb-0.5">{badge.value}</p>
-            <p className="text-xs text-foreground/60 leading-tight">
+            <p
+              className="text-base sm:text-lg font-bold text-foreground mb-0.5"
+            >
+              {badge.value}
+            </p>
+            <p
+              className="text-xs text-foreground/60 leading-tight"
+            >
               {badge.label}
               {badge.suffix && badge.suffix}
             </p>

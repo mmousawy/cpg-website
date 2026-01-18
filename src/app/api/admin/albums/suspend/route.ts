@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Suspend the album
-    // Type assertion needed until Supabase types are regenerated after migration
     const { error: updateError } = await supabase
       .from('albums')
       .update({
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
         suspended_at: new Date().toISOString(),
         suspended_by: user.id,
         suspension_reason: reason,
-      } as any)
+      })
       .eq('id', albumId);
 
     if (updateError) {

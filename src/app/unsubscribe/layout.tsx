@@ -10,5 +10,7 @@ export default function UnsubscribeLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <>
+    {children}
+  </>;
 }

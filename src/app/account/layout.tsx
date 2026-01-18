@@ -28,5 +28,7 @@ export default async function AccountLayout({
     redirect('/onboarding');
   }
 
-  return <>{children}</>;
+  return <>
+    {children}
+  </>;
 }

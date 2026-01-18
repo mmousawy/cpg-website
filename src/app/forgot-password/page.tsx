@@ -11,7 +11,9 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <JavaScriptRequired />
-      <div className="js-content">
+      <div
+        className="js-content"
+      >
         <ForgotPasswordClient />
       </div>
     </>

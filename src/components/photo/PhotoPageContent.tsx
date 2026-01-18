@@ -82,7 +82,10 @@ export default function PhotoPageContent({
 
   return (
     <>
-      <ViewTracker type="photo" id={photo.id} />
+      <ViewTracker
+        type="photo"
+        id={photo.id}
+      />
       <PageContainer>
         {/* Photo with lightbox */}
         <div
@@ -109,10 +112,10 @@ export default function PhotoPageContent({
                 entityType="photo"
                 className={photo.title || photo.description ? 'mt-5 sm:mt-6' : ''}
                 entityId={photo.id}
-                initialCount={(photo as any).likes_count ?? 0}
+                initialCount={photo.likes_count ?? 0}
               />
               <ViewCount
-                count={(photo as any).view_count ?? 0}
+                count={photo.view_count ?? 0}
                 className="mt-2"
               />
               <TagsSection

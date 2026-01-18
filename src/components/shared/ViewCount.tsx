@@ -16,10 +16,16 @@ export default function ViewCount({ count, className }: ViewCountProps) {
   if (count === 0) return null;
 
   return (
-    <div className={clsx('flex items-center gap-1.5 text-sm text-foreground/60', className)}>
-      <EyeIcon className="size-4" />
+    <div
+      className={clsx('flex items-center gap-1.5 text-sm text-foreground/60', className)}
+    >
+      <EyeIcon
+        className="size-4"
+      />
       <span>
-        {count.toLocaleString()} {count === 1 ? 'view' : 'views'}
+        {count.toLocaleString()}
+        {' '}
+        {count === 1 ? 'view' : 'views'}
       </span>
     </div>
   );

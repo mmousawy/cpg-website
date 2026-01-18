@@ -81,28 +81,48 @@ function LoginForm() {
   };
 
   return (
-    <PageContainer className="items-center justify-center">
-      <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-3xl font-bold">Welcome back</h1>
-        <p className="mb-6 text-center text-sm text-foreground/70">
+    <PageContainer
+      className="items-center justify-center"
+    >
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
+        <h1
+          className="mb-2 text-center text-3xl font-bold"
+        >
+          Welcome back
+        </h1>
+        <p
+          className="mb-6 text-center text-sm text-foreground/70"
+        >
           Log in to your account to continue
         </p>
 
         {verified && (
-          <SuccessMessage variant="compact" className="mb-6">
+          <SuccessMessage
+            variant="compact"
+            className="mb-6"
+          >
             Email verified successfully! You can now log in.
           </SuccessMessage>
         )}
 
         {/* Social Login Buttons */}
-        <div className="mb-6 flex flex-col gap-3">
+        <div
+          className="mb-6 flex flex-col gap-3"
+        >
           <Button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
             variant="secondary"
             fullWidth
             icon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24" data-no-inherit>
+              <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                data-no-inherit
+              >
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -130,26 +150,48 @@ function LoginForm() {
             disabled={isLoading}
             variant="custom"
             fullWidth
-            icon={<DiscordSVG className="h-5 w-6 fill-white" />}
+            icon={<DiscordSVG
+              className="h-5 w-6 fill-white"
+            />}
             className="bg-[#5865F2] text-white hover:bg-[#4752C4] hover:text-white border-[#5865F2] hover:border-[#4752C4]"
           >
             Continue with Discord
           </Button>
         </div>
 
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-color" />
+        <div
+          className="relative mb-6"
+        >
+          <div
+            className="absolute inset-0 flex items-center"
+          >
+            <div
+              className="w-full border-t border-border-color"
+            />
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-background-light px-4 text-foreground/50">or continue with email</span>
+          <div
+            className="relative flex justify-center text-sm"
+          >
+            <span
+              className="bg-background-light px-4 text-foreground/50"
+            >
+              or continue with email
+            </span>
           </div>
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailSignIn} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-medium">
+        <form
+          onSubmit={handleEmailSignIn}
+          className="flex flex-col gap-4"
+        >
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="email"
+              className="text-sm font-medium"
+            >
               Email
             </label>
             <Input
@@ -162,16 +204,24 @@ function LoginForm() {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="password" className="text-sm font-medium">
+          <div
+            className="flex flex-col gap-2"
+          >
+            <div
+              className="flex items-center justify-between"
+            >
+              <label
+                htmlFor="password"
+                className="text-sm font-medium"
+              >
                 Password
               </label>
               <Link
                 href={routes.forgotPassword.url}
                 className="text-sm text-primary hover:text-primary-alt"
               >
-                {routes.forgotPassword.label}?
+                {routes.forgotPassword.label}
+                ?
               </Link>
             </div>
             <Input
@@ -186,7 +236,11 @@ function LoginForm() {
           </div>
 
           {error && (
-            <ErrorMessage variant="compact">{error}</ErrorMessage>
+            <ErrorMessage
+              variant="compact"
+            >
+              {error}
+            </ErrorMessage>
           )}
 
           <Button
@@ -199,9 +253,15 @@ function LoginForm() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-foreground/70">
-          Don&apos;t have an account?{' '}
-          <Link href={routes.signup.url} className="font-medium text-primary hover:text-primary-alt">
+        <p
+          className="mt-6 text-center text-sm text-foreground/70"
+        >
+          Don&apos;t have an account?
+          {' '}
+          <Link
+            href={routes.signup.url}
+            className="font-medium text-primary hover:text-primary-alt"
+          >
             {routes.signup.label}
           </Link>
         </p>
@@ -212,7 +272,15 @@ function LoginForm() {
 
 export default function LoginClient() {
   return (
-    <Suspense fallback={<PageContainer><Container><p>Loading...</p></Container></PageContainer>}>
+    <Suspense
+      fallback={<PageContainer>
+        <Container>
+          <p>
+            Loading...
+          </p>
+        </Container>
+      </PageContainer>}
+    >
       <LoginForm />
     </Suspense>
   );

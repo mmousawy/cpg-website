@@ -6,7 +6,7 @@ export type AlbumTag = Tables<'album_tags'>
 
 export type AlbumPhotoExtended = Tables<'album_photos'> & {
   image?: {
-    exif_data?: any;
+    exif_data?: Record<string, unknown>;
   };
 };
 export type AlbumWithPhotos = Album & {
@@ -16,7 +16,9 @@ export type AlbumWithPhotos = Album & {
     full_name: string | null
     avatar_url: string | null
     nickname: string | null
+    suspended_at?: string | null
   }
+  // likes_count and view_count are already in Album (from Tables<'albums'>)
 }
 
 export type AlbumFormData = {

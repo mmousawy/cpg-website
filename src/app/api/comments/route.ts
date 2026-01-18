@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { render } from "@react-email/render";
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
 
-import { createClient } from "@/utils/supabase/server";
-import { CommentNotificationEmail } from "@/emails/comment-notification";
-import { encrypt } from "@/utils/encrypt";
-import { revalidateAlbum } from "@/app/actions/revalidate";
+import { createClient } from '@/utils/supabase/server';
+import { CommentNotificationEmail } from '@/emails/comment-notification';
+import { encrypt } from '@/utils/encrypt';
+import { revalidateAlbum } from '@/app/actions/revalidate';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await request.json();
@@ -24,15 +24,15 @@ export async function POST(request: NextRequest) {
 
   if (!entityType || !entityId || !commentText?.trim()) {
     return NextResponse.json(
-      { message: "Entity type, entity ID, and comment text are required" },
-      { status: 400 }
+      { message: 'Entity type, entity ID, and comment text are required' },
+      { status: 400 },
     );
   }
 
   if (entityType !== 'album' && entityType !== 'photo' && entityType !== 'event') {
     return NextResponse.json(
       { message: "Invalid entity type. Must be 'album', 'photo', or 'event'" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     const eventIdNum = parseInt(entityId, 10);
     if (isNaN(eventIdNum)) {
       return NextResponse.json(
-        { message: "Invalid event ID" },
-        { status: 400 }
+        { message: 'Invalid event ID' },
+        { status: 400 },
       );
     }
     const { data, error } = await supabase.rpc('add_event_comment', {
@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
   if (commentError) {
     console.error('Error creating comment:', commentError);
     return NextResponse.json(
-      { message: commentError.message || "Failed to create comment" },
-      { status: 500 }
+      { message: commentError.message || 'Failed to create comment' },
+      { status: 500 },
     );
   }
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   const commenterName = commenterProfile?.full_name || user.email?.split('@')[0] || 'Someone';
   const commenterNickname = commenterProfile?.nickname || null;
   const commenterAvatarUrl = commenterProfile?.avatar_url || null;
-  const commenterProfileLink = commenterNickname 
+  const commenterProfileLink = commenterNickname
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/@${commenterNickname}`
     : null;
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       ownerId = album.user_id;
       entityTitle = album.title;
       entityThumbnail = album.cover_image_url;
-      
+
       // Get owner profile
       const { data: owner } = await supabase
         .from('profiles')
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         full_name: owner.full_name,
         nickname: owner.nickname,
       } : null;
-      
+
       // Build album link with comments anchor
       if (ownerProfile?.nickname) {
         entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}#comments`;
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       ownerId = photo.user_id;
       entityTitle = photo.title || 'Untitled photo';
       entityThumbnail = photo.url;
-      
+
       // Get owner profile
       const { data: owner } = await supabase
         .from('profiles')
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         full_name: owner.full_name,
         nickname: owner.nickname,
       } : null;
-      
+
       // Build photo link - need to find which album it's in or use standalone link
       if (ownerProfile?.nickname) {
         // Try to get first album this photo is in
@@ -161,9 +161,18 @@ export async function POST(request: NextRequest) {
           .limit(1)
           .single();
 
+        type AlbumPhotoWithAlbum = {
+          albums: { slug: string } | null;
+        };
+
         if (albumPhoto) {
-          const album = albumPhoto.albums as any;
-          entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}/photo/${photo.short_id}#comments`;
+          const typedAlbumPhoto = albumPhoto as AlbumPhotoWithAlbum;
+          const album = typedAlbumPhoto.albums;
+          if (album) {
+            entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}/photo/${photo.short_id}#comments`;
+          } else {
+            entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
+          }
         } else {
           entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
         }
@@ -194,7 +203,7 @@ export async function POST(request: NextRequest) {
       if (admins && admins.length > 0) {
         // Check notification preferences and send emails to all admins
         const { data: notificationsEmailType } = await supabase
-          .from('email_types' as any)
+          .from('email_types')
           .select('id')
           .eq('type_key', 'notifications')
           .single();
@@ -204,15 +213,15 @@ export async function POST(request: NextRequest) {
 
           // Check if this admin has opted out
           if (notificationsEmailType) {
-            const notificationsEmailTypeId = (notificationsEmailType as any).id;
+            const notificationsEmailTypeId = notificationsEmailType.id;
             const { data: preference } = await supabase
-              .from('email_preferences' as any)
+              .from('email_preferences')
               .select('opted_out')
               .eq('user_id', admin.id)
               .eq('email_type_id', notificationsEmailTypeId)
               .single();
 
-            if (preference && (preference as any).opted_out === true) {
+            if (preference && preference.opted_out === true) {
               continue;
             }
           }
@@ -251,7 +260,7 @@ export async function POST(request: NextRequest) {
                   entityThumbnail,
                   entityLink,
                   optOutLink: adminOptOutLink,
-                })
+                }),
               ),
             });
 
@@ -278,7 +287,7 @@ export async function POST(request: NextRequest) {
       .select('slug')
       .eq('id', entityId)
       .single();
-    
+
     if (album?.slug) {
       await revalidateAlbum(ownerProfile.nickname, album.slug);
     }
@@ -294,22 +303,22 @@ export async function POST(request: NextRequest) {
 
   // Check if owner has opted out of "notifications" email type
   const { data: notificationsEmailType } = await supabase
-    .from('email_types' as any)
+    .from('email_types')
     .select('id')
     .eq('type_key', 'notifications')
     .single();
 
   if (notificationsEmailType) {
-    const notificationsEmailTypeId = (notificationsEmailType as any).id;
+    const notificationsEmailTypeId = notificationsEmailType.id;
     const { data: preference } = await supabase
-      .from('email_preferences' as any)
+      .from('email_preferences')
       .select('opted_out')
       .eq('user_id', ownerId)
       .eq('email_type_id', notificationsEmailTypeId)
       .single();
 
     // If opted out, don't send email
-    if (preference && (preference as any).opted_out === true) {
+    if (preference && preference.opted_out === true) {
       return NextResponse.json({ success: true, commentId }, { status: 200 });
     }
   }
@@ -328,7 +337,7 @@ export async function POST(request: NextRequest) {
 
   // Send notification email
   const ownerName = ownerProfile.full_name || ownerProfile.email.split('@')[0] || 'Friend';
-  
+
   try {
     const emailResult = await resend.emails.send({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
@@ -348,7 +357,7 @@ export async function POST(request: NextRequest) {
           entityThumbnail,
           entityLink,
           optOutLink,
-        })
+        }),
       ),
     });
 

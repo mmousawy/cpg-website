@@ -36,7 +36,7 @@ const onboardingSchema = z.object({
   emailPreferences: z.record(z.string(), z.boolean()),
 });
 
-type OnboardingFormData = z.infer<typeof onboardingSchema>;
+export type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
 export default function OnboardingClient() {
   const { user, profile, isLoading, refreshProfile } = useAuth();

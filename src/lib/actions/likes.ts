@@ -137,9 +137,14 @@ export async function toggleLike(
       .eq('id', entityId)
       .maybeSingle();
 
+    type AlbumWithProfile = {
+      user_id: string;
+      profile: { nickname: string } | null;
+    };
+
     if (album) {
-      const profile = album.profile as any;
-      ownerNickname = profile?.nickname || null;
+      const typedAlbum = album as AlbumWithProfile;
+      ownerNickname = typedAlbum.profile?.nickname || null;
     }
 
     if (existingLike !== null && existingLike !== undefined) {

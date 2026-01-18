@@ -13,8 +13,12 @@ export default function OnboardingPage() {
   return (
     <>
       <JavaScriptRequired />
-      <div className="js-content">
-        <Suspense fallback={<PageLoading />}>
+      <div
+        className="js-content"
+      >
+        <Suspense
+          fallback={<PageLoading />}
+        >
           <OnboardingClient />
         </Suspense>
       </div>

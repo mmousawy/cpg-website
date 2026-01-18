@@ -9,7 +9,7 @@ import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
@@ -144,8 +144,7 @@ export default function BulkPhotoEditForm({
       is_public: mixedVisibility ? null : allPublic,
       tags: newCommonTags, // Only reset to common tags
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPhotos.map((p) => p.id).join(',')]);
+  }, [selectedPhotos, reset, mixedVisibility, allPublic]);
 
   const handleAddTag = (tag: string) => {
     const currentTags = watchedTags || [];
@@ -201,8 +200,9 @@ export default function BulkPhotoEditForm({
       reset(data);
       setLocalSuccess(true);
       setTimeout(() => setLocalSuccess(false), 3000);
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to save photos');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save photos';
+      setLocalError(message);
     }
   };
 
@@ -224,8 +224,9 @@ export default function BulkPhotoEditForm({
           await onDelete(photo.id);
         }
       }
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to delete photos');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete photos';
+      setLocalError(message);
     } finally {
       setIsDeleting(false);
     }

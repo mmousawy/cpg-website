@@ -132,7 +132,7 @@ export async function getEventAttendeesForEvent(eventId: number) {
 
   const { data: attendees } = await supabase
     .from('events_rsvps')
-    .select(`id, user_id, email, confirmed_at, profiles (avatar_url)`)
+    .select('id, user_id, email, confirmed_at, profiles (avatar_url)')
     .eq('event_id', eventId)
     .not('confirmed_at', 'is', null)
     .is('canceled_at', null)

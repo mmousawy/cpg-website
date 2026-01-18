@@ -137,8 +137,7 @@ export default function SinglePhotoEditForm({
     });
     setLocalError(null);
     setLocalSuccess(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photo.id, reset]);
+  }, [photo, reset]);
 
   // Handle Delete key for single photo deletion
   useEffect(() => {
@@ -167,8 +166,9 @@ export default function SinglePhotoEditForm({
       reset(data);
       setLocalSuccess(true);
       setTimeout(() => setLocalSuccess(false), 3000);
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to save photo');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save photo';
+      setLocalError(message);
     }
   };
 

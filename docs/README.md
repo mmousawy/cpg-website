@@ -7,6 +7,10 @@
 - **[revalidation-system.md](./revalidation-system.md)** - Complete guide to the tag-based caching and revalidation system
 - **[revalidation-quick-reference.md](./revalidation-quick-reference.md)** - Quick reference for cache tags and revalidation functions
 
+### Performance
+
+- **[performance-optimization.md](./performance-optimization.md)** - Bundle analysis, lazy loading patterns, and performance monitoring
+
 ### SEO & Metadata
 
 - **[metadata.md](./metadata.md)** - Metadata, OpenGraph, and Twitter card implementation
@@ -14,6 +18,14 @@
 ### Email Notifications
 
 - **[email-notifications.md](./email-notifications.md)** - Email notification system, automated reminders, and manual sending
+
+### View Tracking
+
+- **[view-tracking-caching.md](./view-tracking-caching.md)** - View count tracking and caching strategy
+
+### Code Quality
+
+- **Type Safety** - The codebase maintains strict TypeScript type safety with zero `any` types. All Supabase queries, React Hook Form props, error handling, and callback parameters are properly typed.
 
 ## Key Concepts
 
@@ -39,7 +51,18 @@ The project uses Next.js's `use cache` directive for component-level caching. Da
 |------|---------|
 | `src/lib/data/*.ts` | Cached data fetch functions |
 | `src/app/actions/revalidate.ts` | Revalidation server actions |
+| `src/types/supabase-queries.ts` | Typed Supabase query result types for joins |
 | `next.config.ts` | Enable `cacheComponents: true` |
+
+### Type Safety
+
+The codebase maintains strict TypeScript type safety:
+
+- **Zero `any` types** - All types are explicitly defined
+- **Proper error handling** - Uses `unknown` type with `instanceof` checks
+- **Typed Supabase queries** - Custom types in `src/types/supabase-queries.ts` for join results
+- **React Hook Form** - Properly typed with generics (`UseFormRegister`, `FieldErrors`, etc.)
+- **Type guards** - Used throughout for runtime type checking
 
 ## Quick Start
 

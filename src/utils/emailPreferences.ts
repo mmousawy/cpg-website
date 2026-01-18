@@ -12,22 +12,22 @@ export async function hasOptedOut(userId: string, emailType: EmailType): Promise
   try {
     // First check the new email_preferences table (using type assertion for new tables)
     const { data: emailTypeData } = await supabase
-      .from('email_types' as any)
+      .from('email_types')
       .select('id')
       .eq('type_key', emailType)
       .single();
 
     if (emailTypeData) {
-      const emailTypeId = (emailTypeData as any).id;
+      const emailTypeId = emailTypeData.id;
       const { data: preference } = await supabase
-        .from('email_preferences' as any)
+        .from('email_preferences')
         .select('opted_out')
         .eq('user_id', userId)
         .eq('email_type_id', emailTypeId)
         .single();
 
       if (preference) {
-        return (preference as any).opted_out === true;
+        return preference.opted_out === true;
       }
     }
 
@@ -59,7 +59,7 @@ export async function getEmailTypes() {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('email_types' as any)
+    .from('email_types')
     .select('id, type_key, type_label, description')
     .order('id');
 
@@ -78,7 +78,7 @@ export async function getUserEmailPreferences(userId: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('email_preferences' as any)
+    .from('email_preferences')
     .select('opted_out, email_types!inner(id, type_key, type_label)')
     .eq('user_id', userId);
 

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { render } from "@react-email/render";
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
 
-import { createClient } from "@/utils/supabase/server";
-import { ConfirmEmail } from "../../../emails/confirm";
-import { revalidateEventAttendees } from "@/app/actions/revalidate";
+import { createClient } from '@/utils/supabase/server';
+import { ConfirmEmail } from '../../../emails/confirm';
+import { revalidateEventAttendees } from '@/app/actions/revalidate';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const { uuid } = await request.json();
 
   if (!uuid) {
-    return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+    return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
   }
 
   // Get the RSVP
@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!rsvp || !event) {
-    return NextResponse.json({ message: "RSVP or event not found" }, { status: 404 });
+    return NextResponse.json({ message: 'RSVP or event not found' }, { status: 404 });
   }
 
   // Check if already confirmed
   if (rsvp.confirmed_at) {
-    return NextResponse.json({ message: "RSVP already confirmed" }, { status: 200 });
+    return NextResponse.json({ message: 'RSVP already confirmed' }, { status: 200 });
   }
 
   // Get email recipient
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   const recipientName = rsvp.name || 'Guest';
 
   if (!recipientEmail) {
-    return NextResponse.json({ message: "No email associated with this RSVP" }, { status: 400 });
+    return NextResponse.json({ message: 'No email associated with this RSVP' }, { status: 400 });
   }
 
   // Confirm the RSVP in the database

@@ -50,7 +50,9 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
   // Render content based on state
   const renderContent = () => {
     if (showLoading) {
-      return <div className="w-full h-full animate-pulse bg-border-color" />;
+      return <div
+        className="w-full h-full animate-pulse bg-border-color"
+      />;
     }
 
     if (avatarUrl) {
@@ -81,22 +83,35 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
 
     // Fallback: person icon
     return (
-      <div className="flex w-full h-full items-center justify-center bg-[#b9c1ca] dark:bg-[#6e7277]">
-        <svg className={clsx("fill-white/90", sizeConfig.icon)} viewBox="0 0 24 24">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+      <div
+        className="flex w-full h-full items-center justify-center bg-[#b9c1ca] dark:bg-[#6e7277]"
+      >
+        <svg
+          className={clsx('fill-white/90', sizeConfig.icon)}
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+          />
         </svg>
       </div>
     );
   };
 
   return (
-    <div className={clsx("relative overflow-hidden rounded-full shrink-0 bg-border-color", sizeConfig.wrapper, className)}>
+    <div
+      className={clsx('relative overflow-hidden rounded-full shrink-0 bg-border-color', sizeConfig.wrapper, className)}
+    >
       {hoverEffect &&
-        <div className="z-10 rounded-full absolute w-full h-full shadow-[inset_0_0_0_2px_var(--primary),inset_0_0_0_2.5px_#00000030] scale-130 group-focus-visible:scale-100 group-hover:scale-100 transition-all duration-200" />
+        <div
+          className="z-10 rounded-full absolute w-full h-full shadow-[inset_0_0_0_2px_var(--primary),inset_0_0_0_2.5px_#00000030] scale-130 group-focus-visible:scale-100 group-hover:scale-100 transition-all duration-200"
+        />
       }
       {renderContent()}
       {hoverEffect && (
-        <div className="z-10 rounded-full absolute w-full h-full border-2 border-primary bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200" />
+        <div
+          className="z-10 rounded-full absolute w-full h-full border-2 border-primary bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+        />
       )}
     </div>
   );

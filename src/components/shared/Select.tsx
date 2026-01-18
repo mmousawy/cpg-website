@@ -52,7 +52,11 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
     ref,
   ) => {
     return (
-      <SelectPrimitive.Root value={value} onValueChange={onValueChange} disabled={disabled}>
+      <SelectPrimitive.Root
+        value={value}
+        onValueChange={onValueChange}
+        disabled={disabled}
+      >
         <SelectPrimitive.Trigger
           ref={ref}
           className={clsx(
@@ -71,8 +75,12 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
             className,
           )}
         >
-          <SelectPrimitive.Value placeholder={placeholder} />
-          <SelectPrimitive.Icon className="ml-2 text-foreground/80">
+          <SelectPrimitive.Value
+            placeholder={placeholder}
+          />
+          <SelectPrimitive.Icon
+            className="ml-2 text-foreground/80"
+          >
             <svg
               width="12"
               height="12"
@@ -100,7 +108,9 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
             position="popper"
             sideOffset={4}
           >
-            <SelectPrimitive.Viewport className="p-1">
+            <SelectPrimitive.Viewport
+              className="p-1"
+            >
               {options.map((option) => (
                 <SelectPrimitive.Item
                   key={option.value}
@@ -112,8 +122,12 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                     'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                   )}
                 >
-                  <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
-                  <SelectPrimitive.ItemIndicator className="absolute right-2 flex items-center">
+                  <SelectPrimitive.ItemText>
+                    {option.label}
+                  </SelectPrimitive.ItemText>
+                  <SelectPrimitive.ItemIndicator
+                    className="absolute right-2 flex items-center"
+                  >
                     <svg
                       width="12"
                       height="12"

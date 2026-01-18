@@ -40,17 +40,41 @@ export default function ForgotPasswordClient() {
 
   if (success) {
     return (
-      <PageContainer className="items-center justify-center">
-        <Container padding="lg" className="mx-auto max-w-md text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-            <CheckSVG className="h-8 w-8 fill-green-500" />
+      <PageContainer
+        className="items-center justify-center"
+      >
+        <Container
+          padding="lg"
+          className="mx-auto max-w-md text-center"
+        >
+          <div
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10"
+          >
+            <CheckSVG
+              className="h-8 w-8 fill-green-500"
+            />
           </div>
-          <h1 className="mb-2 text-3xl font-bold">Check your email</h1>
-          <p className="text-foreground/70">
-            We&apos;ve sent a password reset link to <strong>{email}</strong>.
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Check your email
+          </h1>
+          <p
+            className="text-foreground/70"
+          >
+            We&apos;ve sent a password reset link to
+            {' '}
+            <strong>
+              {email}
+            </strong>
+            .
             Click the link in the email to reset your password.
           </p>
-          <ArrowLink href={routes.login.url} direction="left" className="mt-6">
+          <ArrowLink
+            href={routes.login.url}
+            direction="left"
+            className="mt-6"
+          >
             Back to login
           </ArrowLink>
         </Container>
@@ -59,16 +83,35 @@ export default function ForgotPasswordClient() {
   }
 
   return (
-    <PageContainer className="items-center justify-center">
-      <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-3xl font-bold">Forgot password?</h1>
-        <p className="mb-8 text-center text-sm text-foreground/70">
+    <PageContainer
+      className="items-center justify-center"
+    >
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
+        <h1
+          className="mb-2 text-center text-3xl font-bold"
+        >
+          Forgot password?
+        </h1>
+        <p
+          className="mb-8 text-center text-sm text-foreground/70"
+        >
           No worries, we&apos;ll send you reset instructions.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-medium">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="email"
+              className="text-sm font-medium"
+            >
               Email
             </label>
             <Input
@@ -82,7 +125,11 @@ export default function ForgotPasswordClient() {
           </div>
 
           {error && (
-            <ErrorMessage variant="compact">{error}</ErrorMessage>
+            <ErrorMessage
+              variant="compact"
+            >
+              {error}
+            </ErrorMessage>
           )}
 
           <Button
@@ -95,8 +142,13 @@ export default function ForgotPasswordClient() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-foreground/70">
-          <ArrowLink href={routes.login.url} direction="left">
+        <p
+          className="mt-6 text-center text-sm text-foreground/70"
+        >
+          <ArrowLink
+            href={routes.login.url}
+            direction="left"
+          >
             Back to login
           </ArrowLink>
         </p>

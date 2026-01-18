@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase/client';
 import type { PhotoWithAlbums } from '@/types/photos';
 import type { Photo } from '@/types/photos';
+import type { Tables } from '@/database.types';
 
 async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
 
@@ -29,10 +30,15 @@ async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
     return [];
   }
 
-  const unifiedPhotos: PhotoWithAlbums[] = albumPhotosData
-    .filter((ap) => ap.photo && !(ap.photo as any).deleted_at)
+  type AlbumPhotoRow = Pick<Tables<'album_photos'>, 'id' | 'album_id' | 'photo_url' | 'title' | 'sort_order'>;
+  type AlbumPhotoQueryResult = AlbumPhotoRow & {
+    photo: (Photo & { photo_tags?: Array<{ tag: string }> }) | null;
+  };
+
+  const unifiedPhotos: PhotoWithAlbums[] = (albumPhotosData as AlbumPhotoQueryResult[])
+    .filter((ap) => ap.photo && !ap.photo.deleted_at)
     .map((ap) => {
-      const photoData = ap.photo as unknown as Photo & { photo_tags?: { tag: string }[] };
+      const photoData = ap.photo!;
       const tags = (photoData.photo_tags || []).map((t) => ({ tag: t.tag }));
       const { photo_tags: _, ...cleanPhotoData } = photoData;
       return {

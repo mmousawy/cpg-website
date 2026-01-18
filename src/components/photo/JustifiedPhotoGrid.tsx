@@ -180,13 +180,20 @@ function PhotoRows({
 
               // Get likes count from client-side batch fetch, fallback to server-provided column
               const shortId = photo?.short_id || photo?.id;
-              const likesCount = (shortId ? batchLikesMap.get(shortId) : undefined) ?? (photo as any)?.likes_count ?? 0;
+              const likesCount = (shortId ? batchLikesMap.get(shortId) : undefined) ?? photo?.likes_count ?? 0;
+
+              // Create accessible label for photo link
+              const photoTitle = photo?.title;
+              const ariaLabel = photoTitle
+                ? `View photo: ${photoTitle} by @${nickname}`
+                : `View photo by @${nickname}`;
 
               return (
                 <Link
                   key={item.photo.id}
                   href={photoHref}
                   className="group relative block overflow-hidden bg-background-light transition-all hover:brightness-110"
+                  aria-label={ariaLabel}
                   style={isConstrained ? {
                     width: item.displayWidth,
                     height: item.displayHeight,

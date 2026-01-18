@@ -35,10 +35,10 @@ export default function Tooltip({
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
     const tooltipRect = tooltipRef.current.getBoundingClientRect();
-    
+
     // If tooltip hasn't rendered yet, skip positioning
     if (tooltipRect.width === 0 || tooltipRect.height === 0) return;
-    
+
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
 
@@ -126,23 +126,29 @@ export default function Tooltip({
     };
   }, [isVisible, updatePosition]);
 
-  const trigger = cloneElement(children as React.ReactElement<any>, {
+  const childElement = children as React.ReactElement<{ ref?: React.Ref<HTMLElement>; onMouseEnter?: (e: React.MouseEvent) => void; onMouseLeave?: (e: React.MouseEvent) => void }>;
+  // Access ref from React element (React stores ref separately, not in props)
+  const childRef = (childElement as { ref?: React.Ref<HTMLElement> }).ref;
+
+  const trigger = cloneElement(childElement, {
     ref: (node: HTMLElement | null) => {
       triggerRef.current = node;
-      const childRef = (children as any).ref;
+      // Forward ref to child component if it has one
       if (typeof childRef === 'function') {
         childRef(node);
-      } else if (childRef) {
+      } else if (childRef && 'current' in childRef) {
+        // Mutating ref.current is correct for ref forwarding - this is expected React pattern
+        // eslint-disable-next-line react-hooks/immutability
         (childRef as React.MutableRefObject<HTMLElement | null>).current = node;
       }
     },
     onMouseEnter: (e: React.MouseEvent) => {
       handleMouseEnter();
-      (children as any).props?.onMouseEnter?.(e);
+      childElement.props?.onMouseEnter?.(e);
     },
     onMouseLeave: (e: React.MouseEvent) => {
       handleMouseLeave();
-      (children as any).props?.onMouseLeave?.(e);
+      childElement.props?.onMouseLeave?.(e);
     },
   });
 
@@ -161,9 +167,9 @@ export default function Tooltip({
             style={
               tooltipPosition
                 ? {
-                    top: `${tooltipPosition.top}px`,
-                    left: `${tooltipPosition.left}px`,
-                  }
+                  top: `${tooltipPosition.top}px`,
+                  left: `${tooltipPosition.left}px`,
+                }
                 : { visibility: 'hidden' }
             }
             onMouseEnter={handleMouseEnter}

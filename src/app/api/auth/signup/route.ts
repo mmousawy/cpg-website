@@ -1,21 +1,21 @@
-import { render } from "@react-email/render";
-import crypto from "crypto";
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { render } from '@react-email/render';
+import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
-import VerifyEmailTemplate from "@/emails/auth/verify-email";
-import { createAdminClient } from "@/utils/supabase/admin";
+import VerifyEmailTemplate from '@/emails/auth/verify-email';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Generate a secure random token
 function generateToken(): string {
-  return crypto.randomBytes(32).toString("hex");
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Hash token for storage (we store hash, send plain token in email)
 function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 export async function POST(request: NextRequest) {
@@ -25,14 +25,14 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!email || !password) {
       return NextResponse.json(
-        { message: "Email and password are required" },
+        { message: 'Email and password are required' },
         { status: 400 },
       );
     }
 
     if (password.length < 6) {
       return NextResponse.json(
-        { message: "Password must be at least 6 characters" },
+        { message: 'Password must be at least 6 characters' },
         { status: 400 },
       );
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     if (emailExists) {
       return NextResponse.json(
-        { message: "An account with this email already exists" },
+        { message: 'An account with this email already exists' },
         { status: 400 },
       );
     }
@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
       });
 
     if (createError) {
-      console.error("Error creating user:", createError);
+      console.error('Error creating user:', createError);
       return NextResponse.json(
-        { message: createError.message || "Failed to create account" },
+        { message: createError.message || 'Failed to create account' },
         { status: 500 },
       );
     }
@@ -74,27 +74,27 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Store token in database
-    const { error: tokenError } = await supabase.from("auth_tokens").insert({
+    const { error: tokenError } = await supabase.from('auth_tokens').insert({
       user_id: userData.user.id,
       email: email.toLowerCase(),
       token_hash: tokenHash,
-      token_type: "email_confirmation",
+      token_type: 'email_confirmation',
       expires_at: expiresAt.toISOString(),
     });
 
     if (tokenError) {
-      console.error("Error storing token:", tokenError);
+      console.error('Error storing token:', tokenError);
       // Delete the user since we couldn't complete signup
       await supabase.auth.admin.deleteUser(userData.user.id);
       return NextResponse.json(
-        { message: "Failed to create account. Please try again." },
+        { message: 'Failed to create account. Please try again.' },
         { status: 500 },
       );
     }
 
     // Create profile (only email, nickname and full_name will be null to trigger onboarding)
     // Use upsert in case profile already exists (e.g., from a previous failed signup attempt)
-    const { error: profileError } = await supabase.from("profiles").upsert({
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: userData.user.id,
       email: email.toLowerCase(),
       full_name: null,
@@ -104,13 +104,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (profileError) {
-      console.error("Error creating profile:", profileError);
+      console.error('Error creating profile:', profileError);
       // Non-fatal - profile can be created later
     }
 
     // Send verification email (skip in test environment)
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
-    const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') || 
+    const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') ||
                       process.env.NODE_ENV === 'test' ||
                       email.endsWith('@test.example.com') ||
                       email.endsWith('@test.local');
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: email,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-        subject: "Verify your email - Creative Photography Group",
+        subject: 'Verify your email - Creative Photography Group',
         html: await render(
           VerifyEmailTemplate({
             verifyLink,
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (emailResult.error) {
-        console.error("Email error:", emailResult.error);
+        console.error('Email error:', emailResult.error);
         // Don't fail the request - user can request a new verification email
       }
     }
@@ -139,14 +139,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "Account created. Please check your email to verify.",
+        message: 'Account created. Please check your email to verify.',
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error('Signup error:', error);
     return NextResponse.json(
-      { message: "An unexpected error occurred" },
+      { message: 'An unexpected error occurred' },
       { status: 500 },
     );
   }

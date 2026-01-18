@@ -1,7 +1,7 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -70,7 +70,10 @@ export default async function PhotoPage({ params }: { params: Params }) {
   }
 
   // Pass to cached content component
-  return <CachedPhotoContent result={result} nickname={nickname} />;
+  return <CachedPhotoContent
+    result={result}
+    nickname={nickname}
+  />;
 }
 
 // Separate cached component for the content

@@ -36,7 +36,9 @@ export default function AlbumMiniCard({
           : 'bg-background-medium'
       }`}
     >
-      <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background">
+      <div
+        className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
+      >
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
@@ -46,13 +48,28 @@ export default function AlbumMiniCard({
             className="object-cover"
           />
         ) : (
-          <FolderSVG className="size-6 text-foreground/30" />
+          <FolderSVG
+            className="size-6 text-foreground/30"
+          />
         )}
       </div>
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium line-clamp-2 leading-none">{title}</span>
+      <div
+        className="flex flex-col gap-0.5"
+      >
+        <span
+          className="text-sm font-medium line-clamp-2 leading-none"
+        >
+          {title}
+        </span>
         {photoCount !== undefined && (
-          <span className="text-xs text-foreground/70">{photoCount} photo{photoCount !== 1 ? 's' : ''}</span>
+          <span
+            className="text-xs text-foreground/70"
+          >
+            {photoCount}
+            {' '}
+            photo
+            {photoCount !== 1 ? 's' : ''}
+          </span>
         )}
       </div>
     </Link>

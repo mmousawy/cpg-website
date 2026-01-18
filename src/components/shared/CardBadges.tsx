@@ -58,16 +58,25 @@ export default function CardBadges({ badges, position = 'top-right' }: CardBadge
   };
 
   return (
-    <div className={clsx('absolute z-10', positionClasses[position], 'flex', flexDirection, 'gap-1.5', alignItems)}>
+    <div
+      className={clsx('absolute z-10', positionClasses[position], 'flex', flexDirection, 'gap-1.5', alignItems)}
+    >
       {badges.map((badge, index) => {
         const badgeElement = (
-          <span key={index} className={clsx(getBadgeClasses(badge.variant), badge.className)}>
+          <span
+            key={index}
+            className={clsx(getBadgeClasses(badge.variant), badge.className)}
+          >
             {badge.icon || badge.label}
           </span>
         );
 
         return badge.tooltip ? (
-          <Tooltip key={index} content={badge.tooltip} position="top">
+          <Tooltip
+            key={index}
+            content={badge.tooltip}
+            position="top"
+          >
             {badgeElement}
           </Tooltip>
         ) : (

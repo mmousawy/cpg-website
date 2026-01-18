@@ -1,0 +1,33 @@
+feat: Performance optimization and CI/CD improvements
+
+Performance optimizations:
+- Add lazy loading for PhotoSwipe lightbox (~25 KiB saved)
+- Add lazy loading for @dnd-kit via LazySelectableGrid (~40 KiB saved)
+- Add inline dynamic import for exifr library (~15 KiB saved)
+- Enable CSS optimization in Next.js config
+- Enable AVIF/WebP image format priority
+- Add bundle analyzer with `npm run analyze`
+
+LCP improvements:
+- Create HeroImage component with priority loading
+- Server-side deterministic hero image selection
+- Add fetchPriority="high" and optimized sizes
+
+Accessibility fixes:
+- Add aria-labels to footer social media buttons
+- Add aria-labels to photo grid links with photo title and photographer
+- Fix color contrast on event "Upcoming" badge
+
+SEO improvements:
+- Add dynamic sitemap.ts with all routes
+- Add robots.ts with proper rules
+
+Security headers:
+- Add X-Frame-Options, X-Content-Type-Options
+- Add Referrer-Policy, Permissions-Policy
+
+CI/CD setup:
+- Add husky pre-commit hooks (lint, typecheck, tests)
+- Add lint-staged for staged file linting
+- Update CI workflow with lint-and-typecheck job
+- Add typecheck and test:run scripts

@@ -429,7 +429,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     slug: albumData.slug,
     description: albumData.description,
     cover_image_url: albumData.cover_image_url,
-    photo_count: (albumData.album_photos_active as any)?.[0]?.count ?? 0,
+    photo_count: (albumData.album_photos_active as Array<{ count: number }>)?.[0]?.count ?? 0,
   };
 
   // Get photo with tags
@@ -462,9 +462,21 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
     .eq('photo_id', photo.id);
 
+  type AlbumPhotoWithAlbum = {
+    album_id: string;
+    albums: {
+      id: string;
+      title: string;
+      slug: string;
+      cover_image_url: string | null;
+      deleted_at: string | null;
+      album_photos_active: Array<{ count: number }>;
+    } | null;
+  };
+
   const albums = (albumPhotosData || [])
-    .map((ap) => {
-      const albumInfo = ap.albums as any;
+    .map((ap: AlbumPhotoWithAlbum) => {
+      const albumInfo = ap.albums;
       if (!albumInfo || albumInfo.deleted_at) return null;
       return {
         id: albumInfo.id,
@@ -533,9 +545,21 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
     .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count))')
     .eq('photo_id', photo.id);
 
+  type AlbumPhotoWithAlbum = {
+    album_id: string;
+    albums: {
+      id: string;
+      title: string;
+      slug: string;
+      cover_image_url: string | null;
+      deleted_at: string | null;
+      album_photos_active: Array<{ count: number }>;
+    } | null;
+  };
+
   const albums = (albumPhotos || [])
-    .map((ap) => {
-      const album = ap.albums as any;
+    .map((ap: AlbumPhotoWithAlbum) => {
+      const album = ap.albums;
       if (!album || album.deleted_at) return null;
       return {
         id: album.id,

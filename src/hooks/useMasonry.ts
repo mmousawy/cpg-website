@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from 'react';
 
 const useMasonry = () => {
   const masonryContainer = useRef<HTMLDivElement | null>(null);
@@ -12,7 +12,7 @@ const useMasonry = () => {
     if (items.length < 1) return;
 
     const gapSize = parseInt(
-      window.getComputedStyle(container).getPropertyValue("grid-row-gap"),
+      window.getComputedStyle(container).getPropertyValue('grid-row-gap'),
     ) || 0;
 
     const elementLeft = (el: HTMLElement) => el.getBoundingClientRect().left;
@@ -23,18 +23,18 @@ const useMasonry = () => {
       if (!(el instanceof HTMLElement)) return;
 
       // Show the element once we start processing
-      el.classList.add("opacity-100");
+      el.classList.add('opacity-100');
 
       let previous = el.previousSibling;
       while (previous) {
         if (previous.nodeType === 1) {
-          el.style.marginTop = "0";
+          el.style.marginTop = '0';
           if (
             previous instanceof HTMLElement &&
             elementLeft(previous) === elementLeft(el)
           ) {
             el.style.marginTop =
-              -(elementTop(el) - elementBottom(previous) - gapSize) + "px";
+              -(elementTop(el) - elementBottom(previous) - gapSize) + 'px';
             break;
           }
         }
@@ -52,7 +52,7 @@ const useMasonry = () => {
     recalculateMasonry();
 
     // Recalculate on resize
-    window.addEventListener("resize", recalculateMasonry);
+    window.addEventListener('resize', recalculateMasonry);
 
     // Use ResizeObserver to detect when children change size (e.g., images loading)
     const resizeObserver = new ResizeObserver(() => {
@@ -65,7 +65,7 @@ const useMasonry = () => {
     });
 
     // Also listen for image load events as a fallback
-    const images = container.querySelectorAll("img");
+    const images = container.querySelectorAll('img');
     const handleImageLoad = () => recalculateMasonry();
 
     images.forEach((img) => {
@@ -73,7 +73,7 @@ const useMasonry = () => {
         // Image already loaded
         recalculateMasonry();
       } else {
-        img.addEventListener("load", handleImageLoad);
+        img.addEventListener('load', handleImageLoad);
       }
     });
 
@@ -83,9 +83,9 @@ const useMasonry = () => {
         mutation.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
             resizeObserver.observe(node);
-            const imgs = node.querySelectorAll("img");
+            const imgs = node.querySelectorAll('img');
             imgs.forEach((img) => {
-              img.addEventListener("load", handleImageLoad);
+              img.addEventListener('load', handleImageLoad);
             });
           }
         });
@@ -96,11 +96,11 @@ const useMasonry = () => {
     mutationObserver.observe(container, { childList: true });
 
     return () => {
-      window.removeEventListener("resize", recalculateMasonry);
+      window.removeEventListener('resize', recalculateMasonry);
       resizeObserver.disconnect();
       mutationObserver.disconnect();
       images.forEach((img) => {
-        img.removeEventListener("load", handleImageLoad);
+        img.removeEventListener('load', handleImageLoad);
       });
     };
   }, [recalculateMasonry]);

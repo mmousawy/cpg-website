@@ -102,7 +102,8 @@ export function useReorderAlbumPhotos(
 
         // Revalidate album page
         if (nickname) {
-          const album = queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId);
+          const albums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums']);
+          const album = albums?.find((a) => a.id === albumId);
           if (album?.slug) {
             await revalidateAlbum(nickname, album.slug);
           }
@@ -197,16 +198,17 @@ export function useUpdateAlbumPhoto(
       await Promise.all(allAffectedTags.map((tag) => revalidateTagPhotos(tag)));
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
+      const albums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums']);
       const userId =
         previousPhotos?.find((p) => p.id === photoId)?.user_id ||
-        queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId)?.user_id;
+        albums?.find((a) => a.id === albumId)?.user_id;
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['photos', userId] });
       }
 
       // Revalidate album page
       if (nickname) {
-        const album = queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId);
+        const album = albums?.find((a) => a.id === albumId);
         if (album?.slug) {
           await revalidateAlbum(nickname, album.slug);
         }
@@ -452,16 +454,17 @@ export function useBulkUpdateAlbumPhotos(
       }
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
+      const albums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums']);
       const userId =
         previousPhotos?.[0]?.user_id ||
-        queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId)?.user_id;
+        albums?.find((a) => a.id === albumId)?.user_id;
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['photos', userId] });
       }
 
       // Revalidate album page
       if (nickname) {
-        const album = queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId);
+        const album = albums?.find((a) => a.id === albumId);
         if (album?.slug) {
           await revalidateAlbum(nickname, album.slug);
         }

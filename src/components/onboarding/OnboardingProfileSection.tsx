@@ -5,10 +5,12 @@ import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingProfileSectionProps {
-  register: any;
-  errors: any;
+  register: UseFormRegister<OnboardingFormData>;
+  errors: FieldErrors<OnboardingFormData>;
   displayAvatarUrl: string | null | undefined;
   displayName: string | null | undefined;
   avatarFile: File | null;

@@ -1,4 +1,5 @@
 import type { Photo, Tag } from '@/types/photos';
+import type { Tables } from '@/database.types';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -268,8 +269,14 @@ export async function getPopularTagsWithMemberCounts(limit = 20) {
 
   // Count unique members per tag
   const tagMemberCounts = new Map<string, Set<string>>();
-  photoTags.forEach((pt) => {
-    const photo = pt.photos as any;
+  type PhotoRow = Pick<Tables<'photos'>, 'user_id'>;
+  type PhotoTagRow = Pick<Tables<'photo_tags'>, 'tag'>;
+  type PhotoTagQueryResult = PhotoTagRow & {
+    photos: PhotoRow | null;
+  };
+
+  photoTags.forEach((pt: PhotoTagQueryResult) => {
+    const photo = pt.photos;
     if (photo?.user_id) {
       if (!tagMemberCounts.has(pt.tag)) {
         tagMemberCounts.set(pt.tag, new Set());

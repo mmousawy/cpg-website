@@ -46,7 +46,7 @@ export function useSelectionBox({
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [hoveredIds, setHoveredIds] = useState<string[]>([]);
   const [justFinishedSelecting, setJustFinishedSelecting] = useState(false);
-  
+
   // Disable box-select on mobile
   const isDisabled = disabled || isMobile;
 

@@ -22,15 +22,25 @@ export default async function AlbumsPage() {
   return (
     <>
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">Photo albums</h1>
-          <p className="text-lg opacity-70">
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Photo albums
+          </h1>
+          <p
+            className="text-lg opacity-70"
+          >
             Photo collections from community members
           </p>
         </div>
       </PageContainer>
 
-      <WidePageContainer className="pt-0!">
+      <WidePageContainer
+        className="pt-0!"
+      >
         <AlbumsPaginated
           initialAlbums={albums}
           perPage={20}

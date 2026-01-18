@@ -70,17 +70,41 @@ export default function SignupClient() {
 
   if (success) {
     return (
-      <PageContainer className="items-center justify-center">
-        <Container padding="lg" className="mx-auto max-w-md text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-            <CheckSVG className="h-8 w-8 fill-green-500" />
+      <PageContainer
+        className="items-center justify-center"
+      >
+        <Container
+          padding="lg"
+          className="mx-auto max-w-md text-center"
+        >
+          <div
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10"
+          >
+            <CheckSVG
+              className="h-8 w-8 fill-green-500"
+            />
           </div>
-          <h1 className="mb-2 text-3xl font-bold">Check your email</h1>
-          <p className="text-foreground/70">
-            We&apos;ve sent a confirmation link to <strong>{email}</strong>.
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Check your email
+          </h1>
+          <p
+            className="text-foreground/70"
+          >
+            We&apos;ve sent a confirmation link to
+            {' '}
+            <strong>
+              {email}
+            </strong>
+            .
             Click the link in the email to activate your account.
           </p>
-          <ArrowLink href={routes.login.url} direction="left" className="mt-6">
+          <ArrowLink
+            href={routes.login.url}
+            direction="left"
+            className="mt-6"
+          >
             Back to login
           </ArrowLink>
         </Container>
@@ -89,22 +113,39 @@ export default function SignupClient() {
   }
 
   return (
-    <PageContainer className="items-center justify-center">
-      <Container padding="lg" className="mx-auto max-w-md">
-        <h1 className="mb-2 text-center text-3xl font-bold">Create an account</h1>
-        <p className="mb-8 text-center text-sm text-foreground/70">
+    <PageContainer
+      className="items-center justify-center"
+    >
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
+        <h1
+          className="mb-2 text-center text-3xl font-bold"
+        >
+          Create an account
+        </h1>
+        <p
+          className="mb-8 text-center text-sm text-foreground/70"
+        >
           Join the Creative Photography Group community
         </p>
 
         {/* Social Login Buttons */}
-        <div className="mb-6 flex flex-col gap-3">
+        <div
+          className="mb-6 flex flex-col gap-3"
+        >
           <Button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
             variant="secondary"
             fullWidth
             icon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24" data-no-inherit>
+              <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                data-no-inherit
+              >
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -132,26 +173,48 @@ export default function SignupClient() {
             disabled={isLoading}
             variant="custom"
             fullWidth
-            icon={<DiscordSVG className="h-5 w-6 fill-white" />}
+            icon={<DiscordSVG
+              className="h-5 w-6 fill-white"
+            />}
             className="bg-[#5865F2] text-white hover:bg-[#4752C4] hover:text-white border-[#5865F2] hover:border-[#4752C4]"
           >
             Continue with Discord
           </Button>
         </div>
 
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border-color" />
+        <div
+          className="relative mb-6"
+        >
+          <div
+            className="absolute inset-0 flex items-center"
+          >
+            <div
+              className="w-full border-t border-border-color"
+            />
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-background-light px-4 text-foreground/50">or sign up with email</span>
+          <div
+            className="relative flex justify-center text-sm"
+          >
+            <span
+              className="bg-background-light px-4 text-foreground/50"
+            >
+              or sign up with email
+            </span>
           </div>
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleEmailSignUp} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-medium">
+        <form
+          onSubmit={handleEmailSignUp}
+          className="flex flex-col gap-4"
+        >
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="email"
+              className="text-sm font-medium"
+            >
               Email
             </label>
             <Input
@@ -164,8 +227,13 @@ export default function SignupClient() {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-sm font-medium">
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="password"
+              className="text-sm font-medium"
+            >
               Password
             </label>
             <Input
@@ -177,11 +245,20 @@ export default function SignupClient() {
               required
               minLength={6}
             />
-            <p className="text-xs text-foreground/50">Must be at least 6 characters</p>
+            <p
+              className="text-xs text-foreground/50"
+            >
+              Must be at least 6 characters
+            </p>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="confirmPassword" className="text-sm font-medium">
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="confirmPassword"
+              className="text-sm font-medium"
+            >
               Confirm Password
             </label>
             <Input
@@ -196,7 +273,11 @@ export default function SignupClient() {
           </div>
 
           {error && (
-            <ErrorMessage variant="compact">{error}</ErrorMessage>
+            <ErrorMessage
+              variant="compact"
+            >
+              {error}
+            </ErrorMessage>
           )}
 
           <Button
@@ -209,9 +290,15 @@ export default function SignupClient() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-foreground/70">
-          Already have an account?{' '}
-          <Link href={routes.login.url} className="font-medium text-primary hover:text-primary-alt">
+        <p
+          className="mt-6 text-center text-sm text-foreground/70"
+        >
+          Already have an account?
+          {' '}
+          <Link
+            href={routes.login.url}
+            className="font-medium text-primary hover:text-primary-alt"
+          >
             {routes.login.label}
           </Link>
         </p>

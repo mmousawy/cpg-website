@@ -78,7 +78,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           .select('id, cover_image_url')
           .in('id', albumIds)
           .eq('user_id', userId);
-        
+
         if (albumsData) {
           albumsData.forEach((album) => {
             albumCoverChecks[album.id] = album.cover_image_url !== null;
@@ -228,11 +228,12 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
               revalidateGalleryData(),
             ]);
           }
-        } catch (err: any) {
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Upload failed';
           console.error('Upload error:', err);
           updateUploadingPhoto(upload.id, {
             status: 'error',
-            error: err.message || 'Upload failed',
+            error: message,
           });
         }
       }

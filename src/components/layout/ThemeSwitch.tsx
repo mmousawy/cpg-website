@@ -1,7 +1,7 @@
 'use client';
 
-import { useTheme } from "next-themes";
-import { useEffect, useCallback } from "react";
+import { useTheme } from 'next-themes';
+import { useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { useMounted } from '@/hooks/useMounted';
 
@@ -11,17 +11,17 @@ export default function ThemeSwitch() {
 
   useEffect(() => {
     // If the theme is set to "system", we need to check the user's system preference
-    if (theme === "system") {
-      if (systemTheme === "dark") {
-        setTheme("dark");
-      } else if (systemTheme === "light") {
-        setTheme("light");
+    if (theme === 'system') {
+      if (systemTheme === 'dark') {
+        setTheme('dark');
+      } else if (systemTheme === 'light') {
+        setTheme('light');
       }
     }
   }, [theme, systemTheme, setTheme]);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   }, [theme, setTheme]);
 
   const themeButtonHandle = (
@@ -37,12 +37,17 @@ export default function ThemeSwitch() {
     <div
       className="flex items-center justify-center gap-2"
     >
-      <label htmlFor="themeButton" className="cursor-pointer opacity-70">Switch theme</label>
+      <label
+        htmlFor="themeButton"
+        className="cursor-pointer opacity-70"
+      >
+        Switch theme
+      </label>
       <button
         id="themeButton"
         onClick={toggleTheme}
         className="h-6 w-12 cursor-pointer rounded-full bg-border-color p-1 text-foreground "
-        aria-label={`Toggle light or dark mode`}
+        aria-label={'Toggle light or dark mode'}
       >
         {mounted
           ? themeButtonHandle

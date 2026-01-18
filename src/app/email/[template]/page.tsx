@@ -1,4 +1,4 @@
-import { render } from "@react-email/render";
+import { render } from '@react-email/render';
 
 // Provide sample params for build-time validation (required with cacheComponents)
 export async function generateStaticParams() {
@@ -6,21 +6,24 @@ export async function generateStaticParams() {
 }
 
 // Email template mapping
-const templates: Record<string, () => Promise<any>> = {
+type EmailTemplateComponent = React.ComponentType<{ preview?: boolean; [key: string]: unknown }>;
+type EmailModule = { default: EmailTemplateComponent };
+
+const templates: Record<string, () => Promise<EmailModule>> = {
   // Event emails
-  'signup': () => import('../../../emails/signup'),
-  'confirm': () => import('../../../emails/confirm'),
-  'cancel': () => import('../../../emails/cancel'),
+  'signup': () => import('../../../emails/signup') as unknown as Promise<EmailModule>,
+  'confirm': () => import('../../../emails/confirm') as unknown as Promise<EmailModule>,
+  'cancel': () => import('../../../emails/cancel') as unknown as Promise<EmailModule>,
   // Auth emails
-  'verify-email': () => import('../../../emails/auth/verify-email'),
-  'reset-password': () => import('../../../emails/auth/reset-password'),
-  'welcome': () => import('../../../emails/auth/welcome'),
+  'verify-email': () => import('../../../emails/auth/verify-email') as unknown as Promise<EmailModule>,
+  'reset-password': () => import('../../../emails/auth/reset-password') as unknown as Promise<EmailModule>,
+  'welcome': () => import('../../../emails/auth/welcome') as unknown as Promise<EmailModule>,
   // Event announcement emails
-  'event-announcement': () => import('../../../emails/event-announcement'),
+  'event-announcement': () => import('../../../emails/event-announcement') as unknown as Promise<EmailModule>,
   // Attendee message emails
-  'attendee-message': () => import('../../../emails/attendee-message'),
+  'attendee-message': () => import('../../../emails/attendee-message') as unknown as Promise<EmailModule>,
   // Comment notification emails
-  'comment-notification': () => import('../../../emails/comment-notification'),
+  'comment-notification': () => import('../../../emails/comment-notification') as unknown as Promise<EmailModule>,
 };
 
 export default async function Email({
@@ -34,14 +37,36 @@ export default async function Email({
 
   if (!templateLoader) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Template not found: {template}</h1>
-          <p className="text-gray-600">Available templates:</p>
-          <ul className="mt-2">
+      <div
+        className="flex items-center justify-center h-screen"
+      >
+        <div
+          className="text-center"
+        >
+          <h1
+            className="text-2xl font-bold mb-4"
+          >
+            Template not found:
+            {template}
+          </h1>
+          <p
+            className="text-gray-600"
+          >
+            Available templates:
+          </p>
+          <ul
+            className="mt-2"
+          >
             {Object.keys(templates).map((t) => (
-              <li key={t}>
-                <a href={`/email/${t}`} className="text-blue-500 hover:underline">{t}</a>
+              <li
+                key={t}
+              >
+                <a
+                  href={`/email/${t}`}
+                  className="text-blue-500 hover:underline"
+                >
+                  {t}
+                </a>
               </li>
             ))}
           </ul>
@@ -51,7 +76,9 @@ export default async function Email({
   }
 
   const EmailComponent = (await templateLoader()).default;
-  const renderedTemplate = await render(<EmailComponent preview />);
+  const renderedTemplate = await render(<EmailComponent
+    preview
+  />);
 
   return (
     <iframe

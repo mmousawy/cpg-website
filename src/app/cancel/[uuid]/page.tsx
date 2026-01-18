@@ -1,7 +1,7 @@
-import Container from "@/components/layout/Container";
-import PageContainer from "@/components/layout/PageContainer";
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
 import { createClient } from '@/utils/supabase/server';
-import CancelBlock from "./CancelBlock";
+import CancelBlock from './CancelBlock';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import { unstable_noStore } from 'next/cache';
@@ -28,19 +28,23 @@ export default async function Cancel({
   const { uuid } = await params;
 
   // Single query with JOIN instead of 2 sequential queries
-  const { data: rsvp } = await supabase.from("events_rsvps")
+  const { data: rsvp } = await supabase.from('events_rsvps')
     .select(`
       *,
       events (*)
     `)
-    .eq("uuid", uuid)
+    .eq('uuid', uuid)
     .single();
 
   const event = rsvp?.events || null;
 
   return (
     <PageContainer>
-      <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Cancel your RSVP</h2>
+      <h2
+        className="mb-4 text-lg font-bold leading-tight opacity-70"
+      >
+        Cancel your RSVP
+      </h2>
       <Container>
         {(!event || !rsvp || !rsvp.email) && (
           <ErrorMessage>

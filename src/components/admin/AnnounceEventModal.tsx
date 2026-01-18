@@ -67,7 +67,7 @@ export default function AnnounceEventModal({
 
       // Get the events email type ID
       const { data: eventsEmailType } = await supabase
-        .from('email_types' as any)
+        .from('email_types')
         .select('id')
         .eq('type_key', 'events')
         .single();
@@ -76,11 +76,11 @@ export default function AnnounceEventModal({
         throw new Error('Events email type not found');
       }
 
-      const eventsEmailTypeId = (eventsEmailType as any).id;
+      const eventsEmailTypeId = eventsEmailType.id;
 
       // Get all users who have opted out of "events" email type
       const { data: optedOutUsers, error: optedOutError } = await supabase
-        .from('email_preferences' as any)
+        .from('email_preferences')
         .select('user_id')
         .eq('email_type_id', eventsEmailTypeId)
         .eq('opted_out', true);
@@ -90,7 +90,7 @@ export default function AnnounceEventModal({
       }
 
       const optedOutUserIds = new Set(
-        (optedOutUsers || []).map((u: any) => u.user_id),
+        (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
       );
 
       // Filter out users who have opted out
@@ -171,7 +171,9 @@ export default function AnnounceEventModal({
   // Memoize footer to prevent infinite loops - use refs for callbacks
   const footerContent = useMemo(
     () => (
-      <div className="flex justify-end gap-3">
+      <div
+        className="flex justify-end gap-3"
+      >
         <Button
           variant="secondary"
           onClick={() => onCloseRef.current()}
@@ -207,10 +209,14 @@ export default function AnnounceEventModal({
 
   return (
     <>
-      <div className="space-y-4">
+      <div
+        className="space-y-4"
+      >
         {/* Subscribers List */}
         {isLoadingSubscribers ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70">
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70"
+          >
             Loading recipients...
           </div>
         ) : (
@@ -223,36 +229,88 @@ export default function AnnounceEventModal({
 
         {/* Error Message */}
         {error && (
-          <ErrorMessage variant="compact">{error}</ErrorMessage>
+          <ErrorMessage
+            variant="compact"
+          >
+            {error}
+          </ErrorMessage>
         )}
 
         {/* Success Message */}
         {success && sendResult && (
-          <div className="mt-4">
+          <div
+            className="mt-4"
+          >
             {sendResult.failed === 0 ? (
-              <SuccessMessage variant="compact">
-                Successfully sent {sendResult.sent} of {sendResult.total} emails
+              <SuccessMessage
+                variant="compact"
+              >
+                Successfully sent
+                {' '}
+                {sendResult.sent}
+                {' '}
+                of
+                {' '}
+                {sendResult.total}
+                {' '}
+                emails
               </SuccessMessage>
             ) : (
-              <div className="flex gap-2 rounded-md bg-yellow-500/20 p-3 text-sm text-foreground">
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    {sendResult.sent} email{sendResult.sent !== 1 ? 's' : ''} sent successfully.
+              <div
+                className="flex gap-2 rounded-md bg-yellow-500/20 p-3 text-sm text-foreground"
+              >
+                <div
+                  className="flex-1"
+                >
+                  <p
+                    className="font-semibold"
+                  >
+                    {sendResult.sent}
+                    {' '}
+                    email
+                    {sendResult.sent !== 1 ? 's' : ''}
+                    {' '}
+                    sent successfully.
                   </p>
                   {sendResult.failed > 0 && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs font-normal">
-                        {sendResult.failed} email{sendResult.failed !== 1 ? 's' : ''} failed to send.
+                    <div
+                      className="mt-2 space-y-1"
+                    >
+                      <p
+                        className="text-xs font-normal"
+                      >
+                        {sendResult.failed}
+                        {' '}
+                        email
+                        {sendResult.failed !== 1 ? 's' : ''}
+                        {' '}
+                        failed to send.
                       </p>
                       {sendResult.errorDetails && Object.keys(sendResult.errorDetails).length > 0 && (
-                        <details className="text-xs">
-                          <summary className="cursor-pointer text-foreground/70 hover:text-foreground">
+                        <details
+                          className="text-xs"
+                        >
+                          <summary
+                            className="cursor-pointer text-foreground/70 hover:text-foreground"
+                          >
                             View error details
                           </summary>
-                          <div className="mt-2 space-y-1 rounded-md bg-red-500/10 p-2">
+                          <div
+                            className="mt-2 space-y-1 rounded-md bg-red-500/10 p-2"
+                          >
                             {Object.entries(sendResult.errorDetails).map(([email, error]) => (
-                              <div key={email} className="break-words">
-                                <span className="font-medium">{email}:</span> {String(error)}
+                              <div
+                                key={email}
+                                className="break-words"
+                              >
+                                <span
+                                  className="font-medium"
+                                >
+                                  {email}
+                                  :
+                                </span>
+                                {' '}
+                                {String(error)}
                               </div>
                             ))}
                           </div>

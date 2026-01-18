@@ -3,9 +3,8 @@
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
+import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -100,8 +99,13 @@ function InfoIconSVG({ className }: { className?: string }) {
       fill="currentColor"
       className={className}
     >
-      <path d="M0 0h24v24H0z" fill="none" />
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+      <path
+        d="M0 0h24v24H0z"
+        fill="none"
+      />
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+      />
     </svg>
   );
 }
@@ -128,7 +132,7 @@ export default function PhotoListItem({
 }: PhotoListItemProps) {
   const displayName = getPhotoDisplayName(photo);
   const isDetailed = variant === 'detailed';
-  const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
+  const lightboxRef = useRef<PhotoSwipeLightboxInstance | null>(null);
   const isOpeningRef = useRef(false);
   const [showExif, setShowExif] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; right: number } | null>(null);
@@ -200,7 +204,7 @@ export default function PhotoListItem({
     }
   }, [showExif]);
 
-  const handleViewFullSize = (e: React.MouseEvent) => {
+  const handleViewFullSize = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -211,6 +215,9 @@ export default function PhotoListItem({
 
     try {
       isOpeningRef.current = true;
+
+      // Lazy load PhotoSwipe
+      const PhotoSwipeLightbox = await initPhotoSwipe();
 
       // Create data source
       const dataSource = [{
@@ -259,7 +266,9 @@ export default function PhotoListItem({
   };
 
   return (
-    <div className={`flex items-start gap-2 border border-border-color bg-background-medium p-0 ${className}`}>
+    <div
+      className={`flex items-start gap-2 border border-border-color bg-background-medium p-0 ${className}`}
+    >
       <div
         className={clsx(
           'group/thumb relative shrink-0 overflow-hidden bg-background cursor-pointer',
@@ -276,14 +285,25 @@ export default function PhotoListItem({
           sizes="128px"
         />
         {/* Hover overlay with magnifying glass */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/thumb:opacity-100">
-          <MagnifyingGlassPlusSVG className="size-5 text-white drop-shadow-md" />
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover/thumb:opacity-100"
+        >
+          <MagnifyingGlassPlusSVG
+            className="size-5 text-white drop-shadow-md"
+          />
         </div>
       </div>
-      <div className="min-w-0 flex-1 py-1 pr-1 space-y-0.5 relative">
+      <div
+        className="min-w-0 flex-1 py-1 pr-1 space-y-0.5 relative"
+      >
         {/* Primary name (title or fallback) */}
-        <div className="flex items-start justify-between gap-2">
-          <p className="line-clamp-2 text-sm font-medium leading-tight flex-1" title={displayName}>
+        <div
+          className="flex items-start justify-between gap-2"
+        >
+          <p
+            className="line-clamp-2 text-sm font-medium leading-tight flex-1"
+            title={displayName}
+          >
             {displayName}
           </p>
           {/* EXIF Info Button - only in detailed view */}
@@ -310,7 +330,9 @@ export default function PhotoListItem({
                 title="View EXIF data"
                 aria-label="View EXIF data"
               >
-                <InfoIconSVG className="size-3.5" />
+                <InfoIconSVG
+                  className="size-3.5"
+                />
               </button>
 
               {/* EXIF Popover - rendered via portal outside scroll container */}
@@ -327,15 +349,31 @@ export default function PhotoListItem({
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <h4 className="text-xs font-semibold mb-1.5 text-foreground/80">Photo EXIF Data</h4>
-                    <div className="table text-[11px]">
+                    <h4
+                      className="text-xs font-semibold mb-1.5 text-foreground/80"
+                    >
+                      Photo EXIF Data
+                    </h4>
+                    <div
+                      className="table text-[11px]"
+                    >
                       {Object.entries(exifData).map(([key, value]) => {
                         const formattedValue = formatExifValue(key, value);
                         if (!formattedValue) return null;
                         return (
-                          <div className="table-row" key={key}>
-                            <span className="table-cell text-foreground/60 font-medium pr-1 pt-0.5 whitespace-nowrap">{getExifLabel(key)}:</span>
-                            <span className="table-cell text-foreground/80 truncate pt-0.5">
+                          <div
+                            className="table-row"
+                            key={key}
+                          >
+                            <span
+                              className="table-cell text-foreground/60 font-medium pr-1 pt-0.5 whitespace-nowrap"
+                            >
+                              {getExifLabel(key)}
+                              :
+                            </span>
+                            <span
+                              className="table-cell text-foreground/80 truncate pt-0.5"
+                            >
                               {formattedValue}
                             </span>
                           </div>
@@ -349,29 +387,53 @@ export default function PhotoListItem({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/60">
+        <div
+          className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/60"
+        >
           {photo.original_filename && (
-            <div className="col-span-2 truncate">
-              <span title={photo.original_filename}>{photo.original_filename}</span>
+            <div
+              className="col-span-2 truncate"
+            >
+              <span
+                title={photo.original_filename}
+              >
+                {photo.original_filename}
+              </span>
             </div>
           )}
           {isDetailed && (
             <>
               {photo.created_at && formatDate(photo.created_at) && (
-                <div className="truncate">
+                <div
+                  className="truncate"
+                >
                   {formatDate(photo.created_at)}
                 </div>
               )}
-              <div className="truncate">
-                {photo.width} × {photo.height}
+              <div
+                className="truncate"
+              >
+                {photo.width}
+                {' '}
+                ×
+                {photo.height}
               </div>
               {formatFileSize(photo.file_size) && (
-                <div className="truncate">
+                <div
+                  className="truncate"
+                >
                   {formatFileSize(photo.file_size)}
                 </div>
               )}
-              <div className="truncate">
-                <span className="text-foreground/60">ID:</span>{' '}
+              <div
+                className="truncate"
+              >
+                <span
+                  className="text-foreground/60"
+                >
+                  ID:
+                </span>
+                {' '}
                 {photo.short_id || photo.id.slice(0, 8)}
               </div>
             </>

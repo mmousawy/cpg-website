@@ -26,7 +26,9 @@ function AlbumCard({
     if (!album.is_public) {
       return [
         {
-          icon: <PrivateMicroSVG className="size-4" />,
+          icon: <PrivateMicroSVG
+            className="size-4"
+          />,
           variant: 'private' as const,
           tooltip: 'Private (only visible to you)',
         },
@@ -47,7 +49,9 @@ function AlbumCard({
       )}
     >
       {/* Cover image */}
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background">
+      <div
+        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
+      >
         {coverImage ? (
           <Image
             src={coverImage}
@@ -59,23 +63,39 @@ function AlbumCard({
             draggable={false}
           />
         ) : (
-          <FolderSVG className="size-12 text-foreground/20" />
+          <FolderSVG
+            className="size-12 text-foreground/20"
+          />
         )}
 
         {/* Badges */}
-        <CardBadges badges={badges} />
+        <CardBadges
+          badges={badges}
+        />
       </div>
 
       {/* Info section */}
-      <div className="p-3">
-        <h3 className="text-sm font-semibold line-clamp-1">{album.title}</h3>
-        <p className="text-xs text-foreground/50 mt-1">
-          {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+      <div
+        className="p-3"
+      >
+        <h3
+          className="text-sm font-semibold line-clamp-1"
+        >
+          {album.title}
+        </h3>
+        <p
+          className="text-xs text-foreground/50 mt-1"
+        >
+          {photoCount}
+          {' '}
+          {photoCount === 1 ? 'photo' : 'photos'}
         </p>
       </div>
 
       {/* Hover overlay */}
-      <div className="absolute inset-0 z-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"></div>
+      <div
+        className="absolute inset-0 z-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"
+      ></div>
     </div>
   );
 }

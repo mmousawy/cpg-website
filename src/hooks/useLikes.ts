@@ -207,7 +207,7 @@ export function usePhotoLikes(
     staleTime?: number;
     refetchOnMount?: boolean;
     refetchOnWindowFocus?: boolean;
-  }
+  },
 ) {
   return useQuery({
     queryKey: ['photo-likes', photoId],
@@ -232,7 +232,7 @@ export function useAlbumLikes(
     staleTime?: number;
     refetchOnMount?: boolean;
     refetchOnWindowFocus?: boolean;
-  }
+  },
 ) {
   return useQuery({
     queryKey: ['album-likes', albumId],

@@ -7,6 +7,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import type { Tables } from '@/database.types';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
 import Textarea from './Textarea';
@@ -77,13 +78,30 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
       if (error) {
         console.error('Error fetching comments:', error);
       } else if (data) {
+        type CommentRow = Pick<Tables<'comments'>, 'id' | 'user_id' | 'comment_text' | 'created_at' | 'updated_at'>;
+        type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url'>;
+        type CommentQueryResult = {
+          comment_id: string;
+          comments: (CommentRow & {
+            profile: ProfileRow | null;
+          }) | null;
+        };
+
         // Flatten the nested structure
-        const flatComments = data
-          .map((ac: any) => ac.comments)
-          .filter((c: any) => c !== null)
-          .map((c: any) => ({
-            ...c,
-            profile: Array.isArray(c.profile) ? c.profile[0] : c.profile,
+        const flatComments = (data as CommentQueryResult[])
+          .map((ac) => ac.comments)
+          .filter((c): c is NonNullable<typeof c> => c !== null)
+          .map((c) => ({
+            id: c.id,
+            user_id: c.user_id,
+            comment_text: c.comment_text,
+            created_at: c.created_at,
+            updated_at: c.updated_at,
+            profile: c.profile ? {
+              full_name: c.profile.full_name,
+              nickname: c.profile.nickname || '',
+              avatar_url: c.profile.avatar_url,
+            } : undefined,
           })) as Comment[];
         setComments(flatComments);
       }
@@ -179,14 +197,26 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
       id="comments"
       className="space-y-4"
     >
-      <h3 className="text-lg font-semibold">{comments.length > 0 ? `${comments.length} Comments` : 'Comments'}</h3>
+      <h3
+        className="text-lg font-semibold"
+      >
+        {comments.length > 0 ? `${comments.length} Comments` : 'Comments'}
+      </h3>
 
       {/* Comments List */}
-      <div className="space-y-4">
+      <div
+        className="space-y-4"
+      >
         {isLoading ? (
-          <p className="text-base text-foreground/70">Loading comments...</p>
+          <p
+            className="text-base text-foreground/70"
+          >
+            Loading comments...
+          </p>
         ) : comments.length === 0 ? (
-          <p className="text-base text-foreground/70">
+          <p
+            className="text-base text-foreground/70"
+          >
             No comments yet. Be the first to comment!
           </p>
         ) : (
@@ -195,7 +225,9 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
               key={comment.id}
               className="dark:bg-foreground/10 rounded-lg shadow-md shadow-[#00000007] border border-border-color-strong p-4"
             >
-              <div className="flex items-start justify-between gap-2">
+              <div
+                className="flex items-start justify-between gap-2"
+              >
                 <Link
                   href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
                   className="flex gap-3 group rounded-lg"
@@ -207,11 +239,20 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
                     size="sm"
                   />
                   <div>
-                    <p className="font-medium group-hover:text-primary transition-colors">
+                    <p
+                      className="font-medium group-hover:text-primary transition-colors"
+                    >
                       {comment.profile?.full_name || 'Anonymous'}
                     </p>
-                    <p className="text-xs text-foreground/50 group-hover:text-primary transition-colors">
-                      @{comment.profile?.nickname} · {formatDate(comment.created_at)}
+                    <p
+                      className="text-xs text-foreground/50 group-hover:text-primary transition-colors"
+                    >
+                      @
+                      {comment.profile?.nickname}
+                      {' '}
+                      ·
+                      {' '}
+                      {formatDate(comment.created_at)}
                     </p>
                   </div>
                 </Link>
@@ -221,11 +262,15 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
                     className="rounded p-1 hover:bg-red-600/10"
                     aria-label="Delete comment"
                   >
-                    <TrashSVG className="size-4 text-red-600" />
+                    <TrashSVG
+                      className="size-4 text-red-600"
+                    />
                   </button>
                 )}
               </div>
-              <p className="mt-2 text-sm text-foreground/90 ml-[52px]">
+              <p
+                className="mt-2 text-sm text-foreground/90 ml-[52px]"
+              >
                 {comment.comment_text}
               </p>
             </div>
@@ -257,7 +302,9 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
         <Button
           type="submit"
           size="sm"
-          iconRight={<SendSVG className="size-4" />}
+          iconRight={<SendSVG
+            className="size-4"
+          />}
           disabled={isSubmitting || !commentText.trim()}
           onClick={(e) => {
             if (!user) {

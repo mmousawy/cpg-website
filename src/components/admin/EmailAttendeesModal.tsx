@@ -199,7 +199,9 @@ export default function EmailAttendeesModal({
   // Memoize footer to prevent infinite loops - use refs for callbacks
   const footerContent = useMemo(
     () => (
-      <div className="flex justify-end gap-3">
+      <div
+        className="flex justify-end gap-3"
+      >
         <Button
           variant="secondary"
           onClick={() => onCloseRef.current()}
@@ -235,10 +237,14 @@ export default function EmailAttendeesModal({
 
   return (
     <>
-      <div className="space-y-4">
+      <div
+        className="space-y-4"
+      >
         {/* Recipients List */}
         {isLoadingRecipients ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70">
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70"
+          >
             Loading recipients...
           </div>
         ) : (
@@ -256,8 +262,17 @@ export default function EmailAttendeesModal({
 
         {/* Message Input */}
         <div>
-          <label htmlFor="message" className="mb-2 block text-sm font-medium">
-            Message <span className="text-red-500">*</span>
+          <label
+            htmlFor="message"
+            className="mb-2 block text-sm font-medium"
+          >
+            Message
+            {' '}
+            <span
+              className="text-red-500"
+            >
+              *
+            </span>
           </label>
           <Textarea
             id="message"
@@ -268,43 +283,97 @@ export default function EmailAttendeesModal({
             disabled={isSending || recipients.filter(r => r.selected).length === 0}
             error={!!error && !message.trim()}
           />
-          <p className="mt-1 text-xs text-foreground/50">
+          <p
+            className="mt-1 text-xs text-foreground/50"
+          >
             This message will be included in the email along with event details.
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <ErrorMessage variant="compact">{error}</ErrorMessage>
+          <ErrorMessage
+            variant="compact"
+          >
+            {error}
+          </ErrorMessage>
         )}
 
         {/* Success Message */}
         {success && sendResult && (
-          <div className="mt-4">
+          <div
+            className="mt-4"
+          >
             {sendResult.failed === 0 ? (
-              <SuccessMessage variant="compact">
-                Successfully sent {sendResult.sent} of {sendResult.total} emails
+              <SuccessMessage
+                variant="compact"
+              >
+                Successfully sent
+                {' '}
+                {sendResult.sent}
+                {' '}
+                of
+                {' '}
+                {sendResult.total}
+                {' '}
+                emails
               </SuccessMessage>
             ) : (
-              <div className="flex gap-2 rounded-md bg-yellow-500/20 p-3 text-sm text-foreground">
-                <div className="flex-1">
-                  <p className="font-semibold">
-                    {sendResult.sent} email{sendResult.sent !== 1 ? 's' : ''} sent successfully.
+              <div
+                className="flex gap-2 rounded-md bg-yellow-500/20 p-3 text-sm text-foreground"
+              >
+                <div
+                  className="flex-1"
+                >
+                  <p
+                    className="font-semibold"
+                  >
+                    {sendResult.sent}
+                    {' '}
+                    email
+                    {sendResult.sent !== 1 ? 's' : ''}
+                    {' '}
+                    sent successfully.
                   </p>
                   {sendResult.failed > 0 && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs font-normal">
-                        {sendResult.failed} email{sendResult.failed !== 1 ? 's' : ''} failed to send.
+                    <div
+                      className="mt-2 space-y-1"
+                    >
+                      <p
+                        className="text-xs font-normal"
+                      >
+                        {sendResult.failed}
+                        {' '}
+                        email
+                        {sendResult.failed !== 1 ? 's' : ''}
+                        {' '}
+                        failed to send.
                       </p>
                       {sendResult.errorDetails && Object.keys(sendResult.errorDetails).length > 0 && (
-                        <details className="text-xs">
-                          <summary className="cursor-pointer text-foreground/70 hover:text-foreground">
+                        <details
+                          className="text-xs"
+                        >
+                          <summary
+                            className="cursor-pointer text-foreground/70 hover:text-foreground"
+                          >
                             View error details
                           </summary>
-                          <div className="mt-2 space-y-1 rounded-md bg-red-500/10 p-2">
+                          <div
+                            className="mt-2 space-y-1 rounded-md bg-red-500/10 p-2"
+                          >
                             {Object.entries(sendResult.errorDetails).map(([email, error]) => (
-                              <div key={email} className="break-words">
-                                <span className="font-medium">{email}:</span> {String(error)}
+                              <div
+                                key={email}
+                                className="break-words"
+                              >
+                                <span
+                                  className="font-medium"
+                                >
+                                  {email}
+                                  :
+                                </span>
+                                {' '}
+                                {String(error)}
                               </div>
                             ))}
                           </div>

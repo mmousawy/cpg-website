@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { render } from "@react-email/render";
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
 
-import { createClient } from "@/utils/supabase/server";
-import { CancelEmail } from "../../../emails/cancel";
-import { revalidateEventAttendees } from "@/app/actions/revalidate";
+import { createClient } from '@/utils/supabase/server';
+import { CancelEmail } from '../../../emails/cancel';
+import { revalidateEventAttendees } from '@/app/actions/revalidate';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const { uuid } = await request.json();
 
   if (!uuid) {
-    return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+    return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
   }
 
   // Get the RSVP
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!rsvp || !event) {
-    return NextResponse.json({ message: "RSVP or event not found" }, { status: 404 });
+    return NextResponse.json({ message: 'RSVP or event not found' }, { status: 404 });
   }
 
   // Check if the current user owns this RSVP (if logged in)
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   const canCancel = (user && rsvp.user_id === user.id) || rsvp.email;
 
   if (!canCancel) {
-    return NextResponse.json({ message: "Unauthorized to cancel this RSVP" }, { status: 403 });
+    return NextResponse.json({ message: 'Unauthorized to cancel this RSVP' }, { status: 403 });
   }
 
   // Cancel the RSVP in the database

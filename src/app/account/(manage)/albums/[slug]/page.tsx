@@ -9,7 +9,11 @@ export async function generateStaticParams() {
 
 export default async function AlbumDetailPage() {
   return (
-    <Suspense fallback={<PageLoading message="Loading album..." />}>
+    <Suspense
+      fallback={<PageLoading
+        message="Loading album..."
+      />}
+    >
       <AlbumDetailClient />
     </Suspense>
   );

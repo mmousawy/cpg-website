@@ -195,6 +195,233 @@ export function useAccountForm() {
     if (loadedUserIdRef.current === user.id) return;
     loadedUserIdRef.current = user.id;
 
+    const loadProfile = async (types: EmailTypeData[]) => {
+      if (!user) return;
+
+      try {
+      // Load email preferences
+        const preferences = await getUserEmailPreferences(user.id);
+        setEmailPreferences(preferences);
+
+        // Load profile interests
+        const { data: interestsData } = await supabase
+          .from('profile_interests')
+          .select('interest')
+          .eq('profile_id', user.id);
+
+        const userInterests = (interestsData || []).map((pi) => pi.interest);
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select(
+            'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in',
+          )
+          .eq('id', user.id)
+          .single();
+
+        // PGRST116 = no rows returned (profile doesn't exist yet)
+        if (error) {
+          if (error.code === 'PGRST116') {
+          // Profile doesn't exist, try to create it
+            const { data: newProfile, error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || null,
+                avatar_url: user.user_metadata?.avatar_url || null,
+              })
+              .select()
+              .single();
+
+            if (newProfile) {
+              setProfile({
+                ...newProfile,
+                social_links: (newProfile.social_links as SocialLink[] | null) ?? null,
+                album_card_style: (newProfile.album_card_style === 'large' ||
+              newProfile.album_card_style === 'compact'
+                ? newProfile.album_card_style
+                : null) as 'large' | 'compact' | null,
+                theme: (newProfile.theme &&
+              ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
+                ? newProfile.theme
+                : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+                newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
+              });
+              setNickname(newProfile.nickname || '');
+              setSavedAvatarUrl(newProfile.avatar_url);
+
+              // Load saved album card style from localStorage (takes priority)
+              const storedStyle = localStorage.getItem('album-card-style');
+              const albumStyle: 'large' | 'compact' =
+              storedStyle === 'large' || storedStyle === 'compact'
+                ? storedStyle
+                : newProfile.album_card_style === 'large' ||
+                    newProfile.album_card_style === 'compact'
+                  ? newProfile.album_card_style
+                  : 'large';
+
+              // Build email preferences object from loaded preferences
+              const emailPrefs: Record<string, boolean> = {};
+              types.forEach((type) => {
+                const pref = preferences.find((p) => p.type_key === type.type_key);
+                // If no preference exists, default to opted in (opted_out = false)
+                // For newsletter, also check newsletter_opt_in for backward compatibility
+                if (type.type_key === 'newsletter') {
+                  emailPrefs[type.type_key] =
+                  (newProfile.newsletter_opt_in ?? (pref ? !pref.opted_out : true));
+                } else {
+                  emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
+                }
+              });
+
+              // Set form values and baseline for dirty comparison
+              const formValues: AccountFormData = {
+                fullName: newProfile.full_name || '',
+                bio: newProfile.bio || '',
+                website: newProfile.website || '',
+                socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
+                interests: userInterests,
+                albumCardStyle: albumStyle,
+                theme: 'system',
+                emailPreferences: emailPrefs,
+              };
+              reset(formValues);
+              setSavedFormValues(formValues);
+            } else if (insertError) {
+              console.error('Error creating profile:', insertError.message || insertError);
+            }
+          } else {
+            console.info(
+              'Profiles table not available, using user metadata:',
+              error.message || error.code,
+            );
+            setProfile({
+              id: user.id,
+              email: user.email || null,
+              full_name: user.user_metadata?.full_name || null,
+              nickname: null,
+              avatar_url: user.user_metadata?.avatar_url || null,
+              bio: null,
+              website: null,
+              social_links: null,
+              album_card_style: null,
+              newsletter_opt_in: false,
+              created_at: user.created_at || new Date().toISOString(),
+              last_logged_in: null,
+            });
+            // Build default email preferences (all opted in)
+            const emailPrefs: Record<string, boolean> = {};
+            types.forEach((type) => {
+              emailPrefs[type.type_key] = true;
+            });
+
+            const formValues: AccountFormData = {
+              fullName: user.user_metadata?.full_name || '',
+              bio: '',
+              website: '',
+              socialLinks: [],
+              interests: [],
+              albumCardStyle: 'large',
+              theme: 'system',
+              emailPreferences: emailPrefs,
+            };
+            reset(formValues);
+            setSavedFormValues(formValues);
+          }
+        } else if (data) {
+          setProfile({
+            ...data,
+            social_links: (data.social_links as SocialLink[] | null) ?? null,
+            album_card_style: (data.album_card_style === 'large' ||
+          data.album_card_style === 'compact'
+            ? data.album_card_style
+            : null) as 'large' | 'compact' | null,
+            theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
+            ? data.theme
+            : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+          });
+          setNickname(data.nickname || '');
+          setSavedAvatarUrl(data.avatar_url);
+
+          // Load saved album card style from localStorage (takes priority)
+          const storedStyle = localStorage.getItem('album-card-style');
+          const albumStyle: 'large' | 'compact' =
+          storedStyle === 'large' || storedStyle === 'compact'
+            ? storedStyle
+            : data.album_card_style === 'large' || data.album_card_style === 'compact'
+              ? data.album_card_style
+              : 'large';
+
+          // Get theme from database (don't use useTheme() value as it may be undefined initially)
+          const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =
+          data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
+            ? (data.theme as 'system' | 'light' | 'dark' | 'midnight')
+            : 'system';
+
+          // Build email preferences object from loaded preferences
+          const emailPrefs: Record<string, boolean> = {};
+          types.forEach((type) => {
+            const pref = preferences.find((p) => p.type_key === type.type_key);
+            // If no preference exists, default to opted in (opted_out = false)
+            // For newsletter, also check newsletter_opt_in for backward compatibility
+            if (type.type_key === 'newsletter') {
+              emailPrefs[type.type_key] = data.newsletter_opt_in ?? (pref ? !pref.opted_out : true);
+            } else {
+              emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
+            }
+          });
+
+          // Set form values and baseline for dirty comparison
+          const formValues: AccountFormData = {
+            fullName: data.full_name || '',
+            bio: data.bio || '',
+            website: data.website || '',
+            socialLinks: (data.social_links as { label: string; url: string }[]) || [],
+            interests: userInterests,
+            albumCardStyle: albumStyle,
+            theme: profileTheme,
+            emailPreferences: emailPrefs,
+          };
+          reset(formValues);
+          setSavedFormValues(formValues);
+        }
+      } catch (err) {
+        console.error('Unexpected error loading profile:', err);
+      }
+
+      setIsLoading(false);
+    };
+
+    const loadStats = async () => {
+      if (!user) return;
+
+      try {
+        const response = await fetch('/api/account/stats');
+        if (!response.ok) {
+          throw new Error('Failed to load stats');
+        }
+        const data = await response.json();
+        setStats(data);
+      } catch (err) {
+        console.error('Error loading stats:', err);
+        setStats({
+          albums: 0,
+          photos: 0,
+          commentsMade: 0,
+          commentsReceived: 0,
+          likesReceived: 0,
+          viewsReceived: 0,
+          likesMade: 0,
+          rsvpsConfirmed: 0,
+          rsvpsCanceled: 0,
+          eventsAttended: 0,
+          memberSince: null,
+          lastLoggedIn: null,
+        });
+      }
+    };
+
     const loadData = async () => {
       try {
         // Load email types first (must be loaded before profile to build preferences correctly)
@@ -214,235 +441,7 @@ export function useAccountForm() {
     };
 
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const loadProfile = async (types: EmailTypeData[] = emailTypes) => {
-    if (!user) return;
-
-    try {
-      // Load email preferences
-      const preferences = await getUserEmailPreferences(user.id);
-      setEmailPreferences(preferences);
-
-      // Load profile interests
-      const { data: interestsData } = await supabase
-        .from('profile_interests')
-        .select('interest')
-        .eq('profile_id', user.id);
-
-      const userInterests = (interestsData || []).map((pi) => pi.interest);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(
-          'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in',
-        )
-        .eq('id', user.id)
-        .single();
-
-      // PGRST116 = no rows returned (profile doesn't exist yet)
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Profile doesn't exist, try to create it
-          const { data: newProfile, error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              email: user.email,
-              full_name: user.user_metadata?.full_name || null,
-              avatar_url: user.user_metadata?.avatar_url || null,
-            })
-            .select()
-            .single();
-
-          if (newProfile) {
-            setProfile({
-              ...newProfile,
-              social_links: (newProfile.social_links as SocialLink[] | null) ?? null,
-              album_card_style: (newProfile.album_card_style === 'large' ||
-              newProfile.album_card_style === 'compact'
-                ? newProfile.album_card_style
-                : null) as 'large' | 'compact' | null,
-              theme: (newProfile.theme &&
-              ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
-                ? newProfile.theme
-                : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
-              newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
-            });
-            setNickname(newProfile.nickname || '');
-            setSavedAvatarUrl(newProfile.avatar_url);
-
-            // Load saved album card style from localStorage (takes priority)
-            const storedStyle = localStorage.getItem('album-card-style');
-            const albumStyle: 'large' | 'compact' =
-              storedStyle === 'large' || storedStyle === 'compact'
-                ? storedStyle
-                : newProfile.album_card_style === 'large' ||
-                    newProfile.album_card_style === 'compact'
-                  ? newProfile.album_card_style
-                  : 'large';
-
-            // Build email preferences object from loaded preferences
-            const emailPrefs: Record<string, boolean> = {};
-            types.forEach((type) => {
-              const pref = preferences.find((p) => p.type_key === type.type_key);
-              // If no preference exists, default to opted in (opted_out = false)
-              // For newsletter, also check newsletter_opt_in for backward compatibility
-              if (type.type_key === 'newsletter') {
-                emailPrefs[type.type_key] =
-                  (newProfile as any).newsletter_opt_in ?? (pref ? !pref.opted_out : true);
-              } else {
-                emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
-              }
-            });
-
-            // Set form values and baseline for dirty comparison
-            const formValues: AccountFormData = {
-              fullName: newProfile.full_name || '',
-              bio: newProfile.bio || '',
-              website: newProfile.website || '',
-              socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
-              interests: userInterests,
-              albumCardStyle: albumStyle,
-              theme: 'system',
-              emailPreferences: emailPrefs,
-            };
-            reset(formValues);
-            setSavedFormValues(formValues);
-          } else if (insertError) {
-            console.error('Error creating profile:', insertError.message || insertError);
-          }
-        } else {
-          console.info(
-            'Profiles table not available, using user metadata:',
-            error.message || error.code,
-          );
-          setProfile({
-            id: user.id,
-            email: user.email || null,
-            full_name: user.user_metadata?.full_name || null,
-            nickname: null,
-            avatar_url: user.user_metadata?.avatar_url || null,
-            bio: null,
-            website: null,
-            social_links: null,
-            album_card_style: null,
-            newsletter_opt_in: false,
-            created_at: user.created_at || new Date().toISOString(),
-            last_logged_in: null,
-          });
-          // Build default email preferences (all opted in)
-          const emailPrefs: Record<string, boolean> = {};
-          types.forEach((type) => {
-            emailPrefs[type.type_key] = true;
-          });
-
-          const formValues: AccountFormData = {
-            fullName: user.user_metadata?.full_name || '',
-            bio: '',
-            website: '',
-            socialLinks: [],
-            interests: [],
-            albumCardStyle: 'large',
-            theme: 'system',
-            emailPreferences: emailPrefs,
-          };
-          reset(formValues);
-          setSavedFormValues(formValues);
-        }
-      } else if (data) {
-        setProfile({
-          ...data,
-          social_links: (data.social_links as SocialLink[] | null) ?? null,
-          album_card_style: (data.album_card_style === 'large' ||
-          data.album_card_style === 'compact'
-            ? data.album_card_style
-            : null) as 'large' | 'compact' | null,
-          theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
-            ? data.theme
-            : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
-        });
-        setNickname(data.nickname || '');
-        setSavedAvatarUrl(data.avatar_url);
-
-        // Load saved album card style from localStorage (takes priority)
-        const storedStyle = localStorage.getItem('album-card-style');
-        const albumStyle: 'large' | 'compact' =
-          storedStyle === 'large' || storedStyle === 'compact'
-            ? storedStyle
-            : data.album_card_style === 'large' || data.album_card_style === 'compact'
-              ? data.album_card_style
-              : 'large';
-
-        // Get theme from database (don't use useTheme() value as it may be undefined initially)
-        const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =
-          data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
-            ? (data.theme as 'system' | 'light' | 'dark' | 'midnight')
-            : 'system';
-
-        // Build email preferences object from loaded preferences
-        const emailPrefs: Record<string, boolean> = {};
-        types.forEach((type) => {
-          const pref = preferences.find((p) => p.type_key === type.type_key);
-          // If no preference exists, default to opted in (opted_out = false)
-          // For newsletter, also check newsletter_opt_in for backward compatibility
-          if (type.type_key === 'newsletter') {
-            emailPrefs[type.type_key] = data.newsletter_opt_in ?? (pref ? !pref.opted_out : true);
-          } else {
-            emailPrefs[type.type_key] = pref ? !pref.opted_out : true;
-          }
-        });
-
-        // Set form values and baseline for dirty comparison
-        const formValues: AccountFormData = {
-          fullName: data.full_name || '',
-          bio: data.bio || '',
-          website: data.website || '',
-          socialLinks: (data.social_links as { label: string; url: string }[]) || [],
-          interests: userInterests,
-          albumCardStyle: albumStyle,
-          theme: profileTheme,
-          emailPreferences: emailPrefs,
-        };
-        reset(formValues);
-        setSavedFormValues(formValues);
-      }
-    } catch (err) {
-      console.error('Unexpected error loading profile:', err);
-    }
-
-    setIsLoading(false);
-  };
-
-  const loadStats = async () => {
-    if (!user) return;
-
-    try {
-      const response = await fetch('/api/account/stats');
-      if (!response.ok) {
-        throw new Error('Failed to load stats');
-      }
-      const data = await response.json();
-      setStats(data);
-    } catch (err) {
-      console.error('Error loading stats:', err);
-      setStats({
-        albums: 0,
-        photos: 0,
-        commentsMade: 0,
-        commentsReceived: 0,
-        likesReceived: 0,
-        viewsReceived: 0,
-        likesMade: 0,
-        rsvpsConfirmed: 0,
-        rsvpsCanceled: 0,
-        eventsAttended: 0,
-        memberSince: null,
-        lastLoggedIn: null,
-      });
-    }
-  };
+  }, [user, supabase]);
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

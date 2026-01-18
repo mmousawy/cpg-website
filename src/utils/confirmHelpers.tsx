@@ -17,9 +17,15 @@ export function confirmDeletePhotos(
     title: 'Delete photos',
     message: `Are you sure you want to delete ${photoCount} photo${photoCount !== 1 ? 's' : ''}? This action cannot be undone.`,
     content: (
-      <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+      <div
+        className="grid gap-2 max-h-[50vh] overflow-y-auto"
+      >
         {photos.map((photo) => (
-          <PhotoListItem key={photo.id} photo={photo} variant="detailed" />
+          <PhotoListItem
+            key={photo.id}
+            photo={photo}
+            variant="detailed"
+          />
         ))}
       </div>
     ),
@@ -33,8 +39,13 @@ export function confirmDeletePhoto(photo: PhotoWithAlbums): ConfirmOptions {
     title: 'Delete photo',
     message: 'Are you sure you want to delete this photo? This action cannot be undone.',
     content: (
-      <div className="grid gap-2">
-        <PhotoListItem photo={photo} variant="detailed" />
+      <div
+        className="grid gap-2"
+      >
+        <PhotoListItem
+          photo={photo}
+          variant="detailed"
+        />
       </div>
     ),
     confirmLabel: 'Delete',
@@ -51,9 +62,15 @@ export function confirmDeleteAlbums(
     title: 'Delete albums',
     message: `Are you sure you want to delete ${albumCount} album${albumCount !== 1 ? 's' : ''}? This action cannot be undone.`,
     content: (
-      <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+      <div
+        className="grid gap-2 max-h-[50vh] overflow-y-auto"
+      >
         {albums.map((album) => (
-          <AlbumListItem key={album.id} album={album} variant="detailed" />
+          <AlbumListItem
+            key={album.id}
+            album={album}
+            variant="detailed"
+          />
         ))}
       </div>
     ),
@@ -66,7 +83,10 @@ export function confirmDeleteAlbum(album: AlbumWithPhotos): ConfirmOptions {
   return {
     title: 'Delete album',
     message: 'Are you sure you want to delete this album? This action cannot be undone.',
-    content: <AlbumListItem album={album} variant="detailed" />,
+    content: <AlbumListItem
+      album={album}
+      variant="detailed"
+    />,
     confirmLabel: 'Delete',
     variant: 'danger',
   };
@@ -90,9 +110,15 @@ export function confirmRemoveFromAlbum(
     title: 'Remove from album',
     message: `Are you sure you want to remove ${photoCount} photo${photoCount !== 1 ? 's' : ''} from this album?`,
     content: (
-      <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+      <div
+        className="grid gap-2 max-h-[50vh] overflow-y-auto"
+      >
         {photos.map((photo) => (
-          <PhotoListItem key={photo.id} photo={photo} variant="compact" />
+          <PhotoListItem
+            key={photo.id}
+            photo={photo}
+            variant="compact"
+          />
         ))}
       </div>
     ),

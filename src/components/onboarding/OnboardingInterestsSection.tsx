@@ -1,10 +1,12 @@
 'use client';
 
 import InterestInput from '@/components/shared/InterestInput';
+import { UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingInterestsSectionProps {
-  watch: (name: string) => any;
-  setValue: any;
+  watch: UseFormWatch<OnboardingFormData>;
+  setValue: UseFormSetValue<OnboardingFormData>;
   isSaving: boolean;
 }
 

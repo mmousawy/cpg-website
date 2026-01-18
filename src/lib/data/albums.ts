@@ -1,5 +1,7 @@
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
+import type { AlbumWithPhotosAndProfile } from '@/types/supabase-queries';
+import type { Tables } from '@/database.types';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -17,11 +19,19 @@ export async function getAllAlbumPaths() {
     .eq('is_public', true)
     .is('deleted_at', null);
 
+  type AlbumRow = Pick<Tables<'albums'>, 'slug'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'nickname'>;
+  type AlbumPathQueryResult = AlbumRow & {
+    profile: ProfileRow | null;
+  };
+
   return (data || [])
-    .filter((a) => a.slug && (a.profile as any)?.nickname)
+    .filter((a: AlbumPathQueryResult): a is AlbumPathQueryResult & { profile: ProfileRow } => {
+      return !!a.slug && !!a.profile?.nickname;
+    })
     .map((a) => ({
-      nickname: (a.profile as any).nickname as string,
-      albumSlug: a.slug as string,
+      nickname: a.profile.nickname,
+      albumSlug: a.slug,
     }));
 }
 
@@ -60,13 +70,21 @@ export async function getRecentAlbums(limit = 6) {
     .limit(limit);
 
   // Filter out albums with no photos and albums from suspended users
-  const albumsWithPhotos = ((albums || []) as any[])
-    .filter((album) => {
-      const profile = album.profile as any;
-      return album.photos && album.photos.length > 0 && profile && !profile.suspended_at;
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at'>;
+  // album_photos_active is a view with nullable fields
+  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'>;
+  type AlbumQueryResult = AlbumRow & {
+    profile: ProfileRow | null;
+    photos: Array<AlbumPhotoActive> | null;
+  };
+
+  const albumsWithPhotos = (albums || [])
+    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
+      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at;
     });
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  return albumsWithPhotos as AlbumWithPhotos[];
 }
 
 /**
@@ -107,13 +125,20 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
     .limit(limit);
 
   // Filter out albums with no photos and albums from suspended users
-  const albumsWithPhotos = ((albums || []) as any[])
-    .filter((album) => {
-      const profile = album.profile as any;
-      return album.photos && album.photos.length > 0 && profile && !profile.suspended_at;
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at'>;
+  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'>;
+  type AlbumQueryResult = AlbumRow & {
+    profile: ProfileRow | null;
+    photos: Array<AlbumPhotoActive> | null;
+  };
+
+  const albumsWithPhotos = (albums || [])
+    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
+      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at;
     });
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  return albumsWithPhotos as AlbumWithPhotos[];
 }
 
 /**
@@ -258,10 +283,20 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
     .limit(limit);
 
   // Filter out albums with no photos
-  const albumsWithPhotos = ((albums || []) as any[])
-    .filter((album) => album.photos && album.photos.length > 0);
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url'>;
+  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'>;
+  type AlbumQueryResult = AlbumRow & {
+    profile: ProfileRow | null;
+    photos: Array<AlbumPhotoActive> | null;
+  };
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  const albumsWithPhotos = (albums || [])
+    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { photos: Array<AlbumPhotoActive> } => {
+      return !!album.photos && album.photos.length > 0;
+    });
+
+  return albumsWithPhotos as AlbumWithPhotos[];
 }
 
 /**
@@ -307,11 +342,18 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
     .limit(limit);
 
   // Filter out albums with no photos and albums from suspended users
-  const albumsWithPhotos = ((albums || []) as any[])
-    .filter((album) => {
-      const profile = album.profile as any;
-      return album.photos && album.photos.length > 0 && profile && !profile.suspended_at;
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at'>;
+  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'>;
+  type AlbumQueryResult = AlbumRow & {
+    profile: ProfileRow | null;
+    photos: Array<AlbumPhotoActive> | null;
+  };
+
+  const albumsWithPhotos = (albums || [])
+    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
+      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at;
     });
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  return albumsWithPhotos as AlbumWithPhotos[];
 }

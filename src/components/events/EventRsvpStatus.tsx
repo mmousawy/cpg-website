@@ -61,14 +61,21 @@ export default function EventRsvpStatus({ className, event }: Props) {
 
   const openModal = () => {
     modalContext.setTitle(`${event?.title}`);
-    modalContext.setContent(<SignupForm event={event} hasExistingRSVP={hasRSVP} rsvpUuid={rsvpUuid} onRSVPChange={setHasRSVP} />);
+    modalContext.setContent(<SignupForm
+      event={event}
+      hasExistingRSVP={hasRSVP}
+      rsvpUuid={rsvpUuid}
+      onRSVPChange={setHasRSVP}
+    />);
     modalContext.setIsOpen(true);
   };
 
   // Show "Event passed" for past events if user didn't RSVP
   if (isPastEvent && !hasRSVP) {
     return (
-      <span className={clsx('inline-flex self-start font-[family-name:var(--font-geist-mono)] items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1.5 text-sm font-medium text-foreground/60 whitespace-nowrap', className)}>
+      <span
+        className={clsx('inline-flex self-start font-[family-name:var(--font-geist-mono)] items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1.5 text-sm font-medium text-foreground/60 whitespace-nowrap', className)}
+      >
         Event passed
       </span>
     );
@@ -76,14 +83,20 @@ export default function EventRsvpStatus({ className, event }: Props) {
 
   if (isLoading) {
     return (
-      <div className={clsx('h-8 w-20 animate-pulse rounded-full bg-border-color', className)} />
+      <div
+        className={clsx('h-8 w-20 animate-pulse rounded-full bg-border-color', className)}
+      />
     );
   }
 
   if (hasRSVP) {
     return (
-      <span className={clsx('inline-flex font-[family-name:var(--font-geist-mono)] items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary whitespace-nowrap', className)}>
-        <CheckSVG className="size-4 fill-current" />
+      <span
+        className={clsx('inline-flex font-[family-name:var(--font-geist-mono)] items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary whitespace-nowrap', className)}
+      >
+        <CheckSVG
+          className="size-4 fill-current"
+        />
         {isPastEvent ? 'You went!' : "You're going!"}
       </span>
     );

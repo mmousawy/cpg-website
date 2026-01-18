@@ -38,29 +38,58 @@ export default function MobileActionBar({
       )}
     >
       {/* Gradient fade at top */}
-      <div className="absolute -top-[13px] left-0 right-0 h-3 bg-linear-to-b from-transparent to-background pointer-events-none" />
+      <div
+        className="absolute -top-[13px] left-0 right-0 h-3 bg-linear-to-b from-transparent to-background pointer-events-none"
+      />
 
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
+      <div
+        className="px-4 py-3"
+      >
+        <div
+          className="flex items-center justify-between gap-3"
+        >
           {/* Left: Selection count and clear button */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground/70">
-              {selectedCount} {selectedCount === 1 ? 'item' : 'items'} selected
+          <div
+            className="flex items-center gap-2"
+          >
+            <span
+              className="text-sm font-medium text-foreground/70"
+            >
+              {selectedCount}
+              {' '}
+              {selectedCount === 1 ? 'item' : 'items'}
+              {' '}
+              selected
             </span>
             <button
               onClick={onClearSelection}
               className="flex items-center justify-center rounded-full border border-border-color p-1 hover:bg-background transition-colors"
               aria-label="Clear selection"
             >
-              <CloseMiniSVG className="size-4 fill-foreground" />
+              <CloseMiniSVG
+                className="size-4 fill-foreground"
+              />
             </button>
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+          >
             {actions}
-            <Button onClick={onEdit} variant="primary" size="sm" icon={<EditMiniSVG className="size-5 -ml-0.5" />}>
-              <span className="hidden md:inline-block">Edit</span>
+            <Button
+              onClick={onEdit}
+              variant="primary"
+              size="sm"
+              icon={<EditMiniSVG
+                className="size-5 -ml-0.5"
+              />}
+            >
+              <span
+                className="hidden md:inline-block"
+              >
+                Edit
+              </span>
             </Button>
           </div>
         </div>

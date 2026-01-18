@@ -28,9 +28,15 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
   cacheTag('albums');
   cacheTag(`profile-${nickname}`);
 
+  type AlbumWithModeration = {
+    is_suspended?: boolean | null;
+    suspension_reason?: string | null;
+  };
+
+  const typedAlbum = album as AlbumWithModeration;
   const moderationData = {
-    is_suspended: (album as any)?.is_suspended || false,
-    suspension_reason: (album as any)?.suspension_reason || null,
+    is_suspended: typedAlbum.is_suspended || false,
+    suspension_reason: typedAlbum.suspension_reason || null,
   };
 
   const albumWithPhotos = album as unknown as AlbumWithPhotos;
@@ -85,7 +91,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 <DetailLikesSection
                   entityType="album"
                   entityId={albumWithPhotos.id}
-                  initialCount={(albumWithPhotos as any).likes_count ?? 0}
+                  initialCount={albumWithPhotos.likes_count ?? 0}
                 />
                 <FullSizeGalleryButton
                   photos={photos}
@@ -93,11 +99,11 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 />
               </div>
               <ViewCount
-                count={(albumWithPhotos as any).view_count ?? 0}
+                count={albumWithPhotos.view_count ?? 0}
                 className="mt-2"
               />
               <TagsSection
-                tags={((albumWithPhotos as any).tags || []) as SimpleTag[]}
+                tags={(albumWithPhotos.tags || []) as SimpleTag[]}
               />
             </>
           }

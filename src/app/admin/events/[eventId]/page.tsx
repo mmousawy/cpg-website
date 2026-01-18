@@ -1,6 +1,5 @@
 'use client';
 
-import exifr from 'exifr';
 import { useParams, useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from 'react';
 
@@ -142,80 +141,80 @@ export default function AdminEventFormPage() {
 
   useEffect(() => {
     // Admin access is guaranteed by ProtectedRoute layout
-    if (!isNewEvent) {
-      fetchEvent();
-    } else {
+    if (isNewEvent) {
       setIsLoading(false);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventSlug]);
 
-  const fetchEvent = async () => {
-    setIsLoading(true);
-    try {
-      // Check if eventSlug is a numeric ID or an actual slug
-      const isNumericId = /^\d+$/.test(eventSlug);
+    const fetchEvent = async () => {
+      setIsLoading(true);
+      try {
+        // Check if eventSlug is a numeric ID or an actual slug
+        const isNumericId = /^\d+$/.test(eventSlug);
 
-      let query = supabase.from('events').select('*');
+        let query = supabase.from('events').select('*');
 
-      if (isNumericId) {
-        query = query.eq('id', parseInt(eventSlug));
-      } else {
-        query = query.eq('slug', eventSlug);
+        if (isNumericId) {
+          query = query.eq('id', parseInt(eventSlug));
+        } else {
+          query = query.eq('slug', eventSlug);
+        }
+
+        const { data, error } = await query.single();
+
+        if (error) {
+          console.error('Error fetching event:', error);
+          setError('Failed to load event');
+        } else if (data) {
+          setEvent(data);
+          setTitle(data.title || '');
+          setSlug(data.slug || '');
+          setIsSlugManuallyEdited(true);
+          setDescription(data.description || '');
+          setDate(data.date || '');
+          setTime(data.time || '');
+          setLocation(data.location || '');
+          setCoverImage(data.cover_image || '');
+          setCoverImagePreview(data.cover_image || null);
+
+          // Set saved form values for change tracking
+          setSavedFormValues({
+            title: data.title || '',
+            slug: data.slug || '',
+            description: data.description || '',
+            date: data.date || '',
+            time: data.time || '',
+            location: data.location || '',
+            coverImage: data.cover_image || '',
+          });
+
+          // Load RSVPs for this event
+          const { data: rsvpsData } = await supabase
+            .from('events_rsvps')
+            .select(
+              'id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)',
+            )
+            .eq('event_id', data.id)
+            .order('created_at', { ascending: false });
+
+          setRsvps(rsvpsData || []);
+
+          // Check if announcement already sent
+          const { data: announcement } = await supabase
+            .from('event_announcements')
+            .select('id')
+            .eq('event_id', data.id)
+            .single();
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError('An unexpected error occurred');
       }
+      setIsLoading(false);
+    };
 
-      const { data, error } = await query.single();
-
-      if (error) {
-        console.error('Error fetching event:', error);
-        setError('Failed to load event');
-      } else if (data) {
-        setEvent(data);
-        setTitle(data.title || '');
-        setSlug(data.slug || '');
-        setIsSlugManuallyEdited(true);
-        setDescription(data.description || '');
-        setDate(data.date || '');
-        setTime(data.time || '');
-        setLocation(data.location || '');
-        setCoverImage(data.cover_image || '');
-        setCoverImagePreview(data.cover_image || null);
-
-        // Set saved form values for change tracking
-        setSavedFormValues({
-          title: data.title || '',
-          slug: data.slug || '',
-          description: data.description || '',
-          date: data.date || '',
-          time: data.time || '',
-          location: data.location || '',
-          coverImage: data.cover_image || '',
-        });
-
-        // Load RSVPs for this event
-        const { data: rsvpsData } = await supabase
-          .from('events_rsvps')
-          .select(
-            'id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)',
-          )
-          .eq('event_id', data.id)
-          .order('created_at', { ascending: false });
-
-        setRsvps(rsvpsData || []);
-
-        // Check if announcement already sent
-        const { data: announcement } = await supabase
-          .from('event_announcements')
-          .select('id')
-          .eq('event_id', data.id)
-          .single();
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred');
-    }
-    setIsLoading(false);
-  };
+    fetchEvent();
+  }, [eventSlug, isNewEvent, supabase]);
 
   const handleMarkAttended = async (rsvpId: number, unmark: boolean = false) => {
     setMarkingId(rsvpId);
@@ -345,9 +344,10 @@ export default function AdminEventFormPage() {
           img.src = URL.createObjectURL(coverImageFile);
         });
 
-        // Extract EXIF data
+        // Extract EXIF data (lazy load exifr only when needed)
         let exifData = null;
         try {
+          const exifr = (await import('exifr')).default;
           exifData = await exifr.parse(coverImageFile, {
             pick: [
               'Make',

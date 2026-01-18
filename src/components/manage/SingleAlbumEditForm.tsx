@@ -111,7 +111,11 @@ export default function SingleAlbumEditForm({
     }
 
     // Use pre-fetched tags from album data
-    const albumTags = album.tags?.map((t: any) => t.tag || t) || [];
+    const albumTags = album.tags?.map((t) => {
+      if (typeof t === 'string') return t;
+      if (t && typeof t === 'object' && 'tag' in t) return t.tag;
+      return '';
+    }).filter(Boolean) || [];
 
     reset({
       title: album.title,
@@ -121,8 +125,7 @@ export default function SingleAlbumEditForm({
       tags: albumTags,
     });
     setHasEditedSlug(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [album?.id, isNewAlbum]);
+  }, [album, isNewAlbum, reset]);
 
   // Handle Delete key for album deletion
   useEffect(() => {
@@ -188,8 +191,9 @@ export default function SingleAlbumEditForm({
         setLocalSuccess(true);
         setTimeout(() => setLocalSuccess(false), 3000);
       }
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to save album');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save album';
+      setLocalError(message);
     }
   };
 
@@ -204,8 +208,9 @@ export default function SingleAlbumEditForm({
 
     try {
       await onDelete(album.id);
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to delete album');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete album';
+      setLocalError(message);
       setIsDeleting(false);
     }
   };

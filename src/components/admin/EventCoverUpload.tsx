@@ -41,7 +41,7 @@ export default function EventCoverUpload({
       }
 
       onCoverImageChange(file);
-      onError?.(null as any);
+      onError?.('');
     }
   };
 

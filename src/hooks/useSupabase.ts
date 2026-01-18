@@ -12,7 +12,7 @@ import { Database } from '@/database.types';
  */
 export function useSupabase(): SupabaseClient<Database> {
   const context = useContext(SupabaseContext);
-  
+
   // Use context client if available, otherwise fall back to singleton
   return context?.client ?? supabase;
 }

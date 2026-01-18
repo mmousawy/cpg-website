@@ -22,7 +22,7 @@ export type EmailPreference = {
 export async function getEmailTypes(): Promise<EmailTypeData[]> {
 
   const { data, error } = await supabase
-    .from('email_types' as any)
+    .from('email_types')
     .select('id, type_key, type_label, description')
     .order('id');
 
@@ -40,7 +40,7 @@ export async function getEmailTypes(): Promise<EmailTypeData[]> {
 export async function getUserEmailPreferences(userId: string): Promise<EmailPreference[]> {
 
   const { data, error } = await supabase
-    .from('email_preferences' as any)
+    .from('email_preferences')
     .select('opted_out, email_types!inner(id, type_key, type_label)')
     .eq('user_id', userId);
 
@@ -49,12 +49,12 @@ export async function getUserEmailPreferences(userId: string): Promise<EmailPref
     return [];
   }
 
-  return (data || []).map((item: any) => ({
+  return (data || []).map((item: { email_types: { id: number; type_key: string; type_label: string }; opted_out: boolean }) => ({
     email_type_id: item.email_types.id,
     type_key: item.email_types.type_key,
     type_label: item.email_types.type_label,
     opted_out: item.opted_out,
-  })) as EmailPreference[];
+  }));
 }
 
 /**
@@ -63,7 +63,7 @@ export async function getUserEmailPreferences(userId: string): Promise<EmailPref
  */
 export async function updateEmailPreferences(
   userId: string,
-  preferences: Array<{ email_type_id: number; opted_out: boolean }>
+  preferences: Array<{ email_type_id: number; opted_out: boolean }>,
 ): Promise<{ error: Error | null }> {
 
   try {
@@ -77,8 +77,8 @@ export async function updateEmailPreferences(
     }));
 
     const { error } = await supabase
-      .from('email_preferences' as any)
-      .upsert(upsertData as any, {
+      .from('email_preferences')
+      .upsert(upsertData, {
         onConflict: 'user_id,email_type_id',
       });
 

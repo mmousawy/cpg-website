@@ -61,24 +61,60 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
   };
 
   return (
-    <div className="flex gap-6 max-sm:flex-col-reverse max-sm:gap-4">
-      <div className='grow'>
-        <div className='mb-6 flex justify-between'>
-          <h3 className="text-2xl font-bold">{event.title}</h3>
+    <div
+      className="flex gap-6 max-sm:flex-col-reverse max-sm:gap-4"
+    >
+      <div
+        className='grow'
+      >
+        <div
+          className='mb-6 flex justify-between'
+        >
+          <h3
+            className="text-2xl font-bold"
+          >
+            {event.title}
+          </h3>
         </div>
-        <div className='flex flex-col'>
+        <div
+          className='flex flex-col'
+        >
           <div>
-            <span className='mb-2 flex gap-4 text-[15px] font-semibold leading-6 max-sm:mb-2'>
-              <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground" />
+            <span
+              className='mb-2 flex gap-4 text-[15px] font-semibold leading-6 max-sm:mb-2'
+            >
+              <span
+                className='flex gap-2'
+              >
+                <CalendarSVG
+                  className="shrink-0 fill-foreground"
+                />
                 {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
-              <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground " />{event.time?.substring(0, 5)}</span>
+              <span
+                className='flex gap-2'
+              >
+                <TimeSVG
+                  className="shrink-0 fill-foreground "
+                />
+                {event.time?.substring(0, 5)}
+              </span>
             </span>
-            <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'>
-              <LocationSVG className="shrink-0 fill-foreground " />{event.location?.replace(/\r\n/gm, ' • ')}
+            <span
+              className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'
+            >
+              <LocationSVG
+                className="shrink-0 fill-foreground "
+              />
+              {event.location?.replace(/\r\n/gm, ' • ')}
             </span>
-            <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold sm:hidden'>
-              <LocationSVG className="shrink-0 fill-foreground " />{event.location}
+            <span
+              className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold sm:hidden'
+            >
+              <LocationSVG
+                className="shrink-0 fill-foreground "
+              />
+              {event.location}
             </span>
           </div>
 
@@ -86,8 +122,19 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
             <>
               {(!rsvp.confirmed_at && !rsvp.canceled_at) && (
                 <>
-                  <p className='mb-6'>Hi {rsvp.name}!<br /><br />You are confirming your sign up for the above mentioned meeting. You can always change your RSVP later.</p>
-                  <div className="flex items-center gap-4 max-sm:justify-between">
+                  <p
+                    className='mb-6'
+                  >
+                    Hi
+                    {rsvp.name}
+                    !
+                    <br />
+                    <br />
+                    You are confirming your sign up for the above mentioned meeting. You can always change your RSVP later.
+                  </p>
+                  <div
+                    className="flex items-center gap-4 max-sm:justify-between"
+                  >
                     <Button
                       size="sm"
                       icon={<CheckSVG />}
@@ -112,17 +159,34 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
 
               {(rsvp.confirmed_at && !rsvp.canceled_at) && (
                 <SuccessMessage>
-                  You&apos;ve already confirmed your RSVP. <br />If you&apos;d like to change your response, you can{' '}<br />
-                  <Link href={`/cancel/${rsvp.uuid}`} className='underline'>cancel your sign up</Link>
+                  You&apos;ve already confirmed your RSVP.
+                  {' '}
+                  <br />
+                  If you&apos;d like to change your response, you can
+                  {' '}
+                  <br />
+                  <Link
+                    href={`/cancel/${rsvp.uuid}`}
+                    className='underline'
+                  >
+                    cancel your sign up
+                  </Link>
                   .
                 </SuccessMessage>
               )}
 
               {rsvp.canceled_at && (
-                <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
-                  <CancelSVG className="shrink-0 fill-foreground" />
+                <div
+                  className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'
+                >
+                  <CancelSVG
+                    className="shrink-0 fill-foreground"
+                  />
                   <span>
-                    You&apos;ve already canceled your RSVP. <br />If you&apos;ve changed your mind, you can always sign up again!
+                    You&apos;ve already canceled your RSVP.
+                    {' '}
+                    <br />
+                    If you&apos;ve changed your mind, you can always sign up again!
                   </span>
                 </div>
               )}
@@ -131,18 +195,32 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
 
           {signupSuccess && (
             <>
-              <SuccessMessage className="mb-6">
-                Thank you for confirming your RSVP.<br />We look forward to seeing you at the meetup!
+              <SuccessMessage
+                className="mb-6"
+              >
+                Thank you for confirming your RSVP.
+                <br />
+                We look forward to seeing you at the meetup!
               </SuccessMessage>
 
-              <AddToCalendar event={event} />
+              <AddToCalendar
+                event={event}
+              />
             </>
           )}
 
           {cancelSuccess && (
-            <div className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'>
-              <CancelSVG className="shrink-0 fill-foreground" />
-              <span>You&apos;ve successfully canceled your RSVP.<br />If you change your mind, you can always sign up again!</span>
+            <div
+              className='flex gap-2 rounded-md bg-[#c4c4c420] p-4 font-semibold leading-6 text-foreground'
+            >
+              <CancelSVG
+                className="shrink-0 fill-foreground"
+              />
+              <span>
+                You&apos;ve successfully canceled your RSVP.
+                <br />
+                If you change your mind, you can always sign up again!
+              </span>
             </div>
           )}
 

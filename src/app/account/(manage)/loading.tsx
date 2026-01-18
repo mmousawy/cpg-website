@@ -33,16 +33,28 @@ export default function ManageLoading() {
   const isAlbumsActive = pathname.startsWith('/account/albums');
 
   return (
-    <div className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none">
+    <div
+      className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none"
+    >
       {/* Left Panel - Content */}
-      <div className="flex flex-1 flex-col overflow-y-auto border-r border-border-color md:border-r">
+      <div
+        className="flex flex-1 flex-col overflow-y-auto border-r border-border-color md:border-r"
+      >
         {/* Header - show actual tabs, not skeleton */}
-        <div className="sticky top-0 z-20 border-b border-border-color bg-background-light px-2 py-2">
-          <div className="flex items-center justify-between gap-4">
+        <div
+          className="sticky top-0 z-20 border-b border-border-color bg-background-light px-2 py-2"
+        >
+          <div
+            className="flex items-center justify-between gap-4"
+          >
             {/* Left side: tabs */}
-            <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-4"
+            >
               {/* Tab navigation */}
-              <div className="flex">
+              <div
+                className="flex"
+              >
                 <Link
                   href="/account/photos"
                   className={clsx(
@@ -52,9 +64,17 @@ export default function ManageLoading() {
                       : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
                   )}
                 >
-                  <PhotoMicroSVG className="size-4" />
-                  <span className="hidden md:inline">Photos</span>
-                  <div className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs">
+                  <PhotoMicroSVG
+                    className="size-4"
+                  />
+                  <span
+                    className="hidden md:inline"
+                  >
+                    Photos
+                  </span>
+                  <div
+                    className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
+                  >
                     {photoCount}
                   </div>
                 </Link>
@@ -67,9 +87,17 @@ export default function ManageLoading() {
                       : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
                   )}
                 >
-                  <FolderMicroSVG className="size-4" />
-                  <span className="hidden md:inline">Albums</span>
-                  <div className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs">
+                  <FolderMicroSVG
+                    className="size-4"
+                  />
+                  <span
+                    className="hidden md:inline"
+                  >
+                    Albums
+                  </span>
+                  <div
+                    className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
+                  >
                     {albumCount}
                   </div>
                 </Link>
@@ -79,8 +107,12 @@ export default function ManageLoading() {
         </div>
 
         {/* Grid skeleton - matches SelectableGrid styles */}
-        <div className="flex-1 overflow-hidden p-3 md:p-6">
-          <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] content-start">
+        <div
+          className="flex-1 overflow-hidden p-3 md:p-6"
+        >
+          <div
+            className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))] content-start"
+          >
             {Array.from({ length: 15 }).map((_, i) => (
               <Skeleton
                 key={i}
@@ -95,10 +127,18 @@ export default function ManageLoading() {
       </div>
 
       {/* Right Panel - Sidebar skeleton (hidden on mobile) */}
-      <div className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col items-center justify-center bg-background-light p-10 text-center">
-        <Skeleton className="mb-2 size-10 rounded" />
-        <Skeleton className="mb-2 h-6 w-48 rounded" />
-        <Skeleton className="h-4 w-56 rounded" />
+      <div
+        className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col items-center justify-center bg-background-light p-10 text-center"
+      >
+        <Skeleton
+          className="mb-2 size-10 rounded"
+        />
+        <Skeleton
+          className="mb-2 h-6 w-48 rounded"
+        />
+        <Skeleton
+          className="h-4 w-56 rounded"
+        />
       </div>
     </div>
   );

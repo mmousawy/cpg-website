@@ -60,8 +60,11 @@ export default function DetailLikesSection({ entityType, className, entityId, in
   const likesQuery = entityType === 'photo' ? photoLikesQuery : albumLikesQuery;
 
   // Update local state when likes data is fetched
+  // This syncs server data with local state for optimistic updates
+  // Note: Setting state in effect is intentional here - we're syncing external query data
   useEffect(() => {
     if (likesQuery.data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLiked(likesQuery.data.userHasLiked);
       setCount(likesQuery.data.count);
     }
@@ -70,6 +73,7 @@ export default function DetailLikesSection({ entityType, className, entityId, in
   // Trigger animation when liked changes from false to true
   useEffect(() => {
     if (liked && !previousLikedRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 1000);
     }
@@ -135,7 +139,9 @@ export default function DetailLikesSection({ entityType, className, entityId, in
   const hasLikes = count > 0;
 
   return (
-    <div className={clsx("flex items-center gap-2", className)}>
+    <div
+      className={clsx('flex items-center gap-2', className)}
+    >
       {/* Like Button */}
       <button
         onClick={handleLikeClick}
@@ -153,11 +159,17 @@ export default function DetailLikesSection({ entityType, className, entityId, in
         aria-label={liked ? 'Unlike' : 'Like'}
       >
         {/* Wrapper for bubble + sparkle pseudo-elements */}
-        <div className={`${styles.likeWrapper} ${isAnimating ? styles.animating : ''}`}>
+        <div
+          className={`${styles.likeWrapper} ${isAnimating ? styles.animating : ''}`}
+        >
           {liked ? (
-            <HeartFilledIcon className={`size-4 text-red-500 ${isAnimating ? styles.animateHeartPop : ''}`} />
+            <HeartFilledIcon
+              className={`size-4 text-red-500 ${isAnimating ? styles.animateHeartPop : ''}`}
+            />
           ) : (
-            <HeartIcon className="size-4 text-foreground transition-colors group-hover:text-red-500" />
+            <HeartIcon
+              className="size-4 text-foreground transition-colors group-hover:text-red-500"
+            />
           )}
         </div>
       </button>
@@ -184,8 +196,12 @@ export default function DetailLikesSection({ entityType, className, entityId, in
             aria-label={`${count} ${count === 1 ? 'like' : 'likes'}`}
           >
             {/* Stacked avatars */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center">
+            <div
+              className="flex items-center gap-1.5"
+            >
+              <div
+                className="flex items-center"
+              >
                 {/* Show skeletons when loading or when we have a count but no avatars yet */}
                 {(likesQuery.isLoading || visibleLikes.length === 0) ? (
                   // Loading skeleton avatars
@@ -221,37 +237,63 @@ export default function DetailLikesSection({ entityType, className, entityId, in
                 )}
               </div>
               {/* Total count */}
-              <span className="text-xs font-medium text-foreground/70">
+              <span
+                className="text-xs font-medium text-foreground/70"
+              >
                 {count > 0 ? count : ''}
               </span>
             </div>
           </button>
         }
       >
-        <div className="p-2.5 max-h-96 overflow-y-auto">
-          <h4 className="text-xs font-semibold mb-2 text-foreground">
-            {count} {count === 1 ? 'person likes' : 'people like'} this
+        <div
+          className="p-2.5 max-h-96 overflow-y-auto"
+        >
+          <h4
+            className="text-xs font-semibold mb-2 text-foreground"
+          >
+            {count}
+            {' '}
+            {count === 1 ? 'person likes' : 'people like'}
+            {' '}
+            this
           </h4>
 
           {likesQuery.isLoading ? (
-            <div className="space-y-2">
+            <div
+              className="space-y-2"
+            >
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className="flex items-center gap-2 p-1.5"
                 >
-                  <div className="size-8 rounded-full bg-border-color animate-pulse" />
-                  <div className="flex-1 space-y-1">
-                    <div className="h-3 w-24 bg-border-color animate-pulse rounded" />
-                    <div className="h-2 w-16 bg-border-color animate-pulse rounded" />
+                  <div
+                    className="size-8 rounded-full bg-border-color animate-pulse"
+                  />
+                  <div
+                    className="flex-1 space-y-1"
+                  >
+                    <div
+                      className="h-3 w-24 bg-border-color animate-pulse rounded"
+                    />
+                    <div
+                      className="h-2 w-16 bg-border-color animate-pulse rounded"
+                    />
                   </div>
                 </div>
               ))}
             </div>
           ) : likes.length === 0 ? (
-            <p className="text-xs text-foreground/60">No likes yet</p>
+            <p
+              className="text-xs text-foreground/60"
+            >
+              No likes yet
+            </p>
           ) : (
-            <div className="space-y-1">
+            <div
+              className="space-y-1"
+            >
               {likes.map((like) => (
                 <Link
                   key={like.user_id}
@@ -265,13 +307,20 @@ export default function DetailLikesSection({ entityType, className, entityId, in
                     size="xs"
                     hoverEffect
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">
+                  <div
+                    className="flex-1 min-w-0"
+                  >
+                    <p
+                      className="text-xs font-medium truncate"
+                    >
                       {like.profile?.full_name || 'Anonymous'}
                     </p>
                     {like.profile?.nickname && (
-                      <p className="text-xs text-foreground/60 truncate">
-                        @{like.profile.nickname}
+                      <p
+                        className="text-xs text-foreground/60 truncate"
+                      >
+                        @
+                        {like.profile.nickname}
                       </p>
                     )}
                   </div>

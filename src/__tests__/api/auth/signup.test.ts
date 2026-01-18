@@ -44,7 +44,7 @@ describe('POST /api/auth/signup', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    
+
     const data = await response.json();
     expect(data.success).toBe(true);
 
@@ -65,7 +65,7 @@ describe('POST /api/auth/signup', () => {
       .single();
 
     expect(profile).toBeTruthy();
-    expect(profile.email).toBe(testEmail.toLowerCase());
+    expect(profile!.email).toBe(testEmail.toLowerCase());
   });
 
   it('should reject signup with duplicate email', async () => {
@@ -91,7 +91,7 @@ describe('POST /api/auth/signup', () => {
 
     const duplicateResponse = await POST(duplicateRequest);
     expect(duplicateResponse.status).toBe(400);
-    
+
     const duplicateData = await duplicateResponse.json();
     expect(duplicateData.message).toContain('already exists');
   });
@@ -116,7 +116,7 @@ describe('POST /api/auth/signup', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(400);
-    
+
     const data = await response.json();
     expect(data.message).toContain('at least 6 characters');
   });
@@ -129,7 +129,7 @@ describe('POST /api/auth/signup', () => {
 
     const response1 = await POST(request1);
     expect(response1.status).toBe(400);
-    
+
     const data1 = await response1.json();
     expect(data1.message).toContain('required');
 
@@ -140,7 +140,7 @@ describe('POST /api/auth/signup', () => {
 
     const response2 = await POST(request2);
     expect(response2.status).toBe(400);
-    
+
     const data2 = await response2.json();
     expect(data2.message).toContain('required');
   });

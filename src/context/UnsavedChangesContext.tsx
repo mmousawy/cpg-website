@@ -5,6 +5,15 @@ import { confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+// Declare Window interface extension for unsaved changes context
+declare global {
+  interface Window {
+    __unsavedChangesContext?: {
+      setHasUnsavedChanges: (value: boolean) => void;
+    };
+  }
+}
+
 interface UnsavedChangesContextType {
   hasUnsavedChanges: boolean;
   setHasUnsavedChanges: (value: boolean) => void;
@@ -28,11 +37,11 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
   // Expose setter on window for useFormChanges hook
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__unsavedChangesContext = { setHasUnsavedChanges };
+      window.__unsavedChangesContext = { setHasUnsavedChanges };
     }
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).__unsavedChangesContext;
+        delete window.__unsavedChangesContext;
       }
     };
   }, [setHasUnsavedChanges]);
@@ -99,7 +108,9 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
   }, [confirm, router]);
 
   return (
-    <UnsavedChangesContext.Provider value={{ hasUnsavedChanges, setHasUnsavedChanges }}>
+    <UnsavedChangesContext.Provider
+      value={{ hasUnsavedChanges, setHasUnsavedChanges }}
+    >
       {children}
     </UnsavedChangesContext.Provider>
   );

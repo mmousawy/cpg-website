@@ -9,5 +9,7 @@ export default function ManageLayout({
   // Opt out of static generation - manage routes require authentication
   unstable_noStore();
 
-  return <ManageDataProvider>{children}</ManageDataProvider>;
+  return <ManageDataProvider>
+    {children}
+  </ManageDataProvider>;
 }

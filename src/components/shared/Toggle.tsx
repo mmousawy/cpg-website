@@ -35,9 +35,17 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
     }, [props.disabled]);
 
     return (
-      <div className={clsx('flex flex-col gap-2', className)}>
-        {label && <span className="text-sm font-medium">{label}</span>}
-        <div className="group flex items-center gap-3">
+      <div
+        className={clsx('flex flex-col gap-2', className)}
+      >
+        {label && <span
+          className="text-sm font-medium"
+        >
+          {label}
+        </span>}
+        <div
+          className="group flex items-center gap-3"
+        >
           {/* Hidden checkbox */}
           <input
             ref={inputRef}

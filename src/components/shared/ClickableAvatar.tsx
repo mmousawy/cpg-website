@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
+import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 
 type ClickableAvatarProps = {
   avatarUrl: string | null
@@ -32,23 +31,34 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
   useEffect(() => {
     if (!avatarUrl || !dimensions) return;
 
-    let lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
-      gallery: `#${galleryId}`,
-      children: 'a',
-      pswpModule: () => import('photoswipe'),
-      // Prevent upscaling beyond original size
-      initialZoomLevel: 'fit',
-      secondaryZoomLevel: 1,
-      maxZoomLevel: 1,
+    let lightbox: PhotoSwipeLightboxInstance | null = null;
+    let mounted = true;
+
+    // Lazy load PhotoSwipe
+    initPhotoSwipe().then((PhotoSwipeLightbox) => {
+      if (!mounted) return;
+
+      lightbox = new PhotoSwipeLightbox({
+        gallery: `#${galleryId}`,
+        children: 'a',
+        pswpModule: () => import('photoswipe'),
+        // Prevent upscaling beyond original size
+        initialZoomLevel: 'fit',
+        secondaryZoomLevel: 1,
+        maxZoomLevel: 1,
+      });
+
+      lightbox.init();
     });
 
-    lightbox.init();
-
     return () => {
-      lightbox?.destroy();
-      lightbox = null;
+      mounted = false;
+      if (lightbox) {
+        lightbox.destroy();
+        lightbox = null;
+      }
     };
-  }, [avatarUrl, dimensions]);
+  }, [avatarUrl, dimensions, galleryId]);
 
   // Generate initials for fallback
   const initials = fullName
@@ -63,14 +73,19 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
   if (!avatarUrl) {
     // Non-clickable fallback with initials
     return (
-      <div className={`flex items-center justify-center bg-[#5e9b84] text-white font-bold text-2xl ${className || ''}`}>
+      <div
+        className={`flex items-center justify-center bg-[#5e9b84] text-white font-bold text-2xl ${className || ''}`}
+      >
         {initials}
       </div>
     );
   }
 
   return (
-    <div id={galleryId} className={className}>
+    <div
+      id={galleryId}
+      className={className}
+    >
       <a
         href={avatarUrl}
         data-pswp-width={dimensions?.width || 500}

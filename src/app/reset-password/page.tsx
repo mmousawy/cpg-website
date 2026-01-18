@@ -11,7 +11,9 @@ export default function ResetPasswordPage() {
   return (
     <>
       <JavaScriptRequired />
-      <div className="js-content">
+      <div
+        className="js-content"
+      >
         <ResetPasswordClient />
       </div>
     </>

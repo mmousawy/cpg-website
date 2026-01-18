@@ -3,16 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * View Tracking API
- * 
+ *
  * Tracks views on photos and albums by incrementing view_count in the database.
- * 
+ *
  * Caching Strategy:
  * - View counts are intentionally NOT invalidated on each view for performance
  * - View counts will be slightly stale (acceptable for non-critical metrics)
  * - "Most viewed this week" queries use 1-hour cache for freshness
  * - Detail pages use max cache - view counts update on next cache invalidation
  * - Account/profile stats use max cache - acceptable to be slightly stale
- * 
+ *
  * This approach balances performance (no cache invalidation overhead) with
  * acceptable freshness (view counts don't need to be real-time).
  */

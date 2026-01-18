@@ -1,10 +1,10 @@
-import { render } from "@react-email/render";
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { render } from '@react-email/render';
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
-import { AttendeeMessageEmail } from "@/emails/attendee-message";
-import { encrypt } from "@/utils/encrypt";
-import { createClient } from "@/utils/supabase/server";
+import { AttendeeMessageEmail } from '@/emails/attendee-message';
+import { encrypt } from '@/utils/encrypt';
+import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if user is admin
@@ -26,18 +26,18 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
   const body = await request.json();
   const { eventId, message, recipientEmails } = body;
 
   if (!eventId) {
-    return NextResponse.json({ message: "Event ID is required" }, { status: 400 });
+    return NextResponse.json({ message: 'Event ID is required' }, { status: 400 });
   }
 
   if (!message || !message.trim()) {
-    return NextResponse.json({ message: "Message is required" }, { status: 400 });
+    return NextResponse.json({ message: 'Message is required' }, { status: 400 });
   }
 
   // Get the event
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   if (eventError || !event) {
     return NextResponse.json(
-      { message: "Event not found" },
+      { message: 'Event not found' },
       { status: 404 },
     );
   }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   if (rsvpsError) {
     console.error('Error fetching RSVPs:', rsvpsError);
     return NextResponse.json(
-      { message: "Failed to fetch RSVPs" },
+      { message: 'Failed to fetch RSVPs' },
       { status: 500 },
     );
   }
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
   if (adminsError) {
     console.error('Error fetching admins:', adminsError);
     return NextResponse.json(
-      { message: "Failed to fetch admin profiles" },
+      { message: 'Failed to fetch admin profiles' },
       { status: 500 },
     );
   }
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
 
   if (recipients.length === 0) {
     return NextResponse.json(
-      { message: "No recipients found for this event" },
+      { message: 'No recipients found for this event' },
       { status: 400 },
     );
   }
@@ -192,10 +192,13 @@ export async function POST(request: NextRequest) {
       const batchResult = await resend.batch.send(batchEmails);
 
       if (batchResult.error) {
-        const error = batchResult.error as any;
+        type ResendError = string | { message?: string } | Error;
+        const error = batchResult.error as ResendError;
         const errorMessage = typeof error === 'string'
           ? error
-          : error?.message || JSON.stringify(error);
+          : error instanceof Error
+            ? error.message
+            : (error as { message?: string }).message || JSON.stringify(error);
         console.error(`Failed to send batch starting at index ${i}:`, error);
         // Mark all emails in batch as failed
         batch.forEach((recipient) => {
@@ -209,7 +212,12 @@ export async function POST(request: NextRequest) {
         const resultsArray = batchResult.data?.data || batchResult.data;
 
         if (resultsArray && Array.isArray(resultsArray)) {
-          resultsArray.forEach((result: any, idx: number) => {
+          type ResendBatchResult = {
+            id?: string;
+            error?: string | { message?: string } | Error;
+          };
+
+          resultsArray.forEach((result: ResendBatchResult, idx: number) => {
             const recipient = batch[idx];
             if (!recipient) {
               console.warn(`No recipient found at index ${idx} in batch`);
@@ -218,11 +226,14 @@ export async function POST(request: NextRequest) {
 
             if (result && typeof result === 'object') {
               // Check if it's an error response
-              if ('error' in result) {
-                const error = result.error as any;
+              if ('error' in result && result.error) {
+                type ResendError = string | { message?: string } | Error;
+                const error = result.error as ResendError;
                 const errorMessage = typeof error === 'string'
                   ? error
-                  : error?.message || JSON.stringify(error);
+                  : error instanceof Error
+                    ? error.message
+                    : (error as { message?: string }).message || JSON.stringify(error);
                 console.error(`Failed to send email to ${recipient.email}:`, error);
                 sendStatus[recipient.email] = 'error';
                 errorDetails[recipient.email] = errorMessage;

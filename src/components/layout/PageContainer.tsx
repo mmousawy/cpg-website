@@ -23,7 +23,9 @@ export default function PageContainer({ children, className, variant = 'default'
         className,
       )}
     >
-      <div className={clsx("w-full max-w-screen-md", innerClassName)}>
+      <div
+        className={clsx('w-full max-w-screen-md', innerClassName)}
+      >
         {children}
       </div>
     </div>

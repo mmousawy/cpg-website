@@ -79,9 +79,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     // If there are addons, wrap in a relative container
     if (hasAddons) {
       return (
-        <div className={clsx('relative', fullWidth && 'w-full')}>
+        <div
+          className={clsx('relative', fullWidth && 'w-full')}
+        >
           {leftAddon && (
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">
+            <span
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50"
+            >
               {leftAddon}
             </span>
           )}
@@ -93,7 +97,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightAddon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
               {rightAddon}
             </div>
           )}

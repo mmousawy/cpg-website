@@ -1,7 +1,7 @@
-import Container from "@/components/layout/Container";
-import PageContainer from "@/components/layout/PageContainer";
+import Container from '@/components/layout/Container';
+import PageContainer from '@/components/layout/PageContainer';
 import { createClient } from '@/utils/supabase/server';
-import ConfirmBlock from "./ConfirmBlock";
+import ConfirmBlock from './ConfirmBlock';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import { unstable_noStore } from 'next/cache';
@@ -28,19 +28,23 @@ export default async function Confirm({
   const { uuid } = await params;
 
   // Single query with JOIN instead of 2 sequential queries
-  const { data: rsvp } = await supabase.from("events_rsvps")
+  const { data: rsvp } = await supabase.from('events_rsvps')
     .select(`
       *,
       events (*)
     `)
-    .eq("uuid", uuid)
+    .eq('uuid', uuid)
     .single();
 
   const event = rsvp?.events || null;
 
   return (
     <PageContainer>
-      <h2 className="mb-4 text-lg font-bold leading-tight opacity-70">Confirm your sign up</h2>
+      <h2
+        className="mb-4 text-lg font-bold leading-tight opacity-70"
+      >
+        Confirm your sign up
+      </h2>
       <Container>
         {(!event || !rsvp || !rsvp.email) && (
           <ErrorMessage>

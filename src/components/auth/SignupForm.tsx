@@ -123,33 +123,69 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
   // Show loading state while checking auth
   if (authLoading) {
     return (
-      <LoadingSpinner centered />
+      <LoadingSpinner
+        centered
+      />
     );
   }
 
   return (
     <div>
-      <span className='mb-2 flex gap-4 text-md font-semibold leading-6'>
-        <span className='flex gap-2'><CalendarSVG className="shrink-0 fill-foreground " />
+      <span
+        className='mb-2 flex gap-4 text-md font-semibold leading-6'
+      >
+        <span
+          className='flex gap-2'
+        >
+          <CalendarSVG
+            className="shrink-0 fill-foreground "
+          />
           {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
-        <span className='flex gap-2'><TimeSVG className="shrink-0 fill-foreground " />{event.time?.substring(0, 5)}</span>
+        <span
+          className='flex gap-2'
+        >
+          <TimeSVG
+            className="shrink-0 fill-foreground "
+          />
+          {event.time?.substring(0, 5)}
+        </span>
       </span>
-      <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-md font-semibold leading-6 max-sm:hidden'>
-        <LocationSVG className="shrink-0 fill-foreground " />{event.location?.replace(/\r\n/gm, ' • ')}
+      <span
+        className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-md font-semibold leading-6 max-sm:hidden'
+      >
+        <LocationSVG
+          className="shrink-0 fill-foreground "
+        />
+        {event.location?.replace(/\r\n/gm, ' • ')}
       </span>
-      <span className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-md font-semibold sm:hidden'>
-        <LocationSVG className="shrink-0 fill-foreground " />{event.location}
+      <span
+        className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-md font-semibold sm:hidden'
+      >
+        <LocationSVG
+          className="shrink-0 fill-foreground "
+        />
+        {event.location}
       </span>
 
       {/* Not logged in - show login prompt */}
       {!user && !success && (
-        <div className="rounded-xl border border-border-color bg-background p-6 text-center">
-          <h3 className="mb-2 text-lg font-semibold">Log in to RSVP</h3>
-          <p className="mb-4 text-sm text-foreground/70">
+        <div
+          className="rounded-xl border border-border-color bg-background p-6 text-center"
+        >
+          <h3
+            className="mb-2 text-lg font-semibold"
+          >
+            Log in to RSVP
+          </h3>
+          <p
+            className="mb-4 text-sm text-foreground/70"
+          >
             You need an account to sign up for events.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <div
+            className="flex flex-col gap-3 sm:flex-row sm:justify-center"
+          >
             <Link
               href={`${routes.login.url}?redirectTo=/`}
               onClick={() => modalContext.setIsOpen(false)}
@@ -173,13 +209,21 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
         <form
           onSubmit={submitForm}
           className={clsx([
-            "flex flex-col gap-4 transition-opacity",
-            isSubmitting && "pointer-events-none opacity-50",
+            'flex flex-col gap-4 transition-opacity',
+            isSubmitting && 'pointer-events-none opacity-50',
           ])}
         >
-          <div className='flex gap-2 rounded-md bg-foreground/5 px-4 py-2'>
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-semibold leading-6 text-foreground/80">Signing up as</p>
+          <div
+            className='flex gap-2 rounded-md bg-foreground/5 px-4 py-2'
+          >
+            <div
+              className="flex flex-col gap-2"
+            >
+              <p
+                className="text-sm font-semibold leading-6 text-foreground/80"
+              >
+                Signing up as
+              </p>
               <div
                 className="inline-flex items-center gap-1.5 mb-2"
               >
@@ -189,20 +233,36 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
                   hoverEffect
                   size="xs"
                 />
-                <span className="flex flex-col leading-tight">
-                  <span className="font-medium">{profile?.full_name || user.user_metadata?.full_name || user.email}</span>
-                  <span className="text-sm opacity-70">@{profile?.nickname || user.user_metadata?.nickname || user.email}</span>
+                <span
+                  className="flex flex-col leading-tight"
+                >
+                  <span
+                    className="font-medium"
+                  >
+                    {profile?.full_name || user.user_metadata?.full_name || user.email}
+                  </span>
+                  <span
+                    className="text-sm opacity-70"
+                  >
+                    @
+                    {profile?.nickname || user.user_metadata?.nickname || user.email}
+                  </span>
                 </span>
               </div>
             </div>
           </div>
 
-          <p className="text-sm text-foreground/70">
+          <p
+            className="text-sm text-foreground/70"
+          >
             You can cancel your RSVP anytime. You&apos;ll receive a confirmation email with all the event details.
           </p>
 
           {error && (
-            <ErrorMessage>Error: {error}</ErrorMessage>
+            <ErrorMessage>
+              Error:
+              {error}
+            </ErrorMessage>
           )}
 
           <Button
@@ -218,22 +278,35 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
 
       {/* User has existing RSVP - show cancel option */}
       {user && !success && hasExistingRSVP && (
-        <div className="flex flex-col gap-4">
+        <div
+          className="flex flex-col gap-4"
+        >
           <SuccessMessage>
             <div>
-              <p>You&apos;re signed up for this event!</p>
-              <p className="mt-1 text-sm font-normal text-foreground/70">
-                A confirmation email was sent to {user.email}
+              <p>
+                You&apos;re signed up for this event!
+              </p>
+              <p
+                className="mt-1 text-sm font-normal text-foreground/70"
+              >
+                A confirmation email was sent to
+                {' '}
+                {user.email}
               </p>
             </div>
           </SuccessMessage>
 
-          <p className="text-sm text-foreground/70">
+          <p
+            className="text-sm text-foreground/70"
+          >
             Need to cancel? Click the button below to remove your RSVP.
           </p>
 
           {error && (
-            <ErrorMessage>Error: {error}</ErrorMessage>
+            <ErrorMessage>
+              Error:
+              {error}
+            </ErrorMessage>
           )}
 
           <Button
@@ -249,9 +322,15 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       )}
 
       {success && hasExistingRSVP && (
-        <div className='flex gap-2 rounded-md bg-orange-500/20 p-4 font-semibold leading-6 text-foreground'>
-          <CloseSVG className="shrink-0 fill-foreground" />
-          <span>Your RSVP has been cancelled. You can sign up again anytime.</span>
+        <div
+          className='flex gap-2 rounded-md bg-orange-500/20 p-4 font-semibold leading-6 text-foreground'
+        >
+          <CloseSVG
+            className="shrink-0 fill-foreground"
+          />
+          <span>
+            Your RSVP has been cancelled. You can sign up again anytime.
+          </span>
         </div>
       )}
 

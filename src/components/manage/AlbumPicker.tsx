@@ -27,33 +27,31 @@ export default function AlbumPicker({
 
   useEffect(() => {
     if (!user) return;
-    fetchAlbums();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
-  const fetchAlbums = async () => {
-    if (!user) return;
+    const fetchAlbums = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('albums')
+          .select('id, title, slug')
+          .eq('user_id', user.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('albums')
-        .select('id, title, slug')
-        .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('Error fetching albums:', error);
-      } else {
-        setAlbums((data || []) as Album[]);
+        if (error) {
+          console.error('Error fetching albums:', error);
+        } else {
+          setAlbums((data || []) as Album[]);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
       }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    }
-    setIsLoading(false);
-  };
+      setIsLoading(false);
+    };
+
+    fetchAlbums();
+  }, [user, supabase]);
 
   const handleToggleAlbum = (albumId: string) => {
     const newSelection = selectedAlbumIds.includes(albumId)
@@ -90,9 +88,10 @@ export default function AlbumPicker({
       setAlbums([newAlbum as Album, ...albums]);
       onSelectionChange([...selectedAlbumIds, newAlbum.id]);
       setNewAlbumTitle('');
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create album';
       console.error('Error creating album:', err);
-      alert(err.message || 'Failed to create album');
+      alert(message);
     } finally {
       setIsCreatingAlbum(false);
     }
@@ -100,21 +99,37 @@ export default function AlbumPicker({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-border-color bg-background-light p-4">
-        <p className="text-sm text-foreground/60">Loading albums...</p>
+      <div
+        className="rounded-lg border border-border-color bg-background-light p-4"
+      >
+        <p
+          className="text-sm text-foreground/60"
+        >
+          Loading albums...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+    >
       <div>
-        <label className="mb-2 block text-sm font-medium">
+        <label
+          className="mb-2 block text-sm font-medium"
+        >
           Add to album? (optional)
         </label>
-        <div className="space-y-2">
+        <div
+          className="space-y-2"
+        >
           {albums.length === 0 ? (
-            <p className="text-sm text-foreground/60">No albums yet</p>
+            <p
+              className="text-sm text-foreground/60"
+            >
+              No albums yet
+            </p>
           ) : (
             albums.map((album) => (
               <label
@@ -127,18 +142,28 @@ export default function AlbumPicker({
                   onChange={() => handleToggleAlbum(album.id)}
                   className="size-4 rounded border-border-color text-primary focus:ring-primary"
                 />
-                <span className="flex-1 text-sm">{album.title}</span>
+                <span
+                  className="flex-1 text-sm"
+                >
+                  {album.title}
+                </span>
               </label>
             ))
           )}
         </div>
       </div>
 
-      <div className="rounded-lg border border-border-color bg-background-light p-4">
-        <label className="mb-2 block text-sm font-medium">
+      <div
+        className="rounded-lg border border-border-color bg-background-light p-4"
+      >
+        <label
+          className="mb-2 block text-sm font-medium"
+        >
           Create new album
         </label>
-        <div className="flex gap-2">
+        <div
+          className="flex gap-2"
+        >
           <Input
             type="text"
             value={newAlbumTitle}

@@ -2,7 +2,7 @@
 
 import type { Photo } from '@/types/photos';
 import PhotoCard from './PhotoCard';
-import SelectableGrid from './SelectableGrid';
+import LazySelectableGrid from './LazySelectableGrid';
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -43,7 +43,7 @@ export default function PhotoGrid({
   currentAlbumTitle,
 }: PhotoGridProps) {
   return (
-    <SelectableGrid
+    <LazySelectableGrid
       items={photos}
       selectedIds={selectedPhotoIds}
       getId={(photo) => photo.id}

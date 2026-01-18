@@ -68,30 +68,59 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
     : null;
 
   return (
-    <StickyActionBar constrainWidth>
-      <div className="flex flex-col gap-0.5">
-        <p className="text-xs sm:text-sm text-foreground font-medium">
-          {formatEventDate(event.date || '', { includeYear: true })} at {formatEventTime(event.time || '')}
+    <StickyActionBar
+      constrainWidth
+    >
+      <div
+        className="flex flex-col gap-0.5"
+      >
+        <p
+          className="text-xs sm:text-sm text-foreground font-medium"
+        >
+          {formatEventDate(event.date || '', { includeYear: true })}
+          {' '}
+          at
+          {formatEventTime(event.time || '')}
         </p>
 
-        <div className="flex-1">
+        <div
+          className="flex-1"
+        >
           {isLoading ? (
-            <div className="h-5 w-24 animate-pulse rounded bg-border-color" />
+            <div
+              className="h-5 w-24 animate-pulse rounded bg-border-color"
+            />
           ) : hasRSVP ? (
-            <p className="flex items-center text-sm font-medium text-primary">
-              <CheckSVG className="size-4 fill-current inline-block mr-1.5 align-top" /> You&apos;re going!
+            <p
+              className="flex items-center text-sm font-medium text-primary"
+            >
+              <CheckSVG
+                className="size-4 fill-current inline-block mr-1.5 align-top"
+              />
+              {' '}
+              You&apos;re going!
             </p>
           ) : spotsLeft !== null && spotsLeft > 0 ? (
-            <p className="text-sm text-foreground/70">
-              {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
+            <p
+              className="text-sm text-foreground/70"
+            >
+              {spotsLeft}
+              {' '}
+              {spotsLeft === 1 ? 'spot' : 'spots'}
+              {' '}
+              left
             </p>
           ) : spotsLeft === 0 ? (
-            <p className="text-sm text-foreground/70">
-            Event is full
+            <p
+              className="text-sm text-foreground/70"
+            >
+              Event is full
             </p>
           ) : (
-            <p className="text-sm text-foreground/70">
-            Reserve your spot
+            <p
+              className="text-sm text-foreground/70"
+            >
+              Reserve your spot
             </p>
           )}
         </div>
@@ -100,7 +129,11 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
       <Button
         onClick={openModal}
         disabled={isLoading || (spotsLeft === 0 && !hasRSVP)}
-        icon={hasRSVP ? <CloseSVG className="size-4 -ml-0.5 fill-current" /> : <CheckSVG className="size-4 -ml-0.5 fill-current" />}
+        icon={hasRSVP ? <CloseSVG
+          className="size-4 -ml-0.5 fill-current"
+        /> : <CheckSVG
+          className="size-4 -ml-0.5 fill-current"
+        />}
         variant={hasRSVP ? 'secondary' : 'primary'}
         size="md"
         className="rounded-full"

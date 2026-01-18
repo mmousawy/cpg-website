@@ -85,13 +85,25 @@ export default function ProtectedRoute({
   if (requireAdmin && !isAdmin) {
     return (
       <PageContainer>
-        <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
-          <h1 className="mb-4 text-3xl font-bold">Access denied</h1>
-          <p className="text-foreground/70">You don&apos;t have permission to access this page.</p>
+        <div
+          className="flex min-h-[50vh] flex-col items-center justify-center text-center"
+        >
+          <h1
+            className="mb-4 text-3xl font-bold"
+          >
+            Access denied
+          </h1>
+          <p
+            className="text-foreground/70"
+          >
+            You don&apos;t have permission to access this page.
+          </p>
         </div>
       </PageContainer>
     );
   }
 
-  return <>{children}</>;
+  return <>
+    {children}
+  </>;
 }

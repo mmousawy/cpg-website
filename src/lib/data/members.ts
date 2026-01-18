@@ -187,8 +187,13 @@ export async function getMembersByTagUsage(limit = 12) {
 
   // Count tag usage per user
   const userTagCounts = new Map<string, number>();
-  photoTags.forEach((pt) => {
-    const photo = pt.photos as any;
+  type PhotoRow = Pick<Tables<'photos'>, 'user_id'>;
+  type PhotoTagRow = Pick<Tables<'photo_tags'>, 'tag' | 'photo_id'>;
+  type PhotoTagWithPhoto = PhotoTagRow & {
+    photos: PhotoRow | null;
+  };
+  photoTags.forEach((pt: PhotoTagWithPhoto) => {
+    const photo = pt.photos;
     if (photo?.user_id) {
       const current = userTagCounts.get(photo.user_id) || 0;
       userTagCounts.set(photo.user_id, current + 1);
@@ -312,8 +317,13 @@ export async function getMembersByTag(tagName: string) {
 
   // Count tag usage per user
   const userTagCounts = new Map<string, number>();
-  photoTags.forEach((pt) => {
-    const photo = pt.photos as any;
+  type PhotoRow = Pick<Tables<'photos'>, 'user_id'>;
+  type PhotoTagQueryResult = {
+    photo_id: string;
+    photos: PhotoRow | null;
+  };
+  photoTags.forEach((pt: PhotoTagQueryResult) => {
+    const photo = pt.photos;
     if (photo?.user_id) {
       const current = userTagCounts.get(photo.user_id) || 0;
       userTagCounts.set(photo.user_id, current + 1);

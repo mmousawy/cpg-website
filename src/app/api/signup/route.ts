@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { render } from "@react-email/render";
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
 
-import { createClient } from "@/utils/supabase/server";
-import { ConfirmEmail } from "../../../emails/confirm";
-import { revalidateEventAttendees } from "@/app/actions/revalidate";
+import { createClient } from '@/utils/supabase/server';
+import { ConfirmEmail } from '../../../emails/confirm';
+import { revalidateEventAttendees } from '@/app/actions/revalidate';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "You must be logged in to sign up for events" }, { status: 401 });
+    return NextResponse.json({ message: 'You must be logged in to sign up for events' }, { status: 401 });
   }
 
   const { event_id } = await request.json();
-  const ipAddress = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for");
+  const ipAddress = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for');
 
   if (!event_id) {
-    return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+    return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
   }
 
   // Get user profile for name
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const { data: event } = await supabase.from('events').select().eq('id', event_id).single();
 
   if (!event) {
-    return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    return NextResponse.json({ message: 'Event not found' }, { status: 404 });
   }
 
   // Check if the user has already signed up for the event
@@ -47,11 +47,11 @@ export async function POST(request: NextRequest) {
     .select()
     .eq('event_id', event_id)
     .eq('user_id', user.id)
-    .is("canceled_at", null)
+    .is('canceled_at', null)
     .single();
 
   if (existingRSVP) {
-    return NextResponse.json({ message: "You have already signed up for this event." }, { status: 400 });
+    return NextResponse.json({ message: 'You have already signed up for this event.' }, { status: 400 });
   }
 
   // Insert the RSVP into the database - already confirmed since user is authenticated

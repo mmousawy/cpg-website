@@ -298,9 +298,10 @@ export default function AlbumDetailClient() {
 
       // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload photos';
       console.error('Upload error:', err);
-      alert(err.message || 'Failed to upload photos');
+      alert(message);
     }
 
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -425,8 +426,7 @@ export default function AlbumDetailClient() {
               isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handleAlbumDirtyChange}
             />
-          )
-        }
+        )}
         mobileActionBar={
           selectedCount > 0 ? (
             <MobileActionBar
@@ -463,8 +463,7 @@ export default function AlbumDetailClient() {
                 Edit Album
               </Button>
             </div>
-          )
-        }
+        )}
       >
         <DropZone
           onDrop={handleFileDrop}
@@ -544,7 +543,7 @@ export default function AlbumDetailClient() {
           />
         ) : (
           <AlbumEditSidebar
-            selectedAlbums={album ? [album as any] : []}
+            selectedAlbums={album ? [album] : []}
             nickname={profile?.nickname}
             onSave={handleSaveAlbum}
             onDelete={handleDeleteAlbum}

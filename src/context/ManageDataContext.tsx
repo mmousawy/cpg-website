@@ -17,11 +17,13 @@ export function ManageDataProvider({ children }: { children: React.ReactNode }) 
   // This populates the cache so pages can use cached data immediately
   usePhotoCounts(user?.id);
   useAlbums(user?.id);
-  
+
   // Prefetch all photo filter variants to warm up cache
   usePhotos(user?.id, 'all');
   usePhotos(user?.id, 'public');
   usePhotos(user?.id, 'private');
 
-  return <>{children}</>;
+  return <>
+    {children}
+  </>;
 }

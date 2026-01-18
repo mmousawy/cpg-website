@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
-import { revalidateEvents, revalidateEventAttendees } from "@/app/actions/revalidate";
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+import { revalidateEvents, revalidateEventAttendees } from '@/app/actions/revalidate';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if user is admin
@@ -20,22 +20,22 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
   const body = await request.json();
   const { title, description, date, time, location, cover_image } = body;
 
   if (!title || !date) {
-    return NextResponse.json({ message: "Title and date are required" }, { status: 400 });
+    return NextResponse.json({ message: 'Title and date are required' }, { status: 400 });
   }
 
   // Generate slug from title (simple example, adjust as needed)
   const slug = title
     .toString()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
 
   // Create event
   const { data, error } = await supabase
@@ -95,7 +95,7 @@ export async function PUT(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if user is admin
@@ -106,18 +106,18 @@ export async function PUT(request: NextRequest) {
     .single();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
   const body = await request.json();
   const { id, title, description, date, time, location, cover_image } = body;
 
   if (!id) {
-    return NextResponse.json({ message: "Event ID is required" }, { status: 400 });
+    return NextResponse.json({ message: 'Event ID is required' }, { status: 400 });
   }
 
   if (!title || !date) {
-    return NextResponse.json({ message: "Title and date are required" }, { status: 400 });
+    return NextResponse.json({ message: 'Title and date are required' }, { status: 400 });
   }
 
   // Update event
@@ -152,7 +152,7 @@ export async function DELETE(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if user is admin
@@ -163,14 +163,14 @@ export async function DELETE(request: NextRequest) {
     .single();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
   const body = await request.json();
   const { id, slug } = body;
 
   if (!id && !slug) {
-    return NextResponse.json({ message: "Event ID or slug is required" }, { status: 400 });
+    return NextResponse.json({ message: 'Event ID or slug is required' }, { status: 400 });
   }
 
   // Delete event - use ID if provided, otherwise use slug

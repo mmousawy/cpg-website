@@ -33,13 +33,28 @@ export default function MemberCard({ member, badge, className }: MemberCardProps
         size="lg"
         hoverEffect
       />
-      <div className="flex grow flex-col items-center text-center">
-        <p className="font-medium text-sm leading-tight">{member.full_name || `@${member.nickname}`}</p>
+      <div
+        className="flex grow flex-col items-center text-center"
+      >
+        <p
+          className="font-medium text-sm leading-tight"
+        >
+          {member.full_name || `@${member.nickname}`}
+        </p>
         {member.full_name && (
-          <p className="mt-0.5 text-xs text-foreground/60">@{member.nickname}</p>
+          <p
+            className="mt-0.5 text-xs text-foreground/60"
+          >
+            @
+            {member.nickname}
+          </p>
         )}
         {badge && (
-          <p className="mt-auto pt-2 text-xs text-foreground/90">{badge}</p>
+          <p
+            className="mt-auto pt-2 text-xs text-foreground/90"
+          >
+            {badge}
+          </p>
         )}
       </div>
     </Link>

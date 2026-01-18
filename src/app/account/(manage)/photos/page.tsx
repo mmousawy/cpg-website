@@ -217,9 +217,10 @@ export default function PhotosPage() {
 
       // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload photos';
       console.error('Upload error:', err);
-      alert(err.message || 'Failed to upload photos');
+      alert(message);
     }
 
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -276,10 +277,16 @@ export default function PhotosPage() {
             <Button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              icon={<PlusMiniSVG className="size-5 -ml-0.5" />}
+              icon={<PlusMiniSVG
+                className="size-5 -ml-0.5"
+              />}
               variant="primary"
             >
-              <span className="hidden md:inline-block">{isUploading ? 'Uploading...' : 'Upload'}</span>
+              <span
+                className="hidden md:inline-block"
+              >
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </span>
             </Button>
             <input
               ref={fileInputRef}
@@ -315,9 +322,15 @@ export default function PhotosPage() {
                     onClick={handleMobileBulkDelete}
                     variant="danger"
                     size="sm"
-                    icon={<TrashSVG className="size-5 -ml-0.5" />}
+                    icon={<TrashSVG
+                      className="size-5 -ml-0.5"
+                    />}
                   >
-                    <span className="hidden md:inline-block">Delete</span>
+                    <span
+                      className="hidden md:inline-block"
+                    >
+                      Delete
+                    </span>
                   </Button>
                 )}
                 {selectedCount > 0 && (
@@ -325,9 +338,15 @@ export default function PhotosPage() {
                     onClick={() => handleAddToAlbum(Array.from(selectedPhotoIds))}
                     variant="secondary"
                     size="sm"
-                    icon={<FolderDownMiniSVG className="size-5 -ml-0.5" />}
+                    icon={<FolderDownMiniSVG
+                      className="size-5 -ml-0.5"
+                    />}
                   >
-                    <span className="hidden md:inline-block">Album</span>
+                    <span
+                      className="hidden md:inline-block"
+                    >
+                      Album
+                    </span>
                   </Button>
                 )}
               </>
@@ -342,15 +361,32 @@ export default function PhotosPage() {
           overlayMessage="Drop to upload"
         >
           {photosLoading && photos.length === 0 ? (
-            <PageLoading message="Loading photos..." />
+            <PageLoading
+              message="Loading photos..."
+            />
           ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
-            <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
-              <ImageSVG className="size-10 mb-2 inline-block" />
-              <p className="mb-2 text-lg opacity-70">You don&apos;t have any photos yet</p>
-              <p className="text-sm text-foreground/50 mb-4">
+            <div
+              className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
+            >
+              <ImageSVG
+                className="size-10 mb-2 inline-block"
+              />
+              <p
+                className="mb-2 text-lg opacity-70"
+              >
+                You don&apos;t have any photos yet
+              </p>
+              <p
+                className="text-sm text-foreground/50 mb-4"
+              >
                 Drag and drop photos here, or use the &quot;Upload&quot; button to upload photos
               </p>
-              <Button onClick={() => fileInputRef.current?.click()} icon={<PlusMiniSVG className="size-5 -ml-0.5" />}>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                icon={<PlusMiniSVG
+                  className="size-5 -ml-0.5"
+                />}
+              >
                 Upload
               </Button>
             </div>
@@ -368,7 +404,11 @@ export default function PhotosPage() {
                 uploadingPhotos.length > 0 ? (
                   <>
                     {uploadingPhotos.map((upload) => (
-                      <UploadingPhotoCard key={upload.id} upload={upload} onDismiss={dismissUpload} />
+                      <UploadingPhotoCard
+                        key={upload.id}
+                        upload={upload}
+                        onDismiss={dismissUpload}
+                      />
                     ))}
                   </>
                 ) : undefined
@@ -379,7 +419,10 @@ export default function PhotosPage() {
       </ManageLayout>
 
       {/* Mobile Edit Sheet */}
-      <BottomSheet isOpen={isMobileEditSheetOpen} onClose={handleMobileEditClose}>
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+      >
         <PhotoEditSidebar
           selectedPhotos={selectedPhotos}
           onSave={handleSavePhoto}

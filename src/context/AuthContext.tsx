@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase/client';
@@ -14,12 +14,12 @@ export type AuthState = {
   isAdmin: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
-  signInWithGoogle: (redirectTo?: string) => Promise<{ error: any }>;
-  signInWithDiscord: (redirectTo?: string) => Promise<{ error: any }>;
-  signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
-  updatePassword: (newPassword: string) => Promise<{ error: any }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ error: Error | null }>;
+  signInWithDiscord: (redirectTo?: string) => Promise<{ error: Error | null }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -163,12 +163,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
-        return { error: { message: data.message || 'Failed to create account' } };
+        const errorData = data as { message?: string };
+        return { error: new Error(errorData.message || 'Failed to create account') };
       }
 
       return { error: null };
-    } catch {
-      return { error: { message: 'An unexpected error occurred' } };
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error('An unexpected error occurred') };
     }
   }, []);
 
@@ -183,18 +184,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
-        return { error: { message: data.message || 'Failed to send reset email' } };
+        const errorData = data as { message?: string };
+        return { error: new Error(errorData.message || 'Failed to send reset email') };
       }
 
       return { error: null };
-    } catch {
-      return { error: { message: 'An unexpected error occurred' } };
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error('An unexpected error occurred') };
     }
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    return { error };
+    return { error: error || null };
   }, []);
 
   const value = useMemo(() => ({
@@ -206,7 +208,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resetPassword, updatePassword]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={value}
+    >
       {children}
     </AuthContext.Provider>
   );

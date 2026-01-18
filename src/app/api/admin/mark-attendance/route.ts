@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if user is admin
@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
   const { rsvp_id, unmark } = await request.json();
 
   if (!rsvp_id) {
-    return NextResponse.json({ message: "Missing rsvp_id" }, { status: 400 });
+    return NextResponse.json({ message: 'Missing rsvp_id' }, { status: 400 });
   }
 
   // Mark or unmark attendance

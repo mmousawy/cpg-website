@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     // Get the email type ID (using type assertion since types haven't been regenerated yet)
     const { data: emailTypeData, error: emailTypeError } = await supabase
-      .from('email_types' as any)
+      .from('email_types')
       .select('id, type_key, type_label')
       .eq('type_key', emailTypeKey)
       .single();
@@ -99,18 +99,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const emailTypeId = (emailTypeData as any).id;
-    const emailTypeLabel = (emailTypeData as any).type_label;
+    const emailTypeId = emailTypeData.id;
+    const emailTypeLabel = emailTypeData.type_label;
 
     // Check if already unsubscribed - prevent duplicate unsubscribes
     const { data: existingPreference } = await supabase
-      .from('email_preferences' as any)
+      .from('email_preferences')
       .select('opted_out')
       .eq('user_id', userId)
       .eq('email_type_id', emailTypeId)
       .single();
 
-    if ((existingPreference as any)?.opted_out) {
+    if (existingPreference?.opted_out) {
       return NextResponse.json(
         {
           message: 'You are already unsubscribed from this email type',
@@ -132,13 +132,13 @@ export async function POST(request: NextRequest) {
       if (profileWithNewsletter?.newsletter_opt_in === false) {
         // Also ensure preference is set in new table
         await supabase
-          .from('email_preferences' as any)
+          .from('email_preferences')
           .upsert({
             user_id: userId,
             email_type_id: emailTypeId,
             opted_out: true,
             updated_at: new Date().toISOString(),
-          } as any, {
+          }, {
             onConflict: 'user_id,email_type_id',
           });
 
@@ -155,13 +155,13 @@ export async function POST(request: NextRequest) {
 
     // Upsert the preference (insert or update)
     const { error: updateError } = await supabase
-      .from('email_preferences' as any)
+      .from('email_preferences')
       .upsert({
         user_id: userId,
         email_type_id: emailTypeId,
         opted_out: true,
         updated_at: new Date().toISOString(),
-      } as any, {
+      }, {
         onConflict: 'user_id,email_type_id',
       });
 

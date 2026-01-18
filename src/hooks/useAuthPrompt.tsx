@@ -35,8 +35,12 @@ export function useAuthPrompt() {
       setSize('small');
       setTitle(title || 'Join our community');
       setContent(
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+        <div
+          className="text-center"
+        >
+          <div
+            className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10"
+          >
             <svg
               className="size-8 text-primary"
               fill="none"
@@ -51,13 +55,17 @@ export function useAuthPrompt() {
               />
             </svg>
           </div>
-          <p className="text-foreground/70">
+          <p
+            className="text-foreground/70"
+          >
             {description || `Sign in to ${feature} and connect with our photography community.`}
           </p>
         </div>,
       );
       setFooter(
-        <div className="flex flex-wrap justify-center gap-3">
+        <div
+          className="flex flex-wrap justify-center gap-3"
+        >
           <Button
             href={`${routes.login.url}?redirectTo=${redirectTo}`}
             onClick={() => setIsOpen(false)}

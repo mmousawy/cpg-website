@@ -1,4 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const nextConfig: NextConfig = {
   // Enable 'use cache' directive for data layer caching
@@ -6,12 +11,14 @@ const nextConfig: NextConfig = {
   // Memory optimization for Webpack builds (production)
   experimental: {
     webpackMemoryOptimizations: true,
+    optimizeCss: true,
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
     qualities: [25, 50, 75, 85, 95],
     remotePatterns: [
       {
-        hostname: "gravatar.com",
+        hostname: 'gravatar.com',
       },
       {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',
@@ -49,6 +56,21 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // Note: CSP and HSTS should be configured at the hosting/CDN level (Vercel)
+          // Trusted Types requires more complex setup and may break existing functionality
+        ],
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

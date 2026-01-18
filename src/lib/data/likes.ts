@@ -89,10 +89,15 @@ export async function getAlbumLikes(albumId: string): Promise<{
     .eq('id', albumId)
     .maybeSingle();
 
+  type AlbumWithProfile = {
+    user_id: string;
+    profile: { nickname: string } | null;
+  };
+
   if (album) {
-    const profile = album.profile as any;
-    if (profile?.nickname) {
-      cacheTag(`profile-${profile.nickname}`);
+    const typedAlbum = album as AlbumWithProfile;
+    if (typedAlbum.profile?.nickname) {
+      cacheTag(`profile-${typedAlbum.profile.nickname}`);
     }
   }
 

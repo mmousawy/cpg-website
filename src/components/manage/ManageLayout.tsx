@@ -56,16 +56,28 @@ export default function ManageLayout({
   };
 
   return (
-    <div className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none">
+    <div
+      className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none"
+    >
       {/* Left Panel - Content */}
-      <div className="flex flex-1 flex-col overflow-y-auto border-r border-border-color md:border-r">
+      <div
+        className="flex flex-1 flex-col overflow-y-auto border-r border-border-color md:border-r"
+      >
         {/* Header */}
-        <div className="sticky top-0 z-20 border-b border-border-color bg-background-light px-2 py-2">
-          <div className="flex items-center justify-between gap-4">
+        <div
+          className="sticky top-0 z-20 border-b border-border-color bg-background-light px-2 py-2"
+        >
+          <div
+            className="flex items-center justify-between gap-4"
+          >
             {/* Left side: tabs + album title (if album detail) */}
-            <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-4"
+            >
               {/* Tab navigation */}
-              <div className="flex">
+              <div
+                className="flex"
+              >
                 <Link
                   href="/account/photos"
                   onClick={(e) => handleTabClick(e, '/account/photos')}
@@ -76,9 +88,17 @@ export default function ManageLayout({
                       : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
                   )}
                 >
-                  <PhotoMicroSVG className="size-4" />
-                  <span className="hidden md:inline">Photos</span>
-                  <div className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs">
+                  <PhotoMicroSVG
+                    className="size-4"
+                  />
+                  <span
+                    className="hidden md:inline"
+                  >
+                    Photos
+                  </span>
+                  <div
+                    className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
+                  >
                     {photoCount}
                   </div>
                 </Link>
@@ -92,9 +112,17 @@ export default function ManageLayout({
                       : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
                   )}
                 >
-                  <FolderMicroSVG className="size-4" />
-                  <span className="hidden md:inline">Albums</span>
-                  <div className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs">
+                  <FolderMicroSVG
+                    className="size-4"
+                  />
+                  <span
+                    className="hidden md:inline"
+                  >
+                    Albums
+                  </span>
+                  <div
+                    className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
+                  >
                     {albumCount}
                   </div>
                 </Link>
@@ -102,61 +130,91 @@ export default function ManageLayout({
 
               {/* Loading indicator during tab transition */}
               {isPending && (
-                <div className="flex items-center">
-                  <LoadingSpinner size="sm" />
+                <div
+                  className="flex items-center"
+                >
+                  <LoadingSpinner
+                    size="sm"
+                  />
                 </div>
               )}
 
               {/* Album title (only in album detail mode - hidden on mobile) */}
               {albumDetail && (
-                <div className="hidden md:flex items-center gap-2">
+                <div
+                  className="hidden md:flex items-center gap-2"
+                >
                   <Link
                     href="/account/albums"
                     onClick={(e) => handleTabClick(e, '/account/albums')}
                     className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
                     aria-label="Back to albums"
                   >
-                    <ArrowUpLeftSVG className="size-4" />
+                    <ArrowUpLeftSVG
+                      className="size-4"
+                    />
                   </Link>
-                  <h2 className="text-lg font-semibold">{albumDetail.title}</h2>
+                  <h2
+                    className="text-lg font-semibold"
+                  >
+                    {albumDetail.title}
+                  </h2>
                 </div>
               )}
             </div>
 
             {/* Actions */}
-            {actions && <div className="flex gap-2 items-center">{actions}</div>}
+            {actions && <div
+              className="flex gap-2 items-center"
+            >
+              {actions}
+            </div>}
           </div>
 
           {/* Mobile album detail bar - shown below main header on mobile */}
           {albumDetail && (
-            <div className="flex md:hidden items-center gap-2 mt-2 px-0.5">
+            <div
+              className="flex md:hidden items-center gap-2 mt-2 px-0.5"
+            >
               <Link
                 href="/account/albums"
                 onClick={(e) => handleTabClick(e, '/account/albums')}
                 className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
                 aria-label="Back to albums"
               >
-                <ArrowUpLeftSVG className="size-4" />
+                <ArrowUpLeftSVG
+                  className="size-4"
+                />
               </Link>
-              <h2 className="text-base font-semibold truncate">{albumDetail.title}</h2>
+              <h2
+                className="text-base font-semibold truncate"
+              >
+                {albumDetail.title}
+              </h2>
             </div>
           )}
         </div>
 
         {/* Content area */}
-        <div className="flex flex-1 flex-col min-h-0">
+        <div
+          className="flex flex-1 flex-col min-h-0"
+        >
           {children}
         </div>
       </div>
 
       {/* Right Panel - Sidebar (hidden on mobile) */}
-      <div className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col overflow-hidden bg-background-light">
+      <div
+        className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col overflow-hidden bg-background-light"
+      >
         {sidebar}
       </div>
 
       {/* Mobile Action Bar (shown when items are selected) */}
       {mobileActionBar && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-20">
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 z-20"
+        >
           {mobileActionBar}
         </div>
       )}

@@ -17,8 +17,14 @@ interface RecentEventsListProps {
 export default function RecentEventsList({ events, max = 3, serverNow }: RecentEventsListProps) {
   if (!events || events.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border-color p-6 text-center">
-        <p className="text-foreground/70">No events yet. Check back soon!</p>
+      <div
+        className="rounded-xl border border-dashed border-border-color p-6 text-center"
+      >
+        <p
+          className="text-foreground/70"
+        >
+          No events yet. Check back soon!
+        </p>
       </div>
     );
   }
@@ -46,7 +52,9 @@ export default function RecentEventsList({ events, max = 3, serverNow }: RecentE
     .slice(0, max);
 
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3"
+    >
       {sortedEvents.map((event) => (
         <EventCard
           key={event.id}

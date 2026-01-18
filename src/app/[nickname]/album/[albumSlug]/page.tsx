@@ -35,9 +35,12 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   const albumDescription = album.description || `Photo album "${album.title}" by @${nickname}`;
 
   // Get first photo from album (sorted by sort_order) for og:image
-  const albumWithPhotos = album as any;
+  type AlbumWithPhotosType = {
+    photos?: Array<{ photo_url: string; sort_order?: number | null }>;
+  };
+  const albumWithPhotos = album as AlbumWithPhotosType;
   const photos = albumWithPhotos.photos || [];
-  const sortedPhotos = [...photos].sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+  const sortedPhotos = [...photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   const firstPhoto = sortedPhotos.length > 0 ? sortedPhotos[0] : null;
   const albumImage = firstPhoto?.photo_url || null;
 

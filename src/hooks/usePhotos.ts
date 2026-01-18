@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase/client';
-import type { PhotoWithAlbums } from '@/types/photos';
+import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import type { Tables } from '@/database.types';
 
 type PhotoFilter = 'all' | 'public' | 'private';
 
@@ -42,11 +43,25 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
     throw new Error(error.message || 'Failed to fetch photos');
   }
 
-  const photosWithAlbums = (data || []).map((photo) => {
+  type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'slug' | 'cover_image_url' | 'deleted_at'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'nickname'>;
+  type AlbumPhotoJoin = {
+    album: (AlbumRow & {
+      profile: ProfileRow | null;
+      album_photos_active: Array<{ count: number }>;
+    }) | null;
+  };
+
+  type PhotoQueryResult = Photo & {
+    album_photos: AlbumPhotoJoin[] | null;
+    photo_tags?: Array<{ tag: string }> | null;
+  };
+
+  const photosWithAlbums = (data || []).map((photo: PhotoQueryResult) => {
     const albums = (photo.album_photos || [])
-      .map((ap: { album: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string | null } | null; album_photos_active: { count: number }[] } | null }) => ap.album)
-      .filter((a: unknown): a is { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string | null } | null; album_photos_active: { count: number }[] } => a !== null && !(a as any).deleted_at)
-      .map((a: { id: string; title: string; slug: string; cover_image_url: string | null; deleted_at: string | null; profile: { nickname: string | null } | null; album_photos_active: { count: number }[] }) => ({
+      .map((ap) => ap.album)
+      .filter((a): a is NonNullable<typeof a> => a !== null && !a.deleted_at)
+      .map((a) => ({
         id: a.id,
         title: a.title,
         slug: a.slug,

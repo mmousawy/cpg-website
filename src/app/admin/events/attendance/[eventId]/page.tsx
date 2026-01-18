@@ -34,25 +34,23 @@ export default function AdminEventAttendancePage() {
   const eventId = parseInt(params.eventId as string);
   const supabase = useSupabase();
 
-  const [event, setEvent] = useState<any>(null);
+  type Event = Pick<Tables<'events'>, 'id' | 'title' | 'date' | 'time' | 'location'>;
+  const [event, setEvent] = useState<Event | null>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [markingId, setMarkingId] = useState<number | null>(null);
-
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
 
   const loadData = async () => {
     // Load event
     const { data: eventData } = await supabase
       .from('events')
-      .select()
+      .select('id, title, date, time, location')
       .eq('id', eventId)
       .single();
 
-    setEvent(eventData);
+    if (eventData) {
+      setEvent(eventData as Event);
+    }
 
     // Load RSVPs for this event
     const { data: rsvpsData } = await supabase
@@ -64,6 +62,33 @@ export default function AdminEventAttendancePage() {
     setRsvps(rsvpsData || []);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    const loadDataAsync = async () => {
+      // Load event
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('id, title, date, time, location')
+        .eq('id', eventId)
+        .single();
+
+      if (eventData) {
+        setEvent(eventData as Event);
+      }
+
+      // Load RSVPs for this event
+      const { data: rsvpsData } = await supabase
+        .from('events_rsvps')
+        .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at')
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: false });
+
+      setRsvps(rsvpsData || []);
+      setIsLoading(false);
+    };
+
+    loadDataAsync();
+  }, [eventId, supabase]);
 
   const handleMarkAttended = async (rsvpId: number) => {
     setMarkingId(rsvpId);
@@ -84,8 +109,14 @@ export default function AdminEventAttendancePage() {
   if (isLoading) {
     return (
       <PageContainer>
-        <Container className="text-center animate-pulse">
-          <p className="text-foreground/50">Loading attendance...</p>
+        <Container
+          className="text-center animate-pulse"
+        >
+          <p
+            className="text-foreground/50"
+          >
+            Loading attendance...
+          </p>
         </Container>
       </PageContainer>
     );
@@ -95,8 +126,16 @@ export default function AdminEventAttendancePage() {
     return (
       <PageContainer>
         <Container>
-          <h1 className="mb-4 text-3xl font-bold">Event not found</h1>
-          <p className="text-foreground/70">The event you&apos;re looking for doesn&apos;t exist.</p>
+          <h1
+            className="mb-4 text-3xl font-bold"
+          >
+            Event not found
+          </h1>
+          <p
+            className="text-foreground/70"
+          >
+            The event you&apos;re looking for doesn&apos;t exist.
+          </p>
         </Container>
       </PageContainer>
     );
@@ -107,39 +146,77 @@ export default function AdminEventAttendancePage() {
 
   return (
     <PageContainer>
-      <div className="mb-6">
-        <h1 className="mb-2 text-3xl font-bold">Event attendance</h1>
-        <p className="text-lg opacity-70">
+      <div
+        className="mb-6"
+      >
+        <h1
+          className="mb-2 text-3xl font-bold"
+        >
+          Event attendance
+        </h1>
+        <p
+          className="text-lg opacity-70"
+        >
           Manage attendee check-ins for this event
         </p>
         {event && (
-          <div className="rounded-2xl border border-border-color bg-background-light p-4">
-            <h2 className="mb-3 text-xl font-semibold">{event.title}</h2>
-            <div className="flex flex-wrap gap-4 text-sm text-foreground/70">
-              <span className="flex items-center gap-1">
-                <CalendarSVG className="h-4 w-4 fill-foreground/70" />
-                {new Date(event.date).toLocaleDateString('en-US', {
+          <div
+            className="rounded-2xl border border-border-color bg-background-light p-4"
+          >
+            <h2
+              className="mb-3 text-xl font-semibold"
+            >
+              {event.title}
+            </h2>
+            <div
+              className="flex flex-wrap gap-4 text-sm text-foreground/70"
+            >
+              <span
+                className="flex items-center gap-1"
+              >
+                <CalendarSVG
+                  className="h-4 w-4 fill-foreground/70"
+                />
+                {event.date ? new Date(event.date).toLocaleDateString('en-US', {
                   weekday: 'long',
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
-                })}
+                }) : 'Date TBD'}
               </span>
-              <span className="flex items-center gap-1">
-                <TimeSVG className="h-4 w-4 fill-foreground/70" />
+              <span
+                className="flex items-center gap-1"
+              >
+                <TimeSVG
+                  className="h-4 w-4 fill-foreground/70"
+                />
                 {event.time?.substring(0, 5)}
               </span>
-              <span className="flex items-center gap-1">
-                <LocationSVG className="h-4 w-4 fill-foreground/70" />
+              <span
+                className="flex items-center gap-1"
+              >
+                <LocationSVG
+                  className="h-4 w-4 fill-foreground/70"
+                />
                 {event.location}
               </span>
             </div>
-            <div className="mt-4 flex gap-4 text-sm">
-              <span className="font-medium text-foreground">
-                {confirmedRSVPs.length} confirmed
+            <div
+              className="mt-4 flex gap-4 text-sm"
+            >
+              <span
+                className="font-medium text-foreground"
+              >
+                {confirmedRSVPs.length}
+                {' '}
+                confirmed
               </span>
-              <span className="font-medium text-green-600">
-                {attendedRSVPs.length} attended
+              <span
+                className="font-medium text-green-600"
+              >
+                {attendedRSVPs.length}
+                {' '}
+                attended
               </span>
             </div>
           </div>
@@ -147,30 +224,60 @@ export default function AdminEventAttendancePage() {
       </div>
 
       <div>
-        <h2 className="mb-4 text-lg font-semibold opacity-70">RSVPs</h2>
+        <h2
+          className="mb-4 text-lg font-semibold opacity-70"
+        >
+          RSVPs
+        </h2>
         <Container>
-          <div className="space-y-2">
+          <div
+            className="space-y-2"
+          >
             {confirmedRSVPs.length === 0 ? (
-              <div className="text-center">
-                <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No confirmed RSVPs</p>
+              <div
+                className="text-center"
+              >
+                <p
+                  className="text-foreground/80"
+                >
+                  <SadSVG
+                    className="inline align-top h-6 w-6 mr-2 fill-foreground/80"
+                  />
+                  {' '}
+                  No confirmed RSVPs
+                </p>
               </div>
             ) : (
               confirmedRSVPs.map((rsvp) => (
                 <div
                   key={rsvp.id}
                   className={clsx(
-                    "flex items-center justify-between rounded-lg border border-border-color p-3",
-                    rsvp.attended_at && "bg-green-500/5",
+                    'flex items-center justify-between rounded-lg border border-border-color p-3',
+                    rsvp.attended_at && 'bg-green-500/5',
                   )}
                 >
                   <div>
-                    <p className="font-medium">{rsvp.name || 'Unknown'}</p>
-                    <p className="text-sm text-foreground/60">{rsvp.email}</p>
+                    <p
+                      className="font-medium"
+                    >
+                      {rsvp.name || 'Unknown'}
+                    </p>
+                    <p
+                      className="text-sm text-foreground/60"
+                    >
+                      {rsvp.email}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div
+                    className="flex items-center gap-2"
+                  >
                     {rsvp.attended_at ? (
-                      <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-                        <CheckSVG className="h-3 w-3 fill-green-600" />
+                      <span
+                        className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600"
+                      >
+                        <CheckSVG
+                          className="h-3 w-3 fill-green-600"
+                        />
                         Attended
                       </span>
                     ) : (
@@ -180,7 +287,9 @@ export default function AdminEventAttendancePage() {
                         size="sm"
                         className="rounded-full border-green-500/30 text-green-600 hover:border-green-500 hover:bg-green-500/10"
                       >
-                        <CheckCircleSVG className="size-4" />
+                        <CheckCircleSVG
+                          className="size-4"
+                        />
                         {markingId === rsvp.id ? 'Marking...' : 'Mark attended'}
                       </Button>
                     )}

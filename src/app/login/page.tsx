@@ -11,7 +11,9 @@ export default function LoginPage() {
   return (
     <>
       <JavaScriptRequired />
-      <div className="js-content">
+      <div
+        className="js-content"
+      >
         <LoginClient />
       </div>
     </>

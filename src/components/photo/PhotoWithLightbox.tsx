@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
 import Image from 'next/image';
+import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 
 interface PhotoWithLightboxProps {
   url: string;
@@ -22,19 +21,31 @@ export default function PhotoWithLightbox({
   height,
 }: PhotoWithLightboxProps) {
   useEffect(() => {
-    const lightbox = new PhotoSwipeLightbox({
-      gallery: '#single-photo-gallery',
-      children: 'a',
-      pswpModule: () => import('photoswipe'),
-      showHideAnimationType: 'zoom',
+    let lightbox: PhotoSwipeLightboxInstance | null = null;
+
+    initPhotoSwipe().then((PhotoSwipeLightbox) => {
+      lightbox = new PhotoSwipeLightbox({
+        gallery: '#single-photo-gallery',
+        children: 'a',
+        pswpModule: () => import('photoswipe'),
+        showHideAnimationType: 'zoom',
+      });
+
+      lightbox.init();
     });
 
-    lightbox.init();
-    return () => lightbox.destroy();
+    return () => {
+      if (lightbox) {
+        lightbox.destroy();
+      }
+    };
   }, []);
 
   return (
-    <div id="single-photo-gallery" className="relative w-full overflow-hidden bg-background-light">
+    <div
+      id="single-photo-gallery"
+      className="relative w-full overflow-hidden bg-background-light"
+    >
       <a
         href={url}
         data-pswp-width={width}

@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Control, Controller } from 'react-hook-form';
+import { Control, Controller, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
 import Checkbox from '@/components/shared/Checkbox';
@@ -13,8 +13,8 @@ interface PreferencesSectionProps {
   themeMounted: boolean;
   resolvedTheme: string | undefined;
   emailTypes: EmailTypeData[];
-  watch: (name: keyof AccountFormData) => any;
-  setValue: (name: keyof AccountFormData, value: any) => void;
+  watch: UseFormWatch<AccountFormData>;
+  setValue: UseFormSetValue<AccountFormData>;
 }
 
 export default function PreferencesSection({

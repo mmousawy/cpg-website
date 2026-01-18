@@ -208,10 +208,16 @@ export default function AlbumsPage() {
         actions={
           <Button
             onClick={handleCreateNewAlbum}
-            icon={<FolderAddMiniSVG className="size-5 -ml-0.5" />}
+            icon={<FolderAddMiniSVG
+              className="size-5 -ml-0.5"
+            />}
             variant="primary"
           >
-            <span className="hidden md:inline-block">New album</span>
+            <span
+              className="hidden md:inline-block"
+            >
+              New album
+            </span>
           </Button>
         }
         sidebar={
@@ -240,9 +246,15 @@ export default function AlbumsPage() {
                     onClick={handleMobileBulkDelete}
                     variant="danger"
                     size="sm"
-                    icon={<TrashSVG className="size-5 -ml-0.5" />}
+                    icon={<TrashSVG
+                      className="size-5 -ml-0.5"
+                    />}
                   >
-                    <span className="hidden md:inline-block">Delete</span>
+                    <span
+                      className="hidden md:inline-block"
+                    >
+                      Delete
+                    </span>
                   </Button>
                 )}
                 {selectedCount === 1 && (
@@ -253,9 +265,15 @@ export default function AlbumsPage() {
                     }}
                     variant="secondary"
                     size="sm"
-                    icon={<FolderOpenMiniSVG className="size-5 -ml-0.5" />}
+                    icon={<FolderOpenMiniSVG
+                      className="size-5 -ml-0.5"
+                    />}
                   >
-                    <span className="hidden md:inline-block">Open</span>
+                    <span
+                      className="hidden md:inline-block"
+                    >
+                      Open
+                    </span>
                   </Button>
                 )}
               </>
@@ -264,15 +282,32 @@ export default function AlbumsPage() {
         }
       >
         {albumsLoading && albums.length === 0 ? (
-          <PageLoading message="Loading albums..." />
+          <PageLoading
+            message="Loading albums..."
+          />
         ) : albums.length === 0 ? (
-          <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
-            <FolderSVG className="size-10 mb-2 inline-block" />
-            <p className="mb-2 text-lg opacity-70">You don&apos;t have any albums yet</p>
-            <p className="text-sm text-foreground/50 mb-4">
+          <div
+            className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
+          >
+            <FolderSVG
+              className="size-10 mb-2 inline-block"
+            />
+            <p
+              className="mb-2 text-lg opacity-70"
+            >
+              You don&apos;t have any albums yet
+            </p>
+            <p
+              className="text-sm text-foreground/50 mb-4"
+            >
               Use the &quot;New album&quot; button to create a new album
             </p>
-            <Button onClick={handleCreateNewAlbum} icon={<FolderAddMiniSVG className="size-5 -ml-0.5" />}>
+            <Button
+              onClick={handleCreateNewAlbum}
+              icon={<FolderAddMiniSVG
+                className="size-5 -ml-0.5"
+              />}
+            >
               New album
             </Button>
           </div>
@@ -289,7 +324,10 @@ export default function AlbumsPage() {
       </ManageLayout>
 
       {/* Mobile Edit Sheet */}
-      <BottomSheet isOpen={isMobileEditSheetOpen} onClose={handleMobileEditClose}>
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+      >
         <AlbumEditSidebar
           selectedAlbums={selectedAlbums}
           isNewAlbum={isNewAlbum}

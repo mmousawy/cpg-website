@@ -149,27 +149,41 @@ export default function BottomSheet({
           onTouchEnd={handleTouchEnd}
         >
           {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
-            <div className="h-1 w-12 rounded-full bg-foreground/20" />
+          <div
+            className="flex justify-center pt-3 pb-2 flex-shrink-0"
+          >
+            <div
+              className="h-1 w-12 rounded-full bg-foreground/20"
+            />
           </div>
 
           {/* Header - always show close button */}
-          <div className={clsx(
-            'flex items-center justify-end gap-4 px-3 flex-shrink-0',
-            title ? 'justify-between pb-2 border-b border-border-color' : 'absolute right-0 top-0 pt-3 z-10',
-          )}>
-            {title && <h2 className="text-xl font-semibold">{title}</h2>}
+          <div
+            className={clsx(
+              'flex items-center justify-end gap-4 px-3 flex-shrink-0',
+              title ? 'justify-between pb-2 border-b border-border-color' : 'absolute right-0 top-0 pt-3 z-10',
+            )}
+          >
+            {title && <h2
+              className="text-xl font-semibold"
+            >
+              {title}
+            </h2>}
             <button
               className="flex-shrink-0 rounded-full border border-border-color bg-background p-1.5 hover:bg-background-medium transition-colors"
               onClick={onClose}
               aria-label="Close"
             >
-              <CloseSVG className="size-4 fill-foreground" />
+              <CloseSVG
+                className="size-4 fill-foreground"
+              />
             </button>
           </div>
 
           {/* Content - let children handle their own scrolling */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div
+            className="flex-1 min-h-0 overflow-hidden"
+          >
             {children}
           </div>
         </div>

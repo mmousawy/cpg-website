@@ -1,10 +1,10 @@
-import { render } from "@react-email/render";
-import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { render } from '@react-email/render';
+import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
-import { EventAnnouncementEmail } from "@/emails/event-announcement";
-import { encrypt } from "@/utils/encrypt";
-import { createClient } from "@/utils/supabase/server";
+import { EventAnnouncementEmail } from '@/emails/event-announcement';
+import { encrypt } from '@/utils/encrypt';
+import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if user is admin
@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!profile?.is_admin) {
-    return NextResponse.json({ message: "Admin access required" }, { status: 403 });
+    return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
   const body = await request.json();
   const { eventId, recipientEmails } = body;
 
   if (!eventId) {
-    return NextResponse.json({ message: "Event ID is required" }, { status: 400 });
+    return NextResponse.json({ message: 'Event ID is required' }, { status: 400 });
   }
 
   // Get the event
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   if (eventError || !event) {
     return NextResponse.json(
-      { message: "Event not found" },
+      { message: 'Event not found' },
       { status: 404 },
     );
   }
@@ -63,14 +63,14 @@ export async function POST(request: NextRequest) {
   if (profilesError) {
     console.error('Error fetching profiles:', profilesError);
     return NextResponse.json(
-      { message: "Failed to fetch profiles" },
+      { message: 'Failed to fetch profiles' },
       { status: 500 },
     );
   }
 
   if (!allProfiles || allProfiles.length === 0) {
     return NextResponse.json(
-      { message: "No active members found" },
+      { message: 'No active members found' },
       { status: 400 },
     );
   }
@@ -79,23 +79,23 @@ export async function POST(request: NextRequest) {
 
   // Get the events email type ID
   const { data: eventsEmailType } = await supabase
-    .from('email_types' as any)
+    .from('email_types')
     .select('id')
     .eq('type_key', 'events')
     .single();
 
   if (!eventsEmailType) {
     return NextResponse.json(
-      { message: "Events email type not found" },
+      { message: 'Events email type not found' },
       { status: 500 },
     );
   }
 
-  const eventsEmailTypeId = (eventsEmailType as any).id;
+  const eventsEmailTypeId = eventsEmailType.id;
 
   // Get all users who have opted out of "events" email type
   const { data: optedOutUsers, error: optedOutError } = await supabase
-    .from('email_preferences' as any)
+    .from('email_preferences')
     .select('user_id')
     .eq('email_type_id', eventsEmailTypeId)
     .eq('opted_out', true);
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
   }
 
   const optedOutUserIds = new Set(
-    (optedOutUsers || []).map((u: any) => u.user_id),
+    (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
   );
 
   console.log(`🚫 Found ${optedOutUserIds.size} users who have opted out`);
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
 
   if (subscribers.length === 0) {
     return NextResponse.json(
-      { message: "No subscribers found (all members have opted out of event announcements)" },
+      { message: 'No subscribers found (all members have opted out of event announcements)' },
       { status: 400 },
     );
   }
@@ -188,10 +188,13 @@ export async function POST(request: NextRequest) {
       const batchResult = await resend.batch.send(batchEmails);
 
       if (batchResult.error) {
-        const error = batchResult.error as any;
+        type ResendError = string | { message?: string } | Error;
+        const error = batchResult.error as ResendError;
         const errorMessage = typeof error === 'string'
           ? error
-          : error?.message || JSON.stringify(error);
+          : error instanceof Error
+            ? error.message
+            : (error as { message?: string }).message || JSON.stringify(error);
         console.error(`Failed to send batch starting at index ${i}:`, error);
         // Mark all emails in batch as failed
         batch.forEach((subscriber) => {
@@ -205,7 +208,12 @@ export async function POST(request: NextRequest) {
         const resultsArray = batchResult.data?.data || batchResult.data;
 
         if (resultsArray && Array.isArray(resultsArray)) {
-          resultsArray.forEach((result: any, idx: number) => {
+          type ResendBatchResult = {
+            id?: string;
+            error?: string | { message?: string } | Error;
+          };
+
+          resultsArray.forEach((result: ResendBatchResult, idx: number) => {
             const subscriber = batch[idx];
             if (!subscriber) {
               console.warn(`No subscriber found at index ${idx} in batch`);
@@ -213,12 +221,15 @@ export async function POST(request: NextRequest) {
             }
 
             if (result && typeof result === 'object') {
-              if ('error' in result) {
+              if ('error' in result && result.error) {
                 // Error in result object
-                const error = result.error as any;
+                type ResendError = string | { message?: string } | Error;
+                const error = result.error as ResendError;
                 const errorMessage = typeof error === 'string'
                   ? error
-                  : error?.message || JSON.stringify(error);
+                  : error instanceof Error
+                    ? error.message
+                    : (error as { message?: string }).message || JSON.stringify(error);
                 console.error(`Failed to send email to ${subscriber.email}:`, error);
                 sendStatus[subscriber.email!] = 'error';
                 errorDetails[subscriber.email!] = errorMessage;

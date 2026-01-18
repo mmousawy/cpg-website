@@ -110,10 +110,14 @@ export default function TagInput({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div
+      className="flex flex-col gap-2"
+    >
       {/* Selected tags - show all tags from tagCounts for visibility */}
       {tagCounts && Object.keys(tagCounts).length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div
+          className="flex flex-wrap gap-2"
+        >
           {Object.keys(tagCounts)
             .filter((tag) => {
               // Only show tags that are in the form OR are read-only (partially shared)
@@ -149,7 +153,9 @@ export default function TagInput({
       )}
       {/* Fallback: show tags from form if no tagCounts provided */}
       {(!tagCounts || Object.keys(tagCounts).length === 0) && tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div
+          className="flex flex-wrap gap-2"
+        >
           {tags.map((tag) => (
             <Tag
               key={tag}
@@ -162,7 +168,9 @@ export default function TagInput({
       )}
 
       {/* Input with autocomplete */}
-      <div className="relative">
+      <div
+        className="relative"
+      >
         <Input
           ref={inputRef}
           id={id}
@@ -186,9 +194,13 @@ export default function TagInput({
             ref={suggestionsRef}
             className="absolute z-30 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
           >
-            <ul className="max-h-48 overflow-y-auto p-1">
+            <ul
+              className="max-h-48 overflow-y-auto p-1"
+            >
               {suggestions.map((tag, index) => (
-                <li key={tag.id}>
+                <li
+                  key={tag.id}
+                >
                   <button
                     type="button"
                     className={`w-full px-3 py-2 text-left text-sm hover:bg-foreground/5 ${
@@ -197,8 +209,18 @@ export default function TagInput({
                     onClick={() => handleSuggestionClick(tag)}
                     onMouseEnter={() => setHighlightedIndex(index)}
                   >
-                    <span className="font-medium uppercase">{tag.name}</span>
-                    <span className="ml-2 text-foreground/50">({tag.count})</span>
+                    <span
+                      className="font-medium uppercase"
+                    >
+                      {tag.name}
+                    </span>
+                    <span
+                      className="ml-2 text-foreground/50"
+                    >
+                      (
+                      {tag.count}
+                      )
+                    </span>
                   </button>
                 </li>
               ))}
@@ -208,7 +230,11 @@ export default function TagInput({
       </div>
 
       {/* Helper text */}
-      {helperText && <p className="text-xs text-foreground/50">{helperText}</p>}
+      {helperText && <p
+        className="text-xs text-foreground/50"
+      >
+        {helperText}
+      </p>}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
 import AlbumCard from './AlbumCard';
-import SelectableGrid from './SelectableGrid';
+import LazySelectableGrid from './LazySelectableGrid';
 
 interface AlbumGridProps {
   albums: AlbumWithPhotos[];
@@ -27,7 +27,7 @@ export default function AlbumGrid({
   className,
 }: AlbumGridProps) {
   return (
-    <SelectableGrid
+    <LazySelectableGrid
       items={albums}
       selectedIds={selectedAlbumIds}
       getId={(album) => album.id}

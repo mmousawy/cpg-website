@@ -120,11 +120,19 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
     <>
       <PageContainer>
         {/* Profile Header */}
-        <div className="mb-8 sm:mb-10">
+        <div
+          className="mb-8 sm:mb-10"
+        >
           {/* Avatar and Name */}
-          <div className="mb-3 sm:mb-6 flex items-center gap-3 sm:gap-4">
-            <div className="relative shrink-0 rounded-full outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none">
-              <div className="flex h-20 w-20 sm:h-26 sm:w-26 items-center justify-center overflow-hidden rounded-full border-2 border-border-color">
+          <div
+            className="mb-3 sm:mb-6 flex items-center gap-3 sm:gap-4"
+          >
+            <div
+              className="relative shrink-0 rounded-full outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none"
+            >
+              <div
+                className="flex h-20 w-20 sm:h-26 sm:w-26 items-center justify-center overflow-hidden rounded-full border-2 border-border-color"
+              >
                 <ClickableAvatar
                   avatarUrl={profile.avatar_url}
                   fullName={profile.full_name}
@@ -133,19 +141,28 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                 />
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="sm:text-3xl text-xl font-bold truncate">
+            <div
+              className="flex-1 min-w-0"
+            >
+              <h1
+                className="sm:text-3xl text-xl font-bold truncate"
+              >
                 {profile.full_name || `@${profile.nickname}`}
               </h1>
               {profile.full_name && (
-                <p className="sm:text-lg text-base opacity-70">
-                  @{profile.nickname}
+                <p
+                  className="sm:text-lg text-base opacity-70"
+                >
+                  @
+                  {profile.nickname}
                 </p>
               )}
 
               {/* Links - Desktop only (inline with name) */}
               {(profile.website || socialLinks.length > 0) && (
-                <div className="hidden sm:flex flex-wrap items-center gap-2 sm:mt-2">
+                <div
+                  className="hidden sm:flex flex-wrap items-center gap-2 sm:mt-2"
+                >
                   {profile.website && (
                     <a
                       href={profile.website}
@@ -188,7 +205,9 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
 
           {/* Links - Mobile only (full width below avatar) */}
           {(profile.website || socialLinks.length > 0) && (
-            <div className="flex sm:hidden flex-wrap items-center gap-2 mb-4">
+            <div
+              className="flex sm:hidden flex-wrap items-center gap-2 mb-4"
+            >
               {profile.website && (
                 <a
                   href={profile.website}
@@ -229,30 +248,49 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
 
           {/* Bio */}
           {profile.bio && (
-            <div className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]">
+            <div
+              className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]"
+            >
               {profile.bio}
             </div>
           )}
 
           {/* Interests */}
           {profile.interests && profile.interests.length > 0 && (
-            <div className="mb-4">
-              <InterestCloud interests={profile.interests} />
+            <div
+              className="mb-4"
+            >
+              <InterestCloud
+                interests={profile.interests}
+              />
             </div>
           )}
         </div>
 
         {/* Stats Badges */}
-        <ProfileStatsBadges stats={publicStats} />
+        <ProfileStatsBadges
+          stats={publicStats}
+        />
       </PageContainer>
 
       {/* Photostream - Wide container */}
       {publicPhotos.length > 0 && (
-        <WidePageContainer className="!pt-0">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold">Photostream</h2>
-            <p className="mt-1 text-sm text-foreground/60">
-              Latest photos by @{profile.nickname}
+        <WidePageContainer
+          className="!pt-0"
+        >
+          <div
+            className="mb-6"
+          >
+            <h2
+              className="text-xl font-semibold"
+            >
+              Photostream
+            </h2>
+            <p
+              className="mt-1 text-sm text-foreground/60"
+            >
+              Latest photos by @
+              {profile.nickname}
             </p>
           </div>
           <JustifiedPhotoGrid
@@ -272,14 +310,27 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
 
       {/* Albums - Wide container */}
       {albums.length > 0 && (
-        <WidePageContainer className={publicPhotos.length > 0 ? '!pt-0' : ''}>
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold">Albums</h2>
-            <p className="mt-1 text-sm text-foreground/60">
-              Photo collections by @{profile.nickname}
+        <WidePageContainer
+          className={publicPhotos.length > 0 ? '!pt-0' : ''}
+        >
+          <div
+            className="mb-6"
+          >
+            <h2
+              className="text-xl font-semibold"
+            >
+              Albums
+            </h2>
+            <p
+              className="mt-1 text-sm text-foreground/60"
+            >
+              Photo collections by @
+              {profile.nickname}
             </p>
           </div>
-          <AlbumGrid albums={albums} />
+          <AlbumGrid
+            albums={albums}
+          />
         </WidePageContainer>
       )}
     </>

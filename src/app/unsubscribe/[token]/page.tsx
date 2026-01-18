@@ -62,16 +62,39 @@ export default function UnsubscribePage() {
   if (isSuccess) {
     return (
       <PageContainer>
-        <Container variant="centered" className="max-w-md mx-auto">
-          <div className="text-center">
-            <ThumbsUpSVG className="inline-block mb-4 size-10" />
-            <h1 className="mb-4 text-2xl font-bold">No biggie! You&apos;re unsubscribed</h1>
-            <p className="text-foreground/70">
-              You&apos;ve been unsubscribed from emails about {emailType ? `${emailType.toLowerCase()}` : 'this type of'}.
+        <Container
+          variant="centered"
+          className="max-w-md mx-auto"
+        >
+          <div
+            className="text-center"
+          >
+            <ThumbsUpSVG
+              className="inline-block mb-4 size-10"
+            />
+            <h1
+              className="mb-4 text-2xl font-bold"
+            >
+              No biggie! You&apos;re unsubscribed
+            </h1>
+            <p
+              className="text-foreground/70"
+            >
+              You&apos;ve been unsubscribed from emails about
+              {' '}
+              {emailType ? `${emailType.toLowerCase()}` : 'this type of'}
+              .
             </p>
-            <p className="mb-6 text-foreground/70">Changed your mind? You can always opt in again in your account settings.</p>
-            <p className="text-sm text-foreground/70">
-              Got feedback? Reach out to{' '}
+            <p
+              className="mb-6 text-foreground/70"
+            >
+              Changed your mind? You can always opt in again in your account settings.
+            </p>
+            <p
+              className="text-sm text-foreground/70"
+            >
+              Got feedback? Reach out to
+              {' '}
               <a
                 href="mailto:hello@murtada.nl"
                 className="text-primary underline hover:text-primary/70"
@@ -87,18 +110,33 @@ export default function UnsubscribePage() {
 
   return (
     <PageContainer>
-      <Container variant="centered" className="max-w-md mx-auto">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">Unsubscribe from emails</h1>
-          <p className="mb-6 text-foreground/70">
+      <Container
+        variant="centered"
+        className="max-w-md mx-auto"
+      >
+        <div
+          className="text-center"
+        >
+          <h1
+            className="mb-4 text-2xl font-bold"
+          >
+            Unsubscribe from emails
+          </h1>
+          <p
+            className="mb-6 text-foreground/70"
+          >
             Are you sure you want to opt out of emails for upcoming events?
           </p>
           {error && (
-            <div className="mb-4 rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            <div
+              className="mb-4 rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"
+            >
               {error}
             </div>
           )}
-          <div className="flex gap-3 justify-center mb-6">
+          <div
+            className="flex gap-3 justify-center mb-6"
+          >
             <Button
               onClick={handleUnsubscribe}
               disabled={isLoading || hasUnsubscribed || isSuccess}
@@ -108,7 +146,9 @@ export default function UnsubscribePage() {
               {hasUnsubscribed || isSuccess ? 'Unsubscribed' : 'Yes, unsubscribe'}
             </Button>
           </div>
-          <p className="text-sm text-foreground/60">
+          <p
+            className="text-sm text-foreground/60"
+          >
             Want to opt in to other types of emails? You can change your email preferences in your account settings.
           </p>
         </div>

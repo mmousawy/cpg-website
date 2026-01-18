@@ -8,7 +8,7 @@ const eslintConfig = [
       "semi": ["error", "always"],
       "quotes": ["error", "single", { "avoidEscape": true }],
       "comma-dangle": ["error", "always-multiline"],
-      "indent": ["error", 2, { "SwitchCase": 1 }],
+      "indent": ["error", 2, { "SwitchCase": 1, "ignoredNodes": ["JSXElement", "JSXElement *", "JSXAttribute", "JSXIdentifier", "JSXNamespacedName", "JSXMemberExpression", "JSXSpreadAttribute", "JSXExpressionContainer", "JSXOpeningElement", "JSXClosingElement", "JSXFragment", "JSXOpeningFragment", "JSXClosingFragment", "JSXText", "JSXEmptyExpression", "JSXSpreadChild", "ConditionalExpression"] }],
       "no-trailing-spaces": "error",
       "eol-last": ["error", "always"],
 

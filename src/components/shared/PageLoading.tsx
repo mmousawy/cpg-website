@@ -21,10 +21,16 @@ type PageLoadingProps = {
 export default function PageLoading({ message }: PageLoadingProps = {}) {
   return (
     <PageContainer>
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
+      <div
+        className="flex min-h-[50vh] flex-col items-center justify-center gap-4"
+      >
         <LoadingSpinner />
         {message && (
-          <p className="text-sm text-foreground/70">{message}</p>
+          <p
+            className="text-sm text-foreground/70"
+          >
+            {message}
+          </p>
         )}
       </div>
     </PageContainer>

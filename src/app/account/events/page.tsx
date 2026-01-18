@@ -88,46 +88,90 @@ export default function MyEventsPage() {
 
   return (
     <PageContainer>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My events</h1>
-        <p className="text-base sm:text-lg opacity-70">
+      <div
+        className="mb-8"
+      >
+        <h1
+          className="text-3xl font-bold mb-2"
+        >
+          My events
+        </h1>
+        <p
+          className="text-base sm:text-lg opacity-70"
+        >
           View and manage your event registrations
         </p>
       </div>
 
       {/* No-JS fallback */}
       <noscript>
-        <style>{`.js-loading { display: none !important; }`}</style>
-        <div className="text-center py-12">
-          <p className="text-lg font-medium mb-2">JavaScript required</p>
-          <p className="text-foreground/70">
+        <style>
+          {'.js-loading { display: none !important; }'}
+        </style>
+        <div
+          className="text-center py-12"
+        >
+          <p
+            className="text-lg font-medium mb-2"
+          >
+            JavaScript required
+          </p>
+          <p
+            className="text-foreground/70"
+          >
             Please enable JavaScript to view your event registrations.
           </p>
         </div>
       </noscript>
 
-      <div className="space-y-10">
+      <div
+        className="space-y-10"
+      >
         {/* Upcoming Events */}
         <section>
-          <h2 className="mb-4 text-lg font-semibold opacity-70">Your upcoming events</h2>
+          <h2
+            className="mb-4 text-lg font-semibold opacity-70"
+          >
+            Your upcoming events
+          </h2>
           {isLoading ? (
-            <div className="text-center animate-pulse js-loading py-12">
-              <p className="text-foreground/50">Loading your events...</p>
+            <div
+              className="text-center animate-pulse js-loading py-12"
+            >
+              <p
+                className="text-foreground/50"
+              >
+                Loading your events...
+              </p>
             </div>
           ) : upcomingRSVPs.length === 0 ? (
-            <div className="text-center py-8 rounded-xl border border-dashed border-border-color">
-              <p className="text-foreground/80"><SadSVG className="inline align-top h-6 w-6 mr-2 fill-foreground/80" /> No upcoming events</p>
+            <div
+              className="text-center py-8 rounded-xl border border-dashed border-border-color"
+            >
+              <p
+                className="text-foreground/80"
+              >
+                <SadSVG
+                  className="inline align-top h-6 w-6 mr-2 fill-foreground/80"
+                />
+                {' '}
+                No upcoming events
+              </p>
               <Button
                 href={routes.events.url}
                 size='sm'
-                iconRight={<ArrowRightSVG className="-mr-1.5" />}
+                iconRight={<ArrowRightSVG
+                  className="-mr-1.5"
+                />}
                 className="mt-4 rounded-full"
               >
                 Browse events
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div
+              className="space-y-3"
+            >
               {upcomingRSVPs.map((rsvp) => (
                 <RsvpEventCard
                   key={rsvp.id}
@@ -141,8 +185,14 @@ export default function MyEventsPage() {
         {/* Past Events */}
         {pastRSVPs.length > 0 && (
           <section>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Past events</h2>
-            <div className="space-y-3">
+            <h2
+              className="mb-4 text-lg font-semibold opacity-70"
+            >
+              Past events
+            </h2>
+            <div
+              className="space-y-3"
+            >
               {pastRSVPs.map((rsvp) => (
                 <RsvpEventCard
                   key={rsvp.id}
@@ -158,10 +208,20 @@ export default function MyEventsPage() {
         {/* Canceled Events */}
         {canceledRSVPs.length > 0 && (
           <section>
-            <h2 className="mb-4 text-lg font-semibold opacity-70">Canceled RSVPs</h2>
-            <div className="space-y-3 opacity-40">
+            <h2
+              className="mb-4 text-lg font-semibold opacity-70"
+            >
+              Canceled RSVPs
+            </h2>
+            <div
+              className="space-y-3 opacity-40"
+            >
               {canceledRSVPs.map((rsvp) => (
-                <RsvpEventCard key={rsvp.id} rsvp={rsvp} isCanceled />
+                <RsvpEventCard
+                  key={rsvp.id}
+                  rsvp={rsvp}
+                  isCanceled
+                />
               ))}
             </div>
           </section>
@@ -193,22 +253,34 @@ function RsvpEventCard({
 
   // Determine the status badge - only show for past events (attended/not attended) or canceled
   const statusBadge = isCanceled ? (
-    <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap">
-      <CancelSVG className="h-3 w-3 fill-red-500" />
+    <span
+      className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap"
+    >
+      <CancelSVG
+        className="h-3 w-3 fill-red-500"
+      />
       Canceled
     </span>
   ) : isPast ? (
     rsvp.attended_at ? (
-      <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap">
-        <CheckSVG className="h-3 w-3 fill-green-600" />
+      <span
+        className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap"
+      >
+        <CheckSVG
+          className="h-3 w-3 fill-green-600"
+        />
         Attended
       </span>
     ) : isWithinSevenDays ? (
-      <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 whitespace-nowrap">
+      <span
+        className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 whitespace-nowrap"
+      >
         Pending confirmation
       </span>
     ) : (
-      <span className="flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap">
+      <span
+        className="flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap"
+      >
         Not attended
       </span>
     )
@@ -230,11 +302,17 @@ function RsvpEventCard({
       <EventCard
         event={event as EventCardData}
         description={event.description}
-        rightSlot={<div className="hidden sm:block">{statusBadge}</div>}
+        rightSlot={<div
+          className="hidden sm:block"
+        >
+          {statusBadge}
+        </div>}
         className="bg-background-light"
       />
       {/* Mobile: Show status badge below card */}
-      <div className="mt-2 sm:hidden">
+      <div
+        className="mt-2 sm:hidden"
+      >
         {statusBadge}
       </div>
     </div>

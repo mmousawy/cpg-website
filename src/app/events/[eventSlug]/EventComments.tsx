@@ -7,5 +7,7 @@ interface EventCommentsProps {
 }
 
 export default function EventComments({ eventId }: EventCommentsProps) {
-  return <Comments eventId={eventId} />;
+  return <Comments
+    eventId={eventId}
+  />;
 }

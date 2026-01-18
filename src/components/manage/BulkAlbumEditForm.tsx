@@ -7,7 +7,7 @@ import Toggle from '@/components/shared/Toggle';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbums } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
@@ -123,6 +123,9 @@ export default function BulkAlbumEditForm({
   const watchedIsPublic = watch('isPublic');
   const isSaving = isSubmitting || externalIsSaving;
 
+  // Memoize album IDs string for dependency
+  const albumIdsKey = useMemo(() => selectedAlbums.map((a) => a.id).join(','), [selectedAlbums]);
+
   // Reset form when selection changes to update tags (only common tags)
   useEffect(() => {
     const newCommonTags = getCommonTags(selectedAlbums);
@@ -130,8 +133,7 @@ export default function BulkAlbumEditForm({
       isPublic: mixedVisibility ? null : allPublic,
       tags: newCommonTags, // Only reset to common tags
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAlbums.map((a) => a.id).join(',')]);
+  }, [albumIdsKey, selectedAlbums, reset, mixedVisibility, allPublic]);
 
   // Update dirty ref and call callback when dirty state changes
   useEffect(() => {
@@ -185,8 +187,9 @@ export default function BulkAlbumEditForm({
       reset(data);
       setLocalSuccess(true);
       setTimeout(() => setLocalSuccess(false), 3000);
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to save albums');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save albums';
+      setLocalError(message);
     }
   };
 
@@ -206,8 +209,9 @@ export default function BulkAlbumEditForm({
           await onDelete(album.id);
         }
       }
-    } catch (err: any) {
-      setLocalError(err.message || 'Failed to delete albums');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete albums';
+      setLocalError(message);
     } finally {
       setIsDeleting(false);
     }

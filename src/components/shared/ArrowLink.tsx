@@ -25,16 +25,20 @@ export default function ArrowLink({
     <Link
       href={href}
       className={clsx(
-        "group inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4",
+        'group inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4',
         className,
       )}
     >
       {direction === 'left' && (
-        <ArrowIcon className={clsx("size-4 fill-current transition-transform", hoverTransform)} />
+        <ArrowIcon
+          className={clsx('size-4 fill-current transition-transform', hoverTransform)}
+        />
       )}
       {children}
       {direction === 'right' && (
-        <ArrowIcon className={clsx("size-4 fill-current transition-transform", hoverTransform)} />
+        <ArrowIcon
+          className={clsx('size-4 fill-current transition-transform', hoverTransform)}
+        />
       )}
     </Link>
   );

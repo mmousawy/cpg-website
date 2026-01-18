@@ -23,6 +23,8 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Public/private visibility
 - Full-size viewing (PhotoSwipe)
 - Masonry grid layout
+- Likes on photos and albums
+- View tracking with "Most viewed this week" sections
 - Admin moderation (suspend/unsuspend)
 
 ### User Profiles
@@ -130,11 +132,37 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Scripts
 
 ```bash
-npm run dev      # Dev server (Turbopack)
-npm run build    # Production build
-npm run start    # Production server
-npm run lint     # ESLint
+npm run dev       # Dev server (Turbopack)
+npm run build     # Production build
+npm run start     # Production server
+npm run lint      # ESLint
+npm run typecheck # TypeScript type checking
+npm run test:run  # Run unit tests once
+npm run analyze   # Bundle analysis (webpack)
 ```
+
+### Pre-commit Hooks
+
+The project uses [husky](https://typicode.github.io/husky/) to run checks before each commit:
+
+1. **Lint staged files** - ESLint runs on staged `.ts` and `.tsx` files
+2. **Type check** - Full TypeScript check (`tsc --noEmit`)
+3. **Unit tests** - Runs all Vitest tests
+
+If any check fails, the commit is blocked. To bypass (not recommended):
+
+```bash
+git commit --no-verify -m "message"
+```
+
+### CI Pipeline
+
+On pull requests, GitHub Actions runs:
+
+1. **Lint & Type Check** - Must pass before tests run
+2. **Unit Tests** - Vitest tests
+3. **Build** - Production build
+4. **E2E Tests** - Playwright tests
 
 ## Project Structure
 
@@ -176,12 +204,14 @@ supabase/
 | `profiles` | User profiles |
 | `events` | Events/meetups |
 | `events_rsvps` | RSVPs and attendance |
-| `albums` | Photo albums |
+| `albums` | Photo albums (with likes_count, view_count) |
 | `album_photos` | Album-photo junction |
-| `photos` | Photo metadata + EXIF |
+| `photos` | Photo metadata + EXIF (with likes_count, view_count) |
 | `photo_tags` | Photo tags |
-| `comments` | Album/photo comments |
+| `photo_likes` | Photo likes |
+| `album_likes` | Album likes |
 | `album_tags` | Album tags |
+| `comments` | Album/photo comments |
 | `interests` | Central interests table with usage counts |
 | `profile_interests` | Profile-interests junction |
 | `auth_tokens` | Email verification & password reset tokens |
@@ -203,6 +233,33 @@ Or via SSH:
 ```bash
 ssh user@domain "npx supabase gen types typescript --db-url 'postgresql://postgres.[tenant-id]:[password]@localhost:5432/postgres' --schema public" > ./src/database.types.ts
 ```
+
+## Performance
+
+### Bundle Optimization
+
+Heavy dependencies are lazy-loaded to reduce initial bundle size:
+
+| Library | Size | Loaded When |
+|---------|------|-------------|
+| PhotoSwipe | ~25 KiB | User clicks to view full-size image |
+| @dnd-kit | ~40 KiB | User opens photo/album management |
+| exifr | ~15 KiB | User uploads photos |
+| Swiper | ~30 KiB | Activities slider rendered |
+
+### Image Optimization
+
+- Modern formats enabled (AVIF, WebP)
+- Responsive `sizes` attributes on all images
+- Priority loading for LCP images
+
+### Bundle Analysis
+
+```bash
+npm run analyze
+```
+
+Opens an interactive treemap to visualize bundle composition. See [docs/performance-optimization.md](./docs/performance-optimization.md) for details.
 
 ## Deployment
 
@@ -241,7 +298,8 @@ Deploy to Vercel:
 
 ### Engagement
 
-- [ ] Photo/album likes
+- [x] Photo/album likes
+- [x] View tracking and stats
 - [ ] Follow photographers
 - [ ] Activity feed
 - [ ] In-app notifications
@@ -260,7 +318,7 @@ Deploy to Vercel:
   - Explore by photo style (tags with member counts)
   - Random interests with member samples
 - [ ] Search (albums, photos, users, events, tags)
-- [ ] Featured/trending galleries
+- [x] Featured/trending galleries (Most viewed this week)
 
 ### Sharing
 

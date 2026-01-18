@@ -81,22 +81,32 @@ export default function UploadDropzone({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-        <div className={clsx(
-          'mb-4 flex size-14 items-center justify-center rounded-xl border transition-colors',
-          isDragging
-            ? 'border-primary bg-primary/10'
-            : 'border-border-color bg-background-light',
-        )}>
-          <CameraSVG className={clsx(
-            'size-7 transition-colors',
-            isDragging ? 'fill-primary' : 'fill-foreground/50',
-          )} />
+      <div
+        className="flex flex-col items-center justify-center px-6 py-10 text-center"
+      >
+        <div
+          className={clsx(
+            'mb-4 flex size-14 items-center justify-center rounded-xl border transition-colors',
+            isDragging
+              ? 'border-primary bg-primary/10'
+              : 'border-border-color bg-background-light',
+          )}
+        >
+          <CameraSVG
+            className={clsx(
+              'size-7 transition-colors',
+              isDragging ? 'fill-primary' : 'fill-foreground/50',
+            )}
+          />
         </div>
-        <p className="mb-1 text-base font-medium">
+        <p
+          className="mb-1 text-base font-medium"
+        >
           {isDragging ? 'Drop photos here' : 'Drag photos here'}
         </p>
-        <p className="mb-4 text-sm text-foreground/60">
+        <p
+          className="mb-4 text-sm text-foreground/60"
+        >
           or click to browse • JPEG, PNG, GIF, WebP
         </p>
         <Button

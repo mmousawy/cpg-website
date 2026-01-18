@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (process.env.NODE_ENV === 'production' && !process.env.CI) {
     return NextResponse.json(
       { error: 'Not available in production' },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -20,21 +20,21 @@ export async function POST(request: Request) {
     if (!emails || !Array.isArray(emails) || emails.length === 0) {
       return NextResponse.json(
         { error: 'emails array is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Only allow cleanup of test emails (safety check)
-    const testEmails = emails.filter((email: string) => 
-      email.includes('test-e2e-') || 
+    const testEmails = emails.filter((email: string) =>
+      email.includes('test-e2e-') ||
       email.includes('@test.local') ||
-      email.includes('test-signup-')
+      email.includes('test-signup-'),
     );
 
     if (testEmails.length === 0) {
       return NextResponse.json(
         { error: 'No valid test emails provided' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     if (!supabaseUrl || !supabaseServiceKey) {
       return NextResponse.json(
         { error: 'Missing Supabase credentials' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -61,21 +61,21 @@ export async function POST(request: Request) {
     for (const email of testEmails) {
       // Find user by email
       const { data: users, error: listError } = await adminClient.auth.admin.listUsers();
-      
+
       if (listError) {
         errors.push(`Failed to list users: ${listError.message}`);
         continue;
       }
 
       const user = users.users.find(u => u.email === email);
-      
+
       if (user) {
         // Delete profile first (foreign key constraint)
         await adminClient.from('profiles').delete().eq('id', user.id);
-        
+
         // Delete auth user
         const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
-        
+
         if (deleteError) {
           errors.push(`Failed to delete ${email}: ${deleteError.message}`);
         } else {
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     console.error('Cleanup error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,0 +1,8 @@
+# Run lint-staged on staged files (auto-fixes formatting, doesn't block on formatting-only issues)
+npx lint-staged || true
+
+# Run TypeScript type checking
+npm run typecheck
+
+# Run unit/integration tests
+npm run test:run

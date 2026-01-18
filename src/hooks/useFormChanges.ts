@@ -1,6 +1,15 @@
 import { useMemo, useEffect, useContext } from 'react';
 import { createContext } from 'react';
 
+// Declare Window interface extension for unsaved changes context
+declare global {
+  interface Window {
+    __unsavedChangesContext?: {
+      setHasUnsavedChanges: (value: boolean) => void;
+    };
+  }
+}
+
 // Import the context type - we'll check if context exists at runtime
 // This is a lightweight way to get the setter without a hard dependency
 const UnsavedChangesContext = createContext<{ setHasUnsavedChanges?: (value: boolean) => void } | null>(null);
@@ -78,8 +87,8 @@ export function useFormChanges<T extends Record<string, unknown>>(
     let setHasUnsavedChanges: ((value: boolean) => void) | undefined;
 
     // Try to get the context setter from the window (set by UnsavedChangesProvider)
-    if (typeof window !== 'undefined' && (window as any).__unsavedChangesContext) {
-      setHasUnsavedChanges = (window as any).__unsavedChangesContext.setHasUnsavedChanges;
+    if (typeof window !== 'undefined' && window.__unsavedChangesContext) {
+      setHasUnsavedChanges = window.__unsavedChangesContext.setHasUnsavedChanges;
     }
 
     if (setHasUnsavedChanges) {

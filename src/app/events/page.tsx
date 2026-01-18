@@ -35,18 +35,34 @@ export default async function EventsPage() {
 
   return (
     <PageContainer>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Events</h1>
-        <p className="mt-2 text-foreground/70">
+      <div
+        className="mb-8"
+      >
+        <h1
+          className="text-3xl font-bold"
+        >
+          Events
+        </h1>
+        <p
+          className="mt-2 text-foreground/70"
+        >
           Join us at our upcoming meetups or browse past events
         </p>
       </div>
 
-      <div className="space-y-10">
+      <div
+        className="space-y-10"
+      >
         {/* Upcoming Events */}
         <section>
-          <h2 className="text-lg font-semibold mb-4 opacity-70">Upcoming</h2>
-          <div className="grid gap-4 sm:gap-6">
+          <h2
+            className="text-lg font-semibold mb-4 opacity-70"
+          >
+            Upcoming
+          </h2>
+          <div
+            className="grid gap-4 sm:gap-6"
+          >
             <EventsList
               events={upcomingEvents}
               attendeesByEvent={attendeesByEvent}
@@ -58,8 +74,14 @@ export default async function EventsPage() {
 
         {/* Past Events - Paginated */}
         <section>
-          <h2 className="text-lg font-semibold mb-4 opacity-70">Past events</h2>
-          <div className="grid gap-4 sm:gap-6">
+          <h2
+            className="text-lg font-semibold mb-4 opacity-70"
+          >
+            Past events
+          </h2>
+          <div
+            className="grid gap-4 sm:gap-6"
+          >
             <PastEventsPaginated
               initialEvents={initialPast}
               initialAttendees={attendeesByEvent}

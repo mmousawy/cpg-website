@@ -1,0 +1,24 @@
+refactor: Eliminate all `any` types and fix eslint-disable comments
+
+Code quality improvements:
+- Remove all 147 instances of `any` types throughout codebase
+- Fix 18 eslint-disable comments by addressing root causes
+- Replace `catch (err: any)` with proper `unknown` type and instanceof checks
+- Remove unnecessary `as any` casts from Supabase queries
+- Add proper types for Supabase join results using new query types
+- Fix React Hook Form props with proper generics (UseFormRegister, FieldErrors, etc.)
+- Add explicit types for callback parameters
+- Type Resend API error responses properly
+- Add Window interface declaration for global properties
+
+Type infrastructure:
+- Create `src/types/supabase-queries.ts` with typed query result types
+- Add proper type guards for error handling
+- Update base types to include likes_count/view_count fields
+
+ESLint fixes:
+- Fix 11 react-hooks/exhaustive-deps violations by moving functions inside useEffect
+- Replace 2 <img> tags with Next.js <Image> component
+- Clean up remaining eslint-disable comments with proper patterns
+
+Result: 0 TypeScript errors, 0 `any` types, improved type safety throughout

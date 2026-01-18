@@ -68,23 +68,40 @@ export default function ConfirmModal() {
             'transition-transform duration-300',
           ])}
         >
-          <h2 className="mb-3 text-xl font-bold">{options?.title}</h2>
-          <p className="text-foreground/70">{options?.message}</p>
+          <h2
+            className="mb-3 text-xl font-bold"
+          >
+            {options?.title}
+          </h2>
+          <p
+            className="text-foreground/70"
+          >
+            {options?.message}
+          </p>
 
           {options?.content && (
-            <div className="my-4">
+            <div
+              className="my-4"
+            >
               {options.content}
             </div>
           )}
 
-          <div className={clsx('flex justify-end gap-3', !options?.content && 'mt-6')}>
-            <Button variant="secondary" onClick={handleCancel}>
+          <div
+            className={clsx('flex justify-end gap-3', !options?.content && 'mt-6')}
+          >
+            <Button
+              variant="secondary"
+              onClick={handleCancel}
+            >
               {options?.cancelLabel || 'Cancel'}
             </Button>
             <Button
               variant={isDanger ? 'danger' : 'primary'}
               onClick={handleConfirm}
-              icon={isDanger ? <TrashSVG className="size-4 -ml-0.5" /> : undefined}
+              icon={isDanger ? <TrashSVG
+                className="size-4 -ml-0.5"
+              /> : undefined}
             >
               {options?.confirmLabel || 'Confirm'}
             </Button>
