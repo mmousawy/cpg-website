@@ -5,6 +5,8 @@ import Comments from '@/components/shared/Comments';
 import ContentHeader from '@/components/shared/ContentHeader';
 import DetailLikesSection from '@/components/shared/DetailLikesSection';
 import TagsSection from '@/components/shared/TagsSection';
+import ViewCount from '@/components/shared/ViewCount';
+import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 
 interface Album {
@@ -80,6 +82,7 @@ export default function PhotoPageContent({
 
   return (
     <>
+      <ViewTracker type="photo" id={photo.id} />
       <PageContainer>
         {/* Photo with lightbox */}
         <div
@@ -107,6 +110,10 @@ export default function PhotoPageContent({
                 className={photo.title || photo.description ? 'mt-5 sm:mt-6' : ''}
                 entityId={photo.id}
                 initialCount={(photo as any).likes_count ?? 0}
+              />
+              <ViewCount
+                count={(photo as any).view_count ?? 0}
+                className="mt-2"
               />
               <TagsSection
                 tags={photo.tags || []}

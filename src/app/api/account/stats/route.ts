@@ -21,6 +21,7 @@ export async function GET() {
       commentsReceived: 0,
       likesReceived: 0,
       likesMade: 0,
+      viewsReceived: 0,
       // Event stats
       rsvpsConfirmed: 0,
       rsvpsCanceled: 0,
@@ -263,6 +264,35 @@ export async function GET() {
       }
 
       stats.likesReceived = receivedLikes;
+
+      // Load views received on user's content (reuse albumIds and photoIds from above)
+      let viewsReceived = 0;
+
+      // Views on albums
+      if (albumIds.length > 0) {
+        const { data: albumViews } = await supabase
+          .from('albums')
+          .select('view_count')
+          .in('id', albumIds);
+
+        if (albumViews) {
+          viewsReceived += albumViews.reduce((sum, a) => sum + (a.view_count || 0), 0);
+        }
+      }
+
+      // Views on photos
+      if (photoIds.length > 0) {
+        const { data: photoViews } = await supabase
+          .from('photos')
+          .select('view_count')
+          .in('id', photoIds);
+
+        if (photoViews) {
+          viewsReceived += photoViews.reduce((sum, p) => sum + (p.view_count || 0), 0);
+        }
+      }
+
+      stats.viewsReceived = viewsReceived;
     } catch {
       // Likes tables might not exist yet
     }

@@ -13,15 +13,17 @@ export type StreamPhoto = Photo & {
 
 /**
  * Get recent public photos for the community photostream
- * Shows photos from all users, ordered by creation date
+ * Shows photos from all users, ordered by creation date or view count
  * Tagged with 'gallery' for cache invalidation
  */
-export async function getPublicPhotostream(limit = 100) {
+export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popular' = 'recent') {
   'use cache';
   cacheLife('max');
   cacheTag('gallery');
 
   const supabase = createPublicClient();
+
+  const orderColumn = sortBy === 'popular' ? 'view_count' : 'created_at';
 
   // Fetch photos (likes_count is now a column on the photos table)
   const { data: photos } = await supabase
@@ -30,7 +32,7 @@ export async function getPublicPhotostream(limit = 100) {
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%')
-    .order('created_at', { ascending: false })
+    .order(orderColumn, { ascending: false })
     .limit(limit);
 
   if (!photos || photos.length === 0) {
@@ -384,4 +386,74 @@ export async function getAllTagNames() {
     .gt('count', 0);
 
   return (tags || []).map((t) => t.name);
+}
+
+/**
+ * Get most viewed photos from the last week
+ * Shows photos created in the last 7 days, ordered by view_count
+ * Tagged with 'gallery' for cache invalidation
+ * Uses shorter cache time (1 hour) since view counts change frequently
+ */
+export async function getMostViewedPhotosLastWeek(limit = 20) {
+  'use cache';
+  cacheLife({ revalidate: 3600 }); // 1 hour - view counts change frequently
+  cacheTag('gallery');
+
+  const supabase = createPublicClient();
+
+  // Calculate date 7 days ago
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const oneWeekAgoISO = oneWeekAgo.toISOString();
+
+  // Fetch photos created in the last week, ordered by view_count
+  // Only select needed columns for better performance
+  const { data: photos } = await supabase
+    .from('photos')
+    .select('id, short_id, url, title, description, width, height, created_at, user_id, blurhash, likes_count, view_count')
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%')
+    .gte('created_at', oneWeekAgoISO)
+    .order('view_count', { ascending: false })
+    .limit(limit);
+
+  if (!photos || photos.length === 0) {
+    return [];
+  }
+
+  // Get unique user IDs
+  const userIds = [...new Set(photos.map((p) => p.user_id).filter((id): id is string => id !== null))];
+
+  // Fetch profiles for these users
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, nickname, full_name, avatar_url, suspended_at')
+    .in('id', userIds);
+
+  // Create a map for quick lookup
+  const profileMap = new Map(
+    (profiles || []).map((p) => [p.id, p]),
+  );
+
+  // Filter out photos from suspended users and merge with profile data
+  const validPhotos = photos
+    .filter((p) => {
+      if (!p.user_id) return false;
+      const profile = profileMap.get(p.user_id);
+      return profile && !profile.suspended_at && profile.nickname;
+    })
+    .map((p) => {
+      const profile = profileMap.get(p.user_id!);
+      return {
+        ...p,
+        profile: profile ? {
+          nickname: profile.nickname!,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+        } : null,
+      } as StreamPhoto;
+    });
+
+  return validPhotos;
 }

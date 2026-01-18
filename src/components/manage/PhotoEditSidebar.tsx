@@ -3,11 +3,11 @@
 import type { PhotoWithAlbums } from '@/types/photos';
 import BulkPhotoEditForm from './BulkPhotoEditForm';
 import PhotoEditEmptyState from './PhotoEditEmptyState';
-import SinglePhotoEditForm from './SinglePhotoEditForm';
 import SidebarPanel from './SidebarPanel';
+import SinglePhotoEditForm from './SinglePhotoEditForm';
 
-import type { PhotoFormData } from './SinglePhotoEditForm';
 import type { BulkPhotoFormData } from './BulkPhotoEditForm';
+import type { PhotoFormData } from './SinglePhotoEditForm';
 
 interface PhotoEditSidebarProps {
   selectedPhotos: PhotoWithAlbums[];
@@ -106,5 +106,6 @@ export default function PhotoEditSidebar({
 }
 
 // Re-export types for backward compatibility
-export type { PhotoFormData } from './SinglePhotoEditForm';
 export type { BulkPhotoFormData } from './BulkPhotoEditForm';
+export type { PhotoFormData } from './SinglePhotoEditForm';
+

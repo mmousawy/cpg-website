@@ -9,14 +9,17 @@ type AlbumsPaginatedProps = {
   initialAlbums: AlbumWithPhotos[];
   perPage?: number;
   initialHasMore?: boolean;
+  initialSort?: 'recent' | 'popular';
 };
 
 export default function AlbumsPaginated({
   initialAlbums,
   perPage = 20,
   initialHasMore,
+  initialSort = 'recent',
 }: AlbumsPaginatedProps) {
   const [albums, setAlbums] = useState<AlbumWithPhotos[]>(initialAlbums);
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
   // If initialHasMore is provided, use it; otherwise check if we got a full page
   const [hasMore, setHasMore] = useState(
     initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage
@@ -26,7 +29,7 @@ export default function AlbumsPaginated({
   const loadMore = () => {
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/gallery/albums?offset=${albums.length}&limit=${perPage}`);
+        const res = await fetch(`/api/gallery/albums?offset=${albums.length}&limit=${perPage}&sort=${sortBy}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch more albums');
@@ -42,22 +45,63 @@ export default function AlbumsPaginated({
     });
   };
 
-  if (albums.length === 0) {
-    return (
-      <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-        <p className="text-lg opacity-70">
-          No albums yet. Be the first to create one!
-        </p>
-      </div>
-    );
-  }
+  const handleSortChange = (newSort: 'recent' | 'popular') => {
+    if (newSort === sortBy) return;
+    
+    setSortBy(newSort);
+    setAlbums([]);
+    setHasMore(true);
+    
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/gallery/albums?offset=0&limit=${perPage}&sort=${newSort}`);
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch albums');
+        }
+
+        const data = await res.json();
+        setAlbums(data.albums);
+        setHasMore(data.hasMore);
+      } catch (error) {
+        console.error('Error loading albums:', error);
+      }
+    });
+  };
 
   return (
     <>
-      <AlbumGrid
-        albums={albums}
-        className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
-      />
+      <div className="flex gap-2 mb-6">
+        <Button
+          variant={sortBy === 'recent' ? 'primary' : 'secondary'}
+          onClick={() => handleSortChange('recent')}
+          size="sm"
+          disabled={isPending}
+        >
+          Recent
+        </Button>
+        <Button
+          variant={sortBy === 'popular' ? 'primary' : 'secondary'}
+          onClick={() => handleSortChange('popular')}
+          size="sm"
+          disabled={isPending}
+        >
+          Popular
+        </Button>
+      </div>
+
+      {albums.length === 0 && !isPending ? (
+        <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
+          <p className="text-lg opacity-70">
+            No albums found.
+          </p>
+        </div>
+      ) : (
+        <AlbumGrid
+          albums={albums}
+          className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
+        />
+      )}
 
       {hasMore && (
         <div className="flex justify-center pt-6">

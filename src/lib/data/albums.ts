@@ -74,12 +74,14 @@ export async function getRecentAlbums(limit = 6) {
  * Tagged with 'albums' for granular cache invalidation
  * Note: likes_count is now a column on the albums table (updated via triggers)
  */
-export async function getPublicAlbums(limit = 50) {
+export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' = 'recent') {
   'use cache';
   cacheLife('max');
   cacheTag('albums');
 
   const supabase = createPublicClient();
+
+  const orderColumn = sortBy === 'popular' ? 'view_count' : 'created_at';
 
   const { data: albums } = await supabase
     .from('albums')
@@ -92,6 +94,7 @@ export async function getPublicAlbums(limit = 50) {
       is_public,
       created_at,
       likes_count,
+      view_count,
       profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at),
       photos:album_photos_active!inner(
         id,
@@ -100,7 +103,7 @@ export async function getPublicAlbums(limit = 50) {
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
-    .order('created_at', { ascending: false })
+    .order(orderColumn, { ascending: false })
     .limit(limit);
 
   // Filter out albums with no photos and albums from suspended users
@@ -157,6 +160,7 @@ export async function getAlbumBySlug(nickname: string, albumSlug: string) {
       is_suspended,
       suspension_reason,
       likes_count,
+      view_count,
       profile:profiles!albums_user_id_fkey(full_name, avatar_url, nickname),
       photos:album_photos_active(
         id,
@@ -256,6 +260,58 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
   // Filter out albums with no photos
   const albumsWithPhotos = ((albums || []) as any[])
     .filter((album) => album.photos && album.photos.length > 0);
+
+  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+}
+
+/**
+ * Get most viewed albums from the last week
+ * Shows albums created in the last 7 days, ordered by view_count
+ * Tagged with 'albums' for granular cache invalidation
+ * Uses shorter cache time (1 hour) since view counts change frequently
+ */
+export async function getMostViewedAlbumsLastWeek(limit = 20) {
+  'use cache';
+  cacheLife({ revalidate: 3600 }); // 1 hour - view counts change frequently
+  cacheTag('albums');
+
+  const supabase = createPublicClient();
+
+  // Calculate date 7 days ago
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const oneWeekAgoISO = oneWeekAgo.toISOString();
+
+  const { data: albums } = await supabase
+    .from('albums')
+    .select(`
+      id,
+      title,
+      description,
+      slug,
+      cover_image_url,
+      is_public,
+      created_at,
+      likes_count,
+      view_count,
+      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at),
+      photos:album_photos_active!inner(
+        id,
+        photo_url
+      )
+    `)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .gte('created_at', oneWeekAgoISO)
+    .order('view_count', { ascending: false })
+    .limit(limit);
+
+  // Filter out albums with no photos and albums from suspended users
+  const albumsWithPhotos = ((albums || []) as any[])
+    .filter((album) => {
+      const profile = album.profile as any;
+      return album.photos && album.photos.length > 0 && profile && !profile.suspended_at;
+    });
 
   return albumsWithPhotos as unknown as AlbumWithPhotos[];
 }

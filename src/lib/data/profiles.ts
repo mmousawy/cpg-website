@@ -214,6 +214,7 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
   let commentsMade = 0;
   let commentsReceived = 0;
   let likesReceived = 0;
+  let viewsReceived = 0;
 
   // Get events attended count
   try {
@@ -343,6 +344,35 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
     // Comments tables might not exist
   }
 
+  // Get views received count (sum of view_count from photos and albums)
+  try {
+    // Get user's photos with view_count
+    const { data: userPhotos } = await supabase
+      .from('photos')
+      .select('view_count')
+      .eq('user_id', userId)
+      .eq('is_public', true)
+      .is('deleted_at', null) as { data: Array<{ view_count: number }> | null };
+
+    // Get user's albums with view_count
+    const { data: userAlbums } = await supabase
+      .from('albums')
+      .select('view_count')
+      .eq('user_id', userId)
+      .eq('is_public', true)
+      .is('deleted_at', null) as { data: Array<{ view_count: number }> | null };
+
+    if (userPhotos) {
+      viewsReceived += userPhotos.reduce((sum, photo) => sum + (photo.view_count || 0), 0);
+    }
+
+    if (userAlbums) {
+      viewsReceived += userAlbums.reduce((sum, album) => sum + (album.view_count || 0), 0);
+    }
+  } catch {
+    // View count columns might not exist yet
+  }
+
   return {
     photos: photoCount,
     albums: albumCount,
@@ -350,6 +380,7 @@ export async function getProfileStats(userId: string, nickname: string, albumCou
     commentsMade,
     commentsReceived,
     likesReceived,
+    viewsReceived,
     memberSince,
   };
 }

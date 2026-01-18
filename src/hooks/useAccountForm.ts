@@ -74,6 +74,7 @@ export type AccountStats = {
   commentsReceived: number;
   likesReceived: number;
   likesMade: number;
+  viewsReceived: number;
   rsvpsConfirmed: number;
   rsvpsCanceled: number;
   eventsAttended: number;
@@ -120,6 +121,7 @@ export function useAccountForm() {
     commentsReceived: 0,
     likesReceived: 0,
     likesMade: 0,
+    viewsReceived: 0,
     rsvpsConfirmed: 0,
     rsvpsCanceled: 0,
     eventsAttended: 0,

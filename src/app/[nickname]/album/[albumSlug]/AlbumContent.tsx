@@ -7,6 +7,8 @@ import Comments from '@/components/shared/Comments';
 import ContentHeader from '@/components/shared/ContentHeader';
 import DetailLikesSection from '@/components/shared/DetailLikesSection';
 import TagsSection from '@/components/shared/TagsSection';
+import ViewCount from '@/components/shared/ViewCount';
+import ViewTracker from '@/components/shared/ViewTracker';
 import { getPhotosByUrls } from '@/lib/data/albums';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo, SimpleTag } from '@/types/photos';
@@ -57,8 +59,12 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
   return (
     <>
+      <ViewTracker
+        type="album"
+        id={albumWithPhotos.id}
+      />
       <PageContainer
-        className="!pb-0"
+        className="pb-0!"
       >
         <ContentHeader
           title={albumWithPhotos.title}
@@ -86,6 +92,10 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                   className="mt-4 text-xs"
                 />
               </div>
+              <ViewCount
+                count={(albumWithPhotos as any).view_count ?? 0}
+                className="mt-2"
+              />
               <TagsSection
                 tags={((albumWithPhotos as any).tags || []) as SimpleTag[]}
               />
@@ -117,7 +127,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
       </WidePageContainer>
 
       <PageContainer
-        className="!pt-0"
+        className="pt-0!"
       >
         {/* Admin Moderation Panel */}
         <AlbumModerationPanel

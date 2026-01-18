@@ -180,6 +180,7 @@ export type Database = {
           title: string
           updated_at: string | null
           user_id: string
+          view_count: number
         }
         Insert: {
           cover_image_url?: string | null
@@ -198,6 +199,7 @@ export type Database = {
           title: string
           updated_at?: string | null
           user_id: string
+          view_count?: number
         }
         Update: {
           cover_image_url?: string | null
@@ -216,6 +218,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -677,6 +680,7 @@ export type Database = {
           title: string | null
           url: string
           user_id: string | null
+          view_count: number
           width: number
         }
         Insert: {
@@ -698,6 +702,7 @@ export type Database = {
           title?: string | null
           url: string
           user_id?: string | null
+          view_count?: number
           width: number
         }
         Update: {
@@ -719,6 +724,7 @@ export type Database = {
           title?: string | null
           url?: string
           user_id?: string | null
+          view_count?: number
           width?: number
         }
         Relationships: []
@@ -908,6 +914,10 @@ export type Database = {
       get_user_album_photos_count: {
         Args: { user_uuid: string }
         Returns: number
+      }
+      increment_view_count: {
+        Args: { p_entity_id: string; p_entity_type: string }
+        Returns: undefined
       }
       restore_album: { Args: { p_album_id: string }; Returns: boolean }
       restore_comment: { Args: { p_comment_id: string }; Returns: boolean }

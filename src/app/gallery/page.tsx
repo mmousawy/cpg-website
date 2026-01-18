@@ -6,8 +6,8 @@ import PopularTagsSection from '@/components/shared/PopularTagsSection';
 import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
-import { getPublicAlbums } from '@/lib/data/albums';
-import { getPublicPhotostream } from '@/lib/data/gallery';
+import { getMostViewedAlbumsLastWeek, getPublicAlbums } from '@/lib/data/albums';
+import { getMostViewedPhotosLastWeek, getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
   title: 'Gallery & Community Photo Albums',
@@ -19,7 +19,12 @@ export const metadata = createMetadata({
 
 export default async function GalleryPage() {
   // Fetch data in parallel
-  const [albums, photos] = await Promise.all([getPublicAlbums(50), getPublicPhotostream(100)]);
+  const [albums, photos, mostViewedPhotos, mostViewedAlbums] = await Promise.all([
+    getPublicAlbums(10),
+    getPublicPhotostream(10),
+    getMostViewedPhotosLastWeek(10),
+    getMostViewedAlbumsLastWeek(10),
+  ]);
 
   return (
     <>
@@ -45,6 +50,58 @@ export default async function GalleryPage() {
       <WidePageContainer
         className="!pt-0"
       >
+        {/* Most viewed in last week - Photos */}
+        {mostViewedPhotos.length > 0 && (
+          <div
+            className="mb-12"
+          >
+            <div
+              className="mb-6"
+            >
+              <h2
+                className="text-xl font-semibold"
+              >
+                Most viewed this week
+              </h2>
+              <p
+                className="text-foreground/60 mt-1 text-sm"
+              >
+                Popular photos from the last 7 days
+              </p>
+            </div>
+            <JustifiedPhotoGrid
+              photos={mostViewedPhotos}
+              showAttribution
+            />
+          </div>
+        )}
+
+        {/* Most viewed in last week - Albums */}
+        {mostViewedAlbums.length > 0 && (
+          <div
+            className="mb-12"
+          >
+            <div
+              className="mb-6"
+            >
+              <h2
+                className="text-xl font-semibold"
+              >
+                Trending albums
+              </h2>
+              <p
+                className="text-foreground/60 mt-1 text-sm"
+              >
+                Most viewed albums from the last 7 days
+              </p>
+            </div>
+            <AlbumGrid
+              albums={mostViewedAlbums}
+              className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-6"
+            />
+          </div>
+        )}
+
         {/* Community photostream */}
         {photos.length > 0 && (
           <div

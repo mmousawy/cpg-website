@@ -159,6 +159,18 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   {stats.commentsReceived}
                 </p>
               </div>
+              <div>
+                <p
+                  className="text-foreground/70"
+                >
+                  Views received
+                </p>
+                <p
+                  className="text-foreground text-lg font-semibold"
+                >
+                  {stats.viewsReceived}
+                </p>
+              </div>
             </div>
           </div>
 

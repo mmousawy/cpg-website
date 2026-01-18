@@ -1,0 +1,31 @@
+feat: Add view tracking for photos and albums
+
+Implement client-side view tracking with database storage and display
+view counts on detail pages, profile stats, and gallery sections.
+
+View tracking system:
+- Add view_count columns to photos and albums tables with indexes
+- Create increment_view_count RPC function for atomic updates
+- Add /api/views endpoint with bot detection
+- Create useViewTracker hook and ViewTracker component for client-side tracking
+- Fire-and-forget tracking that doesn't block page rendering
+
+View count display:
+- Add ViewCount component with eye icon
+- Display view counts on photo and album detail pages
+- Add views received stat to account stats page
+- Add views received badge to profile stats badges
+
+Gallery enhancements:
+- Add "Most viewed this week" photos section to gallery page
+- Add "Trending albums" section showing most viewed albums from last week
+- Add popular sorting option for albums (sort by view_count)
+- Limit all gallery sections to 10 items max
+
+Caching strategy:
+- Time-sensitive "most viewed" queries use 1-hour cache
+- Standard queries use max cache (view counts update on next invalidation)
+- No cache invalidation on view tracking for performance
+
+Bug fixes:
+- Add short_id to getMostViewedPhotosLastWeek query for correct photo links
