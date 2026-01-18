@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/mmousawy/cpg-website/compare/v1.8.1...v1.8.2) (2026-01-18)
+
+
+### Bug Fixes
+
+* Update README for clarity on linting and CI processes ([ba53c5d](https://github.com/mmousawy/cpg-website/commit/ba53c5d3cc8c45dca0bebed4b69a4d98fd4172d1))
+
 ## [1.8.1](https://github.com/mmousawy/cpg-website/compare/v1.8.0...v1.8.1) (2026-01-18)
 
 
