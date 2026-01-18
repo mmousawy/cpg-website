@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/mmousawy/cpg-website/compare/v1.7.0...v1.8.0) (2026-01-18)
+
+
+### Features
+
+* Performance optimization and CI/CD improvements ([beedd76](https://github.com/mmousawy/cpg-website/commit/beedd76814d60b4f82fe369309091a53dc005408))
+
+
+### Bug Fixes
+
+* Add svg.d.ts to TypeScript configuration for improved type support ([e8179eb](https://github.com/mmousawy/cpg-website/commit/e8179ebddf7eb1f66fb852de3fef14e6ceb0ba1f))
+* Update linting command in package.json to use ESLint directly for TypeScript files ([8a7d550](https://github.com/mmousawy/cpg-website/commit/8a7d550f26f4d70d9bb2d96e05fc5a634c41f140))
+
 ## [1.7.0](https://github.com/mmousawy/cpg-website/compare/v1.6.1...v1.7.0) (2026-01-18)
 
 
