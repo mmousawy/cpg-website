@@ -26,7 +26,7 @@ export default function TagsSection({ tags, className }: TagsSectionProps) {
       <p
         className="mb-2 text-sm font-medium"
       >
-        Tags:
+        Tags
       </p>
       <div
         className="flex flex-wrap gap-2"

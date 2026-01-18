@@ -96,7 +96,7 @@ export default async function TagMembersPage({ params }: { params: Params }) {
         {/* Explore by Photo Style (Tags) */}
         {popularTags.length > 0 && (
           <div
-            className="mb-10"
+            className="mb-8 sm:mb-10"
           >
             <h2
               className="mb-1 text-lg font-semibold"

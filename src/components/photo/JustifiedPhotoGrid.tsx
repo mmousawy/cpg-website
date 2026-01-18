@@ -49,8 +49,14 @@ export default function JustifiedPhotoGrid({
 
   if (photos.length === 0) {
     return (
-      <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-        <p className="text-lg opacity-70">No photos yet.</p>
+      <div
+        className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+      >
+        <p
+          className="text-lg opacity-70"
+        >
+          No photos yet.
+        </p>
       </div>
     );
   }
@@ -85,7 +91,9 @@ export default function JustifiedPhotoGrid({
   return (
     <>
       {/* Mobile layout */}
-      <div className="block sm:hidden">
+      <div
+        className="block sm:hidden"
+      >
         <PhotoRows
           rows={mobileRows}
           photoMap={photoMap}
@@ -97,7 +105,9 @@ export default function JustifiedPhotoGrid({
       </div>
 
       {/* Tablet layout */}
-      <div className="hidden sm:block lg:hidden">
+      <div
+        className="hidden sm:block lg:hidden"
+      >
         <PhotoRows
           rows={tabletRows}
           photoMap={photoMap}
@@ -109,7 +119,9 @@ export default function JustifiedPhotoGrid({
       </div>
 
       {/* Desktop layout */}
-      <div className="hidden lg:block">
+      <div
+        className="hidden lg:block"
+      >
         <PhotoRows
           rows={desktopRows}
           photoMap={photoMap}
@@ -140,7 +152,9 @@ function PhotoRows({
 }) {
 
   return (
-    <div className="w-full">
+    <div
+      className="w-full"
+    >
       {rows.map((row, rowIndex) => {
         // If row has a constrained width (single portrait photo), center it
         const isConstrained = row.width !== undefined;
@@ -173,18 +187,14 @@ function PhotoRows({
                   key={item.photo.id}
                   href={photoHref}
                   className="group relative block overflow-hidden bg-background-light transition-all hover:brightness-110"
-                  style={
-                    isConstrained
-                      ? {
-                        width: item.displayWidth,
-                        height: item.displayHeight,
-                      }
-                      : {
-                        flexGrow: item.photo.aspectRatio,
-                        flexBasis: 0,
-                        aspectRatio: item.photo.aspectRatio,
-                      }
-                  }
+                  style={isConstrained ? {
+                    width: item.displayWidth,
+                    height: item.displayHeight,
+                  } : {
+                    flexGrow: item.photo.aspectRatio,
+                    flexBasis: 0,
+                    aspectRatio: item.photo.aspectRatio,
+                  }}
                 >
                   <Image
                     src={thumbnailUrl}
@@ -197,7 +207,10 @@ function PhotoRows({
                   />
 
                   {/* Likes overlay */}
-                  {photo?.id && <CardLikes likesCount={likesCount} />}
+                  {photo?.id && <CardLikes
+                    likesCount={likesCount}
+                    className="absolute bottom-2! right-2! z-10"
+                  />}
 
                   {/* Top blur layer with gradient mask */}
                   {photo?.title && (
@@ -211,12 +224,18 @@ function PhotoRows({
                   )}
                   {/* Top gradient overlay */}
                   {photo?.title && (
-                    <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                    <div
+                      className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    />
                   )}
                   {/* Title - top left, visible on hover */}
                   {photo?.title && (
-                    <div className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      <h3 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md">
+                    <div
+                      className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    >
+                      <h3
+                        className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
+                      >
                         {photo.title}
                       </h3>
                     </div>
@@ -234,18 +253,25 @@ function PhotoRows({
                   )}
                   {/* Bottom gradient overlay */}
                   {showAttribution && streamPhoto?.profile && (
-                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                    <div
+                      className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    />
                   )}
                   {/* Attribution - bottom left, visible on hover */}
                   {showAttribution && streamPhoto?.profile && (
-                    <div className="absolute left-0 right-0 pr-12 bottom-0 flex items-center gap-1 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <div
+                      className="absolute left-0 right-0 pr-12 bottom-0 flex items-center gap-1 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    >
                       <Avatar
                         avatarUrl={streamPhoto.profile.avatar_url}
                         fullName={streamPhoto.profile.full_name}
                         size="xxs"
                       />
-                      <span className="text-xs font-medium text-white">
-                        @{streamPhoto.profile.nickname}
+                      <span
+                        className="text-xs font-medium text-white"
+                      >
+                        @
+                        {streamPhoto.profile.nickname}
                       </span>
                     </div>
                   )}

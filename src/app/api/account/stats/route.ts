@@ -13,32 +13,40 @@ export async function GET() {
     }
 
     const stats = {
-      galleries: 0,
+      // Core content stats
+      albums: 0,
       photos: 0,
+      // Engagement stats
       commentsMade: 0,
       commentsReceived: 0,
+      likesReceived: 0,
+      likesMade: 0,
+      // Event stats
       rsvpsConfirmed: 0,
       rsvpsCanceled: 0,
       eventsAttended: 0,
-      galleryViews: 0,
-      profileViews: 0,
+      // Profile info
+      memberSince: null as string | null,
       lastLoggedIn: null as string | null,
     };
 
-    // Load profile to get last_logged_in
+    // Load profile to get created_at and last_logged_in
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('last_logged_in')
+        .select('created_at, last_logged_in')
         .eq('id', user.id)
         .single();
 
-      const data = profileData as { last_logged_in: string | null } | null;
+      const data = profileData as { created_at: string | null; last_logged_in: string | null } | null;
+      if (data?.created_at) {
+        stats.memberSince = data.created_at;
+      }
       if (data?.last_logged_in) {
         stats.lastLoggedIn = data.last_logged_in;
       }
     } catch {
-      // Profiles table might not exist or last_logged_in column might not exist
+      // Profiles table might not exist or columns might not exist
     }
 
     // Load RSVP stats
@@ -77,15 +85,16 @@ export async function GET() {
       // RSVPs table might not exist or have issues - that's okay
     }
 
-    // Load galleries count (albums)
+    // Load albums count
     try {
       const { count } = await supabase
         .from('albums')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
 
       if (count !== null) {
-        stats.galleries = count;
+        stats.albums = count;
       }
     } catch {
       // Albums table doesn't exist yet
@@ -126,72 +135,154 @@ export async function GET() {
       }
     }
 
-    // TODO: Comments feature not yet implemented
-    // // Load comments made count (when comments table exists)
-    // try {
-    //   const { count } = await supabase
-    //     .from('comments')
-    //     .select('*', { count: 'exact', head: true })
-    //     .eq('user_id', user.id)
+    // Load comments made by user (comments table has user_id)
+    try {
+      const { count } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
 
-    //   if (count !== null) {
-    //     stats.commentsMade = count
-    //   }
-    // } catch {
-    //   // Comments table doesn't exist yet
-    // }
+      stats.commentsMade = count || 0;
+    } catch {
+      // Comments table might not exist yet
+    }
 
-    // // Load comments received count (when comments table exists)
-    // // This would need to query galleries owned by user and count comments on those galleries
-    // try {
-    //   const { data: userGalleries } = await supabase
-    //     .from('albums')
-    //     .select('id')
-    //     .eq('user_id', user.id)
+    // Load comments received on user's content
+    // Need to join through album_comments and photo_comments junction tables
+    try {
+      // Get user's albums
+      const { data: userAlbums } = await supabase
+        .from('albums')
+        .select('id')
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
 
-    //   if (userGalleries && userGalleries.length > 0) {
-    //     const galleryIds = userGalleries.map(g => g.id)
-    //     const { count } = await supabase
-    //       .from('comments')
-    //       .select('*', { count: 'exact', head: true })
-    //       .in('gallery_id', galleryIds)
+      // Get user's photos via album_photos
+      const albumIds = userAlbums?.map(a => a.id) || [];
+      let photoIds: string[] = [];
 
-    //     if (count !== null) {
-    //       stats.commentsReceived = count
-    //     }
-    //   }
-    // } catch {
-    //   // Comments or albums table doesn't exist yet
-    // }
+      if (albumIds.length > 0) {
+        const { data: albumPhotos } = await supabase
+          .from('album_photos')
+          .select('photo_id')
+          .in('album_id', albumIds);
 
-    // TODO: Views tracking not yet implemented
-    // // Load gallery views (when gallery_views table exists)
-    // try {
-    //   const { count } = await supabase
-    //     .from('gallery_views')
-    //     .select('*', { count: 'exact', head: true })
-    //     .eq('gallery_owner_id', user.id)
+        photoIds = albumPhotos?.map(p => p.photo_id) || [];
+      }
 
-    //   if (count !== null) {
-    //     stats.galleryViews = count
-    //   }
-    // } catch {
-    //   // Gallery views table doesn't exist yet
-    // }
+      let receivedCount = 0;
 
-    // // Load profile views (when profile_views table exists)
-    // try {
-    //   const { count } = await supabase
-    //     .from('profile_views')
-    //     .select('*', { count: 'exact', head: true })
-    //     .eq('profile_id', user.id)
+      // Get comments on user's albums (excluding own comments)
+      if (albumIds.length > 0) {
+        const { data: albumCommentLinks } = await supabase
+          .from('album_comments')
+          .select('comment_id')
+          .in('album_id', albumIds);
 
-    //   if (count !== null) {
-    //     stats.profileViews = count
-    //   }
-    // } catch {
-    //   // Profile views table doesn't exist yet
-    // }
+        if (albumCommentLinks && albumCommentLinks.length > 0) {
+          const commentIds = albumCommentLinks.map(c => c.comment_id);
+          const { count } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .in('id', commentIds)
+            .neq('user_id', user.id)
+            .is('deleted_at', null);
+
+          receivedCount += count || 0;
+        }
+      }
+
+      // Get comments on user's photos (excluding own comments)
+      if (photoIds.length > 0) {
+        const { data: photoCommentLinks } = await supabase
+          .from('photo_comments')
+          .select('comment_id')
+          .in('photo_id', photoIds);
+
+        if (photoCommentLinks && photoCommentLinks.length > 0) {
+          const commentIds = photoCommentLinks.map(c => c.comment_id);
+          const { count } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .in('id', commentIds)
+            .neq('user_id', user.id)
+            .is('deleted_at', null);
+
+          receivedCount += count || 0;
+        }
+      }
+
+      stats.commentsReceived = receivedCount;
+    } catch {
+      // Comments or content tables might not exist yet
+    }
+
+    // Load likes received on user's content
+    try {
+      // Get user's albums
+      const { data: userAlbums } = await supabase
+        .from('albums')
+        .select('id')
+        .eq('user_id', user.id)
+        .is('deleted_at', null);
+
+      const albumIds = userAlbums?.map(a => a.id) || [];
+      let photoIds: string[] = [];
+
+      // Get photos from user's albums
+      if (albumIds.length > 0) {
+        const { data: albumPhotos } = await supabase
+          .from('album_photos')
+          .select('photo_id')
+          .in('album_id', albumIds);
+
+        photoIds = albumPhotos?.map(p => p.photo_id) || [];
+      }
+
+      let receivedLikes = 0;
+
+      // Likes on albums
+      if (albumIds.length > 0) {
+        const { count } = await supabase
+          .from('album_likes')
+          .select('*', { count: 'exact', head: true })
+          .in('album_id', albumIds);
+
+        receivedLikes += count || 0;
+      }
+
+      // Likes on photos
+      if (photoIds.length > 0) {
+        const { count } = await supabase
+          .from('photo_likes')
+          .select('*', { count: 'exact', head: true })
+          .in('photo_id', photoIds);
+
+        receivedLikes += count || 0;
+      }
+
+      stats.likesReceived = receivedLikes;
+    } catch {
+      // Likes tables might not exist yet
+    }
+
+    // Load likes made by user
+    try {
+      const { count: albumLikes } = await supabase
+        .from('album_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const { count: photoLikes } = await supabase
+        .from('photo_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      stats.likesMade = (albumLikes || 0) + (photoLikes || 0);
+    } catch {
+      // Likes tables might not exist yet
+    }
 
     return NextResponse.json(stats);
   } catch (error) {

@@ -48,27 +48,50 @@ export default async function TagPage({ params }: { params: Params }) {
   return (
     <>
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">
-            Photos tagged &ldquo;{tagName}&rdquo;
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Photos tagged &ldquo;
+            {tagName}
+            &rdquo;
           </h1>
-          <p className="text-lg opacity-70">
-            {photos.length} {photos.length === 1 ? 'photo' : 'photos'} with this tag
+          <p
+            className="text-lg opacity-70"
+          >
+            {photos.length}
+            {' '}
+            {photos.length === 1 ? 'photo' : 'photos'}
+            {' '}
+            with this tag
           </p>
         </div>
 
-        <PopularTagsSection activeTag={tagName} />
+        <PopularTagsSection
+          activeTag={tagName}
+        />
       </PageContainer>
 
-      <WidePageContainer className="!pt-0">
+      <WidePageContainer
+        className="pt-0!"
+      >
         {photos.length === 0 ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-            <p className="text-lg opacity-70">
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+          >
+            <p
+              className="text-lg opacity-70"
+            >
               No photos found with this tag.
             </p>
           </div>
         ) : (
-          <JustifiedPhotoGrid photos={photos} showAttribution />
+          <JustifiedPhotoGrid
+            photos={photos}
+            showAttribution
+          />
         )}
       </WidePageContainer>
     </>

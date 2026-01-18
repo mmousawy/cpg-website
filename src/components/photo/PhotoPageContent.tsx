@@ -118,7 +118,7 @@ export default function PhotoPageContent({
                   <p
                     className="mb-2 text-sm font-medium"
                   >
-                    Part of:
+                    Seen in
                   </p>
                   <div
                     className="flex flex-wrap gap-2"

@@ -165,15 +165,20 @@ export default function AccountPage() {
 
   // Stats state
   const [stats, setStats] = useState({
-    galleries: 0,
+    // Core content stats
+    albums: 0,
     photos: 0,
+    // Engagement stats
     commentsMade: 0,
     commentsReceived: 0,
+    likesReceived: 0,
+    likesMade: 0,
+    // Event stats
     rsvpsConfirmed: 0,
     rsvpsCanceled: 0,
     eventsAttended: 0,
-    galleryViews: 0,
-    profileViews: 0,
+    // Profile info
+    memberSince: null as string | null,
     lastLoggedIn: null as string | null,
   });
 
@@ -426,15 +431,16 @@ export default function AccountPage() {
     } catch (err) {
       console.error('Error loading stats:', err);
       setStats({
-        galleries: 0,
+        albums: 0,
         photos: 0,
         commentsMade: 0,
         commentsReceived: 0,
+        likesReceived: 0,
+        likesMade: 0,
         rsvpsConfirmed: 0,
         rsvpsCanceled: 0,
         eventsAttended: 0,
-        galleryViews: 0,
-        profileViews: 0,
+        memberSince: null,
         lastLoggedIn: null,
       });
     }
@@ -709,17 +715,37 @@ export default function AccountPage() {
   return (
     <>
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">Account settings</h1>
-          <p className="text-lg opacity-70">Manage your profile information and preferences</p>
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Account settings
+          </h1>
+          <p
+            className="text-lg opacity-70"
+          >
+            Manage your profile information and preferences
+          </p>
         </div>
 
         {/* No-JS fallback: show message and hide loading spinner */}
         <noscript>
-          <style>{`.js-loading { display: none !important; }`}</style>
-          <div className="border-border-color bg-background-light rounded-xl border p-6 text-center">
-            <p className="mb-2 text-lg font-medium">JavaScript required</p>
-            <p className="text-foreground/70">
+          <style>
+            {'.js-loading { display: none !important; }'}
+          </style>
+          <div
+            className="border-border-color bg-background-light rounded-xl border p-6 text-center"
+          >
+            <p
+              className="mb-2 text-lg font-medium"
+            >
+              JavaScript required
+            </p>
+            <p
+              className="text-foreground/70"
+            >
               This page requires JavaScript to manage your account settings. Please enable
               JavaScript in your browser to continue.
             </p>
@@ -727,18 +753,33 @@ export default function AccountPage() {
         </noscript>
 
         {isLoading ? (
-          <div className="js-loading">
-            <LoadingSpinner centered />
+          <div
+            className="js-loading"
+          >
+            <LoadingSpinner
+              centered
+            />
           </div>
         ) : (
-          <div className="space-y-8">
-            <form id="account-form" onSubmit={handleSubmit(onSubmit)}>
+          <div
+            className="space-y-8"
+          >
+            <form
+              id="account-form"
+              onSubmit={handleSubmit(onSubmit)}
+            >
               {/* Basic Info Section */}
               <div>
-                <h2 className="mb-4 text-lg font-semibold opacity-70">Basic info</h2>
+                <h2
+                  className="mb-4 text-lg font-semibold opacity-70"
+                >
+                  Basic info
+                </h2>
                 <Container>
                   {/* Profile Picture */}
-                  <div className="border-border-color mb-6 flex items-center gap-6 border-b pb-6">
+                  <div
+                    className="border-border-color mb-6 flex items-center gap-6 border-b pb-6"
+                  >
                     <div
                       className={clsx(
                         'rounded-full border-2',
@@ -751,8 +792,12 @@ export default function AccountPage() {
                         size="xl"
                       />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex flex-wrap gap-2">
+                    <div
+                      className="flex-1"
+                    >
+                      <div
+                        className="flex flex-wrap gap-2"
+                      >
                         <Button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={isSaving}
@@ -792,22 +837,37 @@ export default function AccountPage() {
                           </Button>
                         )}
                       </div>
-                      {avatarError && <p className="mt-2 text-sm text-red-500">{avatarError}</p>}
+                      {avatarError && <p
+                        className="mt-2 text-sm text-red-500"
+                      >
+                        {avatarError}
+                      </p>}
                     </div>
                   </div>
 
                   {/* Form Fields */}
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="email" className="text-sm font-medium">
+                  <div
+                    className="space-y-4"
+                  >
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium"
+                      >
                         Email
                       </label>
                       {emailChangedFromUrl && (
-                        <SuccessMessage variant="compact">
+                        <SuccessMessage
+                          variant="compact"
+                        >
                           Your email has been successfully changed!
                         </SuccessMessage>
                       )}
-                      <div className="flex gap-2">
+                      <div
+                        className="flex gap-2"
+                      >
                         <Input
                           id="email"
                           type="email"
@@ -825,8 +885,13 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="fullName" className="text-sm font-medium">
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        htmlFor="fullName"
+                        className="text-sm font-medium"
+                      >
                         Full name
                       </label>
                       <Input
@@ -837,16 +902,31 @@ export default function AccountPage() {
                       />
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="nickname" className="text-sm font-medium">
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        htmlFor="nickname"
+                        className="text-sm font-medium"
+                      >
                         Nickname (username)
                       </label>
-                      <Input id="nickname" type="text" value={nickname} disabled />
-                      <p className="text-foreground/50 text-xs">
+                      <Input
+                        id="nickname"
+                        type="text"
+                        value={nickname}
+                        disabled
+                      />
+                      <p
+                        className="text-foreground/50 text-xs"
+                      >
                         Your nickname is used in your gallery URLs and cannot be changed.
                         <br />
-                        URL:{' '}
-                        <span className="break-words">
+                        URL:
+                        {' '}
+                        <span
+                          className="break-words"
+                        >
                           {(() => {
                             const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
                             const url = `${baseUrl}/@${nickname || 'your-nickname'}`;
@@ -860,15 +940,30 @@ export default function AccountPage() {
               </div>
 
               {/* Public Profile Section */}
-              <div className="mt-8">
-                <h2 className="mb-4 text-lg font-semibold opacity-70">Your public profile</h2>
+              <div
+                className="mt-8"
+              >
+                <h2
+                  className="mb-4 text-lg font-semibold opacity-70"
+                >
+                  Your public profile
+                </h2>
                 <Container>
-                  <p className="text-foreground/60 mb-4 text-sm">
+                  <p
+                    className="text-foreground/60 mb-4 text-sm"
+                  >
                     This information will be visible on your public profile page.
                   </p>
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="bio" className="text-sm font-medium">
+                  <div
+                    className="space-y-4"
+                  >
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        htmlFor="bio"
+                        className="text-sm font-medium"
+                      >
                         Bio
                       </label>
                       <Textarea
@@ -879,8 +974,13 @@ export default function AccountPage() {
                       />
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="website" className="text-sm font-medium">
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        htmlFor="website"
+                        className="text-sm font-medium"
+                      >
                         Website
                       </label>
                       <Input
@@ -892,16 +992,33 @@ export default function AccountPage() {
                     </div>
 
                     {/* Social Links */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">Social links</label>
-                        <span className="text-foreground/50 text-xs">{fields.length}/3</span>
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <div
+                        className="flex items-center justify-between"
+                      >
+                        <label
+                          className="text-sm font-medium"
+                        >
+                          Social links
+                        </label>
+                        <span
+                          className="text-foreground/50 text-xs"
+                        >
+                          {fields.length}
+                          /3
+                        </span>
                       </div>
-                      <p className="text-foreground/50 mb-2 text-xs">
+                      <p
+                        className="text-foreground/50 mb-2 text-xs"
+                      >
                         Add up to 3 links to your social profiles
                       </p>
 
-                      <div className="space-y-4">
+                      <div
+                        className="space-y-4"
+                      >
                         {fields.map((field, index) => (
                           <div
                             key={field.id}
@@ -926,10 +1043,16 @@ export default function AccountPage() {
                               onClick={() => remove(index)}
                               variant="danger"
                               aria-label="Remove link"
-                              icon={<CloseSVG className="size-4" />}
+                              icon={<CloseSVG
+                                className="size-4"
+                              />}
                               className="w-full !px-2 !py-2 sm:w-auto"
                             >
-                              <span className="sm:hidden">Remove</span>
+                              <span
+                                className="sm:hidden"
+                              >
+                                Remove
+                              </span>
                             </Button>
                           </div>
                         ))}
@@ -938,7 +1061,9 @@ export default function AccountPage() {
                           <Button
                             type="button"
                             variant="secondary"
-                            icon={<PlusIconSVG className="size-4" />}
+                            icon={<PlusIconSVG
+                              className="size-4"
+                            />}
                             onClick={() => append({ label: '', url: '' })}
                           >
                             Add social link
@@ -948,8 +1073,14 @@ export default function AccountPage() {
                     </div>
 
                     {/* Interests */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">Interests</label>
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        className="text-sm font-medium"
+                      >
+                        Interests
+                      </label>
                       <Controller
                         name="interests"
                         control={control}
@@ -979,18 +1110,34 @@ export default function AccountPage() {
               </div>
 
               {/* App preferences Section */}
-              <div className="mt-8">
-                <h2 className="mb-4 text-lg font-semibold opacity-70">App preferences</h2>
+              <div
+                className="mt-8"
+              >
+                <h2
+                  className="mb-4 text-lg font-semibold opacity-70"
+                >
+                  App preferences
+                </h2>
                 <Container>
-                  <div className="space-y-6">
+                  <div
+                    className="space-y-6"
+                  >
                     {/* Theme */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">Theme</label>
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        className="text-sm font-medium"
+                      >
+                        Theme
+                      </label>
                       <Controller
                         name="theme"
                         control={control}
                         render={({ field }) => (
-                          <div className="grid grid-cols-3 gap-2">
+                          <div
+                            className="grid grid-cols-2 gap-2"
+                          >
                             {[
                               {
                                 value: 'system',
@@ -1074,7 +1221,9 @@ export default function AccountPage() {
                           </div>
                         )}
                       />
-                      <p className="text-foreground/50 text-xs">
+                      <p
+                        className="text-foreground/50 text-xs"
+                      >
                         {themeMounted && theme === 'system'
                           ? `Currently using ${resolvedTheme} mode based on your system`
                           : 'Choose your preferred color scheme'}
@@ -1082,13 +1231,21 @@ export default function AccountPage() {
                     </div>
 
                     {/* Gallery card style */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium">Gallery card style</label>
+                    <div
+                      className="flex flex-col gap-2"
+                    >
+                      <label
+                        className="text-sm font-medium"
+                      >
+                        Gallery card style
+                      </label>
                       <Controller
                         name="albumCardStyle"
                         control={control}
                         render={({ field }) => (
-                          <div className="grid gap-3 sm:grid-cols-2">
+                          <div
+                            className="grid gap-3 sm:grid-cols-2"
+                          >
                             {/* Large option */}
                             <button
                               type="button"
@@ -1100,9 +1257,15 @@ export default function AccountPage() {
                                   : 'border-border-color hover:border-border-color-strong',
                               )}
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1">
-                                  <div className="mb-1 flex items-center gap-2">
+                              <div
+                                className="flex items-start justify-between gap-3"
+                              >
+                                <div
+                                  className="flex-1"
+                                >
+                                  <div
+                                    className="mb-1 flex items-center gap-2"
+                                  >
                                     <div
                                       className={clsx(
                                         'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
@@ -1112,26 +1275,52 @@ export default function AccountPage() {
                                       )}
                                     >
                                       {field.value === 'large' && (
-                                        <div className="bg-primary size-2 rounded-full" />
+                                        <div
+                                          className="bg-primary size-2 rounded-full"
+                                        />
                                       )}
                                     </div>
-                                    <span className="text-sm font-medium">Large</span>
+                                    <span
+                                      className="text-sm font-medium"
+                                    >
+                                      Large
+                                    </span>
                                   </div>
-                                  <p className="text-foreground/50 ml-6 text-xs">
+                                  <p
+                                    className="text-foreground/50 ml-6 text-xs"
+                                  >
                                     Info visible below image
                                   </p>
                                 </div>
                                 {/* Wireframe - top right */}
-                                <div className="border-border-color-strong bg-background w-20 shrink-0 overflow-hidden rounded border">
-                                  <div className="bg-foreground/5 h-12" />
-                                  <div className="bg-background-light border-border-color-strong border-t p-1.5">
-                                    <div className="bg-foreground/20 mb-1.5 h-1 w-4/5 rounded" />
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-1">
-                                        <div className="bg-foreground/15 size-2 rounded-full" />
-                                        <div className="bg-foreground/10 h-1 w-6 rounded" />
+                                <div
+                                  className="border-border-color-strong bg-background w-20 shrink-0 overflow-hidden rounded border"
+                                >
+                                  <div
+                                    className="bg-foreground/5 h-12"
+                                  />
+                                  <div
+                                    className="bg-background-light border-border-color-strong border-t p-1.5"
+                                  >
+                                    <div
+                                      className="bg-foreground/20 mb-1.5 h-1 w-4/5 rounded"
+                                    />
+                                    <div
+                                      className="flex items-center justify-between"
+                                    >
+                                      <div
+                                        className="flex items-center gap-1"
+                                      >
+                                        <div
+                                          className="bg-foreground/15 size-2 rounded-full"
+                                        />
+                                        <div
+                                          className="bg-foreground/10 h-1 w-6 rounded"
+                                        />
                                       </div>
-                                      <div className="bg-foreground/10 h-1 w-4 rounded" />
+                                      <div
+                                        className="bg-foreground/10 h-1 w-4 rounded"
+                                      />
                                     </div>
                                   </div>
                                 </div>
@@ -1149,9 +1338,15 @@ export default function AccountPage() {
                                   : 'border-border-color hover:border-border-color-strong',
                               )}
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1">
-                                  <div className="mb-1 flex items-center gap-2">
+                              <div
+                                className="flex items-start justify-between gap-3"
+                              >
+                                <div
+                                  className="flex-1"
+                                >
+                                  <div
+                                    className="mb-1 flex items-center gap-2"
+                                  >
                                     <div
                                       className={clsx(
                                         'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
@@ -1161,28 +1356,56 @@ export default function AccountPage() {
                                       )}
                                     >
                                       {field.value === 'compact' && (
-                                        <div className="bg-primary size-2 rounded-full" />
+                                        <div
+                                          className="bg-primary size-2 rounded-full"
+                                        />
                                       )}
                                     </div>
-                                    <span className="text-sm font-medium">Compact</span>
+                                    <span
+                                      className="text-sm font-medium"
+                                    >
+                                      Compact
+                                    </span>
                                   </div>
-                                  <p className="text-foreground/50 ml-6 text-xs">
+                                  <p
+                                    className="text-foreground/50 ml-6 text-xs"
+                                  >
                                     Info shown on hover
                                   </p>
                                 </div>
                                 {/* Wireframe - top right */}
-                                <div className="border-border-color-strong bg-background w-20 shrink-0 overflow-hidden rounded border">
-                                  <div className="bg-foreground/5 relative h-[4.75rem]">
-                                    <div className="from-background-light absolute inset-x-0 top-0 bg-gradient-to-b to-transparent p-1.5">
-                                      <div className="bg-foreground/25 h-1 w-3/4 rounded" />
+                                <div
+                                  className="border-border-color-strong bg-background w-20 shrink-0 overflow-hidden rounded border"
+                                >
+                                  <div
+                                    className="bg-foreground/5 relative h-[4.75rem]"
+                                  >
+                                    <div
+                                      className="from-background-light absolute inset-x-0 top-0 bg-gradient-to-b to-transparent p-1.5"
+                                    >
+                                      <div
+                                        className="bg-foreground/25 h-1 w-3/4 rounded"
+                                      />
                                     </div>
-                                    <div className="from-background-light absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent p-1.5">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1">
-                                          <div className="bg-foreground/20 size-2 rounded-full" />
-                                          <div className="bg-foreground/15 h-1 w-5 rounded" />
+                                    <div
+                                      className="from-background-light absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent p-1.5"
+                                    >
+                                      <div
+                                        className="flex items-center justify-between"
+                                      >
+                                        <div
+                                          className="flex items-center gap-1"
+                                        >
+                                          <div
+                                            className="bg-foreground/20 size-2 rounded-full"
+                                          />
+                                          <div
+                                            className="bg-foreground/15 h-1 w-5 rounded"
+                                          />
                                         </div>
-                                        <div className="bg-foreground/15 h-1 w-4 rounded" />
+                                        <div
+                                          className="bg-foreground/15 h-1 w-4 rounded"
+                                        />
                                       </div>
                                     </div>
                                   </div>
@@ -1195,14 +1418,24 @@ export default function AccountPage() {
                     </div>
 
                     {/* Email Preferences */}
-                    <div className="flex flex-col gap-4">
-                      <label className="text-sm font-medium">Email preferences</label>
-                      <p className="text-foreground/50 -mt-2 text-xs">
+                    <div
+                      className="flex flex-col gap-4"
+                    >
+                      <label
+                        className="text-sm font-medium"
+                      >
+                        Email preferences
+                      </label>
+                      <p
+                        className="text-foreground/50 -mt-2 text-xs"
+                      >
                         Choose which types of emails you&apos;d like to receive. You can change
                         these settings anytime.
                       </p>
                       {emailTypes.length > 0 ? (
-                        <div className="space-y-3">
+                        <div
+                          className="space-y-3"
+                        >
                           {emailTypes.map((type) => {
                             const fieldName = `emailPreferences.${type.type_key}` as const;
                             return (
@@ -1212,7 +1445,9 @@ export default function AccountPage() {
                                 control={control}
                                 defaultValue={true}
                                 render={({ field }) => (
-                                  <div className="flex items-start gap-2">
+                                  <div
+                                    className="flex items-start gap-2"
+                                  >
                                     <Checkbox
                                       id={`emailPref-${type.type_key}`}
                                       checked={field.value ?? true}
@@ -1228,7 +1463,9 @@ export default function AccountPage() {
                                       }}
                                       labelClassName="mt-0.75"
                                     />
-                                    <div className="flex-1">
+                                    <div
+                                      className="flex-1"
+                                    >
                                       <label
                                         htmlFor={`emailPref-${type.type_key}`}
                                         className="cursor-pointer text-sm font-medium"
@@ -1236,7 +1473,9 @@ export default function AccountPage() {
                                         {type.type_label}
                                       </label>
                                       {type.description && (
-                                        <p className="text-foreground/50 mt-1 text-xs">
+                                        <p
+                                          className="text-foreground/50 mt-1 text-xs"
+                                        >
                                           {type.description}
                                         </p>
                                       )}
@@ -1248,7 +1487,11 @@ export default function AccountPage() {
                           })}
                         </div>
                       ) : (
-                        <p className="text-foreground/50 text-xs">Loading email preferences...</p>
+                        <p
+                          className="text-foreground/50 text-xs"
+                        >
+                          Loading email preferences...
+                        </p>
                       )}
                     </div>
                   </div>
@@ -1258,97 +1501,198 @@ export default function AccountPage() {
 
             {/* Account Info Section */}
             <div>
-              <h2 className="mb-4 text-lg font-semibold opacity-70">Account info</h2>
+              <h2
+                className="mb-4 text-lg font-semibold opacity-70"
+              >
+                Account info
+              </h2>
               <Container>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <div
+                  className="space-y-4"
+                >
+                  <div
+                    className="grid grid-cols-2 gap-4 text-sm"
+                  >
                     <div>
-                      <p className="text-foreground font-medium">Member since</p>
-                      <p className="text-foreground/70">
+                      <p
+                        className="text-foreground font-medium"
+                      >
+                        Member since
+                      </p>
+                      <p
+                        className="text-foreground/70"
+                      >
                         {profile?.created_at
                           ? new Date(profile.created_at).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })
                           : 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-foreground font-medium">Last logged in</p>
-                      <p className="text-foreground/70">
+                      <p
+                        className="text-foreground font-medium"
+                      >
+                        Last logged in
+                      </p>
+                      <p
+                        className="text-foreground/70"
+                      >
                         {stats.lastLoggedIn
                           ? new Date(stats.lastLoggedIn).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })
                           : 'Never'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="border-border-color-strong border-t pt-4">
-                    <p className="text-foreground mb-3 text-sm font-medium">Activity</p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div
+                    className="border-border-color-strong border-t pt-4"
+                  >
+                    <p
+                      className="text-foreground mb-3 text-sm font-medium"
+                    >
+                      Content
+                    </p>
+                    <div
+                      className="grid grid-cols-2 gap-4 text-sm"
+                    >
                       <div>
-                        <p className="text-foreground/70">Galleries</p>
-                        <p className="text-foreground text-lg font-semibold">{stats.galleries}</p>
-                      </div>
-                      <div>
-                        <p className="text-foreground/70">Photos</p>
-                        <p className="text-foreground text-lg font-semibold">{stats.photos}</p>
-                      </div>
-                      <div>
-                        <p className="text-foreground/70">Comments made</p>
-                        <p className="text-foreground text-lg font-semibold">
-                          {stats.commentsMade}
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Albums
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.albums}
                         </p>
                       </div>
                       <div>
-                        <p className="text-foreground/70">Comments received</p>
-                        <p className="text-foreground text-lg font-semibold">
-                          {stats.commentsReceived}
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Photos
                         </p>
-                      </div>
-                      <div>
-                        <p className="text-foreground/70">Events attended</p>
-                        <p className="text-foreground text-lg font-semibold">
-                          {stats.eventsAttended}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-foreground/70">RSVPs</p>
-                        <p className="text-foreground text-lg font-semibold">
-                          {stats.rsvpsConfirmed} / {stats.rsvpsCanceled}
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.photos}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {(stats.galleryViews > 0 || stats.profileViews > 0) && (
-                    <div className="border-border-color border-t pt-4">
-                      <p className="text-foreground mb-3 text-sm font-medium">Engagement</p>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        {stats.galleryViews > 0 && (
-                          <div>
-                            <p className="text-foreground/70">Gallery views</p>
-                            <p className="text-foreground text-lg font-semibold">
-                              {stats.galleryViews}
-                            </p>
-                          </div>
-                        )}
-                        {stats.profileViews > 0 && (
-                          <div>
-                            <p className="text-foreground/70">Profile views</p>
-                            <p className="text-foreground text-lg font-semibold">
-                              {stats.profileViews}
-                            </p>
-                          </div>
-                        )}
+                  <div
+                    className="border-border-color-strong border-t pt-4"
+                  >
+                    <p
+                      className="text-foreground mb-3 text-sm font-medium"
+                    >
+                      Engagement
+                    </p>
+                    <div
+                      className="grid grid-cols-2 gap-4 text-sm"
+                    >
+                      <div>
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Likes received
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.likesReceived}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Likes given
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.likesMade}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Comments made
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.commentsMade}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Comments received
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.commentsReceived}
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
+
+                  <div
+                    className="border-border-color-strong border-t pt-4"
+                  >
+                    <p
+                      className="text-foreground mb-3 text-sm font-medium"
+                    >
+                      Events
+                    </p>
+                    <div
+                      className="grid grid-cols-2 gap-4 text-sm"
+                    >
+                      <div>
+                        <p
+                          className="text-foreground/70"
+                        >
+                          Events attended
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.eventsAttended}
+                        </p>
+                      </div>
+                      <div>
+                        <p
+                          className="text-foreground/70"
+                        >
+                          RSVPs
+                        </p>
+                        <p
+                          className="text-foreground text-lg font-semibold"
+                        >
+                          {stats.rsvpsConfirmed}
+                          {' '}
+                          confirmed /
+                          {stats.rsvpsCanceled}
+                          {' '}
+                          canceled
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </Container>
             </div>
@@ -1358,21 +1702,36 @@ export default function AccountPage() {
 
       {/* Sticky Save Button */}
       {changeCount > 0 && (
-        <StickyActionBar constrainWidth>
-          <div className="flex items-center gap-3 text-sm">
+        <StickyActionBar
+          constrainWidth
+        >
+          <div
+            className="flex items-center gap-3 text-sm"
+          >
             {submitError && (
-              <ErrorMessage variant="compact" className="py-1.5 text-sm">
+              <ErrorMessage
+                variant="compact"
+                className="py-1.5 text-sm"
+              >
                 {submitError}
               </ErrorMessage>
             )}
             {success && (
-              <SuccessMessage variant="compact" className="py-1.5 text-sm">
+              <SuccessMessage
+                variant="compact"
+                className="py-1.5 text-sm"
+              >
                 Profile updated!
               </SuccessMessage>
             )}
             {!submitError && !success && hasChanges && (
-              <span className="text-foreground/70">
-                {changeCount} unsaved {changeCount === 1 ? 'change' : 'changes'}
+              <span
+                className="text-foreground/70"
+              >
+                {changeCount}
+                {' '}
+                unsaved
+                {changeCount === 1 ? 'change' : 'changes'}
               </span>
             )}
           </div>

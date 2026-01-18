@@ -60,33 +60,63 @@ export default async function InterestMembersPage({ params }: { params: Params }
   return (
     <>
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">
-            Members interested in &ldquo;{interest.name}&rdquo;
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Members interested in &ldquo;
+            {interest.name}
+            &rdquo;
           </h1>
-          <p className="text-lg opacity-70">
-            {members.length} {members.length === 1 ? 'member' : 'members'} with this interest
+          <p
+            className="text-lg opacity-70"
+          >
+            {members.length}
+            {' '}
+            {members.length === 1 ? 'member' : 'members'}
+            {' '}
+            with this interest
           </p>
         </div>
 
         {/* Popular interests sidebar */}
         {popularInterests.length > 0 && (
-          <div className="mb-8">
-            <h2 className="mb-3 text-xl font-semibold">Browse by interest</h2>
-            <InterestCloud interests={popularInterests} activeInterest={interest.name} />
+          <div
+            className="mb-8 sm:mb-10"
+          >
+            <h2
+              className="mb-3 text-xl font-semibold"
+            >
+              Browse by interest
+            </h2>
+            <InterestCloud
+              interests={popularInterests}
+              activeInterest={interest.name}
+            />
           </div>
         )}
 
         {members.length === 0 ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-            <p className="text-lg opacity-70">
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+          >
+            <p
+              className="text-lg opacity-70"
+            >
               No members found with this interest yet.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+          >
             {members.map((member) => (
-              <MemberCard key={member.id} member={member} />
+              <MemberCard
+                key={member.id}
+                member={member}
+              />
             ))}
           </div>
         )}

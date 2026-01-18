@@ -70,7 +70,7 @@ export default function Tag({
   return (
     <span
       className={clsx(
-        'relative inline-flex items-center',
+        'relative flex items-center',
         // Text color
         isActive ? 'text-white' : isLink && 'group-hover:text-primary group-focus:text-primary',
         // Border color via CSS custom property (class-based for hover to work)

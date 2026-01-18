@@ -47,7 +47,9 @@ function PhotoCard({
           ? `Used as cover of: ${coverAlbumNames}`
           : 'Used as album cover';
       badgeList.push({
-        icon: <WallArtSVG className="size-4 fill-current" />,
+        icon: <WallArtSVG
+          className="size-4 fill-current"
+        />,
         variant: 'album-cover' as const,
         tooltip: tooltipText,
       });
@@ -55,14 +57,18 @@ function PhotoCard({
     if (isInAlbum && !isAlbumCover) {
       const albumNames = photoWithAlbums.albums?.map((a) => a.title).join(', ') || '';
       badgeList.push({
-        icon: <FolderInAlbumSVG className="size-4 fill-current" />,
+        icon: <FolderInAlbumSVG
+          className="size-4 fill-current"
+        />,
         variant: 'in-album' as const,
         tooltip: albumNames ? `In albums: ${albumNames}` : 'In album',
       });
     }
     if (!photo.is_public) {
       badgeList.push({
-        icon: <PrivateMicroSVG className="size-4" />,
+        icon: <PrivateMicroSVG
+          className="size-4"
+        />,
         variant: 'private' as const,
         tooltip: 'Private (only visible to you)',
       });
@@ -84,7 +90,9 @@ function PhotoCard({
       )}
     >
       {/* Image */}
-      <div className="aspect-square overflow-hidden bg-background-light">
+      <div
+        className="aspect-square overflow-hidden bg-background-light"
+      >
         <Image
           src={thumbnailUrl}
           alt={photo.title || 'Photo'}
@@ -95,16 +103,26 @@ function PhotoCard({
           draggable={false}
         />
         {/* Badges */}
-        <CardBadges badges={badges} />
+        <CardBadges
+          badges={badges}
+        />
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"></div>
+        <div
+          className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"
+        ></div>
       </div>
 
       {/* Title overlay on hover */}
       {photo.title && (
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <p className="truncate text-sm text-white">{photo.title}</p>
+        <div
+          className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <p
+            className="truncate text-sm text-white"
+          >
+            {photo.title}
+          </p>
         </div>
       )}
     </div>

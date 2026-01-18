@@ -279,14 +279,18 @@ function BulkEditForm({
     <SidebarPanel
       title={`Edit ${selectedPhotos.length} photos`}
       footer={
-        <div className="flex gap-2 w-full">
+        <div
+          className="flex gap-2 w-full"
+        >
           <Button
             type="button"
             variant="danger"
             onClick={handleBulkDelete}
             disabled={isSaving || isLoading || isDeleting}
             loading={isDeleting}
-            icon={<TrashSVG className="size-5 -ml-0.5" />}
+            icon={<TrashSVG
+              className="size-5 -ml-0.5"
+            />}
           >
             Delete
           </Button>
@@ -295,7 +299,9 @@ function BulkEditForm({
               type="button"
               variant="secondary"
               onClick={() => onAddToAlbum(selectedPhotos.map((p) => p.id))}
-              icon={<FolderDownMiniSVG className="size-5 -ml-0.5" />}
+              icon={<FolderDownMiniSVG
+                className="size-5 -ml-0.5"
+              />}
             >
               Album
             </Button>
@@ -305,7 +311,9 @@ function BulkEditForm({
               type="button"
               variant="secondary"
               onClick={() => onRemoveFromAlbum(selectedPhotos.map((p) => p.id))}
-              icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
+              icon={<CloseMiniSVG
+                className="size-5 -ml-0.5"
+              />}
             >
               Remove
             </Button>
@@ -314,7 +322,9 @@ function BulkEditForm({
             onClick={triggerSubmit}
             disabled={isSaving || isLoading || !isDirty}
             loading={isSaving}
-            icon={<CheckMiniSVG className="size-5 -ml-0.5" />}
+            icon={<CheckMiniSVG
+              className="size-5 -ml-0.5"
+            />}
             className="ml-auto"
           >
             {success ? 'Saved!' : 'Save'}
@@ -323,16 +333,31 @@ function BulkEditForm({
       }
     >
       {/* Selected photos list */}
-      <div className="mb-6 max-h-48 space-y-1 overflow-y-auto">
+      <div
+        className="mb-6 max-h-48 space-y-1 overflow-y-auto"
+      >
         {selectedPhotos.map((photo) => (
-          <PhotoListItem key={photo.id} photo={photo} variant="detailed" />
+          <PhotoListItem
+            key={photo.id}
+            photo={photo}
+            variant="detailed"
+          />
         ))}
       </div>
 
       {/* Bulk edit form */}
-      <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="bulk_title" className="text-sm font-medium">
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
+        <div
+          className="flex flex-col gap-2"
+        >
+          <label
+            htmlFor="bulk_title"
+            className="text-sm font-medium"
+          >
             Title
           </label>
           <Input
@@ -341,13 +366,20 @@ function BulkEditForm({
             {...register('title')}
             placeholder="Set same title for all (leave empty to skip)"
           />
-          <p className="text-xs text-foreground/50">
+          <p
+            className="text-xs text-foreground/50"
+          >
             Leave empty to keep existing titles
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="bulk_description" className="text-sm font-medium">
+        <div
+          className="flex flex-col gap-2"
+        >
+          <label
+            htmlFor="bulk_description"
+            className="text-sm font-medium"
+          >
             Description
           </label>
           <Textarea
@@ -356,12 +388,16 @@ function BulkEditForm({
             rows={3}
             placeholder="Set same description for all (leave empty to skip)"
           />
-          <p className="text-xs text-foreground/50">
+          <p
+            className="text-xs text-foreground/50"
+          >
             Leave empty to keep existing descriptions
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div
+          className="flex flex-col gap-2"
+        >
           <Toggle
             id="bulk_is_public"
             leftLabel="Private"
@@ -370,12 +406,22 @@ function BulkEditForm({
             label="Visibility"
           />
           {mixedVisibility && (
-            <span className="text-xs text-foreground/50">(currently mixed)</span>
+            <span
+              className="text-xs text-foreground/50"
+            >
+              (currently mixed)
+            </span>
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Tags</label>
+        <div
+          className="flex flex-col gap-2"
+        >
+          <label
+            className="text-sm font-medium"
+          >
+            Tags
+          </label>
           <TagInput
             id="bulk_tags"
             tags={watchedTags || []}
@@ -389,7 +435,9 @@ function BulkEditForm({
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+          <div
+            className="rounded-md bg-red-500/10 p-3 text-sm text-red-500"
+          >
             {error}
           </div>
         )}
@@ -553,13 +601,17 @@ function SinglePhotoEditForm({
     <SidebarPanel
       title="Edit photo"
       footer={
-        <div className="flex gap-2 w-full">
+        <div
+          className="flex gap-2 w-full"
+        >
           <Button
             type="button"
             variant="danger"
             onClick={handleDelete}
             disabled={isSaving || isLoading}
-            icon={<TrashSVG className="size-5 -ml-0.5" />}
+            icon={<TrashSVG
+              className="size-5 -ml-0.5"
+            />}
           >
             Delete
           </Button>
@@ -568,7 +620,9 @@ function SinglePhotoEditForm({
               type="button"
               variant="secondary"
               onClick={() => onAddToAlbum([photo.id])}
-              icon={<FolderDownMiniSVG className="size-5 -ml-0.5" />}
+              icon={<FolderDownMiniSVG
+                className="size-5 -ml-0.5"
+              />}
             >
               Album
             </Button>
@@ -578,7 +632,9 @@ function SinglePhotoEditForm({
               type="button"
               variant="secondary"
               onClick={() => onRemoveFromAlbum([photo.id])}
-              icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
+              icon={<CloseMiniSVG
+                className="size-5 -ml-0.5"
+              />}
             >
               Remove
             </Button>
@@ -587,7 +643,9 @@ function SinglePhotoEditForm({
             onClick={triggerSubmit}
             disabled={isSaving || isLoading || !isDirty}
             loading={isSaving}
-            icon={<CheckMiniSVG className="size-5 -ml-0.5" />}
+            icon={<CheckMiniSVG
+              className="size-5 -ml-0.5"
+            />}
             className="ml-auto"
           >
             {success ? 'Saved!' : 'Save'}
@@ -596,13 +654,27 @@ function SinglePhotoEditForm({
       }
     >
       {/* Photo thumbnail */}
-      <div className="mb-6">
-        <PhotoListItem photo={photo} variant="detailed" />
+      <div
+        className="mb-6"
+      >
+        <PhotoListItem
+          photo={photo}
+          variant="detailed"
+        />
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex flex-col gap-2">
-          <label htmlFor={`title-${photo.id}`} className="text-sm font-medium">
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
+        <div
+          className="flex flex-col gap-2"
+        >
+          <label
+            htmlFor={`title-${photo.id}`}
+            className="text-sm font-medium"
+          >
             Title
           </label>
           <Input
@@ -613,8 +685,13 @@ function SinglePhotoEditForm({
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor={`description-${photo.id}`} className="text-sm font-medium">
+        <div
+          className="flex flex-col gap-2"
+        >
+          <label
+            htmlFor={`description-${photo.id}`}
+            className="text-sm font-medium"
+          >
             Description
           </label>
           <Textarea
@@ -633,8 +710,14 @@ function SinglePhotoEditForm({
           label="Visibility"
         />
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Tags</label>
+        <div
+          className="flex flex-col gap-2"
+        >
+          <label
+            className="text-sm font-medium"
+          >
+            Tags
+          </label>
           <TagInput
             id={`tags-${photo.id}`}
             tags={watchedTags || []}
@@ -646,10 +729,18 @@ function SinglePhotoEditForm({
 
         {/* Album cover section - only show when in album context */}
         {currentAlbum && onSetAsCover && (
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Album cover</label>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+            >
+              Album cover
+            </label>
             {isCurrentCover ? (
-              <p className="text-sm text-foreground/70">
+              <p
+                className="text-sm text-foreground/70"
+              >
                 This photo is the current cover of this album
               </p>
             ) : (
@@ -659,7 +750,9 @@ function SinglePhotoEditForm({
                 onClick={handleSetAsCover}
                 loading={isSettingCover}
                 disabled={isSettingCover}
-                icon={<WallArtSVG className="size-4" />}
+                icon={<WallArtSVG
+                  className="size-4"
+                />}
                 className="self-start"
               >
                 Set as album cover
@@ -671,10 +764,18 @@ function SinglePhotoEditForm({
         {/* Albums this photo belongs to */}
         {photoAlbums.length > 0 && (
           <>
-            <hr className="my-4 border-border-color" />
+            <hr
+              className="my-4 border-border-color"
+            />
             <div>
-              <h3 className="mb-2 text-sm font-medium">Part of:</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <h3
+                className="mb-2 text-sm font-medium"
+              >
+                Part of:
+              </h3>
+              <div
+                className="grid grid-cols-2 gap-2"
+              >
                 {photoAlbums.map((album) => (
                   <AlbumMiniCard
                     key={album.id}
@@ -691,7 +792,9 @@ function SinglePhotoEditForm({
         )}
 
         {error && (
-          <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+          <div
+            className="rounded-md bg-red-500/10 p-3 text-sm text-red-500"
+          >
             {error}
           </div>
         )}
