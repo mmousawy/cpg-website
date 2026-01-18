@@ -3,17 +3,11 @@
   "release-type": "node",
   "include-component-in-tag": false,
   "include-v-in-tag": true,
-  "packages": {
-    ".": {
-      "component": "release",
-      "changelog-path": "CHANGELOG.md",
-      "release-type": "node",
-      "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true,
-      "draft": false,
-      "prerelease": false
-    }
-  },
+  "changelog-path": "CHANGELOG.md",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "draft": false,
+  "prerelease": false,
   "changelog-sections": [
     { "type": "feat", "section": "✨ Features" },
     { "type": "fix", "section": "🐛 Bug Fixes" },
