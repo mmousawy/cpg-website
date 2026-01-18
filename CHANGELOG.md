@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/mmousawy/cpg-website/compare/v1.6.1...v1.7.0) (2026-01-18)
+
+
+### Features
+
+* Add view tracking for photos and albums ([32e042a](https://github.com/mmousawy/cpg-website/commit/32e042a47c86ccb9d6fbc1b6cc6ebe420fa6d255))
+
+
+### Bug Fixes
+
+* Update types. ([eff66c1](https://github.com/mmousawy/cpg-website/commit/eff66c12c231685708439ae2ddf93ae9e5f0cc7a))
+
 ## [1.6.1](https://github.com/mmousawy/cpg-website/compare/v1.6.0...v1.6.1) (2026-01-18)
 
 
