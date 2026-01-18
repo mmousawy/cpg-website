@@ -40,7 +40,9 @@ export default function InterestCloud({
   }
 
   return (
-    <div className={clsx('flex flex-wrap items-center gap-2', className)}>
+    <div
+      className={clsx('flex flex-wrap items-center gap-2', className)}
+    >
       {interests.map((interest) => {
         const isActive = activeInterest === interest.name;
         const count = interest.count || 0;
@@ -50,15 +52,19 @@ export default function InterestCloud({
             key={interest.id}
             href={`/members/interest/${encodeURIComponent(interest.name)}`}
             className={clsx(
-              'border-border-color bg-background-light inline-flex items-center gap-2 rounded-full border px-3 py-2 leading-none transition-colors',
+              'border-border-color-strong bg-background-light inline-flex items-center gap-2 rounded-full border px-3 py-2 leading-none transition-colors',
               'hover:border-primary hover:text-primary',
               getSizeClass(count),
               isActive
                 ? 'border-primary bg-primary text-white'
-                : 'border-border-color bg-background-light hover:border-primary hover:text-primary',
+                : 'border-border-color-strong bg-background-light hover:border-primary hover:text-primary',
             )}
           >
-            <span className="-mt-[0.15em] leading-none font-medium">{interest.name}</span>
+            <span
+              className="-mt-[0.15em] leading-none font-medium"
+            >
+              {interest.name}
+            </span>
             <span
               className={clsx('text-[0.75em] leading-none opacity-60', isActive && 'opacity-80')}
             >

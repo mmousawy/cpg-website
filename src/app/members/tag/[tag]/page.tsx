@@ -72,23 +72,45 @@ export default async function TagMembersPage({ params }: { params: Params }) {
   return (
     <>
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">
-            Members using &ldquo;{tagName}&rdquo; tag
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Members using &ldquo;
+            {tagName}
+            &rdquo; tag
           </h1>
-          <p className="text-lg opacity-70">
-            {members.length} {members.length === 1 ? 'member' : 'members'} frequently use this tag
+          <p
+            className="text-lg opacity-70"
+          >
+            {members.length}
+            {' '}
+            {members.length === 1 ? 'member' : 'members'}
+            {' '}
+            frequently use this tag
           </p>
         </div>
 
         {/* Explore by Photo Style (Tags) */}
         {popularTags.length > 0 && (
-          <div className="mb-10">
-            <h2 className="mb-1 text-lg font-semibold">Explore by photo style</h2>
-            <p className="mb-6 text-sm text-foreground/60">
+          <div
+            className="mb-10"
+          >
+            <h2
+              className="mb-1 text-lg font-semibold"
+            >
+              Explore by photo style
+            </h2>
+            <p
+              className="mb-6 text-sm text-foreground/60"
+            >
               Discover members who frequently use these photo tags
             </p>
-            <div className="flex flex-wrap gap-2 items-center">
+            <div
+              className="flex flex-wrap gap-2 items-center"
+            >
               {popularTags.map((tag) => {
                 const count = tag.memberCount || 0;
                 const isActive = tag.name.toLowerCase() === tagName.toLowerCase();
@@ -96,6 +118,7 @@ export default async function TagMembersPage({ params }: { params: Params }) {
                   <Link
                     key={tag.id}
                     href={`/members/tag/${encodeURIComponent(tag.name)}`}
+                    className="group"
                   >
                     <Tag
                       text={tag.name}
@@ -111,13 +134,19 @@ export default async function TagMembersPage({ params }: { params: Params }) {
         )}
 
         {members.length === 0 ? (
-          <div className="rounded-lg border border-border-color bg-background-light p-12 text-center">
-            <p className="text-lg opacity-70">
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+          >
+            <p
+              className="text-lg opacity-70"
+            >
               No members found using this tag yet.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+          >
             {members.map((member) => (
               <MemberCard
                 key={member.id}

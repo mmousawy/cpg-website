@@ -28,15 +28,27 @@ export default async function MembersPage() {
   if (!user) {
     return (
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">Discover our community</h1>
-          <p className="text-lg opacity-70">
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Discover our community
+          </h1>
+          <p
+            className="text-lg opacity-70"
+          >
             Sign in to discover and connect with our community members
           </p>
         </div>
 
-        <div className="rounded-xl border border-border-color bg-background-light p-8 text-center">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
+        <div
+          className="rounded-xl border border-border-color bg-background-light p-8 text-center"
+        >
+          <div
+            className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10"
+          >
             <svg
               className="size-8 text-primary"
               fill="none"
@@ -51,12 +63,22 @@ export default async function MembersPage() {
               />
             </svg>
           </div>
-          <h2 className="mb-2 text-xl font-semibold">Join our community</h2>
-          <p className="mb-6 text-foreground/70">
+          <h2
+            className="mb-2 text-xl font-semibold"
+          >
+            Join our community
+          </h2>
+          <p
+            className="mb-6 text-foreground/70"
+          >
             Sign in to explore members by interests, discover photographers by their photo styles, and connect with recently active community members.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button href={`${routes.login.url}?redirectTo=/members`}>
+          <div
+            className="flex flex-wrap justify-center gap-3"
+          >
+            <Button
+              href={`${routes.login.url}?redirectTo=/members`}
+            >
               Log in
             </Button>
             <Button
@@ -84,29 +106,57 @@ export default async function MembersPage() {
   return (
     <>
       <PageContainer>
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">Discover our community</h1>
-          <p className="text-lg opacity-70">
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            Discover our community
+          </h1>
+          <p
+            className="text-lg opacity-70"
+          >
             Explore members by interests, recent activity, and photo styles
           </p>
         </div>
 
         {/* Popular Interests Section */}
         {popularInterests.length > 0 && (
-          <div className="mb-10">
-            <h2 className="mb-3 text-xl font-semibold">Popular interests</h2>
-            <InterestCloud interests={popularInterests} />
+          <div
+            className="mb-10"
+          >
+            <h2
+              className="mb-3 text-xl font-semibold"
+            >
+              Popular interests
+            </h2>
+            <InterestCloud
+              interests={popularInterests}
+            />
           </div>
         )}
 
         {/* Random Interests with Members */}
         {randomInterests.length > 0 && (
-          <div className="mb-10">
-            <h2 className="mb-1 text-lg font-semibold">Explore by interests</h2>
-            <div className="space-y-8">
+          <div
+            className="mb-10"
+          >
+            <h2
+              className="mb-1 text-lg font-semibold"
+            >
+              Explore by interests
+            </h2>
+            <div
+              className="space-y-8"
+            >
               {randomInterests.map(({ interest, members }) => (
-                <div key={interest.id}>
-                  <div className="mb-3 flex items-center justify-between">
+                <div
+                  key={interest.id}
+                >
+                  <div
+                    className="mb-3 flex items-center justify-between"
+                  >
                     <Link
                       href={`/members/interest/${encodeURIComponent(interest.name)}`}
                       className="text-lg font-medium hover:text-primary"
@@ -117,10 +167,15 @@ export default async function MembersPage() {
                       href={`/members/interest/${encodeURIComponent(interest.name)}`}
                       className="text-sm text-foreground/60 hover:text-primary"
                     >
-                      View all ({interest.count || 0} members) →
+                      View all (
+                      {interest.count || 0}
+                      {' '}
+                      members) →
                     </Link>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  <div
+                    className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                  >
                     {members.map((member) => (
                       <MemberCard
                         key={member.id}
@@ -136,12 +191,22 @@ export default async function MembersPage() {
 
         {/* Recently Active Members */}
         {recentlyActive.length > 0 && (
-          <div className="mb-10">
-            <h2 className="mb-1 text-lg font-semibold">Recently active</h2>
-            <p className="mb-6 text-sm text-foreground/60">
+          <div
+            className="mb-10"
+          >
+            <h2
+              className="mb-1 text-lg font-semibold"
+            >
+              Recently active
+            </h2>
+            <p
+              className="mb-6 text-sm text-foreground/60"
+            >
               Members who have shared photos or albums recently
             </p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div
+              className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+            >
               {recentlyActive.map((member) => (
                 <MemberCard
                   key={member.id}
@@ -174,18 +239,29 @@ export default async function MembersPage() {
           }
 
           return (
-            <div className="mb-10">
-              <h2 className="mb-1 text-lg font-semibold">Explore by photo style</h2>
-              <p className="mb-6 text-sm text-foreground/60">
+            <div
+              className="mb-10"
+            >
+              <h2
+                className="mb-1 text-lg font-semibold"
+              >
+                Explore by photo style
+              </h2>
+              <p
+                className="mb-6 text-sm text-foreground/60"
+              >
                 Discover members who frequently use these photo tags
               </p>
-              <div className="flex flex-wrap gap-2 items-center">
+              <div
+                className="flex flex-wrap gap-2 items-center"
+              >
                 {popularTags.map((tag) => {
                   const count = tag.memberCount || 0;
                   return (
                     <Link
                       key={tag.id}
                       href={`/members/tag/${encodeURIComponent(tag.name)}`}
+                      className="group"
                     >
                       <Tag
                         text={tag.name}
@@ -202,12 +278,22 @@ export default async function MembersPage() {
 
         {/* New Members */}
         {newMembers.length > 0 && (
-          <div className="">
-            <h2 className="mb-1 text-lg font-semibold">New members</h2>
-            <p className="mb-6 text-sm text-foreground/60">
+          <div
+            className=""
+          >
+            <h2
+              className="mb-1 text-lg font-semibold"
+            >
+              New members
+            </h2>
+            <p
+              className="mb-6 text-sm text-foreground/60"
+            >
               Welcome our newest community members
             </p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div
+              className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+            >
               {newMembers.map((member) => (
                 <MemberCard
                   key={member.id}

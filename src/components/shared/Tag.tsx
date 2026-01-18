@@ -16,10 +16,10 @@ interface TagProps {
 
 // Size configurations with pre-calculated values
 const SIZE_CONFIG = {
-  xs: { fontSize: 12, height: 22, holeRadius: 2.4 },
-  sm: { fontSize: 13, height: 24, holeRadius: 2.6 },
-  base: { fontSize: 14, height: 26, holeRadius: 2.8 },
-  lg: { fontSize: 15, height: 27, holeRadius: 3.0 },
+  xs: { fontSize: 12, height: 26, holeRadius: 2.4 },
+  sm: { fontSize: 13, height: 28, holeRadius: 2.6 },
+  base: { fontSize: 14, height: 30, holeRadius: 2.8 },
+  lg: { fontSize: 15, height: 32, holeRadius: 3.0 },
 } as const;
 
 // Fixed layout values (in em, relative to font size)
@@ -59,20 +59,24 @@ export default function Tag({
   const bgColor = isActive ? 'var(--primary)' : 'var(--background-light)';
   const lightBgColor = isActive ? 'var(--primary-light)' : 'var(--background-medium)';
 
-  // CSS custom properties for dynamic values
+  // CSS custom properties for dynamic values (excluding border-color which is handled by classes)
   const cssVars = {
     '--tag-height': `${config.height}px`,
     '--tag-font-size': `${config.fontSize}px`,
     '--tag-padding': `${LAYOUT.padding}em`,
     '--tag-corner-radius': `${LAYOUT.cornerRadius}em`,
-    '--tag-border-color': isActive ? 'var(--primary)' : 'var(--border-color-strong)',
   } as React.CSSProperties;
 
   return (
     <span
       className={clsx(
         'relative inline-flex items-center',
+        // Text color
         isActive ? 'text-white' : isLink && 'group-hover:text-primary group-focus:text-primary',
+        // Border color via CSS custom property (class-based for hover to work)
+        isActive
+          ? '[--tag-border-color:var(--primary)]'
+          : '[--tag-border-color:var(--border-color-strong)]',
         isLink && !isActive && 'group-hover:[--tag-border-color:var(--primary)] group-focus:[--tag-border-color:var(--primary)]',
         className,
       )}
@@ -92,16 +96,16 @@ export default function Tag({
 
       {/* Label section */}
       <span
-        className={clsx(
-          'flex items-center justify-center border-y border-r -ml-0.5',
-          hasRightSection ? 'border-r-dashed' : 'rounded-r-[--tag-corner-radius]',
-        )}
+        className="flex items-center justify-center border-y border-r -ml-0.5"
         style={{
           height: svgHeight,
           padding: '0 var(--tag-padding)',
           backgroundColor: bgColor,
           borderColor: 'var(--tag-border-color)',
           fontSize: 'var(--tag-font-size)',
+          borderRightStyle: hasRightSection ? 'dashed' : 'solid',
+          borderTopRightRadius: hasRightSection ? 0 : `${LAYOUT.cornerRadius}em`,
+          borderBottomRightRadius: hasRightSection ? 0 : `${LAYOUT.cornerRadius}em`,
         }}
       >
         <span
@@ -117,13 +121,16 @@ export default function Tag({
       {/* Count section */}
       {count !== undefined && !onRemove && (
         <span
-          className="flex items-center justify-center border border-l-dashed rounded-r-[--tag-corner-radius] -ml-px"
+          className="flex items-center justify-center border -ml-px"
           style={{
             height: svgHeight,
             padding: '0 var(--tag-padding)',
             backgroundColor: lightBgColor,
             borderColor: 'var(--tag-border-color)',
             fontSize: 'var(--tag-font-size)',
+            borderLeftStyle: 'dashed',
+            borderTopRightRadius: `${LAYOUT.cornerRadius}em`,
+            borderBottomRightRadius: `${LAYOUT.cornerRadius}em`,
           }}
         >
           <span
@@ -140,11 +147,13 @@ export default function Tag({
       {/* Remove button section */}
       {onRemove && (
         <span
-          className="flex items-center justify-center border rounded-r-[--tag-corner-radius] -ml-px"
+          className="flex items-center justify-center border -ml-px"
           style={{
             height: svgHeight,
             backgroundColor: lightBgColor,
             borderColor: 'var(--tag-border-color)',
+            borderTopRightRadius: `${LAYOUT.cornerRadius}em`,
+            borderBottomRightRadius: `${LAYOUT.cornerRadius}em`,
           }}
         >
           <button
