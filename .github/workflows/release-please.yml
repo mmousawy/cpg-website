@@ -14,8 +14,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           release-type: node
           target-branch: main
           # Use PAT to allow the created PR to trigger CI workflow
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      # Create release branch when a release is published
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - name: Configure git
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          # Parse version from tag (e.g., v1.8.0 -> 1.8)
+          TAG="${{ steps.release.outputs.tag_name }}"
+          VERSION="${TAG#v}"  # Remove 'v' prefix if present
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1-2)
+          git checkout -b release/$MAJOR_MINOR
+          git push origin release/$MAJOR_MINOR

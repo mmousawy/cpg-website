@@ -1,8 +1,11 @@
-# Run lint-staged on staged files (auto-fixes formatting, doesn't block on formatting-only issues)
-npx lint-staged || true
+# Run lint-staged on staged files (auto-fixes formatting)
+# Warnings are allowed, only errors block commits
+npx lint-staged
 
 # Run TypeScript type checking
+# Only fails on errors, warnings are allowed
 npm run typecheck
 
 # Run unit/integration tests
+# Only fails on test failures
 npm run test:run
