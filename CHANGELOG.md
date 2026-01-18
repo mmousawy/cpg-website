@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/mmousawy/cpg-website/compare/v1.6.0...v1.6.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* standardize JSX formatting and improve component structure ([fe094ae](https://github.com/mmousawy/cpg-website/commit/fe094ae3cecdc389bb015a80bb6b981045313f3c))
+* update account stats structure and improve error handling ([40ce6bf](https://github.com/mmousawy/cpg-website/commit/40ce6bf694dd44d792a60079693b085bfe32b705))
+
 ## [1.6.0](https://github.com/mmousawy/cpg-website/compare/v1.5.1...v1.6.0) (2026-01-17)
 
 
