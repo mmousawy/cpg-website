@@ -340,8 +340,15 @@ export default function AlbumDetailClient() {
 
   if (albumLoading && !album) {
     return (
-      <ManageLayout albumDetail={{ title: '...' }} sidebar={<PageLoading message="Loading..." />}>
-        <PageLoading message="Loading album..." />
+      <ManageLayout
+        albumDetail={{ title: '...' }}
+        sidebar={<PageLoading
+          message="Loading..."
+        />}
+      >
+        <PageLoading
+          message="Loading album..."
+        />
       </ManageLayout>
     );
   }
@@ -358,19 +365,31 @@ export default function AlbumDetailClient() {
           <>
             <Button
               onClick={handleAddFromLibrary}
-              icon={<GalleryMiniSVG className="size-5 -ml-0.5" />}
+              icon={<GalleryMiniSVG
+                className="size-5 -ml-0.5"
+              />}
               variant="secondary"
               className="hidden md:flex"
             >
-              <span className="hidden md:inline-block">Add from library</span>
+              <span
+                className="hidden md:inline-block"
+              >
+                Add from library
+              </span>
             </Button>
             <Button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              icon={<PlusSVG className="size-5 -ml-0.5" />}
+              icon={<PlusSVG
+                className="size-5 -ml-0.5"
+              />}
               variant="primary"
             >
-              <span className="hidden md:inline">{isUploading ? 'Uploading...' : 'Upload'}</span>
+              <span
+                className="hidden md:inline"
+              >
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </span>
             </Button>
             <input
               ref={fileInputRef}
@@ -419,16 +438,28 @@ export default function AlbumDetailClient() {
                   onClick={handleMobileRemoveFromAlbum}
                   variant="secondary"
                   size="sm"
-                  icon={<CloseMiniSVG className="size-5 -ml-0.5" />}
+                  icon={<CloseMiniSVG
+                    className="size-5 -ml-0.5"
+                  />}
                 >
-                  <span className="hidden md:inline-block">Remove</span>
+                  <span
+                    className="hidden md:inline-block"
+                  >
+                    Remove
+                  </span>
                 </Button>
               }
             />
           ) : (
             // Show edit album button when no photos selected on mobile
-            <div className="md:hidden border-t border-border-color-strong bg-background-light px-4 py-3">
-              <Button onClick={handleMobileEdit} variant="secondary" className="w-full">
+            <div
+              className="md:hidden border-t border-border-color-strong bg-background-light px-4 py-3"
+            >
+              <Button
+                onClick={handleMobileEdit}
+                variant="secondary"
+                className="w-full"
+              >
                 Edit Album
               </Button>
             </div>
@@ -442,12 +473,26 @@ export default function AlbumDetailClient() {
           overlayMessage="Drop to add to album"
         >
           {photosLoading && photos.length === 0 ? (
-            <PageLoading message="Loading photos..." />
+            <PageLoading
+              message="Loading photos..."
+            />
           ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
-            <div className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center">
-              <FolderSVG className="size-10 mb-2 inline-block" />
-              <p className="mb-2 text-lg opacity-70">No photos in this album</p>
-              <p className="text-sm text-foreground/50">Drag and drop photos here, or use the buttons above</p>
+            <div
+              className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
+            >
+              <FolderSVG
+                className="size-10 mb-2 inline-block"
+              />
+              <p
+                className="mb-2 text-lg opacity-70"
+              >
+                No photos in this album
+              </p>
+              <p
+                className="text-sm text-foreground/50"
+              >
+                Drag and drop photos here, or use the buttons above
+              </p>
             </div>
           ) : (
             <PhotoGrid
@@ -466,7 +511,11 @@ export default function AlbumDetailClient() {
                 uploadingPhotos.length > 0 ? (
                   <>
                     {uploadingPhotos.map((upload) => (
-                      <UploadingPhotoCard key={upload.id} upload={upload} onDismiss={dismissUpload} />
+                      <UploadingPhotoCard
+                        key={upload.id}
+                        upload={upload}
+                        onDismiss={dismissUpload}
+                      />
                     ))}
                   </>
                 ) : undefined
@@ -477,7 +526,10 @@ export default function AlbumDetailClient() {
       </ManageLayout>
 
       {/* Mobile Edit Sheet */}
-      <BottomSheet isOpen={isMobileEditSheetOpen} onClose={handleMobileEditClose}>
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+      >
         {selectedPhotos.length > 0 ? (
           <PhotoEditSidebar
             selectedPhotos={selectedPhotos}

@@ -5,7 +5,11 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-export function useRemoveFromAlbum(albumId: string | undefined, userId: string | undefined, nickname: string | null | undefined) {
+export function useRemoveFromAlbum(
+  albumId: string | undefined,
+  userId: string | undefined,
+  nickname: string | null | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -48,7 +52,9 @@ export function useRemoveFromAlbum(albumId: string | undefined, userId: string |
 
       // Revalidate album page
       if (nickname && userId) {
-        const album = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.find((a) => a.id === albumId);
+        const album = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.find(
+          (a) => a.id === albumId,
+        );
         if (album?.slug) {
           await revalidateAlbum(nickname, album.slug);
         }
@@ -65,7 +71,10 @@ export function useRemoveFromAlbum(albumId: string | undefined, userId: string |
   });
 }
 
-export function useReorderAlbumPhotos(albumId: string | undefined, nickname: string | null | undefined) {
+export function useReorderAlbumPhotos(
+  albumId: string | undefined,
+  nickname: string | null | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -111,7 +120,10 @@ export function useReorderAlbumPhotos(albumId: string | undefined, nickname: str
   });
 }
 
-export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: string | null | undefined) {
+export function useUpdateAlbumPhoto(
+  albumId: string | undefined,
+  nickname: string | null | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -130,12 +142,12 @@ export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: strin
         return old.map((p) =>
           p.id === photoId
             ? {
-                ...p,
-                title: data.title,
-                description: data.description,
-                is_public: data.is_public,
-                tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
-              }
+              ...p,
+              title: data.title,
+              description: data.description,
+              is_public: data.is_public,
+              tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
+            }
             : p,
         );
       });
@@ -162,7 +174,10 @@ export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: strin
       }
 
       // Get previous tags before updating
-      const previousTags = previousPhotos?.find((p) => p.id === photoId)?.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+      const previousTags =
+        previousPhotos?.find((p) => p.id === photoId)?.tags?.map((t) =>
+          typeof t === 'string' ? t : t.tag,
+        ) || [];
       const newTags = data.tags?.map((t) => t.toLowerCase()) || [];
 
       // Update tags - delete existing and insert new ones
@@ -182,7 +197,8 @@ export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: strin
       await Promise.all(allAffectedTags.map((tag) => revalidateTagPhotos(tag)));
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
-      const userId = previousPhotos?.find((p) => p.id === photoId)?.user_id ||
+      const userId =
+        previousPhotos?.find((p) => p.id === photoId)?.user_id ||
         queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId)?.user_id;
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['photos', userId] });
@@ -207,7 +223,11 @@ export function useUpdateAlbumPhoto(albumId: string | undefined, nickname: strin
   });
 }
 
-export function useDeleteAlbumPhoto(albumId: string | undefined, userId: string | undefined, nickname: string | null | undefined) {
+export function useDeleteAlbumPhoto(
+  albumId: string | undefined,
+  userId: string | undefined,
+  nickname: string | null | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -244,7 +264,9 @@ export function useDeleteAlbumPhoto(albumId: string | undefined, userId: string 
 
       // Revalidate album page
       if (nickname && userId) {
-        const album = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.find((a) => a.id === albumId);
+        const album = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.find(
+          (a) => a.id === albumId,
+        );
         if (album?.slug) {
           await revalidateAlbum(nickname, album.slug);
         }
@@ -261,7 +283,10 @@ export function useDeleteAlbumPhoto(albumId: string | undefined, userId: string 
   });
 }
 
-export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: string | null | undefined) {
+export function useBulkUpdateAlbumPhotos(
+  albumId: string | undefined,
+  nickname: string | null | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -277,9 +302,8 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
       const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['album-photos', albumId]);
 
       // Pre-compute tag sets for optimistic update
-      const desiredTagsForCache = data.tags !== undefined
-        ? new Set(data.tags.map((t) => t.toLowerCase()))
-        : null;
+      const desiredTagsForCache =
+        data.tags !== undefined ? new Set(data.tags.map((t) => t.toLowerCase())) : null;
       const originalCommonTagsForCache = data.originalCommonTags
         ? new Set(data.originalCommonTags.map((t) => t.toLowerCase()))
         : new Set<string>();
@@ -296,7 +320,8 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
           // and only apply changes to common tags
           let newTags = p.tags;
           if (desiredTagsForCache !== null) {
-            const existingTags = p.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
+            const existingTags =
+              p.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
             // Keep tags that are: (1) in desired set, OR (2) not explicitly removed (partial tags)
             const keptTags = existingTags.filter(
               (tag) => desiredTagsForCache.has(tag) || !explicitlyRemovedTagsForCache.has(tag),
@@ -318,10 +343,11 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
 
       // Update album_photos titles if provided
       if (data.title !== null) {
-        const albumPhotoIds = previousPhotos
-          ?.filter((p) => photoIds.includes(p.id))
-          .map((p) => p.album_photo_id)
-          .filter((id): id is string => !!id) || [];
+        const albumPhotoIds =
+          previousPhotos
+            ?.filter((p) => photoIds.includes(p.id))
+            .map((p) => p.album_photo_id)
+            .filter((id): id is string => !!id) || [];
 
         if (albumPhotoIds.length > 0) {
           await supabase.from('album_photos').update({ title: data.title }).in('id', albumPhotoIds);
@@ -381,7 +407,10 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
 
           // Add tags that are in desired list but not in existing
           desiredTags.forEach((tag) => {
-            if (!existing.has(tag) && existing.size + tagInserts.filter((t) => t.photo_id === photoId).length < 5) {
+            if (
+              !existing.has(tag) &&
+              existing.size + tagInserts.filter((t) => t.photo_id === photoId).length < 5
+            ) {
               tagInserts.push({ photo_id: photoId, tag });
             }
           });
@@ -423,7 +452,8 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
       }
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
-      const userId = previousPhotos?.[0]?.user_id ||
+      const userId =
+        previousPhotos?.[0]?.user_id ||
         queryClient.getQueryData<any>(['albums'])?.find((a: any) => a.id === albumId)?.user_id;
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['photos', userId] });
@@ -448,7 +478,10 @@ export function useBulkUpdateAlbumPhotos(albumId: string | undefined, nickname: 
   });
 }
 
-export function useSetAlbumCover(userId: string | undefined, nickname: string | null | undefined) {
+export function useSetAlbumCover(
+  userId: string | undefined,
+  nickname: string | null | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -492,9 +525,7 @@ export function useSetAlbumCover(userId: string | undefined, nickname: string | 
       queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
         if (!old) return old;
         return old.map((a) =>
-          a.id === albumId
-            ? { ...a, cover_image_url: photoUrl, cover_is_manual: true }
-            : a,
+          a.id === albumId ? { ...a, cover_image_url: photoUrl, cover_is_manual: true } : a,
         );
       });
 

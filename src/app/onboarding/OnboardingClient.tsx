@@ -1,21 +1,19 @@
 'use client';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
-import Avatar from '@/components/auth/Avatar';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
-import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
-import Input from '@/components/shared/Input';
-import InterestInput from '@/components/shared/InterestInput';
 import PageLoading from '@/components/shared/PageLoading';
-import Textarea from '@/components/shared/Textarea';
+import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
+import OnboardingInterestsSection from '@/components/onboarding/OnboardingInterestsSection';
+import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
+import OnboardingProfileSection from '@/components/onboarding/OnboardingProfileSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { zodResolver } from '@hookform/resolvers/zod';
-import clsx from 'clsx';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -38,7 +36,7 @@ const onboardingSchema = z.object({
   emailPreferences: z.record(z.string(), z.boolean()),
 });
 
-type OnboardingFormData = z.infer<typeof onboardingSchema>
+type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
 export default function OnboardingClient() {
   const { user, profile, isLoading, refreshProfile } = useAuth();
@@ -70,12 +68,24 @@ export default function OnboardingClient() {
     if (identities.length > 0) {
       const provider = identities[0].provider;
       // Explicitly check for OAuth providers
-      return provider === 'google' || provider === 'discord' || provider === 'github' || provider === 'facebook' || provider === 'apple';
+      return (
+        provider === 'google' ||
+        provider === 'discord' ||
+        provider === 'github' ||
+        provider === 'facebook' ||
+        provider === 'apple'
+      );
     }
 
     // Fallback: check app_metadata provider (should be explicit OAuth provider)
     const appProvider = user.app_metadata?.provider;
-    return appProvider === 'google' || appProvider === 'discord' || appProvider === 'github' || appProvider === 'facebook' || appProvider === 'apple';
+    return (
+      appProvider === 'google' ||
+      appProvider === 'discord' ||
+      appProvider === 'github' ||
+      appProvider === 'facebook' ||
+      appProvider === 'apple'
+    );
   }, [user]);
 
   const {
@@ -106,7 +116,7 @@ export default function OnboardingClient() {
         setEmailTypes(types);
         // Set default values (all opted in by default)
         const defaultPrefs: Record<string, boolean> = {};
-        types.forEach(type => {
+        types.forEach((type) => {
           defaultPrefs[type.type_key] = true;
         });
         setValue('emailPreferences', defaultPrefs);
@@ -146,6 +156,42 @@ export default function OnboardingClient() {
   }, [user, profile, isLoading, isTestMode, router]);
 
   const watchedNickname = watch('nickname');
+  const nicknameCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Check nickname availability with debounce
+  const checkNicknameAvailability = async (nickname: string) => {
+    if (!nickname || nickname.length < 3) {
+      setNicknameAvailable(null);
+      return;
+    }
+
+    // Validate format first
+    if (!/^[a-z0-9-]+$/.test(nickname) || nickname.startsWith('-') || nickname.endsWith('-')) {
+      setNicknameAvailable(null);
+      return;
+    }
+
+    setIsCheckingNickname(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('nickname', nickname)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking nickname:', error);
+        setNicknameAvailable(null);
+      } else {
+        setNicknameAvailable(data === null);
+      }
+    } catch (err) {
+      console.error('Error checking nickname:', err);
+      setNicknameAvailable(null);
+    } finally {
+      setIsCheckingNickname(false);
+    }
+  };
 
   // Handle avatar upload
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,41 +242,6 @@ export default function OnboardingClient() {
     setAvatarError(null);
   };
 
-  // Check nickname availability with debounce
-  const checkNicknameAvailability = async (nickname: string) => {
-    if (!nickname || nickname.length < 3) {
-      setNicknameAvailable(null);
-      return;
-    }
-
-    // Validate format first
-    if (!/^[a-z0-9-]+$/.test(nickname) || nickname.startsWith('-') || nickname.endsWith('-')) {
-      setNicknameAvailable(null);
-      return;
-    }
-
-    setIsCheckingNickname(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('nickname', nickname)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error checking nickname:', error);
-        setNicknameAvailable(null);
-      } else {
-        setNicknameAvailable(data === null);
-      }
-    } catch (err) {
-      console.error('Error checking nickname:', err);
-      setNicknameAvailable(null);
-    } finally {
-      setIsCheckingNickname(false);
-    }
-  };
-
   const onSubmit = async (data: OnboardingFormData) => {
     // In test mode without a user, just validate the form and show success message
     if (isTestMode && !user) {
@@ -242,7 +253,9 @@ export default function OnboardingClient() {
 
       // Show a test mode success message
       setSubmitError(null);
-      alert('Test Mode: Form validation passed! All fields are valid.\n\nIn production, this would save your profile.');
+      alert(
+        'Test Mode: Form validation passed! All fields are valid.\n\nIn production, this would save your profile.',
+      );
       return;
     }
 
@@ -284,9 +297,9 @@ export default function OnboardingClient() {
           return;
         }
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('user-avatars')
-          .getPublicUrl(filePath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
 
         avatarUrl = publicUrl;
       } else {
@@ -316,10 +329,7 @@ export default function OnboardingClient() {
         updateData.email = data.email.toLowerCase();
       }
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
+      const { error: profileError } = await supabase.from('profiles').update(updateData).eq('id', user.id);
 
       if (profileError) {
         if (profileError.code === '23505') {
@@ -336,7 +346,7 @@ export default function OnboardingClient() {
       }
 
       // Update email preferences in batch
-      const preferenceUpdates = emailTypes.map(type => {
+      const preferenceUpdates = emailTypes.map((type) => {
         const isOptedIn = data.emailPreferences[type.type_key] ?? true;
         return {
           email_type_id: type.id,
@@ -357,12 +367,12 @@ export default function OnboardingClient() {
         const normalizedInterests = interestsToSave.map((i) => i.toLowerCase().trim()).filter(Boolean);
 
         // Insert interests (database will handle duplicates via unique constraint)
-        const { error: interestsError } = await supabase
-          .from('profile_interests')
-          .insert(normalizedInterests.map((interest) => ({
+        const { error: interestsError } = await supabase.from('profile_interests').insert(
+          normalizedInterests.map((interest) => ({
             profile_id: user.id,
             interest,
-          })));
+          })),
+        );
 
         if (interestsError) {
           // Ignore duplicate key errors (23505) - user might have already added some
@@ -400,18 +410,31 @@ export default function OnboardingClient() {
   }
 
   // Determine which avatar to display: pending upload preview, existing profile avatar, or null if removed
-  const displayAvatarUrl = removeAvatar ? null : (avatarPreview || profile?.avatar_url);
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
+  const displayAvatarUrl = removeAvatar ? null : avatarPreview || profile?.avatar_url;
+  const displayName =
+    profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
 
   return (
-    <PageContainer className="items-center justify-center">
+    <PageContainer
+      className="items-center justify-center"
+    >
       <Container
         padding="lg"
         className="mx-auto max-w-lg"
       >
-        <div className="mb-8 text-center">
-          <h1 className="mb-1 text-3xl font-bold">Welcome{displayName ? `, ${displayName.split(' ')[0]}` : ''}!</h1>
-          <p className="text-lg opacity-70 mb-8">
+        <div
+          className="mb-8 text-center"
+        >
+          <h1
+            className="mb-1 text-3xl font-bold"
+          >
+            Welcome
+            {displayName ? `, ${displayName.split(' ')[0]}` : ''}
+            !
+          </h1>
+          <p
+            className="text-lg opacity-70 mb-8"
+          >
             Let&apos;s set up your profile
           </p>
         </div>
@@ -420,314 +443,68 @@ export default function OnboardingClient() {
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-6 mt-6"
         >
-          {/* Nickname Field */}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="nickname"
-              className="text-sm font-medium"
-            >
-                Choose a nickname <span className="text-red-500">*</span>
-            </label>
-            <Input
-              id="nickname"
-              type="text"
-              {...register('nickname', {
-                onChange: (e) => {
-                  const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                  e.target.value = value;
-                  // Debounce the availability check
-                  const timeoutId = setTimeout(() => checkNicknameAvailability(value), 500);
-                  return () => clearTimeout(timeoutId);
-                },
-              })}
-              placeholder="your-nickname"
-              autoComplete="off"
-              leftAddon="@"
-              rightAddon={
-                <>
-                  {isCheckingNickname && (
-                    <svg
-                      className="size-4 animate-spin text-foreground/70"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                  )}
-                  {!isCheckingNickname && nicknameAvailable === true && watchedNickname.length >= 3 && (
-                    <svg
-                      className="size-4 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={3}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  )}
-                  {!isCheckingNickname && nicknameAvailable === false && (
-                    <svg
-                      className="size-4 text-red-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  )}
-                </>
+          <OnboardingNicknameSection
+            register={register}
+            errors={errors}
+            watchedNickname={watchedNickname}
+            isCheckingNickname={isCheckingNickname}
+            nicknameAvailable={nicknameAvailable}
+            onNicknameChange={(value) => {
+              // Clear previous timeout
+              if (nicknameCheckTimeoutRef.current) {
+                clearTimeout(nicknameCheckTimeoutRef.current);
               }
-            />
-            {errors.nickname && (
-              <p className="text-sm text-red-500">{errors.nickname.message}</p>
-            )}
-            {!errors.nickname && nicknameAvailable === false && (
-              <p className="text-sm text-red-500">This nickname is already taken</p>
-            )}
-            {!errors.nickname && nicknameAvailable === true && watchedNickname.length >= 3 && (
-              <p className="text-sm text-primary">Nickname is available!</p>
-            )}
-            <p className="text-xs text-foreground/70">
-                Your profile URL will be:
-              <br />
-              <span className="break-words">
-                {(() => {
-                  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://creativephotography.group';
-                  const url = `${baseUrl}/@${watchedNickname || 'your-nickname'}`;
-                  return url.replace(/^https?:\/\//, '');
-                })()}
-              </span>
-            </p>
-          </div>
+              // Debounce the availability check
+              nicknameCheckTimeoutRef.current = setTimeout(() => {
+                checkNicknameAvailability(value);
+              }, 500);
+            }}
+          />
 
-          {/* Profile Picture */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">
-                Profile picture
-            </label>
-            <div className="flex items-center gap-4">
-              <div className={clsx(
-                "rounded-full border-2 transition-colors flex-shrink-0",
-                avatarFile ? "border-primary" : "border-border-color",
-              )}
-              >
-                <Avatar
-                  avatarUrl={displayAvatarUrl}
-                  fullName={displayName}
-                  size="xl"
-                />
-              </div>
-              <div className="flex-1 flex flex-col gap-2">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isSaving}
-                    variant="secondary"
-                    type="button"
-                    size="sm"
-                  >
-                    {avatarFile ? 'Change picture' : 'Upload picture'}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                    disabled={isSaving}
-                  />
-                  {(avatarFile || (profile?.avatar_url && !removeAvatar)) && (
-                    <Button
-                      type="button"
-                      variant="danger"
-                      onClick={handleRemoveAvatar}
-                      disabled={isSaving}
-                      size="sm"
-                    >
-                        Remove
-                    </Button>
-                  )}
-                </div>
-                {avatarError && (
-                  <p className="text-sm text-red-500">{avatarError}</p>
-                )}
-              </div>
-            </div>
-          </div>
+          <OnboardingProfileSection
+            register={register}
+            errors={errors}
+            displayAvatarUrl={displayAvatarUrl}
+            displayName={displayName}
+            avatarFile={avatarFile}
+            avatarError={avatarError}
+            isSaving={isSaving}
+            isOAuthUser={isOAuthUser}
+            fileInputRef={fileInputRef}
+            handleAvatarUpload={handleAvatarUpload}
+            handleRemoveAvatar={handleRemoveAvatar}
+            profileAvatarUrl={profile?.avatar_url}
+            removeAvatar={removeAvatar}
+          />
 
-          {/* Email Field - Only for OAuth users */}
-          {isOAuthUser && (
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium"
-              >
-                  Email <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="email"
-                type="email"
-                {...register('email', { required: isOAuthUser ? 'Email is required' : false })}
-                placeholder="you@example.com"
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
-              <p className="text-xs text-foreground/70">
-                  This email will be used for notifications and account communications.
-              </p>
-            </div>
-          )}
+          <OnboardingInterestsSection
+            watch={watch}
+            setValue={setValue}
+            isSaving={isSaving}
+          />
 
-          {/* Full Name Field */}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="fullName"
-              className="text-sm font-medium"
-            >
-                Full name
-            </label>
-            <Input
-              id="fullName"
-              type="text"
-              {...register('fullName')}
-              placeholder="Your full name"
-            />
-          </div>
+          <OnboardingEmailPreferencesSection
+            control={control}
+            watch={watch}
+            setValue={setValue}
+            emailTypes={emailTypes}
+            isLoadingEmailTypes={isLoadingEmailTypes}
+          />
 
-          {/* Bio Field */}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="bio"
-              className="text-sm font-medium"
-            >
-                Bio
-            </label>
-            <Textarea
-              id="bio"
-              {...register('bio')}
-              placeholder="Tell us about yourself..."
-              rows={4}
-            />
-          </div>
-
-          {/* Interests Field */}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="interests"
-              className="text-sm font-medium"
-            >
-                Interests
-            </label>
-            <InterestInput
-              id="interests"
-              interests={watch('interests') || []}
-              onAddInterest={(interest) => {
-                const currentInterests = watch('interests') || [];
-                if (!currentInterests.includes(interest) && currentInterests.length < 10) {
-                  setValue('interests', [...currentInterests, interest]);
-                }
-              }}
-              onRemoveInterest={(interest) => {
-                const currentInterests = watch('interests') || [];
-                setValue('interests', currentInterests.filter((i) => i !== interest));
-              }}
-              maxInterests={10}
-              placeholder="Type an interest and press Enter"
-              helperText="Add up to 10 interests to help others discover your profile. Click the input to see popular interests."
-              disabled={isSaving}
-            />
-          </div>
-
-          {/* Email Preferences */}
-          <div className="rounded-lg border border-border-color bg-background-light p-4">
-            <label className="text-sm font-medium mb-1 block">
-                Email preferences
-            </label>
-            <p className="text-xs text-foreground/70 mb-4">
-                Choose which types of emails you&apos;d like to receive. You can change these settings anytime.
-            </p>
-            {isLoadingEmailTypes ? (
-              <p className="text-xs text-foreground/70">Loading preferences...</p>
-            ) : emailTypes.length > 0 ? (
-              <div className="space-y-3">
-                {emailTypes.map((type) => {
-                  const fieldName = `emailPreferences.${type.type_key}` as const;
-                  return (
-                    <Controller
-                      key={type.type_key}
-                      name={fieldName}
-                      control={control}
-                      defaultValue={true}
-                      render={({ field }) => (
-                        <div className="flex items-start gap-2">
-                          <Checkbox
-                            id={`emailPref-${type.type_key}`}
-                            checked={field.value ?? true}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              field.onChange(checked);
-                              // Also update the nested object
-                              const currentPrefs = watch('emailPreferences') || {};
-                              setValue('emailPreferences', {
-                                ...currentPrefs,
-                                [type.type_key]: checked,
-                              });
-                            }}
-                            className="mt-0.5"
-                          />
-                          <div className="flex-1">
-                            <label
-                              htmlFor={`emailPref-${type.type_key}`}
-                              className="text-sm font-medium cursor-pointer"
-                            >
-                              {type.type_label}
-                            </label>
-                            {type.description && (
-                              <p className="text-xs text-foreground/70 mt-1">
-                                {type.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-xs text-foreground/70">Unable to load email preferences</p>
-            )}
-          </div>
-
-          {submitError && (
-            <ErrorMessage>{submitError}</ErrorMessage>
-          )}
+          {submitError && <ErrorMessage>
+            {submitError}
+          </ErrorMessage>}
 
           {isTestMode && !user && (
-            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400">
-              <strong>Test Mode:</strong> You are not logged in. Form validation will work, but submission will only show a test message.
+            <div
+              className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
+            >
+              <strong>
+                Test Mode:
+              </strong>
+              {' '}
+              You are not logged in. Form validation will work, but
+              submission will only show a test message.
             </div>
           )}
 
@@ -736,16 +513,18 @@ export default function OnboardingClient() {
             className="w-full"
             disabled={
               isSaving ||
-                nicknameAvailable === false ||
-                !watchedNickname ||
-                (isOAuthUser && !watch('email') && !isTestMode)
+              nicknameAvailable === false ||
+              !watchedNickname ||
+              (isOAuthUser && !watch('email') && !isTestMode)
             }
             loading={isSaving}
           >
             {isTestMode && !user ? 'Test Form Validation' : 'Complete setup'}
           </Button>
 
-          <p className="text-center text-xs text-foreground/70">
+          <p
+            className="text-center text-xs text-foreground/70"
+          >
             You can update your profile picture and other details later in your account settings.
           </p>
         </form>

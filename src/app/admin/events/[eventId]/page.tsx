@@ -1,19 +1,18 @@
 'use client';
 
 import exifr from 'exifr';
-import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import AnnounceEventModal from '@/components/admin/AnnounceEventModal';
 import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
+import EventForm from '@/components/admin/EventForm';
+import EventRsvpList from '@/components/admin/EventRsvpList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
-import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
@@ -21,19 +20,17 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 
 import { revalidateEvent } from '@/app/actions/revalidate';
-import ErrorMessage from '@/components/shared/ErrorMessage';
-import SuccessMessage from '@/components/shared/SuccessMessage';
-import clsx from 'clsx';
-import CheckCircleSVG from 'public/icons/check-circle.svg';
-import CloseSVG from 'public/icons/close.svg';
 import EmailForwardSVG from 'public/icons/email-forward.svg';
 import MegaphoneSVG from 'public/icons/megaphone.svg';
 import TrashSVG from 'public/icons/trash.svg';
-import { useContext } from 'react';
 
-type Event = Pick<Tables<'events'>, 'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'>
+type Event = Pick<
+  Tables<'events'>,
+  'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'
+>;
 
-type RSVPWithProfile = Pick<Tables<'events_rsvps'>,
+type RSVPWithProfile = Pick<
+  Tables<'events_rsvps'>,
   'id' | 'uuid' | 'name' | 'email' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'
 > & {
   profiles: Pick<Tables<'profiles'>, 'nickname'> | Pick<Tables<'profiles'>, 'nickname'>[] | null;
@@ -109,6 +106,22 @@ export default function AdminEventFormPage() {
     setIsSlugManuallyEdited(true);
   };
 
+  const handleCoverImageChange = (file: File | null) => {
+    setCoverImageFile(file);
+    if (file) {
+      setCoverImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCoverImageRemove = () => {
+    setCoverImageFile(null);
+    setCoverImagePreview(null);
+    setCoverImage('');
+    if (coverImageInputRef.current) {
+      coverImageInputRef.current.value = '';
+    }
+  };
+
   // Track form changes for unsaved changes warning
   const currentFormValues = {
     title,
@@ -143,9 +156,7 @@ export default function AdminEventFormPage() {
       // Check if eventSlug is a numeric ID or an actual slug
       const isNumericId = /^\d+$/.test(eventSlug);
 
-      let query = supabase
-        .from('events')
-        .select('*');
+      let query = supabase.from('events').select('*');
 
       if (isNumericId) {
         query = query.eq('id', parseInt(eventSlug));
@@ -184,7 +195,9 @@ export default function AdminEventFormPage() {
         // Load RSVPs for this event
         const { data: rsvpsData } = await supabase
           .from('events_rsvps')
-          .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)')
+          .select(
+            'id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)',
+          )
           .eq('event_id', data.id)
           .order('created_at', { ascending: false });
 
@@ -196,7 +209,6 @@ export default function AdminEventFormPage() {
           .select('id')
           .eq('event_id', data.id)
           .single();
-
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -302,7 +314,8 @@ export default function AdminEventFormPage() {
     // Generate slug from title if creating new event and slug is empty
     let finalSlug = slug.trim();
     if (isNewEvent && !finalSlug) {
-      finalSlug = title.trim()
+      finalSlug = title
+        .trim()
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
@@ -336,7 +349,18 @@ export default function AdminEventFormPage() {
         let exifData = null;
         try {
           exifData = await exifr.parse(coverImageFile, {
-            pick: ['Make', 'Model', 'DateTimeOriginal', 'ExposureTime', 'FNumber', 'ISO', 'FocalLength', 'LensModel', 'GPSLatitude', 'GPSLongitude'],
+            pick: [
+              'Make',
+              'Model',
+              'DateTimeOriginal',
+              'ExposureTime',
+              'FNumber',
+              'ISO',
+              'FocalLength',
+              'LensModel',
+              'GPSLatitude',
+              'GPSLongitude',
+            ],
           });
         } catch (err) {
           console.warn('Failed to extract EXIF data:', err);
@@ -362,26 +386,24 @@ export default function AdminEventFormPage() {
         }
 
         // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('event-covers')
-          .getPublicUrl(filePath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('event-covers').getPublicUrl(filePath);
 
         coverImageUrl = publicUrl;
 
         // Store photo metadata
-        const { error: metadataError } = await supabase
-          .from('photos')
-          .insert({
-            storage_path: filePath,
-            url: publicUrl,
-            width: dimensions.width,
-            height: dimensions.height,
-            file_size: coverImageFile.size,
-            mime_type: coverImageFile.type,
-            exif_data: exifData,
-            user_id: user?.id,
-            original_filename: coverImageFile.name,
-          });
+        const { error: metadataError } = await supabase.from('photos').insert({
+          storage_path: filePath,
+          url: publicUrl,
+          width: dimensions.width,
+          height: dimensions.height,
+          file_size: coverImageFile.size,
+          mime_type: coverImageFile.type,
+          exif_data: exifData,
+          user_id: user?.id,
+          original_filename: coverImageFile.name,
+        });
 
         if (metadataError) {
           console.error('Error storing image metadata:', metadataError);
@@ -486,305 +508,105 @@ export default function AdminEventFormPage() {
 
   return (
     <PageContainer>
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">
+      <div
+        className="mb-8"
+      >
+        <h1
+          className="mb-2 text-3xl font-bold"
+        >
           {isNewEvent ? 'Create new event' : 'Edit event'}
         </h1>
-        <p className="text-lg opacity-70">
+        <p
+          className="text-lg opacity-70"
+        >
           {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
         </p>
       </div>
 
       {isLoading ? (
-        <Container className="text-center animate-pulse">
-          <p className="text-foreground/50">Loading event...</p>
+        <Container
+          className="text-center animate-pulse"
+        >
+          <p
+            className="text-foreground/50"
+          >
+            Loading event...
+          </p>
         </Container>
       ) : (
-        <div className="space-y-6">
-          <form onSubmit={handleSave}>
-            {/* Event Details */}
-            <Container>
-              <h2 className="mb-6 text-xl font-semibold">Event Details</h2>
-              <div className="space-y-6">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="title" className="text-sm font-medium">
-                  Event Title *
-                  </label>
-                  <Input
-                    id="title"
-                    type="text"
-                    value={title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    onBlur={handleTitleBlur}
-                    required
-                    placeholder="e.g., Monthly Meetup at Coffee Shop"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="slug" className="text-sm font-medium">
-                  URL Slug *
-                  </label>
-                  <Input
-                    id="slug"
-                    type="text"
-                    value={slug}
-                    onChange={(e) => handleSlugChange(e.target.value)}
-                    required
-                    pattern="[a-z0-9-]+"
-                    mono
-                    placeholder="url-friendly-event-name"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                  Used in the URL: {process.env.NEXT_PUBLIC_SITE_URL}/events/{slug || 'your-slug-here'}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="description" className="text-sm font-medium">
-                  Description
-                  </label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={6}
-                    placeholder="Describe your event, what to expect, any special notes..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="date" className="text-sm font-medium">
-                    Date *
-                    </label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="time" className="text-sm font-medium">
-                    Time
-                    </label>
-                    <Input
-                      id="time"
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="location" className="text-sm font-medium">
-                  Location
-                  </label>
-                  <Textarea
-                    id="location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    rows={3}
-                    placeholder="e.g., Central Park, New York, NY"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium">
-                  Cover Image *
-                  </label>
-
-                  {(coverImagePreview || coverImageFile) ? (
-                    <div className="space-y-3">
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border-color">
-                        <Image
-                          src={coverImageFile ? URL.createObjectURL(coverImageFile) : coverImagePreview!}
-                          alt="Cover preview"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          onClick={() => coverImageInputRef.current?.click()}
-                          variant="secondary"
-                          size="sm"
-                        >
-                        Change Image
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            setCoverImageFile(null);
-                            setCoverImagePreview(null);
-                            setCoverImage('');
-                            if (coverImageInputRef.current) {
-                              coverImageInputRef.current.value = '';
-                            }
-                          }}
-                          variant="secondary"
-                          size="sm"
-                          icon={<TrashSVG className="h-4 w-4" />}
-                        >
-                        Remove
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border-2 border-dashed border-border-color p-8 text-center">
-                      <p className="mb-3 text-sm text-foreground/70">
-                      No cover image selected
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={() => coverImageInputRef.current?.click()}
-                        variant="secondary"
-                        size="sm"
-                      >
-                      Select Image
-                      </Button>
-                    </div>
-                  )}
-
-                  <input
-                    ref={coverImageInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                      // Validate file type
-                        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                        if (!allowedTypes.includes(file.type)) {
-                          setError('Invalid file type. Please use JPEG, PNG, GIF, or WebP.');
-                          return;
-                        }
-
-                        // Validate file size (max 5 MB)
-                        const maxSize = 5 * 1024 * 1024;
-                        if (file.size > maxSize) {
-                          setError('File too large. Maximum size is 5 MB.');
-                          return;
-                        }
-
-                        setCoverImageFile(file);
-                        setError(null);
-                      }
-                    }}
-                    className="hidden"
-                  />
-
-                  <p className="text-xs text-foreground/50">
-                  Upload a cover image for your event (max 5 MB)
-                  </p>
-                </div>
-              </div>
-
-              {error && (
-                <ErrorMessage variant="compact" className="mt-4">{error}</ErrorMessage>
-              )}
-
-              {success && (
-                <SuccessMessage variant="compact" className="mt-4">
-                  {isNewEvent ? 'Event created successfully! Redirecting...' : 'Event updated successfully!'}
-                </SuccessMessage>
-              )}
-
-              <div className="mt-6 flex gap-3">
-                <Button type="submit" disabled={isSaving} variant="primary">
-                  {isSaving ? 'Saving...' : isNewEvent ? 'Create Event' : 'Save Changes'}
-                </Button>
-                <Button href="/admin/events" variant="secondary">
-                Cancel
-                </Button>
-              </div>
-            </Container>
-          </form>
+        <div
+          className="space-y-6"
+        >
+          <EventForm
+            formData={{
+              title,
+              slug,
+              description,
+              date,
+              time,
+              location,
+            }}
+            onFormDataChange={(data) => {
+              if (data.title !== undefined) setTitle(data.title);
+              if (data.slug !== undefined) setSlug(data.slug);
+              if (data.description !== undefined) setDescription(data.description);
+              if (data.date !== undefined) setDate(data.date);
+              if (data.time !== undefined) setTime(data.time);
+              if (data.location !== undefined) setLocation(data.location);
+            }}
+            onTitleChange={handleTitleChange}
+            onTitleBlur={handleTitleBlur}
+            onSlugChange={handleSlugChange}
+            coverImageFile={coverImageFile}
+            coverImagePreview={coverImagePreview}
+            coverImage={coverImage}
+            onCoverImageChange={handleCoverImageChange}
+            onCoverImageRemove={handleCoverImageRemove}
+            coverImageInputRef={coverImageInputRef}
+            error={error}
+            success={success}
+            isSaving={isSaving}
+            isNewEvent={isNewEvent}
+            onSubmit={handleSave}
+          />
 
           {/* Attendance Section - Only show for existing events */}
           {!isNewEvent && event && (
-            <Container>
-              <h2 className="mb-6 text-xl font-semibold">Event Attendance</h2>
-              <div className="mb-6 rounded-lg border border-border-color bg-background p-4">
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <span className="font-medium text-foreground">
-                    {rsvps.filter(r => r.confirmed_at && !r.canceled_at).length} confirmed
-                  </span>
-                  <span className="font-medium text-green-600">
-                    {rsvps.filter(r => r.attended_at).length} attended
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {rsvps.filter(r => r.confirmed_at && !r.canceled_at).length === 0 ? (
-                  <p className="text-center text-sm text-foreground/70 py-4">No confirmed RSVPs yet</p>
-                ) : (
-                  rsvps.filter(r => r.confirmed_at && !r.canceled_at).map((rsvp) => {
-                    const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
-                    const nickname = profile?.nickname;
-                    return (
-                      <div
-                        key={rsvp.id}
-                        className={clsx(
-                          "flex items-center justify-between rounded-lg border border-border-color p-3",
-                          rsvp.attended_at && "text-primary border-green-600/30 bg-green-500/5",
-                        )}
-                      >
-                        <div>
-                          <p className="text-sm font-medium">{rsvp.name} {nickname && `(@${nickname})`}</p>
-                          <p className="text-xs text-foreground/60">{rsvp.email}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {rsvp.attended_at ? (
-                            <Button
-                              onClick={() => handleMarkAttended(rsvp.id, true)}
-                              disabled={markingId === rsvp.id}
-                              variant="danger"
-                              type="button"
-                              size="sm"
-                              icon={<CloseSVG className="size-4" />}
-                            >
-                              <span className="hidden sm:inline">{markingId === rsvp.id ? 'Unmarking...' : 'Unmark attended'}</span>
-                            </Button>
-                          ) : (
-                            <Button
-                              onClick={() => handleMarkAttended(rsvp.id)}
-                              disabled={markingId === rsvp.id}
-                              type="button"
-                              size="sm"
-                              icon={<CheckCircleSVG className="size-4" />}
-                            >
-                              <span className="hidden sm:inline">{markingId === rsvp.id ? 'Marking...' : 'Mark attended'}</span>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </Container>
+            <EventRsvpList
+              rsvps={rsvps}
+              markingId={markingId}
+              onMarkAttended={handleMarkAttended}
+            />
           )}
 
           {/* Notifications Section - Only show for existing events */}
           {!isNewEvent && event && (
             <Container>
-              <h2 className="mb-6 text-xl font-semibold">Notifications</h2>
+              <h2
+                className="mb-6 text-xl font-semibold"
+              >
+                Notifications
+              </h2>
 
-              <div className="space-y-4">
+              <div
+                className="space-y-4"
+              >
                 {/* Announce Event Button */}
                 <div>
-                  <div className="mb-2 flex items-center justify-between">
+                  <div
+                    className="mb-2 flex items-center justify-between"
+                  >
                     <div>
-                      <h3 className="text-sm font-semibold">Announce event</h3>
-                      <p className="text-xs text-foreground/70">
-                        Send a one-time announcement to all members who have are opted in to event announcements
+                      <h3
+                        className="text-sm font-semibold"
+                      >
+                        Announce event
+                      </h3>
+                      <p
+                        className="text-xs text-foreground/70"
+                      >
+                        Send a one-time announcement to all members who have are opted in to event
+                        announcements
                       </p>
                     </div>
                   </div>
@@ -792,16 +614,26 @@ export default function AdminEventFormPage() {
                     onClick={handleAnnounceEvent}
                     variant="primary"
                   >
-                    <MegaphoneSVG className="size-5" />
+                    <MegaphoneSVG
+                      className="size-5"
+                    />
                     Announce event
                   </Button>
                 </div>
 
                 {/* Email Attendees Button */}
                 <div>
-                  <div className="mb-2">
-                    <h3 className="text-sm font-semibold">Email attendees</h3>
-                    <p className="text-xs text-foreground/70">
+                  <div
+                    className="mb-2"
+                  >
+                    <h3
+                      className="text-sm font-semibold"
+                    >
+                      Email attendees
+                    </h3>
+                    <p
+                      className="text-xs text-foreground/70"
+                    >
                       Send a custom message to confirmed attendees and hosts
                     </p>
                   </div>
@@ -809,7 +641,9 @@ export default function AdminEventFormPage() {
                     onClick={handleEmailAttendees}
                     variant="secondary"
                   >
-                    <EmailForwardSVG className="size-5" />
+                    <EmailForwardSVG
+                      className="size-5"
+                    />
                     Email attendees
                   </Button>
                 </div>
@@ -819,17 +653,28 @@ export default function AdminEventFormPage() {
 
           {/* Danger Zone - Only show for existing events */}
           {!isNewEvent && (
-            <Container className="border-red-500/30 bg-red-500/5">
-              <h3 className="mb-2 font-semibold text-red-600">Danger zone</h3>
-              <p className="mb-4 text-sm text-foreground/70">
-              Once you delete an event, there is no going back. This will permanently delete the event and all associated RSVPs.
+            <Container
+              className="border-red-500/30 bg-red-500/5"
+            >
+              <h3
+                className="mb-2 font-semibold text-red-600"
+              >
+                Danger zone
+              </h3>
+              <p
+                className="mb-4 text-sm text-foreground/70"
+              >
+                Once you delete an event, there is no going back. This will permanently delete the
+                event and all associated RSVPs.
               </p>
               <Button
                 onClick={handleDelete}
                 variant="danger"
-                icon={<TrashSVG className="h-4 w-4" />}
+                icon={<TrashSVG
+                  className="h-4 w-4"
+                />}
               >
-              Delete event
+                Delete event
               </Button>
             </Container>
           )}
