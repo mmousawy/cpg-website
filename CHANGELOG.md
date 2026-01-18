@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/mmousawy/cpg-website/compare/v1.8.0...v1.8.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* Update release-please workflow for improved configuration ([b84b68d](https://github.com/mmousawy/cpg-website/commit/b84b68dc0f74930e3c5e97205cbf8b6602b92b05))
+
 ## [1.8.0](https://github.com/mmousawy/cpg-website/compare/v1.7.0...v1.8.0) (2026-01-18)
 
 
