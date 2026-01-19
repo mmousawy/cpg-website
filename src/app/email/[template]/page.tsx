@@ -10,20 +10,16 @@ type EmailTemplateComponent = React.ComponentType<{ preview?: boolean; [key: str
 type EmailModule = { default: EmailTemplateComponent };
 
 const templates: Record<string, () => Promise<EmailModule>> = {
-  // Event emails
   'signup': () => import('../../../emails/signup') as unknown as Promise<EmailModule>,
   'confirm': () => import('../../../emails/confirm') as unknown as Promise<EmailModule>,
   'cancel': () => import('../../../emails/cancel') as unknown as Promise<EmailModule>,
-  // Auth emails
   'verify-email': () => import('../../../emails/auth/verify-email') as unknown as Promise<EmailModule>,
   'reset-password': () => import('../../../emails/auth/reset-password') as unknown as Promise<EmailModule>,
   'welcome': () => import('../../../emails/auth/welcome') as unknown as Promise<EmailModule>,
-  // Event announcement emails
   'event-announcement': () => import('../../../emails/event-announcement') as unknown as Promise<EmailModule>,
-  // Attendee message emails
   'attendee-message': () => import('../../../emails/attendee-message') as unknown as Promise<EmailModule>,
-  // Comment notification emails
   'comment-notification': () => import('../../../emails/comment-notification') as unknown as Promise<EmailModule>,
+  'weekly-digest': () => import('../../../emails/weekly-digest') as unknown as Promise<EmailModule>,
 };
 
 export default async function Email({

@@ -1,13 +1,13 @@
 'use client';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import type { Tables } from '@/database.types';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
 import Textarea from './Textarea';
@@ -223,7 +223,7 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
           comments.map((comment) => (
             <div
               key={comment.id}
-              className="dark:bg-foreground/10 rounded-lg shadow-md shadow-[#00000007] border border-border-color-strong p-4"
+              className="dark:bg-foreground/5 rounded-lg max-w-160 shadow-md shadow-[#00000010] border border-border-color-strong p-3 sm:p-4"
             >
               <div
                 className="flex items-start justify-between gap-2"
@@ -281,7 +281,7 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
       {/* Comment Form */}
       <form
         onSubmit={handleSubmitComment}
-        className="space-y-3"
+        className="space-y-3 mt-8"
       >
         <Textarea
           value={commentText}
@@ -296,7 +296,7 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
           placeholder="Write a comment..."
           rows={3}
           disabled={isSubmitting}
-          className="block max-w-[70ch]"
+          className="block max-w-160"
           readOnly={!user}
         />
         <Button

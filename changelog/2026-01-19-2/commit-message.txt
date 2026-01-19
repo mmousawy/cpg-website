@@ -1,0 +1,84 @@
+feat: Implement activity feed and in-app notifications system
+
+Complete implementation of activity feed and in-app notifications including
+notification button in header, dedicated activity page, weekly digest emails,
+and all supporting infrastructure.
+
+Database:
+- Create notifications table with RLS policies and Realtime support
+- Optimize RLS policies using (select auth.uid()) pattern
+- Add dismissed_at column for removing notifications from menu
+- Add weekly_digest email type for independent preference control
+
+Core Infrastructure:
+- Notification types system (like_photo, like_album, comment_*, follow, etc.)
+- Notification creation utility using admin client
+- Data fetching functions with authenticated client for RLS
+- Server actions for mark as seen, dismiss, mock creation
+- API route for fetching notifications with pagination
+- React hook (useNotifications) for notification state management
+
+UI Components:
+- NotificationButton: Desktop bell icon with dropdown (header)
+- MobileNotificationButton: Mobile bottom sheet menu
+- NotificationItem: Individual notification with keyboard accessibility
+- Activity page: Dedicated page with date grouping and card styling
+- Empty states with mock notification creation
+
+Integration:
+- Header: Notification button left of avatar
+- Mobile menu: Activity link
+- Likes: Trigger notifications for photo/album likes
+- Comments: Trigger notifications for comments
+- Self-notification checks: Prevent notifications for own actions
+
+Weekly Digest:
+- Cron job for weekly email digest
+- React Email template with notification list
+- Unsubscribe links with weekly_digest type
+- Batch sending (max 100 per Resend limit)
+
+Fixes:
+- Activity page empty state: Use authenticated client for RLS
+- Realtime subscription: Disabled due to SSR hydration issues
+- Activity page styling: Card containers matching other pages
+- BottomSheet: Fixed backdrop filter animation
+- Self-notifications: Restored prevention checks
+
+Files changed (36):
+New (18):
+- supabase/migrations/20260119000000_create_notifications.sql
+- supabase/migrations/20260119000001_optimize_notifications_rls.sql
+- supabase/migrations/20260119000002_add_notifications_dismissed.sql
+- supabase/migrations/20260119100000_add_weekly_digest_email_type.sql
+- src/app/account/activity/ActivityContent.tsx
+- src/app/account/activity/page.tsx
+- src/app/api/cron/weekly-digest/route.ts
+- src/app/api/notifications/route.ts
+- src/components/notifications/MobileNotificationButton.tsx
+- src/components/notifications/NotificationButton.tsx
+- src/components/notifications/NotificationItem.tsx
+- src/emails/weekly-digest.tsx
+- src/hooks/useNotifications.ts
+- src/lib/actions/notifications.ts
+- src/lib/data/notifications.ts
+- src/lib/notifications/create.ts
+- src/types/notifications.ts
+
+Modified (18):
+- .cursorrules, README.md
+- src/app/api/comments/route.ts - Notification creation, self-checks
+- src/app/api/unsubscribe/route.ts - Email type key return
+- src/app/email/[template]/page.tsx - Email preview
+- src/app/events/[eventSlug]/page.tsx - Notification integration
+- src/app/unsubscribe/[token]/page.tsx - Weekly digest label
+- src/components/album/AlbumGrid.tsx - Notification integration
+- src/components/layout/Header.tsx - Notification buttons
+- src/components/layout/MobileMenu.tsx - Activity link
+- src/components/shared/BottomSheet.tsx - Backdrop animation fix
+- src/components/shared/Button.tsx - Mobile notifications
+- src/components/shared/Comments.tsx - Notification integration
+- src/database.types.ts - Notification types
+- src/lib/actions/likes.ts - Notification creation, self-checks
+- src/utils/emailPreferencesClient.ts - Weekly digest type
+- vercel.json - Weekly digest cron

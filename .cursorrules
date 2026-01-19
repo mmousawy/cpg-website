@@ -8,11 +8,14 @@
 - Use sentence case for UI text (labels, buttons, headers), not Title Case.
 
 ## Git workflow
+- If we're working in main, create a new branch for the feature we're working in the format of `feat/<feature name>`, for example: feat/notifications
 - Do not push or open PRs until explicitly instructed. Create PRs as drafts.
 - PR/commit messages: no AI watermarks, no hype words ("comprehensive"), no task lists. Keep it casual but technically competent.
 - PR descriptions: only include testing sections if tests are in the diff. Show code examples for new syntax.
 - Design docs: ordered phases only, no time estimates.
 
 ## Project context
-- Read CLAUDE.md files in sub-repos before working.
 - Adhere to specs in `docs/README.md` for all implementations.
+- Update `./README.md` when you're implementing a specific feature.
+- Write docs in `./docs` in the same pattern as the existing docs after you're done implementing the feature.
+- Update the docs if you're revising a feature.

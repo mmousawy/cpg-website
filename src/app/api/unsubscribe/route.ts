@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
     }
 
     const emailTypeId = emailTypeData.id;
-    const emailTypeLabel = emailTypeData.type_label;
 
     // Check if already unsubscribed - prevent duplicate unsubscribes
     const { data: existingPreference } = await supabase
@@ -115,7 +114,7 @@ export async function POST(request: NextRequest) {
         {
           message: 'You are already unsubscribed from this email type',
           alreadyUnsubscribed: true,
-          emailType: emailTypeLabel,
+          emailType: emailTypeKey,
         },
         { status: 200 },
       );
@@ -146,7 +145,7 @@ export async function POST(request: NextRequest) {
           {
             message: 'You are already unsubscribed from this email type',
             alreadyUnsubscribed: true,
-            emailType: emailTypeLabel,
+            emailType: emailTypeKey,
           },
           { status: 200 },
         );
@@ -184,7 +183,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message: 'Successfully unsubscribed',
-        emailType: emailTypeLabel,
+        emailType: emailTypeKey,
       },
       { status: 200 },
     );

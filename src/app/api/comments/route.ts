@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/server';
 import { CommentNotificationEmail } from '@/emails/comment-notification';
 import { encrypt } from '@/utils/encrypt';
 import { revalidateAlbum } from '@/app/actions/revalidate';
+import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -201,6 +202,25 @@ export async function POST(request: NextRequest) {
         .neq('id', user.id);
 
       if (admins && admins.length > 0) {
+        // Create in-app notifications for all admins
+        for (const admin of admins) {
+          await createNotification({
+            userId: admin.id,
+            actorId: user.id,
+            type: 'comment_event',
+            entityType: 'event',
+            entityId: entityId,
+            data: {
+              title: entityTitle,
+              thumbnail: entityThumbnail,
+              link: entityLink,
+              actorName: commenterName,
+              actorNickname: commenterNickname,
+              actorAvatar: commenterAvatarUrl,
+            },
+          });
+        }
+
         // Check notification preferences and send emails to all admins
         const { data: notificationsEmailType } = await supabase
           .from('email_types')
@@ -293,11 +313,33 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Don't send notification if:
+  // Create in-app notification for album and photo comments (not events)
+  // Skip if commenting on own content
+  if (ownerId && ownerId !== user.id && ownerProfile && (entityType === 'album' || entityType === 'photo')) {
+    const notificationType = entityType === 'album' ? 'comment_album' : 'comment_photo';
+
+    await createNotification({
+      userId: ownerId,
+      actorId: user.id,
+      type: notificationType,
+      entityType,
+      entityId,
+      data: {
+        title: entityTitle,
+        thumbnail: entityThumbnail,
+        link: entityLink,
+        actorName: commenterName,
+        actorNickname: commenterNickname,
+        actorAvatar: commenterAvatarUrl,
+      },
+    });
+  }
+
+  // Don't send email notification if:
   // 1. Owner not found
-  // 2. Commenter is the owner (no self-notifications)
-  // 3. Owner has no email
-  if (!ownerId || !ownerProfile || ownerId === user.id || !ownerProfile.email) {
+  // 2. Owner has no email
+  // 3. Commenting on own content
+  if (!ownerId || ownerId === user.id || !ownerProfile || !ownerProfile.email) {
     return NextResponse.json({ success: true, commentId }, { status: 200 });
   }
 

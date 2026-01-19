@@ -1,6 +1,6 @@
 import { supabase } from '@/utils/supabase/client';
 
-export type EmailType = 'events' | 'newsletter' | 'notifications';
+export type EmailType = 'events' | 'newsletter' | 'notifications' | 'weekly_digest';
 
 export type EmailTypeData = {
   id: number;

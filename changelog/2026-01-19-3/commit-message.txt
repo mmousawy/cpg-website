@@ -1,0 +1,56 @@
+feat: Enhance notification system with real-time toasts and UX improvements
+
+Real-time Toast Notifications:
+- Add Sonner toast library for notification display
+- Create useRealtimeNotifications hook for Supabase Realtime subscriptions
+- Subscribe to INSERT events on notifications table filtered by user_id
+- Toasts auto-dismiss after 10 seconds (can also be manually dismissed)
+- Responsive positioning: full-width on mobile, right-aligned on desktop
+
+Notification Components Refactoring:
+- Create NotificationContent component to centralize shared UI logic
+- Add custom SVG icons for each notification type (calendar, heart, comment, megaphone)
+- Use proper <Link> elements for accessibility and SEO instead of div onClick
+- Increase thumbnail resolution (80px) for better display on retina screens
+- Add "mark as seen" button on activity page notifications
+
+State Management Improvements:
+- Optimistic UI updates when marking notifications as seen/dismissed
+- Use custom events (notifications:mark-seen, notifications:dismiss, notifications:mark-all-seen)
+- Avoid full query refetches for better performance
+- Sync state across components (bell icon, activity page, toasts)
+
+Auto-mark Notifications as Seen:
+- Create useAutoMarkNotificationsSeen hook
+- Automatically mark notifications as seen when user navigates to associated page
+- Add markNotificationsSeenByLink server action
+
+Mobile UX:
+- Close mobile menu when notification bottom sheet opens
+- Responsive toast positioning based on header height (57px mobile, 72px desktop)
+- Full-width toasts on mobile screens
+
+Files changed (19):
+New (11):
+- src/hooks/useRealtimeNotifications.tsx
+- src/hooks/useAutoMarkNotificationsSeen.ts
+- src/components/notifications/ToastProvider.tsx
+- src/components/notifications/NotificationToast.tsx
+- src/components/notifications/NotificationToastManager.tsx
+- src/components/notifications/NotificationHooks.tsx
+- src/components/notifications/NotificationContent.tsx
+- public/icons/notification-calendar.svg
+- public/icons/notification-heart.svg
+- public/icons/notification-comment.svg
+- public/icons/notification-megaphone.svg
+
+Modified (8):
+- src/app/layout.tsx - Add NotificationToastManager
+- src/app/globals.css - Responsive toast container positioning
+- src/app/account/activity/ActivityContent.tsx - Optimistic updates, remove router
+- src/components/layout/Header.tsx - Close menu on notification sheet open
+- src/components/notifications/NotificationButton.tsx - Use optimistic updates
+- src/components/notifications/NotificationItem.tsx - Use Link, pass onLinkClick
+- src/components/notifications/MobileNotificationButton.tsx - Dispatch sheet-open event
+- src/hooks/useNotifications.ts - Listen for specific events, optimistic state
+- src/lib/actions/notifications.ts - Add markNotificationsSeenByLink action

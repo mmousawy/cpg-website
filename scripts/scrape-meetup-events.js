@@ -378,7 +378,7 @@ async function main() {
       console.log(`  ✅ ${eventData.title || 'Unknown event'}`);
       if (eventData.date) console.log(`     📅 ${eventData.date} at ${eventData.time}`);
       if (eventData.location) console.log(`     📍 ${eventData.location.split('\n')[0]}`);
-      if (eventData.image_url) console.log(`     🖼️  Has image`);
+      if (eventData.image_url) console.log('     🖼️  Has image');
     }
 
     // Be nice to Meetup servers

@@ -4,12 +4,14 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
+import MobileNotificationButton from '../notifications/MobileNotificationButton';
+import NotificationButton from '../notifications/NotificationButton';
 import MobileMenu from './MobileMenu';
 import UserMenu from './UserMenu';
 
@@ -44,6 +46,18 @@ export default function Header() {
   const pathname = usePathname();
   const mounted = useMounted();
   const { profile } = useAuth();
+
+  // Close mobile menu when notification sheet opens
+  useEffect(() => {
+    const handleNotificationSheetOpen = () => {
+      setMobileMenuOpen(false);
+    };
+
+    window.addEventListener('notifications:sheet-open', handleNotificationSheetOpen);
+    return () => {
+      window.removeEventListener('notifications:sheet-open', handleNotificationSheetOpen);
+    };
+  }, []);
 
   // Check if current path should have full-width header
   const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
@@ -98,21 +112,25 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Right: User Menu (Desktop) / Mobile Menu Button (Mobile) */}
+        {/* Right: Notifications + User Menu (Desktop) / Mobile Menu Button (Mobile) */}
         <div
           className="flex items-center gap-3"
         >
-          {/* Desktop Only: UserMenu */}
+          {/* Desktop Only: Notifications + UserMenu */}
           <div
-            className="hidden sm:block"
+            className="hidden sm:flex items-center gap-2"
           >
+            <NotificationButton />
             <UserMenu />
           </div>
 
-          {/* Mobile Only: Avatar + Menu Button */}
+          {/* Mobile Only: Notifications + Avatar + Menu Button */}
           <div
-            className="flex items-center gap-3 sm:hidden"
+            className="flex items-center gap-2 sm:hidden"
           >
+            {/* Mobile Notifications */}
+            <MobileNotificationButton />
+
             {/* Mobile Avatar - opens mobile menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

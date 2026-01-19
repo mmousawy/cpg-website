@@ -2,6 +2,7 @@
 
 import { revalidateAlbumLikes, revalidatePhotoLikes } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
+import { createNotification } from '@/lib/notifications/create';
 
 /**
  * Toggle like/unlike for a photo or album
@@ -97,6 +98,73 @@ export async function toggleLike(
       if (!insertedData || insertedData.length === 0) {
         return { liked: false, count: 0, error: 'Insert succeeded but no data returned' };
       }
+
+      // Create notification if owner exists and is not the current user
+      if (photo?.user_id && photo.user_id !== user.id) {
+        // Get actor (current user) profile
+        const { data: actorProfile } = await supabase
+          .from('profiles')
+          .select('full_name, nickname, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        // Get photo details for link
+        const { data: photoDetails } = await supabase
+          .from('photos')
+          .select('title, short_id, url')
+          .eq('id', entityId)
+          .maybeSingle();
+
+        // Get owner profile for link
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', photo.user_id)
+          .maybeSingle();
+
+        if (ownerProfile?.nickname && photoDetails) {
+          // Try to find which album this photo is in
+          const { data: albumPhoto } = await supabase
+            .from('album_photos')
+            .select('albums!inner(slug)')
+            .eq('photo_id', entityId)
+            .limit(1)
+            .maybeSingle();
+
+          type AlbumPhotoWithAlbum = {
+            albums: { slug: string } | null;
+          };
+
+          let link: string;
+          if (albumPhoto) {
+            const typedAlbumPhoto = albumPhoto as AlbumPhotoWithAlbum;
+            const album = typedAlbumPhoto.albums;
+            if (album) {
+              link = `/@${ownerProfile.nickname}/album/${album.slug}/photo/${photoDetails.short_id}`;
+            } else {
+              link = `/@${ownerProfile.nickname}/photo/${photoDetails.short_id}`;
+            }
+          } else {
+            link = `/@${ownerProfile.nickname}/photo/${photoDetails.short_id}`;
+          }
+
+          await createNotification({
+            userId: photo.user_id,
+            actorId: user.id,
+            type: 'like_photo',
+            entityType: 'photo',
+            entityId,
+            data: {
+              title: photoDetails.title || 'Untitled photo',
+              thumbnail: photoDetails.url,
+              link,
+              actorName: actorProfile?.full_name || null,
+              actorNickname: actorProfile?.nickname || null,
+              actorAvatar: actorProfile?.avatar_url || null,
+            },
+          });
+        }
+      }
     }
 
     // Get updated count
@@ -182,6 +250,43 @@ export async function toggleLike(
 
       if (!insertedData || insertedData.length === 0) {
         return { liked: false, count: 0, error: 'Insert succeeded but no data returned' };
+      }
+
+      // Create notification if owner exists and is not the current user
+      if (album && album.user_id !== user.id) {
+        // Get actor (current user) profile
+        const { data: actorProfile } = await supabase
+          .from('profiles')
+          .select('full_name, nickname, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        // Get album details for link
+        const { data: albumDetails } = await supabase
+          .from('albums')
+          .select('title, slug, cover_image_url')
+          .eq('id', entityId)
+          .maybeSingle();
+
+        if (ownerNickname && albumDetails) {
+          const link = `/@${ownerNickname}/album/${albumDetails.slug}`;
+
+          await createNotification({
+            userId: album.user_id,
+            actorId: user.id,
+            type: 'like_album',
+            entityType: 'album',
+            entityId,
+            data: {
+              title: albumDetails.title,
+              thumbnail: albumDetails.cover_image_url,
+              link,
+              actorName: actorProfile?.full_name || null,
+              actorNickname: actorProfile?.nickname || null,
+              actorAvatar: actorProfile?.avatar_url || null,
+            },
+          });
+        }
       }
     }
 
