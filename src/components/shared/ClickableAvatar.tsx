@@ -101,7 +101,7 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
           width={100}
           height={100}
           loading='eager'
-          quality={95}
+          quality={85}
           className="object-cover"
         />
       </a>

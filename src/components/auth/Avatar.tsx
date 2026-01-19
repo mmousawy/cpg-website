@@ -64,7 +64,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
           width={100}
           height={100}
           loading='lazy'
-          quality={95}
+          quality={85}
           className="object-cover w-full h-full"
         />
       );

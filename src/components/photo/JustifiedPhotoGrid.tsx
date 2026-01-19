@@ -167,7 +167,8 @@ function PhotoRows({
           >
             {row.items.map((item) => {
               const photo = photoMap.get(item.photo.id);
-              const thumbnailUrl = `${item.photo.url}?width=800&quality=80`;
+              // Use raw URL - custom loader adds transform params automatically
+              const thumbnailUrl = item.photo.url;
 
               // Get nickname from photo's profile (community) or use provided profileNickname
               const streamPhoto = photo as StreamPhoto;
@@ -208,7 +209,7 @@ function PhotoRows({
                     alt={photo?.title || 'Photo'}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
+                    sizes={`${Math.ceil(item.displayWidth * 1.5)}px`}
                     loading='lazy'
                     quality={85}
                   />

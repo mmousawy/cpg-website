@@ -28,7 +28,8 @@ function PhotoCard({
   albumCoverUrl,
   currentAlbumTitle,
 }: PhotoCardProps) {
-  const thumbnailUrl = `${photo.url}?width=400&height=400&resize=cover`;
+  // Use raw URL - custom loader adds transform params automatically
+  const thumbnailUrl = photo.url;
   const isAlbumCover = albumCoverUrl === photo.url;
 
   const photoWithAlbums = photo as PhotoWithAlbums;

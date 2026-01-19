@@ -185,7 +185,7 @@ function AdminEventCard({ event }: { event: Event }) {
                   alt={event.title || 'Event cover'}
                   sizes="256px"
                   loading="eager"
-                  quality={95}
+                  quality={85}
                   fill
                   className="object-cover"
                 />

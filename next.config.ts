@@ -14,8 +14,14 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
   images: {
-    formats: ['image/avif', 'image/webp'],
-    qualities: [25, 50, 75, 85, 95],
+    loader: 'custom',
+    loaderFile: './src/utils/supabaseImageLoader.ts',
+    // Cache transformed images for 31 days (reduces re-transformations)
+    minimumCacheTTL: 2678400,
+    // Single format reduces variants (Supabase uses WebP automatically)
+    formats: ['image/webp'],
+    // Single quality level - all components will use 85
+    qualities: [85],
     remotePatterns: [
       {
         hostname: 'gravatar.com',

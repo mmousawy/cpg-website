@@ -17,7 +17,7 @@ export default function HeroImage({ src }: HeroImageProps) {
       className="object-cover object-[center_30%] brightness-75"
       priority
       fetchPriority="high"
-      sizes="100vw"
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px"
       quality={85}
     />
   );

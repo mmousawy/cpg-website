@@ -1,0 +1,20 @@
+fix: Fix Supabase image transformations and optimize image sizing
+
+Image Loader Fixes:
+- Fix Supabase image transformations by using correct /render/image/public/ endpoint
+  (previously used /object/public/ which doesn't support transformations)
+- Handle StaticImageData objects from static imports (hero images, camera icon)
+- Add width query param to all URLs to satisfy Next.js loader requirements
+- External images (gravatar, discord, google, meetupstatic) now load correctly
+  (returned as-is since custom loaders can't use /_next/image proxy)
+
+Image Sizing Optimizations:
+- HeroImage: Update sizes from 100vw to responsive breakpoints with 1200px max
+- JustifiedPhotoGrid: Use dynamic sizes based on actual calculated displayWidth
+  with 1.5x multiplier for retina display quality
+- Reduces bandwidth by requesting appropriately sized images instead of oversized ones
+
+Files changed:
+- src/utils/supabaseImageLoader.ts - Complete rewrite of image loader logic
+- src/components/shared/HeroImage.tsx - Responsive sizes with max 1200px
+- src/components/photo/JustifiedPhotoGrid.tsx - Dynamic per-image sizing

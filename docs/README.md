@@ -23,6 +23,21 @@
 
 - **[view-tracking-caching.md](./view-tracking-caching.md)** - View count tracking and caching strategy
 
+### Image Optimization
+
+The project uses a custom image loader (`src/utils/supabaseImageLoader.ts`) that handles different image sources:
+
+| Image Type | Optimization |
+|------------|-------------|
+| **Supabase images** | Resized via `/render/image/public/` endpoint with width/quality params |
+| **Local images** | Served directly with width hint for Next.js compatibility |
+| **External images** | Served as-is (gravatar, discord, google, meetupstatic) |
+
+Key optimizations:
+- **HeroImage**: Responsive sizes with 1200px max width cap
+- **JustifiedPhotoGrid**: Dynamic sizing based on actual display width (1.5x for retina)
+- **Supabase transforms**: Proper `/render/image/` endpoint for server-side resizing
+
 ### Code Quality
 
 - **Type Safety** - The codebase maintains strict TypeScript type safety with zero `any` types. All Supabase queries, React Hook Form props, error handling, and callback parameters are properly typed.
@@ -52,7 +67,8 @@ The project uses Next.js's `use cache` directive for component-level caching. Da
 | `src/lib/data/*.ts` | Cached data fetch functions |
 | `src/app/actions/revalidate.ts` | Revalidation server actions |
 | `src/types/supabase-queries.ts` | Typed Supabase query result types for joins |
-| `next.config.ts` | Enable `cacheComponents: true` |
+| `src/utils/supabaseImageLoader.ts` | Custom image loader for Supabase transformations |
+| `next.config.ts` | Enable `cacheComponents: true`, custom image loader |
 
 ### Type Safety
 
