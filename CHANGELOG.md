@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.3](https://github.com/mmousawy/cpg-website/compare/v1.8.2...v1.8.3) (2026-01-19)
+
+
+### Bug Fixes
+
+* Fix Supabase image transformations and optimize image sizing ([5fd7e4f](https://github.com/mmousawy/cpg-website/commit/5fd7e4f8b9bce7b16f7070a89d274418f1fb556f))
+
 ## [1.8.2](https://github.com/mmousawy/cpg-website/compare/v1.8.1...v1.8.2) (2026-01-18)
 
 
