@@ -317,3 +317,35 @@ input:focus-visible,
 textarea:focus-visible {
   border-color: var(--border-color);
 }
+
+/* Toast container positioning - below header */
+.toast-container {
+  /* Behind header (header is z-40) */
+  z-index: 39 !important;
+}
+
+/* Desktop: header is 72px (56px logo + 16px padding) */
+@media (min-width: 640px) {
+  .toast-container {
+    top: calc(72px + 1rem) !important;
+    right: max(1rem, calc((100vw - 768px) / 2)) !important;
+    left: auto !important;
+  }
+  .toast-container [data-sonner-toast] {
+    width: auto !important;
+    max-width: 400px !important;
+  }
+}
+
+/* Mobile: header is 57px (40px logo + 16px padding + 1px border) */
+@media (max-width: 639px) {
+  .toast-container {
+    top: calc(57px + 0.75rem) !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+  }
+  .toast-container [data-sonner-toast] {
+    width: 100% !important;
+  }
+}

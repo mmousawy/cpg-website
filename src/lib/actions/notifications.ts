@@ -1,9 +1,9 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
-import { createClient } from '@/utils/supabase/server';
 import { createNotification } from '@/lib/notifications/create';
 import type { NotificationType } from '@/types/notifications';
+import { createClient } from '@/utils/supabase/server';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Mark a notification as seen
@@ -55,6 +55,54 @@ export async function markAllNotificationsAsSeen(): Promise<{ success: boolean; 
   }
 
   return { success: true };
+}
+
+/**
+ * Mark notifications as seen by matching link/pathname
+ * Used for auto-marking when user visits a page associated with notifications
+ */
+export async function markNotificationsSeenByLink(pathname: string): Promise<{ success: boolean; markedIds: string[]; error?: string }> {
+  const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, markedIds: [], error: 'Not authenticated' };
+  }
+
+  // Find unseen notifications where the link matches the current pathname
+  // The link in data is stored as a JSON field, so we use ->> to extract it as text
+  const { data: matchingNotifications, error: fetchError } = await supabase
+    .from('notifications')
+    .select('id')
+    .eq('user_id', user.id)
+    .is('seen_at', null)
+    .is('dismissed_at', null)
+    .filter('data->>link', 'eq', pathname);
+
+  if (fetchError) {
+    console.error('Error fetching notifications by link:', fetchError);
+    return { success: false, markedIds: [], error: fetchError.message };
+  }
+
+  if (!matchingNotifications || matchingNotifications.length === 0) {
+    return { success: true, markedIds: [] };
+  }
+
+  const ids = matchingNotifications.map((n) => n.id);
+
+  // Mark them as seen
+  const { error: updateError } = await supabase
+    .from('notifications')
+    .update({ seen_at: new Date().toISOString() })
+    .in('id', ids);
+
+  if (updateError) {
+    console.error('Error marking notifications as seen by link:', updateError);
+    return { success: false, markedIds: [], error: updateError.message };
+  }
+
+  return { success: true, markedIds: ids };
 }
 
 /**
@@ -116,9 +164,9 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
       title: string;
       thumbnail?: string;
       link: string;
-      actorName: string | null;
-      actorNickname: string | null;
-      actorAvatar: string | null;
+      actorName?: string | null;
+      actorNickname?: string | null;
+      actorAvatar?: string | null;
     };
   }> = [
     {
@@ -126,11 +174,10 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
       entityType: 'photo',
       data: {
         title: 'Sunset Over the Ocean',
-        thumbnail: null,
         link: '/gallery',
-        actorName: actors[0]?.full_name || null,
-        actorNickname: actors[0]?.nickname || null,
-        actorAvatar: actors[0]?.avatar_url || null,
+        actorName: actors[0]?.full_name ?? undefined,
+        actorNickname: actors[0]?.nickname ?? undefined,
+        actorAvatar: actors[0]?.avatar_url ?? undefined,
       },
     },
     {
@@ -138,11 +185,10 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
       entityType: 'album',
       data: {
         title: 'Nature Photography Collection',
-        thumbnail: null,
         link: '/gallery',
-        actorName: actors[1]?.full_name || actors[0]?.full_name || null,
-        actorNickname: actors[1]?.nickname || actors[0]?.nickname || null,
-        actorAvatar: actors[1]?.avatar_url || actors[0]?.avatar_url || null,
+        actorName: actors[1]?.full_name || actors[0]?.full_name || undefined,
+        actorNickname: actors[1]?.nickname || actors[0]?.nickname || undefined,
+        actorAvatar: actors[1]?.avatar_url || actors[0]?.avatar_url || undefined,
       },
     },
     {
@@ -150,11 +196,10 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
       entityType: 'album',
       data: {
         title: 'Urban Landscapes',
-        thumbnail: null,
         link: '/gallery',
-        actorName: actors[2]?.full_name || actors[0]?.full_name || null,
-        actorNickname: actors[2]?.nickname || actors[0]?.nickname || null,
-        actorAvatar: actors[2]?.avatar_url || actors[0]?.avatar_url || null,
+        actorName: actors[2]?.full_name || actors[0]?.full_name || undefined,
+        actorNickname: actors[2]?.nickname || actors[0]?.nickname || undefined,
+        actorAvatar: actors[2]?.avatar_url || actors[0]?.avatar_url || undefined,
       },
     },
     {
@@ -162,11 +207,10 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
       entityType: 'event',
       data: {
         title: 'Photography Workshop',
-        thumbnail: null,
         link: '/events',
-        actorName: actors[0]?.full_name || null,
-        actorNickname: actors[0]?.nickname || null,
-        actorAvatar: actors[0]?.avatar_url || null,
+        actorName: actors[0]?.full_name ?? undefined,
+        actorNickname: actors[0]?.nickname ?? undefined,
+        actorAvatar: actors[0]?.avatar_url ?? undefined,
       },
     },
     {
@@ -174,11 +218,7 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
       entityType: 'event',
       data: {
         title: 'Group Photo Walk - Tomorrow',
-        thumbnail: null,
         link: '/events',
-        actorName: null,
-        actorNickname: null,
-        actorAvatar: null,
       },
     },
   ];
@@ -202,7 +242,7 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
   }
 
   // Invalidate the notifications cache so the new notifications appear
-  revalidateTag(`notifications-${user.id}`);
+  revalidateTag(`notifications-${user.id}`, 'max');
 
   return { success: true };
 }

@@ -12,10 +12,10 @@ test.describe('Onboarding Flow', () => {
   test('should have proper navigation from signup to onboarding flow', async ({ page }) => {
     // Navigate to signup page
     await page.goto('/signup');
-    
+
     // Verify signup page loads
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
-    
+
     // Check that the page mentions the next step (onboarding/profile setup)
     // This ensures the signup -> onboarding flow is connected
     const pageContent = await page.textContent('body');
@@ -28,6 +28,6 @@ test.describe('Onboarding Flow', () => {
 // 2. Manually confirming their email or bypassing verification
 // 3. Logging in with the test credentials
 // 4. Completing onboarding
-// 
+//
 // This is better suited for integration tests that can directly
 // interact with the database to set up test state.

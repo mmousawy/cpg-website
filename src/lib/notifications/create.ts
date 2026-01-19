@@ -1,7 +1,8 @@
 'use server';
 
-import { createAdminClient } from '@/utils/supabase/admin';
+import type { Json } from '@/database.types';
 import type { CreateNotificationParams } from '@/types/notifications';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 /**
  * Create a notification in the database
@@ -19,7 +20,7 @@ export async function createNotification(params: CreateNotificationParams): Prom
         type: params.type,
         entity_type: params.entityType,
         entity_id: params.entityId || null,
-        data: params.data || {},
+        data: (params.data || {}) as Json,
       });
 
     if (error) {

@@ -1,33 +1,28 @@
 'use client';
 
 import clsx from 'clsx';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { useNotifications } from '@/hooks/useNotifications';
 import { createMockNotifications } from '@/lib/actions/notifications';
-import Button from '../shared/Button';
 import BottomSheet from '../shared/BottomSheet';
+import Button from '../shared/Button';
 import NotificationItem from './NotificationItem';
 
 export default function MobileNotificationButton() {
   const { user } = useAuth();
   const mounted = useMounted();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isCreatingMocks, setIsCreatingMocks] = useState(false);
 
   const { notifications, unseenCount, totalCount, hasMore, isLoading, isLoadingMore, markAsSeen, loadMore } = useNotifications(user?.id || null);
 
   // Handle notification click (view)
-  const handleView = async (notificationId: string, link?: string) => {
+  const handleView = async (notificationId: string) => {
     await markAsSeen(notificationId);
     setIsOpen(false);
-    if (link) {
-      router.push(link);
-    }
   };
 
   // Handle create mock notifications
@@ -52,7 +47,11 @@ export default function MobileNotificationButton() {
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          // Notify other components (like MobileMenu) to close
+          window.dispatchEvent(new CustomEvent('notifications:sheet-open'));
+        }}
         className="relative flex items-center justify-center size-8 rounded-full hover:bg-foreground/5 transition-colors"
         aria-label="Notifications"
       >
@@ -181,9 +180,7 @@ export default function MobileNotificationButton() {
               fullWidth
               onClick={() => setIsOpen(false)}
             >
-              {totalCount > notifications.length
-                ? `View all ${totalCount} notifications`
-                : 'View all notifications'}
+              View all notifications
             </Button>
           </div>
         </div>

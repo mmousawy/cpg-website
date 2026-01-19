@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +15,6 @@ export default function NotificationButton() {
   const { user, profile } = useAuth();
   const mounted = useMounted();
   const pathname = usePathname();
-  const router = useRouter();
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isCreatingMocks, setIsCreatingMocks] = useState(false);
@@ -44,14 +43,11 @@ export default function NotificationButton() {
   }, [pathname]);
 
   // Handle notification click (view)
-  const handleView = async (notificationId: string, link?: string) => {
+  const handleView = async (notificationId: string) => {
     await markAsSeen(notificationId);
     if (detailsRef.current) {
       detailsRef.current.open = false;
       setIsOpen(false);
-    }
-    if (link) {
-      router.push(link);
     }
   };
 
@@ -203,12 +199,12 @@ export default function NotificationButton() {
                 {/* Load more button */}
                 {hasMore && (
                   <div
-                    className="p-3 text-center"
+                    className="p-0 text-center"
                   >
                     <button
                       onClick={loadMore}
                       disabled={isLoadingMore}
-                      className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                      className="text-sm text-primary hover:text-foreground font-medium disabled:opacity-50 px-4 py-3 w-full hover:bg-background"
                     >
                       {isLoadingMore ? 'Loading...' : 'Load more'}
                     </button>
@@ -221,11 +217,11 @@ export default function NotificationButton() {
           {/* Footer */}
           {notifications.length > 0 && (
             <div
-              className="border-t border-border-color-strong px-4 py-3"
+              className="border-t border-border-color-strong"
             >
               <Link
                 href="/account/activity"
-                className="block text-center text-sm text-primary hover:text-primary/80 font-medium"
+                className="block text-center text-sm text-primary hover:text-foreground font-medium hover:bg-background px-4 py-3 w-full"
                 onClick={() => {
                   if (detailsRef.current) {
                     detailsRef.current.open = false;
@@ -233,9 +229,7 @@ export default function NotificationButton() {
                   }
                 }}
               >
-                {totalCount > notifications.length
-                  ? `View all ${totalCount} notifications`
-                  : 'View all activity'}
+                View all notifications
               </Link>
             </div>
           )}

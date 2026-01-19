@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,6 +46,18 @@ export default function Header() {
   const pathname = usePathname();
   const mounted = useMounted();
   const { profile } = useAuth();
+
+  // Close mobile menu when notification sheet opens
+  useEffect(() => {
+    const handleNotificationSheetOpen = () => {
+      setMobileMenuOpen(false);
+    };
+
+    window.addEventListener('notifications:sheet-open', handleNotificationSheetOpen);
+    return () => {
+      window.removeEventListener('notifications:sheet-open', handleNotificationSheetOpen);
+    };
+  }, []);
 
   // Check if current path should have full-width header
   const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));

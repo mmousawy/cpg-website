@@ -9,6 +9,7 @@ import QueryProvider from '@/app/providers/QueryProvider';
 import { ThemeProviderWrapper as ThemeProvider } from '@/app/providers/ThemeProvider';
 import Layout from '@/components/layout/Layout';
 import NavigationProgress from '@/components/layout/NavigationProgress';
+import NotificationToastManager from '@/components/notifications/NotificationToastManager';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import Modal from '@/components/shared/Modal';
 import PageLoading from '@/components/shared/PageLoading';
@@ -117,6 +118,7 @@ export default function RootLayout({
                   <ConfirmModal />
                 </ConfirmProvider>
               </ThemeProvider>
+              <NotificationToastManager />
             </AuthProvider>
           </QueryProvider>
         </SupabaseProvider>

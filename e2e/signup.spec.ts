@@ -11,7 +11,7 @@ test.describe('Signup Flow', () => {
   test('should complete signup flow with email and password', async ({ page }) => {
     // Track email for cleanup
     trackTestEmail(testEmail);
-    
+
     // Navigate to signup page
     await page.goto('/signup');
 
@@ -108,7 +108,7 @@ test.describe('Signup Flow', () => {
 
     // Browser's built-in validation prevents submission - verify we're still on signup page
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
-    
+
     // Check the email input is invalid via JavaScript
     const isInvalid = await emailInput.evaluate((el: HTMLInputElement) => !el.checkValidity());
     expect(isInvalid).toBe(true);

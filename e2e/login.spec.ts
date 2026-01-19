@@ -16,8 +16,8 @@ test.describe('Login Flow', () => {
     // Check for submit button
     await expect(
       page.locator('button[type="submit"]').or(
-        page.getByRole('button', { name: /log in|sign in/i })
-      )
+        page.getByRole('button', { name: /log in|sign in/i }),
+      ),
     ).toBeVisible();
 
     // Check for signup link
@@ -36,13 +36,13 @@ test.describe('Login Flow', () => {
 
     // Submit the form
     const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /log in|sign in/i })
+      page.getByRole('button', { name: /log in|sign in/i }),
     );
     await submitButton.click();
 
     // Should show error message
     await expect(
-      page.getByText(/invalid.*credentials|incorrect.*password|user.*not.*found|invalid.*email|unable|error/i)
+      page.getByText(/invalid.*credentials|incorrect.*password|user.*not.*found|invalid.*email|unable|error/i),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -75,15 +75,15 @@ test.describe('Login Flow', () => {
     // Check for Google login button
     await expect(
       page.getByRole('button', { name: /google/i }).or(
-        page.locator('button:has-text("Google")')
-      )
+        page.locator('button:has-text("Google")'),
+      ),
     ).toBeVisible();
 
     // Check for Discord login button
     await expect(
       page.getByRole('button', { name: /discord/i }).or(
-        page.locator('button:has-text("Discord")')
-      )
+        page.locator('button:has-text("Discord")'),
+      ),
     ).toBeVisible();
   });
 });

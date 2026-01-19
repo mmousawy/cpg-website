@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import PageContainer from '@/components/layout/PageContainer';
+import NotificationItem from '@/components/notifications/NotificationItem';
+import { createMockNotifications, dismissNotification, markAllNotificationsAsSeen, markNotificationAsSeen } from '@/lib/actions/notifications';
+import type { NotificationWithActor } from '@/types/notifications';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import type { NotificationWithActor } from '@/types/notifications';
-import { markAllNotificationsAsSeen, markNotificationAsSeen, dismissNotification, createMockNotifications } from '@/lib/actions/notifications';
-import NotificationItem from '@/components/notifications/NotificationItem';
-import PageContainer from '@/components/layout/PageContainer';
-import { useRouter } from 'next/navigation';
 import SadSVG from 'public/icons/sad.svg';
+import { useCallback, useEffect, useState } from 'react';
 
 dayjs.extend(relativeTime);
 
@@ -50,7 +49,6 @@ function groupNotificationsByDate(notifications: NotificationWithActor[]) {
 }
 
 export default function ActivityContent({ initialNotifications, initialTotalCount }: ActivityContentProps) {
-  const router = useRouter();
   const [notifications, setNotifications] = useState(initialNotifications);
   const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [hasMore, setHasMore] = useState(initialNotifications.length < initialTotalCount);
@@ -68,23 +66,52 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
   const groups = groupNotificationsByDate(notifications);
   const unseenCount = notifications.filter((n) => !n.seen_at).length;
 
-  const handleView = useCallback(async (notificationId: string, link?: string) => {
+  const handleView = useCallback(async (notificationId: string) => {
     // Optimistically mark as seen
     setNotifications((prev) =>
       prev.map((notif) =>
         notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
       ),
     );
+
+    // Notify other components to update their state without refetching
+    window.dispatchEvent(new CustomEvent('notifications:mark-seen', {
+      detail: { notificationId },
+    }));
+
     await markNotificationAsSeen(notificationId);
-    if (link) {
-      router.push(link);
-    }
-  }, [router]);
+  }, []);
 
   const handleDismiss = useCallback(async (notificationId: string) => {
-    // Optimistically remove from list
+    const notification = notifications.find((n) => n.id === notificationId);
+    const wasUnseen = notification ? !notification.seen_at : false;
+
+    // Optimistically remove from list and update total count
     setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+    setTotalCount((prev) => Math.max(0, prev - 1));
+
+    // Notify other components to update their state without refetching
+    window.dispatchEvent(new CustomEvent('notifications:dismiss', {
+      detail: { notificationId, wasUnseen },
+    }));
+
     await dismissNotification(notificationId);
+  }, [notifications]);
+
+  const handleMarkAsSeen = useCallback(async (notificationId: string) => {
+    // Optimistically mark as seen in local state
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
+      ),
+    );
+
+    // Notify other components to update their state without refetching
+    window.dispatchEvent(new CustomEvent('notifications:mark-seen', {
+      detail: { notificationId },
+    }));
+
+    await markNotificationAsSeen(notificationId);
   }, []);
 
   const handleMarkAllAsSeen = useCallback(async () => {
@@ -92,8 +119,8 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
     const result = await markAllNotificationsAsSeen();
     if (result.success) {
       setNotifications((prev) => prev.map((notif) => ({ ...notif, seen_at: new Date().toISOString() })));
-      // Notify other components (e.g., NotificationButton) to refresh
-      window.dispatchEvent(new CustomEvent('notifications:refresh'));
+      // Notify other components to update their state without refetching
+      window.dispatchEvent(new CustomEvent('notifications:mark-all-seen'));
     }
     setIsMarkingAll(false);
   }, []);
@@ -130,8 +157,11 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
         const data = await response.json();
         setNotifications((prev) => [...prev, ...(data.notifications || [])]);
         setHasMore(data.hasMore || false);
+      } else {
+        console.error('Error loading more notifications: response not ok', response.status);
       }
     } catch (error) {
+      // Network errors (ETIMEDOUT, etc.) - fail silently, user can retry
       console.error('Error loading more notifications:', error);
     } finally {
       setIsLoadingMore(false);
@@ -153,15 +183,29 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
           >
             Activity
           </h1>
-          {hasNotifications && unseenCount > 0 && (
-            <button
-              onClick={handleMarkAllAsSeen}
-              disabled={isMarkingAll}
-              className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
-            >
-              {isMarkingAll ? 'Marking...' : `Mark all as seen (${unseenCount})`}
-            </button>
-          )}
+          <div
+            className="flex items-center gap-4"
+          >
+            {/* Dev-only mock button */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={handleCreateMocks}
+                disabled={isCreatingMocks}
+                className="text-sm text-foreground/50 hover:text-foreground/70 font-medium disabled:opacity-50"
+              >
+                {isCreatingMocks ? 'Adding...' : '+ Add mock'}
+              </button>
+            )}
+            {hasNotifications && unseenCount > 0 && (
+              <button
+                onClick={handleMarkAllAsSeen}
+                disabled={isMarkingAll}
+                className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+              >
+                {isMarkingAll ? 'Marking...' : `Mark all as seen (${unseenCount})`}
+              </button>
+            )}
+          </div>
         </div>
         <p
           className="text-base sm:text-lg opacity-70"
@@ -219,6 +263,7 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
                     notification={notification}
                     onView={handleView}
                     onDismiss={handleDismiss}
+                    onMarkAsSeen={handleMarkAsSeen}
                     showDismiss
                   />
                 ))}
@@ -242,6 +287,7 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
                     notification={notification}
                     onView={handleView}
                     onDismiss={handleDismiss}
+                    onMarkAsSeen={handleMarkAsSeen}
                     showDismiss
                   />
                 ))}
@@ -265,6 +311,7 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
                     notification={notification}
                     onView={handleView}
                     onDismiss={handleDismiss}
+                    onMarkAsSeen={handleMarkAsSeen}
                     showDismiss
                   />
                 ))}
@@ -288,6 +335,7 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
                     notification={notification}
                     onView={handleView}
                     onDismiss={handleDismiss}
+                    onMarkAsSeen={handleMarkAsSeen}
                     showDismiss
                   />
                 ))}

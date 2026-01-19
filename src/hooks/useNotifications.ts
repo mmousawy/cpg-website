@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { dismissNotification as dismissNotificationAction, markAllNotificationsAsSeen, markNotificationAsSeen } from '@/lib/actions/notifications';
 import type { NotificationWithActor } from '@/types/notifications';
-import { markNotificationAsSeen, markAllNotificationsAsSeen, dismissNotification as dismissNotificationAction } from '@/lib/actions/notifications';
+import { useCallback, useEffect, useState } from 'react';
 
 const PAGE_SIZE = 20;
 
@@ -14,7 +14,7 @@ export function useNotifications(userId: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Fetch initial notifications
+  // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
     if (!userId) {
       setIsLoading(false);
@@ -38,7 +38,7 @@ export function useNotifications(userId: string | null) {
     }
   }, [userId]);
 
-  // Load more notifications
+  // Load more notifications (pagination)
   const loadMore = useCallback(async () => {
     if (!userId || isLoadingMore || !hasMore) return;
 
@@ -64,7 +64,7 @@ export function useNotifications(userId: string | null) {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Listen for custom refresh events (e.g., when mocks are created from another component)
+  // Listen for refresh events (triggered by Realtime or other components)
   useEffect(() => {
     const handleRefresh = () => {
       fetchNotifications();
@@ -76,13 +76,44 @@ export function useNotifications(userId: string | null) {
     };
   }, [fetchNotifications]);
 
-  // TODO: Supabase Realtime subscription is disabled due to SSR hydration issues
-  // The notification button still updates via:
-  // 1. Custom event system (notifications:refresh) - triggered by server actions
-  // 2. Initial fetch on page load
-  // 3. Manual refresh when needed
-  // To re-enable Realtime, the postgres_changes subscription needs proper SSR handling
+  // Listen for optimistic updates from other components (e.g., ActivityContent)
+  useEffect(() => {
+    const handleMarkAsSeen = (event: CustomEvent<{ notificationId: string }>) => {
+      const { notificationId } = event.detail;
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
+        ),
+      );
+      setUnseenCount((prev) => Math.max(0, prev - 1));
+    };
 
+    const handleDismiss = (event: CustomEvent<{ notificationId: string; wasUnseen: boolean }>) => {
+      const { notificationId, wasUnseen } = event.detail;
+      setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+      setTotalCount((prev) => Math.max(0, prev - 1));
+      if (wasUnseen) {
+        setUnseenCount((prev) => Math.max(0, prev - 1));
+      }
+    };
+
+    const handleMarkAllAsSeen = () => {
+      setNotifications((prev) => prev.map((notif) => ({ ...notif, seen_at: new Date().toISOString() })));
+      setUnseenCount(0);
+    };
+
+    window.addEventListener('notifications:mark-seen', handleMarkAsSeen as EventListener);
+    window.addEventListener('notifications:dismiss', handleDismiss as EventListener);
+    window.addEventListener('notifications:mark-all-seen', handleMarkAllAsSeen);
+
+    return () => {
+      window.removeEventListener('notifications:mark-seen', handleMarkAsSeen as EventListener);
+      window.removeEventListener('notifications:dismiss', handleDismiss as EventListener);
+      window.removeEventListener('notifications:mark-all-seen', handleMarkAllAsSeen);
+    };
+  }, []);
+
+  // Mark single notification as seen
   const markAsSeen = useCallback(async (notificationId: string) => {
     const result = await markNotificationAsSeen(notificationId);
     if (result.success) {
@@ -96,6 +127,7 @@ export function useNotifications(userId: string | null) {
     return result;
   }, []);
 
+  // Mark all notifications as seen
   const markAllAsSeen = useCallback(async () => {
     const result = await markAllNotificationsAsSeen();
     if (result.success) {
@@ -105,11 +137,12 @@ export function useNotifications(userId: string | null) {
     return result;
   }, []);
 
+  // Dismiss a notification
   const dismiss = useCallback(async (notificationId: string) => {
-    // Optimistically remove from list
     const notification = notifications.find((n) => n.id === notificationId);
     const wasUnseen = notification && !notification.seen_at;
 
+    // Optimistic update
     setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
     setTotalCount((prev) => Math.max(0, prev - 1));
     if (wasUnseen) {
