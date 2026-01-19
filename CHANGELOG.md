@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.0](https://github.com/mmousawy/cpg-website/compare/v1.8.3...v1.9.0) (2026-01-19)
+
+
+### Features
+
+* Enhance notification system with real-time toasts and UX improvements ([0a150a4](https://github.com/mmousawy/cpg-website/commit/0a150a41e2acb95bd5779da88645a4d5fc8843ed))
+* Implement activity feed and in-app notifications system ([69d95a9](https://github.com/mmousawy/cpg-website/commit/69d95a92135c7b8d79de7601b0b33158776bbb9d))
+
 ## [1.8.3](https://github.com/mmousawy/cpg-website/compare/v1.8.2...v1.8.3) (2026-01-19)
 
 
