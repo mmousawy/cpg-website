@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventSignupBar from '@/components/events/EventSignupBar';
@@ -7,12 +6,13 @@ import PageContainer from '@/components/layout/PageContainer';
 import type { Tables } from '@/database.types';
 import clsx from 'clsx';
 import crypto from 'crypto';
+import { cacheLife, cacheTag } from 'next/cache';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
-import { getAllEventSlugs, getEventBySlug, getEventAttendeesForEvent } from '@/lib/data/events';
+import { getAllEventSlugs, getEventAttendeesForEvent, getEventBySlug } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
 
@@ -231,7 +231,7 @@ async function CachedEventContent({
               )}
               {!isPastEvent && (
                 <span
-                  className="mb-2 inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary backdrop-blur-sm"
+                  className="mb-2 inline-block rounded-full bg-primary/60 px-3 py-1 text-xs font-medium text-[#fff] backdrop-blur-sm"
                 >
                   Upcoming event
                 </span>

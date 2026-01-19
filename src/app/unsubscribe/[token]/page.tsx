@@ -3,10 +3,18 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import type { EmailType } from '@/utils/emailPreferencesClient';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import ThumbsUpSVG from 'public/icons/thumbsup.svg';
+
+const emailTypeLabels: Record<EmailType, string> = {
+  events: 'upcoming events',
+  newsletter: 'the community newsletter',
+  notifications: 'activity notifications',
+  weekly_digest: 'the weekly digest',
+};
 
 export default function UnsubscribePage() {
   const params = useParams();
@@ -16,8 +24,10 @@ export default function UnsubscribePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [emailType, setEmailType] = useState<string | null>(null);
+  const [emailType, setEmailType] = useState<EmailType | null>(null);
   const [hasUnsubscribed, setHasUnsubscribed] = useState(false);
+
+  const emailTypeLabel = emailType ? `about ${emailTypeLabels[emailType]}` : null;
 
   const handleUnsubscribe = async () => {
     if (!token) {
@@ -51,7 +61,7 @@ export default function UnsubscribePage() {
       // Mark as unsubscribed to prevent duplicate requests
       setHasUnsubscribed(true);
       setIsSuccess(true);
-      setEmailType(data.emailType || null);
+      setEmailType((data.emailType as EmailType) || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -80,10 +90,9 @@ export default function UnsubscribePage() {
             <p
               className="text-foreground/70"
             >
-              You&apos;ve been unsubscribed from emails about
-              {' '}
-              {emailType ? `${emailType.toLowerCase()}` : 'this type of'}
-              .
+              {emailTypeLabel
+                ? `You've been unsubscribed from emails ${emailTypeLabel}.`
+                : 'You\'ve been unsubscribed from these emails.'}
             </p>
             <p
               className="mb-6 text-foreground/70"
@@ -125,7 +134,7 @@ export default function UnsubscribePage() {
           <p
             className="mb-6 text-foreground/70"
           >
-            Are you sure you want to opt out of emails for upcoming events?
+            { emailType ? `Are you sure you want to unsubscribe from emails ${emailTypeLabel}?` : 'Are you sure you want to unsubscribe from these emails?' }
           </p>
           {error && (
             <div
@@ -149,7 +158,7 @@ export default function UnsubscribePage() {
           <p
             className="text-sm text-foreground/60"
           >
-            Want to opt in to other types of emails? You can change your email preferences in your account settings.
+            Want to opt out of other types of emails? You can change your email preferences in your account settings.
           </p>
         </div>
       </Container>

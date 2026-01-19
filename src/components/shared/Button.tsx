@@ -118,7 +118,7 @@ export default function Button({
     // Width
     fullWidth && 'w-full',
     // Disabled/loading state
-    isDisabled && 'cursor-not-allowed opacity-50',
+    isDisabled && 'cursor-not-allowed opacity-70 pointer-events-none',
     // Custom className
     className,
   );

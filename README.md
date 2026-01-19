@@ -52,6 +52,9 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Loading skeletons
 - Custom 404 page
 - Email notifications (React Email + Resend)
+- In-app notifications with real-time updates (Supabase Realtime)
+- Activity feed page
+- Weekly notification digest emails
 - Automated cron jobs (Vercel Cron)
 
 ## Tech Stack
@@ -305,8 +308,8 @@ Deploy to Vercel:
 - [x] Photo/album likes
 - [x] View tracking and stats
 - [ ] Follow photographers
-- [ ] Activity feed
-- [ ] In-app notifications
+- [x] Activity feed
+- [x] In-app notifications
 - [ ] Community photo albums
 
 ### Discovery

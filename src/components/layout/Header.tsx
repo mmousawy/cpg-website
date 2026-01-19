@@ -10,6 +10,8 @@ import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
+import MobileNotificationButton from '../notifications/MobileNotificationButton';
+import NotificationButton from '../notifications/NotificationButton';
 import MobileMenu from './MobileMenu';
 import UserMenu from './UserMenu';
 
@@ -98,21 +100,25 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Right: User Menu (Desktop) / Mobile Menu Button (Mobile) */}
+        {/* Right: Notifications + User Menu (Desktop) / Mobile Menu Button (Mobile) */}
         <div
           className="flex items-center gap-3"
         >
-          {/* Desktop Only: UserMenu */}
+          {/* Desktop Only: Notifications + UserMenu */}
           <div
-            className="hidden sm:block"
+            className="hidden sm:flex items-center gap-2"
           >
+            <NotificationButton />
             <UserMenu />
           </div>
 
-          {/* Mobile Only: Avatar + Menu Button */}
+          {/* Mobile Only: Notifications + Avatar + Menu Button */}
           <div
-            className="flex items-center gap-3 sm:hidden"
+            className="flex items-center gap-2 sm:hidden"
           >
+            {/* Mobile Notifications */}
+            <MobileNotificationButton />
+
             {/* Mobile Avatar - opens mobile menu */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

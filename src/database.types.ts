@@ -568,6 +568,60 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string | null
+          data: Json | null
+          dismissed_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          seen_at: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string | null
+          data?: Json | null
+          dismissed_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          seen_at?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string | null
+          data?: Json | null
+          dismissed_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          seen_at?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_actor_id_fkey'
+            columns: ['actor_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notifications_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       photo_comments: {
         Row: {
           comment_id: string

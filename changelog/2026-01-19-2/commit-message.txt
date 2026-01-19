@@ -1,0 +1,26 @@
+feat: Add separate weekly_digest email type for independent preference control
+
+Add new weekly_digest email type to allow users to independently control
+weekly digest emails separately from instant activity notifications.
+
+Database:
+- Add weekly_digest email type with label "Weekly Digest" and description
+
+TypeScript:
+- Add 'weekly_digest' to EmailType union in emailPreferencesClient.ts
+
+Weekly Digest Cron:
+- Check weekly_digest email preferences instead of notifications
+- Generate unsubscribe links with emailType: 'weekly_digest'
+
+Unsubscribe Page:
+- Add weekly_digest label: 'the weekly digest'
+
+Files changed:
+- supabase/migrations/20260119100000_add_weekly_digest_email_type.sql - New migration
+- src/utils/emailPreferencesClient.ts - Updated EmailType union
+- src/app/api/cron/weekly-digest/route.ts - Use weekly_digest type for preferences and unsubscribe
+- src/app/unsubscribe/[token]/page.tsx - Add weekly_digest label
+
+Note: Onboarding and account settings pages automatically show the new email type
+since they load email types dynamically from the database.
