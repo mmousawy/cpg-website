@@ -35,6 +35,7 @@
     "@tanstack/react-query": "^5.90.16",
     "@vercel/analytics": "^1.6.1",
     "blurhash": "^2.0.5",
+    "botid": "^1.5.10",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",

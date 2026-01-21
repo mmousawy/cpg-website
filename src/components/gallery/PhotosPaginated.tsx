@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import Button from '../shared/Button';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
@@ -7,18 +8,25 @@ import type { StreamPhoto } from '@/lib/data/gallery';
 
 type PhotosPaginatedProps = {
   initialPhotos: StreamPhoto[];
-  apiEndpoint: string;
   perPage?: number;
   initialHasMore?: boolean;
+  initialSort?: 'recent' | 'popular';
+  apiEndpoint?: string;
+  showSortToggle?: boolean;
 };
 
 export default function PhotosPaginated({
   initialPhotos,
-  apiEndpoint,
   perPage = 20,
   initialHasMore,
+  initialSort = 'recent',
+  apiEndpoint = '/api/gallery/photos',
+  showSortToggle = true,
 }: PhotosPaginatedProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [photos, setPhotos] = useState<StreamPhoto[]>(initialPhotos);
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
   // If initialHasMore is provided, use it; otherwise check if we got a full page
   const [hasMore, setHasMore] = useState(
     initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
@@ -28,7 +36,8 @@ export default function PhotosPaginated({
   const loadMore = () => {
     startTransition(async () => {
       try {
-        const res = await fetch(`${apiEndpoint}?offset=${photos.length}&limit=${perPage}`);
+        const sortParam = showSortToggle ? `&sort=${sortBy}` : '';
+        const res = await fetch(`${apiEndpoint}?offset=${photos.length}&limit=${perPage}${sortParam}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch more photos');
@@ -44,26 +53,104 @@ export default function PhotosPaginated({
     });
   };
 
-  if (photos.length === 0) {
-    return (
-      <div
-        className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-      >
-        <p
-          className="text-lg opacity-70"
-        >
-          No photos yet.
-        </p>
-      </div>
-    );
-  }
+  const handleSortChange = (newSort: 'recent' | 'popular') => {
+    if (newSort === sortBy) return;
+
+    setSortBy(newSort);
+
+    // Update URL query parameter
+    const params = new URLSearchParams(searchParams.toString());
+    if (newSort === 'recent') {
+      params.delete('sort');
+    } else {
+      params.set('sort', newSort);
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    router.replace(newUrl, { scroll: false });
+
+    startTransition(async () => {
+      try {
+        const res = await fetch(`${apiEndpoint}?offset=0&limit=${perPage}&sort=${newSort}`);
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch photos');
+        }
+
+        const data = await res.json();
+        setPhotos(data.photos);
+        setHasMore(data.hasMore);
+      } catch (error) {
+        console.error('Error loading photos:', error);
+      }
+    });
+  };
 
   return (
     <>
-      <JustifiedPhotoGrid
-        photos={photos}
-        showAttribution
-      />
+      {showSortToggle && (
+        <div
+          className="flex items-center gap-2 mb-6"
+        >
+          <Button
+            variant={sortBy === 'recent' ? 'primary' : 'secondary'}
+            onClick={() => handleSortChange('recent')}
+            size="sm"
+            disabled={isPending}
+          >
+            Recent
+          </Button>
+          <Button
+            variant={sortBy === 'popular' ? 'primary' : 'secondary'}
+            onClick={() => handleSortChange('popular')}
+            size="sm"
+            disabled={isPending}
+          >
+            Popular
+          </Button>
+          {isPending && (
+            <svg
+              className="animate-spin h-4 w-4 text-foreground/50"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          )}
+        </div>
+      )}
+
+      {photos.length === 0 && !isPending ? (
+        <div
+          className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+        >
+          <p
+            className="text-lg opacity-70"
+          >
+            No photos found.
+          </p>
+        </div>
+      ) : (
+        <div
+          className={isPending ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}
+        >
+          <JustifiedPhotoGrid
+            photos={photos}
+            showAttribution
+          />
+        </div>
+      )}
 
       {hasMore && (
         <div

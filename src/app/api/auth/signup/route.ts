@@ -1,4 +1,5 @@
 import { render } from '@react-email/render';
+import { checkBotId } from 'botid/server';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
@@ -20,6 +21,18 @@ function hashToken(token: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check for bots using BotID
+    // In development, checkBotId() automatically returns { isBot: false }
+    const { isBot } = await checkBotId();
+
+    if (isBot) {
+      console.log('Bot detected, rejecting signup attempt');
+      return NextResponse.json(
+        { message: 'Request rejected' },
+        { status: 403 },
+      );
+    }
+
     const { email, password } = await request.json();
 
     // Validate required fields

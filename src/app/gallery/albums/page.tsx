@@ -1,6 +1,6 @@
+import AlbumsPaginated from '@/components/gallery/AlbumsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import AlbumsPaginated from '@/components/gallery/AlbumsPaginated';
 import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
@@ -13,18 +13,23 @@ export const metadata = createMetadata({
   keywords: ['photo albums', 'photography collections', 'community albums'],
 });
 
-export default async function AlbumsPage() {
+type PageProps = {
+  searchParams: Promise<{ sort?: string }>;
+};
+
+export default async function AlbumsPage({ searchParams }: PageProps) {
+  const { sort } = await searchParams;
+  const initialSort = sort === 'popular' ? 'popular' : 'recent';
+
   // Fetch one extra to check if there are more
-  const allAlbums = await getPublicAlbums(21);
+  const allAlbums = await getPublicAlbums(21, initialSort);
   const albums = allAlbums.slice(0, 20);
   const hasMore = allAlbums.length > 20;
 
   return (
     <>
       <PageContainer>
-        <div
-          className="mb-8"
-        >
+        <div>
           <h1
             className="mb-2 text-3xl font-bold"
           >
@@ -42,9 +47,11 @@ export default async function AlbumsPage() {
         className="pt-0!"
       >
         <AlbumsPaginated
+          key={initialSort}
           initialAlbums={albums}
           perPage={20}
           initialHasMore={hasMore}
+          initialSort={initialSort}
         />
       </WidePageContainer>
     </>

@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const limit = parseInt(searchParams.get('limit') || '20', 10);
+  const sortBy = searchParams.get('sort') === 'popular' ? 'popular' : 'recent';
 
   // Validate params
   if (offset < 0 || limit < 1 || limit > 100) {
@@ -17,6 +18,8 @@ export async function GET(request: NextRequest) {
 
   const supabase = createPublicClient();
 
+  const orderColumn = sortBy === 'popular' ? 'view_count' : 'created_at';
+
   // Fetch one extra to check if there are more
   const fetchLimit = limit + 1;
   const { data: photos, error } = await supabase
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest) {
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%')
-    .order('created_at', { ascending: false })
+    .order(orderColumn, { ascending: false })
     .range(offset, offset + fetchLimit - 1);
 
   if (error) {

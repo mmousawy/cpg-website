@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import Button from '../shared/Button';
 import AlbumGrid from '../album/AlbumGrid';
@@ -18,6 +19,8 @@ export default function AlbumsPaginated({
   initialHasMore,
   initialSort = 'recent',
 }: AlbumsPaginatedProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [albums, setAlbums] = useState<AlbumWithPhotos[]>(initialAlbums);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
   // If initialHasMore is provided, use it; otherwise check if we got a full page
@@ -49,8 +52,16 @@ export default function AlbumsPaginated({
     if (newSort === sortBy) return;
 
     setSortBy(newSort);
-    setAlbums([]);
-    setHasMore(true);
+
+    // Update URL query parameter
+    const params = new URLSearchParams(searchParams.toString());
+    if (newSort === 'recent') {
+      params.delete('sort');
+    } else {
+      params.set('sort', newSort);
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    router.replace(newUrl, { scroll: false });
 
     startTransition(async () => {
       try {
@@ -72,7 +83,7 @@ export default function AlbumsPaginated({
   return (
     <>
       <div
-        className="flex gap-2 mb-6"
+        className="flex items-center gap-2 mb-6"
       >
         <Button
           variant={sortBy === 'recent' ? 'primary' : 'secondary'}
@@ -90,6 +101,27 @@ export default function AlbumsPaginated({
         >
           Popular
         </Button>
+        {isPending && (
+          <svg
+            className="animate-spin h-4 w-4 text-foreground/50"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        )}
       </div>
 
       {albums.length === 0 && !isPending ? (
@@ -103,10 +135,14 @@ export default function AlbumsPaginated({
           </p>
         </div>
       ) : (
-        <AlbumGrid
-          albums={albums}
-          className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
-        />
+        <div
+          className={isPending ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}
+        >
+          <AlbumGrid
+            albums={albums}
+            className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
+          />
+        </div>
       )}
 
       {hasMore && (

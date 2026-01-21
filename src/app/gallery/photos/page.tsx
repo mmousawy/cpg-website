@@ -7,33 +7,38 @@ import { createMetadata } from '@/utils/metadata';
 import { getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
-  title: 'Recent Photos',
-  description: 'Browse the latest photos uploaded by the community.',
+  title: 'Community Photos',
+  description: 'Browse photos uploaded by the community.',
   canonical: '/gallery/photos',
-  keywords: ['recent photos', 'latest uploads', 'community photostream'],
+  keywords: ['photos', 'community photos', 'photography'],
 });
 
-export default async function RecentPhotosPage() {
+type PageProps = {
+  searchParams: Promise<{ sort?: string }>;
+};
+
+export default async function PhotosPage({ searchParams }: PageProps) {
+  const { sort } = await searchParams;
+  const initialSort = sort === 'popular' ? 'popular' : 'recent';
+
   // Fetch one extra to check if there are more
-  const allPhotos = await getPublicPhotostream(21);
+  const allPhotos = await getPublicPhotostream(21, initialSort);
   const photos = allPhotos.slice(0, 20);
   const hasMore = allPhotos.length > 20;
 
   return (
     <>
       <PageContainer>
-        <div
-          className=""
-        >
+        <div>
           <h1
             className="mb-2 text-3xl font-bold"
           >
-            Recent photos
+            Community photos
           </h1>
           <p
             className="text-lg opacity-70"
           >
-            Latest uploads from the community
+            Photos from the community
           </p>
         </div>
       </PageContainer>
@@ -42,10 +47,11 @@ export default async function RecentPhotosPage() {
         className="pt-0!"
       >
         <PhotosPaginated
+          key={initialSort}
           initialPhotos={photos}
-          apiEndpoint="/api/gallery/photos"
           perPage={20}
           initialHasMore={hasMore}
+          initialSort={initialSort}
         />
       </WidePageContainer>
     </>

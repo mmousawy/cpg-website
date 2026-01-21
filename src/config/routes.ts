@@ -27,6 +27,14 @@ export const routes = {
     label: 'Gallery',
     url: '/gallery',
   },
+  galleryPhotos: {
+    label: 'Photos',
+    url: '/gallery/photos',
+  },
+  galleryAlbums: {
+    label: 'Albums',
+    url: '/gallery/albums',
+  },
   members: {
     label: 'Members',
     url: '/members',
@@ -50,6 +58,18 @@ export const routes = {
   admin: {
     label: 'Admin',
     url: '/admin',
+  },
+  terms: {
+    label: 'Terms of Service',
+    url: '/terms',
+  },
+  privacy: {
+    label: 'Privacy Policy',
+    url: '/privacy',
+  },
+  contact: {
+    label: 'Contact',
+    url: '/contact',
   },
 } as const;
 

@@ -46,6 +46,7 @@ export default async function RecentlyLikedPage() {
           apiEndpoint="/api/gallery/recent-likes"
           perPage={20}
           initialHasMore={hasMore}
+          showSortToggle={false}
         />
       </WidePageContainer>
     </>
