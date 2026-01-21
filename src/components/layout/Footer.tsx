@@ -1,6 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+
 import Button from '@/components/shared/Button';
+import { routes } from '@/config/routes';
 import { socialLinks } from '@/config/socials';
 
 // Import social icons - footer uses discord2 variant
@@ -53,14 +56,51 @@ export default function Footer() {
             );
           })}
         </div>
-        <p
-          className="text-sm text-center opacity-70"
+        <div
+          className="flex flex-wrap items-center justify-center gap-4 text-sm max-sm:flex-col max-sm:gap-2"
         >
-          &copy;
-          {currentYear}
-          {' '}
-          Creative Photography Group
-        </p>
+          <p
+            className="opacity-70"
+          >
+            &copy;
+            {currentYear}
+            {' '}
+            Creative Photography Group
+          </p>
+          <span
+            className="opacity-25 max-sm:hidden"
+          >
+            •
+          </span>
+          <Link
+            href={routes.terms.url}
+            className="opacity-70 hover:opacity-100 transition-opacity"
+          >
+            {routes.terms.label}
+          </Link>
+          <span
+            className="opacity-25 max-sm:hidden"
+          >
+            •
+          </span>
+          <Link
+            href={routes.privacy.url}
+            className="opacity-70 hover:opacity-100 transition-opacity"
+          >
+            {routes.privacy.label}
+          </Link>
+          <span
+            className="opacity-25 max-sm:hidden"
+          >
+            •
+          </span>
+          <Link
+            href={routes.contact.url}
+            className="opacity-70 hover:opacity-100 transition-opacity"
+          >
+            {routes.contact.label}
+          </Link>
+        </div>
       </div>
     </footer>
   );

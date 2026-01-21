@@ -1,8 +1,12 @@
+import Link from 'next/link';
+
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import Button from '@/components/shared/Button';
 import PopularTagsSection from '@/components/shared/PopularTagsSection';
+import { routes } from '@/config/routes';
 import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
@@ -58,11 +62,16 @@ export default async function GalleryPage() {
             <div
               className="mb-6"
             >
-              <h2
-                className="text-xl font-semibold"
+              <Link
+                href={`${routes.galleryPhotos.url}?sort=popular`}
+                className="group"
               >
-                Most viewed this week
-              </h2>
+                <h2
+                  className="text-xl font-semibold group-hover:text-primary transition-colors"
+                >
+                  Most viewed this week
+                </h2>
+              </Link>
               <p
                 className="text-foreground/60 mt-1 text-sm"
               >
@@ -73,6 +82,16 @@ export default async function GalleryPage() {
               photos={mostViewedPhotos}
               showAttribution
             />
+            <div
+              className="mt-6 flex justify-center"
+            >
+              <Button
+                href={`${routes.galleryPhotos.url}?sort=popular`}
+                variant="secondary"
+              >
+                View all popular photos
+              </Button>
+            </div>
           </div>
         )}
 
@@ -84,11 +103,16 @@ export default async function GalleryPage() {
             <div
               className="mb-6"
             >
-              <h2
-                className="text-xl font-semibold"
+              <Link
+                href={`${routes.galleryAlbums.url}?sort=popular`}
+                className="group"
               >
-                Trending albums
-              </h2>
+                <h2
+                  className="text-xl font-semibold group-hover:text-primary transition-colors"
+                >
+                  Trending albums
+                </h2>
+              </Link>
               <p
                 className="text-foreground/60 mt-1 text-sm"
               >
@@ -99,6 +123,16 @@ export default async function GalleryPage() {
               albums={mostViewedAlbums}
               className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-6"
             />
+            <div
+              className="mt-6 flex justify-center"
+            >
+              <Button
+                href={`${routes.galleryAlbums.url}?sort=popular`}
+                variant="secondary"
+              >
+                View all popular albums
+              </Button>
+            </div>
           </div>
         )}
 
@@ -110,11 +144,16 @@ export default async function GalleryPage() {
             <div
               className="mb-6"
             >
-              <h2
-                className="text-xl font-semibold"
+              <Link
+                href={routes.galleryPhotos.url}
+                className="group"
               >
-                Recent photos
-              </h2>
+                <h2
+                  className="text-xl font-semibold group-hover:text-primary transition-colors"
+                >
+                  Recent photos
+                </h2>
+              </Link>
               <p
                 className="text-foreground/60 mt-1 text-sm"
               >
@@ -125,6 +164,16 @@ export default async function GalleryPage() {
               photos={photos}
               showAttribution
             />
+            <div
+              className="mt-6 flex justify-center"
+            >
+              <Button
+                href={routes.galleryPhotos.url}
+                variant="secondary"
+              >
+                View all recent photos
+              </Button>
+            </div>
           </div>
         )}
 
@@ -133,11 +182,16 @@ export default async function GalleryPage() {
           <div
             className="mb-6"
           >
-            <h2
-              className="text-xl font-semibold"
+            <Link
+              href={routes.galleryAlbums.url}
+              className="group"
             >
-              Albums
-            </h2>
+              <h2
+                className="text-xl font-semibold group-hover:text-primary transition-colors"
+              >
+                Albums
+              </h2>
+            </Link>
             <p
               className="text-foreground/60 mt-1 text-sm"
             >
@@ -156,10 +210,22 @@ export default async function GalleryPage() {
               </p>
             </div>
           ) : (
-            <AlbumGrid
-              albums={albums}
-              className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-6"
-            />
+            <>
+              <AlbumGrid
+                albums={albums}
+                className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-6"
+              />
+              <div
+                className="mt-6 flex justify-center"
+              >
+                <Button
+                  href={routes.galleryAlbums.url}
+                  variant="secondary"
+                >
+                  View all albums
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </WidePageContainer>

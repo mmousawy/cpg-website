@@ -7,18 +7,19 @@ import type { StreamPhoto } from '@/lib/data/gallery';
 
 type PhotosPaginatedProps = {
   initialPhotos: StreamPhoto[];
-  apiEndpoint: string;
   perPage?: number;
   initialHasMore?: boolean;
+  initialSort?: 'recent' | 'popular';
 };
 
 export default function PhotosPaginated({
   initialPhotos,
-  apiEndpoint,
   perPage = 20,
   initialHasMore,
+  initialSort = 'recent',
 }: PhotosPaginatedProps) {
   const [photos, setPhotos] = useState<StreamPhoto[]>(initialPhotos);
+  const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
   // If initialHasMore is provided, use it; otherwise check if we got a full page
   const [hasMore, setHasMore] = useState(
     initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
@@ -28,7 +29,7 @@ export default function PhotosPaginated({
   const loadMore = () => {
     startTransition(async () => {
       try {
-        const res = await fetch(`${apiEndpoint}?offset=${photos.length}&limit=${perPage}`);
+        const res = await fetch(`/api/gallery/photos?offset=${photos.length}&limit=${perPage}&sort=${sortBy}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch more photos');
@@ -44,26 +45,69 @@ export default function PhotosPaginated({
     });
   };
 
-  if (photos.length === 0) {
-    return (
-      <div
-        className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-      >
-        <p
-          className="text-lg opacity-70"
-        >
-          No photos yet.
-        </p>
-      </div>
-    );
-  }
+  const handleSortChange = (newSort: 'recent' | 'popular') => {
+    if (newSort === sortBy) return;
+
+    setSortBy(newSort);
+    setPhotos([]);
+    setHasMore(true);
+
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/gallery/photos?offset=0&limit=${perPage}&sort=${newSort}`);
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch photos');
+        }
+
+        const data = await res.json();
+        setPhotos(data.photos);
+        setHasMore(data.hasMore);
+      } catch (error) {
+        console.error('Error loading photos:', error);
+      }
+    });
+  };
 
   return (
     <>
-      <JustifiedPhotoGrid
-        photos={photos}
-        showAttribution
-      />
+      <div
+        className="flex gap-2 mb-6"
+      >
+        <Button
+          variant={sortBy === 'recent' ? 'primary' : 'secondary'}
+          onClick={() => handleSortChange('recent')}
+          size="sm"
+          disabled={isPending}
+        >
+          Recent
+        </Button>
+        <Button
+          variant={sortBy === 'popular' ? 'primary' : 'secondary'}
+          onClick={() => handleSortChange('popular')}
+          size="sm"
+          disabled={isPending}
+        >
+          Popular
+        </Button>
+      </div>
+
+      {photos.length === 0 && !isPending ? (
+        <div
+          className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+        >
+          <p
+            className="text-lg opacity-70"
+          >
+            No photos found.
+          </p>
+        </div>
+      ) : (
+        <JustifiedPhotoGrid
+          photos={photos}
+          showAttribution
+        />
+      )}
 
       {hasMore && (
         <div

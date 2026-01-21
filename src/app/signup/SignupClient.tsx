@@ -1,21 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { BotIdClient } from 'botid/client';
 import Link from 'next/link';
+import { useState } from 'react';
 
-import { useAuth } from '@/hooks/useAuth';
-import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import { routes } from '@/config/routes';
-import ErrorMessage from '@/components/shared/ErrorMessage';
-
-import DiscordSVG from 'public/icons/discord2.svg';
-import CheckSVG from 'public/icons/check.svg';
 import ArrowLink from '@/components/shared/ArrowLink';
+import Button from '@/components/shared/Button';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import Input from '@/components/shared/Input';
+import { routes } from '@/config/routes';
+import { useAuth } from '@/hooks/useAuth';
 
-export default function SignupClient() {
+import CheckSVG from 'public/icons/check.svg';
+import DiscordSVG from 'public/icons/discord2.svg';
+
+function SignupForm() {
   const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -304,5 +305,18 @@ export default function SignupClient() {
         </p>
       </Container>
     </PageContainer>
+  );
+}
+
+export default function SignupClient() {
+  return (
+    <>
+      <BotIdClient
+        protect={[
+          { path: '/api/auth/signup', method: 'POST' },
+        ]}
+      />
+      <SignupForm />
+    </>
   );
 }

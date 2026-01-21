@@ -1,0 +1,64 @@
+feat: Add gallery section links, sort toggle, and improve legal pages
+
+Gallery Overview Page:
+- Add clickable section titles linking to detail pages
+- Add "View all" button links below each section grid
+- Most viewed photos → /gallery/photos?sort=popular
+- Trending albums → /gallery/albums?sort=popular
+- Recent photos → /gallery/photos
+- Albums → /gallery/albums
+
+Photos Page with Sort Toggle:
+- Add "Recent" / "Popular" toggle buttons (same pattern as albums)
+- Support ?sort=popular query parameter from URL
+- Fetch initial data based on sort parameter
+- Client-side toggle switches between sort modes
+
+Albums Page with Sort Toggle:
+- Accept ?sort=popular query parameter from URL
+- Pass initialSort to AlbumsPaginated component
+- SSR with correct initial data based on sort
+
+API Updates:
+- /api/gallery/photos now supports sort=popular|recent param
+- Popular sorts by view_count, Recent sorts by created_at
+
+Route Config:
+- Update galleryPhotos and galleryAlbums labels
+
+Cleanup:
+- Remove redundant trending pages and API routes
+- /gallery/trending-photos (deleted)
+- /gallery/trending-albums (deleted)
+- /api/gallery/trending-photos (deleted)
+- /api/gallery/trending-albums (deleted)
+
+Terms & Privacy Pages:
+- Restructure terms page to match privacy page layout
+- Add responsive font sizes (smaller on mobile)
+- h1: text-2xl sm:text-3xl, h2: text-xl sm:text-2xl, h3: text-lg sm:text-xl
+- Body text: text-sm sm:text-base
+- Responsive spacing: space-y-6 sm:space-y-8, mb-2 sm:mb-4
+
+Footer:
+- Replace <a> tags with Next.js Link components for client-side navigation
+
+Files changed (11):
+
+Modified (9):
+- src/app/gallery/page.tsx - Add linked titles and button links
+- src/app/gallery/photos/page.tsx - Add sort param support
+- src/app/gallery/albums/page.tsx - Add sort param support
+- src/components/gallery/PhotosPaginated.tsx - Add Recent/Popular toggle
+- src/app/api/gallery/photos/route.ts - Add sort param support
+- src/config/routes.ts - Update labels, remove trending routes
+- src/app/terms/page.tsx - Match privacy structure, responsive fonts
+- src/app/privacy/page.tsx - Add responsive fonts and spacing
+- src/components/layout/Footer.tsx - Use Link for soft navigation
+
+Deleted (5):
+- src/app/gallery/trending-photos/page.tsx
+- src/app/gallery/trending-albums/page.tsx
+- src/app/gallery/trending-albums/TrendingAlbumsPaginated.tsx
+- src/app/api/gallery/trending-photos/route.ts
+- src/app/api/gallery/trending-albums/route.ts

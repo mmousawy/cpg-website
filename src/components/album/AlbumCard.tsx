@@ -38,7 +38,7 @@ export default function AlbumCard({
 
   const cardContent = (
     <div
-      className="group block overflow-hidden border border-border-color bg-background-light transition-shadow group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong"
+      className="group block overflow-hidden border border-border-color bg-background-light group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong transition-all duration-200"
     >
       <div
         className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
@@ -51,7 +51,7 @@ export default function AlbumCard({
             quality={85}
             fill
             loading='lazy'
-            className="object-cover transition-transform duration-200"
+            className="object-cover group-hover:brightness-110 transition-all duration-200"
           />
         ) : (
           <FolderSVG

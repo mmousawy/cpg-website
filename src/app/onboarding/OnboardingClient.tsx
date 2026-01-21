@@ -4,8 +4,10 @@ import { revalidateProfile } from '@/app/actions/revalidate';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import PageLoading from '@/components/shared/PageLoading';
+import { routes } from '@/config/routes';
 import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
 import OnboardingInterestsSection from '@/components/onboarding/OnboardingInterestsSection';
 import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
@@ -34,6 +36,9 @@ const onboardingSchema = z.object({
   bio: z.string().optional(),
   interests: z.array(z.string()),
   emailPreferences: z.record(z.string(), z.boolean()),
+  termsAccepted: z.boolean().refine((val) => val === true, {
+    message: 'You must agree to the Terms of Service to continue',
+  }),
 });
 
 export type OnboardingFormData = z.infer<typeof onboardingSchema>;
@@ -105,6 +110,7 @@ export default function OnboardingClient() {
       bio: profile?.bio || '',
       interests: [],
       emailPreferences: {},
+      termsAccepted: false,
     },
   });
 
@@ -315,6 +321,7 @@ export default function OnboardingClient() {
         bio: string | null;
         avatar_url: string | null;
         newsletter_opt_in: boolean;
+        terms_accepted_at: string;
       } = {
         nickname: data.nickname,
         full_name: data.fullName || null,
@@ -322,6 +329,7 @@ export default function OnboardingClient() {
         avatar_url: avatarUrl,
         // For backward compatibility, set newsletter_opt_in based on newsletter preference
         newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
+        terms_accepted_at: new Date().toISOString(),
       };
 
       // Only update email if OAuth user and email is provided
@@ -491,6 +499,54 @@ export default function OnboardingClient() {
             isLoadingEmailTypes={isLoadingEmailTypes}
           />
 
+          <div
+            className="rounded-lg border border-border-color bg-background-light p-4"
+          >
+            <div
+              className="flex items-start gap-3"
+            >
+              <Checkbox
+                id="terms-accepted"
+                {...register('termsAccepted')}
+                className="mt-0.5 shrink-0"
+              />
+              <label
+                htmlFor="terms-accepted"
+                className="text-sm leading-relaxed"
+              >
+                I agree to the
+                {' '}
+                <a
+                  href={routes.terms.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:text-primary-alt underline"
+                >
+                  Terms of Service
+                </a>
+                {' '}
+                and acknowledge that I retain full copyright ownership of my photos. I have also read the
+                {' '}
+                <a
+                  href={routes.privacy.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:text-primary-alt underline"
+                >
+                  Privacy Policy
+                </a>
+                .
+              </label>
+            </div>
+            {errors.termsAccepted && (
+              <p
+                className="mt-2 text-sm text-red-600 dark:text-red-400"
+              >
+                {errors.termsAccepted.message}
+              </p>
+            )}
+          </div>
+
           {submitError && <ErrorMessage>
             {submitError}
           </ErrorMessage>}
@@ -515,7 +571,8 @@ export default function OnboardingClient() {
               isSaving ||
               nicknameAvailable === false ||
               !watchedNickname ||
-              (isOAuthUser && !watch('email') && !isTestMode)
+              (isOAuthUser && !watch('email') && !isTestMode) ||
+              !watch('termsAccepted')
             }
             loading={isSaving}
           >
