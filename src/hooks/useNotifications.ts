@@ -2,8 +2,12 @@
 
 import type { NotificationWithActor } from '@/types/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queueNotificationSeen,
+  queueNotificationDismiss,
+  queueAllNotificationsSeen,
+} from '@/lib/sync';
 import { useCallback, useEffect, useState } from 'react';
-import { useDebouncedSync } from './useDebouncedSync';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -35,7 +39,6 @@ type UseNotificationsOptions = {
 export function useNotifications(userId: string | null, options?: UseNotificationsOptions) {
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
   const queryClient = useQueryClient();
-  const { queueNotificationSeen, queueNotificationDismiss, queueAllNotificationsSeen } = useDebouncedSync();
 
   // Get cached data to initialize state (prevents flash of stale data on navigation)
   const queryKey = ['notifications', userId, pageSize];
@@ -159,7 +162,7 @@ export function useNotifications(userId: string | null, options?: UseNotificatio
     queueNotificationSeen(notificationId);
 
     return { success: true };
-  }, [queueNotificationSeen]);
+  }, []);
 
   // Mark all notifications as seen
   const markAllAsSeen = useCallback(() => {
@@ -177,7 +180,7 @@ export function useNotifications(userId: string | null, options?: UseNotificatio
     queueAllNotificationsSeen(unseenIds);
 
     return { success: true };
-  }, [notifications, queueAllNotificationsSeen]);
+  }, [notifications]);
 
   // Dismiss a notification
   const dismiss = useCallback((notificationId: string) => {
@@ -200,7 +203,7 @@ export function useNotifications(userId: string | null, options?: UseNotificatio
     queueNotificationDismiss(notificationId);
 
     return { success: true };
-  }, [notifications, queueNotificationDismiss]);
+  }, [notifications]);
 
   // Invalidate query (for external use)
   const invalidate = useCallback(() => {

@@ -1,6 +1,7 @@
 import type { SyncAction, SyncCallback, SyncHandler, SyncRegistry } from './types';
 
 const DEFAULT_DEBOUNCE_MS = 2000;
+const MAX_RETRIES = 3;
 
 // Global state that persists across component mounts/unmounts and navigation
 const handlers = new Map<string, SyncHandler<unknown, unknown>>();
@@ -57,6 +58,7 @@ async function syncToServer(): Promise<void> {
 
   // Process each handler's actions
   const promises: Promise<void>[] = [];
+  const successfulHandlers = new Set<string>();
 
   for (const [handlerId, handlerActions] of actionsByHandler) {
     const handler = handlers.get(handlerId);
@@ -71,15 +73,23 @@ async function syncToServer(): Promise<void> {
         promises.push(
           handler.sync(action.payload)
             .then(() => {
-              handler.onSuccess?.();
-              invokeSuccessCallbacks(handlerId);
+              successfulHandlers.add(handlerId);
             })
             .catch((error) => {
               console.error(`Sync failed for ${handlerId}:`, error);
               handler.onError?.(error);
-              // Re-queue for retry
-              const key = getActionKey(handlerId, handler.getKey(action.payload));
-              pendingActions.set(key, action);
+              // Re-queue for retry if under max retries
+              if (action.retryCount < MAX_RETRIES) {
+                const key = getActionKey(handlerId, handler.getKey(action.payload));
+                pendingActions.set(key, {
+                  ...action,
+                  retryCount: action.retryCount + 1,
+                });
+              } else {
+                console.error(
+                  `Max retries (${MAX_RETRIES}) exceeded for ${handlerId}:${action.key}`,
+                );
+              }
             }),
         );
       }
@@ -93,16 +103,24 @@ async function syncToServer(): Promise<void> {
       promises.push(
         handler.sync(grouped)
           .then(() => {
-            handler.onSuccess?.();
-            invokeSuccessCallbacks(handlerId);
+            successfulHandlers.add(handlerId);
           })
           .catch((error) => {
             console.error(`Batch sync failed for ${handlerId}:`, error);
             handler.onError?.(error);
-            // Re-queue all for retry
+            // Re-queue all for retry if under max retries
             for (const action of handlerActions) {
-              const key = getActionKey(handlerId, handler.getKey(action.payload));
-              pendingActions.set(key, action);
+              if (action.retryCount < MAX_RETRIES) {
+                const key = getActionKey(handlerId, handler.getKey(action.payload));
+                pendingActions.set(key, {
+                  ...action,
+                  retryCount: action.retryCount + 1,
+                });
+              } else {
+                console.error(
+                  `Max retries (${MAX_RETRIES}) exceeded for ${handlerId}:${action.key}`,
+                );
+              }
             }
           }),
       );
@@ -110,6 +128,13 @@ async function syncToServer(): Promise<void> {
   }
 
   await Promise.all(promises);
+
+  // Invoke callbacks once per handler after all syncs complete
+  for (const handlerId of successfulHandlers) {
+    const handler = handlers.get(handlerId);
+    handler?.onSuccess?.();
+    invokeSuccessCallbacks(handlerId);
+  }
 
   isSyncing = false;
 
@@ -235,6 +260,7 @@ export const syncRegistry: SyncRegistry = {
       payload,
       timestamp: Date.now(),
       priority: actionPriority,
+      retryCount: existing?.retryCount ?? 0,
     });
 
     scheduleSync(handler.debounceMs ?? DEFAULT_DEBOUNCE_MS);

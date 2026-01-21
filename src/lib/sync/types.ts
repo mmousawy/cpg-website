@@ -17,6 +17,7 @@ export type SyncAction<TPayload = unknown> = {
   payload: TPayload;
   timestamp: number;
   priority: number;
+  retryCount: number;
 };
 
 /**
@@ -63,7 +64,8 @@ export type SyncHandler<TPayload = unknown, TBatched = unknown> = {
 
   /**
    * Called after successful sync.
-   * Use for cache invalidation, event dispatch, etc.
+   * Optional - use for handler-specific cleanup.
+   * For cache invalidation, use syncRegistry.onSyncSuccess() instead.
    */
   onSuccess?: () => void;
 
@@ -81,7 +83,7 @@ export type SyncHandler<TPayload = unknown, TBatched = unknown> = {
 
   /**
    * Debounce delay in milliseconds.
-   * Default: uses global DEBOUNCE_MS (1000ms)
+   * Default: uses global DEBOUNCE_MS (2000ms)
    */
   debounceMs?: number;
 };

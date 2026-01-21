@@ -3,8 +3,8 @@
 import Avatar from '@/components/auth/Avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useDebouncedSync } from '@/hooks/useDebouncedSync';
 import { useAlbumLikes, usePhotoLikes } from '@/hooks/useLikes';
+import { queueLike } from '@/lib/sync';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -34,7 +34,6 @@ const MAX_VISIBLE_AVATARS = 5;
 export default function DetailLikesSection({ entityType, className, entityId, initialCount = 0 }: DetailLikesSectionProps) {
   const { user, profile } = useAuth();
   const showAuthPrompt = useAuthPrompt();
-  const { queueLike } = useDebouncedSync();
   const queryClient = useQueryClient();
 
   // Get cached data to initialize state (prevents flash of stale data on navigation)
