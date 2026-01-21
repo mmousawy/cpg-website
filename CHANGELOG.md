@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/mmousawy/cpg-website/compare/v1.10.0...v1.11.0) (2026-01-21)
+
+
+### Features
+
+* Add gallery section links, sort toggle, and improve legal pages ([0f03841](https://github.com/mmousawy/cpg-website/commit/0f0384136ad29846c97a23874bad019e9668af0c))
+* Enhance PhotosPaginated component with custom endpoint and sort toggle options ([adcc97c](https://github.com/mmousawy/cpg-website/commit/adcc97c2413fcfc8ffc7f79cf9353229537eb114))
+
 ## [1.10.0](https://github.com/mmousawy/cpg-website/compare/v1.9.0...v1.10.0) (2026-01-21)
 
 
