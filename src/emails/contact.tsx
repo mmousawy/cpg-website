@@ -65,7 +65,7 @@ export const ContactEmail = ({
               {name}
             </Text>
             <Text
-              className="!mt-1 text-[14px] leading-[24px] text-[#171717]"
+              className="mt-1! text-[14px] leading-[24px] text-[#171717]"
             >
               <strong>
                 Email:
@@ -74,7 +74,7 @@ export const ContactEmail = ({
               {email}
             </Text>
             <Text
-              className="!mt-1 text-[14px] leading-[24px] text-[#171717]"
+              className="mt-1! text-[14px] leading-[24px] text-[#171717]"
             >
               <strong>
                 Subject:

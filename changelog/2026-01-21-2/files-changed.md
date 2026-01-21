@@ -250,13 +250,47 @@ import Link from 'next/link';
 
 This enables soft navigation without full page reloads.
 
-## All Modified Files (9 + 5 deleted)
+### 10. PhotosPaginated Prop Restoration
+
+**File: `src/components/gallery/PhotosPaginated.tsx`**
+
+Restored `apiEndpoint` and added `showSortToggle` props to support different use cases:
+
+```tsx
+type PhotosPaginatedProps = {
+  initialPhotos: StreamPhoto[];
+  perPage?: number;
+  initialHasMore?: boolean;
+  initialSort?: 'recent' | 'popular';
+  apiEndpoint?: string;      // Custom API endpoint (default: /api/gallery/photos)
+  showSortToggle?: boolean;  // Show Recent/Popular toggle (default: true)
+};
+```
+
+This fixes the recent-likes page which uses a different endpoint and doesn't need sort toggle.
+
+**File: `src/app/gallery/recent-likes/page.tsx`**
+
+Updated to use new props:
+
+```tsx
+<PhotosPaginated
+  initialPhotos={photos}
+  apiEndpoint="/api/gallery/recent-likes"
+  perPage={20}
+  initialHasMore={hasMore}
+  showSortToggle={false}
+/>
+```
+
+## All Modified Files (10 + 5 deleted)
 
 ### Modified
 - `src/app/gallery/page.tsx` - Linked titles, button links
 - `src/app/gallery/photos/page.tsx` - Sort param support
 - `src/app/gallery/albums/page.tsx` - Sort param support
-- `src/components/gallery/PhotosPaginated.tsx` - Recent/Popular toggle
+- `src/app/gallery/recent-likes/page.tsx` - Use showSortToggle prop
+- `src/components/gallery/PhotosPaginated.tsx` - Recent/Popular toggle, apiEndpoint/showSortToggle props
 - `src/app/api/gallery/photos/route.ts` - Sort param support
 - `src/config/routes.ts` - Updated labels, removed trending
 - `src/app/terms/page.tsx` - Match privacy structure, responsive fonts

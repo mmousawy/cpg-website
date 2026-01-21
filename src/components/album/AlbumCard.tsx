@@ -41,7 +41,7 @@ export default function AlbumCard({
       className="group block overflow-hidden border border-border-color bg-background-light group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong transition-all duration-200"
     >
       <div
-        className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
+        className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-background"
       >
         {coverImage ? (
           <Image
@@ -77,7 +77,7 @@ export default function AlbumCard({
             />
             {/* Top gradient overlay */}
             <div
-              className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+              className="absolute inset-x-0 top-0 h-24 bg-linear-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
             />
 
             {/* Bottom blur layer with gradient mask */}
@@ -90,7 +90,7 @@ export default function AlbumCard({
             />
             {/* Bottom gradient overlay */}
             <div
-              className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
+              className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
             />
 
             {/* Title - top left, visible on hover */}

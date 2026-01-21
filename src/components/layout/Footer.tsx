@@ -42,7 +42,7 @@ export default function Footer() {
                 icon={<Icon
                   className="inline-block size-4"
                 />}
-                className="!p-2 sm:!px-3 sm:!py-1"
+                className="p-2! sm:px-3! sm:py-1!"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={name}

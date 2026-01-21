@@ -47,6 +47,7 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
         className="pt-0!"
       >
         <AlbumsPaginated
+          key={initialSort}
           initialAlbums={albums}
           perPage={20}
           initialHasMore={hasMore}

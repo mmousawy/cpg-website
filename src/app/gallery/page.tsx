@@ -52,7 +52,7 @@ export default async function GalleryPage() {
       </PageContainer>
 
       <WidePageContainer
-        className="!pt-0"
+        className="pt-0!"
       >
         {/* Most viewed in last week - Photos */}
         {mostViewedPhotos.length > 0 && (

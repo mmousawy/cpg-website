@@ -43,13 +43,18 @@ Terms & Privacy Pages:
 Footer:
 - Replace <a> tags with Next.js Link components for client-side navigation
 
-Files changed (11):
+PhotosPaginated Component:
+- Restore apiEndpoint prop for custom endpoints (fixes recent-likes page)
+- Add showSortToggle prop to optionally hide sort buttons
 
-Modified (9):
+Files changed (12):
+
+Modified (10):
 - src/app/gallery/page.tsx - Add linked titles and button links
 - src/app/gallery/photos/page.tsx - Add sort param support
 - src/app/gallery/albums/page.tsx - Add sort param support
-- src/components/gallery/PhotosPaginated.tsx - Add Recent/Popular toggle
+- src/app/gallery/recent-likes/page.tsx - Use showSortToggle prop
+- src/components/gallery/PhotosPaginated.tsx - Add Recent/Popular toggle, restore apiEndpoint/showSortToggle
 - src/app/api/gallery/photos/route.ts - Add sort param support
 - src/config/routes.ts - Update labels, remove trending routes
 - src/app/terms/page.tsx - Match privacy structure, responsive fonts
