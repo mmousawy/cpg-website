@@ -3,8 +3,8 @@
 import Avatar from '@/components/auth/Avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useDebouncedSync } from '@/hooks/useDebouncedSync';
 import { useAlbumLikes, usePhotoLikes } from '@/hooks/useLikes';
-import { toggleLike } from '@/lib/actions/likes';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -33,29 +33,31 @@ const MAX_VISIBLE_AVATARS = 5;
 
 export default function DetailLikesSection({ entityType, className, entityId, initialCount = 0 }: DetailLikesSectionProps) {
   const { user, profile } = useAuth();
-  const queryClient = useQueryClient();
   const showAuthPrompt = useAuthPrompt();
+  const { queueLike } = useDebouncedSync();
+  const queryClient = useQueryClient();
 
-  // Local state for optimistic updates - initialize with server count
-  const [liked, setLiked] = useState(false);
-  const [count, setCount] = useState(initialCount);
-  const [isPending, setIsPending] = useState(false);
+  // Get cached data to initialize state (prevents flash of stale data on navigation)
+  const queryKey = entityType === 'photo' ? ['photo-likes', entityId] : ['album-likes', entityId];
+  const cachedData = queryClient.getQueryData<{ likes: unknown[]; count: number; userHasLiked: boolean }>(queryKey);
+
+  // Local state for optimistic updates - initialize from cache if available, else server count
+  const [liked, setLiked] = useState(cachedData?.userHasLiked ?? false);
+  const [count, setCount] = useState(cachedData?.count ?? initialCount);
   const [isAnimating, setIsAnimating] = useState(false);
-  const previousLikedRef = useRef(false);
+  const previousLikedRef = useRef(cachedData?.userHasLiked ?? false);
 
   // Popover state
   const [showLikers, setShowLikers] = useState(false);
 
-  // Always fetch likes to show avatars (when there's an initial count)
-  const shouldFetch = initialCount > 0 || count > 0;
-
+  // Always fetch likes - we need to know if the current user has liked
   const photoLikesQuery = usePhotoLikes(
     entityType === 'photo' ? entityId : undefined,
-    { enabled: entityType === 'photo' && shouldFetch },
+    { enabled: entityType === 'photo' },
   );
   const albumLikesQuery = useAlbumLikes(
     entityType === 'album' ? entityId : undefined,
-    { enabled: entityType === 'album' && shouldFetch },
+    { enabled: entityType === 'album' },
   );
   const likesQuery = entityType === 'photo' ? photoLikesQuery : albumLikesQuery;
 
@@ -80,9 +82,7 @@ export default function DetailLikesSection({ entityType, className, entityId, in
     previousLikedRef.current = liked;
   }, [liked]);
 
-  const handleLikeClick = async () => {
-    if (isPending) return;
-
+  const handleLikeClick = () => {
     // Show auth prompt for non-authenticated users
     if (!user) {
       showAuthPrompt({
@@ -91,28 +91,15 @@ export default function DetailLikesSection({ entityType, className, entityId, in
       return;
     }
 
-    // Optimistic update
+    // Optimistic update - immediate local state change
     const newLiked = !liked;
     const newCount = newLiked ? count + 1 : count - 1;
     setLiked(newLiked);
     setCount(newCount);
-    setIsPending(true);
 
-    const result = await toggleLike(entityType, entityId);
-
-    if (result.error) {
-      // Revert on error
-      setLiked(!newLiked);
-      setCount(!newLiked ? count + 1 : count - 1);
-    } else {
-      setLiked(result.liked);
-      setCount(result.count);
-      // Invalidate likes caches for this entity and batch caches for grids
-      queryClient.invalidateQueries({ queryKey: [entityType === 'photo' ? 'photo-likes' : 'album-likes', entityId] });
-      queryClient.invalidateQueries({ queryKey: [entityType === 'photo' ? 'batch-photo-like-counts' : 'batch-album-like-counts'] });
-    }
-
-    setIsPending(false);
+    // Queue the sync to server after 1 second debounce
+    // Sync persists even if user navigates away
+    queueLike(entityType, entityId, newLiked);
   };
 
   const fetchedLikes = likesQuery.data?.likes || [];
@@ -138,6 +125,13 @@ export default function DetailLikesSection({ entityType, className, entityId, in
   const visibleLikes = likes.slice(0, MAX_VISIBLE_AVATARS);
   const hasLikes = count > 0;
 
+  // Show skeleton avatars only when:
+  // 1. Query is loading and we have no optimistic avatars to show
+  // 2. We have a count but no avatars loaded yet
+  const showSkeletonAvatars =
+    (likesQuery.isLoading && visibleLikes.length === 0) ||
+    (visibleLikes.length === 0 && count > 0);
+
   return (
     <div
       className={clsx('flex items-center gap-2', className)}
@@ -145,7 +139,6 @@ export default function DetailLikesSection({ entityType, className, entityId, in
       {/* Like Button */}
       <button
         onClick={handleLikeClick}
-        disabled={isPending}
         className={clsx(
           'group relative z-10',
           'inline-flex items-center justify-center',
@@ -202,8 +195,8 @@ export default function DetailLikesSection({ entityType, className, entityId, in
               <div
                 className="flex items-center"
               >
-                {/* Show skeletons when loading or when we have a count but no avatars yet */}
-                {(likesQuery.isLoading || visibleLikes.length === 0) ? (
+                {/* Show skeletons when loading and no optimistic data, or count > 0 but no avatars */}
+                {showSkeletonAvatars ? (
                   // Loading skeleton avatars
                   [...Array(Math.min(3, count))].map((_, i) => (
                     <div
@@ -212,7 +205,7 @@ export default function DetailLikesSection({ entityType, className, entityId, in
                         'size-6 rounded-full bg-border-color',
                         'ring-2 ring-background',
                         i > 0 && '-ml-2',
-                        likesQuery.isLoading && 'animate-pulse',
+                        'animate-pulse',
                       )}
                     />
                   ))

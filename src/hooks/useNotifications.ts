@@ -1,42 +1,73 @@
 'use client';
 
-import { dismissNotification as dismissNotificationAction, markAllNotificationsAsSeen, markNotificationAsSeen } from '@/lib/actions/notifications';
 import type { NotificationWithActor } from '@/types/notifications';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
+import { useDebouncedSync } from './useDebouncedSync';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
-export function useNotifications(userId: string | null) {
-  const [notifications, setNotifications] = useState<NotificationWithActor[]>([]);
-  const [unseenCount, setUnseenCount] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+type NotificationsData = {
+  notifications: NotificationWithActor[];
+  unseenCount: number;
+  totalCount: number;
+  hasMore: boolean;
+};
+
+async function fetchNotificationsData(pageSize: number): Promise<NotificationsData> {
+  const response = await fetch(`/api/notifications?limit=${pageSize}&offset=0`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch notifications');
+  }
+  const data = await response.json();
+  return {
+    notifications: data.notifications || [],
+    unseenCount: data.unseenCount || 0,
+    totalCount: data.totalCount || 0,
+    hasMore: data.hasMore || false,
+  };
+}
+
+type UseNotificationsOptions = {
+  pageSize?: number;
+};
+
+export function useNotifications(userId: string | null, options?: UseNotificationsOptions) {
+  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const queryClient = useQueryClient();
+  const { queueNotificationSeen, queueNotificationDismiss, queueAllNotificationsSeen } = useDebouncedSync();
+
+  // Get cached data to initialize state (prevents flash of stale data on navigation)
+  const queryKey = ['notifications', userId, pageSize];
+  const cachedData = queryClient.getQueryData<NotificationsData>(queryKey);
+
+  // Use React Query for notifications data
+  // staleTime of 30s means it won't refetch on every render
+  // refetchOnWindowFocus disabled to prevent unwanted fetches
+  const query = useQuery({
+    queryKey,
+    queryFn: () => fetchNotificationsData(pageSize),
+    enabled: !!userId,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchOnWindowFocus: false,
+  });
+
+  // Local state for optimistic updates - initialize from cache if available
+  const [notifications, setNotifications] = useState<NotificationWithActor[]>(cachedData?.notifications ?? []);
+  const [unseenCount, setUnseenCount] = useState(cachedData?.unseenCount ?? 0);
+  const [totalCount, setTotalCount] = useState(cachedData?.totalCount ?? 0);
+  const [hasMore, setHasMore] = useState(cachedData?.hasMore ?? false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Fetch notifications from API
-  const fetchNotifications = useCallback(async () => {
-    if (!userId) {
-      setIsLoading(false);
-      return;
+  // Sync local state from query data
+  useEffect(() => {
+    if (query.data) {
+      setNotifications(query.data.notifications);
+      setUnseenCount(query.data.unseenCount);
+      setTotalCount(query.data.totalCount);
+      setHasMore(query.data.hasMore);
     }
-
-    try {
-      const response = await fetch(`/api/notifications?limit=${PAGE_SIZE}&offset=0`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
-      const data = await response.json();
-      setNotifications(data.notifications || []);
-      setUnseenCount(data.unseenCount || 0);
-      setTotalCount(data.totalCount || 0);
-      setHasMore(data.hasMore || false);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId]);
+  }, [query.data]);
 
   // Load more notifications (pagination)
   const loadMore = useCallback(async () => {
@@ -45,7 +76,7 @@ export function useNotifications(userId: string | null) {
     setIsLoadingMore(true);
     try {
       const offset = notifications.length;
-      const response = await fetch(`/api/notifications?limit=${PAGE_SIZE}&offset=${offset}`);
+      const response = await fetch(`/api/notifications?limit=${pageSize}&offset=${offset}`);
       if (!response.ok) {
         throw new Error('Failed to fetch more notifications');
       }
@@ -57,24 +88,20 @@ export function useNotifications(userId: string | null) {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [userId, isLoadingMore, hasMore, notifications.length]);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  }, [userId, isLoadingMore, hasMore, notifications.length, pageSize]);
 
   // Listen for refresh events (triggered by Realtime or other components)
   useEffect(() => {
     const handleRefresh = () => {
-      fetchNotifications();
+      // Invalidate all notification queries for this user (regardless of pageSize)
+      queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
     };
 
     window.addEventListener('notifications:refresh', handleRefresh);
     return () => {
       window.removeEventListener('notifications:refresh', handleRefresh);
     };
-  }, [fetchNotifications]);
+  }, [queryClient, userId]);
 
   // Listen for optimistic updates from other components (e.g., ActivityContent)
   useEffect(() => {
@@ -114,31 +141,46 @@ export function useNotifications(userId: string | null) {
   }, []);
 
   // Mark single notification as seen
-  const markAsSeen = useCallback(async (notificationId: string) => {
-    const result = await markNotificationAsSeen(notificationId);
-    if (result.success) {
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
-        ),
-      );
-      setUnseenCount((prev) => Math.max(0, prev - 1));
-    }
-    return result;
-  }, []);
+  const markAsSeen = useCallback((notificationId: string) => {
+    // Optimistically update local state
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
+      ),
+    );
+    setUnseenCount((prev) => Math.max(0, prev - 1));
+
+    // Notify other hook instances to update their state
+    window.dispatchEvent(new CustomEvent('notifications:mark-seen', {
+      detail: { notificationId },
+    }));
+
+    // Queue for debounced sync (persists across navigation)
+    queueNotificationSeen(notificationId);
+
+    return { success: true };
+  }, [queueNotificationSeen]);
 
   // Mark all notifications as seen
-  const markAllAsSeen = useCallback(async () => {
-    const result = await markAllNotificationsAsSeen();
-    if (result.success) {
-      setNotifications((prev) => prev.map((notif) => ({ ...notif, seen_at: new Date().toISOString() })));
-      setUnseenCount(0);
-    }
-    return result;
-  }, []);
+  const markAllAsSeen = useCallback(() => {
+    // Get IDs of all unseen notifications
+    const unseenIds = notifications.filter((n) => !n.seen_at).map((n) => n.id);
+
+    // Optimistically update local state
+    setNotifications((prev) => prev.map((notif) => ({ ...notif, seen_at: new Date().toISOString() })));
+    setUnseenCount(0);
+
+    // Notify other hook instances to update their state
+    window.dispatchEvent(new CustomEvent('notifications:mark-all-seen'));
+
+    // Queue all unseen for debounced sync (persists across navigation)
+    queueAllNotificationsSeen(unseenIds);
+
+    return { success: true };
+  }, [notifications, queueAllNotificationsSeen]);
 
   // Dismiss a notification
-  const dismiss = useCallback(async (notificationId: string) => {
+  const dismiss = useCallback((notificationId: string) => {
     const notification = notifications.find((n) => n.id === notificationId);
     const wasUnseen = notification && !notification.seen_at;
 
@@ -149,25 +191,33 @@ export function useNotifications(userId: string | null) {
       setUnseenCount((prev) => Math.max(0, prev - 1));
     }
 
-    const result = await dismissNotificationAction(notificationId);
-    if (!result.success) {
-      // Revert on error
-      fetchNotifications();
-    }
-    return result;
-  }, [notifications, fetchNotifications]);
+    // Notify other hook instances to update their state
+    window.dispatchEvent(new CustomEvent('notifications:dismiss', {
+      detail: { notificationId, wasUnseen },
+    }));
+
+    // Queue for debounced sync (persists across navigation)
+    queueNotificationDismiss(notificationId);
+
+    return { success: true };
+  }, [notifications, queueNotificationDismiss]);
+
+  // Invalidate query (for external use)
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['notifications', userId] });
+  }, [queryClient, userId]);
 
   return {
     notifications,
     unseenCount,
     totalCount,
     hasMore,
-    isLoading,
+    isLoading: query.isLoading,
     isLoadingMore,
     markAsSeen,
     markAllAsSeen,
     dismiss,
     loadMore,
-    refresh: fetchNotifications,
+    refresh: invalidate,
   };
 }

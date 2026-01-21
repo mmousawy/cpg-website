@@ -1,0 +1,43 @@
+feat: Add extensible debounced sync system with global cache invalidation
+
+Debounced Sync Registry:
+- Create registry-based system for debounced database syncs
+- Persist pending syncs across client-side navigation
+- Support individual (likes) and batched (notifications) sync strategies
+- Use sendBeacon for reliable delivery on page unload/tab hide
+- Add priority system for action superseding (dismiss > seen)
+
+Global Cache Invalidation:
+- Add onSyncSuccess callback system to sync registry
+- Register cache invalidation callbacks in initializeSyncHandlers
+- Invalidate React Query cache after successful sync
+- Works even when components are unmounted during navigation
+
+Singleton QueryClient:
+- Create getQueryClient() for global access outside React
+- Use in QueryProvider for consistency across app
+- Enable non-React code (sync handlers) to invalidate cache
+
+Handler System:
+- Create SyncHandler type with getKey, batch, sync, beaconSync options
+- Implement likes handler (individual sync, 1s debounce)
+- Implement notifications handler (batched sync, 1s debounce)
+- Remove direct getQueryClient calls from handlers (moved to registry)
+
+Files changed (12):
+
+New (6):
+- src/lib/sync/types.ts - Type definitions for sync system
+- src/lib/sync/registry.ts - Core registry with queue, debounce, callbacks
+- src/lib/sync/handlers/likes.ts - Like sync handler
+- src/lib/sync/handlers/notifications.ts - Notification sync handler
+- src/lib/sync/index.ts - Public API and handler initialization
+- src/lib/queryClient.ts - Singleton QueryClient
+
+Modified (6):
+- src/app/providers/QueryProvider.tsx - Use singleton getQueryClient()
+- src/hooks/useDebouncedSync.ts - Thin wrapper around sync registry
+- src/hooks/useLikes.ts - Remove event listeners (cache invalidation via registry)
+- src/hooks/useNotifications.ts - Initialize state from cache
+- src/components/shared/DetailLikesSection.tsx - Initialize from cache, optimistic UI
+- src/app/account/activity/ActivityContent.tsx - Use useNotifications hook
