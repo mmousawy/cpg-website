@@ -2,21 +2,19 @@
 
 import PageContainer from '@/components/layout/PageContainer';
 import NotificationItem from '@/components/notifications/NotificationItem';
-import { createMockNotifications, dismissNotification, markAllNotificationsAsSeen, markNotificationAsSeen } from '@/lib/actions/notifications';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+import { createMockNotifications } from '@/lib/actions/notifications';
 import type { NotificationWithActor } from '@/types/notifications';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import SadSVG from 'public/icons/sad.svg';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 dayjs.extend(relativeTime);
 
 const PAGE_SIZE = 40;
-
-type ActivityContentProps = {
-  initialNotifications: NotificationWithActor[];
-  initialTotalCount: number;
-};
 
 function groupNotificationsByDate(notifications: NotificationWithActor[]) {
   const groups: Record<string, NotificationWithActor[]> = {
@@ -48,127 +46,90 @@ function groupNotificationsByDate(notifications: NotificationWithActor[]) {
   return groups;
 }
 
-export default function ActivityContent({ initialNotifications, initialTotalCount }: ActivityContentProps) {
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const [totalCount, setTotalCount] = useState(initialTotalCount);
-  const [hasMore, setHasMore] = useState(initialNotifications.length < initialTotalCount);
-  const [isMarkingAll, setIsMarkingAll] = useState(false);
+export default function ActivityContent() {
+  const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const [isCreatingMocks, setIsCreatingMocks] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Sync state with props when server data changes (e.g., after router.refresh())
-  useEffect(() => {
-    setNotifications(initialNotifications);
-    setTotalCount(initialTotalCount);
-    setHasMore(initialNotifications.length < initialTotalCount);
-  }, [initialNotifications, initialTotalCount]);
+  // Use the shared notifications hook with React Query
+  const {
+    notifications,
+    unseenCount,
+    totalCount,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    markAsSeen,
+    markAllAsSeen,
+    dismiss,
+    loadMore,
+    refresh,
+  } = useNotifications(user?.id || null, { pageSize: PAGE_SIZE });
 
   const groups = groupNotificationsByDate(notifications);
-  const unseenCount = notifications.filter((n) => !n.seen_at).length;
 
-  const handleView = useCallback(async (notificationId: string) => {
-    // Optimistically mark as seen
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
-      ),
-    );
+  // Hook methods already dispatch events to sync other hook instances
+  const handleView = useCallback((notificationId: string) => {
+    markAsSeen(notificationId);
+  }, [markAsSeen]);
 
-    // Notify other components to update their state without refetching
-    window.dispatchEvent(new CustomEvent('notifications:mark-seen', {
-      detail: { notificationId },
-    }));
+  const handleDismiss = useCallback((notificationId: string) => {
+    dismiss(notificationId);
+  }, [dismiss]);
 
-    await markNotificationAsSeen(notificationId);
-  }, []);
+  const handleMarkAsSeen = useCallback((notificationId: string) => {
+    markAsSeen(notificationId);
+  }, [markAsSeen]);
 
-  const handleDismiss = useCallback(async (notificationId: string) => {
-    const notification = notifications.find((n) => n.id === notificationId);
-    const wasUnseen = notification ? !notification.seen_at : false;
-
-    // Optimistically remove from list and update total count
-    setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
-    setTotalCount((prev) => Math.max(0, prev - 1));
-
-    // Notify other components to update their state without refetching
-    window.dispatchEvent(new CustomEvent('notifications:dismiss', {
-      detail: { notificationId, wasUnseen },
-    }));
-
-    await dismissNotification(notificationId);
-  }, [notifications]);
-
-  const handleMarkAsSeen = useCallback(async (notificationId: string) => {
-    // Optimistically mark as seen in local state
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, seen_at: new Date().toISOString() } : notif,
-      ),
-    );
-
-    // Notify other components to update their state without refetching
-    window.dispatchEvent(new CustomEvent('notifications:mark-seen', {
-      detail: { notificationId },
-    }));
-
-    await markNotificationAsSeen(notificationId);
-  }, []);
-
-  const handleMarkAllAsSeen = useCallback(async () => {
-    setIsMarkingAll(true);
-    const result = await markAllNotificationsAsSeen();
-    if (result.success) {
-      setNotifications((prev) => prev.map((notif) => ({ ...notif, seen_at: new Date().toISOString() })));
-      // Notify other components to update their state without refetching
-      window.dispatchEvent(new CustomEvent('notifications:mark-all-seen'));
-    }
-    setIsMarkingAll(false);
-  }, []);
+  const handleMarkAllAsSeen = useCallback(() => {
+    markAllAsSeen();
+  }, [markAllAsSeen]);
 
   const handleCreateMocks = useCallback(async () => {
     setIsCreatingMocks(true);
     try {
       await createMockNotifications();
-      // Fetch fresh notifications from API since router.refresh() may not update state
-      const response = await fetch(`/api/notifications?limit=${PAGE_SIZE}&offset=0`);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-        setTotalCount(data.totalCount || 0);
-        setHasMore(data.hasMore || false);
-      }
-      // Notify other components (e.g., NotificationButton) to refresh
+      // Refresh all notification queries
+      refresh();
       window.dispatchEvent(new CustomEvent('notifications:refresh'));
     } catch (error) {
       console.error('Error creating mock notifications:', error);
     } finally {
       setIsCreatingMocks(false);
     }
-  }, []);
-
-  const handleLoadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-    try {
-      const offset = notifications.length;
-      const response = await fetch(`/api/notifications?limit=${PAGE_SIZE}&offset=${offset}`);
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications((prev) => [...prev, ...(data.notifications || [])]);
-        setHasMore(data.hasMore || false);
-      } else {
-        console.error('Error loading more notifications: response not ok', response.status);
-      }
-    } catch (error) {
-      // Network errors (ETIMEDOUT, etc.) - fail silently, user can retry
-      console.error('Error loading more notifications:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [isLoadingMore, hasMore, notifications.length]);
+  }, [refresh]);
 
   const hasNotifications = notifications.length > 0;
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <div
+          className="mb-8"
+        >
+          <h1
+            className="text-3xl font-bold mb-2"
+          >
+            Activity
+          </h1>
+          <p
+            className="text-base sm:text-lg opacity-70"
+          >
+            View your notifications and activity
+          </p>
+        </div>
+        <div
+          className="rounded-xl border border-border-color bg-background-light p-8 text-center"
+        >
+          <div
+            className="animate-pulse text-foreground/40"
+          >
+            Loading notifications...
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -186,8 +147,8 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
           <div
             className="flex items-center gap-4"
           >
-            {/* Dev-only mock button */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* Admin-only mock button */}
+            {isAdmin && (
               <button
                 onClick={handleCreateMocks}
                 disabled={isCreatingMocks}
@@ -199,10 +160,11 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
             {hasNotifications && unseenCount > 0 && (
               <button
                 onClick={handleMarkAllAsSeen}
-                disabled={isMarkingAll}
-                className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                className="text-sm text-primary hover:text-primary/80 font-medium"
               >
-                {isMarkingAll ? 'Marking...' : `Mark all as seen (${unseenCount})`}
+                Mark all as seen (
+                {unseenCount}
+                )
               </button>
             )}
           </div>
@@ -235,13 +197,15 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
           >
             Your notifications and activity will appear here
           </p>
-          <button
-            onClick={handleCreateMocks}
-            disabled={isCreatingMocks}
-            className="mt-6 text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
-          >
-            {isCreatingMocks ? 'Creating...' : 'Create mock notifications'}
-          </button>
+          {isAdmin && (
+            <button
+              onClick={handleCreateMocks}
+              disabled={isCreatingMocks}
+              className="mt-6 text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+            >
+              {isCreatingMocks ? 'Creating...' : 'Create mock notifications'}
+            </button>
+          )}
         </div>
       ) : (
         <div
@@ -349,7 +313,7 @@ export default function ActivityContent({ initialNotifications, initialTotalCoun
               className="text-center"
             >
               <button
-                onClick={handleLoadMore}
+                onClick={loadMore}
                 disabled={isLoadingMore}
                 className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
               >

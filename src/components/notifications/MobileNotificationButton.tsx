@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { useState } from 'react';
 
+import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -13,6 +14,7 @@ import NotificationItem from './NotificationItem';
 
 export default function MobileNotificationButton() {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const mounted = useMounted();
   const [isOpen, setIsOpen] = useState(false);
   const [isCreatingMocks, setIsCreatingMocks] = useState(false);
@@ -134,13 +136,15 @@ export default function MobileNotificationButton() {
                 >
                   New notifications will appear here
                 </p>
-                <button
-                  onClick={handleCreateMocks}
-                  disabled={isCreatingMocks}
-                  className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
-                >
-                  {isCreatingMocks ? 'Creating...' : 'Create mock notifications'}
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleCreateMocks}
+                    disabled={isCreatingMocks}
+                    className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                  >
+                    {isCreatingMocks ? 'Creating...' : 'Create mock notifications'}
+                  </button>
+                )}
               </div>
             ) : (
               <div

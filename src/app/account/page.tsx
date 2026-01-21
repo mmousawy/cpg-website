@@ -1,16 +1,16 @@
 'use client';
 
-import PageContainer from '@/components/layout/PageContainer';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import StickyActionBar from '@/components/shared/StickyActionBar';
-import Button from '@/components/shared/Button';
-import ErrorMessage from '@/components/shared/ErrorMessage';
-import SuccessMessage from '@/components/shared/SuccessMessage';
-import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import AccountStatsSection from '@/components/account/AccountStatsSection';
+import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import PreferencesSection from '@/components/account/PreferencesSection';
 import ProfileSection from '@/components/account/ProfileSection';
 import PublicProfileSection from '@/components/account/PublicProfileSection';
+import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import StickyActionBar from '@/components/shared/StickyActionBar';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 import { useAccountForm } from '@/hooks/useAccountForm';
 
 export default function AccountPage() {
@@ -195,6 +195,7 @@ export default function AccountPage() {
                 {changeCount}
                 {' '}
                 unsaved
+                {' '}
                 {changeCount === 1 ? 'change' : 'changes'}
               </span>
             )}

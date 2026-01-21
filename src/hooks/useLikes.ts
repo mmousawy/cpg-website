@@ -209,6 +209,8 @@ export function usePhotoLikes(
     refetchOnWindowFocus?: boolean;
   },
 ) {
+  // Cache invalidation is handled by the sync handler via getQueryClient()
+  // This ensures invalidation works even when this hook is unmounted
   return useQuery({
     queryKey: ['photo-likes', photoId],
     queryFn: () => fetchPhotoLikes(photoId!),
@@ -234,6 +236,8 @@ export function useAlbumLikes(
     refetchOnWindowFocus?: boolean;
   },
 ) {
+  // Cache invalidation is handled by the sync handler via getQueryClient()
+  // This ensures invalidation works even when this hook is unmounted
   return useQuery({
     queryKey: ['album-likes', albumId],
     queryFn: () => fetchAlbumLikes(albumId!),

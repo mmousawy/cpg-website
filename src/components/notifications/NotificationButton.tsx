@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -13,6 +14,7 @@ import NotificationItem from './NotificationItem';
 
 export default function NotificationButton() {
   const { user, profile } = useAuth();
+  const { isAdmin } = useAdmin();
   const mounted = useMounted();
   const pathname = usePathname();
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -177,13 +179,15 @@ export default function NotificationButton() {
                 >
                   New notifications will appear here
                 </p>
-                <button
-                  onClick={handleCreateMocks}
-                  disabled={isCreatingMocks}
-                  className="text-xs text-primary hover:text-primary/80 font-medium disabled:opacity-50"
-                >
-                  {isCreatingMocks ? 'Creating...' : 'Create mock notifications'}
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleCreateMocks}
+                    disabled={isCreatingMocks}
+                    className="text-xs text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                  >
+                    {isCreatingMocks ? 'Creating...' : 'Create mock notifications'}
+                  </button>
+                )}
               </div>
             ) : (
               <div
