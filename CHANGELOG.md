@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.0](https://github.com/mmousawy/cpg-website/compare/v1.9.0...v1.10.0) (2026-01-21)
+
+
+### Features
+
+* add event debouncing and sync ([d5eaaed](https://github.com/mmousawy/cpg-website/commit/d5eaaed6583d98fb4e84641af490bd19367f905b))
+* Add extensible debounced sync system with global cache invalidation ([5ccb41a](https://github.com/mmousawy/cpg-website/commit/5ccb41a2fd49df64678f058c09fb7e4685732f0a))
+* Refactor sync system and remove useDebouncedSync hook ([161c7bf](https://github.com/mmousawy/cpg-website/commit/161c7bf419ea22f93f8338431574661849560cd2))
+
 ## [1.9.0](https://github.com/mmousawy/cpg-website/compare/v1.8.3...v1.9.0) (2026-01-19)
 
 
