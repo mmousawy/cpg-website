@@ -12,7 +12,7 @@ export default defineConfig({
   globalTeardown: './e2e/global-teardown.ts',
 
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -24,8 +24,8 @@ export default defineConfig({
     },
   ],
 
-  // Auto-start server for tests
-  webServer: {
+  // Auto-start server for tests (only if not using external URL)
+  webServer: process.env.BASE_URL ? undefined : {
     command: process.env.CI ? 'npm start' : 'npm run dev:light',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI, // Reuse existing server locally

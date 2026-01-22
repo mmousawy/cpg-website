@@ -21,6 +21,7 @@ const iconMap: Record<string, typeof DiscordSVG> = {
 export default function Footer() {
   // Client component - safe to use new Date() directly
   const currentYear = new Date().getFullYear();
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION;
 
   return (
     <footer
@@ -100,6 +101,22 @@ export default function Footer() {
           >
             {routes.contact.label}
           </Link>
+          {appVersion && (
+            <>
+              <span
+                className="opacity-25 max-sm:hidden"
+              >
+                •
+              </span>
+              <Link
+                href={routes.changelog.url}
+                className="opacity-50 hover:opacity-100 transition-opacity text-xs"
+              >
+                v
+                {appVersion}
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </footer>

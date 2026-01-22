@@ -72,12 +72,18 @@ jobs:
       - run: npm ci
       # Install Playwright browsers
       - run: npx playwright install --with-deps chromium
-      # Build the app for E2E tests
-      - name: Build
-        run: npm run build
-      # Run E2E tests (Playwright will start the server automatically)
+      # Wait for Vercel preview deployment
+      - name: Wait for Vercel preview
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        id: vercel
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 600
+      # Run E2E tests against Vercel preview
       - name: E2E tests
         run: npm run test:e2e
+        env:
+          BASE_URL: ${{ steps.vercel.outputs.url }}
       # Upload test results if tests fail
       - name: Upload Playwright report
         if: always()
