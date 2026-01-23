@@ -8,11 +8,5 @@
       "path": "/api/cron/weekly-digest",
       "schedule": "0 8 * * 0"
     }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "main": false
-    }
-  },
-  "ignoreCommand": "bash -c '[[ ! \"$VERCEL_GIT_COMMIT_REF\" =~ ^release/ ]]'"
+  ]
 }

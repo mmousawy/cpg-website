@@ -1,0 +1,33 @@
+feat: CI/CD automation improvements and changelog page
+
+CI/CD Improvements:
+- Configure Vercel to build previews for feature PRs (skip main and release branches)
+- Update e2e tests to run against Vercel preview deployments instead of local builds
+- Add automatic production deployment after release-please creates release
+- Remove duplicate build step from CI (Vercel handles builds)
+
+Version Display:
+- Expose app version via NEXT_PUBLIC_APP_VERSION in next.config.ts
+- Display version in footer (clickable link to changelog)
+- Log version to browser console on app load
+
+Changelog Page:
+- Create /changelog page that reads and parses CHANGELOG.md
+- Display version history with sections (Features, Bug Fixes, etc.)
+- Parse markdown links and render as clickable links
+- Add changelog route to routes config
+
+Files changed (8):
+
+New (2):
+- src/app/changelog/page.tsx - Changelog page component
+- src/components/VersionLogger.tsx - Version console logger component
+
+Modified (6):
+- next.config.ts - Add NEXT_PUBLIC_APP_VERSION env variable
+- src/components/layout/Footer.tsx - Add version display with changelog link
+- src/app/layout.tsx - Add VersionLogger component
+- playwright.config.ts - Make baseURL configurable for Vercel previews
+- .github/workflows/ci.yml - Use Vercel preview for e2e tests
+- .github/workflows/release-please.yml - Add production deployment step
+- src/config/routes.ts - Add changelog route

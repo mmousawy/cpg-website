@@ -71,6 +71,10 @@ export const routes = {
     label: 'Contact',
     url: '/contact',
   },
+  changelog: {
+    label: 'Changelog',
+    url: '/changelog',
+  },
 } as const;
 
 export type RouteKey = keyof typeof routes

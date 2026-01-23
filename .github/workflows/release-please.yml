@@ -45,3 +45,25 @@ jobs:
           MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1-2)
           git checkout -b release/$MAJOR_MINOR
           git push origin release/$MAJOR_MINOR
+
+      - name: Setup Node
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm ci
+
+      - name: Install Vercel CLI
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm install -g vercel
+
+      - name: Deploy to Production
+        if: ${{ steps.release.outputs.release_created }}
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

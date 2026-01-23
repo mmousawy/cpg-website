@@ -1,11 +1,15 @@
 import bundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
+import pkg from './package.json' with { type: 'json' };
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
   // Enable 'use cache' directive for data layer caching
   cacheComponents: true,
   // Memory optimization for Webpack builds (production)
