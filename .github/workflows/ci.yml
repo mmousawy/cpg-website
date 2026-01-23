@@ -72,26 +72,56 @@ jobs:
       - run: npm ci
       # Install Playwright browsers
       - run: npx playwright install --with-deps chromium
-      # Wait for Vercel preview deployment
-      - name: Wait for Vercel preview
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+      # Get Vercel preview URL from PR comments
+      - name: Get Vercel preview URL
         id: vercel
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 600
-      # Wait for preview to be accessible (with bypass token if needed)
-      - name: Wait for preview accessibility
-        if: steps.vercel.outputs.url != ''
         run: |
-          URL="${{ steps.vercel.outputs.url }}"
+          PR_NUMBER=${{ github.event.pull_request.number }}
           BYPASS_TOKEN="${{ secrets.VERCEL_BYPASS_TOKEN }}"
           
-          for i in {1..60}; do
-            if [ -n "$BYPASS_TOKEN" ]; then
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "x-vercel-protection-bypass: $BYPASS_TOKEN" "$URL")
-            else
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          # Try to get URL from Vercel bot comment in PR
+          echo "Fetching preview URL from PR #$PR_NUMBER..."
+          COMMENT=$(gh pr view $PR_NUMBER --json comments --jq '.comments[] | select(.author.login == "vercel[bot]") | .body' | grep -oP 'https://[^\s]+\.vercel\.app' | head -1)
+          
+          if [ -z "$COMMENT" ]; then
+            echo "No URL found in PR comments, trying Vercel API..."
+            # Fallback: Get latest deployment from Vercel API
+            DEPLOYMENT=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              "https://api.vercel.com/v6/deployments?projectId=${{ secrets.VERCEL_PROJECT_ID }}&limit=1" | \
+              jq -r '.deployments[0]')
+            
+            if [ "$DEPLOYMENT" != "null" ]; then
+              COMMENT=$(echo "$DEPLOYMENT" | jq -r '.url' | sed 's|^|https://|')
             fi
+          fi
+          
+          if [ -z "$COMMENT" ]; then
+            echo "Could not find preview URL"
+            exit 1
+          fi
+          
+          # Append bypass token as query parameter if available
+          if [ -n "$BYPASS_TOKEN" ]; then
+            if [[ "$COMMENT" == *"?"* ]]; then
+              COMMENT="${COMMENT}&x-vercel-protection-bypass=${BYPASS_TOKEN}"
+            else
+              COMMENT="${COMMENT}?x-vercel-protection-bypass=${BYPASS_TOKEN}"
+            fi
+          fi
+          
+          echo "Found preview URL: $COMMENT"
+          echo "url=$COMMENT" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Wait for preview to be accessible
+      - name: Wait for preview accessibility
+        run: |
+          URL="${{ steps.vercel.outputs.url }}"
+          
+          echo "Waiting for preview to be accessible: $URL"
+          
+          for i in {1..60}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
             
             if [ "$STATUS" = "200" ]; then
               echo "Preview is ready (HTTP $STATUS)"
@@ -102,7 +132,7 @@ jobs:
             sleep 10
           done
           
-          echo "Preview not accessible after 10 minutes"
+          echo "Preview not accessible after 10 minutes (last status: $STATUS)"
           exit 1
       # Run E2E tests against Vercel preview
       - name: E2E tests
