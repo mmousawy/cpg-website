@@ -79,7 +79,31 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 600
-          vercel_bypass_token: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+      # Wait for preview to be accessible (with bypass token if needed)
+      - name: Wait for preview accessibility
+        if: steps.vercel.outputs.url != ''
+        run: |
+          URL="${{ steps.vercel.outputs.url }}"
+          BYPASS_TOKEN="${{ secrets.VERCEL_BYPASS_TOKEN }}"
+          
+          for i in {1..60}; do
+            if [ -n "$BYPASS_TOKEN" ]; then
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "x-vercel-protection-bypass: $BYPASS_TOKEN" "$URL")
+            else
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            fi
+            
+            if [ "$STATUS" = "200" ]; then
+              echo "Preview is ready (HTTP $STATUS)"
+              exit 0
+            fi
+            
+            echo "Attempt $i/60: HTTP $STATUS, waiting..."
+            sleep 10
+          done
+          
+          echo "Preview not accessible after 10 minutes"
+          exit 1
       # Run E2E tests against Vercel preview
       - name: E2E tests
         run: npm run test:e2e
