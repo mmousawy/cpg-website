@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/mmousawy/cpg-website/compare/v1.12.0...v1.12.1) (2026-01-23)
+
+
+### Performance Improvements
+
+* Database optimization ([0b2c855](https://github.com/mmousawy/cpg-website/commit/0b2c855c7fd64a5ad3388d17427b110788ea2f4a))
+* Database optimization with RPC functions and migration consolidation ([8b271ca](https://github.com/mmousawy/cpg-website/commit/8b271ca736ea50e40a5e6c656283c50c367e013f))
+
 ## [1.12.0](https://github.com/mmousawy/cpg-website/compare/v1.11.0...v1.12.0) (2026-01-23)
 
 
