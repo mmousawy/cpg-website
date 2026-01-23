@@ -79,6 +79,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           max_timeout: 600
+          vercel_bypass_token: ${{ secrets.VERCEL_BYPASS_TOKEN }}
       # Run E2E tests against Vercel preview
       - name: E2E tests
         run: npm run test:e2e
