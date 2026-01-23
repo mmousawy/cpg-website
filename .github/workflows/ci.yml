@@ -77,7 +77,6 @@ jobs:
         id: vercel
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
-          BYPASS_TOKEN="${{ secrets.VERCEL_BYPASS_TOKEN }}"
           
           # Try to get URL from Vercel bot comment in PR
           echo "Fetching preview URL from PR #$PR_NUMBER..."
@@ -100,28 +99,27 @@ jobs:
             exit 1
           fi
           
-          # Append bypass token as query parameter if available
-          if [ -n "$BYPASS_TOKEN" ]; then
-            if [[ "$COMMENT" == *"?"* ]]; then
-              COMMENT="${COMMENT}&x-vercel-protection-bypass=${BYPASS_TOKEN}"
-            else
-              COMMENT="${COMMENT}?x-vercel-protection-bypass=${BYPASS_TOKEN}"
-            fi
-          fi
+          # Extract base URL without query params
+          BASE_URL_ONLY=$(echo "$COMMENT" | cut -d'?' -f1)
           
-          echo "Found preview URL: $COMMENT"
-          echo "url=$COMMENT" >> $GITHUB_OUTPUT
+          echo "Found preview URL: $BASE_URL_ONLY"
+          echo "url=$BASE_URL_ONLY" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Wait for preview to be accessible
+      # Wait for preview to be accessible (with bypass token)
       - name: Wait for preview accessibility
         run: |
           URL="${{ steps.vercel.outputs.url }}"
+          BYPASS_TOKEN="${{ secrets.VERCEL_BYPASS_TOKEN }}"
           
           echo "Waiting for preview to be accessible: $URL"
           
           for i in {1..60}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            if [ -n "$BYPASS_TOKEN" ]; then
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "x-vercel-protection-bypass: $BYPASS_TOKEN" "$URL")
+            else
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            fi
             
             if [ "$STATUS" = "200" ]; then
               echo "Preview is ready (HTTP $STATUS)"
@@ -139,6 +137,7 @@ jobs:
         run: npm run test:e2e
         env:
           BASE_URL: ${{ steps.vercel.outputs.url }}
+          VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
       # Upload test results if tests fail
       - name: Upload Playwright report
         if: always()

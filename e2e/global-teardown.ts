@@ -26,10 +26,20 @@ async function globalTeardown() {
   console.log(`Found ${testEmails.length} test emails to clean up`);
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // Use BASE_URL if available (for Vercel previews), otherwise fallback to localhost
+    let baseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // Remove query parameters from baseURL for cleanup API call
+    baseUrl = baseUrl.split('?')[0];
+
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    // Add bypass token if available
+    if (process.env.VERCEL_BYPASS_TOKEN) {
+      headers['x-vercel-protection-bypass'] = process.env.VERCEL_BYPASS_TOKEN;
+    }
+
     const response = await fetch(`${baseUrl}/api/test/cleanup`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ emails: testEmails }),
     });
 
