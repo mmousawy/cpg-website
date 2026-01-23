@@ -116,6 +116,17 @@ export async function GET(request: NextRequest) {
     (userProfiles || []).map((profile) => [profile.id, profile]),
   );
 
+  // Batch fetch all email preferences at once (instead of N queries in loop)
+  const { data: allPreferences } = await supabase
+    .from('email_preferences')
+    .select('user_id, opted_out')
+    .in('user_id', userIds)
+    .eq('email_type_id', weeklyDigestEmailType.id);
+
+  const preferencesMap = new Map(
+    (allPreferences || []).map((p) => [p.user_id, p.opted_out]),
+  );
+
   // Build user digests
   const userDigests: UserDigest[] = [];
 
@@ -126,15 +137,8 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    // Check if user has opted out
-    const { data: preference } = await supabase
-      .from('email_preferences')
-      .select('opted_out')
-      .eq('user_id', userId)
-      .eq('email_type_id', weeklyDigestEmailType.id)
-      .maybeSingle();
-
-    if (preference?.opted_out) {
+    // Check if user has opted out (using pre-fetched map)
+    if (preferencesMap.get(userId) === true) {
       continue;
     }
 

@@ -183,13 +183,12 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           }
 
           // Add to albums if specified
+          // Note: width/height are no longer written - they're read from photos table via view
           if (albumIds.length > 0 && photoData) {
             const albumPhotoInserts = albumIds.map((albumId) => ({
               album_id: albumId,
               photo_id: photoData.id,
-              photo_url: publicUrl,
-              width: img.width,
-              height: img.height,
+              photo_url: publicUrl, // Kept for cover logic compatibility
               sort_order: sortOrderStart + i,
             }));
 

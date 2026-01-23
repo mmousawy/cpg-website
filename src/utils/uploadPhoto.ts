@@ -144,13 +144,12 @@ export async function uploadPhoto(
   }
 
   // 11. If albumIds provided, insert into album_photos for each
+  // Note: width/height are no longer written - they're read from photos table via view
   if (albumIds.length > 0 && photoData) {
     const albumPhotoInserts = albumIds.map((albumId, index) => ({
       album_id: albumId,
       photo_id: photoData.id,
-      photo_url: publicUrl,
-      width: img.width,
-      height: img.height,
+      photo_url: publicUrl, // Kept for cover logic compatibility
       sort_order: albumSortOrder + index,
     }));
 

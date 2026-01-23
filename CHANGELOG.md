@@ -5,8 +5,7 @@
 
 ### Features
 
-* Add app version to environment and display in footer ([7468759](https://github.com/mmousawy/cpg-website/commit/746875981b08dc4da688d756200dc243b1829f22))
-* Add app version to environment and display in footer ([bb1e063](https://github.com/mmousawy/cpg-website/commit/bb1e063e0efb9f77b65a5c61064b32239a1cbad7))
+* Add app version to environment and display in footer, add changelog page, and improve CI/CD workflow with Vercel bypass token support ([bb1e063](https://github.com/mmousawy/cpg-website/commit/bb1e063e0efb9f77b65a5c61064b32239a1cbad7))
 
 ## [1.11.0](https://github.com/mmousawy/cpg-website/compare/v1.10.0...v1.11.0) (2026-01-21)
 

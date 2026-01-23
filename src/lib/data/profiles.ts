@@ -203,184 +203,44 @@ export async function getUserPublicPhotoCount(userId: string, nickname: string) 
  * Get public profile stats
  * Tagged with specific profile tag for granular invalidation
  */
-export async function getProfileStats(userId: string, nickname: string, albumCount: number, photoCount: number, memberSince: string | null) {
+export async function getProfileStats(
+  userId: string,
+  nickname: string,
+  albumCount: number,
+  photoCount: number,
+  memberSince: string | null,
+) {
   'use cache';
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
 
-  let eventsAttended = 0;
-  let commentsMade = 0;
-  let commentsReceived = 0;
-  let likesReceived = 0;
-  let viewsReceived = 0;
+  // Single RPC call replaces 12+ queries
+  const { data: dbStats, error } = await supabase.rpc('get_profile_stats', {
+    p_user_id: userId,
+  });
 
-  // Get events attended count
-  try {
-    const { data: rsvpsData } = await supabase
-      .from('events_rsvps')
-      .select('attended_at, confirmed_at, canceled_at, event_id, events!inner(id)')
-      .eq('user_id', userId)
-      .not('attended_at', 'is', null)
-      .not('confirmed_at', 'is', null)
-      .is('canceled_at', null);
-
-    if (rsvpsData) {
-      eventsAttended = rsvpsData.length;
-    }
-  } catch {
-    // RSVPs table might not exist or have issues
+  if (error) {
+    console.error('Error fetching profile stats:', error);
   }
 
-  // Get comments made count
-  try {
-    const { count } = await supabase
-      .from('comments')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .is('deleted_at', null);
-
-    if (count !== null) {
-      commentsMade = count;
-    }
-  } catch {
-    // Comments table might not exist
-  }
-
-  // Get likes received count (sum of likes_count from photos and albums)
-  try {
-    // Get user's photos with likes_count
-    const { data: userPhotos } = await supabase
-      .from('photos')
-      .select('likes_count')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .is('deleted_at', null) as { data: Array<{ likes_count: number }> | null };
-
-    // Get user's albums with likes_count
-    const { data: userAlbums } = await supabase
-      .from('albums')
-      .select('likes_count')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .is('deleted_at', null) as { data: Array<{ likes_count: number }> | null };
-
-    if (userPhotos) {
-      likesReceived += userPhotos.reduce((sum, photo) => sum + (photo.likes_count || 0), 0);
-    }
-
-    if (userAlbums) {
-      likesReceived += userAlbums.reduce((sum, album) => sum + (album.likes_count || 0), 0);
-    }
-  } catch {
-    // Likes tables might not exist
-  }
-
-  // Get comments received count
-  try {
-    // Get user's album IDs
-    const { data: userAlbums } = await supabase
-      .from('albums')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .is('deleted_at', null);
-
-    // Get user's photo IDs
-    const { data: userPhotos } = await supabase
-      .from('photos')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .is('deleted_at', null);
-
-    // Count comments on albums
-    if (userAlbums && userAlbums.length > 0) {
-      const albumIds = userAlbums.map(a => a.id);
-      const { data: albumCommentIds } = await supabase
-        .from('album_comments')
-        .select('comment_id')
-        .in('album_id', albumIds);
-
-      if (albumCommentIds && albumCommentIds.length > 0) {
-        const commentIds = albumCommentIds.map(ac => ac.comment_id);
-        const { count: albumCommentsCount } = await supabase
-          .from('comments')
-          .select('id', { count: 'exact', head: true })
-          .in('id', commentIds)
-          .is('deleted_at', null)
-          .neq('user_id', userId);
-
-        if (albumCommentsCount !== null) {
-          commentsReceived += albumCommentsCount;
-        }
-      }
-    }
-
-    // Count comments on photos
-    if (userPhotos && userPhotos.length > 0) {
-      const photoIds = userPhotos.map(p => p.id);
-      const { data: photoCommentIds } = await supabase
-        .from('photo_comments')
-        .select('comment_id')
-        .in('photo_id', photoIds);
-
-      if (photoCommentIds && photoCommentIds.length > 0) {
-        const commentIds = photoCommentIds.map(pc => pc.comment_id);
-        const { count: photoCommentsCount } = await supabase
-          .from('comments')
-          .select('id', { count: 'exact', head: true })
-          .in('id', commentIds)
-          .is('deleted_at', null)
-          .neq('user_id', userId);
-
-        if (photoCommentsCount !== null) {
-          commentsReceived += photoCommentsCount;
-        }
-      }
-    }
-  } catch {
-    // Comments tables might not exist
-  }
-
-  // Get views received count (sum of view_count from photos and albums)
-  try {
-    // Get user's photos with view_count
-    const { data: userPhotos } = await supabase
-      .from('photos')
-      .select('view_count')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .is('deleted_at', null) as { data: Array<{ view_count: number }> | null };
-
-    // Get user's albums with view_count
-    const { data: userAlbums } = await supabase
-      .from('albums')
-      .select('view_count')
-      .eq('user_id', userId)
-      .eq('is_public', true)
-      .is('deleted_at', null) as { data: Array<{ view_count: number }> | null };
-
-    if (userPhotos) {
-      viewsReceived += userPhotos.reduce((sum, photo) => sum + (photo.view_count || 0), 0);
-    }
-
-    if (userAlbums) {
-      viewsReceived += userAlbums.reduce((sum, album) => sum + (album.view_count || 0), 0);
-    }
-  } catch {
-    // View count columns might not exist yet
-  }
+  // Type the RPC response
+  const stats = dbStats as {
+    eventsAttended: number;
+    commentsMade: number;
+    likesReceived: number;
+    viewsReceived: number;
+  } | null;
 
   return {
     photos: photoCount,
     albums: albumCount,
-    eventsAttended,
-    commentsMade,
-    commentsReceived,
-    likesReceived,
-    viewsReceived,
+    eventsAttended: stats?.eventsAttended ?? 0,
+    commentsMade: stats?.commentsMade ?? 0,
+    commentsReceived: 0, // Not tracked in public profile stats
+    likesReceived: stats?.likesReceived ?? 0,
+    viewsReceived: stats?.viewsReceived ?? 0,
     memberSince,
   };
 }

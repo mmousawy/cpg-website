@@ -225,6 +225,7 @@ export async function getMembersByTagUsage(limit = 12) {
  * Get featured interests with member samples
  * Uses deterministic selection based on interest count to ensure cacheability
  * Tagged with 'interests' and 'profiles' for cache invalidation
+ * Optimized: Uses 3 bulk queries instead of 2*N queries
  */
 export async function getRandomInterestsWithMembers(interestLimit = 6, membersPerInterest = 3) {
   'use cache';
@@ -251,37 +252,72 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
   const step = Math.max(1, Math.floor(allInterests.length / interestLimit));
   const selectedInterests = allInterests.filter((_, index) => index % step === 1).slice(0, interestLimit);
 
-  // For each interest, get sample members
+  if (selectedInterests.length === 0) {
+    return [];
+  }
+
+  // Bulk fetch all profile_interests for selected interests (1 query instead of N)
+  const interestNames = selectedInterests.map((i) => i.name);
+  const { data: allProfileInterests } = await supabase
+    .from('profile_interests')
+    .select('profile_id, interest')
+    .in('interest', interestNames);
+
+  if (!allProfileInterests || allProfileInterests.length === 0) {
+    return [];
+  }
+
+  // Group profile_interests by interest and get unique profile IDs
+  const profileIdsByInterest = new Map<string, string[]>();
+  for (const pi of allProfileInterests) {
+    const existing = profileIdsByInterest.get(pi.interest) || [];
+    if (!existing.includes(pi.profile_id)) {
+      existing.push(pi.profile_id);
+    }
+    profileIdsByInterest.set(pi.interest, existing);
+  }
+
+  // Get all unique profile IDs we need to fetch (limited per interest)
+  const allProfileIds = new Set<string>();
+  for (const [, profileIds] of profileIdsByInterest) {
+    // Take first N members per interest (deterministic)
+    profileIds.slice(0, membersPerInterest).forEach((id) => allProfileIds.add(id));
+  }
+
+  if (allProfileIds.size === 0) {
+    return [];
+  }
+
+  // Bulk fetch all profiles (1 query instead of N)
+  const { data: allProfiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, nickname, avatar_url')
+    .in('id', Array.from(allProfileIds))
+    .not('nickname', 'is', null)
+    .is('suspended_at', null);
+
+  if (!allProfiles || allProfiles.length === 0) {
+    return [];
+  }
+
+  // Create a profile lookup map
+  const profileMap = new Map(allProfiles.map((p) => [p.id, p]));
+
+  // Build results by mapping interests to their members
   const results: InterestWithMembers[] = [];
 
   for (const interest of selectedInterests) {
-    // Get profile IDs with this interest
-    const { data: profileInterests } = await supabase
-      .from('profile_interests')
-      .select('profile_id')
-      .eq('interest', interest.name)
-      .limit(membersPerInterest * 2); // Get more to randomize
+    const profileIds = profileIdsByInterest.get(interest.name) || [];
+    // Get profiles for this interest (limited to membersPerInterest)
+    const members = profileIds
+      .slice(0, membersPerInterest)
+      .map((id) => profileMap.get(id))
+      .filter((p): p is Member => p !== undefined);
 
-    if (!profileInterests || profileInterests.length === 0) {
-      continue;
-    }
-
-    // Deterministic member selection: take first N members
-    // This ensures cache consistency while still showing variety
-    const selectedMemberIds = profileInterests.slice(0, membersPerInterest).map((pi) => pi.profile_id);
-
-    // Fetch member profiles
-    const { data: members } = await supabase
-      .from('profiles')
-      .select('id, full_name, nickname, avatar_url')
-      .in('id', selectedMemberIds)
-      .not('nickname', 'is', null)
-      .is('suspended_at', null);
-
-    if (members && members.length > 0) {
+    if (members.length > 0) {
       results.push({
         interest: interest as Interest,
-        members: members as Member[],
+        members,
       });
     }
   }

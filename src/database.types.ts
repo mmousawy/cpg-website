@@ -124,13 +124,6 @@ export type Database = {
             referencedRelation: 'photos'
             referencedColumns: ['id']
           },
-          {
-            foreignKeyName: 'fk_album_photos_photo_url'
-            columns: ['photo_url']
-            isOneToOne: false
-            referencedRelation: 'photos'
-            referencedColumns: ['url']
-          },
         ]
       }
       album_tags: {
@@ -828,6 +821,7 @@ export type Database = {
           social_links: Json | null
           suspended_at: string | null
           suspended_reason: string | null
+          terms_accepted_at: string | null
           theme: string | null
           updated_at: string | null
           website: string | null
@@ -847,6 +841,7 @@ export type Database = {
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
+          terms_accepted_at?: string | null
           theme?: string | null
           updated_at?: string | null
           website?: string | null
@@ -866,6 +861,7 @@ export type Database = {
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
+          terms_accepted_at?: string | null
           theme?: string | null
           updated_at?: string | null
           website?: string | null
@@ -923,13 +919,6 @@ export type Database = {
             referencedRelation: 'photos'
             referencedColumns: ['id']
           },
-          {
-            foreignKeyName: 'fk_album_photos_photo_url'
-            columns: ['photo_url']
-            isOneToOne: false
-            referencedRelation: 'photos'
-            referencedColumns: ['url']
-          },
         ]
       }
     }
@@ -965,10 +954,12 @@ export type Database = {
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
       generate_short_id: { Args: { size?: number }; Returns: string }
       get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
+      get_profile_stats: { Args: { p_user_id: string }; Returns: Json }
       get_user_album_photos_count: {
         Args: { user_uuid: string }
         Returns: number
       }
+      get_user_stats: { Args: { p_user_id: string }; Returns: Json }
       increment_view_count: {
         Args: { p_entity_id: string; p_entity_type: string }
         Returns: undefined

@@ -1,8 +1,7 @@
 'use client';
 
 import Container from '@/components/layout/Container';
-import type { AccountStats } from '@/hooks/useAccountForm';
-import type { Profile } from '@/hooks/useAccountForm';
+import type { AccountStats, Profile } from '@/hooks/useAccountForm';
 
 interface AccountStatsSectionProps {
   profile: Profile | null;
@@ -209,6 +208,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   {stats.rsvpsConfirmed}
                   {' '}
                   confirmed /
+                  {' '}
                   {stats.rsvpsCanceled}
                   {' '}
                   canceled
