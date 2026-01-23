@@ -1,0 +1,45 @@
+perf: Database optimization with RPC functions and migration consolidation
+
+Database:
+- Add get_user_stats RPC function to replace 15+ queries for account stats
+- Add get_profile_stats RPC function to replace 12+ queries for profile stats
+- Normalize album_photos table by removing redundant width/height columns
+- Update album_photos_active view to use photos table for dimensions
+- Fix sort_order default conflict with auto-assign trigger
+- Remove redundant FK constraints on album_photos
+- Fix events_rsvps dual FK issue (remove redundant auth.users FK)
+- Consolidate old migrations into baseline migration
+
+Performance:
+- Account stats API: Reduced from 15+ queries to 1 RPC call
+- Profile stats API: Reduced from 12+ queries to 1 RPC call
+- Optimize getRandomInterestsWithMembers to use bulk queries (3 queries instead of 2*N)
+
+API Routes:
+- Refactor /api/account/stats to use get_user_stats RPC
+- Update /api/comments to use simplified query patterns
+- Update /api/cron/weekly-digest to use optimized queries
+
+Data Layer:
+- Simplify getProfileStats to use get_profile_stats RPC
+- Optimize getRandomInterestsWithMembers with bulk profile_interests query
+- Remove redundant query logic from data functions
+
+Files changed (15):
+
+New (2):
+- supabase/migrations/20260123000000_normalize_album_photos.sql - Normalize album_photos schema
+- supabase/migrations/20260123000001_add_stats_rpcs.sql - Add optimized stats RPC functions
+
+Modified (13):
+- supabase/migrations/00000000000000_baseline.sql - Consolidate old migrations
+- src/app/api/account/stats/route.ts - Use get_user_stats RPC (reduced from 330+ lines to 52)
+- src/app/api/comments/route.ts - Simplified query patterns
+- src/app/api/cron/weekly-digest/route.ts - Optimized queries
+- src/components/account/AccountStatsSection.tsx - Updated to use new stats structure
+- src/database.types.ts - Updated types for RPC functions
+- src/hooks/usePhotoUpload.ts - Updated for schema changes
+- src/lib/data/members.ts - Optimized getRandomInterestsWithMembers
+- src/lib/data/profiles.ts - Simplified getProfileStats to use RPC
+- src/utils/uploadPhoto.ts - Updated for schema changes
+- .cursorrules - Moved to .cursor/.cursorrules

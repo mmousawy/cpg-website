@@ -228,22 +228,27 @@ export async function POST(request: NextRequest) {
           .eq('type_key', 'notifications')
           .single();
 
+        // Batch fetch all admin email preferences at once (instead of N queries in loop)
+        let adminPrefsMap = new Map<string, boolean>();
+        if (notificationsEmailType) {
+          const adminIds = admins.map((a) => a.id);
+          const { data: adminPrefs } = await supabase
+            .from('email_preferences')
+            .select('user_id, opted_out')
+            .in('user_id', adminIds)
+            .eq('email_type_id', notificationsEmailType.id);
+
+          adminPrefsMap = new Map(
+            (adminPrefs || []).map((p) => [p.user_id, p.opted_out]),
+          );
+        }
+
         for (const admin of admins) {
           if (!admin.email) continue;
 
-          // Check if this admin has opted out
-          if (notificationsEmailType) {
-            const notificationsEmailTypeId = notificationsEmailType.id;
-            const { data: preference } = await supabase
-              .from('email_preferences')
-              .select('opted_out')
-              .eq('user_id', admin.id)
-              .eq('email_type_id', notificationsEmailTypeId)
-              .single();
-
-            if (preference && preference.opted_out === true) {
-              continue;
-            }
+          // Check if this admin has opted out (using pre-fetched map)
+          if (adminPrefsMap.get(admin.id) === true) {
+            continue;
           }
 
           // Generate opt-out link for this admin

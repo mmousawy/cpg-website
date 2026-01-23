@@ -122,6 +122,41 @@ COMMENT ON FUNCTION "public"."add_comment"("p_entity_type" "text", "p_entity_id"
 
 
 
+CREATE OR REPLACE FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_comment_id UUID;
+  v_user_id UUID;
+BEGIN
+  -- Get the current user
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  -- Insert the comment
+  INSERT INTO comments (user_id, comment_text)
+  VALUES (v_user_id, p_comment_text)
+  RETURNING id INTO v_comment_id;
+
+  -- Link to the event
+  INSERT INTO event_comments (event_id, comment_id)
+  VALUES (p_event_id, v_comment_id);
+
+  RETURN v_comment_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") OWNER TO "supabase_admin";
+
+
+COMMENT ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") IS 'Creates a comment and links it to an event';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -596,6 +631,23 @@ $$;
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF p_entity_type = 'photo' THEN
+    UPDATE photos SET view_count = view_count + 1 WHERE id = p_entity_id;
+  ELSIF p_entity_type = 'album' THEN
+    UPDATE albums SET view_count = view_count + 1 WHERE id = p_entity_id;
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."restore_album"("p_album_id" "uuid") RETURNS boolean
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -792,6 +844,26 @@ COMMENT ON FUNCTION "public"."update_album_cover"() IS 'Updates album cover_imag
 
 
 
+CREATE OR REPLACE FUNCTION "public"."update_album_likes_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE albums SET likes_count = likes_count + 1 WHERE id = NEW.album_id;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE albums SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.album_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_album_likes_count"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."update_comments_updated_at"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -804,6 +876,50 @@ $$;
 
 
 ALTER FUNCTION "public"."update_comments_updated_at"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_interest_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    -- Insert interest if it doesn't exist, or increment count
+    INSERT INTO interests (name, count)
+    VALUES (NEW.interest, 1)
+    ON CONFLICT (name) DO UPDATE SET count = interests.count + 1;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    -- Decrement count (don't delete interest even if count reaches 0, for history)
+    UPDATE interests SET count = GREATEST(count - 1, 0) WHERE name = OLD.interest;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_interest_count"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_photo_likes_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE photos SET likes_count = likes_count + 1 WHERE id = NEW.photo_id;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE photos SET likes_count = GREATEST(0, likes_count - 1) WHERE id = OLD.photo_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_photo_likes_count"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_tag_count"() RETURNS "trigger"
@@ -857,6 +973,16 @@ CREATE TABLE IF NOT EXISTS "public"."album_comments" (
 ALTER TABLE "public"."album_comments" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."album_likes" (
+    "album_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."album_likes" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."album_photos" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "album_id" "uuid" NOT NULL,
@@ -892,7 +1018,9 @@ CREATE TABLE IF NOT EXISTS "public"."photos" (
     "blurhash" "text",
     "short_id" "text" DEFAULT "public"."generate_short_id"(5) NOT NULL,
     "original_filename" "text",
-    "deleted_at" timestamp with time zone
+    "deleted_at" timestamp with time zone,
+    "likes_count" integer DEFAULT 0 NOT NULL,
+    "view_count" integer DEFAULT 0 NOT NULL
 );
 
 
@@ -944,7 +1072,9 @@ CREATE TABLE IF NOT EXISTS "public"."albums" (
     "suspended_by" "uuid",
     "suspension_reason" "text",
     "deleted_at" timestamp with time zone,
-    "cover_is_manual" boolean DEFAULT false
+    "cover_is_manual" boolean DEFAULT false,
+    "likes_count" integer DEFAULT 0 NOT NULL,
+    "view_count" integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1032,6 +1162,15 @@ CREATE TABLE IF NOT EXISTS "public"."event_announcements" (
 ALTER TABLE "public"."event_announcements" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."event_comments" (
+    "event_id" integer NOT NULL,
+    "comment_id" "uuid" NOT NULL
+);
+
+
+ALTER TABLE "public"."event_comments" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."events" (
     "id" integer NOT NULL,
     "title" "text",
@@ -1047,7 +1186,9 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
     "image_width" integer,
     "image_height" integer,
     "max_attendees" integer,
-    "slug" "text" NOT NULL
+    "slug" "text" NOT NULL,
+    "rsvp_reminder_sent_at" timestamp with time zone,
+    "attendee_reminder_sent_at" timestamp with time zone
 );
 
 
@@ -1104,6 +1245,34 @@ ALTER SEQUENCE "public"."events_rsvps_id_seq" OWNED BY "public"."events_rsvps"."
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."interests" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "count" integer DEFAULT 0,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."interests" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."notifications" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "actor_id" "uuid",
+    "type" "text" NOT NULL,
+    "entity_type" "text" NOT NULL,
+    "entity_id" "text",
+    "data" "jsonb" DEFAULT '{}'::"jsonb",
+    "seen_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "dismissed_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."notifications" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."photo_comments" (
     "photo_id" "uuid" NOT NULL,
     "comment_id" "uuid" NOT NULL
@@ -1111,6 +1280,16 @@ CREATE TABLE IF NOT EXISTS "public"."photo_comments" (
 
 
 ALTER TABLE "public"."photo_comments" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."photo_likes" (
+    "photo_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."photo_likes" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."photo_tags" (
@@ -1122,6 +1301,17 @@ CREATE TABLE IF NOT EXISTS "public"."photo_tags" (
 
 
 ALTER TABLE "public"."photo_tags" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."profile_interests" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "profile_id" "uuid" NOT NULL,
+    "interest" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."profile_interests" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
@@ -1142,6 +1332,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "suspended_reason" "text",
     "theme" "text" DEFAULT 'system'::"text",
     "newsletter_opt_in" boolean DEFAULT false NOT NULL,
+    "terms_accepted_at" timestamp with time zone,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_nickname_format" CHECK ((("nickname" IS NULL) OR ("nickname" ~ '^[a-z0-9-]+$'::"text"))),
@@ -1154,6 +1345,10 @@ ALTER TABLE "public"."profiles" OWNER TO "postgres";
 
 
 COMMENT ON COLUMN "public"."profiles"."social_links" IS 'Array of social links (max 3). Format: [{ "label": string, "url": string }]';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."terms_accepted_at" IS 'Timestamp when the user accepted the Terms of Service during onboarding';
 
 
 
@@ -1182,6 +1377,11 @@ ALTER TABLE ONLY "public"."events_rsvps" ALTER COLUMN "id" SET DEFAULT "nextval"
 
 ALTER TABLE ONLY "public"."album_comments"
     ADD CONSTRAINT "album_comments_pkey1" PRIMARY KEY ("album_id", "comment_id");
+
+
+
+ALTER TABLE ONLY "public"."album_likes"
+    ADD CONSTRAINT "album_likes_pkey" PRIMARY KEY ("album_id", "user_id");
 
 
 
@@ -1255,6 +1455,11 @@ ALTER TABLE ONLY "public"."event_announcements"
 
 
 
+ALTER TABLE ONLY "public"."event_comments"
+    ADD CONSTRAINT "event_comments_pkey" PRIMARY KEY ("event_id", "comment_id");
+
+
+
 ALTER TABLE ONLY "public"."events"
     ADD CONSTRAINT "events_pkey" PRIMARY KEY ("id");
 
@@ -1290,8 +1495,28 @@ ALTER TABLE ONLY "public"."photos"
 
 
 
+ALTER TABLE ONLY "public"."interests"
+    ADD CONSTRAINT "interests_name_key" UNIQUE ("name");
+
+
+
+ALTER TABLE ONLY "public"."interests"
+    ADD CONSTRAINT "interests_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."notifications"
+    ADD CONSTRAINT "notifications_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."photo_comments"
     ADD CONSTRAINT "photo_comments_pkey" PRIMARY KEY ("photo_id", "comment_id");
+
+
+
+ALTER TABLE ONLY "public"."photo_likes"
+    ADD CONSTRAINT "photo_likes_pkey" PRIMARY KEY ("photo_id", "user_id");
 
 
 
@@ -1302,6 +1527,16 @@ ALTER TABLE ONLY "public"."photo_tags"
 
 ALTER TABLE ONLY "public"."photo_tags"
     ADD CONSTRAINT "photo_tags_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."profile_interests"
+    ADD CONSTRAINT "profile_interests_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."profile_interests"
+    ADD CONSTRAINT "profile_interests_profile_id_interest_key" UNIQUE ("profile_id", "interest");
 
 
 
@@ -1365,6 +1600,14 @@ CREATE INDEX "idx_album_comments_comment" ON "public"."album_comments" USING "bt
 
 
 
+CREATE INDEX "idx_album_likes_album_id" ON "public"."album_likes" USING "btree" ("album_id");
+
+
+
+CREATE INDEX "idx_album_likes_user_id" ON "public"."album_likes" USING "btree" ("user_id");
+
+
+
 CREATE INDEX "idx_album_photos_album_id" ON "public"."album_photos" USING "btree" ("album_id");
 
 
@@ -1397,6 +1640,10 @@ CREATE INDEX "idx_albums_is_suspended" ON "public"."albums" USING "btree" ("is_s
 
 
 
+CREATE INDEX "idx_albums_likes_count" ON "public"."albums" USING "btree" ("likes_count" DESC);
+
+
+
 CREATE INDEX "idx_albums_public_created_deleted" ON "public"."albums" USING "btree" ("is_public", "created_at" DESC, "deleted_at") WHERE (("is_public" = true) AND ("deleted_at" IS NULL));
 
 
@@ -1410,6 +1657,10 @@ CREATE INDEX "idx_albums_user_id" ON "public"."albums" USING "btree" ("user_id")
 
 
 CREATE INDEX "idx_albums_user_public_deleted" ON "public"."albums" USING "btree" ("user_id", "is_public", "deleted_at", "created_at" DESC) WHERE (("is_public" = true) AND ("deleted_at" IS NULL));
+
+
+
+CREATE INDEX "idx_albums_view_count" ON "public"."albums" USING "btree" ("view_count" DESC);
 
 
 
@@ -1453,11 +1704,43 @@ CREATE INDEX "idx_event_announcements_event_id" ON "public"."event_announcements
 
 
 
+CREATE INDEX "idx_interests_count" ON "public"."interests" USING "btree" ("count" DESC);
+
+
+
+CREATE INDEX "idx_interests_name" ON "public"."interests" USING "btree" ("name");
+
+
+
+CREATE INDEX "idx_interests_name_prefix" ON "public"."interests" USING "btree" ("name" "text_pattern_ops");
+
+
+
+CREATE INDEX "idx_notifications_user_active" ON "public"."notifications" USING "btree" ("user_id", "created_at" DESC) WHERE ("dismissed_at" IS NULL);
+
+
+
+CREATE INDEX "idx_notifications_user_all" ON "public"."notifications" USING "btree" ("user_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_notifications_user_unseen" ON "public"."notifications" USING "btree" ("user_id", "created_at" DESC) WHERE (("seen_at" IS NULL) AND ("dismissed_at" IS NULL));
+
+
+
 CREATE INDEX "idx_photo_comments_comment" ON "public"."photo_comments" USING "btree" ("comment_id");
 
 
 
 CREATE INDEX "idx_photo_comments_photo" ON "public"."photo_comments" USING "btree" ("photo_id");
+
+
+
+CREATE INDEX "idx_photo_likes_photo_id" ON "public"."photo_likes" USING "btree" ("photo_id");
+
+
+
+CREATE INDEX "idx_photo_likes_user_id" ON "public"."photo_likes" USING "btree" ("user_id");
 
 
 
@@ -1474,6 +1757,10 @@ CREATE INDEX "idx_photos_deleted_at" ON "public"."photos" USING "btree" ("delete
 
 
 CREATE INDEX "idx_photos_id_deleted_at" ON "public"."photos" USING "btree" ("id", "deleted_at") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_photos_likes_count" ON "public"."photos" USING "btree" ("likes_count" DESC);
 
 
 
@@ -1506,6 +1793,18 @@ CREATE INDEX "idx_photos_user_public" ON "public"."photos" USING "btree" ("user_
 
 
 CREATE INDEX "idx_photos_user_sorted" ON "public"."photos" USING "btree" ("user_id", "sort_order", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_photos_view_count" ON "public"."photos" USING "btree" ("view_count" DESC);
+
+
+
+CREATE INDEX "idx_profile_interests_interest" ON "public"."profile_interests" USING "btree" ("interest");
+
+
+
+CREATE INDEX "idx_profile_interests_profile_id" ON "public"."profile_interests" USING "btree" ("profile_id");
 
 
 
@@ -1549,7 +1848,19 @@ CREATE OR REPLACE TRIGGER "trigger_photo_tags_count" AFTER INSERT OR DELETE ON "
 
 
 
+CREATE OR REPLACE TRIGGER "trigger_profile_interests_count" AFTER INSERT OR DELETE ON "public"."profile_interests" FOR EACH ROW EXECUTE FUNCTION "public"."update_interest_count"();
+
+
+
 CREATE OR REPLACE TRIGGER "trigger_update_album_cover" AFTER INSERT OR DELETE OR UPDATE OF "sort_order", "photo_url" ON "public"."album_photos" FOR EACH ROW EXECUTE FUNCTION "public"."update_album_cover"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_update_album_likes_count" AFTER INSERT OR DELETE ON "public"."album_likes" FOR EACH ROW EXECUTE FUNCTION "public"."update_album_likes_count"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_update_photo_likes_count" AFTER INSERT OR DELETE ON "public"."photo_likes" FOR EACH ROW EXECUTE FUNCTION "public"."update_photo_likes_count"();
 
 
 
@@ -1568,6 +1879,16 @@ ALTER TABLE ONLY "public"."album_comments"
 
 ALTER TABLE ONLY "public"."album_comments"
     ADD CONSTRAINT "album_comments_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "public"."comments"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."album_likes"
+    ADD CONSTRAINT "album_likes_album_id_fkey" FOREIGN KEY ("album_id") REFERENCES "public"."albums"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."album_likes"
+    ADD CONSTRAINT "album_likes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -1626,6 +1947,16 @@ ALTER TABLE ONLY "public"."event_announcements"
 
 
 
+ALTER TABLE ONLY "public"."event_comments"
+    ADD CONSTRAINT "event_comments_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "public"."comments"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."event_comments"
+    ADD CONSTRAINT "event_comments_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."events_rsvps"
     ADD CONSTRAINT "events_rsvps_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
 
@@ -1655,6 +1986,16 @@ ALTER TABLE ONLY "public"."photos"
 
 
 
+ALTER TABLE ONLY "public"."notifications"
+    ADD CONSTRAINT "notifications_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."notifications"
+    ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."photo_comments"
     ADD CONSTRAINT "photo_comments_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "public"."comments"("id") ON DELETE CASCADE;
 
@@ -1665,8 +2006,23 @@ ALTER TABLE ONLY "public"."photo_comments"
 
 
 
+ALTER TABLE ONLY "public"."photo_likes"
+    ADD CONSTRAINT "photo_likes_photo_id_fkey" FOREIGN KEY ("photo_id") REFERENCES "public"."photos"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."photo_likes"
+    ADD CONSTRAINT "photo_likes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."photo_tags"
     ADD CONSTRAINT "photo_tags_photo_id_fkey" FOREIGN KEY ("photo_id") REFERENCES "public"."photos"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."profile_interests"
+    ADD CONSTRAINT "profile_interests_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -1687,11 +2043,39 @@ CREATE POLICY "Admins can view all event announcements" ON "public"."event_annou
 
 
 
+CREATE POLICY "Album likes are publicly readable" ON "public"."album_likes" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."albums"
+  WHERE (("albums"."id" = "album_likes"."album_id") AND (("albums"."is_public" = true) OR ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+           FROM "public"."profiles"
+          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))) AND ("albums"."deleted_at" IS NULL)))));
+
+
+
 CREATE POLICY "Anyone can create RSVPs" ON "public"."events_rsvps" FOR INSERT WITH CHECK (true);
 
 
 
+CREATE POLICY "Authenticated users can add event comments" ON "public"."event_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can insert interests" ON "public"."interests" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
 CREATE POLICY "Authenticated users can insert tags" ON "public"."tags" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can like albums" ON "public"."album_likes" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can like photos" ON "public"."photo_likes" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can update interests" ON "public"."interests" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
 
 
 
@@ -1725,6 +2109,10 @@ CREATE POLICY "Email types are viewable by everyone" ON "public"."email_types" F
 
 
 
+CREATE POLICY "Event comments are viewable by everyone" ON "public"."event_comments" FOR SELECT USING (true);
+
+
+
 CREATE POLICY "Events are viewable by everyone" ON "public"."events" FOR SELECT USING (true);
 
 
@@ -1738,6 +2126,10 @@ CREATE POLICY "Insert email preferences policy" ON "public"."email_preferences" 
 
 
 CREATE POLICY "Insert photo comment links" ON "public"."photo_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Interests are viewable by everyone" ON "public"."interests" FOR SELECT USING (true);
 
 
 
@@ -1756,6 +2148,18 @@ CREATE POLICY "Only admins can delete events" ON "public"."events" FOR DELETE US
 CREATE POLICY "Only admins can update events" ON "public"."events" FOR UPDATE USING ((EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+
+
+
+CREATE POLICY "Photo likes are publicly readable" ON "public"."photo_likes" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."photos"
+  WHERE (("photos"."id" = "photo_likes"."photo_id") AND (("photos"."is_public" = true) OR ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+           FROM "public"."profiles"
+          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))))));
+
+
+
+CREATE POLICY "Profile interests are viewable by everyone" ON "public"."profile_interests" FOR SELECT USING (true);
 
 
 
@@ -1823,6 +2227,10 @@ CREATE POLICY "Update email preferences policy" ON "public"."email_preferences" 
 
 
 
+CREATE POLICY "Users can add interests to their own profile" ON "public"."profile_interests" FOR INSERT WITH CHECK (("profile_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
 CREATE POLICY "Users can add photos to their own albums" ON "public"."album_photos" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
    FROM "public"."albums"
   WHERE (("albums"."id" = "album_photos"."album_id") AND ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
@@ -1842,6 +2250,10 @@ CREATE POLICY "Users can add tags to their own photos" ON "public"."photo_tags" 
 
 
 CREATE POLICY "Users can create their own albums" ON "public"."albums" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Users can delete interests from their own profile" ON "public"."profile_interests" FOR DELETE USING (("profile_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
@@ -1885,6 +2297,22 @@ CREATE POLICY "Users can insert own profile" ON "public"."profiles" FOR INSERT W
 
 
 
+CREATE POLICY "Users can mark own notifications as seen" ON "public"."notifications" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") = "user_id")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can read own notifications" ON "public"."notifications" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can unlike their own album likes" ON "public"."album_likes" FOR DELETE USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Users can unlike their own photo likes" ON "public"."photo_likes" FOR DELETE USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
 CREATE POLICY "Users can update own comments" ON "public"."comments" FOR UPDATE USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
@@ -1908,6 +2336,14 @@ CREATE POLICY "Users can update photos in their own albums" ON "public"."album_p
 CREATE POLICY "Users can view tags from public photos or their own photos" ON "public"."photo_tags" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."photos"
   WHERE (("photos"."id" = "photo_tags"."photo_id") AND ((("photos"."is_public" = true) AND ("photos"."deleted_at" IS NULL)) OR ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+
+
+
+CREATE POLICY "Users or admins can delete event comments" ON "public"."event_comments" FOR DELETE USING (((EXISTS ( SELECT 1
+   FROM "public"."comments"
+  WHERE (("comments"."id" = "event_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
 
 
 
@@ -1936,6 +2372,9 @@ CREATE POLICY "View public or own photos" ON "public"."photos" FOR SELECT USING 
 ALTER TABLE "public"."album_comments" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."album_likes" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."album_photos" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1960,19 +2399,34 @@ ALTER TABLE "public"."email_types" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."event_announcements" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."event_comments" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."events_rsvps" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."interests" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."notifications" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."photo_comments" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."photo_likes" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."photo_tags" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."photos" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."profile_interests" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
@@ -1984,6 +2438,14 @@ ALTER TABLE "public"."tags" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+
+
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."notifications";
+
 
 
 
@@ -2207,6 +2669,13 @@ GRANT ALL ON FUNCTION "public"."add_comment"("p_entity_type" "text", "p_entity_i
 
 
 
+GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "postgres";
 GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "authenticated";
@@ -2298,6 +2767,13 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "postgres";
 GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "authenticated";
@@ -2339,10 +2815,31 @@ GRANT ALL ON FUNCTION "public"."update_album_cover"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."update_album_likes_count"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."update_album_likes_count"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_album_likes_count"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_album_likes_count"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_comments_updated_at"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."update_comments_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_comments_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_comments_updated_at"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_interest_count"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."update_interest_count"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_interest_count"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_interest_count"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_photo_likes_count"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."update_photo_likes_count"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_photo_likes_count"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_photo_likes_count"() TO "service_role";
 
 
 
@@ -2384,6 +2881,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_comments" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_comments" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_comments" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_likes" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_likes" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_likes" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."album_likes" TO "service_role";
 
 
 
@@ -2461,6 +2965,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_comments" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_comments" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_comments" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_comments" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."events" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."events" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."events" TO "service_role";
@@ -2485,6 +2996,20 @@ GRANT ALL ON SEQUENCE "public"."events_rsvps_id_seq" TO "service_role";
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_comments" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_comments" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_comments" TO "authenticated";
@@ -2492,10 +3017,24 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_likes" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."photo_tags" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_interests" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_interests" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_interests" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profile_interests" TO "service_role";
 
 
 
