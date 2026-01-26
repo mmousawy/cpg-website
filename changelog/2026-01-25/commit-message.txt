@@ -1,0 +1,47 @@
+feat: Global search with PostgreSQL full-text search and notification sound effects
+
+Database:
+- Add global_search RPC function for unified search across all entity types
+- Add tsvector columns with GIN indexes for full-text search on profiles, albums, photos, events
+- Weighted ranking: titles get higher weight than descriptions
+- Tag search uses prefix/substring matching with photo counts
+- Album results include photo count, event results use cover_image fallback
+
+Search UI:
+- Add SearchModal with ⌘K/Ctrl+K keyboard shortcut (OS-aware)
+- Keyboard navigation with ↑↓ arrows and Enter to select
+- Debounced search input (300ms) with loading skeleton
+- Results grouped by entity type with section headers
+- Result items styled to match existing cards (AlbumMiniCard, MemberCard, etc.)
+- Responsive design: footer hints hidden on mobile
+
+Performance:
+- Client-side debouncing prevents excessive API calls while typing
+- AbortController cancels pending requests when query changes
+- Loading state derived from query comparison (no flicker)
+- 5-minute cache on search results with 'search' tag for invalidation
+
+API:
+- Add /api/search route with query, types, and limit parameters
+- Add searchEntities data layer function with caching
+- Add revalidateSearch action and update existing revalidation functions
+
+Files changed (14):
+
+New (10):
+- supabase/migrations/20260125000000_add_global_search.sql - FTS migration with RPC
+- src/types/search.ts - TypeScript types for search results
+- src/lib/data/search.ts - Cached search data function
+- src/app/api/search/route.ts - Search API endpoint
+- src/hooks/useSearch.ts - Search hook with debouncing and loading state
+- src/hooks/useDebounce.ts - Generic debounce hook
+- src/components/search/SearchModal.tsx - Modal with keyboard navigation
+- src/components/search/SearchInput.tsx - Search input with clear button
+- src/components/search/SearchResults.tsx - Grouped results display
+- src/components/search/SearchResultItem.tsx - Entity-specific result styling
+
+Modified (4):
+- src/components/layout/Header.tsx - Add search button and global ⌘K shortcut
+- src/app/actions/revalidate.ts - Add revalidateSearch and update other functions
+- src/lib/data/index.ts - Export search functions
+- src/hooks/useRealtimeNotifications.tsx - Add notification sound effects with debouncing

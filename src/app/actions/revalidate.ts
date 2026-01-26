@@ -18,6 +18,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  * - 'tag-[tagname]' - Photos with a specific tag
  * - 'interests' - All interests data
  * - 'interest-[name]' - Members with a specific interest
+ * - 'search' - Search results cache
  *
  * @see docs/revalidation-system.md for usage details
  */
@@ -32,6 +33,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  */
 export async function revalidateEvents() {
   revalidateTag('events', 'max');
+  revalidateTag('search', 'max');
 }
 
 /**
@@ -58,6 +60,8 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   revalidateTag(`profile-${nickname}`, 'max');
   // Revalidate gallery (photostream shows all public photos)
   revalidateTag('gallery', 'max');
+  // Revalidate search (albums are searchable)
+  revalidateTag('search', 'max');
 
   // Revalidate the profile page (shows albums list)
   // Note: Profile URLs use @ prefix format: /@nickname
@@ -79,6 +83,8 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   revalidateTag(`profile-${nickname}`, 'max');
   // Revalidate gallery (photostream shows all public photos)
   revalidateTag('gallery', 'max');
+  // Revalidate search (albums are searchable)
+  revalidateTag('search', 'max');
   // Revalidate the profile page (shows albums list)
   // Note: Profile URLs use @ prefix format: /@nickname
   revalidatePath(`/@${nickname}`);
@@ -94,6 +100,7 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
  */
 export async function revalidateGalleryData() {
   revalidateTag('gallery', 'max');
+  revalidateTag('search', 'max');
 }
 
 /**
@@ -105,6 +112,8 @@ export async function revalidateTagPhotos(tagName: string) {
   revalidateTag(`tag-${tagName}`, 'max');
   // Also revalidate members by tag page
   revalidateTag('profiles', 'max');
+  // Revalidate search (tags are searchable)
+  revalidateTag('search', 'max');
 }
 
 // ============================================================================
@@ -117,6 +126,7 @@ export async function revalidateTagPhotos(tagName: string) {
  */
 export async function revalidateProfiles() {
   revalidateTag('profiles', 'max');
+  revalidateTag('search', 'max');
 }
 
 /**
@@ -127,6 +137,8 @@ export async function revalidateProfile(nickname: string) {
   revalidateTag(`profile-${nickname}`, 'max');
   // Also revalidate the profiles list (homepage members)
   revalidateTag('profiles', 'max');
+  // Revalidate search (profiles are searchable)
+  revalidateTag('search', 'max');
 }
 
 // ============================================================================
@@ -186,8 +198,22 @@ export async function revalidateAll() {
   revalidateTag('gallery', 'max');
   revalidateTag('profiles', 'max');
   revalidateTag('interests', 'max');
+  revalidateTag('search', 'max');
   // Also revalidate the layout for any non-cached data
   revalidatePath('/', 'layout');
+}
+
+// ============================================================================
+// Search Revalidation
+// ============================================================================
+
+/**
+ * Revalidate search results cache
+ * Use when: Content changes that affect search results
+ * Note: This is automatically called by other revalidation functions
+ */
+export async function revalidateSearch() {
+  revalidateTag('search', 'max');
 }
 
 // ============================================================================

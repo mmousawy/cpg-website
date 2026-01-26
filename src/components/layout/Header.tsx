@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +12,7 @@ import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
 import MobileNotificationButton from '../notifications/MobileNotificationButton';
 import NotificationButton from '../notifications/NotificationButton';
+import SearchModal from '../search/SearchModal';
 import MobileMenu from './MobileMenu';
 import UserMenu from './UserMenu';
 
@@ -43,9 +44,16 @@ const fullWidthPaths = ['/account/photos', '/account/albums'];
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
   const mounted = useMounted();
   const { profile } = useAuth();
+
+  // Detect Mac vs other OS for keyboard shortcut display (only after mount)
+  const isMac = useMemo(() => {
+    if (!mounted) return true; // Default to Mac symbol for SSR
+    return navigator.platform.toLowerCase().includes('mac');
+  }, [mounted]);
 
   // Close mobile menu when notification sheet opens
   useEffect(() => {
@@ -56,6 +64,22 @@ export default function Header() {
     window.addEventListener('notifications:sheet-open', handleNotificationSheetOpen);
     return () => {
       window.removeEventListener('notifications:sheet-open', handleNotificationSheetOpen);
+    };
+  }, []);
+
+  // Global keyboard shortcut: Cmd+K / Ctrl+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -112,22 +136,79 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Right: Notifications + User Menu (Desktop) / Mobile Menu Button (Mobile) */}
+        {/* Right: Search + Notifications + User Menu (Desktop) / Mobile Menu Button (Mobile) */}
         <div
           className="flex items-center gap-3"
         >
-          {/* Desktop Only: Notifications + UserMenu */}
+          {/* Desktop Only: Search + Notifications + UserMenu */}
           <div
             className="hidden sm:flex items-center gap-2"
           >
+            {/* Search Button */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-2 rounded-lg border border-border-color bg-background-medium px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:border-primary hover:text-foreground"
+              aria-label="Search"
+            >
+              <svg
+                className="size-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <span
+                className="hidden lg:inline"
+              >
+                Search
+              </span>
+              <kbd
+                className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-[10px] font-medium text-foreground/50"
+              >
+                <span
+                  className="text-xs"
+                >
+                  {isMac ? '⌘' : 'Ctrl'}
+                </span>
+                K
+              </kbd>
+            </button>
             <NotificationButton />
             <UserMenu />
           </div>
 
-          {/* Mobile Only: Notifications + Avatar + Menu Button */}
+          {/* Mobile Only: Search + Notifications + Avatar + Menu Button */}
           <div
             className="flex items-center gap-2 sm:hidden"
           >
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center justify-center rounded-full p-2 text-foreground/60 transition-colors hover:text-foreground"
+              aria-label="Search"
+            >
+              <svg
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
             {/* Mobile Notifications */}
             <MobileNotificationButton />
 
@@ -179,6 +260,12 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </header>
   );
 }

@@ -14,6 +14,7 @@
  * - 'tag-[tagname]' - Photos with a specific tag
  * - 'interests' - All interests data
  * - 'interest-[name]' - Members with a specific interest
+ * - 'search' - Search results cache
  *
  * @see docs/revalidation-system.md for usage details
  */
@@ -25,4 +26,5 @@ export * from './interests';
 export * from './likes';
 export * from './members';
 export * from './profiles';
+export * from './search';
 
