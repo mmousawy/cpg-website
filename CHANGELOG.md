@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.0](https://github.com/mmousawy/cpg-website/compare/v1.12.1...v1.13.0) (2026-01-26)
+
+
+### Features
+
+* Global search with PostgreSQL full-text search and notification sound effects ([75a6fbe](https://github.com/mmousawy/cpg-website/commit/75a6fbe87a7063f59b6fa2faee18b9e8df3158b9))
+
+
+### Bug Fixes
+
+* Add search_vector for full-text search and update event types ([66353c7](https://github.com/mmousawy/cpg-website/commit/66353c70399b6c8319cd1f51552c7b79c41631b5))
+
 ## [1.12.1](https://github.com/mmousawy/cpg-website/compare/v1.12.0...v1.12.1) (2026-01-23)
 
 
