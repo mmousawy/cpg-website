@@ -1,6 +1,7 @@
 import { Database, Tables } from '@/database.types';
 
-export type CPGEvent = Database['public']['Tables']['events']['Row'];
+// Exclude search_vector as it's only used for database FTS, not in app code
+export type CPGEvent = Omit<Database['public']['Tables']['events']['Row'], 'search_vector'>;
 
 export const eventDateFilter = ['upcoming', 'past'] as const;
 

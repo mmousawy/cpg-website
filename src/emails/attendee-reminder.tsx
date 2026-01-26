@@ -11,7 +11,7 @@ import {
   Text,
 } from '@react-email/components';
 
-import { Database } from '@/database.types';
+import { CPGEvent } from '@/types/events';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
@@ -28,7 +28,7 @@ export const AttendeeReminderEmail = ({
 }: {
   preview?: boolean;
   fullName: string,
-  event: Database['public']['Tables']['events']['Row'],
+  event: CPGEvent,
   cancellationLink: string,
 }) => {
   if (preview) {
@@ -41,7 +41,7 @@ export const AttendeeReminderEmail = ({
       time: '13:00:00',
       location: 'The Tea Lab\r\nNieuwe Binnenweg 178 A\r\nNetherlands',
       cover_image: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/Murtada-al-Mousawy-20241214-DC4A4303.jpg',
-    } as Database['public']['Tables']['events']['Row'];
+    } as CPGEvent;
 
     cancellationLink = `${baseUrl}/cancel/123456`;
   }

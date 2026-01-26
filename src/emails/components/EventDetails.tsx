@@ -7,11 +7,11 @@ import {
   Text,
 } from '@react-email/components';
 
-import { Database } from '@/database.types';
+import { CPGEvent } from '@/types/events';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
-export default function EventDetails({ event, noDescription }: { event: Database['public']['Tables']['events']['Row'], noDescription?: boolean }) {
+export default function EventDetails({ event, noDescription }: { event: CPGEvent, noDescription?: boolean }) {
   const eventLocationSeparated = event.location?.split(/\r\n/) || [];
   const eventDescriptionFiltered = event.description?.replace(/\r\n/g, '<br>') || '';
 

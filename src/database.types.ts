@@ -166,6 +166,7 @@ export type Database = {
           is_public: boolean | null
           is_suspended: boolean | null
           likes_count: number
+          search_vector: unknown
           slug: string
           suspended_at: string | null
           suspended_by: string | null
@@ -185,6 +186,7 @@ export type Database = {
           is_public?: boolean | null
           is_suspended?: boolean | null
           likes_count?: number
+          search_vector?: unknown
           slug: string
           suspended_at?: string | null
           suspended_by?: string | null
@@ -204,6 +206,7 @@ export type Database = {
           is_public?: boolean | null
           is_suspended?: boolean | null
           likes_count?: number
+          search_vector?: unknown
           slug?: string
           suspended_at?: string | null
           suspended_by?: string | null
@@ -439,6 +442,7 @@ export type Database = {
           max_attendees: number | null
           rsvp_count: number | null
           rsvp_reminder_sent_at: string | null
+          search_vector: unknown
           slug: string
           time: string | null
           title: string | null
@@ -458,6 +462,7 @@ export type Database = {
           max_attendees?: number | null
           rsvp_count?: number | null
           rsvp_reminder_sent_at?: string | null
+          search_vector?: unknown
           slug: string
           time?: string | null
           title?: string | null
@@ -477,6 +482,7 @@ export type Database = {
           max_attendees?: number | null
           rsvp_count?: number | null
           rsvp_reminder_sent_at?: string | null
+          search_vector?: unknown
           slug?: string
           time?: string | null
           title?: string | null
@@ -721,6 +727,7 @@ export type Database = {
           likes_count: number
           mime_type: string
           original_filename: string | null
+          search_vector: unknown
           short_id: string
           sort_order: number | null
           storage_path: string
@@ -743,6 +750,7 @@ export type Database = {
           likes_count?: number
           mime_type: string
           original_filename?: string | null
+          search_vector?: unknown
           short_id?: string
           sort_order?: number | null
           storage_path: string
@@ -765,6 +773,7 @@ export type Database = {
           likes_count?: number
           mime_type?: string
           original_filename?: string | null
+          search_vector?: unknown
           short_id?: string
           sort_order?: number | null
           storage_path?: string
@@ -818,6 +827,7 @@ export type Database = {
           last_logged_in: string | null
           newsletter_opt_in: boolean
           nickname: string | null
+          search_vector: unknown
           social_links: Json | null
           suspended_at: string | null
           suspended_reason: string | null
@@ -838,6 +848,7 @@ export type Database = {
           last_logged_in?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
+          search_vector?: unknown
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
@@ -858,6 +869,7 @@ export type Database = {
           last_logged_in?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
+          search_vector?: unknown
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
@@ -960,6 +972,22 @@ export type Database = {
         Returns: number
       }
       get_user_stats: { Args: { p_user_id: string }; Returns: Json }
+      global_search: {
+        Args: {
+          result_limit?: number
+          search_query: string
+          search_types?: string[]
+        }
+        Returns: {
+          entity_id: string
+          entity_type: string
+          image_url: string
+          rank: number
+          subtitle: string
+          title: string
+          url: string
+        }[]
+      }
       increment_view_count: {
         Args: { p_entity_id: string; p_entity_type: string }
         Returns: undefined
