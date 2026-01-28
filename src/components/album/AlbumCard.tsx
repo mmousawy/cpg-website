@@ -1,10 +1,10 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
 
 import type { AlbumWithPhotos } from '@/types/albums';
 
 import Avatar from '../auth/Avatar';
+import BlurImage from '../shared/BlurImage';
 import CardBadges from '../shared/CardBadges';
 import CardLikes from '../shared/CardLikes';
 
@@ -44,7 +44,7 @@ export default function AlbumCard({
         className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-background"
       >
         {coverImage ? (
-          <Image
+          <BlurImage
             src={coverImage}
             alt={album.title}
             sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"

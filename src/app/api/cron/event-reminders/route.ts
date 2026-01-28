@@ -6,6 +6,7 @@ import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
 import { encrypt } from '@/utils/encrypt';
 import { createClient } from '@/utils/supabase/server';
+import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
     // ===== RSVP REMINDERS (5 days before) =====
     const { data: rsvpReminderEvents, error: rsvpEventsError } = await supabase
       .from('events')
-      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at')
+      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at')
       .eq('date', fiveDaysDateStr)
       .is('rsvp_reminder_sent_at', null);
 
@@ -152,6 +153,7 @@ export async function GET(request: NextRequest) {
           const batchSize = 100;
           let successCount = 0;
           let errorCount = 0;
+          const successfulRecipients: Array<{ id: string }> = [];
 
           for (let i = 0; i < recipients.length; i += batchSize) {
             const batch = recipients.slice(i, i + batchSize);
@@ -202,11 +204,16 @@ export async function GET(request: NextRequest) {
                 };
 
                 if (resultsArray && Array.isArray(resultsArray)) {
-                  resultsArray.forEach((result: ResendBatchResult) => {
+                  resultsArray.forEach((result: ResendBatchResult, idx: number) => {
+                    const recipient = batch[idx];
                     if (result && typeof result === 'object' && 'error' in result && result.error) {
                       errorCount++;
                     } else if (result && typeof result === 'object' && 'id' in result) {
                       successCount++;
+                      // Track successful recipients for notification creation
+                      if (recipient && recipient.id) {
+                        successfulRecipients.push({ id: recipient.id });
+                      }
                     } else {
                       errorCount++;
                     }
@@ -224,6 +231,29 @@ export async function GET(request: NextRequest) {
             if (i + batchSize < recipients.length) {
               await new Promise(resolve => setTimeout(resolve, 500));
             }
+          }
+
+          // Create notifications for successful email sends
+          if (successfulRecipients.length > 0) {
+            const notificationPromises = successfulRecipients.map(recipient =>
+              createNotification({
+                userId: recipient.id,
+                type: 'event_reminder',
+                entityType: 'event',
+                entityId: String(event.id),
+                data: {
+                  title: event.title,
+                  thumbnail: event.cover_image,
+                  link: `/events/${event.slug || event.id}`,
+                },
+              }).catch((error) => {
+                console.error(`Failed to create notification for user ${recipient.id}:`, error);
+                return { success: false, error: String(error) };
+              }),
+            );
+
+            await Promise.all(notificationPromises);
+            console.log(`📬 Created ${successfulRecipients.length} notifications for RSVP reminders`);
           }
 
           // Mark as sent if we had any successful sends
@@ -248,7 +278,7 @@ export async function GET(request: NextRequest) {
     // ===== ATTENDEE REMINDERS (1 day before) =====
     const { data: attendeeReminderEvents, error: attendeeEventsError } = await supabase
       .from('events')
-      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at')
+      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at')
       .eq('date', oneDayDateStr)
       .is('attendee_reminder_sent_at', null);
 
@@ -283,6 +313,7 @@ export async function GET(request: NextRequest) {
           const batchSize = 100;
           let successCount = 0;
           let errorCount = 0;
+          const successfulRecipients: Array<{ user_id: string | null }> = [];
 
           for (let i = 0; i < rsvps.length; i += batchSize) {
             const batch = rsvps.slice(i, i + batchSize);
@@ -322,11 +353,16 @@ export async function GET(request: NextRequest) {
                 };
 
                 if (resultsArray && Array.isArray(resultsArray)) {
-                  resultsArray.forEach((result: ResendBatchResult) => {
+                  resultsArray.forEach((result: ResendBatchResult, idx: number) => {
+                    const rsvp = batch[idx];
                     if (result && typeof result === 'object' && 'error' in result && result.error) {
                       errorCount++;
                     } else if (result && typeof result === 'object' && 'id' in result) {
                       successCount++;
+                      // Track successful recipients with user IDs for notification creation
+                      if (rsvp && rsvp.user_id) {
+                        successfulRecipients.push({ user_id: rsvp.user_id });
+                      }
                     } else {
                       errorCount++;
                     }
@@ -344,6 +380,31 @@ export async function GET(request: NextRequest) {
             if (i + batchSize < rsvps.length) {
               await new Promise(resolve => setTimeout(resolve, 500));
             }
+          }
+
+          // Create notifications for successful email sends (only for users with user IDs)
+          if (successfulRecipients.length > 0) {
+            const notificationPromises = successfulRecipients
+              .filter(r => r.user_id !== null)
+              .map(recipient =>
+                createNotification({
+                  userId: recipient.user_id!,
+                  type: 'event_reminder',
+                  entityType: 'event',
+                  entityId: String(event.id),
+                  data: {
+                    title: event.title,
+                    thumbnail: event.cover_image,
+                    link: `/events/${event.slug || event.id}`,
+                  },
+                }).catch((error) => {
+                  console.error(`Failed to create notification for user ${recipient.user_id}:`, error);
+                  return { success: false, error: String(error) };
+                }),
+              );
+
+            await Promise.all(notificationPromises);
+            console.log(`📬 Created ${successfulRecipients.filter(r => r.user_id !== null).length} notifications for attendee reminders`);
           }
 
           // Mark as sent if we had any successful sends

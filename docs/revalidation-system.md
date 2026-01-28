@@ -370,8 +370,7 @@ With Cache Components enabled, Next.js enforces strict rules about `new Date()` 
 | `RandomHeroImage` | `Math.random()` | `useState` lazy initializer + Suspense boundary + `onLoad` fade-in |
 | `ActivitiesSlider` | Swiper library uses Date | Wrapped in `ActivitiesSliderWrapper` with dynamic import `ssr: false` |
 | `EventCard` | `isEventPast()` | Accepts `serverNow` prop from data layer |
-| `RecentEventsList` | Sorting by date | Requires `serverNow` prop |
-| `EventsList` | `isEventPast()` | Requires `serverNow` prop |
+| `EventsList` | `isEventPast()` + sorting | Requires `serverNow` prop (supports `variant="compact"` for homepage) |
 | `PastEventsPaginated` | Client-side date | Uses `useState` + `useEffect` for `clientNow` |
 | Album page | Dynamic route params | `generateStaticParams` (no `loading.tsx` for cached pages) |
 
@@ -395,10 +394,10 @@ export async function getRecentEvents(limit = 6) {
 }
 
 // In page component
-const { events, serverNow } = await getRecentEvents(6);
+const { events, attendeesByEvent, serverNow } = await getRecentEvents(6);
 
 // Pass to components
-<RecentEventsList events={events} serverNow={serverNow} />
+<EventsList events={events} attendeesByEvent={attendeesByEvent} variant="compact" max={3} serverNow={serverNow} />
 ```
 
 ### Client Component Pattern for Random Values

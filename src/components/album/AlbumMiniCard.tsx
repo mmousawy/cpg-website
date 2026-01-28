@@ -1,6 +1,7 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
+
+import BlurImage from '../shared/BlurImage';
 
 interface AlbumMiniCardProps {
   title: string;
@@ -40,7 +41,7 @@ export default function AlbumMiniCard({
         className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
       >
         {coverImageUrl ? (
-          <Image
+          <BlurImage
             src={coverImageUrl}
             alt={title}
             fill

@@ -20,7 +20,7 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
     outlookStartDate: calendarDate.format('YYYY-MM-DDTHH:mm:ssZ'),
     outlookEndDate: calendarDate.add(3, 'hour').format('YYYY-MM-DDTHH:mm:ssZ'),
     description: event.description,
-    location: event.location?.replace(/\r\n/gm, ', '),
+    location: event.location?.replace(/\n/gm, ', '),
   };
 
   // Use encodeURIComponent to encode all the details in the calendar links

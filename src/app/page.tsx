@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Avatar from '@/components/auth/Avatar';
-import RecentEventsList from '@/components/events/RecentEventsList';
+import EventsList from '@/components/events/EventsList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
@@ -39,13 +39,13 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
 };
 
 const heroImages = [
-  '/gallery/home-hero1.jpg',
-  '/gallery/home-hero2.jpg',
-  '/gallery/home-hero3.jpg',
-  '/gallery/home-hero4.jpg',
-  '/gallery/home-hero5.jpg',
-  '/gallery/home-hero6.jpg',
-  '/gallery/home-hero7.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero1.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero2.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero3.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero4.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero5.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero6.jpg',
+  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero7.jpg',
 ];
 
 export default async function Home() {
@@ -57,7 +57,7 @@ export default async function Home() {
     getRecentEvents(6),
   ]);
 
-  const { events, serverNow } = eventsData;
+  const { events, attendeesByEvent, serverNow } = eventsData;
 
   // Select hero image server-side for better LCP discovery
   // Use deterministic selection based on date to ensure consistency while still rotating
@@ -154,8 +154,13 @@ export default async function Home() {
                 View all events
               </ArrowLink>
             </div>
-            <RecentEventsList
+            <EventsList
               events={events}
+              attendeesByEvent={attendeesByEvent}
+              variant="compact"
+              max={3}
+              disableAttendeesPopover
+              avatarSize="xs"
               serverNow={serverNow}
             />
           </div>

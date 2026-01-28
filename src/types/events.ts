@@ -12,5 +12,5 @@ export type EventAttendee = Pick<Tables<'events_rsvps'>, 'event_id' | 'user_id'>
   id: string;
   email: string;
   confirmed_at: string;
-  profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null;
+  profiles: Pick<Tables<'profiles'>, 'avatar_url' | 'full_name' | 'nickname'> | null;
 };

@@ -94,7 +94,7 @@ export default function Popover({
   return (
     <details
       ref={detailsRef}
-      className="relative"
+      className="relative block"
       onToggle={handleToggle}
     >
       <summary
@@ -107,7 +107,7 @@ export default function Popover({
       </summary>
       <div
         className={clsx(
-          'absolute top-full z-30 mt-2',
+          'absolute top-full z-35 mt-2',
           width,
           alignmentClasses[align],
           'overflow-hidden rounded-xl',

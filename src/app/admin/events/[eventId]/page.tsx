@@ -19,6 +19,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 
 import { revalidateEvent } from '@/app/actions/revalidate';
+import { generateBlurhash } from '@/utils/generateBlurhash';
 import EmailForwardSVG from 'public/icons/email-forward.svg';
 import MegaphoneSVG from 'public/icons/megaphone.svg';
 import TrashSVG from 'public/icons/trash.svg';
@@ -333,6 +334,9 @@ export default function AdminEventFormPage() {
 
     try {
       let coverImageUrl = coverImage; // Use existing URL if no new file
+      let imageBlurhash: string | null = null;
+      let imageWidth: number | null = null;
+      let imageHeight: number | null = null;
 
       // Upload new cover image if selected
       if (coverImageFile) {
@@ -343,6 +347,12 @@ export default function AdminEventFormPage() {
           img.onerror = reject;
           img.src = URL.createObjectURL(coverImageFile);
         });
+
+        imageWidth = dimensions.width;
+        imageHeight = dimensions.height;
+
+        // Generate blurhash for instant placeholder
+        imageBlurhash = await generateBlurhash(coverImageFile);
 
         // Extract EXIF data (lazy load exifr only when needed)
         let exifData = null;
@@ -403,6 +413,7 @@ export default function AdminEventFormPage() {
           exif_data: exifData,
           user_id: user?.id,
           original_filename: coverImageFile.name,
+          blurhash: imageBlurhash,
         });
 
         if (metadataError) {
@@ -423,6 +434,9 @@ export default function AdminEventFormPage() {
             time: time || null,
             location: location.trim() || null,
             cover_image: coverImageUrl,
+            image_blurhash: imageBlurhash,
+            image_width: imageWidth,
+            image_height: imageHeight,
           })
           .select()
           .single();
@@ -454,17 +468,26 @@ export default function AdminEventFormPage() {
         }, 1500);
       } else {
         // Update existing event
+        const updateData: Record<string, unknown> = {
+          title: title.trim(),
+          slug: finalSlug,
+          description: description.trim() || null,
+          date,
+          time: time || null,
+          location: location.trim() || null,
+          cover_image: coverImageUrl,
+        };
+
+        // Only update image metadata if a new cover was uploaded
+        if (coverImageFile && imageBlurhash) {
+          updateData.image_blurhash = imageBlurhash;
+          updateData.image_width = imageWidth;
+          updateData.image_height = imageHeight;
+        }
+
         const { error: updateError } = await supabase
           .from('events')
-          .update({
-            title: title.trim(),
-            slug: finalSlug,
-            description: description.trim() || null,
-            date,
-            time: time || null,
-            location: location.trim() || null,
-            cover_image: coverImageUrl,
-          })
+          .update(updateData)
           .eq('slug', eventSlug);
 
         if (updateError) {

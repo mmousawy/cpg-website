@@ -16,7 +16,7 @@ import PlusSVG from 'public/icons/plus.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 
-type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image' | 'image_url'>
+type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image'>
 
 export default function AdminEventsPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
@@ -29,7 +29,7 @@ export default function AdminEventsPage() {
     const loadEvents = async () => {
       const { data } = await supabase
         .from('events')
-        .select('id, slug, title, date, time, location, description, cover_image, image_url')
+        .select('id, slug, title, date, time, location, description, cover_image')
         .order('date', { ascending: false });
 
       setEvents(data || []);
@@ -158,7 +158,7 @@ export default function AdminEventsPage() {
 }
 
 function AdminEventCard({ event }: { event: Event }) {
-  const imageSrc = event.cover_image || event.image_url;
+  const imageSrc = event.cover_image;
 
   return (
     <div

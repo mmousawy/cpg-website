@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { AttendeeMessageEmail } from '@/emails/attendee-message';
 import { encrypt } from '@/utils/encrypt';
 import { createClient } from '@/utils/supabase/server';
+import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
   let errorCount = 0;
   const sendStatus: Record<string, 'success' | 'error'> = {};
   const errorDetails: Record<string, string> = {};
+  const successfulRecipients: Array<{ userId?: string }> = [];
 
   for (let i = 0; i < recipients.length; i += batchSize) {
     const batch = recipients.slice(i, i + batchSize);
@@ -242,6 +244,10 @@ export async function POST(request: NextRequest) {
                 // Success - has an id
                 sendStatus[recipient.email] = 'success';
                 successCount++;
+                // Track successful recipients with user IDs for notification creation
+                if (recipient.userId) {
+                  successfulRecipients.push({ userId: recipient.userId });
+                }
               } else {
                 // Unknown response format - log it and treat as error
                 const errorMessage = `Unexpected response format: ${JSON.stringify(result)}`;
@@ -285,6 +291,32 @@ export async function POST(request: NextRequest) {
     if (i + batchSize < recipients.length) {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
+  }
+
+  // Create notifications for successful email sends (only for users with user IDs)
+  if (successfulRecipients.length > 0) {
+    const notificationPromises = successfulRecipients
+      .filter(r => r.userId)
+      .map(recipient =>
+        createNotification({
+          userId: recipient.userId!,
+          actorId: user.id,
+          type: 'admin_message',
+          entityType: 'event',
+          entityId: String(event.id),
+          data: {
+            title: event.title,
+            thumbnail: event.cover_image,
+            link: `/events/${event.slug || event.id}`,
+          },
+        }).catch((error) => {
+          console.error(`Failed to create notification for user ${recipient.userId}:`, error);
+          return { success: false, error: String(error) };
+        }),
+      );
+
+    await Promise.all(notificationPromises);
+    console.log(`📬 Created ${successfulRecipients.filter(r => r.userId).length} notifications for attendee messages`);
   }
 
   return NextResponse.json({

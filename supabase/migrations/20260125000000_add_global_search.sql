@@ -119,7 +119,7 @@ BEGIN
       e.id::text AS entity_id,
       COALESCE(e.title, 'Untitled Event') AS title,
       COALESCE(e.location, '') AS subtitle,
-      COALESCE(NULLIF(e.cover_image, ''), NULLIF(e.image_url, '')) AS image_url,
+      NULLIF(e.cover_image, '') AS image_url,
       '/events/' || e.slug AS url,
       ts_rank(e.search_vector, search_tsquery) AS rank
     FROM events e

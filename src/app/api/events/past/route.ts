@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/utils/supabase/server';
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { createPublicClient } from '@/utils/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   // Fetch past events with pagination
   const { data: events, error } = await supabase
     .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
+    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
     .lt('date', now)
     .order('date', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       user_id,
       email,
       confirmed_at,
-      profiles (avatar_url)
+      profiles (avatar_url, full_name, nickname)
     `)
     .in('event_id', eventIds)
     .not('confirmed_at', 'is', null)

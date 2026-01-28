@@ -1,0 +1,77 @@
+feat: Blur image placeholders, unified event attendees UI, and image_url cleanup
+
+Image Loading:
+- Add BlurImage component with blurhash decoding for instant placeholders
+- Add getBlurPlaceholderUrl for tiny Supabase image fallback when no blurhash
+- Detect cached images via useLayoutEffect to skip blur transition
+- Apply blur placeholders to albums, photos, events, and gallery grid
+
+Attendees UI:
+- Add StackedAvatarsPopover for reusable attendee/likes display with popover
+- Unify DetailLikesSection to use StackedAvatarsPopover (major refactor)
+- Add attendees display to EventCard with clickable popover
+- Unify RecentEventsList into EventsList with 'compact' variant
+- Add disablePopover prop for homepage (avatars without interaction)
+- Add avatarSize prop for customizable avatar sizing
+- Export SIZE_MAP from Avatar component for type-safe size references
+
+Database:
+- Remove image_url column from events table (all images now in cover_image)
+- Update global_search function to remove image_url fallback
+- Add migration script to migrate external event covers to Supabase storage
+
+API:
+- Add notification creation to event-reminders cron (RSVP and attendee reminders)
+- Add notification creation to event announcements and attendee emails
+- Update events/past API to include full_name and nickname in attendee profiles
+
+Components:
+- EventImage: Adjust dimensions to 1.5x display size (960x720 small, 480x480 default)
+- HeroImage: Update sizes attribute for better optimization
+- Popover: Increase z-index to z-40 for proper stacking
+
+Scripts:
+- Add upload-hero-images.ts for uploading local hero images to Supabase
+- Add migrate-event-covers.ts for migrating external event covers to Supabase
+
+Files changed (33):
+
+New (5):
+- supabase/migrations/20260126000000_remove_events_image_url.sql
+- src/components/shared/BlurImage.tsx
+- src/components/shared/StackedAvatarsPopover.tsx
+- src/utils/decodeBlurhash.ts
+- scripts/migrate-event-covers.ts
+- scripts/upload-hero-images.ts
+
+Deleted (1):
+- src/components/events/RecentEventsList.tsx
+
+Modified (27):
+- docs/revalidation-system.md
+- src/app/admin/events/page.tsx
+- src/app/api/admin/events/announce/route.ts
+- src/app/api/admin/events/email-attendees/route.ts
+- src/app/api/cron/event-reminders/route.ts
+- src/app/api/events/past/route.ts
+- src/app/events/[eventSlug]/page.tsx
+- src/app/page.tsx
+- src/components/album/AlbumCard.tsx
+- src/components/album/AlbumMiniCard.tsx
+- src/components/auth/Avatar.tsx
+- src/components/events/AddToCalendar.tsx
+- src/components/events/EventCard.tsx
+- src/components/events/EventImage.tsx
+- src/components/events/EventsList.tsx
+- src/components/manage/PhotoCard.tsx
+- src/components/manage/PhotoListItem.tsx
+- src/components/photo/JustifiedPhotoGrid.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/photo/PhotoWithLightbox.tsx
+- src/components/shared/DetailLikesSection.tsx
+- src/components/shared/HeroImage.tsx
+- src/components/shared/Popover.tsx
+- src/lib/data/events.ts
+- src/types/events.ts
+- src/utils/supabaseImageLoader.ts
+- supabase/migrations/20260125000000_add_global_search.sql

@@ -1,9 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import clsx from 'clsx';
+import Image from 'next/image';
 
 type AvatarProps = {
   // For static mode: provide user data directly
@@ -15,7 +15,7 @@ type AvatarProps = {
 }
 
 // Size mappings
-const SIZE_MAP = {
+export const SIZE_MAP = {
   xxs: { wrapper: 'w-6 h-6', icon: 'w-3 h-3', fontSize: 12 },
   xs: { wrapper: 'w-8 h-8', icon: 'w-4 h-4', fontSize: 16 },
   sm: { wrapper: 'w-10 h-10', icon: 'w-5 h-5', fontSize: 20 },

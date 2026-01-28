@@ -96,6 +96,7 @@ export default function PhotoPageContent({
             title={photo.title}
             width={photo.width || 1200}
             height={photo.height || 800}
+            blurhash={photo.blurhash}
           />
         </div>
 

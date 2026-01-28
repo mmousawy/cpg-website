@@ -3,11 +3,11 @@ import AddToCalendar from '@/components/events/AddToCalendar';
 import EventSignupBar from '@/components/events/EventSignupBar';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import BlurImage from '@/components/shared/BlurImage';
+import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { Tables } from '@/database.types';
-import clsx from 'clsx';
 import crypto from 'crypto';
 import { cacheLife, cacheTag } from 'next/cache';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -24,7 +24,7 @@ import EventComments from './EventComments';
 
 // Type for attendee with joined profile data
 type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
-  profiles: Pick<Tables<'profiles'>, 'avatar_url'> | null
+  profiles: Pick<Tables<'profiles'>, 'avatar_url' | 'full_name' | 'nickname'> | null
 }
 
 // Pre-render all events at build time for optimal caching
@@ -54,8 +54,8 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
     });
   }
 
-  // Use event cover image or image_url if available, otherwise fall back to default
-  const eventImage = event.cover_image || event.image_url || null;
+  // Use event cover image if available, otherwise fall back to default
+  const eventImage = event.cover_image || null;
 
   return createMetadata({
     title: event.title || 'Event',
@@ -64,6 +64,20 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
     canonical: `/events/${eventSlug}`,
     type: 'article',
     keywords: ['photography event', 'meetup', 'photo walk', event.location || '', event.title || ''],
+  });
+}
+
+// Transform attendees to AvatarPerson format for the shared component
+function transformAttendeesToAvatarPeople(attendees: AttendeeWithProfile[]): AvatarPerson[] {
+  return attendees.map((attendee) => {
+    const customAvatar = attendee.profiles?.avatar_url;
+    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
+    return {
+      id: attendee.id.toString(),
+      avatarUrl: customAvatar || gravatarUrl,
+      fullName: attendee.profiles?.full_name || null,
+      nickname: attendee.profiles?.nickname || null,
+    };
   });
 }
 
@@ -82,48 +96,17 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
     );
   }
 
-  const attendeesWithAvatars = attendees.map((attendee) => {
-    const customAvatar = attendee.profiles?.avatar_url;
-    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
-    return { ...attendee, avatarUrl: customAvatar || gravatarUrl };
-  });
+  const attendeePeople = transformAttendeesToAvatarPeople(attendees);
 
   return (
-    <div
-      className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'
-    >
-      <div
-        className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44'
-        dir="rtl"
-      >
-        {attendeesWithAvatars.map((attendee, idx) => (
-          <Image
-            key={`${attendee.id}_${idx}`}
-            width={32}
-            height={32}
-            className={clsx([
-              attendeesWithAvatars.length > 1 && '-mr-2',
-              'size-8 rounded-full object-cover',
-            ])}
-            src={attendee.avatarUrl}
-            alt="Avatar"
-          />
-        ))}
-        <div
-          className={clsx([
-            'absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light',
-            attendeesWithAvatars.length < 20 && 'invisible',
-            attendeesWithAvatars.length > 7 && 'max-xs:visible',
-            attendeesWithAvatars.length > 12 && 'max-md:visible',
-            attendeesWithAvatars.length > 16 && '!visible',
-          ])}
-        />
-      </div>
-      {attendeesWithAvatars.length}
-      {' '}
-      attendee
-      {attendeesWithAvatars.length === 1 ? '' : 's'}
-    </div>
+    <StackedAvatarsPopover
+      people={attendeePeople}
+      singularLabel="attendee"
+      pluralLabel="attendees"
+      emptyMessage={isPastEvent ? 'No attendees recorded' : 'No attendees yet'}
+      showInlineCount={true}
+      avatarSize="xs"
+    />
   );
 }
 
@@ -192,17 +175,18 @@ async function CachedEventContent({
   return (
     <>
       {/* Hero Section with Cover Image */}
-      {(event.cover_image || event.image_url) && (
+      {event.cover_image && (
         <div
           className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden"
         >
-          <Image
-            src={event.cover_image || event.image_url!}
+          <BlurImage
+            src={event.cover_image}
             alt={event.title || 'Event cover'}
             fill
             className="object-cover"
             sizes="100vw"
             priority
+            blurhash={event.image_blurhash}
           />
 
           {/* Frosted glass blur layer with eased gradient mask */}
@@ -247,11 +231,11 @@ async function CachedEventContent({
       )}
 
       <PageContainer
-        className={(event.cover_image || event.image_url) ? '!pt-6 sm:!pt-8' : ''}
+        className={event.cover_image ? '!pt-6 sm:!pt-8' : ''}
       >
         <Container>
           {/* Title (if no cover image) */}
-          {!(event.cover_image || event.image_url) && (
+          {!event.cover_image && (
             <div
               className="mb-6"
             >

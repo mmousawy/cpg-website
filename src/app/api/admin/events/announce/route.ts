@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { EventAnnouncementEmail } from '@/emails/event-announcement';
 import { encrypt } from '@/utils/encrypt';
 import { createClient } from '@/utils/supabase/server';
+import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest) {
   let errorCount = 0;
   const sendStatus: Record<string, 'success' | 'error'> = {};
   const errorDetails: Record<string, string> = {};
+  const successfulSubscribers: Array<{ id: string }> = [];
 
   for (let i = 0; i < subscribers.length; i += batchSize) {
     const batch = subscribers.slice(i, i + batchSize);
@@ -238,6 +240,8 @@ export async function POST(request: NextRequest) {
                 // Success - has an id
                 sendStatus[subscriber.email!] = 'success';
                 successCount++;
+                // Track successful subscribers for notification creation
+                successfulSubscribers.push({ id: subscriber.id });
               } else {
                 // Unknown format - log and treat as error
                 const errorMessage = `Unexpected response format: ${JSON.stringify(result)}`;
@@ -281,6 +285,30 @@ export async function POST(request: NextRequest) {
     if (i + batchSize < subscribers.length) {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
+  }
+
+  // Create notifications for successful email sends
+  if (successfulSubscribers.length > 0) {
+    const notificationPromises = successfulSubscribers.map(subscriber =>
+      createNotification({
+        userId: subscriber.id,
+        actorId: user.id,
+        type: 'event_announcement',
+        entityType: 'event',
+        entityId: String(event.id),
+        data: {
+          title: event.title,
+          thumbnail: event.cover_image,
+          link: `/events/${event.slug || event.id}`,
+        },
+      }).catch((error) => {
+        console.error(`Failed to create notification for user ${subscriber.id}:`, error);
+        return { success: false, error: String(error) };
+      }),
+    );
+
+    await Promise.all(notificationPromises);
+    console.log(`📬 Created ${successfulSubscribers.length} notifications for event announcement`);
   }
 
   // Record announcement in tracking table

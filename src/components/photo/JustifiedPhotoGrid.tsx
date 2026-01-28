@@ -4,9 +4,9 @@ import { useBatchPhotoLikeCounts } from '@/hooks/useLikes';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
-import Image from 'next/image';
 import Link from 'next/link';
 import Avatar from '../auth/Avatar';
+import BlurImage from '../shared/BlurImage';
 import CardLikes from '../shared/CardLikes';
 
 interface JustifiedPhotoGridProps {
@@ -204,9 +204,10 @@ function PhotoRows({
                     aspectRatio: item.photo.aspectRatio,
                   }}
                 >
-                  <Image
+                  <BlurImage
                     src={thumbnailUrl}
                     alt={photo?.title || 'Photo'}
+                    blurhash={photo?.blurhash}
                     fill
                     className="object-cover"
                     sizes={`${Math.ceil(item.displayWidth * 1.5)}px`}

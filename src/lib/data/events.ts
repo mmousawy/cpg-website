@@ -1,6 +1,6 @@
-import { cacheTag, cacheLife } from 'next/cache';
-import { createPublicClient } from '@/utils/supabase/server';
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { createPublicClient } from '@/utils/supabase/server';
+import { cacheLife, cacheTag } from 'next/cache';
 
 /**
  * Get all event slugs for static generation
@@ -31,12 +31,21 @@ export async function getRecentEvents(limit = 6) {
   const supabase = createPublicClient();
   const { data } = await supabase
     .from('events')
-    .select('id, title, date, location, time, cover_image, image_url, slug, description')
+    .select('id, title, date, location, time, cover_image, slug, description')
     .order('date', { ascending: false })
     .limit(limit);
 
+  const events = (data || []) as CPGEvent[];
+  const eventIds = events.map(e => e.id);
+
+  // Fetch attendees for recent events
+  const attendeesByEvent = eventIds.length > 0
+    ? await getEventAttendees(eventIds)
+    : {} as Record<number, EventAttendee[]>;
+
   return {
-    events: (data || []) as CPGEvent[],
+    events,
+    attendeesByEvent,
     serverNow: Date.now(),
   };
 }
@@ -57,7 +66,7 @@ export async function getUpcomingEvents() {
 
   const { data } = await supabase
     .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
+    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
     .gte('date', nowDate)
     .order('date', { ascending: true });
 
@@ -83,7 +92,7 @@ export async function getPastEvents(limit = 5) {
 
   const { data, count } = await supabase
     .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug', { count: 'exact' })
+    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug', { count: 'exact' })
     .lt('date', nowDate)
     .order('date', { ascending: false })
     .limit(limit);
@@ -109,7 +118,7 @@ export async function getEventBySlug(slug: string) {
 
   const { data: event } = await supabase
     .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_url, image_width, max_attendees, rsvp_count, slug')
+    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
     .eq('slug', slug)
     .single();
 
@@ -132,7 +141,7 @@ export async function getEventAttendeesForEvent(eventId: number) {
 
   const { data: attendees } = await supabase
     .from('events_rsvps')
-    .select('id, user_id, email, confirmed_at, profiles (avatar_url)')
+    .select('id, user_id, email, confirmed_at, profiles (avatar_url, full_name, nickname)')
     .eq('event_id', eventId)
     .not('confirmed_at', 'is', null)
     .is('canceled_at', null)
@@ -165,7 +174,7 @@ export async function getEventAttendees(eventIds: number[]) {
       user_id,
       email,
       confirmed_at,
-      profiles (avatar_url)
+      profiles (avatar_url, full_name, nickname)
     `)
     .in('event_id', eventIds)
     .not('confirmed_at', 'is', null)

@@ -1,8 +1,8 @@
 'use client';
 
+import BlurImage from '@/components/shared/BlurImage';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
-import Image from 'next/image';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import { useEffect, useRef, useState } from 'react';
@@ -277,7 +277,7 @@ export default function PhotoListItem({
         onClick={handleViewFullSize}
         title="View full size"
       >
-        <Image
+        <BlurImage
           src={photo.url}
           alt={displayName}
           fill

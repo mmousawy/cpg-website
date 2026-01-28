@@ -7,6 +7,45 @@ const SUPABASE_DOMAINS = [
 ];
 
 /**
+ * Check if a URL is a Supabase Storage URL
+ */
+export function isSupabaseUrl(src: string): boolean {
+  return SUPABASE_DOMAINS.some(domain => src.includes(domain));
+}
+
+/**
+ * Get a small placeholder URL for blur effect (32px, low quality)
+ * Only works for Supabase-hosted images
+ */
+export function getBlurPlaceholderUrl(src: string | null | undefined): string | null {
+  if (!src || typeof src !== 'string') return null;
+
+  if (!isSupabaseUrl(src)) return null;
+
+  try {
+    const url = new URL(src);
+    url.searchParams.delete('width');
+    url.searchParams.delete('height');
+    url.searchParams.delete('quality');
+    url.searchParams.delete('resize');
+
+    // Convert to render/image endpoint for transformations
+    url.pathname = url.pathname.replace(
+      '/storage/v1/object/public/',
+      '/storage/v1/render/image/public/',
+    );
+
+    // Request small image for blur placeholder (32px gives smoother blur than 16px)
+    url.searchParams.set('width', '32');
+    url.searchParams.set('quality', '30');
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Custom image loader that uses Supabase transformations for Supabase-hosted images.
  *
  * Note: External images (gravatar, discord, google, meetupstatic, etc.) are returned

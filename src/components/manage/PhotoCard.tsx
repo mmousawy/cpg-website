@@ -1,9 +1,9 @@
 'use client';
 
+import BlurImage from '@/components/shared/BlurImage';
 import CardBadges from '@/components/shared/CardBadges';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
-import Image from 'next/image';
 import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import WallArtSVG from 'public/icons/wall-art.svg';
@@ -94,7 +94,7 @@ function PhotoCard({
       <div
         className="aspect-square overflow-hidden bg-background-light"
       >
-        <Image
+        <BlurImage
           src={thumbnailUrl}
           alt={photo.title || 'Photo'}
           width={200}

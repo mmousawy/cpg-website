@@ -1,30 +1,65 @@
+import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
+import type { CPGEvent, EventAttendee } from '@/types/events';
 import clsx from 'clsx';
 import crypto from 'crypto';
-import Image from 'next/image';
 import Link from 'next/link';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
-import { isEventPast } from './EventCard';
+import { SIZE_MAP } from '../auth/Avatar';
+import EventCard, { isEventPast } from './EventCard';
 import EventImage from './EventImage';
 
-import type { CPGEvent, EventAttendee } from '@/types/events';
+type EventsListVariant = 'full' | 'compact';
 
 type EventsListProps = {
   events: CPGEvent[]
-  attendeesByEvent: Record<number, EventAttendee[]>
+  attendeesByEvent?: Record<number, EventAttendee[]>
   emptyMessage?: string
+  /**
+   * Visual variant
+   * - 'full': Detailed cards with description, image, and actions (for /events page)
+   * - 'compact': Smaller cards with EventCard component (for homepage)
+   * @default 'full'
+   */
+  variant?: EventsListVariant
+  /**
+   * Maximum number of events to display (for compact variant)
+   */
+  max?: number
+  /**
+   * Disable attendees popover in compact variant (just show avatars + count)
+   */
+  disableAttendeesPopover?: boolean
   /**
    * Server timestamp for determining if events are past.
    * REQUIRED when using Cache Components to avoid Date.now() during render.
    */
   serverNow: number
+  /**
+   * Size of the avatars
+   */
+  avatarSize?: keyof typeof SIZE_MAP
 }
 
-// Inline attendees display component (no data fetching)
-function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee[], isPastEvent: boolean }) {
+// Transform attendees to AvatarPerson format for the shared component
+function transformAttendeesToAvatarPeople(attendees: EventAttendee[]): AvatarPerson[] {
+  return attendees.map((attendee) => {
+    const customAvatar = attendee.profiles?.avatar_url;
+    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
+    return {
+      id: attendee.id.toString(),
+      avatarUrl: customAvatar || gravatarUrl,
+      fullName: attendee.profiles?.full_name || null,
+      nickname: attendee.profiles?.nickname || null,
+    };
+  });
+}
+
+// Inline attendees display component using shared StackedAvatarsPopover
+function AttendeesDisplay({ attendees, isPastEvent, avatarSize }: { attendees: EventAttendee[], isPastEvent: boolean, avatarSize: keyof typeof SIZE_MAP | undefined }) {
   if (!attendees || attendees.length === 0) {
     return (
       <div
@@ -35,56 +70,30 @@ function AttendeesDisplay({ attendees, isPastEvent }: { attendees: EventAttendee
     );
   }
 
-  // Get avatar URL for each attendee
-  const attendeesWithAvatars = attendees.map((attendee) => {
-    const customAvatar = attendee.profiles?.avatar_url;
-    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
-    return {
-      ...attendee,
-      avatarUrl: customAvatar || gravatarUrl,
-    };
-  });
+  const attendeePeople = transformAttendeesToAvatarPeople(attendees);
 
   return (
-    <div
-      className='flex gap-2 max-sm:flex-col-reverse max-sm:gap-1 max-sm:text-sm sm:items-center'
-    >
-      <div
-        className='relative flex max-w-96 flex-row-reverse overflow-hidden pr-2 drop-shadow max-md:max-w-[19rem] max-xs:max-w-44'
-        dir="rtl"
-      >
-        {attendeesWithAvatars.map((attendee, attendeeIndex) => (
-          <Image
-            key={`${attendee.id}_${attendeeIndex}`}
-            width={32}
-            height={32}
-            className={clsx([
-              attendeesWithAvatars.length > 1 && '-mr-2',
-              'size-8 rounded-full object-cover',
-            ])}
-            src={attendee.avatarUrl}
-            alt="Avatar"
-          />
-        ))}
-        <div
-          className={clsx([
-            'absolute -right-0 z-50 size-8 bg-gradient-to-r from-transparent to-background-light',
-            attendeesWithAvatars.length < 20 && 'invisible',
-            attendeesWithAvatars.length > 7 && 'max-xs:visible',
-            attendeesWithAvatars.length > 12 && 'max-md:visible',
-            attendeesWithAvatars.length > 16 && '!visible',
-          ])}
-        />
-      </div>
-      {attendeesWithAvatars.length}
-      {' '}
-      attendee
-      {attendeesWithAvatars.length === 1 ? '' : 's'}
-    </div>
+    <StackedAvatarsPopover
+      people={attendeePeople}
+      singularLabel="attendee"
+      pluralLabel="attendees"
+      emptyMessage={isPastEvent ? 'No attendees recorded' : 'No attendees yet'}
+      showInlineCount={true}
+      avatarSize={avatarSize}
+    />
   );
 }
 
-export default function EventsList({ events, attendeesByEvent, emptyMessage, serverNow }: EventsListProps) {
+export default function EventsList({
+  events,
+  attendeesByEvent = {},
+  emptyMessage,
+  variant = 'full',
+  max,
+  disableAttendeesPopover = false,
+  serverNow,
+  avatarSize = 'xxs',
+}: EventsListProps) {
   if (!events || events.length === 0) {
     return (
       <div
@@ -102,9 +111,63 @@ export default function EventsList({ events, attendeesByEvent, emptyMessage, ser
     );
   }
 
+  // Sort events for compact variant: upcoming first (soonest), then past (most recent)
+  let displayEvents = events;
+  if (variant === 'compact') {
+    displayEvents = [...events]
+      .sort((a, b) => {
+        const aDate = a.date ? new Date(a.date) : null;
+        const bDate = b.date ? new Date(b.date) : null;
+        const aIsPast = isEventPast(a.date, serverNow);
+        const bIsPast = isEventPast(b.date, serverNow);
+
+        // Upcoming events come first
+        if (!aIsPast && bIsPast) return -1;
+        if (aIsPast && !bIsPast) return 1;
+
+        // Both upcoming: soonest first (ascending)
+        if (!aIsPast && !bIsPast) {
+          return (aDate?.getTime() || 0) - (bDate?.getTime() || 0);
+        }
+
+        // Both past: most recent first (descending)
+        return (bDate?.getTime() || 0) - (aDate?.getTime() || 0);
+      });
+  }
+
+  // Apply max limit if specified
+  if (max) {
+    displayEvents = displayEvents.slice(0, max);
+  }
+
+  // Compact variant: use EventCard component
+  if (variant === 'compact') {
+    return (
+      <div
+        className="space-y-3"
+      >
+        {displayEvents.map((event) => {
+          const attendees = attendeesByEvent[event.id] || [];
+          return (
+            <EventCard
+              key={event.id}
+              event={event}
+              showBadge
+              description={event.description}
+              attendees={attendees}
+              disableAttendeesPopover={disableAttendeesPopover}
+              serverNow={serverNow}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Full variant: detailed cards
   return (
     <>
-      {events.map((event) => {
+      {displayEvents.map((event) => {
         const isPast = isEventPast(event.date, serverNow);
         const attendees = attendeesByEvent[event.id] || [];
 

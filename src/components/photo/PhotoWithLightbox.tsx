@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import Image from 'next/image';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
+
+import BlurImage from '@/components/shared/BlurImage';
 
 interface PhotoWithLightboxProps {
   url: string;
   title?: string | null;
   width: number;
   height: number;
+  blurhash?: string | null;
 }
 
 /**
@@ -19,6 +21,7 @@ export default function PhotoWithLightbox({
   title,
   width,
   height,
+  blurhash,
 }: PhotoWithLightboxProps) {
   useEffect(() => {
     let lightbox: PhotoSwipeLightboxInstance | null = null;
@@ -53,9 +56,10 @@ export default function PhotoWithLightbox({
         target="_blank"
         rel="noreferrer"
       >
-        <Image
+        <BlurImage
           src={url}
           alt={title || 'Photo'}
+          blurhash={blurhash}
           width={width}
           height={height}
           className="w-full h-auto object-contain cursor-zoom-in"

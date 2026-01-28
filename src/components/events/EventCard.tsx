@@ -1,6 +1,10 @@
+import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
+import type { EventAttendee } from '@/types/events';
 import clsx from 'clsx';
-import Image from 'next/image';
+import crypto from 'crypto';
 import Link from 'next/link';
+
+import BlurImage from '@/components/shared/BlurImage';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -14,9 +18,23 @@ export type EventCardData = {
   time: string | null;
   location: string | null;
   cover_image?: string | null;
-  image_url?: string | null;
+  image_blurhash?: string | null;
   description?: string | null;
 };
+
+// Transform attendees to AvatarPerson format
+function transformAttendeesToAvatarPeople(attendees: EventAttendee[]): AvatarPerson[] {
+  return attendees.map((attendee) => {
+    const customAvatar = attendee.profiles?.avatar_url;
+    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
+    return {
+      id: attendee.id.toString(),
+      avatarUrl: customAvatar || gravatarUrl,
+      fullName: attendee.profiles?.full_name || null,
+      nickname: attendee.profiles?.nickname || null,
+    };
+  });
+}
 
 type EventCardVariant = 'compact' | 'detailed';
 
@@ -51,6 +69,14 @@ type EventCardProps = {
    * Description to display
    */
   description?: string | null;
+  /**
+   * Attendees to display
+   */
+  attendees?: EventAttendee[];
+  /**
+   * Disable popover on attendees (just show avatars + count)
+   */
+  disableAttendeesPopover?: boolean;
   /**
    * Server timestamp for determining if event is past.
    * REQUIRED when using Cache Components to avoid Date.now() during render.
@@ -107,29 +133,33 @@ export default function EventCard({
   rightSlot,
   className,
   asLink = true,
+  attendees = [],
+  disableAttendeesPopover = false,
   serverNow,
 }: EventCardProps) {
   // Use serverNow if provided, otherwise assume client-side rendering
   const isPast = serverNow !== undefined ? isEventPast(event.date, serverNow) : false;
-  const imageSrc = event.cover_image || event.image_url;
+  const imageSrc = event.cover_image;
+  const attendeePeople = transformAttendeesToAvatarPeople(attendees);
 
   const cardContent = (
     <div
       className="flex items-start gap-3 sm:gap-4"
     >
       {/* Thumbnail */}
-      {(imageSrc || event.image_url) && (
+      {imageSrc && (
         <div
           className="relative h-16 w-20 sm:h-22 sm:w-32 shrink-0 overflow-hidden rounded-md bg-background-light"
         >
-          <Image
-            src={imageSrc || event.image_url || ''}
+          <BlurImage
+            src={imageSrc}
             alt={event.title || 'Event cover'}
             sizes="256px"
             loading="lazy"
             quality={85}
             fill
             className="object-cover"
+            blurhash={event.image_blurhash}
           />
         </div>
       )}
@@ -206,6 +236,21 @@ export default function EventCard({
             {event.description}
           </p>
         )}
+
+        {/* Attendees */}
+        {attendees.length > 0 && (
+          <div
+            className="mt-3 max-sm:hidden"
+          >
+            <StackedAvatarsPopover
+              people={attendeePeople}
+              singularLabel="attendee"
+              pluralLabel="attendees"
+              showInlineCount={true}
+              disablePopover={disableAttendeesPopover}
+            />
+          </div>
+        )}
       </div>
 
       {/* Right slot for actions */}
@@ -242,6 +287,20 @@ export default function EventCard({
       >
         {cardContent}
         {mobileDescription}
+        {/* Attendees */}
+        {attendees.length > 0 && (
+          <div
+            className="mt-3 sm:hidden"
+          >
+            <StackedAvatarsPopover
+              people={attendeePeople}
+              singularLabel="attendee"
+              pluralLabel="attendees"
+              showInlineCount={true}
+              disablePopover={disableAttendeesPopover}
+            />
+          </div>
+        )}
       </Link>
     );
   }
