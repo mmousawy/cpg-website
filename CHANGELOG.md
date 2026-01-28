@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/mmousawy/cpg-website/compare/v1.13.0...v1.14.0) (2026-01-28)
+
+
+### Features
+
+* Blur image placeholders, unified event attendees UI, and image_url cleanup ([c57d89c](https://github.com/mmousawy/cpg-website/commit/c57d89ca5b4eb483c73334b8d058291613df9b7d))
+* update app. ([572b190](https://github.com/mmousawy/cpg-website/commit/572b190dcd5577ae8a3ed00d7f29c8f1c00f5b01))
+
 ## [1.13.0](https://github.com/mmousawy/cpg-website/compare/v1.12.1...v1.13.0) (2026-01-26)
 
 
