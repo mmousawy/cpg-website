@@ -305,8 +305,8 @@ export async function POST(request: NextRequest) {
           entityType: 'event',
           entityId: String(event.id),
           data: {
-            title: event.title,
-            thumbnail: event.cover_image,
+            title: event.title ?? undefined,
+            thumbnail: event.cover_image ?? undefined,
             link: `/events/${event.slug || event.id}`,
           },
         }).catch((error) => {

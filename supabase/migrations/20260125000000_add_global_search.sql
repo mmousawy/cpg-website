@@ -51,18 +51,21 @@ RETURNS TABLE(
   url text,
   rank real
 )
-LANGUAGE plpgsql
+LANGUAGE sql
+STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  search_tsquery tsquery;
-BEGIN
-  -- Convert search query to tsquery with prefix matching
-  search_tsquery := plainto_tsquery('english', search_query);
-  
-  RETURN QUERY
-  WITH all_results AS (
+  -- Use prefix matching: "photo nat" becomes "photo:* & nat:*"
+  WITH search_tsquery AS (
+    SELECT to_tsquery('english', 
+      regexp_replace(
+        regexp_replace(search_query, '\s+', ' & ', 'g'), 
+        '(\w+)', '\1:*', 'g'
+      )
+    ) AS query
+  ),
+  all_results AS (
     -- Members (profiles)
     SELECT
       'members'::text AS entity_type,
@@ -70,91 +73,118 @@ BEGIN
       COALESCE(p.full_name, p.nickname, 'Unknown') AS title,
       COALESCE(p.bio, '') AS subtitle,
       p.avatar_url AS image_url,
-      '/members/' || p.id::text AS url,
-      ts_rank(p.search_vector, search_tsquery) AS rank
+      CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname ELSE NULL END AS url,
+      ts_rank(p.search_vector, sq.query) AS rank
     FROM profiles p
+    CROSS JOIN search_tsquery sq
     WHERE 'members' = ANY(search_types)
       AND p.suspended_at IS NULL
-      AND p.search_vector @@ search_tsquery
+      AND p.nickname IS NOT NULL
+      AND p.search_vector @@ sq.query
 
     UNION ALL
 
-    -- Albums
+    -- Albums (with photo count, check owner not suspended)
     SELECT
       'albums'::text AS entity_type,
       a.id::text AS entity_id,
       a.title AS title,
-      (SELECT COUNT(*)::text || ' photos' FROM album_photos ap WHERE ap.album_id = a.id) AS subtitle,
+      COALESCE(
+        (SELECT COUNT(*)::text || ' photo' || CASE WHEN COUNT(*) != 1 THEN 's' ELSE '' END
+         FROM album_photos ap WHERE ap.album_id = a.id),
+        '0 photos'
+      ) AS subtitle,
       a.cover_image_url AS image_url,
-      '/albums/' || a.slug AS url,
-      ts_rank(a.search_vector, search_tsquery) AS rank
+      CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/album/' || a.slug ELSE NULL END AS url,
+      ts_rank(a.search_vector, sq.query) AS rank
     FROM albums a
+    JOIN profiles p ON p.id = a.user_id
+    CROSS JOIN search_tsquery sq
     WHERE 'albums' = ANY(search_types)
       AND a.is_public = true
       AND a.deleted_at IS NULL
-      AND a.suspended_at IS NULL
-      AND a.search_vector @@ search_tsquery
+      AND a.is_suspended = false
+      AND p.suspended_at IS NULL
+      AND a.search_vector @@ sq.query
 
     UNION ALL
 
-    -- Photos
+    -- Photos (check owner not suspended)
     SELECT
       'photos'::text AS entity_type,
       ph.id::text AS entity_id,
-      COALESCE(ph.title, 'Untitled') AS title,
+      COALESCE(ph.title, 'Untitled Photo') AS title,
       COALESCE(ph.description, '') AS subtitle,
       ph.url AS image_url,
-      '/photos/' || ph.id::text AS url,
-      ts_rank(ph.search_vector, search_tsquery) AS rank
+      CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/photo/' || ph.short_id ELSE NULL END AS url,
+      ts_rank(ph.search_vector, sq.query) AS rank
     FROM photos ph
+    JOIN profiles p ON p.id = ph.user_id
+    CROSS JOIN search_tsquery sq
     WHERE 'photos' = ANY(search_types)
       AND ph.is_public = true
-      AND ph.search_vector @@ search_tsquery
+      AND ph.deleted_at IS NULL
+      AND p.suspended_at IS NULL
+      AND ph.search_vector @@ sq.query
 
     UNION ALL
 
-    -- Events
+    -- Events (prefer cover_image over image_url, same as EventImage component)
     SELECT
       'events'::text AS entity_type,
       e.id::text AS entity_id,
       COALESCE(e.title, 'Untitled Event') AS title,
       COALESCE(e.location, '') AS subtitle,
-      NULLIF(e.cover_image, '') AS image_url,
+      COALESCE(NULLIF(e.cover_image, ''), NULLIF(e.image_url, '')) AS image_url,
       '/events/' || e.slug AS url,
-      ts_rank(e.search_vector, search_tsquery) AS rank
+      ts_rank(e.search_vector, sq.query) AS rank
     FROM events e
+    CROSS JOIN search_tsquery sq
     WHERE 'events' = ANY(search_types)
-      AND e.search_vector @@ search_tsquery
+      AND e.search_vector @@ sq.query
 
     UNION ALL
 
-    -- Tags (album_tags with prefix matching)
+    -- Tags (prefix matching on tag name)
     SELECT
       'tags'::text AS entity_type,
       at.tag AS entity_id,
       at.tag AS title,
       (
-        SELECT COUNT(DISTINCT ap.photo_id)::text || ' photos'
+        SELECT COUNT(DISTINCT ap.photo_id)::text || ' photo' || 
+               CASE WHEN COUNT(DISTINCT ap.photo_id) != 1 THEN 's' ELSE '' END
         FROM album_tags at2
         JOIN album_photos ap ON ap.album_id = at2.album_id
         JOIN albums a ON a.id = at2.album_id
         WHERE at2.tag = at.tag
           AND a.is_public = true
           AND a.deleted_at IS NULL
-          AND a.suspended_at IS NULL
+          AND a.is_suspended = false
       ) AS subtitle,
       NULL::text AS image_url,
-      '/tags/' || at.tag AS url,
-      1.0::real AS rank
+      '/gallery/tag/' || at.tag AS url,
+      CASE 
+        WHEN at.tag ILIKE search_query || '%' THEN 1.0::real
+        WHEN at.tag ILIKE '%' || search_query || '%' THEN 0.5::real
+        ELSE 0.1::real
+      END AS rank
     FROM album_tags at
     WHERE 'tags' = ANY(search_types)
-      AND at.tag ILIKE '%' || search_query || '%'
+      AND (at.tag ILIKE search_query || '%' OR at.tag ILIKE '%' || search_query || '%')
     GROUP BY at.tag
   )
-  SELECT * FROM all_results
-  ORDER BY rank DESC
+  SELECT 
+    entity_type,
+    entity_id,
+    title,
+    subtitle,
+    image_url,
+    url,
+    rank
+  FROM all_results
+  WHERE url IS NOT NULL
+  ORDER BY rank DESC, title ASC
   LIMIT result_limit;
-END;
 $$;
 
 -- Grant execute permission to authenticated and anon users
