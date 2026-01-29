@@ -184,13 +184,13 @@ export async function POST(request: NextRequest) {
     const eventIdNum = parseInt(entityId, 10);
     const { data: event } = await supabase
       .from('events')
-      .select('id, title, slug, cover_image, image_url')
+      .select('id, title, slug, cover_image')
       .eq('id', eventIdNum)
       .single();
 
     if (event) {
       entityTitle = event.title || 'Event';
-      entityThumbnail = event.cover_image || event.image_url;
+      entityThumbnail = event.cover_image;
       entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.slug}#comments`;
 
       // Get all admins (excluding the commenter)
