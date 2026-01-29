@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/mmousawy/cpg-website/compare/v1.14.0...v1.15.0) (2026-01-29)
+
+
+### Features
+
+* BlurImage aspect ratio fixes, BottomSheet titles, and image cropping ([79a5408](https://github.com/mmousawy/cpg-website/commit/79a5408964a0ccdbe55cd7baf59f8c94c50936ab))
+
+
+### Bug Fixes
+
+* adjust api routes for CI in test env. ([f53b9ee](https://github.com/mmousawy/cpg-website/commit/f53b9eeb0ff0d066d4a9b9a57c950cf0c90958c2))
+
 ## [1.14.0](https://github.com/mmousawy/cpg-website/compare/v1.13.0...v1.14.0) (2026-01-28)
 
 
