@@ -6,8 +6,13 @@ import type { Database } from '@/database.types';
 // It cleans up test users created during E2E tests
 
 export async function POST(request: Request) {
-  // Only allow in development or test environments
-  if (process.env.NODE_ENV === 'production' && !process.env.CI) {
+  // Only allow in development, test, or preview environments
+  // VERCEL_ENV is 'preview' for PR deployments, 'production' for main branch
+  const isPreview = process.env.VERCEL_ENV === 'preview';
+  const isDev = process.env.NODE_ENV !== 'production';
+  const isCI = !!process.env.CI;
+
+  if (!isDev && !isCI && !isPreview) {
     return NextResponse.json(
       { error: 'Not available in production' },
       { status: 403 },
