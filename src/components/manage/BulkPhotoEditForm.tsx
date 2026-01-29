@@ -9,7 +9,7 @@ import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
@@ -48,6 +48,8 @@ interface BulkPhotoEditFormProps {
   isSaving?: boolean;
   externalError?: string | null;
   externalSuccess?: boolean;
+  /** Hide title (when shown in parent container like BottomSheet) */
+  hideTitle?: boolean;
 }
 
 export default function BulkPhotoEditForm({
@@ -63,6 +65,7 @@ export default function BulkPhotoEditForm({
   isSaving: externalIsSaving = false,
   externalError = null,
   externalSuccess = false,
+  hideTitle = false,
 }: BulkPhotoEditFormProps) {
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
@@ -242,6 +245,7 @@ export default function BulkPhotoEditForm({
   return (
     <SidebarPanel
       title={`Edit ${selectedPhotos.length} photos`}
+      hideTitle={hideTitle}
       footer={
         <div
           className="flex gap-2 w-full"

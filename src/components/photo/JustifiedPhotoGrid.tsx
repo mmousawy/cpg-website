@@ -101,6 +101,7 @@ export default function JustifiedPhotoGrid({
           profileNickname={profileNickname}
           albumSlug={albumSlug}
           showAttribution={showAttribution}
+          maxDisplayWidth={900}
         />
       </div>
 
@@ -115,6 +116,7 @@ export default function JustifiedPhotoGrid({
           profileNickname={profileNickname}
           albumSlug={albumSlug}
           showAttribution={showAttribution}
+          maxDisplayWidth={1350}
         />
       </div>
 
@@ -129,6 +131,7 @@ export default function JustifiedPhotoGrid({
           profileNickname={profileNickname}
           albumSlug={albumSlug}
           showAttribution={showAttribution}
+          maxDisplayWidth={1800}
         />
       </div>
     </>
@@ -142,6 +145,7 @@ function PhotoRows({
   profileNickname,
   albumSlug,
   showAttribution,
+  maxDisplayWidth,
 }: {
   rows: PhotoRow[];
   photoMap: Map<string, Photo | StreamPhoto>;
@@ -149,6 +153,7 @@ function PhotoRows({
   profileNickname?: string;
   albumSlug?: string;
   showAttribution: boolean;
+  maxDisplayWidth: number;
 }) {
 
   return (
@@ -167,6 +172,15 @@ function PhotoRows({
           >
             {row.items.map((item) => {
               const photo = photoMap.get(item.photo.id);
+              // Calculate appropriate image size: target ~1.5x display width for retina
+              // Next.js automatically multiplies sizes by device pixel ratio (DPR)
+              // To get ~1.5x final resolution:
+              //   - On DPR 1 devices: sizes = displayWidth * 1.5 → requests 1.5x (perfect)
+              //   - On DPR 2 devices: sizes = displayWidth * 0.75 → requests 1.5x (perfect)
+              //   - On DPR 1.5 devices: sizes = displayWidth * 1.0 → requests 1.5x (perfect)
+              // We use displayWidth directly as a compromise (works well on DPR 1, slightly high on DPR 2)
+              // Cap at maxDisplayWidth to prevent requesting huge images
+              const imageSize = Math.min(Math.ceil(item.displayWidth), maxDisplayWidth);
               // Use raw URL - custom loader adds transform params automatically
               const thumbnailUrl = item.photo.url;
 
@@ -210,7 +224,7 @@ function PhotoRows({
                     blurhash={photo?.blurhash}
                     fill
                     className="object-cover"
-                    sizes={`${Math.ceil(item.displayWidth * 1.5)}px`}
+                    sizes={`${Math.ceil(item.displayWidth * 2)}px`}
                     loading='lazy'
                     quality={85}
                   />

@@ -2,6 +2,7 @@
 
 import CardBadges from '@/components/shared/CardBadges';
 import type { AlbumWithPhotos } from '@/types/albums';
+import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import Image from 'next/image';
 import FolderSVG from 'public/icons/folder.svg';
@@ -54,7 +55,7 @@ function AlbumCard({
       >
         {coverImage ? (
           <Image
-            src={coverImage}
+            src={getCroppedThumbnailUrl(coverImage, 250, 188, 85) || coverImage}
             alt={album.title}
             fill
             sizes="250px"

@@ -160,12 +160,12 @@ export default function BottomSheet({
           {/* Header - always show close button */}
           <div
             className={clsx(
-              'relative flex items-center justify-center px-3 shrink-0',
+              'relative flex items-center px-4 shrink-0',
               title ? 'pb-3 border-b border-border-color' : 'absolute right-0 top-0 pt-3 pb-2 z-10',
             )}
           >
             {title && <h2
-              className="text-lg font-semibold"
+              className="text-lg font-semibold pr-10"
             >
               {title}
             </h2>}

@@ -105,7 +105,7 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
       pluralLabel="attendees"
       emptyMessage={isPastEvent ? 'No attendees recorded' : 'No attendees yet'}
       showInlineCount={true}
-      avatarSize="xs"
+      avatarSize="sm"
     />
   );
 }

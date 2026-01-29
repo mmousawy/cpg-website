@@ -1,7 +1,7 @@
 import { encode } from 'blurhash';
 
 /**
- * Generate a blurhash from an image file
+ * Generate a blurhash from an image file, preserving aspect ratio
  * @param file - Image file to generate blurhash from
  * @param componentX - X component count (default: 4)
  * @param componentY - Y component count (default: 4)
@@ -21,21 +21,36 @@ export async function generateBlurhash(
       image.src = URL.createObjectURL(file);
     });
 
-    // Create canvas
+    // Calculate dimensions preserving aspect ratio (max 32px on longest side)
+    const maxSize = 32;
+    let width: number;
+    let height: number;
+    if (img.naturalWidth > img.naturalHeight) {
+      width = maxSize;
+      height = Math.round((img.naturalHeight / img.naturalWidth) * maxSize);
+    } else {
+      height = maxSize;
+      width = Math.round((img.naturalWidth / img.naturalHeight) * maxSize);
+    }
+    // Ensure minimum of 1px
+    width = Math.max(1, width);
+    height = Math.max(1, height);
+
+    // Create canvas with correct aspect ratio
     const canvas = document.createElement('canvas');
-    canvas.width = 32; // Small size for performance
-    canvas.height = 32;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
       return null;
     }
 
-    // Draw image to canvas
-    ctx.drawImage(img, 0, 0, 32, 32);
+    // Draw image to canvas (preserving aspect ratio)
+    ctx.drawImage(img, 0, 0, width, height);
 
     // Get image data
-    const imageData = ctx.getImageData(0, 0, 32, 32);
+    const imageData = ctx.getImageData(0, 0, width, height);
 
     // Generate blurhash
     const blurhash = encode(

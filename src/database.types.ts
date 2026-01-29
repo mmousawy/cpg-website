@@ -436,7 +436,6 @@ export type Database = {
           id: number
           image_blurhash: string | null
           image_height: number | null
-          image_url: string | null
           image_width: number | null
           location: string | null
           max_attendees: number | null
@@ -456,7 +455,6 @@ export type Database = {
           id?: number
           image_blurhash?: string | null
           image_height?: number | null
-          image_url?: string | null
           image_width?: number | null
           location?: string | null
           max_attendees?: number | null
@@ -476,7 +474,6 @@ export type Database = {
           id?: number
           image_blurhash?: string | null
           image_height?: number | null
-          image_url?: string | null
           image_width?: number | null
           location?: string | null
           max_attendees?: number | null

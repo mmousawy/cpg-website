@@ -1,0 +1,61 @@
+feat: BlurImage aspect ratio fixes, BottomSheet titles, and image cropping
+
+BlurImage Component:
+- Fix aspect ratio for sized images (non-fill layout)
+- Decode blurhash with correct aspect ratio based on width/height props
+- Use background-image div for blur placeholder to match container size
+- Remove opacity-90 override that was blocking fade-in transition
+
+Blurhash Generation:
+- Update generateBlurhash to preserve aspect ratio (max 32px on longest side)
+- Update generate-event-blurhash script to preserve aspect ratio
+- No more square-cropped blurhash - matches actual image proportions
+
+BottomSheet Titles:
+- Pass title prop to BottomSheet for proper header display on mobile
+- Add hideTitle prop to SidebarPanel, PhotoEditSidebar, AlbumEditSidebar
+- Add hideTitle to all edit form components (Single/Bulk Photo/Album)
+- Left-align title in BottomSheet header with padding for close button
+- Update all manage pages to use BottomSheet title instead of SidebarPanel title
+
+Image Cropping:
+- Add getSquareThumbnailUrl for square-cropped thumbnails (AlbumMiniCard, PhotoListItem)
+- Add getCroppedThumbnailUrl for aspect-ratio cropped thumbnails (AlbumCard)
+- Update supabaseImageLoader to preserve crop settings and cap width at 2400px
+- Apply cropping to PhotoCard, AlbumCard, AlbumMiniCard, PhotoListItem
+
+JustifiedPhotoGrid:
+- Request 2x display width for better DPR support
+- Cap actual request at 2400px via loader to prevent oversized images
+
+EventImage:
+- Update default dimensions to 480x272 (correct aspect ratio for h-34 CSS)
+
+Files changed (25):
+
+Modified:
+- scripts/generate-event-blurhash.ts
+- src/app/account/(manage)/albums/[slug]/AlbumDetailClient.tsx
+- src/app/account/(manage)/albums/page.tsx
+- src/app/account/(manage)/photos/page.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/components/album/AlbumCard.tsx
+- src/components/album/AlbumMiniCard.tsx
+- src/components/events/EventImage.tsx
+- src/components/events/EventsList.tsx
+- src/components/manage/AlbumCard.tsx
+- src/components/manage/AlbumEditSidebar.tsx
+- src/components/manage/BulkAlbumEditForm.tsx
+- src/components/manage/BulkPhotoEditForm.tsx
+- src/components/manage/PhotoCard.tsx
+- src/components/manage/PhotoEditSidebar.tsx
+- src/components/manage/PhotoListItem.tsx
+- src/components/manage/SidebarPanel.tsx
+- src/components/manage/SingleAlbumEditForm.tsx
+- src/components/manage/SinglePhotoEditForm.tsx
+- src/components/photo/JustifiedPhotoGrid.tsx
+- src/components/shared/BlurImage.tsx
+- src/components/shared/BottomSheet.tsx
+- src/database.types.ts
+- src/utils/generateBlurhash.ts
+- src/utils/supabaseImageLoader.ts

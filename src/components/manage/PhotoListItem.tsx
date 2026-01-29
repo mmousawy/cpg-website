@@ -2,6 +2,7 @@
 
 import BlurImage from '@/components/shared/BlurImage';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
@@ -278,7 +279,7 @@ export default function PhotoListItem({
         title="View full size"
       >
         <BlurImage
-          src={photo.url}
+          src={getSquareThumbnailUrl(photo.url, variant === 'compact' ? 48 : 72, 85) || photo.url}
           alt={displayName}
           fill
           className="object-cover transition-transform group-hover/thumb:scale-105"

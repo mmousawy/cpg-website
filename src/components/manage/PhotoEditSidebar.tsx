@@ -35,6 +35,8 @@ interface PhotoEditSidebarProps {
   externalError?: string | null;
   /** Success state from parent */
   externalSuccess?: boolean;
+  /** Hide title (when shown in parent container like BottomSheet) */
+  hideTitle?: boolean;
 }
 
 export default function PhotoEditSidebar({
@@ -53,13 +55,16 @@ export default function PhotoEditSidebar({
   isSaving: externalIsSaving = false,
   externalError = null,
   externalSuccess = false,
+  hideTitle = false,
 }: PhotoEditSidebarProps) {
   const photo = selectedPhotos[0];
   const isMultiple = selectedPhotos.length > 1;
 
   if (!photo) {
     return (
-      <SidebarPanel>
+      <SidebarPanel
+        hideTitle={hideTitle}
+      >
         <PhotoEditEmptyState />
       </SidebarPanel>
     );
@@ -81,6 +86,7 @@ export default function PhotoEditSidebar({
         isSaving={externalIsSaving}
         externalError={externalError}
         externalSuccess={externalSuccess}
+        hideTitle={hideTitle}
       />
     );
   }
@@ -101,6 +107,7 @@ export default function PhotoEditSidebar({
       isSaving={externalIsSaving}
       externalError={externalError}
       externalSuccess={externalSuccess}
+      hideTitle={hideTitle}
     />
   );
 }

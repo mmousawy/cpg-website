@@ -34,13 +34,29 @@ export default function BlurImage({
 
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
 
-  // Decode blurhash synchronously - works on both server (SSR) and client
+  // Get image dimensions for aspect ratio
+  const imgWidth = typeof props.width === 'number' ? props.width : parseInt(String(props.width), 10);
+  const imgHeight = typeof props.height === 'number' ? props.height : parseInt(String(props.height), 10);
+
+  // Decode blurhash with correct aspect ratio - works on both server (SSR) and client
   const blurhashDataUrl = useMemo(() => {
     if (blurhash && !noBlur) {
-      return blurhashToDataURL(blurhash, 64, 64);
+      // Calculate decode dimensions maintaining aspect ratio (max 64px on longest side)
+      let decodeWidth = 64;
+      let decodeHeight = 64;
+      if (imgWidth && imgHeight && imgWidth > 0 && imgHeight > 0) {
+        if (imgWidth > imgHeight) {
+          decodeWidth = 64;
+          decodeHeight = Math.round((imgHeight / imgWidth) * 64);
+        } else {
+          decodeHeight = 64;
+          decodeWidth = Math.round((imgWidth / imgHeight) * 64);
+        }
+      }
+      return blurhashToDataURL(blurhash, decodeWidth, decodeHeight);
     }
     return null;
-  }, [blurhash, noBlur]);
+  }, [blurhash, noBlur, imgWidth, imgHeight]);
 
   // Fall back to Supabase tiny image if no blurhash
   const blurUrl = noBlur ? null : (blurhashDataUrl || getBlurPlaceholderUrl(srcString));
@@ -53,7 +69,7 @@ export default function BlurImage({
         alt={alt}
         className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         fill={fill}
-        onLoad={() => setIsLoaded(true)}
+        onLoadingComplete={() => setIsLoaded(true)}
         {...props}
       />
     );
@@ -99,26 +115,26 @@ export default function BlurImage({
           alt={alt}
           fill
           className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={() => setIsLoaded(true)}
+          onLoadingComplete={() => setIsLoaded(true)}
           {...props}
         />
       </>
     );
   }
 
-  // For sized images - blur behind, main image fades in on top
-  const imgWidth = typeof props.width === 'number' ? props.width : parseInt(String(props.width), 10);
-  const imgHeight = typeof props.height === 'number' ? props.height : parseInt(String(props.height), 10);
-
-  // Render blur first to establish container size, then main image absolutely positioned on top
+  // For sized images: use a wrapper with the blur as background, main image on top
   return (
     <span
-      className="relative block w-full overflow-hidden"
+      className={`relative inline-block overflow-hidden ${className}`}
+      style={{
+        width: imgWidth ? `${imgWidth}px` : undefined,
+        maxWidth: '100%',
+      }}
     >
-      {/* Blur placeholder with background color fallback - establishes container size */}
+      {/* Blur placeholder as background div - matches the main image dimensions */}
       {blurhashDataUrl ? (
         <div
-          className={`blur-md ${className}`}
+          className="blur-md w-full"
           style={{
             backgroundImage: `url(${blurhashDataUrl})`,
             backgroundSize: 'cover',
@@ -134,15 +150,14 @@ export default function BlurImage({
           aria-hidden="true"
           width={props.width}
           height={props.height}
-          className={`blur-md ${className} bg-neutral-200 dark:bg-neutral-800`}
+          className={`blur-md ${className}`}
           priority
           quality={30}
           sizes="64px"
         />
       ) : (
-        // Fallback: just a colored div with aspect ratio
         <div
-          className={`${className} bg-neutral-200 dark:bg-neutral-800`}
+          className="w-full bg-neutral-200 dark:bg-neutral-800"
           style={{
             aspectRatio: imgWidth && imgHeight ? `${imgWidth} / ${imgHeight}` : undefined,
           }}
@@ -154,8 +169,8 @@ export default function BlurImage({
       <Image
         src={src}
         alt={alt}
-        className={`${className} absolute inset-0 transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setIsLoaded(true)}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoadingComplete={() => setIsLoaded(true)}
         {...props}
       />
     </span>

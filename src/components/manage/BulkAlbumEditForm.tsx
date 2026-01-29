@@ -40,6 +40,8 @@ interface BulkAlbumEditFormProps {
   isSaving?: boolean;
   externalError?: string | null;
   externalSuccess?: boolean;
+  /** Hide title (when shown in parent container like BottomSheet) */
+  hideTitle?: boolean;
 }
 
 export default function BulkAlbumEditForm({
@@ -53,6 +55,7 @@ export default function BulkAlbumEditForm({
   isSaving: externalIsSaving = false,
   externalError = null,
   externalSuccess = false,
+  hideTitle = false,
 }: BulkAlbumEditFormProps) {
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
@@ -227,6 +230,7 @@ export default function BulkAlbumEditForm({
   return (
     <SidebarPanel
       title={`Edit ${selectedAlbums.length} albums`}
+      hideTitle={hideTitle}
       footer={
         <div
           className="flex gap-2 w-full"

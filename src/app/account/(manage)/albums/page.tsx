@@ -327,6 +327,7 @@ export default function AlbumsPage() {
       <BottomSheet
         isOpen={isMobileEditSheetOpen}
         onClose={handleMobileEditClose}
+        title={isNewAlbum ? 'New album' : selectedAlbums.length === 0 ? undefined : selectedAlbums.length === 1 ? 'Edit album' : `Edit ${selectedAlbums.length} albums`}
       >
         <AlbumEditSidebar
           selectedAlbums={selectedAlbums}
@@ -339,6 +340,7 @@ export default function AlbumsPage() {
           onCreate={handleCreateAlbum}
           isLoading={albumsLoading}
           onDirtyChange={handleDirtyChange}
+          hideTitle
         />
       </BottomSheet>
     </>

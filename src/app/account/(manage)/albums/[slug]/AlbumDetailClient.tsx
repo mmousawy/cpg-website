@@ -528,6 +528,10 @@ export default function AlbumDetailClient() {
       <BottomSheet
         isOpen={isMobileEditSheetOpen}
         onClose={handleMobileEditClose}
+        title={selectedPhotos.length > 0
+          ? (selectedPhotos.length === 1 ? 'Edit photo' : `Edit ${selectedPhotos.length} photos`)
+          : 'Edit album'
+        }
       >
         {selectedPhotos.length > 0 ? (
           <PhotoEditSidebar
@@ -540,6 +544,7 @@ export default function AlbumDetailClient() {
             currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
             isLoading={photosLoading}
             onDirtyChange={handlePhotoDirtyChange}
+            hideTitle
           />
         ) : (
           <AlbumEditSidebar
@@ -551,6 +556,7 @@ export default function AlbumDetailClient() {
             onBulkDelete={async () => {}}
             isLoading={photosLoading}
             onDirtyChange={handleAlbumDirtyChange}
+            hideTitle
           />
         )}
       </BottomSheet>

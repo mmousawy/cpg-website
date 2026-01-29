@@ -289,7 +289,7 @@ export default function EventsList({
               <AttendeesDisplay
                 attendees={attendees}
                 isPastEvent={isPast}
-                avatarSize="sm"
+                avatarSize="xs"
               />
               <Link
                 href={`/events/${event.slug}`}

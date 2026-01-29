@@ -2,6 +2,7 @@ import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
 
 import BlurImage from '../shared/BlurImage';
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 
 interface AlbumMiniCardProps {
   title: string;
@@ -42,7 +43,7 @@ export default function AlbumMiniCard({
       >
         {coverImageUrl ? (
           <BlurImage
-            src={coverImageUrl}
+            src={getSquareThumbnailUrl(coverImageUrl, 64, 85) || coverImageUrl}
             alt={title}
             fill
             sizes="76px"

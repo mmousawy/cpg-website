@@ -35,12 +35,12 @@ export default function EventImage({ event, size, tabIndex }: { event: CPGEvent,
     >
       <BlurImage
         width={480}
-        height={480}
+        height={272}
         sizes="240px"
         loading='eager'
         quality={85}
         alt={event.title || 'Event cover image'}
-        className='size-full rounded-md object-cover h-34 hover:brightness-90 opacity-90 transition-all duration-200'
+        className='size-full rounded-md object-cover h-34 hover:brightness-90 transition-all duration-200'
         src={imageSrc}
         blurhash={event.image_blurhash}
       />

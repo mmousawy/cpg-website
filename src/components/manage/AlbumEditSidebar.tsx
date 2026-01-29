@@ -26,6 +26,8 @@ interface AlbumEditSidebarProps {
   isSaving?: boolean;
   externalError?: string | null;
   externalSuccess?: boolean;
+  /** Hide title (when shown in parent container like BottomSheet) */
+  hideTitle?: boolean;
 }
 
 export default function AlbumEditSidebar({
@@ -43,6 +45,7 @@ export default function AlbumEditSidebar({
   isSaving: externalIsSaving = false,
   externalError = null,
   externalSuccess = false,
+  hideTitle = false,
 }: AlbumEditSidebarProps) {
   const album = selectedAlbums[0] || null;
   const isMultiple = selectedAlbums.length > 1;
@@ -63,6 +66,7 @@ export default function AlbumEditSidebar({
         isSaving={externalIsSaving}
         externalError={externalError}
         externalSuccess={externalSuccess}
+        hideTitle={hideTitle}
       />
     );
   }
@@ -70,7 +74,9 @@ export default function AlbumEditSidebar({
   // No albums selected
   if (!album) {
     return (
-      <SidebarPanel>
+      <SidebarPanel
+        hideTitle={hideTitle}
+      >
         <AlbumEditEmptyState />
       </SidebarPanel>
     );
@@ -90,6 +96,7 @@ export default function AlbumEditSidebar({
         isSaving={externalIsSaving}
         externalError={externalError}
         externalSuccess={externalSuccess}
+        hideTitle={hideTitle}
       />
     );
   }
@@ -107,6 +114,7 @@ export default function AlbumEditSidebar({
       isSaving={externalIsSaving}
       externalError={externalError}
       externalSuccess={externalSuccess}
+      hideTitle={hideTitle}
     />
   );
 }

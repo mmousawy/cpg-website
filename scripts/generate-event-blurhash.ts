@@ -37,7 +37,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 /**
- * Generate blurhash from an image URL
+ * Generate blurhash from an image URL, preserving aspect ratio
  */
 async function generateBlurhashFromUrl(imageUrl: string): Promise<string | null> {
   try {
@@ -49,9 +49,26 @@ async function generateBlurhashFromUrl(imageUrl: string): Promise<string | null>
 
     const imageBuffer = Buffer.from(await response.arrayBuffer());
 
-    // Resize to small size (32x32) for performance
+    // Get original dimensions to preserve aspect ratio
+    const metadata = await sharp(imageBuffer).metadata();
+    const originalWidth = metadata.width || 32;
+    const originalHeight = metadata.height || 32;
+
+    // Calculate dimensions preserving aspect ratio (max 32px on longest side)
+    const maxSize = 32;
+    let width: number;
+    let height: number;
+    if (originalWidth > originalHeight) {
+      width = maxSize;
+      height = Math.max(1, Math.round((originalHeight / originalWidth) * maxSize));
+    } else {
+      height = maxSize;
+      width = Math.max(1, Math.round((originalWidth / originalHeight) * maxSize));
+    }
+
+    // Resize preserving aspect ratio (no cropping)
     const { data, info } = await sharp(imageBuffer)
-      .resize(32, 32, { fit: 'cover' })
+      .resize(width, height, { fit: 'fill' })
       .ensureAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });

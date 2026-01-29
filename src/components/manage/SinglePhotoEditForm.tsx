@@ -48,6 +48,8 @@ interface SinglePhotoEditFormProps {
   isSaving?: boolean;
   externalError?: string | null;
   externalSuccess?: boolean;
+  /** Hide title (when shown in parent container like BottomSheet) */
+  hideTitle?: boolean;
 }
 
 export default function SinglePhotoEditForm({
@@ -64,6 +66,7 @@ export default function SinglePhotoEditForm({
   isSaving: externalIsSaving = false,
   externalError = null,
   externalSuccess = false,
+  hideTitle = false,
 }: SinglePhotoEditFormProps) {
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
@@ -188,6 +191,7 @@ export default function SinglePhotoEditForm({
   return (
     <SidebarPanel
       title="Edit photo"
+      hideTitle={hideTitle}
       footer={
         <div
           className="flex gap-2 w-full"

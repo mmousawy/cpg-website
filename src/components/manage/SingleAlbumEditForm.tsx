@@ -46,6 +46,8 @@ interface SingleAlbumEditFormProps {
   isSaving?: boolean;
   externalError?: string | null;
   externalSuccess?: boolean;
+  /** Hide title (when shown in parent container like BottomSheet) */
+  hideTitle?: boolean;
 }
 
 export default function SingleAlbumEditForm({
@@ -61,6 +63,7 @@ export default function SingleAlbumEditForm({
   isSaving: externalIsSaving = false,
   externalError = null,
   externalSuccess = false,
+  hideTitle = false,
 }: SingleAlbumEditFormProps) {
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
@@ -226,6 +229,7 @@ export default function SingleAlbumEditForm({
     return (
       <SidebarPanel
         title={isNewAlbum ? 'New album' : 'Edit album'}
+        hideTitle={hideTitle}
       >
         <div
           className="flex items-center justify-center py-12"
@@ -243,6 +247,7 @@ export default function SingleAlbumEditForm({
   return (
     <SidebarPanel
       title={isNewAlbum ? 'New album' : 'Edit album'}
+      hideTitle={hideTitle}
       footer={
         <div
           className="flex gap-2 w-full"

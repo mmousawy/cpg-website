@@ -3,6 +3,7 @@
 import BlurImage from '@/components/shared/BlurImage';
 import CardBadges from '@/components/shared/CardBadges';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
@@ -28,8 +29,8 @@ function PhotoCard({
   albumCoverUrl,
   currentAlbumTitle,
 }: PhotoCardProps) {
-  // Use raw URL - custom loader adds transform params automatically
-  const thumbnailUrl = photo.url;
+  // Generate square cropped thumbnail URL (256x256px, center-cropped)
+  const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
   const isAlbumCover = albumCoverUrl === photo.url;
 
   const photoWithAlbums = photo as PhotoWithAlbums;
@@ -92,15 +93,15 @@ function PhotoCard({
     >
       {/* Image */}
       <div
-        className="aspect-square overflow-hidden bg-background-light"
+        className="relative aspect-square overflow-hidden bg-background-light"
       >
         <BlurImage
           src={thumbnailUrl}
           alt={photo.title || 'Photo'}
-          width={200}
-          height={200}
+          fill
+          sizes="200px"
           quality={85}
-          className="size-full object-cover transition-transform"
+          className="object-cover transition-transform"
           draggable={false}
         />
         {/* Badges */}

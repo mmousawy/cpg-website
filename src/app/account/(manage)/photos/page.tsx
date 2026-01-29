@@ -422,6 +422,7 @@ export default function PhotosPage() {
       <BottomSheet
         isOpen={isMobileEditSheetOpen}
         onClose={handleMobileEditClose}
+        title={selectedPhotos.length === 0 ? undefined : selectedPhotos.length === 1 ? 'Edit photo' : `Edit ${selectedPhotos.length} photos`}
       >
         <PhotoEditSidebar
           selectedPhotos={selectedPhotos}
@@ -432,6 +433,7 @@ export default function PhotosPage() {
           onAddToAlbum={handleAddToAlbum}
           isLoading={photosLoading}
           onDirtyChange={handleDirtyChange}
+          hideTitle
         />
       </BottomSheet>
     </>

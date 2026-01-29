@@ -2,6 +2,7 @@ import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
 
 import type { AlbumWithPhotos } from '@/types/albums';
+import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
@@ -45,7 +46,7 @@ export default function AlbumCard({
       >
         {coverImage ? (
           <BlurImage
-            src={coverImage}
+            src={getCroppedThumbnailUrl(coverImage, 512, 384, 85) || coverImage}
             alt={album.title}
             sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
             quality={85}
