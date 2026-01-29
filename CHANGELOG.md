@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/mmousawy/cpg-website/compare/v1.15.0...v1.15.1) (2026-01-29)
+
+
+### Bug Fixes
+
+* Fix event images. ([566d571](https://github.com/mmousawy/cpg-website/commit/566d5717b2ffcfefc00dccfa350df4a491a2f96e))
+
 ## [1.15.0](https://github.com/mmousawy/cpg-website/compare/v1.14.0...v1.15.0) (2026-01-29)
 
 
