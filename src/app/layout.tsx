@@ -33,6 +33,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
+    ],
+    apple: '/apple-icon.png',
+  },
   title: {
     default: siteConfig.name,
     template: '%s - Creative Photography Group',

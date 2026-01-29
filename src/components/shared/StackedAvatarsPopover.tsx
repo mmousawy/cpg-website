@@ -7,7 +7,8 @@ import { useState } from 'react';
 import Avatar, { SIZE_MAP } from '@/components/auth/Avatar';
 import Popover from './Popover';
 
-const MAX_VISIBLE_AVATARS = 5;
+const MAX_VISIBLE_AVATARS = 12;
+const MAX_VISIBLE_AVATARS_MOBILE = 4;
 
 export interface AvatarPerson {
   id: string;
@@ -60,7 +61,10 @@ export default function StackedAvatarsPopover({
   const count = people.length;
   const label = count === 1 ? singularLabel : pluralLabel;
   const visiblePeople = people.slice(0, MAX_VISIBLE_AVATARS);
+  const visiblePeopleMobile = people.slice(0, MAX_VISIBLE_AVATARS_MOBILE);
   const hasPeople = count > 0;
+  const hiddenCount = count - MAX_VISIBLE_AVATARS;
+  const hiddenCountMobile = count - MAX_VISIBLE_AVATARS_MOBILE;
 
   // Show skeleton avatars when loading
   const showSkeletonAvatars = isLoading && visiblePeople.length === 0;
@@ -90,30 +94,85 @@ export default function StackedAvatarsPopover({
             />
           ))
         ) : (
-          // Actual avatar faces
-          visiblePeople.map((person, index) => (
+          <>
+            {/* Desktop: show up to 5 avatars + count badge */}
             <div
-              key={person.id}
-              className={clsx(
-                'relative rounded-full ring-2 ring-background bg-border-color',
-                index > 0 && '-ml-2',
-              )}
-              style={{ zIndex: MAX_VISIBLE_AVATARS - index }}
+              className="max-sm:hidden flex items-center"
             >
-              <Avatar
-                avatarUrl={person.avatarUrl}
-                fullName={person.fullName}
-                size={avatarSize}
-              />
+              {visiblePeople.map((person, index) => (
+                <div
+                  key={person.id}
+                  className={clsx(
+                    'relative rounded-full ring-2 ring-background bg-border-color',
+                    index > 0 && '-ml-2',
+                  )}
+                  style={{ zIndex: MAX_VISIBLE_AVATARS - index }}
+                >
+                  <Avatar
+                    avatarUrl={person.avatarUrl}
+                    fullName={person.fullName}
+                    size={avatarSize}
+                  />
+                </div>
+              ))}
+              {hiddenCount > 0 && (
+                <span
+                  className={clsx(
+                    'relative -ml-1.5 flex items-center justify-center rounded-full',
+                    'bg-background-medium ring-2 ring-background',
+                    'text-xs font-semibold text-foreground/80',
+                    'size-8',
+                  )}
+                  style={{ zIndex: 0 }}
+                >
+                  +
+                  {hiddenCount}
+                </span>
+              )}
             </div>
-          ))
+            {/* Mobile: show up to 3 avatars + count badge */}
+            <div
+              className="sm:hidden flex items-center"
+            >
+              {visiblePeopleMobile.map((person, index) => (
+                <div
+                  key={person.id}
+                  className={clsx(
+                    'relative rounded-full ring-2 ring-background bg-border-color',
+                    index > 0 && '-ml-2',
+                  )}
+                  style={{ zIndex: MAX_VISIBLE_AVATARS_MOBILE - index }}
+                >
+                  <Avatar
+                    avatarUrl={person.avatarUrl}
+                    fullName={person.fullName}
+                    size={avatarSize}
+                  />
+                </div>
+              ))}
+              {hiddenCountMobile > 0 && (
+                <span
+                  className={clsx(
+                    'relative -ml-1.5 flex items-center justify-center rounded-full',
+                    'bg-background-medium ring-2 ring-background',
+                    'text-xs font-semibold text-foreground/80',
+                    'size-8',
+                  )}
+                  style={{ zIndex: 0 }}
+                >
+                  +
+                  {hiddenCountMobile}
+                </span>
+              )}
+            </div>
+          </>
         )}
       </div>
 
       {/* Count and label */}
       {showInlineCount && (
         <span
-          className="block text-xs font-medium text-foreground/70"
+          className="max-sm:hidden block text-xs font-medium text-foreground/70"
         >
           {count > 0 ? `${count} ${label}` : emptyMessage}
         </span>

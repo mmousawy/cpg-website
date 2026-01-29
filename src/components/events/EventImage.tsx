@@ -15,11 +15,11 @@ export default function EventImage({ event, size, tabIndex }: { event: CPGEvent,
         tabIndex={tabIndex}
       >
         <BlurImage
-          width={960}
-          height={720}
-          sizes="100vw"
+          width={560}
+          height={300}
+          sizes="(max-width: 560px) 100vw, 560px"
           alt={event.title || 'Event cover image'}
-          className='mb-4 w-full rounded-md max-sm:block sm:hidden'
+          className='mb-4 w-full max-w-full rounded-md'
           src={imageSrc}
           blurhash={event.image_blurhash}
         />

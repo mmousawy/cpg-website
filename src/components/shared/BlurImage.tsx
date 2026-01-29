@@ -123,10 +123,13 @@ export default function BlurImage({
   }
 
   // For sized images: use a wrapper with the blur as background, main image on top
+  // Only set explicit width if no responsive width class (w-full, w-auto, etc.) is provided
+  const hasResponsiveWidth = /\bw-(full|auto|screen|\d+|px|\[)/.test(className);
+
   return (
     <span
       className={`relative inline-block overflow-hidden ${className}`}
-      style={{
+      style={hasResponsiveWidth ? undefined : {
         width: imgWidth ? `${imgWidth}px` : undefined,
         maxWidth: '100%',
       }}
