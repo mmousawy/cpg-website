@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.2](https://github.com/mmousawy/cpg-website/compare/v1.15.1...v1.15.2) (2026-01-30)
+
+
+### Bug Fixes
+
+* BottomSheet rendering issues and mobile padding consistency ([1a338cf](https://github.com/mmousawy/cpg-website/commit/1a338cf4e0fc76ba9369c57cb8496435bebb245a))
+
 ## [1.15.1](https://github.com/mmousawy/cpg-website/compare/v1.15.0...v1.15.1) (2026-01-29)
 
 
