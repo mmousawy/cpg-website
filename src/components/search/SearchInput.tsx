@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import Input from '@/components/shared/Input';
+import CloseSVG from 'public/icons/close.svg';
+import { useEffect, useRef } from 'react';
 
 interface SearchInputProps {
   value: string;
@@ -57,23 +58,11 @@ export default function SearchInput({
           <button
             type="button"
             onClick={() => onChange('')}
-            className="text-foreground/50 hover:text-foreground"
             aria-label="Clear search"
           >
-            <svg
-              className="size-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <CloseSVG
+              className="size-4 fill-foreground/50 hover:fill-foreground"
+            />
           </button>
       )
       }

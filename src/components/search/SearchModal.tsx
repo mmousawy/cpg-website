@@ -40,7 +40,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
         const timerId = setTimeout(() => setIsTrapped(false), 0);
         return () => clearTimeout(timerId);
       }
@@ -170,7 +170,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           >
             {query.length < 2 ? (
               <div
-                className="flex flex-col items-center justify-center min-h-22 text-center"
+                className="flex flex-col items-center justify-center min-h-[90px] text-center"
               >
                 <p
                   className="text-foreground/60"

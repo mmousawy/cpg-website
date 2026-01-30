@@ -453,7 +453,7 @@ export default function AlbumDetailClient() {
           ) : (
             // Show edit album button when no photos selected on mobile
             <div
-              className="md:hidden border-t border-border-color-strong bg-background-light px-4 py-3"
+              className="md:hidden border-t border-border-color-strong bg-background-light px-2 py-3"
             >
               <Button
                 onClick={handleMobileEdit}

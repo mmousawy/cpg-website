@@ -242,7 +242,7 @@ export default function ActivitiesSlider() {
       {/* No-JS fallback: static grid */}
       <noscript>
         <div
-          className="grid gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-4 px-2 sm:grid-cols-2 lg:grid-cols-3"
         >
           {activities.map((activity) => (
             <ActivityCard

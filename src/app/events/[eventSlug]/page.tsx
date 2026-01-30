@@ -201,7 +201,7 @@ async function CachedEventContent({
 
           {/* Title overlay */}
           <div
-            className="absolute inset-x-0 bottom-0 px-4 pb-0 sm:px-8 sm:pb-4"
+            className="absolute inset-x-0 bottom-0 px-2 pb-0 sm:px-8 sm:pb-4"
           >
             <div
               className="mx-auto max-w-screen-md"

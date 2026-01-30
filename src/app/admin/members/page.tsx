@@ -136,7 +136,7 @@ export default function AdminMembersPage() {
 
   return (
     <div
-      className="bg-background px-4 py-8"
+      className="bg-background px-2 py-8"
     >
       {/* Header */}
       <div

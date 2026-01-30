@@ -90,7 +90,7 @@ export default async function Home() {
 
         {/* Content overlay */}
         <div
-          className="absolute inset-x-0 bottom-0 pb-4 px-4 sm:px-8 sm:pb-0"
+          className="absolute inset-x-0 bottom-0 px-2 sm:px-8"
         >
           <div
             className="mx-auto max-w-screen-md text-center"
@@ -251,7 +251,7 @@ export default async function Home() {
         </Container>
 
         <div
-          className='w-full max-w-screen-md mx-auto overflow-hidden'
+          className='w-full max-w-screen-md mx-auto'
         >
           <div
             className='py-4 sm:py-10'

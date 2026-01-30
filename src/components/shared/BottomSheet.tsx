@@ -27,6 +27,41 @@ export default function BottomSheet({
   const [startY, setStartY] = useState<number | null>(null);
   const [currentY, setCurrentY] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Track if component should be rendered (delayed unmount for close animation)
+  const [shouldRender, setShouldRender] = useState(false);
+  // Track if animation should show open state (delayed to allow mount animation)
+  const [isAnimatedOpen, setIsAnimatedOpen] = useState(false);
+
+  // Handle mount/unmount with animation
+  useEffect(() => {
+    let mountTimer: ReturnType<typeof setTimeout> | undefined;
+    let animationTimer: number | undefined;
+    let closeAnimTimer: ReturnType<typeof setTimeout> | undefined;
+    let unmountTimer: ReturnType<typeof setTimeout> | undefined;
+
+    if (isOpen) {
+      // First mount the component (use microtask to satisfy linter)
+      mountTimer = setTimeout(() => {
+        setShouldRender(true);
+        // Then trigger the open animation after a frame (allows CSS transition to work)
+        animationTimer = requestAnimationFrame(() => {
+          setIsAnimatedOpen(true);
+        });
+      }, 0);
+    } else {
+      // First trigger close animation (use microtask to satisfy linter)
+      closeAnimTimer = setTimeout(() => setIsAnimatedOpen(false), 0);
+      // Then unmount after animation completes
+      unmountTimer = setTimeout(() => setShouldRender(false), 300);
+    }
+
+    return () => {
+      if (mountTimer) clearTimeout(mountTimer);
+      if (animationTimer) cancelAnimationFrame(animationTimer);
+      if (closeAnimTimer) clearTimeout(closeAnimTimer);
+      if (unmountTimer) clearTimeout(unmountTimer);
+    };
+  }, [isOpen]);
 
   // Handle body scroll lock
   useEffect(() => {
@@ -35,7 +70,7 @@ export default function BottomSheet({
       const timerId = setTimeout(() => setIsTrapped(true), 16);
       return () => clearTimeout(timerId);
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
       const timerId = setTimeout(() => setIsTrapped(false), 0);
       return () => clearTimeout(timerId);
     }
@@ -102,11 +137,16 @@ export default function BottomSheet({
     return `translateY(${deltaY}px)`;
   };
 
+  // Don't render anything if not needed (prevents fixed overlay from affecting page)
+  if (!shouldRender) {
+    return null;
+  }
+
   return (
     <div
       className={clsx(
         'fixed inset-0 z-50',
-        isOpen ? 'pointer-events-auto' : 'pointer-events-none',
+        isAnimatedOpen ? 'pointer-events-auto' : 'pointer-events-none',
       )}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -118,7 +158,7 @@ export default function BottomSheet({
       <div
         className={clsx(
           'absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300',
-          isOpen ? 'opacity-100' : 'opacity-0',
+          isAnimatedOpen ? 'opacity-100' : 'opacity-0',
         )}
       />
 
@@ -137,7 +177,7 @@ export default function BottomSheet({
             'absolute bottom-0 left-0 right-0 flex flex-col',
             'bg-background-light rounded-t-2xl border-t border-border-color-strong shadow-xl',
             'transition-transform duration-300 ease-out',
-            isOpen ? 'translate-y-0' : 'translate-y-full',
+            isAnimatedOpen ? 'translate-y-0' : 'translate-y-full',
           )}
           style={{
             maxHeight: `${maxHeight}vh`,

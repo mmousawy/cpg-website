@@ -126,17 +126,23 @@ export default function BulkAlbumEditForm({
   const watchedIsPublic = watch('isPublic');
   const isSaving = isSubmitting || externalIsSaving;
 
-  // Memoize album IDs string for dependency
+  // Memoize album IDs string for dependency - only reset form when actual selection changes
   const albumIdsKey = useMemo(() => selectedAlbums.map((a) => a.id).join(','), [selectedAlbums]);
 
   // Reset form when selection changes to update tags (only common tags)
+  // Only depend on albumIdsKey to avoid resetting on every parent re-render
   useEffect(() => {
-    const newCommonTags = getCommonTags(selectedAlbums);
+    const albums = selectedAlbums;
+    const newCommonTags = getCommonTags(albums);
+    const newAllPublic = albums.every((a) => a.is_public);
+    const newAllPrivate = albums.every((a) => !a.is_public);
+    const newMixedVisibility = !newAllPublic && !newAllPrivate;
     reset({
-      isPublic: mixedVisibility ? null : allPublic,
+      isPublic: newMixedVisibility ? null : newAllPublic,
       tags: newCommonTags, // Only reset to common tags
     });
-  }, [albumIdsKey, selectedAlbums, reset, mixedVisibility, allPublic]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [albumIdsKey, reset]);
 
   // Update dirty ref and call callback when dirty state changes
   useEffect(() => {

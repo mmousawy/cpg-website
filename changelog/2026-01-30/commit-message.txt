@@ -1,0 +1,43 @@
+fix: BottomSheet rendering issues and mobile padding consistency
+
+BottomSheet:
+- Add conditional rendering to prevent fixed overlay from staying in DOM when closed
+- Add proper mount/unmount animation using shouldRender + isAnimatedOpen states
+- Fix scroll lock cleanup (use empty string instead of 'auto')
+- Prevents BottomSheet from interfering with page scroll when closed
+
+Mobile Padding:
+- Reduce horizontal padding from px-4 to px-2 across mobile layouts
+- Update PageContainer pagePadding/pagePaddingAlt constants
+- Apply to Header, Footer, StickyActionBar, MobileActionBar
+- Apply to home page, events page, admin members page, album detail
+
+Bulk Edit Forms:
+- Fix form reset triggering on every parent re-render
+- BulkPhotoEditForm: Add photoIdsKey memoization for reset dependency
+- BulkAlbumEditForm: Fix useEffect to only depend on albumIdsKey
+
+Modal/SearchModal:
+- Fix scroll lock cleanup (use empty string instead of 'auto')
+
+StickyActionBar:
+- Add pointer-events-none to gradient shadow overlay
+
+Files changed (15):
+
+Modified:
+- src/app/account/(manage)/albums/[slug]/AlbumDetailClient.tsx
+- src/app/admin/members/page.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/app/page.tsx
+- src/components/layout/Footer.tsx
+- src/components/layout/Header.tsx
+- src/components/layout/PageContainer.tsx
+- src/components/manage/BulkAlbumEditForm.tsx
+- src/components/manage/BulkPhotoEditForm.tsx
+- src/components/manage/MobileActionBar.tsx
+- src/components/search/SearchModal.tsx
+- src/components/shared/ActivitiesSlider.tsx
+- src/components/shared/BottomSheet.tsx
+- src/components/shared/Modal.tsx
+- src/components/shared/StickyActionBar.tsx

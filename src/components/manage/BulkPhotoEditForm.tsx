@@ -9,7 +9,7 @@ import Toggle from '@/components/shared/Toggle';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
@@ -138,16 +138,25 @@ export default function BulkPhotoEditForm({
   const watchedTags = watch('tags');
   const isSaving = isSubmitting || externalIsSaving;
 
+  // Memoize photo IDs string for dependency - only reset form when actual selection changes
+  const photoIdsKey = useMemo(() => selectedPhotos.map((p) => p.id).join(','), [selectedPhotos]);
+
   // Reset form when selection changes to update tags (only common tags)
+  // Only depend on photoIdsKey to avoid resetting on every parent re-render
   useEffect(() => {
-    const newCommonTags = getCommonTags(selectedPhotos);
+    const photos = selectedPhotos;
+    const newCommonTags = getCommonTags(photos);
+    const newAllPublic = photos.every((p) => p.is_public);
+    const newAllPrivate = photos.every((p) => !p.is_public);
+    const newMixedVisibility = !newAllPublic && !newAllPrivate;
     reset({
       title: null,
       description: null,
-      is_public: mixedVisibility ? null : allPublic,
+      is_public: newMixedVisibility ? null : newAllPublic,
       tags: newCommonTags, // Only reset to common tags
     });
-  }, [selectedPhotos, reset, mixedVisibility, allPublic]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photoIdsKey, reset]);
 
   const handleAddTag = (tag: string) => {
     const currentTags = watchedTags || [];

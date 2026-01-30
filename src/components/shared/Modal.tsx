@@ -36,7 +36,7 @@ export default function Modal() {
         return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
         // Untrap the dialog element (via microtask to satisfy React Compiler)
         const timerId = setTimeout(() => setIsTrapped(false), 0);
         return () => clearTimeout(timerId);

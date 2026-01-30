@@ -88,7 +88,7 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-b-border-color border-t-primary bg-background-light px-4 py-2 text-foreground shadow-md shadow-[#00000005]"
+      className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-b-border-color border-t-primary bg-background-light px-2 py-2 text-foreground shadow-md shadow-[#00000005]"
     >
       <div
         className={clsx(
@@ -147,15 +147,15 @@ export default function Header() {
             {/* Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-border-color bg-background-medium px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:border-primary hover:text-foreground"
+              className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/70 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-3 lg:py-1.5 lg:text-sm lg:hover:border-primary"
               aria-label="Search"
             >
               <svg
-                className="size-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
+                className="size-5 lg:size-4"
               >
                 <path
                   strokeLinecap="round"
@@ -165,7 +165,7 @@ export default function Header() {
                 />
               </svg>
               <span
-                className="hidden lg:inline"
+                className="hidden lg:inline text-foreground/60"
               >
                 Search
               </span>
@@ -191,7 +191,7 @@ export default function Header() {
             {/* Mobile Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center justify-center rounded-full p-2 text-foreground/60 transition-colors hover:text-foreground"
+              className="flex items-center justify-center rounded-full p-2 text-foreground/70 transition-colors hover:text-foreground"
               aria-label="Search"
             >
               <svg

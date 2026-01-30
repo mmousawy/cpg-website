@@ -31,7 +31,7 @@ export default function StickyActionBar({
       {/* Add shadow at top of bar with div element gradient with 0px at top and 20px at bottom */}
       <div
         className={clsx(
-          'absolute left-0 right-0',
+          'absolute left-0 right-0 pointer-events-none',
           variant === 'compact' ? 'h-4' : 'h-6',
           position === 'bottom'
             ? variant === 'compact' ? '-top-4 bg-gradient-to-b from-transparent to-background-light' : '-top-6 bg-gradient-to-b from-transparent to-background'
@@ -41,7 +41,7 @@ export default function StickyActionBar({
       <div
         className={clsx(
           'border-border-color-strong bg-background-light',
-          variant === 'compact' ? 'px-4 py-3' : 'px-4 py-3 sm:px-6 sm:py-4',
+          variant === 'compact' ? 'px-2 py-3' : 'px-2 py-3 sm:px-6 sm:py-4',
           position === 'bottom' ? 'border-t-[0.0625rem]' : 'border-b-[0.0625rem]',
         )}
       >
