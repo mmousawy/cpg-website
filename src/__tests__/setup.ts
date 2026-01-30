@@ -1,4 +1,3 @@
-import { expect, afterEach } from 'vitest';
 import '@testing-library/jest-dom';
 import { config } from 'dotenv';
 import { resolve } from 'path';
@@ -41,7 +40,4 @@ if (!process.env.EMAIL_REPLY_TO_ADDRESS) {
   process.env.EMAIL_REPLY_TO_ADDRESS = 'test@example.com';
 }
 
-// Cleanup after each test
-afterEach(() => {
-  // Add any global cleanup here
-});
+// Global cleanup can be added in individual test files using afterEach

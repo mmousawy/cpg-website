@@ -1,6 +1,9 @@
 import bundleAnalyzer from '@next/bundle-analyzer';
+import { readFileSync } from 'fs';
 import type { NextConfig } from 'next';
-import pkg from './package.json' with { type: 'json' };
+
+// Read version from package.json
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8')) as { version: string };
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',

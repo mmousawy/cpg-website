@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { generateTestEmail, createTestSupabaseClient, cleanupTestUser, getTestUserByEmail } from '../../utils/test-helpers';
+/// <reference types="vitest/globals" />
 import { POST } from '@/app/api/auth/signup/route';
 import { NextRequest } from 'next/server';
+import { cleanupTestUser, createTestSupabaseClient, generateTestEmail, getTestUserByEmail } from '../../utils/test-helpers';
 
-// Mock resend to prevent actual emails
+// Mock resend to prevent actual emails - use class for vitest v4 constructor support
 vi.mock('resend', () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: {
+  Resend: class MockResend {
+    emails = {
       send: vi.fn().mockResolvedValue({ data: { id: 'test-email-id' }, error: null }),
-    },
-  })),
+    };
+  },
 }));
 
 // Helper to create a mock request
