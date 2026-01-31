@@ -13,7 +13,7 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import clsx from 'clsx';
 import Image from 'next/image';
 import { useQueryClient } from '@tanstack/react-query';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type AlbumWithCount = Album & { photo_count?: number };
 
@@ -153,7 +153,7 @@ export default function AddPhotosToAlbumModal({
     }
   };
 
-  const handleAddToAlbums = async () => {
+  const handleAddToAlbums = useCallback(async () => {
     if (!user || selectedAlbumIds.size === 0) return;
 
     setIsAdding(true);
@@ -207,7 +207,7 @@ export default function AddPhotosToAlbumModal({
     } finally {
       setIsAdding(false);
     }
-  };
+  }, [user, selectedAlbumIds, photos, supabase, albums, queryClient, profile, onSuccess, onClose]);
 
   // Set footer with action buttons
   useEffect(() => {
@@ -231,7 +231,8 @@ export default function AddPhotosToAlbumModal({
         </Button>
       </div>,
     );
-  }, [selectedAlbumIds.size, isAdding, onClose, modalContext]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- modalContext.setFooter is stable, including modalContext causes infinite loop
+  }, [selectedAlbumIds.size, isAdding, onClose, handleAddToAlbums]);
 
   return (
     <div

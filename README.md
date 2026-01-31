@@ -25,6 +25,8 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Masonry grid layout
 - Likes on photos and albums
 - View tracking with "Most viewed this week" sections
+- Bulk photo and album editing (multi-select, batch operations)
+- Add photos to albums modal
 - Admin moderation (suspend/unsuspend)
 
 ### User Profiles
@@ -45,6 +47,12 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Attendance tracking
 - Album moderation
 
+### Search
+- Global search (Cmd/Ctrl+K)
+- Search across albums, photos, members, events, and tags
+- Keyboard navigation support
+- Debounced queries with loading states
+
 ### Other
 - Dark/light/system theme
 - Responsive design with mobile menu
@@ -56,6 +64,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Activity feed page with notification management
 - Weekly notification digest emails
 - Automated cron jobs (Vercel Cron)
+- Changelog page with version history
 
 ## Tech Stack
 
@@ -63,9 +72,11 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 | --- | --- |
 | Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript |
+| UI Library | React 19 |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth |
 | Storage | Supabase Storage |
+| Data Fetching | TanStack Query (React Query) |
 | Styling | Tailwind CSS 4 |
 | Email | React Email + Resend |
 | Cron Jobs | Vercel Cron |
@@ -136,13 +147,16 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Scripts
 
 ```bash
-npm run dev       # Dev server (Turbopack)
-npm run build     # Production build
-npm run start     # Production server
-npm run lint      # ESLint
-npm run typecheck # TypeScript type checking
-npm run test:run  # Run unit tests once
-npm run analyze   # Bundle analysis (webpack)
+npm run dev        # Dev server (Turbopack)
+npm run build      # Production build
+npm run start      # Production server
+npm run lint       # ESLint
+npm run lint:fix   # ESLint with auto-fix
+npm run typecheck  # TypeScript type checking
+npm run test:run   # Run unit tests once
+npm run test:ui    # Unit tests with UI
+npm run test:e2e   # Playwright E2E tests
+npm run analyze    # Bundle analysis (webpack)
 ```
 
 ### Pre-commit Hooks
@@ -176,16 +190,23 @@ src/
 │   ├── account/            # Account settings, user galleries
 │   ├── admin/              # Admin dashboard
 │   ├── api/                # API routes
+│   ├── changelog/          # Version history pages
 │   ├── events/             # Event pages
 │   ├── gallery/            # Public gallery and tag pages
 │   ├── members/            # Member discovery pages
 │   └── ...
 ├── components/
 │   ├── admin/              # Admin components
-│   ├── album/              # Gallery components
+│   ├── album/              # Album display components
 │   ├── auth/               # Auth components
 │   ├── events/             # Event components
+│   ├── gallery/            # Paginated gallery views
 │   ├── layout/             # Header, footer, etc.
+│   ├── manage/             # Photo/album management (edit, bulk actions)
+│   ├── notifications/      # In-app notifications
+│   ├── onboarding/         # New user onboarding flow
+│   ├── photo/              # Photo display and lightbox
+│   ├── search/             # Global search modal
 │   └── shared/             # Reusable UI
 ├── config/                 # Routes, socials
 ├── context/                # React context
@@ -328,7 +349,7 @@ Deploy to Vercel:
   - New members
   - Explore by photo style (tags with member counts)
   - Random interests with member samples
-- [ ] Search (albums, photos, users, events, tags)
+- [x] Search (albums, photos, members, events, tags)
 - [x] Featured/trending galleries (Most viewed this week)
 
 ### Sharing
