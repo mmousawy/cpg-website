@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.3](https://github.com/mmousawy/cpg-website/compare/v1.15.2...v1.15.3) (2026-01-31)
+
+
+### Bug Fixes
+
+* Changelog detail pages, timestamped view tracking, and justified layout improvements ([b54ebb9](https://github.com/mmousawy/cpg-website/commit/b54ebb9cc5c2c6bc77feac852754b925625227c7))
+
 ## [1.15.2](https://github.com/mmousawy/cpg-website/compare/v1.15.1...v1.15.2) (2026-01-30)
 
 
