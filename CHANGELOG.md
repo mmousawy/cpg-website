@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/mmousawy/cpg-website/compare/v1.15.3...v1.16.0) (2026-01-31)
+
+
+### Features
+
+* Update .env.example and README with new configuration options and features ([abe6edd](https://github.com/mmousawy/cpg-website/commit/abe6edd6e5572f563d325dec33b467f0f4aea4dd))
+
 ## [1.15.3](https://github.com/mmousawy/cpg-website/compare/v1.15.2...v1.15.3) (2026-01-31)
 
 
