@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
+import { useEffect } from 'react';
 
 import BlurImage from '@/components/shared/BlurImage';
 
@@ -62,9 +62,9 @@ export default function PhotoWithLightbox({
           blurhash={blurhash}
           width={width}
           height={height}
-          className="w-full h-auto object-contain cursor-zoom-in"
+          className="block w-full h-auto object-contain cursor-zoom-in"
           sizes="100vw"
-          priority
+          preload
           unoptimized={true}
         />
       </a>

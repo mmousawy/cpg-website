@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Control, Controller, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
 import Checkbox from '@/components/shared/Checkbox';
@@ -52,7 +52,7 @@ export default function PreferencesSection({
               control={control}
               render={({ field }) => (
                 <div
-                  className="grid grid-cols-2 gap-2"
+                  className="grid grid-cols-3 gap-2"
                 >
                   {[
                     {

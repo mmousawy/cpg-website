@@ -47,20 +47,7 @@ export default function JustifiedPhotoGrid({
   const batchLikesQuery = useBatchPhotoLikeCounts(shortIds);
   const batchLikesMap = batchLikesQuery.data || new Map<string, number>();
 
-  if (photos.length === 0) {
-    return (
-      <div
-        className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-      >
-        <p
-          className="text-lg opacity-70"
-        >
-          No photos yet.
-        </p>
-      </div>
-    );
-  }
-
+  // Create photoInput before early return
   const photoInput = photos.map((p) => ({
     id: p.short_id || p.id,
     url: p.url,
@@ -68,7 +55,7 @@ export default function JustifiedPhotoGrid({
     height: p.height || 400,
   }));
 
-  // Calculate layouts for each breakpoint with appropriate constraints
+  // Calculate layouts for each breakpoint
   const mobileRows = calculateJustifiedLayout(photoInput, MOBILE_WIDTH, {
     minPhotosPerRow: 2,
     maxPhotosPerRow: 3,
@@ -84,6 +71,20 @@ export default function JustifiedPhotoGrid({
     maxPhotosPerRow: 5,
     targetRowHeight: 280,
   });
+
+  if (photos.length === 0) {
+    return (
+      <div
+        className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+      >
+        <p
+          className="text-lg opacity-70"
+        >
+          No photos yet.
+        </p>
+      </div>
+    );
+  }
 
   // Create a map from short_id to photo for consistent lookups
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));

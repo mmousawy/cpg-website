@@ -33,7 +33,7 @@ export default function RandomHeroImage() {
       className={`object-cover object-[center_30%] brightness-75 transition-opacity duration-500 ${
         isLoaded ? 'opacity-100' : 'opacity-0'
       }`}
-      priority
+      preload
       sizes="60vw"
       quality={85}
       onLoad={() => setIsLoaded(true)}

@@ -32,6 +32,18 @@ const GAP = 4; // Gap between photos (gap-1 = 4px)
 type PhotoData = { id: string; url: string; aspectRatio: number };
 
 /**
+ * Get a shape signature for a row based on aspect ratios
+ * P = portrait (<0.85), S = square (0.85-1.15), L = landscape (>1.15)
+ */
+function getRowSignature(photos: PhotoData[]): string {
+  return photos.map((p) => {
+    if (p.aspectRatio < 0.85) return 'P';
+    if (p.aspectRatio > 1.15) return 'L';
+    return 'S';
+  }).join('');
+}
+
+/**
  * Calculate row height if these photos were to fill the container width
  */
 function getRowHeight(
@@ -113,12 +125,12 @@ export function calculateJustifiedLayout(
   const idealPhotosPerRow = n / estimatedRows;
 
   // Dynamic programming approach
-  // dp[i] = { cost, prev, prevRowSize } for optimal layout of photos 0..i-1
-  const dp: Array<{ cost: number; prev: number; prevRowSize: number }> = new Array(n + 1);
-  dp[0] = { cost: 0, prev: -1, prevRowSize: idealPhotosPerRow };
+  // dp[i] = { cost, prev, prevRowSize, prevSignature } for optimal layout of photos 0..i-1
+  const dp: Array<{ cost: number; prev: number; prevRowSize: number; prevSignature: string }> = new Array(n + 1);
+  dp[0] = { cost: 0, prev: -1, prevRowSize: idealPhotosPerRow, prevSignature: '' };
 
   for (let i = 1; i <= n; i++) {
-    dp[i] = { cost: Infinity, prev: -1, prevRowSize: 0 };
+    dp[i] = { cost: Infinity, prev: -1, prevRowSize: 0, prevSignature: '' };
 
     // Try all possible row sizes (respecting min/max)
     const minJ = Math.max(0, i - maxPhotosPerRow);
@@ -138,6 +150,7 @@ export function calculateJustifiedLayout(
       const rowPhotos = photoData.slice(j, i);
       const rowAspectRatios = rowPhotos.map((p) => p.aspectRatio);
       const rowHeight = getRowHeight(rowAspectRatios, containerWidth);
+      const rowSignature = getRowSignature(rowPhotos);
 
       // Height penalty for extreme heights
       let heightPenalty = 0;
@@ -156,21 +169,39 @@ export function calculateJustifiedLayout(
       const idealDiff = Math.abs(rowSize - idealPhotosPerRow);
       const idealPenalty = idealDiff > 1.5 ? (idealDiff - 1) * 10 : 0;
 
+      // Variety penalty: discourage identical shape patterns in consecutive rows
+      const prevSignature = dp[j].prevSignature;
+      let varietyPenalty = 0;
+      if (prevSignature.length > 0 && rowSignature === prevSignature) {
+        // Heavy penalty for identical patterns (e.g., PLL followed by PLL)
+        varietyPenalty = 150;
+      } else if (prevSignature.length > 0 && rowSignature.length === prevSignature.length) {
+        // Light penalty for same length but different pattern
+        varietyPenalty = 20;
+      }
+
       const rowCost = getRowCost(rowAspectRatios, containerWidth, targetRowHeight)
         + heightPenalty
         + balancePenalty
-        + idealPenalty;
+        + idealPenalty
+        + varietyPenalty;
       const totalCost = dp[j].cost + rowCost;
 
       if (totalCost < dp[i].cost) {
-        dp[i] = { cost: totalCost, prev: j, prevRowSize: rowSize };
+        dp[i] = { cost: totalCost, prev: j, prevRowSize: rowSize, prevSignature: rowSignature };
       }
     }
 
     // Fallback if no valid configuration found
     if (dp[i].cost === Infinity && i > 0) {
       const fallbackStart = Math.max(0, i - minPhotosPerRow);
-      dp[i] = { cost: dp[fallbackStart].cost + 2000, prev: fallbackStart, prevRowSize: minPhotosPerRow };
+      const fallbackPhotos = photoData.slice(fallbackStart, i);
+      dp[i] = {
+        cost: dp[fallbackStart].cost + 2000,
+        prev: fallbackStart,
+        prevRowSize: minPhotosPerRow,
+        prevSignature: getRowSignature(fallbackPhotos),
+      };
     }
   }
 

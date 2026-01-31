@@ -6,6 +6,11 @@ import Button from '../shared/Button';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
 import type { StreamPhoto } from '@/lib/data/gallery';
 
+type PhotoBatch = {
+  id: string;
+  photos: StreamPhoto[];
+};
+
 type PhotosPaginatedProps = {
   initialPhotos: StreamPhoto[];
   perPage?: number;
@@ -25,19 +30,26 @@ export default function PhotosPaginated({
 }: PhotosPaginatedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [photos, setPhotos] = useState<StreamPhoto[]>(initialPhotos);
+  // Track batches of photos - each batch has its own stable layout
+  const [batches, setBatches] = useState<PhotoBatch[]>([
+    { id: 'initial', photos: initialPhotos },
+  ]);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
   // If initialHasMore is provided, use it; otherwise check if we got a full page
   const [hasMore, setHasMore] = useState(
     initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
   );
   const [isPending, startTransition] = useTransition();
+  const [isSorting, setIsSorting] = useState(false);
+
+  // Calculate total photo count for offset
+  const totalPhotoCount = batches.reduce((sum, batch) => sum + batch.photos.length, 0);
 
   const loadMore = () => {
     startTransition(async () => {
       try {
         const sortParam = showSortToggle ? `&sort=${sortBy}` : '';
-        const res = await fetch(`${apiEndpoint}?offset=${photos.length}&limit=${perPage}${sortParam}`);
+        const res = await fetch(`${apiEndpoint}?offset=${totalPhotoCount}&limit=${perPage}${sortParam}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch more photos');
@@ -45,7 +57,11 @@ export default function PhotosPaginated({
 
         const data = await res.json();
 
-        setPhotos(prev => [...prev, ...data.photos]);
+        // Add new batch with unique ID
+        setBatches(prev => [
+          ...prev,
+          { id: `batch-${prev.length}`, photos: data.photos },
+        ]);
         setHasMore(data.hasMore);
       } catch (error) {
         console.error('Error loading more photos:', error);
@@ -68,6 +84,7 @@ export default function PhotosPaginated({
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
     router.replace(newUrl, { scroll: false });
 
+    setIsSorting(true);
     startTransition(async () => {
       try {
         const res = await fetch(`${apiEndpoint}?offset=0&limit=${perPage}&sort=${newSort}`);
@@ -77,10 +94,13 @@ export default function PhotosPaginated({
         }
 
         const data = await res.json();
-        setPhotos(data.photos);
+        // Reset to single batch when sort changes
+        setBatches([{ id: `${newSort}-initial`, photos: data.photos }]);
         setHasMore(data.hasMore);
       } catch (error) {
         console.error('Error loading photos:', error);
+      } finally {
+        setIsSorting(false);
       }
     });
   };
@@ -131,7 +151,7 @@ export default function PhotosPaginated({
         </div>
       )}
 
-      {photos.length === 0 && !isPending ? (
+      {totalPhotoCount === 0 && !isPending ? (
         <div
           className="rounded-lg border border-border-color bg-background-light p-12 text-center"
         >
@@ -143,12 +163,20 @@ export default function PhotosPaginated({
         </div>
       ) : (
         <div
-          className={isPending ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}
+          className={isSorting ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}
         >
-          <JustifiedPhotoGrid
-            photos={photos}
-            showAttribution
-          />
+          {/* Render each batch as its own grid - each has stable layout */}
+          {batches.map((batch) => (
+            <div
+              key={batch.id}
+              className="mb-1"
+            >
+              <JustifiedPhotoGrid
+                photos={batch.photos}
+                showAttribution
+              />
+            </div>
+          ))}
         </div>
       )}
 

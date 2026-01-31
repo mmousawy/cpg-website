@@ -47,7 +47,6 @@ export default async function PhotosPage({ searchParams }: PageProps) {
         className="pt-0!"
       >
         <PhotosPaginated
-          key={initialSort}
           initialPhotos={photos}
           perPage={20}
           initialHasMore={hasMore}

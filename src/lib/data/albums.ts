@@ -301,7 +301,7 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
 
 /**
  * Get most viewed albums from the last week
- * Shows albums created in the last 7 days, ordered by view_count
+ * Shows albums ordered by view count from the last 7 days
  * Tagged with 'albums' for granular cache invalidation
  * Uses shorter cache time (1 hour) since view counts change frequently
  */
@@ -317,6 +317,40 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
   const oneWeekAgoISO = oneWeekAgo.toISOString();
 
+  // First, get album IDs with most views in the last week
+  const { data: viewCounts, error: viewError } = await supabase
+    .from('album_views')
+    .select('album_id')
+    .gte('viewed_at', oneWeekAgoISO);
+
+  if (viewError) {
+    console.error('Error fetching album views:', viewError);
+    return [];
+  }
+
+  if (!viewCounts || viewCounts.length === 0) {
+    // No views in the last week - this is expected if migration just ran
+    return [];
+  }
+
+  // Count views per album
+  const albumViewMap = new Map<string, number>();
+  for (const view of viewCounts) {
+    const count = albumViewMap.get(view.album_id) || 0;
+    albumViewMap.set(view.album_id, count + 1);
+  }
+
+  // Sort by view count and get top album IDs
+  const topAlbumIds = Array.from(albumViewMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([albumId]) => albumId);
+
+  if (topAlbumIds.length === 0) {
+    return [];
+  }
+
+  // Fetch the actual albums for these IDs
   const { data: albums } = await supabase
     .from('albums')
     .select(`
@@ -335,11 +369,21 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
         photo_url
       )
     `)
+    .in('id', topAlbumIds)
     .eq('is_public', true)
-    .is('deleted_at', null)
-    .gte('created_at', oneWeekAgoISO)
-    .order('view_count', { ascending: false })
-    .limit(limit);
+    .is('deleted_at', null);
+
+  if (!albums || albums.length === 0) {
+    return [];
+  }
+
+  // Sort albums by their view count order (maintain the order from topAlbumIds)
+  const albumOrderMap = new Map(topAlbumIds.map((id, index) => [id, index]));
+  albums.sort((a, b) => {
+    const aOrder = albumOrderMap.get(a.id) ?? Infinity;
+    const bOrder = albumOrderMap.get(b.id) ?? Infinity;
+    return aOrder - bOrder;
+  });
 
   // Filter out albums with no photos and albums from suspended users
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;

@@ -397,7 +397,7 @@ export async function getAllTagNames() {
 
 /**
  * Get most viewed photos from the last week
- * Shows photos created in the last 7 days, ordered by view_count
+ * Shows photos ordered by view count from the last 7 days
  * Tagged with 'gallery' for cache invalidation
  * Uses shorter cache time (1 hour) since view counts change frequently
  */
@@ -413,21 +413,59 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
   const oneWeekAgoISO = oneWeekAgo.toISOString();
 
-  // Fetch photos created in the last week, ordered by view_count
-  // Only select needed columns for better performance
+  // First, get photo IDs with most views in the last week
+  const { data: viewCounts, error: viewError } = await supabase
+    .from('photo_views')
+    .select('photo_id')
+    .gte('viewed_at', oneWeekAgoISO);
+
+  if (viewError) {
+    console.error('Error fetching photo views:', viewError);
+    return [];
+  }
+
+  if (!viewCounts || viewCounts.length === 0) {
+    // No views in the last week - this is expected if migration just ran
+    return [];
+  }
+
+  // Count views per photo
+  const photoViewMap = new Map<string, number>();
+  for (const view of viewCounts) {
+    const count = photoViewMap.get(view.photo_id) || 0;
+    photoViewMap.set(view.photo_id, count + 1);
+  }
+
+  // Sort by view count and get top photo IDs
+  const topPhotoIds = Array.from(photoViewMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([photoId]) => photoId);
+
+  if (topPhotoIds.length === 0) {
+    return [];
+  }
+
+  // Fetch the actual photos for these IDs
   const { data: photos } = await supabase
     .from('photos')
     .select('id, short_id, url, title, description, width, height, created_at, user_id, blurhash, likes_count, view_count')
+    .in('id', topPhotoIds)
     .eq('is_public', true)
     .is('deleted_at', null)
-    .not('storage_path', 'like', 'events/%')
-    .gte('created_at', oneWeekAgoISO)
-    .order('view_count', { ascending: false })
-    .limit(limit);
+    .not('storage_path', 'like', 'events/%');
 
   if (!photos || photos.length === 0) {
     return [];
   }
+
+  // Sort photos by their view count order (maintain the order from topPhotoIds)
+  const photoOrderMap = new Map(topPhotoIds.map((id, index) => [id, index]));
+  photos.sort((a, b) => {
+    const aOrder = photoOrderMap.get(a.id) ?? Infinity;
+    const bOrder = photoOrderMap.get(b.id) ?? Infinity;
+    return aOrder - bOrder;
+  });
 
   // Get unique user IDs
   const userIds = [...new Set(photos.map((p) => p.user_id).filter((id): id is string => id !== null))];

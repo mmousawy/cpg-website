@@ -189,7 +189,7 @@ export default async function GalleryPage() {
               <h2
                 className="text-xl font-semibold group-hover:text-primary transition-colors"
               >
-                Albums
+                Recent albums
               </h2>
             </Link>
             <p
@@ -206,7 +206,7 @@ export default async function GalleryPage() {
               <p
                 className="text-lg opacity-70"
               >
-                No photos yet. Be the first to upload some!
+                No albums yet. Be the first to create one!
               </p>
             </div>
           ) : (
@@ -222,7 +222,7 @@ export default async function GalleryPage() {
                   href={routes.galleryAlbums.url}
                   variant="secondary"
                 >
-                  View all albums
+                  View all recent albums
                 </Button>
               </div>
             </>

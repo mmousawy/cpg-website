@@ -1,0 +1,45 @@
+feat: Changelog detail pages, timestamped view tracking, and justified layout improvements
+
+Changelog:
+- Add detail pages for changelog entries at /changelog/[slug]
+- Render files-changed.md using react-markdown with custom styled components
+- Build version-to-slug and slug-to-version mappings from CHANGELOG.md dates
+- Show all versions in overview table with descriptions, link only if folder exists
+- Add changelog library with helper functions for reading changelog data
+
+Database:
+- Add photo_views and album_views tables for timestamped view tracking
+- Update increment_view_count RPC to log individual view events
+- Add indexes for efficient weekly queries (photo_id/album_id, viewed_at)
+- Add RLS policies allowing public inserts and reads for view tracking
+
+Gallery:
+- Update getMostViewedPhotosLastWeek to query from photo_views table
+- Count views from last 7 days instead of just using total view_count
+- Sort photos by actual weekly view count for accurate trending
+
+Justified Layout:
+- Add variety penalty to prevent repetitive row patterns (e.g., PLL, PLL, PLL)
+- Calculate row signatures based on aspect ratios (P=portrait, S=square, L=landscape)
+- Heavy penalty for identical consecutive patterns, light penalty for same-length rows
+
+PhotosPaginated:
+- Store photos in batches instead of flat array
+- Each batch maintains its own stable layout during pagination
+- Prevents layout shifts when loading more photos
+
+Files changed (7):
+
+New:
+- src/app/changelog/[slug]/page.tsx
+- src/lib/changelog.ts
+- supabase/migrations/20260131000000_add_view_tracking.sql
+- supabase/migrations/20260131000001_add_view_tracking_select_policies.sql
+
+Modified:
+- src/app/changelog/page.tsx
+- src/lib/data/gallery.ts
+- src/components/gallery/PhotosPaginated.tsx
+- src/components/photo/JustifiedPhotoGrid.tsx
+- src/utils/justifiedLayout.ts
+- package.json (react-markdown dependency)

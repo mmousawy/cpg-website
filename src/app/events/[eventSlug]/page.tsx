@@ -185,7 +185,7 @@ async function CachedEventContent({
             fill
             className="object-cover"
             sizes="100vw"
-            priority
+            preload
             blurhash={event.image_blurhash}
           />
 

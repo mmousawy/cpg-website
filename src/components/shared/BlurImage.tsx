@@ -103,7 +103,7 @@ export default function BlurImage({
             aria-hidden="true"
             fill
             className={`${className} blur-md`}
-            priority
+            preload
             quality={30}
             sizes="64px"
           />
@@ -128,7 +128,7 @@ export default function BlurImage({
 
   return (
     <span
-      className={`relative inline-block overflow-hidden ${className}`}
+      className={`relative block overflow-hidden ${className}`}
       style={hasResponsiveWidth ? undefined : {
         width: imgWidth ? `${imgWidth}px` : undefined,
         maxWidth: '100%',
@@ -154,7 +154,7 @@ export default function BlurImage({
           width={props.width}
           height={props.height}
           className={`blur-md ${className}`}
-          priority
+          preload
           quality={30}
           sizes="64px"
         />

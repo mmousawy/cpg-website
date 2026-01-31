@@ -155,6 +155,32 @@ export type Database = {
           },
         ]
       }
+      album_views: {
+        Row: {
+          album_id: string
+          id: string
+          viewed_at: string
+        }
+        Insert: {
+          album_id: string
+          id?: string
+          viewed_at?: string
+        }
+        Update: {
+          album_id?: string
+          id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'album_views_album_id_fkey'
+            columns: ['album_id']
+            isOneToOne: false
+            referencedRelation: 'albums'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       albums: {
         Row: {
           cover_image_url: string | null
@@ -703,6 +729,32 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'photo_tags_photo_id_fkey'
+            columns: ['photo_id']
+            isOneToOne: false
+            referencedRelation: 'photos'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      photo_views: {
+        Row: {
+          id: string
+          photo_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          photo_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          photo_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'photo_views_photo_id_fkey'
             columns: ['photo_id']
             isOneToOne: false
             referencedRelation: 'photos'
