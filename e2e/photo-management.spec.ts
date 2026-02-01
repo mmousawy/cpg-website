@@ -146,15 +146,51 @@ test.describe('Photo Management Flow', () => {
     await expect(page).toHaveURL(/\/account\/photos/);
     await page.waitForLoadState('networkidle');
 
-    // Wait for any existing photos to be cleared (from previous test)
+    // Clean up any existing photos from previous tests
     // This ensures we start with a clean state
     const photoCards = page.locator('[data-testid="photo-card"]');
     const initialCount = await photoCards.count();
 
     if (initialCount > 0) {
-      // Wait for photos to be deleted (up to 10 seconds)
-      // This gives the previous test's cleanup time to complete
-      await expect(photoCards).toHaveCount(0, { timeout: 10000 });
+      console.log(`Cleaning up ${initialCount} leftover photo(s) from previous test`);
+      try {
+        // Select all photos and delete them
+        // First, select the first photo
+        await photoCards.first().click();
+        await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
+
+        // If there are multiple photos, select them all with Ctrl+click
+        if (initialCount > 1) {
+          const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+          for (let i = 1; i < initialCount; i++) {
+            await photoCards.nth(i).click({ modifiers: [modifier] });
+          }
+        }
+
+        // Delete all selected photos
+        const deleteButton = page.getByRole('button', { name: /delete/i }).first();
+        await expect(deleteButton).toBeVisible({ timeout: 5000 });
+        await deleteButton.click();
+
+        // Confirm deletion
+        const confirmDialog = page.locator('[role="dialog"]').or(page.locator('dialog[open]'));
+        await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+        const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
+        await confirmButton.click();
+
+        // Wait for all photos to be deleted
+        await expect(photoCards).toHaveCount(0, { timeout: 10000 });
+        await page.waitForLoadState('networkidle');
+
+        // Verify cleanup succeeded
+        const finalCount = await photoCards.count();
+        if (finalCount > 0) {
+          throw new Error(`Failed to clean up photos: ${finalCount} photo(s) still remain`);
+        }
+      } catch (error) {
+        console.error('Failed to clean up leftover photos:', error);
+        throw error;
+      }
     }
 
     // Upload two test images
