@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.17.0](https://github.com/mmousawy/cpg-website/compare/v1.16.0...v1.17.0) (2026-02-01)
+
+
+### Features
+
+* Implement photo challenges feature and admin tools ([ade3c28](https://github.com/mmousawy/cpg-website/commit/ade3c28a92d28be4eb6cf1e56d6ad09aeee2dc2d))
+
+
+### Bug Fixes
+
+* flaky test ([8c0f3ee](https://github.com/mmousawy/cpg-website/commit/8c0f3ee7ec2b682538b0421cbcecbaaa1c300aad))
+* flaky test ([2c88d43](https://github.com/mmousawy/cpg-website/commit/2c88d43757a744bfe7d942dc6a62e7432ced2600))
+
 ## [1.16.0](https://github.com/mmousawy/cpg-website/compare/v1.15.3...v1.16.0) (2026-01-31)
 
 
