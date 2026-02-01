@@ -118,8 +118,18 @@ test.describe('Photo Management Flow', () => {
     const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
     await confirmButton.click();
 
-    // Wait for photo to be deleted
-    await expect(page.locator('[data-testid="photo-card"]')).toHaveCount(0, { timeout: 10000 });
+    // Wait for photo to be deleted and ensure deletion is complete
+    const photoCardsAfterDelete = page.locator('[data-testid="photo-card"]');
+    await expect(photoCardsAfterDelete).toHaveCount(0, { timeout: 10000 });
+
+    // Wait for network to be idle to ensure all deletion requests have completed
+    await page.waitForLoadState('networkidle');
+
+    // Verify count is still 0 (double-check after network settles)
+    const finalCount = await photoCardsAfterDelete.count();
+    if (finalCount > 0) {
+      throw new Error(`Expected 0 photos after deletion, but found ${finalCount}`);
+    }
 
     // Note: Album cleanup is handled automatically when the test user is deleted
     // since albums cascade delete with the user
@@ -136,6 +146,17 @@ test.describe('Photo Management Flow', () => {
     await expect(page).toHaveURL(/\/account\/photos/);
     await page.waitForLoadState('networkidle');
 
+    // Wait for any existing photos to be cleared (from previous test)
+    // This ensures we start with a clean state
+    const photoCards = page.locator('[data-testid="photo-card"]');
+    const initialCount = await photoCards.count();
+
+    if (initialCount > 0) {
+      // Wait for photos to be deleted (up to 10 seconds)
+      // This gives the previous test's cleanup time to complete
+      await expect(photoCards).toHaveCount(0, { timeout: 10000 });
+    }
+
     // Upload two test images
     const testImagePath1 = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
     const testImagePath2 = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_39kB.jpg');
@@ -143,11 +164,10 @@ test.describe('Photo Management Flow', () => {
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles([testImagePath1, testImagePath2]);
 
-    // Wait for both uploads to complete - wait for 2 photo cards to be visible
-    const photoCards = page.locator('[data-testid="photo-card"]');
+    // Wait for both uploads to complete - wait for exactly 2 photo cards
     await expect(photoCards).toHaveCount(2, { timeout: 60000 });
 
-    // Select first photo with regular click
+    // Select first photo with regular click (the first of the 2 newly uploaded photos)
     await photoCards.first().click();
 
     // Wait for sidebar to appear
