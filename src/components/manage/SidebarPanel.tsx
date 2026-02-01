@@ -26,6 +26,7 @@ export default function SidebarPanel({
 }: SidebarPanelProps) {
   return (
     <div
+      data-testid="sidebar-panel"
       className={clsx('flex h-full flex-col', className)}
     >
       {/* Scrollable content */}

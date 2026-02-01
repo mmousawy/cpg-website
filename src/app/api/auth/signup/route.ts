@@ -21,20 +21,52 @@ function hashToken(token: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, bypassToken } = await request.json();
+
+    const supabase = createAdminClient();
+    let shouldSkipBotCheck = false;
 
     // Check if this is a test email (skip bot check for E2E tests)
     const isTestEmail = email?.endsWith('@test.example.com') || email?.endsWith('@test.local');
 
-    // Check for bots using BotID (skip for test emails)
+    // Validate bypass token if provided
+    if (bypassToken) {
+      const tokenHash = hashToken(bypassToken);
+      const { data: token, error: tokenError } = await supabase
+        .from('auth_tokens')
+        .select('*')
+        .eq('token_hash', tokenHash)
+        .eq('token_type', 'signup_bypass')
+        .is('used_at', null)
+        .gt('expires_at', new Date().toISOString())
+        .single();
+
+      if (tokenError || !token) {
+        return NextResponse.json(
+          { message: 'Invalid or expired bypass link' },
+          { status: 400 },
+        );
+      }
+
+      // Mark token as used
+      await supabase
+        .from('auth_tokens')
+        .update({ used_at: new Date().toISOString() })
+        .eq('id', token.id);
+
+      shouldSkipBotCheck = true;
+      console.log('Bypass token validated, skipping BotID check');
+    }
+
+    // Check for bots using BotID (skip for test emails and valid bypass tokens)
     // In development, checkBotId() automatically returns { isBot: false }
-    if (!isTestEmail) {
+    if (!isTestEmail && !shouldSkipBotCheck) {
       const { isBot } = await checkBotId();
 
       if (isBot) {
         console.log('Bot detected, rejecting signup attempt');
         return NextResponse.json(
-          { message: 'Request rejected' },
+          { message: 'We couldn\'t verify your request. If you\'re having trouble signing up, please email murtada.al.mousawy@gmail.com for assistance.' },
           { status: 403 },
         );
       }
@@ -54,8 +86,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
-    const supabase = createAdminClient();
 
     // Check if email already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();

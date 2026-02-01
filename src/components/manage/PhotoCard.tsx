@@ -80,6 +80,7 @@ function PhotoCard({
 
   return (
     <div
+      data-testid="photo-card"
       className={clsx(
         'cursor-pointer active:cursor-grabbing overflow-hidden transition-all duration-300',
         isSelected

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (isBot) {
       console.log('Bot detected, rejecting contact form submission');
       return NextResponse.json(
-        { message: 'Request rejected' },
+        { message: 'We couldn\'t verify your request. If you\'re having trouble signing up, please email murtada.al.mousawy@gmail.com for assistance.' },
         { status: 403 },
       );
     }

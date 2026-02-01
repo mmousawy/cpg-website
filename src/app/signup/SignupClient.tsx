@@ -2,7 +2,8 @@
 
 import { BotIdClient } from 'botid/client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
@@ -16,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import CheckSVG from 'public/icons/check.svg';
 import DiscordSVG from 'public/icons/discord2.svg';
 
-function SignupForm() {
+function SignupForm({ bypassToken }: { bypassToken: string | null }) {
   const { signUpWithEmail, signInWithGoogle, signInWithDiscord } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -38,7 +39,7 @@ function SignupForm() {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await signUpWithEmail(email, password);
+    const { error } = await signUpWithEmail(email, password, bypassToken || undefined);
 
     if (error) {
       setError(error.message);
@@ -310,13 +311,42 @@ function SignupForm() {
 
 export default function SignupClient() {
   return (
+    <Suspense
+      fallback={
+        <PageContainer
+          className="items-center justify-center"
+        >
+          <Container
+            padding="lg"
+            className="mx-auto max-w-md text-center"
+          >
+            <p>
+              Loading...
+            </p>
+          </Container>
+        </PageContainer>}
+    >
+      <SignupClientContent />
+    </Suspense>
+  );
+}
+
+function SignupClientContent() {
+  const searchParams = useSearchParams();
+  const bypassToken = searchParams.get('bypass');
+
+  return (
     <>
-      <BotIdClient
-        protect={[
-          { path: '/api/auth/signup', method: 'POST' },
-        ]}
+      {!bypassToken && (
+        <BotIdClient
+          protect={[
+            { path: '/api/auth/signup', method: 'POST' },
+          ]}
+        />
+      )}
+      <SignupForm
+        bypassToken={bypassToken}
       />
-      <SignupForm />
     </>
   );
 }
