@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/mmousawy/cpg-website/compare/v1.17.0...v1.17.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* Enhance admin tools and signup bypass functionality ([c45b524](https://github.com/mmousawy/cpg-website/commit/c45b524b42fa215b591e2db0b95348229f61abd3))
+
 ## [1.17.0](https://github.com/mmousawy/cpg-website/compare/v1.16.0...v1.17.0) (2026-02-01)
 
 
