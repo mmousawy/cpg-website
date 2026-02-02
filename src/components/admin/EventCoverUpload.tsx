@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import Button from '@/components/shared/Button';
+import Image from 'next/image';
 import TrashSVG from 'public/icons/trash.svg';
 
 interface EventCoverUploadProps {
@@ -108,7 +108,7 @@ export default function EventCoverUpload({
             variant="secondary"
             size="sm"
           >
-            Select Image
+            Select image
           </Button>
         </div>
       )}

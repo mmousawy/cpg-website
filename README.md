@@ -29,6 +29,18 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Add photos to albums modal
 - Admin moderation (suspend/unsuspend)
 
+### Photo Challenges
+- Themed challenges with prompts created by admins
+- Members submit photos (upload or from library)
+- Submission limits per user (optional)
+- Admin review queue (accept/reject with reasons)
+- Bulk review actions
+- Public gallery of accepted submissions
+- Challenge comments
+- Email announcements to members
+- Notifications for submission results
+- Profile badges for challenge participation
+
 ### User Profiles
 - Public profile pages (`/@username`)
 - Custom avatar uploads
@@ -43,9 +55,10 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Password reset
 
 ### Admin
-- Event CRUD
-- Attendance tracking
-- Album moderation
+- Event CRUD with attendance tracking
+- Photo challenge management (create, edit, announce)
+- Submission review queue with bulk actions
+- Album moderation (suspend/unsuspend)
 
 ### Search
 - Global search (Cmd/Ctrl+K)
@@ -190,6 +203,7 @@ src/
 │   ├── account/            # Account settings, user galleries
 │   ├── admin/              # Admin dashboard
 │   ├── api/                # API routes
+│   ├── challenges/         # Photo challenges
 │   ├── changelog/          # Version history pages
 │   ├── events/             # Event pages
 │   ├── gallery/            # Public gallery and tag pages
@@ -199,6 +213,7 @@ src/
 │   ├── admin/              # Admin components
 │   ├── album/              # Album display components
 │   ├── auth/               # Auth components
+│   ├── challenges/         # Challenge components
 │   ├── events/             # Event components
 │   ├── gallery/            # Paginated gallery views
 │   ├── layout/             # Header, footer, etc.
@@ -235,7 +250,11 @@ supabase/
 | `photo_likes` | Photo likes |
 | `album_likes` | Album likes |
 | `album_tags` | Album tags |
-| `comments` | Album/photo/event comments |
+| `challenges` | Photo challenges with prompts and deadlines |
+| `challenge_submissions` | User photo submissions (pending/accepted/rejected) |
+| `challenge_announcements` | Challenge email announcement tracking |
+| `challenge_photos` | View of accepted submissions with photo/profile data |
+| `comments` | Album/photo/event/challenge comments |
 | `notifications` | In-app notifications |
 | `email_types` | Email preference types |
 | `email_preferences` | User email opt-in/out |
@@ -247,7 +266,7 @@ supabase/
 
 - `user-avatars` - Profile pictures
 - `user-albums` - Gallery photos
-- `event-covers` - Event images
+- `event-covers` - Event and challenge cover images
 
 ## Generate Supabase Types
 
@@ -308,6 +327,7 @@ Deploy to Vercel:
 ### In Progress
 
 - [x] Event comments
+- [x] Photo challenges
 
 ### Admin
 
@@ -327,6 +347,17 @@ Deploy to Vercel:
 ### Events
 
 - [x] Email reminders before events
+
+### Challenges
+
+- [x] Challenge creation with cover images
+- [x] Submission flow (upload or library)
+- [x] Admin review queue with bulk actions
+- [x] Email announcements
+- [x] Submission result notifications
+- [x] Profile achievement badges
+- [ ] Voting/judging system
+- [ ] Challenge winners showcase
 
 ### Engagement
 

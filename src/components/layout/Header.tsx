@@ -25,14 +25,14 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     <Link
       href={href}
       className={clsx(
-        'relative py-1 font-medium transition-colors hover:text-primary rounded',
+        'relative py-1 font-medium transition-colors hover:text-primary rounded text-[15px]',
         isActive ? 'text-primary' : 'text-foreground',
       )}
     >
       {children}
       {isActive && (
         <span
-          className="absolute -bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary"
+          className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary"
         />
       )}
     </Link>
@@ -111,17 +111,17 @@ export default function Header() {
           </Link>
 
           <nav
-            className="hidden items-center gap-6 sm:flex"
+            className="hidden items-center gap-5 sm:flex"
           >
-            <NavLink
-              href={routes.home.url}
-            >
-              {routes.home.label}
-            </NavLink>
             <NavLink
               href={routes.events.url}
             >
               {routes.events.label}
+            </NavLink>
+            <NavLink
+              href={routes.challenges.url}
+            >
+              {routes.challenges.label}
             </NavLink>
             <NavLink
               href={routes.gallery.url}

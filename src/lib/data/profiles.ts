@@ -231,6 +231,8 @@ export async function getProfileStats(
     commentsMade: number;
     likesReceived: number;
     viewsReceived: number;
+    challengesParticipated: number;
+    challengePhotosAccepted: number;
   } | null;
 
   return {
@@ -241,6 +243,8 @@ export async function getProfileStats(
     commentsReceived: 0, // Not tracked in public profile stats
     likesReceived: stats?.likesReceived ?? 0,
     viewsReceived: stats?.viewsReceived ?? 0,
+    challengesParticipated: stats?.challengesParticipated ?? 0,
+    challengePhotosAccepted: stats?.challengePhotosAccepted ?? 0,
     memberSince,
   };
 }

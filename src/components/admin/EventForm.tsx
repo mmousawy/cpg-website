@@ -1,12 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Container from '@/components/layout/Container';
-import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
-import ErrorMessage from '@/components/shared/ErrorMessage';
-import SuccessMessage from '@/components/shared/SuccessMessage';
 import EventCoverUpload from './EventCoverUpload';
 
 interface EventFormData {
@@ -30,10 +26,6 @@ interface EventFormProps {
   onCoverImageChange: (file: File | null) => void;
   onCoverImageRemove: () => void;
   coverImageInputRef: React.RefObject<HTMLInputElement | null>;
-  error: string | null;
-  success: boolean;
-  isSaving: boolean;
-  isNewEvent: boolean;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -49,21 +41,18 @@ export default function EventForm({
   onCoverImageChange,
   onCoverImageRemove,
   coverImageInputRef,
-  error,
-  success,
-  isSaving,
-  isNewEvent,
   onSubmit,
 }: EventFormProps) {
   return (
     <form
+      id="event-form"
       onSubmit={onSubmit}
     >
       <Container>
         <h2
           className="mb-6 text-xl font-semibold"
         >
-          Event Details
+          Event details
         </h2>
         <div
           className="space-y-6"
@@ -201,42 +190,6 @@ export default function EventForm({
             onCoverImageRemove={onCoverImageRemove}
             coverImageInputRef={coverImageInputRef}
           />
-        </div>
-
-        {error && (
-          <ErrorMessage
-            variant="compact"
-            className="mt-4"
-          >
-            {error}
-          </ErrorMessage>
-        )}
-
-        {success && (
-          <SuccessMessage
-            variant="compact"
-            className="mt-4"
-          >
-            {isNewEvent ? 'Event created successfully! Redirecting...' : 'Event updated successfully!'}
-          </SuccessMessage>
-        )}
-
-        <div
-          className="mt-6 flex gap-3"
-        >
-          <Button
-            type="submit"
-            disabled={isSaving}
-            variant="primary"
-          >
-            {isSaving ? 'Saving...' : isNewEvent ? 'Create Event' : 'Save Changes'}
-          </Button>
-          <Button
-            href="/admin/events"
-            variant="secondary"
-          >
-            Cancel
-          </Button>
         </div>
       </Container>
     </form>

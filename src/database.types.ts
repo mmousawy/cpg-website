@@ -288,6 +288,205 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_announcements: {
+        Row: {
+          announced_by: string
+          challenge_id: string
+          created_at: string
+          id: string
+          recipient_count: number
+        }
+        Insert: {
+          announced_by: string
+          challenge_id: string
+          created_at?: string
+          id?: string
+          recipient_count?: number
+        }
+        Update: {
+          announced_by?: string
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          recipient_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenge_announcements_announced_by_fkey'
+            columns: ['announced_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_announcements_challenge_id_fkey'
+            columns: ['challenge_id']
+            isOneToOne: false
+            referencedRelation: 'challenges'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      challenge_comments: {
+        Row: {
+          challenge_id: string
+          comment_id: string
+        }
+        Insert: {
+          challenge_id: string
+          comment_id: string
+        }
+        Update: {
+          challenge_id?: string
+          comment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenge_comments_challenge_id_fkey'
+            columns: ['challenge_id']
+            isOneToOne: false
+            referencedRelation: 'challenges'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_comments_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      challenge_submissions: {
+        Row: {
+          challenge_id: string
+          id: string
+          photo_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          id?: string
+          photo_id: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          id?: string
+          photo_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenge_submissions_challenge_id_fkey'
+            columns: ['challenge_id']
+            isOneToOne: false
+            referencedRelation: 'challenges'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_submissions_photo_id_fkey'
+            columns: ['photo_id']
+            isOneToOne: false
+            referencedRelation: 'photos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_submissions_reviewed_by_fkey'
+            columns: ['reviewed_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_submissions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          announced_at: string | null
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          ends_at: string | null
+          id: string
+          image_blurhash: string | null
+          image_height: number | null
+          image_width: number | null
+          is_active: boolean
+          max_photos_per_user: number | null
+          prompt: string
+          slug: string
+          starts_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          announced_at?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by: string
+          ends_at?: string | null
+          id?: string
+          image_blurhash?: string | null
+          image_height?: number | null
+          image_width?: number | null
+          is_active?: boolean
+          max_photos_per_user?: number | null
+          prompt: string
+          slug: string
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          announced_at?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          ends_at?: string | null
+          id?: string
+          image_blurhash?: string | null
+          image_height?: number | null
+          image_width?: number | null
+          is_active?: boolean
+          max_photos_per_user?: number | null
+          prompt?: string
+          slug?: string
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenges_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       comments: {
         Row: {
           comment_text: string
@@ -982,8 +1181,53 @@ export type Database = {
           },
         ]
       }
+      challenge_photos: {
+        Row: {
+          blurhash: string | null
+          challenge_id: string | null
+          height: number | null
+          photo_id: string | null
+          profile_avatar_url: string | null
+          profile_full_name: string | null
+          profile_nickname: string | null
+          reviewed_at: string | null
+          short_id: string | null
+          submitted_at: string | null
+          title: string | null
+          url: string | null
+          user_id: string | null
+          width: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenge_submissions_challenge_id_fkey'
+            columns: ['challenge_id']
+            isOneToOne: false
+            referencedRelation: 'challenges'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_submissions_photo_id_fkey'
+            columns: ['photo_id']
+            isOneToOne: false
+            referencedRelation: 'photos'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_submissions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Functions: {
+      add_challenge_comment: {
+        Args: { p_challenge_id: string; p_comment_text: string }
+        Returns: string
+      }
       add_comment: {
         Args: {
           p_comment_text: string
@@ -1009,6 +1253,14 @@ export type Database = {
       bulk_delete_photos: { Args: { p_photo_ids: string[] }; Returns: number }
       bulk_remove_from_album: {
         Args: { p_album_photo_ids: string[] }
+        Returns: number
+      }
+      bulk_review_challenge_submissions: {
+        Args: {
+          p_rejection_reason?: string
+          p_status: string
+          p_submission_ids: string[]
+        }
         Returns: number
       }
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
@@ -1044,6 +1296,18 @@ export type Database = {
       restore_album: { Args: { p_album_id: string }; Returns: boolean }
       restore_comment: { Args: { p_comment_id: string }; Returns: boolean }
       restore_photo: { Args: { p_photo_id: string }; Returns: boolean }
+      review_challenge_submission: {
+        Args: {
+          p_rejection_reason?: string
+          p_status: string
+          p_submission_id: string
+        }
+        Returns: undefined
+      }
+      submit_to_challenge: {
+        Args: { p_challenge_id: string; p_photo_ids: string[] }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

@@ -13,6 +13,8 @@ interface UserStats {
   rsvpsConfirmed: number;
   rsvpsCanceled: number;
   eventsAttended: number;
+  challengesParticipated: number;
+  challengePhotosAccepted: number;
   memberSince: string | null;
   lastLoggedIn: string | null;
 }

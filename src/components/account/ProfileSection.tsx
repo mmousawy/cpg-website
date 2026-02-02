@@ -1,16 +1,14 @@
 'use client';
 
 import clsx from 'clsx';
-import { Control, UseFormRegister } from 'react-hook-form';
+import { UseFormRegister } from 'react-hook-form';
 
 import Avatar from '@/components/auth/Avatar';
 import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import Textarea from '@/components/shared/Textarea';
-import type { AccountFormData } from '@/hooks/useAccountForm';
-import type { Profile } from '@/hooks/useAccountForm';
+import type { AccountFormData, Profile } from '@/hooks/useAccountForm';
 
 interface ProfileSectionProps {
   register: UseFormRegister<AccountFormData>;
@@ -205,12 +203,12 @@ export default function ProfileSection({
             <p
               className="text-foreground/50 text-xs"
             >
-              Your nickname is used in your gallery URLs and cannot be changed.
+              Your nickname is used in your profile andgallery URLs and cannot be changed.
               <br />
               URL:
               {' '}
               <span
-                className="break-words"
+                className="wrap-break-word"
               >
                 {(() => {
                   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';

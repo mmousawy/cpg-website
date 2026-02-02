@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme } from 'next-themes';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import type { Tables } from '@/database.types';
@@ -195,8 +195,8 @@ export function useAccountForm() {
     if (loadedUserIdRef.current === user.id) return;
     loadedUserIdRef.current = user.id;
 
-    const loadProfile = async (types: EmailTypeData[]) => {
-      if (!user) return;
+    const loadProfile = async (types: EmailTypeData[]): Promise<boolean> => {
+      if (!user) return false;
 
       try {
       // Load email preferences
@@ -385,12 +385,16 @@ export function useAccountForm() {
           };
           reset(formValues);
           setSavedFormValues(formValues);
+
+          setIsLoading(false);
+          return data.is_admin === true;
         }
       } catch (err) {
         console.error('Unexpected error loading profile:', err);
       }
 
       setIsLoading(false);
+      return false;
     };
 
     const loadStats = async () => {
@@ -426,10 +430,16 @@ export function useAccountForm() {
       try {
         // Load email types first (must be loaded before profile to build preferences correctly)
         const types = await getEmailTypes();
-        setEmailTypes(types);
 
         // Only load profile after email types are loaded
-        await loadProfile(types);
+        const isAdmin = await loadProfile(types);
+
+        // Filter out admin-only email types for non-admins
+        const filteredTypes = isAdmin
+          ? types
+          : types.filter((t) => t.type_key !== 'admin_notifications');
+        setEmailTypes(filteredTypes);
+
         // Load stats after profile is loaded (don't await - let it run in background)
         loadStats().catch(() => {
           // Silently fail - stats are optional

@@ -144,42 +144,17 @@ export default function EventCard({
 
   const cardContent = (
     <div
-      className="flex items-start gap-3 sm:gap-4"
+      className="sm:flex sm:items-start sm:gap-4"
     >
-      {/* Thumbnail */}
+      {/* Mobile: Floating badge and thumbnail on right */}
       {imageSrc && (
         <div
-          className="relative h-16 w-20 sm:h-22 sm:w-32 shrink-0 overflow-hidden rounded-md bg-background-light"
+          className="sm:hidden float-right ml-2 mb-1 flex flex-col items-end gap-1.5"
         >
-          <BlurImage
-            src={imageSrc}
-            alt={event.title || 'Event cover'}
-            sizes="256px"
-            loading="lazy"
-            quality={85}
-            fill
-            className="object-cover"
-            blurhash={event.image_blurhash}
-          />
-        </div>
-      )}
-
-      {/* Content */}
-      <div
-        className="flex-1 min-w-0"
-      >
-        <div
-          className="flex items-start justify-between gap-2 mb-1.5"
-        >
-          <h4
-            className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2"
-          >
-            {event.title}
-          </h4>
           {showBadge && (
             <span
               className={clsx(
-                'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
+                'rounded-full px-1.5 py-0.5 text-[10px] font-medium',
                 isPast
                   ? 'bg-foreground/10 text-foreground/60'
                   : 'bg-primary text-white',
@@ -188,10 +163,49 @@ export default function EventCard({
               {isPast ? 'Past' : 'Upcoming'}
             </span>
           )}
+          <div
+            className="relative h-14 w-18 overflow-hidden rounded-md bg-background-light"
+          >
+            <BlurImage
+              src={imageSrc}
+              alt={event.title || 'Event cover'}
+              sizes="72px"
+              loading="lazy"
+              quality={85}
+              fill
+              className="object-cover"
+              blurhash={event.image_blurhash}
+            />
+          </div>
         </div>
+      )}
+
+      {/* Mobile: Badge only (when no image) */}
+      {!imageSrc && showBadge && (
+        <span
+          className={clsx(
+            'sm:hidden float-right ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+            isPast
+              ? 'bg-foreground/10 text-foreground/60'
+              : 'bg-primary text-white',
+          )}
+        >
+          {isPast ? 'Past' : 'Upcoming'}
+        </span>
+      )}
+
+      {/* Content */}
+      <div
+        className="sm:flex-1 sm:min-w-0"
+      >
+        <h4
+          className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2 mb-1.5"
+        >
+          {event.title}
+        </h4>
 
         <div
-          className="flex flex-wrap gap-x-3 gap-y-1 mb-1 text-sm text-foreground/70"
+          className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-1 text-sm text-foreground/70"
         >
           {event.date && (
             <span
@@ -215,7 +229,7 @@ export default function EventCard({
           )}
           {event.location && (
             <span
-              className="hidden sm:flex items-center gap-1"
+              className="flex items-center gap-1"
             >
               <LocationSVG
                 className="size-3.5 fill-foreground/60"
@@ -231,7 +245,7 @@ export default function EventCard({
         {/* Desktop: description in content area */}
         {event.description && (
           <p
-            className="max-sm:hidden w-full max-w-[50ch] text-foreground/90 text-sm line-clamp-3"
+            className="max-sm:hidden w-full max-w-[40ch] text-foreground/90 text-sm line-clamp-2"
           >
             {event.description}
           </p>
@@ -252,6 +266,54 @@ export default function EventCard({
           </div>
         )}
       </div>
+
+      {/* Desktop: Badge and Thumbnail on right */}
+      {imageSrc && (
+        <div
+          className="hidden sm:flex flex-col items-end gap-2 shrink-0"
+        >
+          {showBadge && (
+            <span
+              className={clsx(
+                'rounded-full px-2 py-0.5 text-xs font-medium',
+                isPast
+                  ? 'bg-foreground/10 text-foreground/60'
+                  : 'bg-primary text-white',
+              )}
+            >
+              {isPast ? 'Past' : 'Upcoming'}
+            </span>
+          )}
+          <div
+            className="relative aspect-video w-44 overflow-hidden rounded-md bg-background-light"
+          >
+            <BlurImage
+              src={imageSrc}
+              alt={event.title || 'Event cover'}
+              sizes="224px"
+              loading="lazy"
+              quality={85}
+              fill
+              className="object-cover"
+              blurhash={event.image_blurhash}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop: Badge only (when no image) */}
+      {!imageSrc && showBadge && (
+        <span
+          className={clsx(
+            'hidden sm:inline-flex shrink-0 self-start rounded-full px-2 py-0.5 text-xs font-medium',
+            isPast
+              ? 'bg-foreground/10 text-foreground/60'
+              : 'bg-primary text-white',
+          )}
+        >
+          {isPast ? 'Past' : 'Upcoming'}
+        </span>
+      )}
 
       {/* Right slot for actions */}
       {rightSlot && (

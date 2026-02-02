@@ -3,22 +3,22 @@
 import { revalidateProfile } from '@/app/actions/revalidate';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
+import OnboardingInterestsSection from '@/components/onboarding/OnboardingInterestsSection';
+import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
+import OnboardingProfileSection from '@/components/onboarding/OnboardingProfileSection';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import PageLoading from '@/components/shared/PageLoading';
 import { routes } from '@/config/routes';
-import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
-import OnboardingInterestsSection from '@/components/onboarding/OnboardingInterestsSection';
-import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
-import OnboardingProfileSection from '@/components/onboarding/OnboardingProfileSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 // Zod schema for onboarding validation
@@ -119,10 +119,12 @@ export default function OnboardingClient() {
     const loadEmailTypes = async () => {
       try {
         const types = await getEmailTypes();
-        setEmailTypes(types);
+        // Filter out admin-only email types (new users can't be admins during onboarding)
+        const filteredTypes = types.filter((t) => t.type_key !== 'admin_notifications');
+        setEmailTypes(filteredTypes);
         // Set default values (all opted in by default)
         const defaultPrefs: Record<string, boolean> = {};
-        types.forEach((type) => {
+        filteredTypes.forEach((type) => {
           defaultPrefs[type.type_key] = true;
         });
         setValue('emailPreferences', defaultPrefs);

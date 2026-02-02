@@ -32,9 +32,10 @@ interface CommentsProps {
   albumId?: string
   photoId?: string
   eventId?: string
+  challengeId?: string
 }
 
-export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
+export default function Comments({ albumId, photoId, eventId, challengeId }: CommentsProps) {
   const { user, isAdmin } = useAuth();
   const confirm = useConfirm();
   const supabase = useSupabase();
@@ -45,8 +46,8 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Determine which entity we're commenting on
-  const entityType = albumId ? 'album' : eventId ? 'event' : 'photo';
-  const entityId = albumId || eventId || photoId;
+  const entityType = albumId ? 'album' : eventId ? 'event' : challengeId ? 'challenge' : 'photo';
+  const entityId = albumId || eventId || challengeId || photoId;
 
   const fetchComments = useCallback(async () => {
     if (!entityId) return;
@@ -54,10 +55,17 @@ export default function Comments({ albumId, photoId, eventId }: CommentsProps) {
     setIsLoading(true);
     try {
       // Query through appropriate junction table
-      const junctionTable = entityType === 'album' ? 'album_comments' : entityType === 'event' ? 'event_comments' : 'photo_comments';
-      const entityColumn = entityType === 'album' ? 'album_id' : entityType === 'event' ? 'event_id' : 'photo_id';
+      const junctionTable = entityType === 'album' ? 'album_comments'
+        : entityType === 'event' ? 'event_comments'
+        : entityType === 'challenge' ? 'challenge_comments'
+        : 'photo_comments';
+      const entityColumn = entityType === 'album' ? 'album_id'
+        : entityType === 'event' ? 'event_id'
+        : entityType === 'challenge' ? 'challenge_id'
+        : 'photo_id';
 
-      const { data, error } = await supabase
+
+      const { data, error } = await (supabase as any)
         .from(junctionTable)
         .select(`
           comment_id,

@@ -12,6 +12,9 @@ import EventRsvpList from '@/components/admin/EventRsvpList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import ErrorMessage from '@/components/shared/ErrorMessage';
+import StickyActionBar from '@/components/shared/StickyActionBar';
+import SuccessMessage from '@/components/shared/SuccessMessage';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
@@ -133,7 +136,7 @@ export default function AdminEventFormPage() {
     coverImage,
   };
 
-  useFormChanges(
+  const { hasChanges, changeCount } = useFormChanges(
     currentFormValues,
     savedFormValues,
     {},
@@ -530,179 +533,243 @@ export default function AdminEventFormPage() {
   };
 
   return (
-    <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <h1
-          className="mb-2 text-3xl font-bold"
-        >
-          {isNewEvent ? 'Create new event' : 'Edit event'}
-        </h1>
-        <p
-          className="text-lg opacity-70"
-        >
-          {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
-        </p>
-      </div>
-
-      {isLoading ? (
-        <Container
-          className="text-center animate-pulse"
-        >
-          <p
-            className="text-foreground/50"
-          >
-            Loading event...
-          </p>
-        </Container>
-      ) : (
+    <>
+      <PageContainer>
         <div
-          className="space-y-6"
+          className="mb-8"
         >
-          <EventForm
-            formData={{
+          <h1
+            className="mb-2 text-3xl font-bold"
+          >
+            {isNewEvent ? 'Create new event' : 'Edit event'}
+          </h1>
+          <p
+            className="text-lg opacity-70"
+          >
+            {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
+          </p>
+        </div>
+
+        {isLoading ? (
+          <Container
+            className="text-center animate-pulse"
+          >
+            <p
+              className="text-foreground/50"
+            >
+              Loading event...
+            </p>
+          </Container>
+        ) : (
+          <div
+            className="space-y-6"
+          >
+            <EventForm
+              formData={{
               title,
               slug,
               description,
               date,
               time,
               location,
-            }}
-            onFormDataChange={(data) => {
+              }}
+              onFormDataChange={(data) => {
               if (data.title !== undefined) setTitle(data.title);
               if (data.slug !== undefined) setSlug(data.slug);
               if (data.description !== undefined) setDescription(data.description);
               if (data.date !== undefined) setDate(data.date);
               if (data.time !== undefined) setTime(data.time);
               if (data.location !== undefined) setLocation(data.location);
-            }}
-            onTitleChange={handleTitleChange}
-            onTitleBlur={handleTitleBlur}
-            onSlugChange={handleSlugChange}
-            coverImageFile={coverImageFile}
-            coverImagePreview={coverImagePreview}
-            coverImage={coverImage}
-            onCoverImageChange={handleCoverImageChange}
-            onCoverImageRemove={handleCoverImageRemove}
-            coverImageInputRef={coverImageInputRef}
-            error={error}
-            success={success}
-            isSaving={isSaving}
-            isNewEvent={isNewEvent}
-            onSubmit={handleSave}
-          />
-
-          {/* Attendance Section - Only show for existing events */}
-          {!isNewEvent && event && (
-            <EventRsvpList
-              rsvps={rsvps}
-              markingId={markingId}
-              onMarkAttended={handleMarkAttended}
+              }}
+              onTitleChange={handleTitleChange}
+              onTitleBlur={handleTitleBlur}
+              onSlugChange={handleSlugChange}
+              coverImageFile={coverImageFile}
+              coverImagePreview={coverImagePreview}
+              coverImage={coverImage}
+              onCoverImageChange={handleCoverImageChange}
+              onCoverImageRemove={handleCoverImageRemove}
+              coverImageInputRef={coverImageInputRef}
+              onSubmit={handleSave}
             />
+
+            {/* Attendance Section - Only show for existing events */}
+            {!isNewEvent && event && (
+              <EventRsvpList
+                rsvps={rsvps}
+                markingId={markingId}
+                onMarkAttended={handleMarkAttended}
+              />
           )}
 
-          {/* Notifications Section - Only show for existing events */}
-          {!isNewEvent && event && (
-            <Container>
-              <h2
-                className="mb-6 text-xl font-semibold"
-              >
-                Notifications
-              </h2>
+            {/* Notifications Section - Only show for existing events */}
+            {!isNewEvent && event && (
+              <Container>
+                <h2
+                  className="mb-6 text-xl font-semibold"
+                >
+                  Notifications
+                </h2>
 
-              <div
-                className="space-y-4"
-              >
-                {/* Announce Event Button */}
-                <div>
-                  <div
-                    className="mb-2 flex items-center justify-between"
-                  >
-                    <div>
+                <div
+                  className="space-y-4"
+                >
+                  {/* Announce Event Button */}
+                  <div>
+                    <div
+                      className="mb-2 flex items-center justify-between"
+                    >
+                      <div>
+                        <h3
+                          className="text-sm font-semibold"
+                        >
+                          Announce event
+                        </h3>
+                        <p
+                          className="text-xs text-foreground/70"
+                        >
+                          Send a one-time announcement to all members who have are opted in to event
+                          announcements
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleAnnounceEvent}
+                      variant="primary"
+                    >
+                      <MegaphoneSVG
+                        className="size-5"
+                      />
+                      Announce event
+                    </Button>
+                  </div>
+
+                  {/* Email Attendees Button */}
+                  <div>
+                    <div
+                      className="mb-2"
+                    >
                       <h3
                         className="text-sm font-semibold"
                       >
-                        Announce event
+                        Email attendees
                       </h3>
                       <p
                         className="text-xs text-foreground/70"
                       >
-                        Send a one-time announcement to all members who have are opted in to event
-                        announcements
+                        Send a custom message to confirmed attendees and hosts
                       </p>
                     </div>
-                  </div>
-                  <Button
-                    onClick={handleAnnounceEvent}
-                    variant="primary"
-                  >
-                    <MegaphoneSVG
-                      className="size-5"
-                    />
-                    Announce event
-                  </Button>
-                </div>
-
-                {/* Email Attendees Button */}
-                <div>
-                  <div
-                    className="mb-2"
-                  >
-                    <h3
-                      className="text-sm font-semibold"
+                    <Button
+                      onClick={handleEmailAttendees}
+                      variant="secondary"
                     >
+                      <EmailForwardSVG
+                        className="size-5"
+                      />
                       Email attendees
-                    </h3>
-                    <p
-                      className="text-xs text-foreground/70"
-                    >
-                      Send a custom message to confirmed attendees and hosts
-                    </p>
+                    </Button>
                   </div>
-                  <Button
-                    onClick={handleEmailAttendees}
-                    variant="secondary"
-                  >
-                    <EmailForwardSVG
-                      className="size-5"
-                    />
-                    Email attendees
-                  </Button>
                 </div>
-              </div>
-            </Container>
+              </Container>
           )}
 
-          {/* Danger Zone - Only show for existing events */}
-          {!isNewEvent && (
-            <Container
-              className="border-red-500/30 bg-red-500/5"
-            >
-              <h3
-                className="mb-2 font-semibold text-red-600"
+            {/* Danger Zone - Only show for existing events */}
+            {!isNewEvent && (
+              <Container
+                className="border-red-500/30 bg-red-500/5"
               >
-                Danger zone
-              </h3>
-              <p
-                className="mb-4 text-sm text-foreground/70"
-              >
-                Once you delete an event, there is no going back. This will permanently delete the
-                event and all associated RSVPs.
-              </p>
-              <Button
-                onClick={handleDelete}
-                variant="danger"
-                icon={<TrashSVG
-                  className="h-4 w-4"
-                />}
-              >
-                Delete event
-              </Button>
-            </Container>
+                <h3
+                  className="mb-2 font-semibold text-red-600"
+                >
+                  Danger zone
+                </h3>
+                <p
+                  className="mb-4 text-sm text-foreground/70"
+                >
+                  Once you delete an event, there is no going back. This will permanently delete the
+                  event and all associated RSVPs.
+                </p>
+                <Button
+                  onClick={handleDelete}
+                  variant="danger"
+                  icon={<TrashSVG
+                    className="h-4 w-4"
+                  />}
+                >
+                  Delete event
+                </Button>
+              </Container>
           )}
-        </div>
+          </div>
       )}
-    </PageContainer>
+      </PageContainer>
+
+      {/* Sticky Save Bar */}
+      {(hasChanges || isNewEvent || error || success) && (
+        <StickyActionBar
+          constrainWidth
+        >
+          <div
+            className="flex items-center gap-3 text-sm"
+          >
+            {error && (
+              <ErrorMessage
+                variant="compact"
+                className="py-1.5 text-sm"
+              >
+                {error}
+              </ErrorMessage>
+            )}
+            {success && (
+              <SuccessMessage
+                variant="compact"
+                className="py-1.5 text-sm"
+              >
+                {isNewEvent ? 'Event created!' : 'Changes saved!'}
+              </SuccessMessage>
+            )}
+            {!error && !success && hasChanges && (
+              <span
+                className="text-foreground/70"
+              >
+                {changeCount}
+                {' '}
+                unsaved
+                {' '}
+                {changeCount === 1 ? 'change' : 'changes'}
+              </span>
+            )}
+            {!error && !success && isNewEvent && !hasChanges && (
+              <span
+                className="text-foreground/70"
+              >
+                New event
+              </span>
+            )}
+          </div>
+          <div
+            className="flex gap-2"
+          >
+            <Button
+              href="/admin/events"
+              variant="secondary"
+              size="sm"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="event-form"
+              disabled={isSaving || (!hasChanges && !isNewEvent)}
+              loading={isSaving}
+              size="sm"
+            >
+              {isNewEvent ? 'Create event' : 'Save changes'}
+            </Button>
+          </div>
+        </StickyActionBar>
+      )}
+    </>
   );
 }

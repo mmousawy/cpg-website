@@ -7,8 +7,8 @@ import { useState } from 'react';
 import Avatar, { SIZE_MAP } from '@/components/auth/Avatar';
 import Popover from './Popover';
 
-const MAX_VISIBLE_AVATARS = 12;
-const MAX_VISIBLE_AVATARS_MOBILE = 4;
+const DEFAULT_MAX_VISIBLE_AVATARS = 12;
+const DEFAULT_MAX_VISIBLE_AVATARS_MOBILE = 4;
 
 export interface AvatarPerson {
   id: string;
@@ -38,6 +38,12 @@ interface StackedAvatarsPopoverProps {
   disablePopover?: boolean;
   /** Size of the avatars */
   avatarSize?: keyof typeof SIZE_MAP;
+  /** Show count on mobile (default: false, hidden on mobile) */
+  showCountOnMobile?: boolean;
+  /** Max visible avatars on desktop (default: 12) */
+  maxVisibleAvatars?: number;
+  /** Max visible avatars on mobile (default: 4) */
+  maxVisibleAvatarsMobile?: number;
 }
 
 /**
@@ -55,16 +61,19 @@ export default function StackedAvatarsPopover({
   showInlineCount = true,
   disablePopover = false,
   avatarSize = 'xxs',
+  showCountOnMobile = false,
+  maxVisibleAvatars = DEFAULT_MAX_VISIBLE_AVATARS,
+  maxVisibleAvatarsMobile = DEFAULT_MAX_VISIBLE_AVATARS_MOBILE,
 }: StackedAvatarsPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const count = people.length;
   const label = count === 1 ? singularLabel : pluralLabel;
-  const visiblePeople = people.slice(0, MAX_VISIBLE_AVATARS);
-  const visiblePeopleMobile = people.slice(0, MAX_VISIBLE_AVATARS_MOBILE);
+  const visiblePeople = people.slice(0, maxVisibleAvatars);
+  const visiblePeopleMobile = people.slice(0, maxVisibleAvatarsMobile);
   const hasPeople = count > 0;
-  const hiddenCount = count - MAX_VISIBLE_AVATARS;
-  const hiddenCountMobile = count - MAX_VISIBLE_AVATARS_MOBILE;
+  const hiddenCount = count - maxVisibleAvatars;
+  const hiddenCountMobile = count - maxVisibleAvatarsMobile;
 
   // Show skeleton avatars when loading
   const showSkeletonAvatars = isLoading && visiblePeople.length === 0;
@@ -106,7 +115,7 @@ export default function StackedAvatarsPopover({
                     'relative rounded-full ring-2 ring-background bg-border-color',
                     index > 0 && '-ml-2',
                   )}
-                  style={{ zIndex: MAX_VISIBLE_AVATARS - index }}
+                  style={{ zIndex: index + 1 }}
                 >
                   <Avatar
                     avatarUrl={person.avatarUrl}
@@ -120,10 +129,10 @@ export default function StackedAvatarsPopover({
                   className={clsx(
                     'relative -ml-1.5 flex items-center justify-center rounded-full',
                     'bg-background-medium ring-2 ring-background',
-                    'text-xs font-semibold text-foreground/80',
-                    'size-8',
+                    'text-[10px] font-semibold text-foreground/80',
+                    SIZE_MAP[avatarSize].wrapper,
                   )}
-                  style={{ zIndex: 0 }}
+                  style={{ zIndex: maxVisibleAvatars + 1 }}
                 >
                   +
                   {hiddenCount}
@@ -141,7 +150,7 @@ export default function StackedAvatarsPopover({
                     'relative rounded-full ring-2 ring-background bg-border-color',
                     index > 0 && '-ml-2',
                   )}
-                  style={{ zIndex: MAX_VISIBLE_AVATARS_MOBILE - index }}
+                  style={{ zIndex: index + 1 }}
                 >
                   <Avatar
                     avatarUrl={person.avatarUrl}
@@ -155,10 +164,10 @@ export default function StackedAvatarsPopover({
                   className={clsx(
                     'relative -ml-1.5 flex items-center justify-center rounded-full',
                     'bg-background-medium ring-2 ring-background',
-                    'text-xs font-semibold text-foreground/80',
-                    'size-8',
+                    'text-[10px] font-semibold text-foreground/80',
+                    SIZE_MAP[avatarSize].wrapper,
                   )}
-                  style={{ zIndex: 0 }}
+                  style={{ zIndex: maxVisibleAvatarsMobile + 1 }}
                 >
                   +
                   {hiddenCountMobile}
@@ -172,7 +181,10 @@ export default function StackedAvatarsPopover({
       {/* Count and label */}
       {showInlineCount && (
         <span
-          className="max-sm:hidden block text-xs font-medium text-foreground/70"
+          className={clsx(
+            'block text-xs font-medium text-foreground/70',
+            !showCountOnMobile && 'max-sm:hidden',
+          )}
         >
           {count > 0 ? `${count} ${label}` : emptyMessage}
         </span>

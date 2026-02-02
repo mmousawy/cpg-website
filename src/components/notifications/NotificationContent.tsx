@@ -9,12 +9,15 @@ import Link from 'next/link';
 import Avatar from '../auth/Avatar';
 
 // SVG icons
+import AwardStarSVG from 'public/icons/award-star-mini.svg';
+import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
 import CalendarSVG from 'public/icons/notification-calendar.svg';
 import CommentSVG from 'public/icons/notification-comment.svg';
 import HeartSVG from 'public/icons/notification-heart.svg';
 import MegaphoneSVG from 'public/icons/notification-megaphone.svg';
+import PhotoStackSVG from 'public/icons/photo-stack-mini.svg';
 
 dayjs.extend(relativeTime);
 
@@ -25,9 +28,14 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   comment_photo: CommentSVG,
   comment_album: CommentSVG,
   comment_event: CommentSVG,
+  comment_challenge: CommentSVG,
   follow: HeartSVG,
   event_reminder: CalendarSVG,
   event_announcement: MegaphoneSVG,
+  challenge_announced: AwardStarSVG,
+  new_submission: PhotoStackSVG,
+  submission_accepted: CheckSVG,
+  submission_rejected: CancelSVG,
   admin_message: MegaphoneSVG,
 };
 
@@ -37,9 +45,27 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
   comment_photo: (actor) => `${actor || 'Someone'} commented on your photo`,
   comment_album: (actor) => `${actor || 'Someone'} commented on your album`,
   comment_event: (actor) => `${actor || 'Someone'} commented on the event`,
+  comment_challenge: (actor) => `${actor || 'Someone'} commented on the challenge`,
   follow: (actor) => `${actor || 'Someone'} started following you`,
   event_reminder: () => 'Event reminder',
   event_announcement: () => 'New event announcement',
+  challenge_announced: () => 'New challenge announced',
+  new_submission: (actor, data) => {
+    const count = (data?.photoCount as number) || 1;
+    return `${actor || 'Someone'} submitted ${count} photo${count !== 1 ? 's' : ''}`;
+  },
+  submission_accepted: (_, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `Your photo was accepted for "${title}"`
+      : 'Your submission was accepted';
+  },
+  submission_rejected: (_, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `Your photo was not accepted for "${title}"`
+      : 'Your submission was not accepted';
+  },
   admin_message: () => 'Admin message',
 };
 

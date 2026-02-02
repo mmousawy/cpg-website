@@ -18,6 +18,8 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  * - 'tag-[tagname]' - Photos with a specific tag
  * - 'interests' - All interests data
  * - 'interest-[name]' - Members with a specific interest
+ * - 'challenges' - All challenge data
+ * - 'challenge-photos' - Accepted photos in challenges
  * - 'search' - Search results cache
  *
  * @see docs/revalidation-system.md for usage details
@@ -198,9 +200,34 @@ export async function revalidateAll() {
   revalidateTag('gallery', 'max');
   revalidateTag('profiles', 'max');
   revalidateTag('interests', 'max');
+  revalidateTag('challenges', 'max');
+  revalidateTag('challenge-photos', 'max');
   revalidateTag('search', 'max');
   // Also revalidate the layout for any non-cached data
   revalidatePath('/', 'layout');
+}
+
+// ============================================================================
+// Challenge Revalidation
+// ============================================================================
+
+/**
+ * Revalidate all challenge-related cached data
+ * Use when: Creating, updating, or deleting challenges
+ */
+export async function revalidateChallenges() {
+  revalidateTag('challenges', 'max');
+  revalidateTag('challenge-photos', 'max');
+}
+
+/**
+ * Revalidate a specific challenge and its photos
+ * Use when: Updating challenge details or reviewing submissions
+ */
+export async function revalidateChallenge(challengeSlug: string) {
+  revalidateTag('challenges', 'max');
+  revalidateTag('challenge-photos', 'max');
+  revalidatePath(`/challenges/${challengeSlug}`);
 }
 
 // ============================================================================

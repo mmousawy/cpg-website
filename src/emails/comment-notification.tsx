@@ -40,7 +40,7 @@ export const CommentNotificationEmail = ({
   commenterAvatarUrl: string | null;
   commenterProfileLink: string | null;
   commentText: string;
-  entityType: 'album' | 'photo' | 'event';
+  entityType: 'album' | 'photo' | 'event' | 'challenge';
   entityTitle: string;
   entityThumbnail: string | null;
   entityLink: string;

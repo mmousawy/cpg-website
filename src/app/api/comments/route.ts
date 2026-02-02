@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (entityType !== 'album' && entityType !== 'photo' && entityType !== 'event') {
+  if (entityType !== 'album' && entityType !== 'photo' && entityType !== 'event' && entityType !== 'challenge') {
     return NextResponse.json(
-      { message: "Invalid entity type. Must be 'album', 'photo', or 'event'" },
+      { message: "Invalid entity type. Must be 'album', 'photo', 'event', or 'challenge'" },
       { status: 400 },
     );
   }
@@ -52,6 +52,14 @@ export async function POST(request: NextRequest) {
     }
     const { data, error } = await supabase.rpc('add_event_comment', {
       p_event_id: eventIdNum,
+      p_comment_text: commentText.trim(),
+    });
+    commentId = data ?? null;
+    commentError = error;
+  } else if (entityType === 'challenge') {
+    // Challenges use a separate RPC
+    const { data, error } = await supabase.rpc('add_challenge_comment', {
+      p_challenge_id: entityId,
       p_comment_text: commentText.trim(),
     });
     commentId = data ?? null;
@@ -301,6 +309,129 @@ export async function POST(request: NextRequest) {
       }
 
       // Return early for events since we've handled all notifications
+      return NextResponse.json({ success: true, commentId }, { status: 200 });
+    }
+  } else if (entityType === 'challenge') {
+    // For challenges, we notify all admins similar to events
+    const { data: challenge } = await supabase
+      .from('challenges')
+      .select('id, title, slug, cover_image_url')
+      .eq('id', entityId)
+      .single();
+
+    if (challenge) {
+      entityTitle = challenge.title || 'Challenge';
+      entityThumbnail = challenge.cover_image_url;
+      entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/challenges/${challenge.slug}#comments`;
+
+      // Get all admins (excluding the commenter)
+      const { data: admins } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, nickname')
+        .eq('is_admin', true)
+        .is('suspended_at', null)
+        .neq('id', user.id);
+
+      if (admins && admins.length > 0) {
+        // Create in-app notifications for all admins
+        for (const admin of admins) {
+          await createNotification({
+            userId: admin.id,
+            actorId: user.id,
+            type: 'comment_challenge',
+            entityType: 'challenge',
+            entityId: entityId,
+            data: {
+              title: entityTitle,
+              thumbnail: entityThumbnail,
+              link: entityLink,
+              actorName: commenterName,
+              actorNickname: commenterNickname,
+              actorAvatar: commenterAvatarUrl,
+            },
+          });
+        }
+
+        // Check notification preferences and send emails to all admins
+        const { data: notificationsEmailType } = await supabase
+          .from('email_types')
+          .select('id')
+          .eq('type_key', 'notifications')
+          .single();
+
+        // Batch fetch all admin email preferences at once
+        let adminPrefsMap = new Map<string, boolean>();
+        if (notificationsEmailType) {
+          const adminIds = admins.map((a) => a.id);
+          const { data: adminPrefs } = await supabase
+            .from('email_preferences')
+            .select('user_id, opted_out')
+            .in('user_id', adminIds)
+            .eq('email_type_id', notificationsEmailType.id);
+
+          adminPrefsMap = new Map(
+            (adminPrefs || []).map((p) => [p.user_id, p.opted_out]),
+          );
+        }
+
+        for (const admin of admins) {
+          if (!admin.email) continue;
+
+          // Check if this admin has opted out
+          if (adminPrefsMap.get(admin.id) === true) {
+            continue;
+          }
+
+          // Generate opt-out link for this admin
+          let adminOptOutLink: string | undefined;
+          try {
+            const encrypted = encrypt(JSON.stringify({
+              userId: admin.id,
+              emailType: 'notifications',
+            }));
+            adminOptOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+          } catch (error) {
+            console.error('Error generating opt-out link:', error);
+          }
+
+          // Send notification email to this admin
+          const adminName = admin.full_name || admin.email.split('@')[0] || 'Admin';
+
+          try {
+            const emailResult = await resend.emails.send({
+              from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+              to: admin.email,
+              replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+              subject: `${commenterName} commented on the challenge "${entityTitle}"`,
+              html: await render(
+                CommentNotificationEmail({
+                  ownerName: adminName,
+                  commenterName,
+                  commenterNickname,
+                  commenterAvatarUrl,
+                  commenterProfileLink,
+                  commentText: commentText.trim(),
+                  entityType: 'challenge',
+                  entityTitle,
+                  entityThumbnail,
+                  entityLink,
+                  optOutLink: adminOptOutLink,
+                }),
+              ),
+            });
+
+            if (emailResult.error) {
+              console.error(`Error sending challenge comment notification to ${admin.email}:`, emailResult.error);
+            } else {
+              console.log(`📨 Challenge comment notification sent to admin ${admin.email}`);
+            }
+          } catch (err) {
+            console.error(`Error sending challenge comment notification to ${admin.email}:`, err);
+          }
+        }
+      }
+
+      // Return early for challenges since we've handled all notifications
       return NextResponse.json({ success: true, commentId }, { status: 200 });
     }
   }

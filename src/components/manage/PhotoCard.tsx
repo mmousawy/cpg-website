@@ -5,6 +5,7 @@ import CardBadges from '@/components/shared/CardBadges';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
+import CancelSVG from 'public/icons/cancel.svg';
 import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import WallArtSVG from 'public/icons/wall-art.svg';
@@ -15,10 +16,18 @@ interface PhotoCardProps {
   isSelected: boolean;
   isHovered?: boolean;
   isDragging?: boolean;
+  /** Whether drag-to-reorder is enabled */
+  sortable?: boolean;
   /** URL of the album cover image (if photo is in album context) */
   albumCoverUrl?: string | null;
   /** Current album title (if viewing in album context) */
   currentAlbumTitle?: string | null;
+  /** Whether this photo is disabled (non-selectable) */
+  disabled?: boolean;
+  /** Message to show when disabled */
+  disabledMessage?: string;
+  /** Whether this photo was rejected (for challenge submissions) */
+  rejected?: boolean;
 }
 
 function PhotoCard({
@@ -26,8 +35,12 @@ function PhotoCard({
   isSelected,
   isHovered = false,
   isDragging = false,
+  sortable = false,
   albumCoverUrl,
   currentAlbumTitle,
+  disabled = false,
+  disabledMessage,
+  rejected = false,
 }: PhotoCardProps) {
   // Generate square cropped thumbnail URL (256x256px, center-cropped)
   const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
@@ -42,6 +55,15 @@ function PhotoCard({
 
   const badges = useMemo(() => {
     const badgeList = [];
+    if (rejected) {
+      badgeList.push({
+        icon: <CancelSVG
+          className="size-4 fill-current"
+        />,
+        variant: 'rejected' as const,
+        tooltip: 'Previously rejected - cannot be resubmitted',
+      });
+    }
     if (isAlbumCover) {
       const tooltipText = currentAlbumTitle
         ? `Used as cover of "${currentAlbumTitle}"`
@@ -72,22 +94,28 @@ function PhotoCard({
           className="size-4"
         />,
         variant: 'private' as const,
-        tooltip: 'Private (only visible to you)',
+        tooltip: disabledMessage || 'Private (only visible to you)',
       });
     }
     return badgeList;
-  }, [isAlbumCover, isInAlbum, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames]);
+  }, [rejected, isAlbumCover, isInAlbum, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage]);
 
   return (
     <div
       data-testid="photo-card"
       className={clsx(
-        'cursor-pointer active:cursor-grabbing overflow-hidden transition-all duration-300',
-        isSelected
-          ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
-          : isHovered
-            ? 'ring-2 ring-primary/50 ring-offset-0 [&>div>div]:opacity-80'
-            : 'hover:ring-2 hover:ring-primary/50',
+        'overflow-hidden transition-all duration-300',
+        disabled
+          ? 'cursor-not-allowed'
+          : 'cursor-pointer',
+        sortable && !disabled && 'active:cursor-grabbing',
+        disabled
+          ? '' // No ring effects when disabled
+          : isSelected
+            ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
+            : isHovered
+              ? 'ring-2 ring-primary/50 ring-offset-0 [&>div>div]:opacity-80'
+              : 'hover:ring-2 hover:ring-primary/50',
         isDragging && 'opacity-50',
         photo.isExiting && 'opacity-0 scale-95',
       )}
@@ -102,7 +130,10 @@ function PhotoCard({
           fill
           sizes="200px"
           quality={85}
-          className="object-cover transition-transform"
+          className={clsx(
+            'object-cover transition-transform',
+            disabled && 'grayscale opacity-60',
+          )}
           draggable={false}
         />
         {/* Badges */}
@@ -119,7 +150,7 @@ function PhotoCard({
       {/* Title overlay on hover */}
       {photo.title && (
         <div
-          className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100"
+          className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 via-black/35 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100"
         >
           <p
             className="truncate text-sm text-white"
@@ -133,7 +164,7 @@ function PhotoCard({
 }
 
 export default memo(PhotoCard, (prevProps, nextProps) => {
-  // Only re-render if photo data, selection, hover, dragging, exit state, album cover, albums, or current album title change
+  // Only re-render if photo data, selection, hover, dragging, sortable, exit state, album cover, albums, current album title, disabled, or rejected state change
   const prevPhoto = prevProps.photo as PhotoWithAlbums;
   const nextPhoto = nextProps.photo as PhotoWithAlbums;
   const prevAlbumsLength = prevPhoto.albums?.length || 0;
@@ -148,8 +179,12 @@ export default memo(PhotoCard, (prevProps, nextProps) => {
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isHovered === nextProps.isHovered &&
     prevProps.isDragging === nextProps.isDragging &&
+    prevProps.sortable === nextProps.sortable &&
     prevProps.photo.isExiting === nextProps.photo.isExiting &&
     prevProps.albumCoverUrl === nextProps.albumCoverUrl &&
-    prevProps.currentAlbumTitle === nextProps.currentAlbumTitle
+    prevProps.currentAlbumTitle === nextProps.currentAlbumTitle &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.disabledMessage === nextProps.disabledMessage &&
+    prevProps.rejected === nextProps.rejected
   );
 });

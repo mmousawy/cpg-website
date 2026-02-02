@@ -11,7 +11,7 @@ export default function Footer({
 }: {
   fullName?: string;
   optOutLink?: string;
-  emailType?: 'events' | 'notifications' | 'newsletter';
+  emailType?: 'events' | 'notifications' | 'newsletter' | 'photo_challenges';
 }) {
   const getUnsubscribeText = () => {
     switch (emailType) {
@@ -21,6 +21,8 @@ export default function Footer({
         return 'Unsubscribe from notifications';
       case 'newsletter':
         return 'Unsubscribe from newsletter';
+      case 'photo_challenges':
+        return 'Unsubscribe from challenge announcements';
       default:
         return 'Unsubscribe';
     }

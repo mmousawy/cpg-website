@@ -15,6 +15,7 @@
   --border-color: #e0e3e7;
   --border-color-strong: #cdd0d4;
   --error-red: #f75074;
+  --challenge-badge: #2c96d3;
 }
 
 /* System dark mode preference (works without JS) */
@@ -32,6 +33,7 @@
     --border-color: #424447;
     --border-color-strong: #595b5f;
     --error-red: #f5686a;
+    --challenge-badge: #2c96d3;
   }
 }
 
@@ -49,6 +51,7 @@
   --border-color: #e0e3e7;
   --border-color-strong: #cdd0d4;
   --error-red: #f75074;
+  --challenge-badge: #2c96d3;
 }
 
 /* Explicit dark mode (set by next-themes via JS) */
@@ -65,6 +68,7 @@
   --border-color: #424447;
   --border-color-strong: #595b5f;
   --error-red: #f5686a;
+  --challenge-badge: #2c96d3;
 }
 
 :root.midnight {
@@ -79,6 +83,7 @@
   --border-color: #34373b;
   --border-color-strong: #4c4f57;
   --error-red: #f5686a;
+  --challenge-badge: #2c96d3;
 }
 
 body {

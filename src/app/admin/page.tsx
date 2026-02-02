@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PageContainer from '@/components/layout/PageContainer';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
+import TrophySVG from 'public/icons/trophy.svg';
 
 type AdminCard = {
   title: string
@@ -26,6 +27,15 @@ export default function AdminDashboardPage() {
         className="h-8 w-8 fill-current"
       />,
       href: '/admin/events',
+      enabled: true,
+    },
+    {
+      title: 'Photo challenges',
+      description: 'Create challenges and review submissions',
+      icon: <TrophySVG
+        className="h-8 w-8 fill-current"
+      />,
+      href: '/admin/challenges',
       enabled: true,
     },
     {

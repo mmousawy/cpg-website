@@ -51,6 +51,8 @@ interface SelectableGridProps<T> {
   leadingContent?: React.ReactNode;
   /** Content to render after items (e.g., uploading previews for oldest-first lists) */
   trailingContent?: React.ReactNode;
+  /** Set of item IDs that are disabled (non-selectable, no checkbox) */
+  disabledIds?: Set<string>;
 }
 
 
@@ -70,6 +72,7 @@ export default function SelectableGrid<T>({
   alwaysShowMobileSpacer = false,
   leadingContent,
   trailingContent,
+  disabledIds,
 }: SelectableGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Track the anchor item for shift-click range selection
@@ -498,6 +501,7 @@ export default function SelectableGrid<T>({
                 sortable={sortable}
                 isMultiSelectMode={isMultiSelectMode}
                 onEnterMultiSelectMode={() => setIsMultiSelectModeActive(true)}
+                disabled={disabledIds?.has(id)}
               />
             );
           })

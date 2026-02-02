@@ -24,6 +24,12 @@ interface PhotoGridProps {
   albumCoverUrl?: string | null;
   /** Current album title (if viewing in album context) */
   currentAlbumTitle?: string | null;
+  /** Set of photo IDs that are disabled (non-selectable) */
+  disabledIds?: Set<string>;
+  /** Message to show for disabled photos */
+  disabledMessage?: string;
+  /** Set of photo IDs that were rejected (for challenge submissions) */
+  rejectedIds?: Set<string>;
 }
 
 export default function PhotoGrid({
@@ -41,6 +47,9 @@ export default function PhotoGrid({
   trailingContent,
   albumCoverUrl,
   currentAlbumTitle,
+  disabledIds,
+  disabledMessage,
+  rejectedIds,
 }: PhotoGridProps) {
   return (
     <LazySelectableGrid
@@ -48,6 +57,9 @@ export default function PhotoGrid({
       selectedIds={selectedPhotoIds}
       getId={(photo) => photo.id}
       onSelect={(id, isMulti) => {
+        // Skip if disabled or rejected
+        if (disabledIds?.has(id) || rejectedIds?.has(id)) return;
+
         if (isMulti) {
           onSelectPhoto(id, true);
         } else {
@@ -68,16 +80,25 @@ export default function PhotoGrid({
       alwaysShowMobileSpacer={alwaysShowMobileSpacer}
       leadingContent={leadingContent}
       trailingContent={trailingContent}
-      renderItem={(photo, isSelected, isDragging, isHovered) => (
-        <PhotoCard
-          photo={photo}
-          isSelected={isSelected}
-          isHovered={isHovered}
-          isDragging={isDragging}
-          albumCoverUrl={albumCoverUrl}
-          currentAlbumTitle={currentAlbumTitle}
-        />
-      )}
+      disabledIds={disabledIds}
+      renderItem={(photo, isSelected, isDragging, isHovered) => {
+        const isDisabled = disabledIds?.has(photo.id) ?? false;
+        const isRejected = rejectedIds?.has(photo.id) ?? false;
+        return (
+          <PhotoCard
+            photo={photo}
+            isSelected={isSelected}
+            isHovered={isHovered}
+            isDragging={isDragging}
+            sortable={sortable}
+            albumCoverUrl={albumCoverUrl}
+            currentAlbumTitle={currentAlbumTitle}
+            disabled={isDisabled || isRejected}
+            disabledMessage={isDisabled ? disabledMessage : undefined}
+            rejected={isRejected}
+          />
+        );
+      }}
     />
   );
 }

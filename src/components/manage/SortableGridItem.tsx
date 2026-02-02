@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import GridCheckbox from '@/components/shared/GridCheckbox';
 
 export interface SortableItemProps<T> {
   item: T;
@@ -21,6 +22,7 @@ export interface SortableItemProps<T> {
   sortable: boolean;
   isMultiSelectMode: boolean; // True when in multi-select mode (after first long-press)
   onEnterMultiSelectMode: () => void; // Callback to enter multi-select mode
+  disabled?: boolean; // If true, item is non-selectable and checkbox is hidden
 }
 
 export default function SortableGridItem<T>({
@@ -38,6 +40,7 @@ export default function SortableGridItem<T>({
   sortable,
   isMultiSelectMode,
   onEnterMultiSelectMode,
+  disabled = false,
 }: SortableItemProps<T>) {
   const isMobile = useIsMobile();
 
@@ -201,38 +204,14 @@ export default function SortableGridItem<T>({
       }}
       {...(sortable && !isMobile ? { ...attributes, ...listeners } : {})}
     >
-      {/* Selection checkbox */}
-      <div
-        data-no-select
-        className={clsx(
-          'absolute left-2 top-2 z-10 flex size-6 items-center justify-center rounded border-2 bg-background transition-all cursor-pointer',
-          isSelected
-            ? 'border-primary bg-primary text-white opacity-100 shadow-[0_0_0_2px_#ffffff8a]'
-            : showCheckbox
-              ? 'border-white/80 bg-white/60 opacity-100 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a]'
-              : 'border-white/80 bg-white/60 opacity-0 group-hover:opacity-100 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a]',
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          onCheckboxClick(id);
-        }}
-      >
-        {isSelected && (
-          <svg
-            className="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        )}
-      </div>
+      {/* Selection checkbox - hidden for disabled items */}
+      {!disabled && (
+        <GridCheckbox
+          isSelected={isSelected}
+          onClick={() => onCheckboxClick(id)}
+          alwaysVisible={showCheckbox}
+        />
+      )}
 
       {renderItem(item, isSelected, isBeingDragged, isHovered)}
     </div>

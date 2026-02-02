@@ -1,0 +1,120 @@
+feat: Photo Challenges feature
+
+Complete implementation of photo challenges - themed prompts where admins create challenges,
+members submit photos (upload or from library), and submissions require admin approval.
+
+Database:
+- Add challenges, challenge_submissions, challenge_announcements tables
+- Add challenge_photos view for accepted submissions
+- Add RPC functions: submit_to_challenge, review_challenge_submission, bulk_review_challenge_submissions
+- Add RLS policies for viewing and submitting
+- Add max_photos_per_user limit option per challenge
+- Add challenge stats to get_user_stats and get_profile_stats RPCs
+- Add admin_notifications email type for admin-only preferences
+- Prevent resubmission of rejected photos
+
+Public Pages:
+- /challenges - List of active and past challenges
+- /challenges/[slug] - Challenge detail with gallery, comments, and submit button
+
+User Features:
+- Submit photos to challenges (drag-and-drop upload or from library)
+- Uploads default to public for challenge submissions
+- View submission status in /account/challenges
+- Receive notifications when submissions are accepted/rejected
+
+Admin Features:
+- /admin/challenges - List all challenges with stats
+- /admin/challenges/[slug] - Create/edit challenges with cover image upload
+- /admin/challenges/[slug]/submissions - Review queue with accept/reject
+- Bulk accept/reject with optional rejection reason
+- Announce challenges via email with recipient selection
+- Receive notifications on new submissions
+
+Notifications:
+- challenge_announced, new_submission, submission_accepted, submission_rejected types
+- Email templates for announcements and submission results
+- Admin notification email type (only visible to admins in preferences)
+
+Components:
+- ChallengeCard, ChallengeHeader, ChallengeCoverImage, ChallengeGallery
+- SubmitToChallengeContent with drag-drop upload and library selection
+- SubmissionSuccessContent with photo stack animation
+- AnnounceChallengeModal with recipient list
+- GridCheckbox reusable component for photo selection
+- Profile badges for challenges participated and photos accepted
+
+Files changed (75):
+
+New (48):
+- supabase/migrations/20260202000000_add_photo_challenges.sql
+- supabase/migrations/20260202100000_add_challenge_max_photos.sql
+- supabase/migrations/20260202100000_allow_challenge_photos_viewing.sql
+- supabase/migrations/20260202110000_add_profile_to_challenge_photos.sql
+- supabase/migrations/20260202120000_enforce_public_challenge_photos.sql
+- supabase/migrations/20260202200000_add_challenge_comments.sql
+- supabase/migrations/20260202300000_add_admin_notifications_email_type.sql
+- supabase/migrations/20260202400000_prevent_rejected_resubmission.sql
+- supabase/migrations/20260202500000_add_challenge_stats_to_rpcs.sql
+- src/types/challenges.ts
+- src/lib/data/challenges.ts
+- src/hooks/useChallenges.ts
+- src/hooks/useChallengeSubmissions.ts
+- src/app/challenges/page.tsx
+- src/app/challenges/[slug]/page.tsx
+- src/app/challenges/[slug]/ChallengeComments.tsx
+- src/app/account/challenges/page.tsx
+- src/app/admin/challenges/page.tsx
+- src/app/admin/challenges/[slug]/page.tsx
+- src/app/admin/challenges/[slug]/submissions/page.tsx
+- src/app/api/admin/challenges/announce/route.ts
+- src/app/api/challenges/notify-submission/route.ts
+- src/app/api/challenges/notify-result/route.ts
+- src/components/challenges/index.ts
+- src/components/challenges/ChallengeCard.tsx
+- src/components/challenges/ChallengeHeader.tsx
+- src/components/challenges/ChallengeCoverImage.tsx
+- src/components/challenges/ChallengeGallery.tsx
+- src/components/challenges/ChallengesList.tsx
+- src/components/challenges/SubmitButton.tsx
+- src/components/challenges/SubmitToChallengeContent.tsx
+- src/components/challenges/SubmissionSuccessContent.tsx
+- src/components/admin/AnnounceChallengeModal.tsx
+- src/components/shared/GridCheckbox.tsx
+- src/emails/challenge-announcement.tsx
+- src/emails/submission-notification.tsx
+- src/emails/submission-result.tsx
+- public/icons/award-star.svg
+- public/icons/award-star-mini.svg
+- public/icons/clock-mini.svg
+- public/icons/link.svg
+- public/icons/photo-stack.svg
+- public/icons/photo-stack-mini.svg
+- public/icons/trophy.svg
+- public/icons/undo.svg
+- public/icons/upload.svg
+
+Modified (27):
+- src/types/notifications.ts
+- src/database.types.ts
+- src/config/routes.ts
+- src/lib/data/index.ts
+- src/lib/data/profiles.ts
+- src/app/actions/revalidate.ts
+- src/app/api/account/stats/route.ts
+- src/app/api/comments/route.ts
+- src/app/admin/page.tsx
+- src/app/onboarding/OnboardingClient.tsx
+- src/hooks/useAccountForm.ts
+- src/components/layout/Header.tsx
+- src/components/layout/MobileMenu.tsx
+- src/components/layout/UserMenu.tsx
+- src/components/notifications/NotificationContent.tsx
+- src/components/manage/PhotoCard.tsx
+- src/components/manage/PhotoGrid.tsx
+- src/components/manage/SortableGridItem.tsx
+- src/components/shared/CardBadges.tsx
+- src/components/shared/ProfileStatsBadges.tsx
+- src/components/shared/Comments.tsx
+- src/emails/components/Footer.tsx
+- public/icons/image.svg

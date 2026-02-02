@@ -67,7 +67,7 @@ export default function BlurImage({
       <Image
         src={src}
         alt={alt}
-        className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`${className} transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         fill={fill}
         onLoadingComplete={() => setIsLoaded(true)}
         {...props}
@@ -114,7 +114,7 @@ export default function BlurImage({
           src={src}
           alt={alt}
           fill
-          className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`${className} transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoadingComplete={() => setIsLoaded(true)}
           {...props}
         />
@@ -172,7 +172,7 @@ export default function BlurImage({
       <Image
         src={src}
         alt={alt}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         onLoadingComplete={() => setIsLoaded(true)}
         {...props}
       />

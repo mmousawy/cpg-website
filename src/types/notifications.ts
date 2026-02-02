@@ -9,12 +9,17 @@ export type NotificationType =
   | 'comment_photo'
   | 'comment_album'
   | 'comment_event'
+  | 'comment_challenge'
   | 'follow'
   | 'event_reminder'
   | 'event_announcement'
+  | 'challenge_announced'
+  | 'new_submission'
+  | 'submission_accepted'
+  | 'submission_rejected'
   | 'admin_message';
 
-export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'system';
+export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system';
 
 // Data stored in the notification's JSON `data` field
 export type NotificationData = {

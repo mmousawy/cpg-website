@@ -3,44 +3,50 @@ name: Photo Challenges
 overview: Standalone photo challenges where admins create themed prompts, any member can submit photos (upload or from library), and submissions require admin approval before appearing publicly.
 todos:
   - id: migration
-    content: "Create database migration: challenges table, challenge_submissions table, challenge_photos table, RLS policies, RPCs"
-    status: pending
+    content: "Create database migration: challenges, challenge_submissions, challenge_announcements tables, challenge_photos view, RLS policies, RPCs"
+    status: completed
   - id: types
     content: Create src/types/challenges.ts with Challenge, ChallengeSubmission, ChallengePhoto types
-    status: pending
+    status: completed
   - id: email-type
     content: Add 'photo_challenges' email type to email_types table
-    status: pending
+    status: completed
   - id: data-layer
     content: Create src/lib/data/challenges.ts for server-side data fetching
-    status: pending
+    status: completed
   - id: hooks
     content: Create useChallenges and useChallengeSubmissions hooks
-    status: pending
+    status: completed
   - id: challenges-page
     content: Create /challenges page listing active and past challenges
-    status: pending
+    status: completed
   - id: challenge-detail
     content: Create /challenges/[slug] detail page with gallery and submit button
-    status: pending
+    status: completed
   - id: submit-flow
-    content: Create submission flow - upload directly or add from library
-    status: pending
+    content: Create SubmitToChallengeContent with library tab (PhotoGrid) and upload tab (DropZone)
+    status: completed
+  - id: my-submissions
+    content: Create /account/challenges page for user's submissions with status display
+    status: completed
   - id: admin-crud
-    content: Add challenge creation/edit UI in admin section
-    status: pending
+    content: Create /admin/challenges/[slug] with create/edit form, cover upload with blurhash, useFormChanges
+    status: completed
+  - id: announce-modal
+    content: Create AnnounceChallengeModal reusing RecipientList component
+    status: completed
   - id: review-queue
-    content: Create submission review queue UI for admins
-    status: pending
+    content: Create /admin/challenges/[slug]/submissions review queue with accept/reject
+    status: completed
   - id: announce-api
-    content: Create API route to announce challenge with email + notifications
-    status: pending
+    content: Create announce API route with batch email sending (100/batch) and notification creation
+    status: completed
   - id: email-template
-    content: Create ChallengeAnnouncement email template
-    status: pending
+    content: Create ChallengeAnnouncement email template with unsubscribe link
+    status: completed
   - id: notifications
-    content: Add challenge notification types and handlers
-    status: pending
+    content: Add challenge_announced, submission_accepted, submission_rejected notification types
+    status: completed
 isProject: false
 ---
 
@@ -61,6 +67,9 @@ CREATE TABLE challenges (
   title TEXT NOT NULL,
   prompt TEXT NOT NULL,                    -- Theme/description
   cover_image_url TEXT,                    -- Optional cover image
+  image_blurhash TEXT,                     -- Blurhash for instant placeholder
+  image_width INTEGER,                     -- Cover image dimensions
+  image_height INTEGER,
   starts_at TIMESTAMPTZ DEFAULT now(),     -- When submissions open
   ends_at TIMESTAMPTZ,                     -- Submission deadline (null = no deadline)
   announced_at TIMESTAMPTZ,                -- When challenge was announced
@@ -94,6 +103,22 @@ CREATE TABLE challenge_submissions (
 
 CREATE INDEX idx_challenge_submissions_challenge_status ON challenge_submissions(challenge_id, status);
 CREATE INDEX idx_challenge_submissions_user ON challenge_submissions(user_id);
+```
+
+### New Table: `challenge_announcements`
+
+Track announcement history (pattern from `event_announcements`):
+
+```sql
+CREATE TABLE challenge_announcements (
+  id SERIAL PRIMARY KEY,
+  challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  announced_by UUID NOT NULL REFERENCES profiles(id),
+  recipient_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_challenge_announcements_challenge ON challenge_announcements(challenge_id);
 ```
 
 ### View: `challenge_photos`
@@ -276,14 +301,194 @@ Custom layout (NOT using AlbumContent):
 
 ### 3. Submit to Challenge Flow
 
-**File:** `src/components/challenges/SubmitToChallengeModal.tsx`
+#### Opening the Modal (from Challenge Detail Page)
 
-Two tabs/modes:
+Pattern from [AlbumDetailClient.tsx](src/app/account/(manage)/albums/[slug]/AlbumDetailClient.tsx):
 
-1. **Upload New**: Drag-and-drop upload zone, photos go to user's library AND submitted to challenge
-2. **From Library**: Grid of user's existing photos, multi-select, submit button
+```typescript
+const handleSubmitToChallenge = () => {
+  if (!challenge) return;
 
-Both paths create pending submissions requiring admin approval.
+  modalContext.setSize('large');
+  modalContext.setTitle(`Submit to: ${challenge.title}`);
+  modalContext.setContent(
+    <SubmitToChallengeContent
+      challengeId={challenge.id}
+      existingSubmissionPhotoIds={mySubmissions.map((s) => s.photo_id)}
+      onClose={() => modalContext.setIsOpen(false)}
+      onSuccess={async () => {
+        queryClient.invalidateQueries({ queryKey: ['challenge-submissions', challenge.id] });
+        queryClient.invalidateQueries({ queryKey: ['my-submissions', user?.id] });
+        modalContext.setIsOpen(false);
+      }}
+    />
+  );
+  modalContext.setIsOpen(true);
+};
+```
+
+#### Submit Content Component
+
+**File:** `src/components/challenges/SubmitToChallengeContent.tsx`
+
+Pattern from [AddToAlbumContent.tsx](src/components/manage/AddToAlbumContent.tsx):
+
+```typescript
+interface SubmitToChallengeContentProps {
+  challengeId: string;
+  existingSubmissionPhotoIds: string[];  // Photos already submitted
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export default function SubmitToChallengeContent({
+  challengeId,
+  existingSubmissionPhotoIds,
+  onClose,
+  onSuccess,
+}: SubmitToChallengeContentProps) {
+  const { user } = useAuth();
+  const supabase = useSupabase();
+  const modalContext = useContext(ModalContext);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'library' | 'upload'>('library');
+
+  // Fetch user's photos
+  useEffect(() => {
+    if (!user) return;
+    const fetchPhotos = async () => {
+      setIsLoading(true);
+      const { data } = await supabase
+        .from('photos')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      setPhotos((data || []) as Photo[]);
+      setIsLoading(false);
+    };
+    fetchPhotos();
+  }, [user, supabase]);
+
+  // Filter out photos already submitted to this challenge
+  const availablePhotos = useMemo(
+    () => photos.filter((p) => !existingSubmissionPhotoIds.includes(p.id)),
+    [photos, existingSubmissionPhotoIds]
+  );
+
+  // Selection handlers (same pattern as AddToAlbumContent)
+  const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
+    setSelectedPhotoIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(photoId)) {
+        newSet.delete(photoId);
+      } else {
+        newSet.add(photoId);
+      }
+      return newSet;
+    });
+  };
+
+  // Submit via RPC
+  const handleSubmit = async () => {
+    if (selectedPhotoIds.size === 0) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { error: rpcError } = await supabase.rpc('submit_to_challenge', {
+        p_challenge_id: challengeId,
+        p_photo_ids: Array.from(selectedPhotoIds),
+      });
+
+      if (rpcError) throw new Error(rpcError.message);
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Sticky footer with action buttons
+  useEffect(() => {
+    modalContext.setFooter(
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting || selectedPhotoIds.size === 0}
+          loading={isSubmitting}
+        >
+          Submit {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}
+          photo{selectedPhotoIds.size !== 1 ? 's' : ''}
+        </Button>
+      </div>
+    );
+  }, [selectedPhotoIds.size, isSubmitting]);
+
+  return (
+    <div className="flex h-[60vh] flex-col">
+      {/* Tab switcher: Library | Upload */}
+      <div className="flex gap-2 mb-4">
+        <Button 
+          variant={activeTab === 'library' ? 'primary' : 'secondary'}
+          onClick={() => setActiveTab('library')}
+        >
+          From Library
+        </Button>
+        <Button 
+          variant={activeTab === 'upload' ? 'primary' : 'secondary'}
+          onClick={() => setActiveTab('upload')}
+        >
+          Upload New
+        </Button>
+      </div>
+
+      {activeTab === 'library' ? (
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {isLoading ? (
+            <p>Loading photos...</p>
+          ) : availablePhotos.length === 0 ? (
+            <p>No photos available to submit</p>
+          ) : (
+            <PhotoGrid
+              photos={availablePhotos}
+              selectedPhotoIds={selectedPhotoIds}
+              onSelectPhoto={handleSelectPhoto}
+              onPhotoClick={(photo) => handleSelectPhoto(photo.id, true)}
+              sortable={false}
+            />
+          )}
+        </div>
+      ) : (
+        <DropZone onFilesSelected={handleUploadAndSubmit} />
+      )}
+
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </div>
+  );
+}
+```
+
+Key patterns from existing code:
+
+- **Modal opening**: Use `modalContext.setSize()`, `setTitle()`, `setContent()`, `setIsOpen()`
+- **Sticky footer**: Use `modalContext.setFooter()` in useEffect
+- **Photo grid**: Reuse existing `PhotoGrid` component with selection state
+- **Selection tracking**: `useState<Set<string>>` for `selectedPhotoIds`
+- **Filtering**: `useMemo` to filter out already-submitted photos
+- **RPC submission**: Call `submit_to_challenge` with array of photo IDs
+- **Query invalidation**: Invalidate relevant queries in `onSuccess`
+
+Both paths (library and upload) create pending submissions requiring admin approval.
 
 ### 4. My Submissions
 
@@ -296,17 +501,119 @@ Both paths create pending submissions requiring admin approval.
 
 ### 5. Admin: Challenge Management
 
+#### List Page
+
 **File:** `src/app/admin/challenges/page.tsx`
 
 - List all challenges (active/inactive)
-- Create new challenge form: title, slug, prompt, dates, cover image
-- Edit existing challenges
-- Announce button (disabled if already announced)
-- View submission counts
+- Link to create: `/admin/challenges/new`
+- Link to edit: `/admin/challenges/[slug]`
+- View submission counts per challenge
+
+#### Create/Edit Page (Combined)
+
+**File:** `src/app/admin/challenges/[slug]/page.tsx`
+
+Pattern from [admin/events/[eventId]/page.tsx](src/app/admin/events/[eventId]/page.tsx):
+
+```typescript
+const slug = params.slug as string;
+const isNewChallenge = slug === 'new';
+
+// Auto-generate slug from title on blur
+const generateSlug = (text: string) => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+
+const handleTitleBlur = () => {
+  if (!slug.trim() && title.trim()) {
+    setSlug(generateSlug(title));
+  }
+};
+
+// Track unsaved changes
+useFormChanges(currentFormValues, savedFormValues, {}, !!coverImageFile);
+```
+
+Key features:
+
+- `isNewChallenge = slug === 'new'` for create vs edit in one page
+- `ChallengeForm` component with: title, slug, prompt, start/end dates, cover image
+- Auto-generate slug from title on blur
+- `useFormChanges` hook for unsaved changes warning
+- Cover image upload with blurhash generation (pattern from `EventCoverUpload`)
+- Notifications section with Announce button (opens modal)
+- Danger zone for delete (existing challenges only)
+
+#### Announce Challenge Modal
+
+**File:** `src/components/admin/AnnounceChallengeModal.tsx`
+
+Pattern from [AnnounceEventModal.tsx](src/components/admin/AnnounceEventModal.tsx):
+
+```typescript
+// Reuse existing RecipientList component
+import RecipientList from '@/components/admin/RecipientList';
+
+// Fetch subscribers respecting photo_challenges email preference
+const loadSubscribers = async () => {
+  const { data: allProfiles } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, nickname, created_at')
+    .is('suspended_at', null)
+    .not('email', 'is', null);
+
+  const { data: challengesEmailType } = await supabase
+    .from('email_types')
+    .select('id')
+    .eq('type_key', 'photo_challenges')
+    .single();
+
+  const { data: optedOutUsers } = await supabase
+    .from('email_preferences')
+    .select('user_id')
+    .eq('email_type_id', challengesEmailType.id)
+    .eq('opted_out', true);
+
+  // Filter and map to RecipientList format
+  const subscribersList = allProfiles
+    .filter(profile => !optedOutUserIds.has(profile.id))
+    .map(profile => ({
+      email: profile.email!,
+      name: profile.full_name || profile.email!.split('@')[0],
+      nickname: profile.nickname,
+      selected: true,
+    }));
+};
+
+// Modal footer with sticky buttons
+useEffect(() => {
+  modalContext.setFooter(
+    <div className="flex justify-end gap-3">
+      <Button variant="secondary" onClick={onClose} disabled={isSending}>
+        Cancel
+      </Button>
+      <Button
+        variant="primary"
+        onClick={handleSend}
+        disabled={isSending || selectedCount === 0}
+        loading={isSending}
+      >
+        Send announcement
+      </Button>
+    </div>
+  );
+}, [isSending, selectedCount]);
+```
 
 ### 6. Admin: Review Queue
 
-**File:** `src/app/admin/challenges/[slug]/page.tsx`
+**File:** `src/app/admin/challenges/[slug]/submissions/page.tsx`
 
 - Tabs: Pending | Accepted | Rejected
 - Pending submissions grid with:
@@ -323,12 +630,80 @@ Both paths create pending submissions requiring admin approval.
 
 **File:** `src/app/api/admin/challenges/announce/route.ts`
 
-Pattern after `src/app/api/admin/events/announce/route.ts`:
+Pattern from [admin/events/announce/route.ts](src/app/api/admin/events/announce/route.ts):
 
-- Verify admin
-- Send email to users with `photo_challenges` email preference
-- Create in-app notification for ALL users
-- Set `challenges.announced_at = now()`
+```typescript
+// Key implementation details:
+
+// 1. Verify admin access
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('is_admin')
+  .eq('id', user.id)
+  .single();
+
+if (!profile?.is_admin) {
+  return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
+}
+
+// 2. Batch email sending (100 per batch, 500ms delay)
+const batchSize = 100;
+for (let i = 0; i < subscribers.length; i += batchSize) {
+  const batch = subscribers.slice(i, i + batchSize);
+  const batchEmails = await Promise.all(batch.map(async (subscriber) => ({
+    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+    to: subscriber.email,
+    subject: `New Photo Challenge: ${challenge.title}`,
+    html: await render(ChallengeAnnouncementEmail({ ... })),
+  })));
+
+  const batchResult = await resend.batch.send(batchEmails);
+  // Track per-recipient status...
+
+  if (i + batchSize < subscribers.length) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+}
+
+// 3. Create in-app notifications
+const notificationPromises = successfulSubscribers.map(subscriber =>
+  createNotification({
+    userId: subscriber.id,
+    actorId: user.id,
+    type: 'challenge_announced',
+    entityType: 'challenge',
+    entityId: challenge.id,
+    data: {
+      title: challenge.title,
+      thumbnail: challenge.cover_image_url,
+      link: `/challenges/${challenge.slug}`,
+    },
+  })
+);
+await Promise.all(notificationPromises);
+
+// 4. Record announcement and update challenge
+await supabase.from('challenge_announcements').insert({
+  challenge_id: challengeId,
+  announced_by: user.id,
+  recipient_count: successCount,
+});
+
+await supabase
+  .from('challenges')
+  .update({ announced_at: new Date().toISOString() })
+  .eq('id', challengeId);
+
+// 5. Return detailed status
+return NextResponse.json({
+  success: true,
+  sent: successCount,
+  failed: errorCount,
+  total: subscribers.length,
+  sendStatus,      // Per-recipient: 'success' | 'error'
+  errorDetails,    // Per-recipient error messages
+});
+```
 
 ## Notifications
 
@@ -355,23 +730,40 @@ Pattern after existing email templates:
 ## Key Files
 
 
-| File                                                   | Type | Description                           |
-| ------------------------------------------------------ | ---- | ------------------------------------- |
-| `supabase/migrations/XXXXXXXX_challenges.sql`          | New  | Tables, views, RLS, RPCs              |
-| `src/types/challenges.ts`                              | New  | Challenge, ChallengeSubmission types  |
-| `src/lib/data/challenges.ts`                           | New  | Server-side data fetching             |
-| `src/hooks/useChallenges.ts`                           | New  | List challenges                       |
-| `src/hooks/useChallengeSubmissions.ts`                 | New  | Submit, list, withdraw                |
-| `src/app/challenges/page.tsx`                          | New  | Challenges listing                    |
-| `src/app/challenges/[slug]/page.tsx`                   | New  | Challenge detail + gallery            |
-| `src/components/challenges/ChallengeCard.tsx`          | New  | Card component                        |
-| `src/components/challenges/SubmitToChallengeModal.tsx` | New  | Upload/library submission             |
-| `src/components/challenges/ChallengeGallery.tsx`       | New  | Custom photo grid for accepted photos |
-| `src/app/account/challenges/page.tsx`                  | New  | User's submissions                    |
-| `src/app/admin/challenges/page.tsx`                    | New  | Admin list + create                   |
-| `src/app/admin/challenges/[slug]/page.tsx`             | New  | Review queue                          |
-| `src/app/api/admin/challenges/announce/route.ts`       | New  | Announce API                          |
-| `src/emails/ChallengeAnnouncement.tsx`                 | New  | Email template                        |
+| File                                                     | Type | Description                           |
+| -------------------------------------------------------- | ---- | ------------------------------------- |
+| `supabase/migrations/XXXXXXXX_challenges.sql`            | New  | Tables, views, RLS, RPCs              |
+| `src/types/challenges.ts`                                | New  | Challenge, ChallengeSubmission types  |
+| `src/lib/data/challenges.ts`                             | New  | Server-side data fetching             |
+| `src/hooks/useChallenges.ts`                             | New  | List challenges                       |
+| `src/hooks/useChallengeSubmissions.ts`                   | New  | Submit, list, withdraw                |
+| `src/app/challenges/page.tsx`                            | New  | Challenges listing                    |
+| `src/app/challenges/[slug]/page.tsx`                     | New  | Challenge detail + gallery            |
+| `src/components/challenges/ChallengeCard.tsx`            | New  | Card component                        |
+| `src/components/challenges/SubmitToChallengeContent.tsx` | New  | Upload/library submission             |
+| `src/components/challenges/ChallengeGallery.tsx`         | New  | Custom photo grid for accepted photos |
+| `src/app/account/challenges/page.tsx`                    | New  | User's submissions                    |
+| `src/app/admin/challenges/page.tsx`                      | New  | Admin list                            |
+| `src/app/admin/challenges/[slug]/page.tsx`               | New  | Admin create/edit                     |
+| `src/app/admin/challenges/[slug]/submissions/page.tsx`   | New  | Review queue                          |
+| `src/components/admin/AnnounceChallengeModal.tsx`        | New  | Announce modal                        |
+| `src/app/api/admin/challenges/announce/route.ts`         | New  | Announce API                          |
+| `src/emails/ChallengeAnnouncement.tsx`                   | New  | Email template                        |
+
+
+## Components to Reuse
+
+
+| Component                  | Location                                    | Usage                                   |
+| -------------------------- | ------------------------------------------- | --------------------------------------- |
+| `RecipientList`            | `src/components/admin/RecipientList.tsx`    | Announce modal recipient selection      |
+| `PhotoGrid`                | `src/components/manage/PhotoGrid.tsx`       | Library photo selection in submit modal |
+| `EventCoverUpload` pattern | `src/components/admin/EventCoverUpload.tsx` | Cover image upload with validation      |
+| `useFormChanges`           | `src/hooks/useFormChanges.ts`               | Unsaved changes warning                 |
+| `createNotification`       | `src/lib/notifications/create.ts`           | In-app notifications                    |
+| `encrypt`                  | `src/utils/encrypt.ts`                      | Email unsubscribe tokens                |
+| `ModalContext`             | `src/app/providers/ModalProvider.tsx`       | Modal management with sticky footer     |
+| `DropZone`                 | `src/components/shared/DropZone.tsx`        | Upload new photos tab                   |
 
 
 ## Implementation Phases
@@ -420,4 +812,8 @@ Pattern after existing email templates:
 - **Deadline enforcement**: Database RPC checks `ends_at` before allowing submissions.
 - **No album connection**: Challenges are completely separate from the albums system.
 - **Custom gallery**: Challenge photos use a dedicated component, not the album viewer.
+- **Blurhash**: Cover images generate blurhash for instant placeholders (like events).
+- **Batch emails**: Announce sends up to 100 emails per batch with 500ms delays to respect rate limits.
+- **Combined create/edit**: Use `slug === 'new'` pattern for single admin page handling both cases.
+- **Modal footer**: Use `modalContext.setFooter()` for sticky action buttons in modals.
 
