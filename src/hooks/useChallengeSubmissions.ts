@@ -183,7 +183,7 @@ export function useReviewSubmission() {
       const { error } = await supabase.rpc('review_challenge_submission', {
         p_submission_id: submissionId,
         p_status: status,
-        p_rejection_reason: rejectionReason || null,
+        p_rejection_reason: rejectionReason ?? undefined,
       });
 
       if (error) {
@@ -242,7 +242,7 @@ export function useBulkReviewSubmissions() {
       const { data, error } = await supabase.rpc('bulk_review_challenge_submissions', {
         p_submission_ids: submissionIds,
         p_status: status,
-        p_rejection_reason: rejectionReason || null,
+        p_rejection_reason: rejectionReason ?? undefined,
       });
 
       if (error) {

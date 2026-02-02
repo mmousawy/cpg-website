@@ -289,11 +289,8 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
             <p
               className="text-xs text-foreground/60 leading-tight"
             >
-              {badge.prefix && badge.prefix}
-              {' '}
               {badge.label}
-              {' '}
-              {badge.suffix && badge.suffix}
+              {badge.suffix && ` ${badge.suffix}`}
             </p>
           </div>
         ))}

@@ -309,8 +309,8 @@ export async function getSubmissionsForReview(
     .select(
       `
       *,
-      photo:photos (id, url, width, height, title, blurhash),
-      user:profiles (id, nickname, full_name, avatar_url)
+      photo:photos (id, short_id, url, width, height, title, blurhash),
+      user:profiles!challenge_submissions_user_id_fkey (id, nickname, full_name, avatar_url)
     `,
     )
     .eq('challenge_id', challengeId)
