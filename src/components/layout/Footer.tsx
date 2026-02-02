@@ -58,21 +58,8 @@ export default function Footer() {
           })}
         </div>
         <div
-          className="flex flex-wrap items-center justify-center gap-4 text-sm max-sm:flex-col max-sm:gap-2"
+          className="flex flex-wrap items-center justify-center gap-4 text-sm max-sm:flex-col max-sm:gap-2 py-2"
         >
-          <p
-            className="opacity-70"
-          >
-            &copy;
-            {currentYear}
-            {' '}
-            Creative Photography Group
-          </p>
-          <span
-            className="opacity-25 max-sm:hidden"
-          >
-            •
-          </span>
           <Link
             href={routes.terms.url}
             className="opacity-70 hover:opacity-100 transition-opacity"
@@ -118,6 +105,14 @@ export default function Footer() {
             </>
           )}
         </div>
+        <p
+          className="text-sm opacity-60"
+        >
+          &copy;
+          {currentYear}
+          {' '}
+          Creative Photography Group
+        </p>
       </div>
     </footer>
   );
