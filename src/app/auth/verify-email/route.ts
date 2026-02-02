@@ -16,9 +16,8 @@ function hashToken(token: string): string {
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const token = searchParams.get('token');
-  const email = searchParams.get('email');
 
-  if (!token || !email) {
+  if (!token) {
     return NextResponse.redirect(
       `${origin}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
     );
@@ -27,11 +26,10 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
   const tokenHash = hashToken(token);
 
-  // Find the token
+  // Find the token by hash and type (email is stored in the token record)
   const { data: authToken, error: tokenError } = await supabase
     .from('auth_tokens')
     .select('*')
-    .eq('email', email.toLowerCase())
     .eq('token_hash', tokenHash)
     .eq('token_type', 'email_confirmation')
     .is('used_at', null)
@@ -79,12 +77,13 @@ export async function GET(request: NextRequest) {
       .single()
     : { data: null };
 
-  const fullName = profile?.full_name || email.split('@')[0];
+  const userEmail = authToken.email;
+  const fullName = profile?.full_name || userEmail.split('@')[0];
 
   // Send welcome email
   const emailResult = await resend.emails.send({
     from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-    to: email,
+    to: userEmail,
     replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
     subject: 'Welcome to Creative Photography Group! 📸',
     html: await render(WelcomeTemplate({ fullName })),
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest) {
     // Don't fail - verification was successful
   }
 
-  console.log(`✅ Email verified for user: ${email}`);
+  console.log(`✅ Email verified for user: ${userEmail}`);
 
   // Redirect to login with success message
   return NextResponse.redirect(

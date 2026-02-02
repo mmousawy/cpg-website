@@ -29,13 +29,12 @@ export async function POST(request: NextRequest) {
     // Check if this is a test email (skip bot check for E2E tests)
     const isTestEmail = email?.endsWith('@test.example.com') || email?.endsWith('@test.local');
 
-    // Validate bypass token if provided
+    // Validate bypass token if provided (short ID stored directly in token_hash)
     if (bypassToken) {
-      const tokenHash = hashToken(bypassToken);
       const { data: token, error: tokenError } = await supabase
         .from('auth_tokens')
         .select('*')
-        .eq('token_hash', tokenHash)
+        .eq('token_hash', bypassToken) // Compare short ID directly
         .eq('token_type', 'signup_bypass')
         .is('used_at', null)
         .gt('expires_at', new Date().toISOString())
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
       const { isBot } = await checkBotId();
 
       if (isBot) {
-        console.log('Bot detected, rejecting signup attempt');
+        console.error('Bot detected for email: ', email, ', rejecting signup attempt');
         return NextResponse.json(
           { message: 'We couldn\'t verify your request. If you\'re having trouble signing up, please email murtada.al.mousawy@gmail.com for assistance.' },
           { status: 403 },
@@ -157,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send verification email (skip in test environment)
-    const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${token}`;
     const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') ||
                       process.env.NODE_ENV === 'test' ||
                       email.endsWith('@test.example.com') ||
