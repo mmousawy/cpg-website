@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.18.0](https://github.com/mmousawy/cpg-website/compare/v1.17.1...v1.18.0) (2026-02-03)
+
+
+### Features
+
+* Enhance Home page with Challenges and Recent Photos sections ([3c9cab3](https://github.com/mmousawy/cpg-website/commit/3c9cab3b3dce3fec10ef33a2e32b5d088e8817ef))
+* Photo Challenges feature ([b28b751](https://github.com/mmousawy/cpg-website/commit/b28b751d4853a276cd4dc02f833aa212a79f727a))
+
+
+### Bug Fixes
+
+* update footer. ([75dc53e](https://github.com/mmousawy/cpg-website/commit/75dc53e5b6250397b4af2f24929a2388cb79bfe3))
+
 ## [1.17.1](https://github.com/mmousawy/cpg-website/compare/v1.17.0...v1.17.1) (2026-02-02)
 
 
