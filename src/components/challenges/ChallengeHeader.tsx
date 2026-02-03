@@ -146,7 +146,7 @@ export default function ChallengeHeader({
           </span>
         ) : (
           <span
-            className="flex items-center gap-1.5 text-green-500"
+            className="flex items-center gap-1.5 text-green-600"
           >
             <ClockSVG
               className="h-4 w-4"

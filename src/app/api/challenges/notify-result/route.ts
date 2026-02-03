@@ -4,8 +4,8 @@ import { Resend } from 'resend';
 
 import SubmissionResultEmail from '@/emails/submission-result';
 import { createNotification } from '@/lib/notifications/create';
-import { createClient } from '@/utils/supabase/server';
 import { encrypt } from '@/utils/encrypt';
+import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

@@ -3,9 +3,11 @@ import Link from 'next/link';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Avatar from '@/components/auth/Avatar';
+import ChallengesList from '@/components/challenges/ChallengesList';
 import EventsList from '@/components/events/EventsList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
@@ -16,7 +18,9 @@ import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
 import { getRecentAlbums } from '@/lib/data/albums';
+import { getActiveChallenges } from '@/lib/data/challenges';
 import { getRecentEvents } from '@/lib/data/events';
+import { getPublicPhotostream } from '@/lib/data/gallery';
 import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
 
 export const metadata = createMetadata({
@@ -50,14 +54,17 @@ const heroImages = [
 
 export default async function Home() {
   // Fetch all data in parallel using cached data functions
-  const [albums, organizers, members, eventsData] = await Promise.all([
-    getRecentAlbums(6),
+  const [albums, organizers, members, eventsData, challengesData, photos] = await Promise.all([
+    getRecentAlbums(3),
     getOrganizers(5),
     getRecentMembers(12),
     getRecentEvents(6),
+    getActiveChallenges(),
+    getPublicPhotostream(6),
   ]);
 
   const { events, attendeesByEvent, serverNow } = eventsData;
+  const { challenges } = challengesData;
 
   // Select hero image server-side for better LCP discovery
   // Use deterministic selection based on date to ensure consistency while still rotating
@@ -165,9 +172,37 @@ export default async function Home() {
             />
           </div>
 
+          {/* Challenges */}
+          {challenges.length > 0 && (
+            <div
+              className="mb-10"
+            >
+              <div
+                className="mb-4 flex items-center justify-between"
+              >
+                <h3
+                  className="text-lg font-semibold"
+                >
+                  Photo challenges
+                </h3>
+                <ArrowLink
+                  href={routes.challenges.url}
+                >
+                  View all challenges
+                </ArrowLink>
+              </div>
+              <ChallengesList
+                challenges={challenges.slice(0, 3)}
+                serverNow={serverNow}
+              />
+            </div>
+          )}
+
           {/* Albums */}
           {albums.length > 0 && (
-            <div>
+            <div
+              className="mb-10"
+            >
               <div
                 className="mb-4 flex items-center justify-between"
               >
@@ -184,7 +219,31 @@ export default async function Home() {
               </div>
               <AlbumGrid
                 albums={albums}
-                className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(176px,1fr))]"
+                className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
+              />
+            </div>
+          )}
+
+          {/* Recent Photos */}
+          {photos.length > 0 && (
+            <div>
+              <div
+                className="mb-4 flex items-center justify-between"
+              >
+                <h3
+                  className="text-lg font-semibold"
+                >
+                  Recent photos
+                </h3>
+                <ArrowLink
+                  href="/gallery/photos"
+                >
+                  View all photos
+                </ArrowLink>
+              </div>
+              <JustifiedPhotoGrid
+                photos={photos}
+                showAttribution
               />
             </div>
           )}

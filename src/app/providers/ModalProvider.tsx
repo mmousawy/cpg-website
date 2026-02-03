@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useState } from 'react';
+import { createContext, useRef, useState } from 'react';
 
 export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
 
@@ -25,15 +25,23 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   </>);
   const [footer, setFooter] = useState<React.ReactNode>(null);
   const [size, setSize] = useState<ModalSize>('default');
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Reset size and footer when modal closes, but delay until after animation
   const handleSetIsOpen = (open: boolean) => {
     setIsOpen(open);
-    if (!open) {
+    if (open) {
+      // Cancel any pending reset when reopening
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+    } else {
       // Wait for close animation (300ms) before resetting
-      setTimeout(() => {
+      resetTimeoutRef.current = setTimeout(() => {
         setSize('default');
         setFooter(null);
+        resetTimeoutRef.current = null;
       }, 350);
     }
   };

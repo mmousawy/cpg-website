@@ -1,11 +1,10 @@
 'use client';
 
-import { CSS } from '@dnd-kit/utilities';
-import { useSortable } from '@dnd-kit/sortable';
-import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import GridCheckbox from '@/components/shared/GridCheckbox';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useEffect, useRef, useState } from 'react';
 
 export interface SortableItemProps<T> {
   item: T;

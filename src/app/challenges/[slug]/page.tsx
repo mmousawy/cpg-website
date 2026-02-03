@@ -30,6 +30,10 @@ import ClockSVG from 'public/icons/time.svg';
 // Pre-render all challenges at build time
 export async function generateStaticParams() {
   const slugs = await getAllChallengeSlugs();
+  // Must return at least one result for Next.js Cache Components validation
+  if (slugs.length === 0) {
+    return [{ slug: 'sample' }];
+  }
   return slugs.map((slug) => ({ slug }));
 }
 
@@ -213,7 +217,7 @@ export default async function ChallengePage({
                   </span>
                 ) : (
                   <span
-                    className="inline-flex items-center gap-1 rounded-full bg-green-500 px-2.5 py-1 text-xs font-semibold text-white shadow-md"
+                    className="inline-flex items-center gap-1 rounded-full bg-green-600/70 px-2.5 py-1 text-xs font-semibold text-white text-shadow-sm backdrop-blur-sm border border-green-600/90"
                   >
                     Open
                   </span>
@@ -342,10 +346,10 @@ export default async function ChallengePage({
                   </span>
                 ) : (
                   <span
-                    className="flex items-center gap-2 text-sm font-semibold text-green-600"
+                    className="flex items-center gap-2 text-sm font-semibold text-foreground/70"
                   >
                     <ClockSVG
-                      className="size-5 shrink-0 fill-green-600"
+                      className="size-5 shrink-0 fill-foreground/70 stroke-none"
                     />
                     Open indefinitely
                   </span>

@@ -80,6 +80,7 @@ export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPer
     modalContext.setTitle(`Submit to: ${challengeTitle}`);
     modalContext.setContent(
       <SubmitToChallengeContent
+        key={Date.now()}
         challengeId={challengeId}
         maxPhotosPerUser={maxPhotosPerUser}
         onClose={() => modalContext.setIsOpen(false)}

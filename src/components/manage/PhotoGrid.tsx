@@ -1,8 +1,8 @@
 'use client';
 
 import type { Photo } from '@/types/photos';
-import PhotoCard from './PhotoCard';
 import LazySelectableGrid from './LazySelectableGrid';
+import PhotoCard from './PhotoCard';
 
 interface PhotoGridProps {
   photos: Photo[];

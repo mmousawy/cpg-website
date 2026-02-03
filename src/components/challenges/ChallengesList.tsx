@@ -1,4 +1,5 @@
 import type { ChallengeWithStats } from '@/types/challenges';
+import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import ChallengeCard from './ChallengeCard';
 
 type ChallengesListProps = {
@@ -16,17 +17,24 @@ export default function ChallengesList({
 }: ChallengesListProps) {
   if (challenges.length === 0) {
     return (
-      <p
-        className="py-8 text-center text-foreground/50"
+      <div
+        className="text-center py-12 rounded-2xl border border-dashed border-border-color bg-background-light/50"
       >
-        {emptyMessage}
-      </p>
+        <AwardStarMiniSVG
+          className="h-12 w-12 fill-foreground/20 mx-auto mb-3"
+        />
+        <p
+          className="text-foreground/70"
+        >
+          {emptyMessage}
+        </p>
+      </div>
     );
   }
 
   return (
     <div
-      className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid gap-5 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
     >
       {challenges.map((challenge) => (
         <ChallengeCard

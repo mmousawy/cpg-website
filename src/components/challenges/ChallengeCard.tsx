@@ -177,7 +177,7 @@ export default function ChallengeCard({
           </div>
         ) : (
           <div
-            className="flex items-center gap-1 rounded-full bg-green-500 px-2.5 py-1 text-xs font-semibold text-white shadow-md"
+            className="flex items-center gap-1 rounded-full bg-green-600/70 px-2.5 py-1 text-xs font-semibold text-white shadow-md text-shadow-sm backdrop-blur-sm border border-green-600/90"
           >
             <span>
               Open
