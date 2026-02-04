@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag } from 'next/cache';
+
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
 import { createMetadata } from '@/utils/metadata';
@@ -13,6 +15,10 @@ export const metadata = createMetadata({
 });
 
 export default async function ChallengesPage() {
+  'use cache';
+  cacheLife('max');
+  cacheTag('challenges');
+
   // Fetch challenges using cached data functions
   const [activeData, pastData] = await Promise.all([
     getActiveChallenges(),

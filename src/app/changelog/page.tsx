@@ -3,6 +3,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import { getChangelogSlugs, getSlugsForDate } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
 import { readFile } from 'fs/promises';
+import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
 import { join } from 'path';
 
@@ -92,6 +93,10 @@ function parseChangelog(content: string): ChangelogEntry[] {
 }
 
 export default async function ChangelogPage() {
+  'use cache';
+  cacheLife('max');
+  cacheTag('changelog');
+
   const changelogPath = join(process.cwd(), 'CHANGELOG.md');
   let changelogContent = '';
 

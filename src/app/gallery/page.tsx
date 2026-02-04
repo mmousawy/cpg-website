@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
@@ -22,6 +23,11 @@ export const metadata = createMetadata({
 });
 
 export default async function GalleryPage() {
+  'use cache';
+  cacheLife('max');
+  cacheTag('gallery');
+  cacheTag('albums');
+
   // Fetch data in parallel
   const [albums, photos, mostViewedPhotos, mostViewedAlbums] = await Promise.all([
     getPublicAlbums(10),

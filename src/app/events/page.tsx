@@ -1,10 +1,12 @@
-import PageContainer from '@/components/layout/PageContainer';
+import { cacheLife, cacheTag } from 'next/cache';
+
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
+import PageContainer from '@/components/layout/PageContainer';
 import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
-import { getUpcomingEvents, getPastEvents, getEventAttendees } from '@/lib/data/events';
+import { getEventAttendees, getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 
 const PAST_EVENTS_PER_PAGE = 5;
 
@@ -16,6 +18,11 @@ export const metadata = createMetadata({
 });
 
 export default async function EventsPage() {
+  'use cache';
+  cacheLife('max');
+  cacheTag('events');
+  cacheTag('event-attendees');
+
   // Fetch events using cached data functions
   const [upcomingData, pastEventsData] = await Promise.all([
     getUpcomingEvents(),

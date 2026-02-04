@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -53,6 +54,15 @@ const heroImages = [
 ];
 
 export default async function Home() {
+  'use cache';
+  cacheLife('max');
+  cacheTag('home');
+  cacheTag('events');
+  cacheTag('challenges');
+  cacheTag('albums');
+  cacheTag('gallery');
+  cacheTag('profiles');
+
   // Fetch all data in parallel using cached data functions
   const [albums, organizers, members, eventsData, challengesData, photos] = await Promise.all([
     getRecentAlbums(3),
