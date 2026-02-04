@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.19.0](https://github.com/mmousawy/cpg-website/compare/v1.18.0...v1.19.0) (2026-02-04)
+
+
+### Features
+
+* Enhance photo submission process and email notifications ([7b187e2](https://github.com/mmousawy/cpg-website/commit/7b187e247e7e0923302cba8652dc087bbb0ed5d0))
+
+
+### Bug Fixes
+
+* : Implement blurhash dimension calculation for consistent aspect ratio ([02fdb14](https://github.com/mmousawy/cpg-website/commit/02fdb14674ea3306c8092291c95b54ded58c3744))
+
 ## [1.18.0](https://github.com/mmousawy/cpg-website/compare/v1.17.1...v1.18.0) (2026-02-03)
 
 
