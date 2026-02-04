@@ -21,13 +21,8 @@ export default function TagsSection({ tags, className }: TagsSectionProps) {
 
   return (
     <div
-      className={clsx('mt-5 sm:mt-6', className)}
+      className={clsx(className ?? 'mt-6')}
     >
-      <p
-        className="mb-2 text-sm font-medium"
-      >
-        Tags
-      </p>
       <div
         className="flex flex-wrap gap-2"
       >

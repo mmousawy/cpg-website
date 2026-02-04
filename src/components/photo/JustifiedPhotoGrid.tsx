@@ -90,10 +90,12 @@ export default function JustifiedPhotoGrid({
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));
 
   return (
-    <>
-      {/* Mobile layout */}
+    <div
+      className="@container w-full"
+    >
+      {/* Mobile layout - container < 600px */}
       <div
-        className="block sm:hidden"
+        className="block @[600px]:hidden"
       >
         <PhotoRows
           rows={mobileRows}
@@ -106,9 +108,9 @@ export default function JustifiedPhotoGrid({
         />
       </div>
 
-      {/* Tablet layout */}
+      {/* Tablet layout - container 600px to 960px */}
       <div
-        className="hidden sm:block lg:hidden"
+        className="hidden @[600px]:block @[960px]:hidden"
       >
         <PhotoRows
           rows={tabletRows}
@@ -121,9 +123,9 @@ export default function JustifiedPhotoGrid({
         />
       </div>
 
-      {/* Desktop layout */}
+      {/* Desktop layout - container >= 960px */}
       <div
-        className="hidden lg:block"
+        className="hidden @[960px]:block"
       >
         <PhotoRows
           rows={desktopRows}
@@ -135,7 +137,7 @@ export default function JustifiedPhotoGrid({
           maxDisplayWidth={1800}
         />
       </div>
-    </>
+    </div>
   );
 }
 

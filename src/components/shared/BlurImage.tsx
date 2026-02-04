@@ -88,7 +88,7 @@ export default function BlurImage({
         {/* Blur placeholder - loads on top of background */}
         {blurhashDataUrl ? (
           <div
-            className={`${className} blur-md absolute inset-0`}
+            className={`${className} absolute inset-0`}
             style={{
               backgroundImage: `url(${blurhashDataUrl})`,
               backgroundSize: 'cover',
@@ -102,7 +102,7 @@ export default function BlurImage({
             alt=""
             aria-hidden="true"
             fill
-            className={`${className} blur-md`}
+            className={`${className}`}
             preload
             quality={30}
             sizes="64px"
@@ -137,7 +137,7 @@ export default function BlurImage({
       {/* Blur placeholder as background div - matches the main image dimensions */}
       {blurhashDataUrl ? (
         <div
-          className="blur-md w-full"
+          className="w-full"
           style={{
             backgroundImage: `url(${blurhashDataUrl})`,
             backgroundSize: 'cover',
@@ -153,7 +153,7 @@ export default function BlurImage({
           aria-hidden="true"
           width={props.width}
           height={props.height}
-          className={`blur-md ${className}`}
+          className={`${className}`}
           preload
           quality={30}
           sizes="64px"

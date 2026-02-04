@@ -1,0 +1,47 @@
+refactor: Photo and album detail page layouts
+
+Redesigned photo and album detail pages with a modern two-column layout inspired by
+Instagram and DeviantArt. Desktop shows sticky photo/gallery on left with metadata
+sidebar on right. Mobile shows single-column layout with full-width sidebar below content.
+
+Photo Pages:
+- Two-column layout: sticky photo column + metadata sidebar
+- Photo dynamically sized to fit viewport while preserving aspect ratio
+- Blurhash placeholder with smooth fade-in transition
+- Sidebar contains author, title/description, date, EXIF, views, tags, likes, comments
+- Full-width sidebar on mobile with background and border styling
+
+Album Pages:
+- Same two-column sidebar layout as photo pages
+- Gallery vertically centered within its column
+- Sticky "View in Gallery" button at bottom of gallery
+- Container query-based responsive grid (responds to container width not viewport)
+
+New Components:
+- AuthorRow - Compact author display with avatar, full name, and @nickname
+- PhotoActionBar - Horizontal action bar for likes/views
+
+UI Improvements:
+- Added calendar and camera aperture icons for date and EXIF display
+- ViewCount icon sizing made consistent at 16px
+- Comments section spacing tightened
+- BlurImage blurhash sizing improved to prevent cropping
+
+Files changed (13):
+
+New (4):
+- public/icons/calendar-today.svg
+- public/icons/camera-aperture.svg
+- src/components/shared/AuthorRow.tsx
+- src/components/shared/PhotoActionBar.tsx
+
+Modified (9):
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/components/layout/PageContainer.tsx
+- src/components/photo/JustifiedPhotoGrid.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/photo/PhotoWithLightbox.tsx
+- src/components/shared/BlurImage.tsx
+- src/components/shared/Comments.tsx
+- src/components/shared/TagsSection.tsx
+- src/components/shared/ViewCount.tsx

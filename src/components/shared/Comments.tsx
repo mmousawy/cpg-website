@@ -203,7 +203,7 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
   return (
     <div
       id="comments"
-      className="space-y-4"
+      className="space-y-2"
     >
       <h3
         className="text-lg font-semibold"
@@ -213,17 +213,17 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
 
       {/* Comments List */}
       <div
-        className="space-y-4"
+        className="space-y-3"
       >
         {isLoading ? (
           <p
-            className="text-base text-foreground/70"
+            className="text-sm text-foreground/70"
           >
             Loading comments...
           </p>
         ) : comments.length === 0 ? (
           <p
-            className="text-base text-foreground/70"
+            className="text-sm text-foreground/70"
           >
             No comments yet. Be the first to comment!
           </p>
@@ -231,14 +231,14 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
           comments.map((comment) => (
             <div
               key={comment.id}
-              className="dark:bg-foreground/5 rounded-lg max-w-160 shadow-md shadow-[#00000010] border border-border-color-strong p-3 sm:p-4"
+              className="dark:bg-foreground/5 rounded-lg max-w-160 shadow-sm shadow-[#00000008] border border-border-color p-3"
             >
               <div
-                className="flex items-start justify-between gap-2"
+                className="flex items-start justify-between gap-2 mb-2"
               >
                 <Link
                   href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
-                  className="flex gap-3 group rounded-lg"
+                  className="flex gap-2.5 group rounded-lg"
                 >
                   <Avatar
                     avatarUrl={comment.profile?.avatar_url}
@@ -248,12 +248,12 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
                   />
                   <div>
                     <p
-                      className="font-medium group-hover:text-primary transition-colors"
+                      className="text-sm font-medium group-hover:text-primary transition-colors leading-tight"
                     >
                       {comment.profile?.full_name || 'Anonymous'}
                     </p>
                     <p
-                      className="text-xs text-foreground/50 group-hover:text-primary transition-colors"
+                      className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
                     >
                       @
                       {comment.profile?.nickname}
@@ -277,7 +277,7 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
                 )}
               </div>
               <p
-                className="mt-2 text-sm text-foreground/90 ml-[52px]"
+                className="text-sm text-foreground/90 ml-[50px]"
               >
                 {comment.comment_text}
               </p>
@@ -289,7 +289,7 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
       {/* Comment Form */}
       <form
         onSubmit={handleSubmitComment}
-        className="space-y-3 mt-8"
+        className="space-y-3 mt-4"
       >
         <Textarea
           value={commentText}
