@@ -27,6 +27,7 @@ export const SubmissionNotificationEmail = ({
   submitterAvatarUrl,
   submitterProfileLink,
   photoCount,
+  photoUrls,
   challengeTitle,
   challengeThumbnail,
   challengeLink,
@@ -40,6 +41,7 @@ export const SubmissionNotificationEmail = ({
   submitterAvatarUrl: string | null;
   submitterProfileLink: string | null;
   photoCount: number;
+  photoUrls?: string[];
   challengeTitle: string;
   challengeThumbnail: string | null;
   challengeLink: string;
@@ -52,13 +54,22 @@ export const SubmissionNotificationEmail = ({
     submitterNickname = 'johnsmith';
     submitterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
     submitterProfileLink = `${baseUrl}/@johnsmith`;
-    photoCount = 2;
+    photoCount = 3;
+    photoUrls = [
+      'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+      'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+      'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+    ];
     challengeTitle = 'Urban Photography Challenge';
     challengeThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
     challengeLink = `${baseUrl}/challenges/urban-photography`;
     reviewLink = `${baseUrl}/admin/challenges/urban-photography/submissions`;
     optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
+
+  // Display up to 6 photos in the email
+  const displayPhotos = (photoUrls || []).slice(0, 6);
+  const remainingPhotos = photoCount - displayPhotos.length;
 
   const previewText = `${submitterName} submitted ${photoCount} photo${photoCount !== 1 ? 's' : ''} to "${challengeTitle}"`;
 
@@ -254,6 +265,75 @@ export const SubmissionNotificationEmail = ({
                 </Column>
               </Row>
             </Section>
+
+            {/* Submitted photos grid */}
+            {displayPhotos.length > 0 && (
+              <Section
+                className="my-[20px]"
+              >
+                <table
+                  cellPadding="0"
+                  cellSpacing="4"
+                  style={{ borderCollapse: 'separate' }}
+                >
+                  <tbody>
+                    <tr>
+                      {displayPhotos.slice(0, 3).map((url, index) => (
+                        <td
+                          key={index}
+                          style={{ padding: '2px' }}
+                        >
+                          <Img
+                            src={url}
+                            width="120"
+                            height="120"
+                            alt={`Submitted photo ${index + 1}`}
+                            style={{
+                              borderRadius: '4px',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                    {displayPhotos.length > 3 && (
+                      <tr>
+                        {displayPhotos.slice(3, 6).map((url, index) => (
+                          <td
+                            key={index}
+                            style={{ padding: '2px' }}
+                          >
+                            <Img
+                              src={url}
+                              width="120"
+                              height="120"
+                              alt={`Submitted photo ${index + 4}`}
+                              style={{
+                                borderRadius: '4px',
+                                objectFit: 'cover',
+                                display: 'block',
+                              }}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                {remainingPhotos > 0 && (
+                  <Text
+                    className="mt-2! text-[12px] text-[#666666]"
+                  >
+                    +
+                    {remainingPhotos}
+                    {' '}
+                    more photo
+                    {remainingPhotos !== 1 ? 's' : ''}
+                  </Text>
+                )}
+              </Section>
+            )}
 
             <div
               className="my-[20px]"

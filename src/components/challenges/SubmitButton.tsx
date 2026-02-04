@@ -8,8 +8,8 @@ import { useMySubmissionsForChallenge } from '@/hooks/useChallengeSubmissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useContext } from 'react';
-import SubmitToChallengeContent from './SubmitToChallengeContent';
 import SubmissionSuccessContent from './SubmissionSuccessContent';
+import SubmitToChallengeContent from './SubmitToChallengeContent';
 
 import CheckCircleSVG from 'public/icons/check-circle.svg';
 import PlusSVG from 'public/icons/plus.svg';
@@ -82,6 +82,7 @@ export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPer
       <SubmitToChallengeContent
         key={Date.now()}
         challengeId={challengeId}
+        challengeTitle={challengeTitle}
         maxPhotosPerUser={maxPhotosPerUser}
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={(submittedCount, photoUrls) => {

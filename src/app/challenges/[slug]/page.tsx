@@ -313,12 +313,16 @@ export default async function ChallengePage({
                   <PhotoStackSVG
                     className="size-5 shrink-0 fill-foreground/70 stroke-none"
                   />
-                  {photoCount}
-                  {' '}
-                  photo
-                  {photoCount !== 1 ? 's' : ''}
-                  {' '}
-                  submitted
+                  {photoCount > 0 ? (
+                    <>
+                      {photoCount}
+                      {' '}
+                      photo
+                      {photoCount !== 1 ? 's' : ''}
+                      {' '}
+                      submitted
+                    </>
+                  ) : 'No submissions yet'}
                 </span>
 
                 {/* Deadline */}

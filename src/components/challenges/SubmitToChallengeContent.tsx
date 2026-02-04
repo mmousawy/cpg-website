@@ -6,18 +6,20 @@ import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { useAuth } from '@/hooks/useAuth';
-import { useMySubmissionsForChallenge, useSubmitToChallenge } from '@/hooks/useChallengeSubmissions';
+import { useMySubmissionsForChallenge } from '@/hooks/useChallengeSubmissions';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Photo } from '@/types/photos';
 import { preloadImages } from '@/utils/preloadImages';
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import SubmitConfirmContent from './SubmitConfirmContent';
 
 import ImageSVG from 'public/icons/image.svg';
 import PlusMiniSVG from 'public/icons/plus-mini.svg';
 
 interface SubmitToChallengeContentProps {
   challengeId: string;
+  challengeTitle: string;
   maxPhotosPerUser?: number | null;
   onClose: () => void;
   onSuccess: (submittedCount: number, photoUrls: string[]) => void;
@@ -25,6 +27,7 @@ interface SubmitToChallengeContentProps {
 
 export default function SubmitToChallengeContent({
   challengeId,
+  challengeTitle,
   maxPhotosPerUser,
   onClose,
   onSuccess,
@@ -33,6 +36,7 @@ export default function SubmitToChallengeContent({
   const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
@@ -42,7 +46,6 @@ export default function SubmitToChallengeContent({
   // Use refs to avoid infinite loops with callbacks
   const onCloseRef = useRef(onClose);
   const onSuccessRef = useRef(onSuccess);
-  const handleSubmitRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -61,11 +64,21 @@ export default function SubmitToChallengeContent({
   // Get user's existing submissions
   const { data: existingSubmissions } = useMySubmissionsForChallenge(user?.id, challengeId);
 
-  // Photo IDs that are pending or accepted - completely hidden from grid
-  const submittedPhotoIds = useMemo(
+  // Photo IDs that are pending review
+  const pendingPhotoIds = useMemo(
     () => new Set(
       (existingSubmissions || [])
-        .filter((s) => s.status === 'pending' || s.status === 'accepted')
+        .filter((s) => s.status === 'pending')
+        .map((s) => s.photo_id),
+    ),
+    [existingSubmissions],
+  );
+
+  // Photo IDs that were accepted
+  const acceptedPhotoIds = useMemo(
+    () => new Set(
+      (existingSubmissions || [])
+        .filter((s) => s.status === 'accepted')
         .map((s) => s.photo_id),
     ),
     [existingSubmissions],
@@ -88,8 +101,6 @@ export default function SubmitToChallengeContent({
     : null;
   const hasReachedLimit = remainingQuota !== null && remainingQuota <= 0;
 
-  // Mutation for submitting
-  const submitMutation = useSubmitToChallenge();
 
   // Fetch user's photos
   const fetchPhotos = useCallback(async () => {
@@ -123,22 +134,29 @@ export default function SubmitToChallengeContent({
     fetchPhotos();
   }, [fetchPhotos]);
 
-  // Filter out photos that are pending or accepted (rejected photos stay visible but disabled)
-  const availablePhotos = useMemo(
-    () => photos.filter((p) => !submittedPhotoIds.has(p.id)),
-    [photos, submittedPhotoIds],
+  // Get private photo IDs (these are disabled/non-selectable)
+  const privatePhotoIds = useMemo(
+    () => new Set(photos.filter((p) => !p.is_public).map((p) => p.id)),
+    [photos],
   );
 
-  // Get private and rejected photo IDs (these are disabled/non-selectable)
-  const privateAndRejectedPhotoIds = useMemo(
-    () => new Set(availablePhotos.filter((p) => !p.is_public || rejectedPhotoIds.has(p.id)).map((p) => p.id)),
-    [availablePhotos, rejectedPhotoIds],
+  // All non-selectable photo IDs (private, rejected, pending, accepted)
+  const nonSelectablePhotoIds = useMemo(
+    () => {
+      const combined = new Set<string>();
+      privatePhotoIds.forEach((id) => combined.add(id));
+      rejectedPhotoIds.forEach((id) => combined.add(id));
+      pendingPhotoIds.forEach((id) => combined.add(id));
+      acceptedPhotoIds.forEach((id) => combined.add(id));
+      return combined;
+    },
+    [privatePhotoIds, rejectedPhotoIds, pendingPhotoIds, acceptedPhotoIds],
   );
 
   // Selection handlers
   const handleSelectPhoto = (photoId: string) => {
-    // Skip private or rejected photos
-    if (privateAndRejectedPhotoIds.has(photoId)) return;
+    // Skip non-selectable photos (private, rejected, pending, accepted)
+    if (nonSelectablePhotoIds.has(photoId)) return;
 
     setSelectedPhotoIds((prev) => {
       const newSet = new Set(prev);
@@ -167,7 +185,7 @@ export default function SubmitToChallengeContent({
       const newSet = new Set(prev);
       for (const id of ids) {
         // Skip private or rejected photos
-        if (privateAndRejectedPhotoIds.has(id)) continue;
+        if (nonSelectablePhotoIds.has(id)) continue;
         // Stop adding if we've reached the quota
         if (remainingQuota !== null && newSet.size >= remainingQuota) {
           break;
@@ -229,31 +247,25 @@ export default function SubmitToChallengeContent({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Submit handler
-  const handleSubmit = useCallback(async () => {
+  // Get selected photos for confirmation
+  const selectedPhotos = useMemo(
+    () => photos.filter((p) => selectedPhotoIds.has(p.id)),
+    [photos, selectedPhotoIds],
+  );
+
+  // Show confirmation step
+  const handleReview = useCallback(() => {
     if (selectedPhotoIds.size === 0) return;
+    setShowConfirm(true);
+  }, [selectedPhotoIds.size]);
 
-    setError(null);
-    const submittedCount = selectedPhotoIds.size;
-    const submittedPhotoUrls = photos
-      .filter((p) => selectedPhotoIds.has(p.id))
-      .map((p) => p.url);
-
-    try {
-      await submitMutation.mutateAsync({
-        challengeId,
-        photoIds: Array.from(selectedPhotoIds),
-      });
-      onSuccessRef.current(submittedCount, submittedPhotoUrls);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit photos');
-    }
-  }, [selectedPhotoIds, challengeId, submitMutation, photos]);
+  // Keep ref updated
+  const handleReviewRef = useRef<(() => void) | undefined>(undefined);
 
   // Keep ref updated
   useEffect(() => {
-    handleSubmitRef.current = handleSubmit;
-  }, [handleSubmit]);
+    handleReviewRef.current = handleReview;
+  }, [handleReview]);
 
   // Info text for footer
   const infoText = useMemo(() => {
@@ -305,11 +317,10 @@ export default function SubmitToChallengeContent({
             {isUploading ? 'Uploading...' : 'Upload'}
           </Button>
           <Button
-            onClick={() => handleSubmitRef.current?.()}
-            disabled={submitMutation.isPending || selectedPhotoIds.size === 0 || isUploading}
-            loading={submitMutation.isPending}
+            onClick={() => handleReviewRef.current?.()}
+            disabled={selectedPhotoIds.size === 0 || isUploading}
           >
-            Submit
+            Review
             {' '}
             {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}
             photo
@@ -318,14 +329,29 @@ export default function SubmitToChallengeContent({
         </div>
       </div>
     ),
-    [selectedPhotoIds.size, submitMutation.isPending, isUploading, hasReachedLimit, infoText],
+    [selectedPhotoIds.size, isUploading, hasReachedLimit, infoText],
   );
 
-  // Set modal footer with action buttons
-  useEffect(() => {
-    modalContext.setFooter(footerContent);
+  // Set modal footer with action buttons (only when not showing confirm)
+  useLayoutEffect(() => {
+    if (!showConfirm) {
+      modalContext.setFooter(footerContent);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- modalContext.setFooter is stable, including modalContext causes infinite loop
-  }, [footerContent]);
+  }, [footerContent, showConfirm]);
+
+  // If showing confirmation, render the confirm content
+  if (showConfirm) {
+    return (
+      <SubmitConfirmContent
+        challengeId={challengeId}
+        challengeTitle={challengeTitle}
+        selectedPhotos={selectedPhotos}
+        onBack={() => setShowConfirm(false)}
+        onSuccess={onSuccessRef.current}
+      />
+    );
+  }
 
   return (
     <div
@@ -391,7 +417,7 @@ export default function SubmitToChallengeContent({
                 for this challenge.
               </p>
             </div>
-          ) : availablePhotos.length === 0 && uploadingPhotos.length === 0 ? (
+          ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
             <div
               className="flex h-full flex-col items-center justify-center p-8 text-center"
             >
@@ -401,9 +427,7 @@ export default function SubmitToChallengeContent({
               <p
                 className="text-foreground/70 mb-2"
               >
-                {photos.length === 0
-                  ? "You don't have any photos yet"
-                  : 'All your photos have already been submitted'}
+                You don&apos;t have any photos yet
               </p>
               <p
                 className="text-sm text-foreground/50 mb-4"
@@ -421,16 +445,18 @@ export default function SubmitToChallengeContent({
             </div>
           ) : (
             <PhotoGrid
-              photos={availablePhotos}
+              photos={photos}
               selectedPhotoIds={selectedPhotoIds}
               onSelectPhoto={handleSelectPhoto}
               onPhotoClick={(photo) => handleSelectPhoto(photo.id)}
               onClearSelection={handleClearSelection}
               onSelectMultiple={handleSelectMultiple}
               sortable={false}
-              disabledIds={privateAndRejectedPhotoIds}
+              disabledIds={privatePhotoIds}
               disabledMessage="This photo cannot be submitted because it is private"
               rejectedIds={rejectedPhotoIds}
+              pendingIds={pendingPhotoIds}
+              acceptedIds={acceptedPhotoIds}
               leadingContent={
                 uploadingPhotos.length > 0 ? (
                   <>

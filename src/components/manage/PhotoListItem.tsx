@@ -2,10 +2,11 @@
 
 import BlurImage from '@/components/shared/BlurImage';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import { formatAperture, formatExposure, formatFocalLength, formatISO } from '@/utils/exif';
+import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
-import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -35,7 +36,7 @@ function formatDate(dateString: string | null | undefined): string | null {
   });
 }
 
-/** Format EXIF data for display */
+/** Format EXIF data for display - uses unified exif utilities */
 function formatExifValue(key: string, value: unknown): string {
   if (value === null || value === undefined) return '';
 
@@ -49,19 +50,19 @@ function formatExifValue(key: string, value: unknown): string {
     }
   }
 
-  // Handle numbers with decimals
+  // Handle numbers with proper formatting
   if (typeof value === 'number') {
     if (key === 'ExposureTime') {
-      return value < 1 ? `1/${Math.round(1 / value)}s` : `${value}s`;
+      return formatExposure(value);
     }
     if (key === 'FNumber') {
-      return `f/${value}`;
+      return formatAperture(value);
     }
     if (key === 'FocalLength') {
-      return `${value}mm`;
+      return formatFocalLength(value);
     }
     if (key === 'ISO') {
-      return `ISO ${value}`;
+      return formatISO(value);
     }
     if (key === 'GPSLatitude' || key === 'GPSLongitude') {
       return value.toFixed(6);

@@ -1,11 +1,12 @@
+import { render } from '@react-email/render';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
 
-import { createClient } from '@/utils/supabase/server';
 import { SubmissionNotificationEmail } from '@/emails/submission-notification';
-import { encrypt } from '@/utils/encrypt';
 import { createNotification } from '@/lib/notifications/create';
+import { encrypt } from '@/utils/encrypt';
+import { adminSupabase } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -20,14 +21,25 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { challengeId, photoCount } = body;
+  const { challengeId, photoIds } = body as { challengeId: string; photoIds: string[] };
 
-  if (!challengeId || !photoCount) {
+  if (!challengeId || !photoIds || photoIds.length === 0) {
     return NextResponse.json(
-      { message: 'Challenge ID and photo count are required' },
+      { message: 'Challenge ID and photo IDs are required' },
       { status: 400 },
     );
   }
+
+  const photoCount = photoIds.length;
+
+  // Fetch photo details for the email
+  const { data: photos } = await supabase
+    .from('photos')
+    .select('id, url, title')
+    .in('id', photoIds)
+    .limit(6); // Limit to 6 photos for email display
+
+  const photoUrls = (photos || []).map((p) => p.url);
 
   // Get submitter info
   const { data: submitterProfile } = await supabase
@@ -58,8 +70,8 @@ export async function POST(request: NextRequest) {
   const challengeLink = `${process.env.NEXT_PUBLIC_SITE_URL}/challenges/${challenge.slug}`;
   const reviewLink = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/challenges/${challenge.slug}/submissions`;
 
-  // Get all admin users
-  const { data: admins, error: adminsError } = await supabase
+  // Get all admin users (use admin client to bypass RLS for email access)
+  const { data: admins, error: adminsError } = await adminSupabase
     .from('profiles')
     .select('id, full_name, email')
     .eq('is_admin', true);
@@ -70,7 +82,6 @@ export async function POST(request: NextRequest) {
   }
 
   if (!admins || admins.length === 0) {
-    // No admins to notify, just return success
     return NextResponse.json({ success: true, notifiedCount: 0 });
   }
 
@@ -100,8 +111,8 @@ export async function POST(request: NextRequest) {
   await Promise.all(notificationPromises);
 
   // Check email preferences and send emails
-  // Get admin email preferences for admin notifications
-  const { data: emailPreferences } = await supabase
+  // Get admin email preferences for admin notifications (use admin client)
+  const { data: emailPreferences } = await adminSupabase
     .from('email_preferences')
     .select('user_id')
     .eq('type_key', 'admin_notifications')
@@ -122,10 +133,10 @@ export async function POST(request: NextRequest) {
   try {
     const emailPromises = adminsToEmail.map(async (admin) => {
       const optOutToken = encrypt(JSON.stringify({
-        email: admin.email,
-        type: 'admin_notifications',
+        userId: admin.id,
+        emailType: 'admin_notifications',
       }));
-      const optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${optOutToken}`;
+      const optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(optOutToken)}`;
 
       const html = await render(
         SubmissionNotificationEmail({
@@ -135,6 +146,7 @@ export async function POST(request: NextRequest) {
           submitterAvatarUrl,
           submitterProfileLink,
           photoCount,
+          photoUrls,
           challengeTitle: challenge.title,
           challengeThumbnail: challenge.cover_image_url,
           challengeLink,
@@ -144,7 +156,8 @@ export async function POST(request: NextRequest) {
       );
 
       return {
-        from: `${process.env.RESEND_FROM_NAME} <${process.env.RESEND_FROM_EMAIL}>`,
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+        replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
         to: admin.email!,
         subject: `New submission: ${submitterName} submitted to "${challenge.title}"`,
         html,

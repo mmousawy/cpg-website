@@ -30,6 +30,10 @@ interface PhotoGridProps {
   disabledMessage?: string;
   /** Set of photo IDs that were rejected (for challenge submissions) */
   rejectedIds?: Set<string>;
+  /** Set of photo IDs that are pending review (for challenge submissions) */
+  pendingIds?: Set<string>;
+  /** Set of photo IDs that were accepted (for challenge submissions) */
+  acceptedIds?: Set<string>;
 }
 
 export default function PhotoGrid({
@@ -50,6 +54,8 @@ export default function PhotoGrid({
   disabledIds,
   disabledMessage,
   rejectedIds,
+  pendingIds,
+  acceptedIds,
 }: PhotoGridProps) {
   return (
     <LazySelectableGrid
@@ -57,8 +63,8 @@ export default function PhotoGrid({
       selectedIds={selectedPhotoIds}
       getId={(photo) => photo.id}
       onSelect={(id, isMulti) => {
-        // Skip if disabled or rejected
-        if (disabledIds?.has(id) || rejectedIds?.has(id)) return;
+        // Skip if disabled, rejected, pending, or accepted
+        if (disabledIds?.has(id) || rejectedIds?.has(id) || pendingIds?.has(id) || acceptedIds?.has(id)) return;
 
         if (isMulti) {
           onSelectPhoto(id, true);
@@ -84,6 +90,9 @@ export default function PhotoGrid({
       renderItem={(photo, isSelected, isDragging, isHovered) => {
         const isDisabled = disabledIds?.has(photo.id) ?? false;
         const isRejected = rejectedIds?.has(photo.id) ?? false;
+        const isPending = pendingIds?.has(photo.id) ?? false;
+        const isAccepted = acceptedIds?.has(photo.id) ?? false;
+        const isNonSelectable = isDisabled || isRejected || isPending || isAccepted;
         return (
           <PhotoCard
             photo={photo}
@@ -93,9 +102,11 @@ export default function PhotoGrid({
             sortable={sortable}
             albumCoverUrl={albumCoverUrl}
             currentAlbumTitle={currentAlbumTitle}
-            disabled={isDisabled || isRejected}
+            disabled={isNonSelectable}
             disabledMessage={isDisabled ? disabledMessage : undefined}
             rejected={isRejected}
+            pending={isPending}
+            accepted={isAccepted}
           />
         );
       }}

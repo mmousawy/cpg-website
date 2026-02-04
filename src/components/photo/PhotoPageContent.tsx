@@ -8,6 +8,7 @@ import TagsSection from '@/components/shared/TagsSection';
 import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
+import { getExifSummary } from '@/utils/exif';
 
 interface Album {
   id: string;
@@ -33,46 +34,13 @@ interface PhotoPageContentProps {
   albums?: Album[];
 }
 
-function exifToString(exif: Record<string, unknown> | null): string | null {
-  if (!exif) return null;
-
-  const fields: string[] = [];
-
-  if (exif.Make && exif.Model) {
-    fields.push(`${exif.Make} ${exif.Model}`);
-  } else if (exif.Make) {
-    fields.push(String(exif.Make));
-  } else if (exif.Model) {
-    fields.push(String(exif.Model));
-  }
-
-  if (exif.LensModel) {
-    fields.push(String(exif.LensModel));
-  }
-
-  const settings: string[] = [];
-  if (exif.ISO) settings.push(`ISO ${exif.ISO}`);
-  if (exif.FNumber) settings.push(`f/${exif.FNumber}`);
-  if (exif.ExposureTime) {
-    const exp = Number(exif.ExposureTime);
-    settings.push(exp < 1 ? `1/${Math.round(1 / exp)}s` : `${exp}s`);
-  }
-
-  if (settings.length > 0) {
-    fields.push(settings.join(' · '));
-  }
-
-  return fields.length ? fields.join(' · ') : null;
-}
-
 export default function PhotoPageContent({
   photo,
   profile,
   currentAlbum,
   albums = [],
 }: PhotoPageContentProps) {
-  const exif = photo.exif_data as Record<string, unknown> | null;
-  const exifString = exifToString(exif);
+  const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
   const nickname = profile.nickname;
 
   // Filter out current album from the list of other albums

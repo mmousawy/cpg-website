@@ -109,12 +109,19 @@ export function useSubmitToChallenge() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           challengeId,
-          photoCount: submittedCount,
+          photoIds,
         }),
-      }).catch((err) => {
-        // Log but don't fail the submission
-        console.error('Failed to notify admins:', err);
-      });
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text();
+            console.error('Notify admins failed:', res.status, text);
+          }
+        })
+        .catch((err) => {
+          // Log but don't fail the submission
+          console.error('Failed to notify admins:', err);
+        });
 
       return submittedCount;
     },

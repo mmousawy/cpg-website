@@ -6,6 +6,8 @@ import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import CancelSVG from 'public/icons/cancel.svg';
+import CheckSVG from 'public/icons/check.svg';
+import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import WallArtSVG from 'public/icons/wall-art.svg';
@@ -28,6 +30,10 @@ interface PhotoCardProps {
   disabledMessage?: string;
   /** Whether this photo was rejected (for challenge submissions) */
   rejected?: boolean;
+  /** Whether this photo is pending review (for challenge submissions) */
+  pending?: boolean;
+  /** Whether this photo was accepted (for challenge submissions) */
+  accepted?: boolean;
 }
 
 function PhotoCard({
@@ -41,6 +47,8 @@ function PhotoCard({
   disabled = false,
   disabledMessage,
   rejected = false,
+  pending = false,
+  accepted = false,
 }: PhotoCardProps) {
   // Generate square cropped thumbnail URL (256x256px, center-cropped)
   const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
@@ -55,6 +63,24 @@ function PhotoCard({
 
   const badges = useMemo(() => {
     const badgeList = [];
+    if (accepted) {
+      badgeList.push({
+        icon: <CheckSVG
+          className="size-4 fill-current"
+        />,
+        variant: 'accepted' as const,
+        tooltip: 'Already accepted in this challenge',
+      });
+    }
+    if (pending) {
+      badgeList.push({
+        icon: <ClockMiniSVG
+          className="size-4 fill-current"
+        />,
+        variant: 'pending' as const,
+        tooltip: 'Pending review',
+      });
+    }
     if (rejected) {
       badgeList.push({
         icon: <CancelSVG
@@ -98,7 +124,7 @@ function PhotoCard({
       });
     }
     return badgeList;
-  }, [rejected, isAlbumCover, isInAlbum, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage]);
+  }, [accepted, pending, rejected, isAlbumCover, isInAlbum, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage]);
 
   return (
     <div

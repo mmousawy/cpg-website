@@ -170,11 +170,11 @@ export async function POST(request: NextRequest) {
           // Generate opt-out link
           const optOutToken = encrypt(
             JSON.stringify({
-              email: submissionUser.email,
-              type: 'photo_challenges',
+              userId: submissionUser.id,
+              emailType: 'photo_challenges',
             }),
           );
-          const optOutLink = `${baseUrl}/unsubscribe/${optOutToken}`;
+          const optOutLink = `${baseUrl}/unsubscribe/${encodeURIComponent(optOutToken)}`;
 
           const emailHtml = await render(
             SubmissionResultEmail({
@@ -191,6 +191,7 @@ export async function POST(request: NextRequest) {
 
           await resend.emails.send({
             from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+            replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
             to: submissionUser.email,
             subject:
               status === 'accepted'
