@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/mmousawy/cpg-website/compare/v1.19.0...v1.19.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* Update caching mechanisms. ([39a1d7d](https://github.com/mmousawy/cpg-website/commit/39a1d7d7be92c24f5f1c4b560f1c932c1481e145))
+
 ## [1.19.0](https://github.com/mmousawy/cpg-website/compare/v1.18.0...v1.19.0) (2026-02-04)
 
 
