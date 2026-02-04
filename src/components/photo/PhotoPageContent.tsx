@@ -118,7 +118,7 @@ export default function PhotoPageContent({
                 className="mb-4"
               >
                 <p
-                  className="mb-1 text-sm font-medium"
+                  className="mb-1.5 text-xs font-medium text-foreground/70"
                 >
                   Seen in
                 </p>
