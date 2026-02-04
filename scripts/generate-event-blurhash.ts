@@ -37,6 +37,37 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 /**
+ * Calculate blurhash dimensions preserving aspect ratio.
+ * Same logic as src/utils/decodeBlurhash.ts getBlurhashDimensions
+ */
+function getBlurhashDimensions(
+  width: number,
+  height: number,
+  maxSize: number = 32,
+): { width: number; height: number } {
+  if (!width || !height || width <= 0 || height <= 0) {
+    return { width: maxSize, height: maxSize };
+  }
+
+  if (width > height) {
+    // Landscape: width is longest side
+    return {
+      width: maxSize,
+      height: Math.max(1, Math.round((height / width) * maxSize)),
+    };
+  } else if (height > width) {
+    // Portrait: height is longest side
+    return {
+      width: Math.max(1, Math.round((width / height) * maxSize)),
+      height: maxSize,
+    };
+  } else {
+    // Square
+    return { width: maxSize, height: maxSize };
+  }
+}
+
+/**
  * Generate blurhash from an image URL, preserving aspect ratio
  */
 async function generateBlurhashFromUrl(imageUrl: string): Promise<string | null> {
@@ -55,20 +86,11 @@ async function generateBlurhashFromUrl(imageUrl: string): Promise<string | null>
     const originalHeight = metadata.height || 32;
 
     // Calculate dimensions preserving aspect ratio (max 32px on longest side)
-    const maxSize = 32;
-    let width: number;
-    let height: number;
-    if (originalWidth > originalHeight) {
-      width = maxSize;
-      height = Math.max(1, Math.round((originalHeight / originalWidth) * maxSize));
-    } else {
-      height = maxSize;
-      width = Math.max(1, Math.round((originalWidth / originalHeight) * maxSize));
-    }
+    const dims = getBlurhashDimensions(originalWidth, originalHeight, 32);
 
-    // Resize preserving aspect ratio (no cropping)
+    // Resize preserving aspect ratio - use 'inside' to ensure no cropping/stretching
     const { data, info } = await sharp(imageBuffer)
-      .resize(width, height, { fit: 'fill' })
+      .resize(dims.width, dims.height, { fit: 'inside' })
       .ensureAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });

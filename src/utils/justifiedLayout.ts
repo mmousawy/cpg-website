@@ -24,6 +24,7 @@ export interface LayoutOptions {
   minPhotosPerRow?: number; // Minimum photos per row (default: 2)
   maxPhotosPerRow?: number; // Maximum photos per row (default: 8)
   targetRowHeight?: number; // Target row height in pixels (default: 240)
+  maxRowHeight?: number; // Maximum row height in pixels (default: 350)
 }
 
 const DEFAULT_TARGET_ROW_HEIGHT = 240;
@@ -81,6 +82,7 @@ export function calculateJustifiedLayout(
     minPhotosPerRow = 2,
     maxPhotosPerRow = 8,
     targetRowHeight = DEFAULT_TARGET_ROW_HEIGHT,
+    maxRowHeight = 350,
   } = options;
 
   if (photos.length === 0 || containerWidth <= 0) return [];
@@ -117,7 +119,7 @@ export function calculateJustifiedLayout(
       photoData.map((p) => p.aspectRatio),
       containerWidth,
     );
-    return [createRow(photoData, Math.min(rowHeight, 350), containerWidth)];
+    return [createRow(photoData, Math.min(rowHeight, maxRowHeight), containerWidth)];
   }
 
   // Calculate ideal photos per row for balancing
@@ -152,12 +154,15 @@ export function calculateJustifiedLayout(
       const rowHeight = getRowHeight(rowAspectRatios, containerWidth);
       const rowSignature = getRowSignature(rowPhotos);
 
-      // Height penalty for extreme heights
+      // Height penalty for extreme heights - strongly penalize exceeding max
       let heightPenalty = 0;
       if (rowHeight < 100) heightPenalty = 500;
       else if (rowHeight < 150) heightPenalty = 100;
-      else if (rowHeight > 400) heightPenalty = 200;
-      else if (rowHeight > 350) heightPenalty = 50;
+      else if (rowHeight > maxRowHeight) {
+        // Exponential penalty for exceeding max height - forces adding more photos
+        const excess = rowHeight - maxRowHeight;
+        heightPenalty = 500 + excess * 10;
+      }
 
       // Balance penalty: only penalize big jumps (±1 is fine for playful alternating)
       const prevRowSize = dp[j].prevRowSize;
@@ -223,7 +228,7 @@ export function calculateJustifiedLayout(
       containerWidth,
     );
     // Cap row height for single/few photo rows
-    const cappedHeight = Math.min(rowHeight, 350);
+    const cappedHeight = Math.min(rowHeight, maxRowHeight);
     rows.push(createRow(rowPhotos, cappedHeight, containerWidth));
     start = end;
   }

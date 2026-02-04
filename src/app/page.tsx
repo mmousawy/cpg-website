@@ -244,6 +244,7 @@ export default async function Home() {
               <JustifiedPhotoGrid
                 photos={photos}
                 showAttribution
+                maxRowHeight={280}
               />
             </div>
           )}

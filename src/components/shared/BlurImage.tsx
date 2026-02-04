@@ -3,7 +3,7 @@
 import Image, { type ImageProps } from 'next/image';
 import { useMemo, useState } from 'react';
 
-import { blurhashToDataURL } from '@/utils/decodeBlurhash';
+import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 import { getBlurPlaceholderUrl } from '@/utils/supabaseImageLoader';
 
 type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
@@ -41,19 +41,8 @@ export default function BlurImage({
   // Decode blurhash with correct aspect ratio - works on both server (SSR) and client
   const blurhashDataUrl = useMemo(() => {
     if (blurhash && !noBlur) {
-      // Calculate decode dimensions maintaining aspect ratio (max 64px on longest side)
-      let decodeWidth = 64;
-      let decodeHeight = 64;
-      if (imgWidth && imgHeight && imgWidth > 0 && imgHeight > 0) {
-        if (imgWidth > imgHeight) {
-          decodeWidth = 64;
-          decodeHeight = Math.round((imgHeight / imgWidth) * 64);
-        } else {
-          decodeHeight = 64;
-          decodeWidth = Math.round((imgWidth / imgHeight) * 64);
-        }
-      }
-      return blurhashToDataURL(blurhash, decodeWidth, decodeHeight);
+      const dims = getBlurhashDimensions(imgWidth || 0, imgHeight || 0, 64);
+      return blurhashToDataURL(blurhash, dims.width, dims.height);
     }
     return null;
   }, [blurhash, noBlur, imgWidth, imgHeight]);

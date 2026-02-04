@@ -17,6 +17,10 @@ interface JustifiedPhotoGridProps {
   albumSlug?: string;
   /** Show attribution overlay with user avatar/name on hover (for community photostream) */
   showAttribution?: boolean;
+  /** Maximum row height in pixels (default: 350, use lower for embedded grids) */
+  maxRowHeight?: number;
+  /** Minimum photos per row (default varies by breakpoint: 2 for all) */
+  minPhotosPerRow?: number;
 }
 
 // Reference widths for different breakpoints
@@ -37,6 +41,8 @@ export default function JustifiedPhotoGrid({
   profileNickname,
   albumSlug,
   showAttribution = false,
+  maxRowHeight = 350,
+  minPhotosPerRow,
 }: JustifiedPhotoGridProps) {
   // Collect short_ids for batch fetching - must be before any early returns
   const shortIds = photos
@@ -57,19 +63,22 @@ export default function JustifiedPhotoGrid({
 
   // Calculate layouts for each breakpoint
   const mobileRows = calculateJustifiedLayout(photoInput, MOBILE_WIDTH, {
-    minPhotosPerRow: 2,
+    minPhotosPerRow: minPhotosPerRow ?? 2,
     maxPhotosPerRow: 3,
     targetRowHeight: 180,
+    maxRowHeight,
   });
   const tabletRows = calculateJustifiedLayout(photoInput, TABLET_WIDTH, {
-    minPhotosPerRow: 2,
+    minPhotosPerRow: minPhotosPerRow ?? 2,
     maxPhotosPerRow: 4,
     targetRowHeight: 220,
+    maxRowHeight,
   });
   const desktopRows = calculateJustifiedLayout(photoInput, DESKTOP_WIDTH, {
-    minPhotosPerRow: 2,
+    minPhotosPerRow: minPhotosPerRow ?? 2,
     maxPhotosPerRow: 5,
     targetRowHeight: 280,
+    maxRowHeight,
   });
 
   if (photos.length === 0) {

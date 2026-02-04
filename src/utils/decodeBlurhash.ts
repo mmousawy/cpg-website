@@ -1,6 +1,42 @@
 import { decode } from 'blurhash';
 
 /**
+ * Calculate blurhash encode/decode dimensions preserving aspect ratio.
+ * Uses the same logic for both encoding and decoding to ensure consistency.
+ *
+ * @param width - Original image width
+ * @param height - Original image height
+ * @param maxSize - Maximum dimension (default: 32 for encoding, 64 for decoding)
+ * @returns { width, height } dimensions preserving aspect ratio
+ */
+export function getBlurhashDimensions(
+  width: number,
+  height: number,
+  maxSize: number = 32,
+): { width: number; height: number } {
+  if (!width || !height || width <= 0 || height <= 0) {
+    return { width: maxSize, height: maxSize };
+  }
+
+  if (width > height) {
+    // Landscape: width is longest side
+    return {
+      width: maxSize,
+      height: Math.max(1, Math.round((height / width) * maxSize)),
+    };
+  } else if (height > width) {
+    // Portrait: height is longest side
+    return {
+      width: Math.max(1, Math.round((width / height) * maxSize)),
+      height: maxSize,
+    };
+  } else {
+    // Square
+    return { width: maxSize, height: maxSize };
+  }
+}
+
+/**
  * Convert RGBA pixels to a BMP data URL.
  * Works on both server (Node.js) and client (browser) - no canvas needed.
  */

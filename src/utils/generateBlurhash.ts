@@ -1,5 +1,7 @@
 import { encode } from 'blurhash';
 
+import { getBlurhashDimensions } from './decodeBlurhash';
+
 /**
  * Generate a blurhash from an image file, preserving aspect ratio
  * @param file - Image file to generate blurhash from
@@ -22,19 +24,7 @@ export async function generateBlurhash(
     });
 
     // Calculate dimensions preserving aspect ratio (max 32px on longest side)
-    const maxSize = 32;
-    let width: number;
-    let height: number;
-    if (img.naturalWidth > img.naturalHeight) {
-      width = maxSize;
-      height = Math.round((img.naturalHeight / img.naturalWidth) * maxSize);
-    } else {
-      height = maxSize;
-      width = Math.round((img.naturalWidth / img.naturalHeight) * maxSize);
-    }
-    // Ensure minimum of 1px
-    width = Math.max(1, width);
-    height = Math.max(1, height);
+    const { width, height } = getBlurhashDimensions(img.naturalWidth, img.naturalHeight, 32);
 
     // Create canvas with correct aspect ratio
     const canvas = document.createElement('canvas');

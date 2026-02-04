@@ -4,7 +4,7 @@ import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photosw
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { blurhashToDataURL } from '@/utils/decodeBlurhash';
+import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 
 interface PhotoWithLightboxProps {
   url: string;
@@ -122,12 +122,11 @@ export default function PhotoWithLightbox({
     };
   }, []);
 
-  // Decode blurhash for placeholder
+  // Decode blurhash for placeholder with correct aspect ratio
   const blurhashDataUrl = useMemo(() => {
     if (!blurhash) return null;
-    const decodeWidth = width > height ? 64 : Math.round((width / height) * 64);
-    const decodeHeight = height > width ? 64 : Math.round((height / width) * 64);
-    return blurhashToDataURL(blurhash, decodeWidth, decodeHeight);
+    const dims = getBlurhashDimensions(width, height, 64);
+    return blurhashToDataURL(blurhash, dims.width, dims.height);
   }, [blurhash, width, height]);
 
   return (
