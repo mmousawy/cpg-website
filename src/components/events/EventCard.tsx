@@ -336,8 +336,12 @@ export default function EventCard({
   ) : null;
 
   const wrapperClasses = clsx(
-    'block rounded-lg border border-border-color bg-background p-3 sm:p-4 transition-colors group',
-    asLink && 'hover:border-primary cursor-pointer',
+    'block transition-colors group',
+    // Mobile: borderless, no background. Desktop: card styling
+    'sm:rounded-lg sm:border sm:border-border-color sm:bg-background',
+    'max-sm:[&:not(:first-child)]:pt-6 max-sm:[&:not(:last-child)]:pb-6',
+    'sm:p-4',
+    asLink && 'sm:hover:border-primary cursor-pointer',
     className,
   );
 
@@ -359,6 +363,8 @@ export default function EventCard({
               singularLabel="attendee"
               pluralLabel="attendees"
               showInlineCount={true}
+              maxVisibleAvatarsMobile={8}
+              showCountOnMobile={true}
               disablePopover={disableAttendeesPopover}
             />
           </div>

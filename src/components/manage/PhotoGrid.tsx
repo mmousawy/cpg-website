@@ -57,6 +57,13 @@ export default function PhotoGrid({
   pendingIds,
   acceptedIds,
 }: PhotoGridProps) {
+  // Combine all non-selectable IDs for the grid (controls checkbox visibility)
+  const allNonSelectableIds = new Set<string>();
+  disabledIds?.forEach((id) => allNonSelectableIds.add(id));
+  rejectedIds?.forEach((id) => allNonSelectableIds.add(id));
+  pendingIds?.forEach((id) => allNonSelectableIds.add(id));
+  acceptedIds?.forEach((id) => allNonSelectableIds.add(id));
+
   return (
     <LazySelectableGrid
       items={photos}
@@ -64,7 +71,7 @@ export default function PhotoGrid({
       getId={(photo) => photo.id}
       onSelect={(id, isMulti) => {
         // Skip if disabled, rejected, pending, or accepted
-        if (disabledIds?.has(id) || rejectedIds?.has(id) || pendingIds?.has(id) || acceptedIds?.has(id)) return;
+        if (allNonSelectableIds.has(id)) return;
 
         if (isMulti) {
           onSelectPhoto(id, true);
@@ -86,7 +93,7 @@ export default function PhotoGrid({
       alwaysShowMobileSpacer={alwaysShowMobileSpacer}
       leadingContent={leadingContent}
       trailingContent={trailingContent}
-      disabledIds={disabledIds}
+      disabledIds={allNonSelectableIds}
       renderItem={(photo, isSelected, isDragging, isHovered) => {
         const isDisabled = disabledIds?.has(photo.id) ?? false;
         const isRejected = rejectedIds?.has(photo.id) ?? false;

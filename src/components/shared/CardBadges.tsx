@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { ReactNode } from 'react';
 import Tooltip from './Tooltip';
 
-export type BadgeVariant = 'private' | 'album-cover' | 'in-album' | 'rejected' | 'pending' | 'accepted';
+export type BadgeVariant = 'private' | 'album-cover' | 'in-album' | 'rejected' | 'pending' | 'accepted' | 'challenge';
 
 export interface BadgeConfig {
   icon?: ReactNode;
@@ -62,6 +62,11 @@ export default function CardBadges({ badges, position = 'top-right' }: CardBadge
         return clsx(
           baseClasses,
           'border border-green-800 bg-green-100 text-green-800 dark:bg-green-900/80 dark:text-green-200',
+        );
+      case 'challenge':
+        return clsx(
+          baseClasses,
+          'border border-purple-800 bg-purple-100 text-purple-800 dark:bg-purple-900/80 dark:text-purple-200',
         );
       case 'private':
       default:

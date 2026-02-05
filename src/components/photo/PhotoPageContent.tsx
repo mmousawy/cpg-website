@@ -1,4 +1,5 @@
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
+import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
@@ -26,6 +27,13 @@ interface Profile {
   avatar_url: string | null;
 }
 
+interface Challenge {
+  id: string;
+  title: string;
+  slug: string;
+  cover_image_url?: string | null;
+}
+
 interface PhotoPageContentProps {
   photo: Photo & { tags?: SimpleTag[] };
   profile: Profile;
@@ -33,6 +41,8 @@ interface PhotoPageContentProps {
   currentAlbum?: Album;
   /** All albums this photo is part of */
   albums?: Album[];
+  /** Challenges this photo was accepted in */
+  challenges?: Challenge[];
 }
 
 export default function PhotoPageContent({
@@ -40,6 +50,7 @@ export default function PhotoPageContent({
   profile,
   currentAlbum,
   albums = [],
+  challenges = [],
 }: PhotoPageContentProps) {
   const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
   const nickname = profile.nickname;
@@ -112,6 +123,32 @@ export default function PhotoPageContent({
           <div
             className="mt-auto space-y-2 pt-4"
           >
+            {/* Featured in challenges */}
+            {challenges.length > 0 && (
+              <div
+                className="mb-4"
+              >
+                <p
+                  className="mb-1.5 text-xs font-medium text-foreground/70"
+                >
+                  Featured in
+                </p>
+                <div
+                  className="flex flex-wrap gap-2"
+                >
+                  {challenges.map((challenge) => (
+                    <ChallengeMiniCard
+                      key={challenge.id}
+                      title={challenge.title}
+                      slug={challenge.slug}
+                      coverImageUrl={challenge.cover_image_url}
+                      href={`/challenges/${challenge.slug}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Seen in albums */}
             {(currentAlbum || otherAlbums.length > 0) && (
               <div

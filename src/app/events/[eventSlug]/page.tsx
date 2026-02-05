@@ -106,6 +106,8 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
       emptyMessage={isPastEvent ? 'No attendees recorded' : 'No attendees yet'}
       showInlineCount={true}
       avatarSize="sm"
+      maxVisibleAvatarsMobile={12}
+      showCountOnMobile={true}
     />
   );
 }

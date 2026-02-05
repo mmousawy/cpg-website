@@ -12,6 +12,9 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { createMockNotifications } from '@/lib/actions/notifications';
 import NotificationItem from './NotificationItem';
 
+// Paths where the header is full-width (must match Header.tsx)
+const fullWidthPaths = ['/account/photos', '/account/albums'];
+
 export default function NotificationButton() {
   const { user, profile } = useAuth();
   const { isAdmin } = useAdmin();
@@ -20,6 +23,9 @@ export default function NotificationButton() {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isCreatingMocks, setIsCreatingMocks] = useState(false);
+
+  // Check if current path has full-width header
+  const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
 
   const { notifications, unseenCount, totalCount, hasMore, isLoading, isLoadingMore, markAsSeen, loadMore } = useNotifications(user?.id || null);
 

@@ -94,6 +94,7 @@ async function CachedPhotoContent({
       photo={result.photo}
       profile={result.profile}
       albums={result.albums}
+      challenges={result.challenges}
     />
   );
 }

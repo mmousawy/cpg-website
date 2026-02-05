@@ -27,6 +27,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - View tracking with "Most viewed this week" sections
 - Bulk photo and album editing (multi-select, batch operations)
 - Add photos to albums modal
+- Challenge badges on photos (shows which challenges a photo was accepted in)
 - Admin moderation (suspend/unsuspend)
 
 ### Photo Challenges
@@ -40,6 +41,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Email announcements to members
 - Notifications for submission results
 - Profile badges for challenge participation
+- "Featured in" section on photo detail pages shows accepted challenges
 
 ### User Profiles
 - Public profile pages (`/@username`)
@@ -333,7 +335,7 @@ Deploy to Vercel:
 
 - [x] Member management
 - [ ] Statistics/analytics dashboard
-- [ ] Admin tools
+- [x] Admin tools
 
 ### Photos
 
@@ -356,8 +358,7 @@ Deploy to Vercel:
 - [x] Email announcements
 - [x] Submission result notifications
 - [x] Profile achievement badges
-- [ ] Voting/judging system
-- [ ] Challenge winners showcase
+- [x] Challenge badges on photos (manage grid + photo detail pages)
 
 ### Engagement
 
@@ -386,7 +387,6 @@ Deploy to Vercel:
 ### Sharing
 
 - [ ] Social share buttons
-- [ ] Embed code for galleries
 
 ### Moderation
 

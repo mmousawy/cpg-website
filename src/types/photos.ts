@@ -13,11 +13,20 @@ export type PhotoAlbumInfo = {
   photo_count?: number;
 };
 
+export type PhotoChallengeInfo = {
+  id: string;
+  title: string;
+  slug: string;
+  cover_image_url: string | null;
+  status: 'accepted' | 'pending' | 'rejected';
+};
+
 /** Simplified tag object returned from queries (only need the tag name) */
 export type SimpleTag = { tag: string };
 
 export type PhotoWithAlbums = Photo & {
   albums?: PhotoAlbumInfo[];
+  challenges?: PhotoChallengeInfo[];
   tags?: SimpleTag[];
   /** When viewing within an album context, this is the album_photos.id for that relationship */
   album_photo_id?: string;

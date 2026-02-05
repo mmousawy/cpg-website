@@ -41,7 +41,7 @@ export default function StickyActionBar({
       <div
         className={clsx(
           'border-border-color-strong bg-background-light',
-          variant === 'compact' ? 'px-2 py-3' : 'px-2 py-3 sm:px-6 sm:py-4',
+          variant === 'compact' ? 'px-2 py-3' : 'px-4 py-3 md:px-12 md:py-4',
           position === 'bottom' ? 'border-t-[0.0625rem]' : 'border-b-[0.0625rem]',
         )}
       >

@@ -2,6 +2,7 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
+import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import TagInput from '@/components/shared/TagInput';
@@ -74,6 +75,7 @@ export default function SinglePhotoEditForm({
   const [localSuccess, setLocalSuccess] = useState(false);
   const [isSettingCover, setIsSettingCover] = useState(false);
   const photoAlbums = photo.albums || [];
+  const photoChallenges = photo.challenges || [];
 
   // Check if this photo is already the cover of the current album
   const isCurrentCover = currentAlbum?.cover_image_url === photo.url;
@@ -363,7 +365,7 @@ export default function SinglePhotoEditForm({
               <h3
                 className="mb-2 text-sm font-medium"
               >
-                Part of:
+                In albums:
               </h3>
               <div
                 className="grid grid-cols-2 gap-2"
@@ -376,6 +378,37 @@ export default function SinglePhotoEditForm({
                     coverImageUrl={album.cover_image_url}
                     href={`/account/albums/${album.slug}`}
                     photoCount={album.photo_count}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Challenges this photo was submitted to */}
+        {photoChallenges.length > 0 && (
+          <>
+            <hr
+              className="my-4 border-border-color"
+            />
+            <div>
+              <h3
+                className="mb-2 text-sm font-medium"
+              >
+                In challenges:
+              </h3>
+              <div
+                className="grid grid-cols-2 gap-2"
+              >
+                {photoChallenges.map((challenge) => (
+                  <ChallengeMiniCard
+                    key={challenge.id}
+                    title={challenge.title}
+                    slug={challenge.slug}
+                    coverImageUrl={challenge.cover_image_url}
+                    href={`/challenges/${challenge.slug}`}
+                    status={challenge.status}
+                    showStatus
                   />
                 ))}
               </div>

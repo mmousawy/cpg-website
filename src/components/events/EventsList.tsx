@@ -144,7 +144,7 @@ export default function EventsList({
   if (variant === 'compact') {
     return (
       <div
-        className="space-y-3"
+        className="divide-y divide-border-color sm:divide-y-0 sm:space-y-3"
       >
         {displayEvents.map((event) => {
           const attendees = attendeesByEvent[event.id] || [];

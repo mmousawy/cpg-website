@@ -1,7 +1,7 @@
-import { cacheLife, cacheTag } from 'next/cache';
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -99,6 +99,7 @@ async function CachedAlbumPhotoContent({
       profile={result.profile}
       currentAlbum={result.currentAlbum}
       albums={result.albums}
+      challenges={result.challenges}
     />
   );
 }

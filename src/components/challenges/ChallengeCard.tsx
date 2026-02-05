@@ -255,7 +255,7 @@ export default function ChallengeCard({
 
   // Wrapper classes
   const wrapperClasses = clsx(
-    'group relative flex flex-col overflow-hidden rounded-2xl transition-all min-h-64',
+    'group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl transition-all min-h-56 sm:min-h-64',
     'bg-background-light border border-border-color',
     'hover:border-border-color-strong hover:shadow-lg',
     isEnded && 'opacity-90',

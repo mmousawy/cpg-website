@@ -1,0 +1,51 @@
+feat: Mobile UI optimizations and challenge badges for photos
+
+Improved mobile layouts by reducing padding and making event cards borderless.
+Added challenge badges to photos in manage view and photo detail pages.
+
+Mobile UI:
+- Reduced PageContainer horizontal padding from 16px to 8px on mobile
+- Event cards now borderless on mobile with dividers between items
+- Tighter grid gaps for challenges and albums on mobile
+- Smaller border radius on cards for mobile screens
+
+Challenge Badges:
+- New purple star badge on photos accepted in challenges (PhotoCard)
+- New ChallengeMiniCard component for displaying challenge info
+- SinglePhotoEditForm shows "In challenges:" section
+- PhotoPageContent shows "Featured in" section for challenges
+- usePhotos hook now fetches challenge submission data
+- Data layer functions fetch accepted challenges for photos
+
+Notification Positioning:
+- Sonner toasts respect header's max-width constraint
+- Different positioning for full-width vs constrained pages
+- StickyActionBar padding aligned with PageContainer (px-4, md:px-12)
+
+Files changed (22):
+
+New (1):
+- src/components/challenges/ChallengeMiniCard.tsx
+
+Modified (21):
+- src/app/[nickname]/album/[albumSlug]/photo/[photoId]/page.tsx
+- src/app/[nickname]/photo/[photoId]/page.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/app/page.tsx
+- src/components/album/AlbumCard.tsx
+- src/components/challenges/ChallengeCard.tsx
+- src/components/challenges/ChallengesList.tsx
+- src/components/events/EventCard.tsx
+- src/components/events/EventsList.tsx
+- src/components/layout/PageContainer.tsx
+- src/components/manage/PhotoCard.tsx
+- src/components/manage/PhotoGrid.tsx
+- src/components/manage/SinglePhotoEditForm.tsx
+- src/components/notifications/NotificationButton.tsx
+- src/components/notifications/ToastProvider.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/CardBadges.tsx
+- src/components/shared/StickyActionBar.tsx
+- src/hooks/usePhotos.ts
+- src/lib/data/profiles.ts
+- src/types/photos.ts

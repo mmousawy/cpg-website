@@ -352,6 +352,36 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     })
     .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
 
+  // Get accepted challenge submissions for this photo
+  const { data: challengeSubmissions } = await supabase
+    .from('challenge_submissions')
+    .select('challenge_id, challenges(id, title, slug, cover_image_url)')
+    .eq('photo_id', photo.id)
+    .eq('status', 'accepted');
+
+  type ChallengeSubmissionWithChallenge = {
+    challenge_id: string;
+    challenges: {
+      id: string;
+      title: string;
+      slug: string;
+      cover_image_url: string | null;
+    } | null;
+  };
+
+  const challenges = (challengeSubmissions || [])
+    .map((cs: ChallengeSubmissionWithChallenge) => {
+      const challenge = cs.challenges;
+      if (!challenge) return null;
+      return {
+        id: challenge.id,
+        title: challenge.title,
+        slug: challenge.slug,
+        cover_image_url: challenge.cover_image_url,
+      };
+    })
+    .filter((c): c is { id: string; title: string; slug: string; cover_image_url: string | null } => c !== null);
+
   return {
     photo: photo as Photo,
     profile: {
@@ -362,6 +392,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     },
     currentAlbum: album,
     albums,
+    challenges,
   };
 }
 
@@ -435,6 +466,36 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
     })
     .filter((a): a is { id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number } => a !== null);
 
+  // Get accepted challenge submissions for this photo
+  const { data: challengeSubmissions } = await supabase
+    .from('challenge_submissions')
+    .select('challenge_id, challenges(id, title, slug, cover_image_url)')
+    .eq('photo_id', photo.id)
+    .eq('status', 'accepted');
+
+  type ChallengeSubmissionWithChallenge = {
+    challenge_id: string;
+    challenges: {
+      id: string;
+      title: string;
+      slug: string;
+      cover_image_url: string | null;
+    } | null;
+  };
+
+  const challenges = (challengeSubmissions || [])
+    .map((cs: ChallengeSubmissionWithChallenge) => {
+      const challenge = cs.challenges;
+      if (!challenge) return null;
+      return {
+        id: challenge.id,
+        title: challenge.title,
+        slug: challenge.slug,
+        cover_image_url: challenge.cover_image_url,
+      };
+    })
+    .filter((c): c is { id: string; title: string; slug: string; cover_image_url: string | null } => c !== null);
+
   return {
     photo: photo as Photo,
     profile: {
@@ -444,5 +505,6 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
       avatar_url: profile.avatar_url,
     },
     albums,
+    challenges,
   };
 }

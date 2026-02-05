@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/utils/supabase/client';
-import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import type { Tables } from '@/database.types';
+import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import { supabase } from '@/utils/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 type PhotoFilter = 'all' | 'public' | 'private';
 
@@ -21,6 +21,15 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
           deleted_at,
           profile:profiles!albums_user_id_fkey(nickname),
           album_photos_active(count)
+        )
+      ),
+      challenge_submissions!challenge_submissions_photo_id_fkey(
+        status,
+        challenge:challenges(
+          id,
+          title,
+          slug,
+          cover_image_url
         )
       )
     `)
@@ -45,16 +54,22 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
 
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'slug' | 'cover_image_url' | 'deleted_at'>;
   type ProfileRow = Pick<Tables<'profiles'>, 'nickname'>;
+  type ChallengeRow = Pick<Tables<'challenges'>, 'id' | 'title' | 'slug' | 'cover_image_url'>;
   type AlbumPhotoJoin = {
     album: (AlbumRow & {
       profile: ProfileRow | null;
       album_photos_active: Array<{ count: number }>;
     }) | null;
   };
+  type ChallengeSubmissionJoin = {
+    status: string;
+    challenge: ChallengeRow | null;
+  };
 
   type PhotoQueryResult = Photo & {
     album_photos: AlbumPhotoJoin[] | null;
     photo_tags?: Array<{ tag: string }> | null;
+    challenge_submissions?: ChallengeSubmissionJoin[] | null;
   };
 
   const photosWithAlbums = (data || []).map((photo: PhotoQueryResult) => {
@@ -70,10 +85,20 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
         photo_count: a.album_photos_active?.[0]?.count ?? 0,
       }));
 
+    const challenges = (photo.challenge_submissions || [])
+      .filter((cs) => cs.challenge !== null)
+      .map((cs) => ({
+        id: cs.challenge!.id,
+        title: cs.challenge!.title,
+        slug: cs.challenge!.slug,
+        cover_image_url: cs.challenge!.cover_image_url,
+        status: cs.status as 'accepted' | 'pending' | 'rejected',
+      }));
+
     const tags = (photo.photo_tags || []).map((t: { tag: string }) => ({ tag: t.tag }));
 
-    const { album_photos: _, photo_tags: __, ...photoData } = photo;
-    return { ...photoData, albums, tags } as PhotoWithAlbums;
+    const { album_photos: _, photo_tags: __, challenge_submissions: ___, ...photoData } = photo;
+    return { ...photoData, albums, challenges, tags } as PhotoWithAlbums;
   });
 
   return photosWithAlbums;

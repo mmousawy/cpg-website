@@ -5,6 +5,7 @@ import CardBadges from '@/components/shared/CardBadges';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
+import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
 import ClockMiniSVG from 'public/icons/clock-mini.svg';
@@ -61,8 +62,23 @@ function PhotoCard({
   const coverAlbums = photoWithAlbums.albums?.filter((a) => a.cover_image_url === photo.url) || [];
   const coverAlbumNames = coverAlbums.map((a) => a.title).join(', ');
 
+  // Check for accepted challenges
+  const acceptedChallenges = photoWithAlbums.challenges?.filter((c) => c.status === 'accepted') || [];
+  const isInAcceptedChallenge = acceptedChallenges.length > 0;
+  const acceptedChallengeNames = acceptedChallenges.map((c) => c.title).join(', ');
+
   const badges = useMemo(() => {
     const badgeList = [];
+    // Show star badge for photos accepted in challenges (only when not in challenge context)
+    if (isInAcceptedChallenge && !accepted && !pending && !rejected) {
+      badgeList.push({
+        icon: <AwardStarMiniSVG
+          className="size-4 fill-current"
+        />,
+        variant: 'challenge' as const,
+        tooltip: acceptedChallengeNames ? `Accepted in: ${acceptedChallengeNames}` : 'Accepted in challenge',
+      });
+    }
     if (accepted) {
       badgeList.push({
         icon: <CheckSVG
@@ -124,7 +140,7 @@ function PhotoCard({
       });
     }
     return badgeList;
-  }, [accepted, pending, rejected, isAlbumCover, isInAlbum, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage]);
+  }, [accepted, pending, rejected, isAlbumCover, isInAlbum, isInAcceptedChallenge, acceptedChallengeNames, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage]);
 
   return (
     <div
@@ -190,11 +206,13 @@ function PhotoCard({
 }
 
 export default memo(PhotoCard, (prevProps, nextProps) => {
-  // Only re-render if photo data, selection, hover, dragging, sortable, exit state, album cover, albums, current album title, disabled, or rejected state change
+  // Only re-render if photo data, selection, hover, dragging, sortable, exit state, album cover, albums, challenges, current album title, disabled, or rejected state change
   const prevPhoto = prevProps.photo as PhotoWithAlbums;
   const nextPhoto = nextProps.photo as PhotoWithAlbums;
   const prevAlbumsLength = prevPhoto.albums?.length || 0;
   const nextAlbumsLength = nextPhoto.albums?.length || 0;
+  const prevChallengesLength = prevPhoto.challenges?.length || 0;
+  const nextChallengesLength = nextPhoto.challenges?.length || 0;
 
   return (
     prevProps.photo.id === nextProps.photo.id &&
@@ -202,6 +220,7 @@ export default memo(PhotoCard, (prevProps, nextProps) => {
     prevProps.photo.title === nextProps.photo.title &&
     prevProps.photo.is_public === nextProps.photo.is_public &&
     prevAlbumsLength === nextAlbumsLength &&
+    prevChallengesLength === nextChallengesLength &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isHovered === nextProps.isHovered &&
     prevProps.isDragging === nextProps.isDragging &&

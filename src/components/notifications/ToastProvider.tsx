@@ -1,8 +1,24 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 
+// Paths where the header is full-width (must match Header.tsx)
+const fullWidthPaths = ['/account/photos', '/account/albums'];
+
 export default function ToastProvider() {
+  const pathname = usePathname();
+
+  // Check if current path has full-width header
+  const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
+
+  // Calculate right offset to align with max-w-screen-md content
+  // On full-width pages: use small offset (8px)
+  // On constrained pages: use calc to align with centered max-w-screen-md container
+  const containerStyle = isFullWidth
+    ? { right: '0.5rem' }
+    : { right: 'max(0.5rem, calc((100vw - 768px) / 2 + 0.5rem))' };
+
   return (
     <Toaster
       position="top-right"
@@ -17,6 +33,7 @@ export default function ToastProvider() {
         },
         className: 'notification-toast',
       }}
+      style={containerStyle}
       className="toast-container"
     />
   );

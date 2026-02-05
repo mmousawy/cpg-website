@@ -70,7 +70,7 @@ export default async function Home() {
     getRecentMembers(12),
     getRecentEvents(6),
     getActiveChallenges(),
-    getPublicPhotostream(6),
+    getPublicPhotostream(7),
   ]);
 
   const { events, attendeesByEvent, serverNow } = eventsData;
@@ -229,7 +229,7 @@ export default async function Home() {
               </div>
               <AlbumGrid
                 albums={albums}
-                className="grid gap-2 sm:gap-6 grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
+                className="grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
               />
             </div>
           )}
