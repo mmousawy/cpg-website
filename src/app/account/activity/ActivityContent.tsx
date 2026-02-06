@@ -1,6 +1,7 @@
 'use client';
 
 import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
 import NotificationItem from '@/components/notifications/NotificationItem';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
@@ -312,13 +313,14 @@ export default function ActivityContent() {
             <div
               className="text-center"
             >
-              <button
+              <Button
                 onClick={loadMore}
-                disabled={isLoadingMore}
-                className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                loading={isLoadingMore}
+                variant="ghost"
+                size="sm"
               >
                 {isLoadingMore ? 'Loading...' : `Load more (${totalCount - notifications.length} remaining)`}
-              </button>
+              </Button>
             </div>
           )}
         </div>

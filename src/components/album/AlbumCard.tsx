@@ -39,7 +39,7 @@ export default function AlbumCard({
 
   const cardContent = (
     <div
-      className="group block overflow-hidden rounded-lg sm:rounded-xl border border-border-color bg-background-light group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong transition-all duration-200"
+      className="group block overflow-hidden border border-border-color bg-background-light group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong transition-all duration-200"
     >
       <div
         className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-background"
@@ -48,6 +48,7 @@ export default function AlbumCard({
           <BlurImage
             src={getCroppedThumbnailUrl(coverImage, 512, 384, 85) || coverImage}
             alt={album.title}
+            blurhash={album.cover_image_blurhash}
             sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
             quality={85}
             fill

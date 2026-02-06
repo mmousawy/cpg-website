@@ -1,5 +1,6 @@
 'use client';
 
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
@@ -19,7 +20,6 @@ import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
-import { revalidateAlbum } from '@/app/actions/revalidate';
 import { useDeleteAlbums, useUpdateAlbum } from '@/hooks/useAlbumMutations';
 import {
   useBulkUpdateAlbumPhotos,
@@ -342,7 +342,7 @@ export default function AlbumDetailClient() {
   if (albumLoading && !album) {
     return (
       <ManageLayout
-        albumDetail={{ title: '...' }}
+        albumDetail={{ title: '...', slug }}
         sidebar={<PageLoading
           message="Loading..."
         />}
@@ -361,7 +361,7 @@ export default function AlbumDetailClient() {
   return (
     <>
       <ManageLayout
-        albumDetail={{ title: album.title }}
+        albumDetail={{ title: album.title, slug: album.slug }}
         actions={
           <>
             <Button

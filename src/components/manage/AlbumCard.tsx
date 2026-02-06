@@ -1,10 +1,10 @@
 'use client';
 
+import BlurImage from '@/components/shared/BlurImage';
 import CardBadges from '@/components/shared/CardBadges';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
-import Image from 'next/image';
 import FolderSVG from 'public/icons/folder.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import { memo, useMemo } from 'react';
@@ -54,9 +54,10 @@ function AlbumCard({
         className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background"
       >
         {coverImage ? (
-          <Image
+          <BlurImage
             src={getCroppedThumbnailUrl(coverImage, 250, 188, 85) || coverImage}
             alt={album.title}
+            blurhash={album.cover_image_blurhash}
             fill
             sizes="250px"
             quality={85}

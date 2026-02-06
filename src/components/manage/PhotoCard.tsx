@@ -169,6 +169,7 @@ function PhotoCard({
         <BlurImage
           src={thumbnailUrl}
           alt={photo.title || 'Photo'}
+          blurhash={photo.blurhash}
           fill
           sizes="200px"
           quality={85}

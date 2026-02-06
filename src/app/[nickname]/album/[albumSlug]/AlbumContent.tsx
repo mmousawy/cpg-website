@@ -61,7 +61,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
-        className="w-full px-4 pt-4 md:p-4 md:flex md:gap-4 md:items-start md:min-h-[calc(100vh-90px)] lg:p-8 lg:min-h-[calc(100vh-106px)]"
+        className="w-full px-4 pt-4 md:p-4 md:flex md:gap-8 md:items-start md:min-h-[calc(100vh-90px)] lg:p-8 lg:min-h-[calc(100vh-106px)]"
       >
         {/* Gallery column - vertically centered */}
         <div
@@ -97,7 +97,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             >
               <FullSizeGalleryButton
                 photos={photos}
-                className="text-xs shadow-lg"
+                className="text-xs bg-foreground/5 dark:bg-border-color/70"
               />
             </div>
           )}

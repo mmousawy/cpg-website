@@ -35,7 +35,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
   const navLinkClass = (href: string, exact = false) => clsx(
     'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium',
     isActive(href, exact)
-      ? 'bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]'
+      ? 'bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c] after:ml-auto after:size-1.5 after:shrink-0 after:rounded-full after:bg-primary'
       : 'hover:bg-background',
   );
 

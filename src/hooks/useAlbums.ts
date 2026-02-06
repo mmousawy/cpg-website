@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/utils/supabase/client';
-import type { AlbumWithPhotos } from '@/types/albums';
 import type { Tables } from '@/database.types';
+import type { AlbumWithPhotos } from '@/types/albums';
+import { supabase } from '@/utils/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
 
@@ -19,7 +19,7 @@ async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
       photos:album_photos(
         id,
         photo_url,
-        photo:photos!album_photos_photo_id_fkey(deleted_at)
+        photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
       ),
       tags:album_tags(tag)
     `)
@@ -33,7 +33,7 @@ async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
   }
 
   type AlbumPhotoRow = Pick<Tables<'album_photos'>, 'id' | 'photo_url'>;
-  type PhotoRow = Pick<Tables<'photos'>, 'deleted_at'>;
+  type PhotoRow = Pick<Tables<'photos'>, 'deleted_at' | 'blurhash'>;
   type AlbumPhotoWithPhoto = AlbumPhotoRow & {
     photo: PhotoRow | null;
   };
@@ -44,11 +44,23 @@ async function fetchAlbums(userId: string): Promise<AlbumWithPhotos[]> {
     tags: Array<{ tag: string }> | null;
   };
 
-  // Filter out deleted photos from albums
-  const albumsWithFilteredPhotos = (data || []).map((album: AlbumQueryResult) => ({
-    ...album,
-    photos: (album.photos || []).filter((ap) => !ap.photo?.deleted_at),
-  }));
+  // Filter out deleted photos from albums and resolve cover image blurhash
+  const albumsWithFilteredPhotos = (data || []).map((album: AlbumQueryResult) => {
+    const activePhotos = (album.photos || []).filter((ap) => !ap.photo?.deleted_at);
+
+    // Resolve blurhash for the cover image
+    const coverUrl = album.cover_image_url || activePhotos[0]?.photo_url;
+    const coverPhoto = coverUrl
+      ? activePhotos.find((ap) => ap.photo_url === coverUrl)
+      : activePhotos[0];
+    const cover_image_blurhash = coverPhoto?.photo?.blurhash || null;
+
+    return {
+      ...album,
+      photos: activePhotos,
+      cover_image_blurhash,
+    };
+  });
 
   return albumsWithFilteredPhotos as unknown as AlbumWithPhotos[];
 }
@@ -77,7 +89,7 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
       photos:album_photos(
         id,
         photo_url,
-        photo:photos!album_photos_photo_id_fkey(deleted_at)
+        photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
       ),
       tags:album_tags(tag)
     `)
@@ -91,7 +103,7 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
   }
 
   type AlbumPhotoRow = Pick<Tables<'album_photos'>, 'id' | 'photo_url'>;
-  type PhotoRow = Pick<Tables<'photos'>, 'deleted_at'>;
+  type PhotoRow = Pick<Tables<'photos'>, 'deleted_at' | 'blurhash'>;
   type AlbumPhotoWithPhoto = AlbumPhotoRow & {
     photo: PhotoRow | null;
   };
@@ -102,11 +114,20 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
     tags: Array<{ tag: string }> | null;
   };
 
-  // Filter out deleted photos from album
+  // Filter out deleted photos from album and resolve cover image blurhash
   const typedData = data as AlbumQueryResult;
+  const activePhotos = (typedData.photos || []).filter((ap) => !ap.photo?.deleted_at);
+
+  const coverUrl = typedData.cover_image_url || activePhotos[0]?.photo_url;
+  const coverPhoto = coverUrl
+    ? activePhotos.find((ap) => ap.photo_url === coverUrl)
+    : activePhotos[0];
+  const cover_image_blurhash = coverPhoto?.photo?.blurhash || null;
+
   const albumWithFilteredPhotos = {
     ...typedData,
-    photos: (typedData.photos || []).filter((ap) => !ap.photo?.deleted_at),
+    photos: activePhotos,
+    cover_image_blurhash,
   };
 
   return albumWithFilteredPhotos as unknown as AlbumWithPhotos;

@@ -110,7 +110,7 @@ export default function Popover({
           'absolute top-full z-35 mt-2',
           width,
           alignmentClasses[align],
-          'overflow-hidden rounded-xl',
+          'overflow-hidden rounded-md',
           'border border-border-color bg-background-light shadow-lg',
           className,
         )}

@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import crypto from 'crypto';
 import Link from 'next/link';
 
+import Button from '@/components/shared/Button';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
@@ -219,18 +220,15 @@ export default function EventsList({
                   </h3>
                 </Link>
               </div>
-              <Link
+              <Button
                 href={`/events/${event.slug}`}
                 tabIndex={-1}
-                className={clsx(
-                  'ml-2 max-sm:hidden self-start rounded-full border px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap',
-                  isPast
-                    ? 'border-border-color-strong bg-background text-foreground/70 hover:border-border-color hover:bg-background-light'
-                    : 'border-primary bg-primary text-white hover:border-primary-alt hover:bg-primary-alt hover:text-slate-950',
-                )}
+                variant={isPast ? 'secondary' : 'primary'}
+                size="sm"
+                className="ml-2 max-sm:hidden self-start"
               >
                 View event
-              </Link>
+              </Button>
             </div>
             <div
               className='flex gap-6'
@@ -291,17 +289,14 @@ export default function EventsList({
                 isPastEvent={isPast}
                 avatarSize="xs"
               />
-              <Link
+              <Button
                 href={`/events/${event.slug}`}
-                className={clsx(
-                  'ml-2 self-end sm:hidden rounded-full border px-4 py-2 text-sm font-semibold transition-colors whitespace-nowrap',
-                  isPast
-                    ? 'border-border-color-strong bg-background text-foreground/70 hover:border-border-color hover:bg-background-light'
-                    : 'border-primary bg-primary text-white hover:border-primary-alt hover:bg-primary-alt hover:text-slate-950',
-                )}
+                variant={isPast ? 'secondary' : 'primary'}
+                size="md"
+                className="ml-2 self-end sm:hidden"
               >
                 View event
-              </Link>
+              </Button>
             </div>
           </div>
         );

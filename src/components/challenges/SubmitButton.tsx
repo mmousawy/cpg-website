@@ -119,6 +119,7 @@ export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPer
     <Button
       onClick={handleSubmit}
       variant="primary"
+      size="md"
     >
       <PlusSVG
         className="h-5 w-5"

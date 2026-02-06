@@ -282,6 +282,7 @@ export default function PhotoListItem({
         <BlurImage
           src={getSquareThumbnailUrl(photo.url, variant === 'compact' ? 48 : 72, 85) || photo.url}
           alt={displayName}
+          blurhash={photo.blurhash}
           fill
           className="object-cover transition-transform group-hover/thumb:scale-105"
           sizes="128px"

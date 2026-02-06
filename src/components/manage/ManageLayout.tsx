@@ -7,8 +7,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 
+import AlbumSwitcher from '@/components/manage/AlbumSwitcher';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import ArrowUpLeftSVG from 'public/icons/arrow-up-left-micro.svg';
 import FolderMicroSVG from 'public/icons/folder-micro.svg';
 import PhotoMicroSVG from 'public/icons/image-micro.svg';
 
@@ -18,9 +18,10 @@ interface ManageLayoutProps {
   sidebar: React.ReactNode;
   /** Header action buttons */
   actions?: React.ReactNode;
-  /** Album detail mode - shows album title */
+  /** Album detail mode - shows album title and switcher */
   albumDetail?: {
     title: string;
+    slug: string;
   };
   /** Mobile action bar content (shown when items are selected on mobile) */
   mobileActionBar?: React.ReactNode;
@@ -128,8 +129,8 @@ export default function ManageLayout({
                 </Link>
               </div>
 
-              {/* Loading indicator during tab transition */}
-              {isPending && (
+              {/* Loading indicator during tab transition (only when not in album detail, since AlbumSwitcher has its own) */}
+              {isPending && !albumDetail && (
                 <div
                   className="flex items-center"
                 >
@@ -139,26 +140,15 @@ export default function ManageLayout({
                 </div>
               )}
 
-              {/* Album title (only in album detail mode - hidden on mobile) */}
+              {/* Album switcher (only in album detail mode - hidden on mobile) */}
               {albumDetail && (
                 <div
-                  className="hidden md:flex items-center gap-2"
+                  className="hidden md:flex items-center"
                 >
-                  <Link
-                    href="/account/albums"
-                    onClick={(e) => handleTabClick(e, '/account/albums')}
-                    className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
-                    aria-label="Back to albums"
-                  >
-                    <ArrowUpLeftSVG
-                      className="size-4"
-                    />
-                  </Link>
-                  <h2
-                    className="text-lg font-semibold"
-                  >
-                    {albumDetail.title}
-                  </h2>
+                  <AlbumSwitcher
+                    title={albumDetail.title}
+                    slug={albumDetail.slug}
+                  />
                 </div>
               )}
             </div>
@@ -174,23 +164,13 @@ export default function ManageLayout({
           {/* Mobile album detail bar - shown below main header on mobile */}
           {albumDetail && (
             <div
-              className="flex md:hidden items-center gap-2 mt-2 px-0.5"
+              className="flex md:hidden items-center mt-2 px-0.5"
             >
-              <Link
-                href="/account/albums"
-                onClick={(e) => handleTabClick(e, '/account/albums')}
-                className="flex items-center justify-center rounded-lg border border-border-color bg-background px-2 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-primary/5"
-                aria-label="Back to albums"
-              >
-                <ArrowUpLeftSVG
-                  className="size-4"
-                />
-              </Link>
-              <h2
-                className="text-base font-semibold truncate"
-              >
-                {albumDetail.title}
-              </h2>
+              <AlbumSwitcher
+                title={albumDetail.title}
+                slug={albumDetail.slug}
+                compact
+              />
             </div>
           )}
         </div>

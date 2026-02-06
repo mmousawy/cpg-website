@@ -1,8 +1,8 @@
 'use client';
 
+import BlurImage from '@/components/shared/BlurImage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
-import Image from 'next/image';
 import FolderSVG from 'public/icons/folder.svg';
 
 /** Get display name for an album: title -> slug -> short id */
@@ -58,9 +58,10 @@ export default function AlbumListItem({
         )}
       >
         {coverImage ? (
-          <Image
+          <BlurImage
             src={coverImage}
             alt={displayName}
+            blurhash={album.cover_image_blurhash}
             fill
             className="object-cover"
             sizes="64px"

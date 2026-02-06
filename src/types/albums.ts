@@ -18,6 +18,8 @@ export type AlbumWithPhotos = Album & {
     nickname: string | null
     suspended_at?: string | null
   }
+  /** Blurhash of the cover image (resolved from the cover photo) */
+  cover_image_blurhash?: string | null
   // likes_count and view_count are already in Album (from Tables<'albums'>)
 }
 
