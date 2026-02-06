@@ -4,8 +4,8 @@ import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import VerifyEmailTemplate from '@/emails/auth/verify-email';
 import { revalidateProfiles } from '@/app/actions/revalidate';
+import VerifyEmailTemplate from '@/emails/auth/verify-email';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -157,7 +157,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Revalidate profiles cache so new member appears in listings
-    await revalidateProfiles();
+    // Wrapped in try/catch because revalidateTag requires a Next.js request context
+    try { await revalidateProfiles(); } catch { /* non-fatal outside request context */ }
 
     // Send verification email (skip in test environment)
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${token}`;
