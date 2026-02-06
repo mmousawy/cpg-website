@@ -148,6 +148,7 @@ async function CachedEventContent({
 
   cacheLife('max');
   cacheTag('events');
+  cacheTag(`event-${event.slug}`);
 
   // Fetch hosts and attendees using cached functions
   const [hosts, attendees] = await Promise.all([

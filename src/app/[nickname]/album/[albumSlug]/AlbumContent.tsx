@@ -26,6 +26,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
   cacheLife('max');
   cacheTag('albums');
   cacheTag(`profile-${nickname}`);
+  cacheTag(`album-${nickname}-${albumSlug}`);
 
   const albumWithPhotos = album as unknown as AlbumWithPhotos;
 

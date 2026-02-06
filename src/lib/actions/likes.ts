@@ -175,7 +175,7 @@ export async function toggleLike(
 
     // Revalidate cache
     if (ownerNickname) {
-      await revalidatePhotoLikes(ownerNickname);
+      await revalidatePhotoLikes(entityId, ownerNickname);
     }
 
     return {
@@ -298,7 +298,7 @@ export async function toggleLike(
 
     // Revalidate cache
     if (ownerNickname) {
-      await revalidateAlbumLikes(ownerNickname);
+      await revalidateAlbumLikes(entityId, ownerNickname);
     }
 
     return {

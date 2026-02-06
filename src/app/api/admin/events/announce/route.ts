@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { EventAnnouncementEmail } from '@/emails/event-announcement';
+import { revalidateEvents } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
 import { createClient } from '@/utils/supabase/server';
 import { createNotification } from '@/lib/notifications/create';
@@ -333,6 +334,9 @@ export async function POST(request: NextRequest) {
     }
     // Don't fail the request if tracking fails
   }
+
+  // Revalidate events cache so announcement tracking is reflected
+  await revalidateEvents();
 
   console.log(`📧 Email sending complete: ${successCount} sent, ${errorCount} failed, ${subscribers.length} total`);
 

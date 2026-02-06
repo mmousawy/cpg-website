@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
 import { createNoIndexMetadata } from '@/utils/metadata';
-import { unstable_noStore } from 'next/cache';
 
 export const metadata = createNoIndexMetadata({
   title: 'Account',
@@ -14,7 +14,7 @@ export default async function AccountLayout({
   children: React.ReactNode
 }) {
   // Opt out of static generation - account pages require authentication
-  unstable_noStore();
+  await connection();
 
   const { user, profile } = await getServerAuth();
 

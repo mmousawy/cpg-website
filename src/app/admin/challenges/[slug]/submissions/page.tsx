@@ -74,10 +74,12 @@ export default function ReviewQueuePage() {
   };
 
   const handleAccept = async (submissionId: string) => {
+    const submission = submissions?.find((s) => s.id === submissionId);
     await reviewMutation.mutateAsync({
       submissionId,
       status: 'accepted',
       challengeSlug,
+      photoShortId: submission?.photo?.short_id || '',
     });
   };
 
@@ -85,11 +87,13 @@ export default function ReviewQueuePage() {
     const reason = await promptRejectionReason();
     if (reason === null) return; // User cancelled
 
+    const submission = submissions?.find((s) => s.id === submissionId);
     await reviewMutation.mutateAsync({
       submissionId,
       status: 'rejected',
       rejectionReason: reason || undefined,
       challengeSlug,
+      photoShortId: submission?.photo?.short_id || '',
     });
   };
 
@@ -105,10 +109,16 @@ export default function ReviewQueuePage() {
 
     if (!confirmed) return;
 
+    const selectedSubmissions = submissions?.filter((s) => selectedIds.has(s.id)) || [];
+    const photoShortIds = selectedSubmissions
+      .map((s) => s.photo?.short_id)
+      .filter((id): id is string => !!id);
+
     await bulkReviewMutation.mutateAsync({
       submissionIds: Array.from(selectedIds),
       status: 'accepted',
       challengeSlug,
+      photoShortIds,
     });
 
     setSelectedIds(new Set());
@@ -120,11 +130,17 @@ export default function ReviewQueuePage() {
     const reason = await promptRejectionReason();
     if (reason === null) return;
 
+    const selectedSubmissions = submissions?.filter((s) => selectedIds.has(s.id)) || [];
+    const photoShortIds = selectedSubmissions
+      .map((s) => s.photo?.short_id)
+      .filter((id): id is string => !!id);
+
     await bulkReviewMutation.mutateAsync({
       submissionIds: Array.from(selectedIds),
       status: 'rejected',
       rejectionReason: reason || undefined,
       challengeSlug,
+      photoShortIds,
     });
 
     setSelectedIds(new Set());

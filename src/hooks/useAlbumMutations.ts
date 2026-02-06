@@ -136,6 +136,12 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
         queryClient.setQueryData(['albums', userId], context.previousAlbums);
       }
     },
+    onSuccess: () => {
+      // Invalidate albums cache to ensure fresh data after server revalidation
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
+      }
+    },
   });
 }
 
@@ -303,6 +309,12 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
       // Rollback on error
       if (userId && context?.previousAlbums) {
         queryClient.setQueryData(['albums', userId], context.previousAlbums);
+      }
+    },
+    onSuccess: () => {
+      // Invalidate albums cache to ensure fresh data after server revalidation
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
       }
     },
   });

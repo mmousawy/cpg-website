@@ -47,6 +47,14 @@ export async function revalidateEventAttendees() {
   revalidateTag('event-attendees', 'max');
 }
 
+/**
+ * Revalidate a specific event by slug (granular)
+ * Use when: Only a specific event detail page needs refreshing
+ */
+export async function revalidateEventBySlug(slug: string) {
+  revalidateTag(`event-${slug}`, 'max');
+}
+
 // ============================================================================
 // Album Revalidation
 // ============================================================================
@@ -69,10 +77,20 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   // Note: Profile URLs use @ prefix format: /@nickname
   revalidatePath(`/@${nickname}`);
 
-  // Also revalidate the specific album page path for any non-cached data
+  // Also revalidate the specific album page path and granular tag
   if (albumSlug) {
+    revalidateTag(`album-${nickname}-${albumSlug}`, 'max');
     revalidatePath(`/@${nickname}/album/${albumSlug}`);
   }
+}
+
+/**
+ * Revalidate a specific album by slug (granular - only the album page, not listings)
+ * Use when: Only the album detail page needs refreshing (e.g., comment added)
+ */
+export async function revalidateAlbumBySlug(nickname: string, slug: string) {
+  revalidateTag(`album-${nickname}-${slug}`, 'max');
+  revalidateTag(`profile-${nickname}`, 'max');
 }
 
 /**
@@ -172,7 +190,8 @@ export async function revalidateInterest(interestName: string) {
  * Revalidate after a like/unlike on a photo
  * Use when: User likes or unlikes a photo
  */
-export async function revalidatePhotoLikes(ownerNickname: string) {
+export async function revalidatePhotoLikes(photoId: string, ownerNickname: string) {
+  revalidateTag(`photo-likes-${photoId}`, 'max');
   revalidateTag(`profile-${ownerNickname}`, 'max');
 }
 
@@ -180,7 +199,8 @@ export async function revalidatePhotoLikes(ownerNickname: string) {
  * Revalidate after a like/unlike on an album
  * Use when: User likes or unlikes an album
  */
-export async function revalidateAlbumLikes(ownerNickname: string) {
+export async function revalidateAlbumLikes(albumId: string, ownerNickname: string) {
+  revalidateTag(`album-likes-${albumId}`, 'max');
   revalidateTag(`profile-${ownerNickname}`, 'max');
 }
 
@@ -203,8 +223,32 @@ export async function revalidateAll() {
   revalidateTag('challenges', 'max');
   revalidateTag('challenge-photos', 'max');
   revalidateTag('search', 'max');
+  revalidateTag('home', 'max');
+  revalidateTag('changelog', 'max');
   // Also revalidate the layout for any non-cached data
   revalidatePath('/', 'layout');
+}
+
+// ============================================================================
+// Photo Revalidation
+// ============================================================================
+
+/**
+ * Revalidate a specific photo's cached data
+ * Use when: Photo metadata changes, challenge submission status changes
+ */
+export async function revalidatePhoto(photoShortId: string) {
+  revalidateTag(`photo-${photoShortId}`, 'max');
+}
+
+/**
+ * Revalidate multiple photos (batch operation)
+ * Use when: Bulk reviewing challenge submissions
+ */
+export async function revalidatePhotos(photoShortIds: string[]) {
+  for (const shortId of photoShortIds) {
+    revalidateTag(`photo-${shortId}`, 'max');
+  }
 }
 
 // ============================================================================
@@ -224,10 +268,34 @@ export async function revalidateChallenges() {
  * Revalidate a specific challenge and its photos
  * Use when: Updating challenge details or reviewing submissions
  */
-export async function revalidateChallenge(challengeSlug: string) {
+export async function revalidateChallenge(challengeSlug: string, challengeId?: string) {
+  revalidateTag(`challenge-${challengeSlug}`, 'max');
   revalidateTag('challenges', 'max');
+  if (challengeId) {
+    revalidateTag(`challenge-photos-${challengeId}`, 'max');
+  }
   revalidateTag('challenge-photos', 'max');
   revalidatePath(`/challenges/${challengeSlug}`);
+}
+
+// ============================================================================
+// Home & Changelog Revalidation
+// ============================================================================
+
+/**
+ * Revalidate home page cached data
+ * Use when: Content changes affect the homepage
+ */
+export async function revalidateHome() {
+  revalidateTag('home', 'max');
+}
+
+/**
+ * Revalidate changelog cached data
+ * Use when: Changelog content is updated
+ */
+export async function revalidateChangelog() {
+  revalidateTag('changelog', 'max');
 }
 
 // ============================================================================

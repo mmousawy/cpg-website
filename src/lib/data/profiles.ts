@@ -258,6 +258,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
   cacheTag('albums');
+  cacheTag(`photo-${photoShortId}`); // Granular invalidation for this specific photo
 
   const supabase = createPublicClient();
 
@@ -404,6 +405,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
   'use cache';
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
+  cacheTag(`photo-${photoShortId}`); // Granular invalidation for this specific photo
 
   const supabase = createPublicClient();
 

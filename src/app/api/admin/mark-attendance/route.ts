@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -37,6 +38,9 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
+
+  // Revalidate attendee cache so attendance status is reflected
+  await revalidateEventAttendees();
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

@@ -35,11 +35,16 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 │                  (src/app/actions/revalidate.ts)                    │
 │                                                                     │
 │  revalidateTag('events', 'max')        → Invalidates event cache    │
+│  revalidateTag('event-[slug]', ..)     → Invalidates specific event │
 │  revalidateTag('event-attendees', ..)  → Invalidates RSVP data      │
 │  revalidateTag('albums', 'max')        → Invalidates album cache    │
+│  revalidateTag('album-[n]-[s]', ..)    → Invalidates specific album │
 │  revalidateTag('gallery', 'max')       → Invalidates photostream    │
 │  revalidateTag('profiles', 'max')      → Invalidates profiles cache │
 │  revalidateTag('profile-[nick]', ..)   → Invalidates specific user  │
+│  revalidateTag('challenges', 'max')    → Invalidates challenges     │
+│  revalidateTag('challenge-[slug]',..)  → Invalidates one challenge  │
+│  revalidateTag('photo-[id]', 'max')    → Invalidates specific photo │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -48,12 +53,27 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 | Tag | Description | Invalidated When |
 |-----|-------------|------------------|
 | `events` | All event data (upcoming, past, details) | Event created/updated/deleted |
+| `event-[slug]` | Specific event detail page | Event detail changes |
 | `event-attendees` | RSVP and attendee lists | RSVP signup/confirm/cancel |
 | `albums` | All album listings | Album created/updated/deleted |
+| `album-[nick]-[slug]` | Specific album detail page | Album content changes |
 | `gallery` | Community photostream, popular tags | Photo created/updated/deleted, tags modified |
 | `profiles` | Members list, organizers | New user onboarding, profile changes |
 | `profile-[nickname]` | Specific user's data | User updates profile, creates content |
 | `tag-[tagname]` | Photos with a specific tag | Photos tagged/untagged |
+| `challenges` | All challenge data | Challenge created/updated/deleted |
+| `challenge-[slug]` | Specific challenge detail page | Challenge detail changes |
+| `challenge-photos` | Accepted photos in challenges | Submission review |
+| `challenge-photos-[id]` | Photos for a specific challenge | Submission review for that challenge |
+| `photo-[shortId]` | Specific photo detail page | Photo metadata/challenge status changes |
+| `photo-likes-[photoId]` | Like count for a specific photo | Photo liked/unliked |
+| `album-likes-[albumId]` | Like count for a specific album | Album liked/unliked |
+| `notifications-[userId]` | Notifications for a specific user | Notification created/read/dismissed |
+| `search` | Search results | Content changes |
+| `home` | Homepage data | Homepage content changes |
+| `changelog` | Changelog data | Changelog updates |
+| `interests` | All interests data | Interests added/removed |
+| `interest-[name]` | Members with a specific interest | Interest membership changes |
 
 ## Configuration
 
@@ -198,7 +218,7 @@ export async function POST(request: NextRequest) {
 | `getRecentEvents(limit)` | `events` | Recent events for homepage |
 | `getUpcomingEvents()` | `events` | All upcoming events |
 | `getPastEvents(limit)` | `events` | Paginated past events |
-| `getEventBySlug(slug)` | `events` | Single event by slug |
+| `getEventBySlug(slug)` | `events`, `event-[slug]` | Single event by slug |
 | `getEventAttendeesForEvent(id)` | `event-attendees` | Attendees for one event |
 | `getEventAttendees(ids)` | `event-attendees` | Attendees for multiple events |
 
@@ -208,7 +228,7 @@ export async function POST(request: NextRequest) {
 |----------|------|-------------|
 | `getRecentAlbums(limit)` | `albums` | Recent public albums |
 | `getPublicAlbums(limit)` | `albums` | All public albums |
-| `getAlbumBySlug(nick, slug)` | `albums`, `profile-[nick]` | Single album by slug |
+| `getAlbumBySlug(nick, slug)` | `albums`, `profile-[nick]`, `album-[nick]-[slug]` | Single album by slug |
 | `getPhotosByUrls(urls)` | `albums` | Photo metadata by URLs |
 | `getUserPublicAlbums(...)` | `albums`, `profile-[nick]` | User's public albums |
 
@@ -240,14 +260,24 @@ export async function POST(request: NextRequest) {
 
 | Function | Invalidates | Use When |
 |----------|-------------|----------|
-| `revalidateEvents()` | `events` | Event CRUD |
+| `revalidateEvents()` | `events`, `search` | Event CRUD |
 | `revalidateEventAttendees()` | `event-attendees` | RSVP changes |
-| `revalidateAlbum(nick, slug)` | `albums`, `profile-[nick]`, `gallery` | Album update |
+| `revalidateEventBySlug(slug)` | `event-[slug]` | Specific event changes |
+| `revalidateAlbum(nick, slug)` | `albums`, `profile-[nick]`, `gallery`, `album-[n]-[s]` | Album update |
+| `revalidateAlbumBySlug(nick, slug)` | `album-[nick]-[slug]`, `profile-[nick]` | Specific album changes |
 | `revalidateAlbums(nick, slugs)` | `albums`, `profile-[nick]`, `gallery` | Bulk album ops |
-| `revalidateGalleryData()` | `gallery` | Photo CRUD |
-| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]` | Photo tagged/untagged |
-| `revalidateProfile(nick)` | `profiles`, `profile-[nick]` | Profile update |
-| `revalidateProfiles()` | `profiles` | Member list changes |
+| `revalidateGalleryData()` | `gallery`, `search` | Photo CRUD |
+| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]`, `profiles`, `search` | Photo tagged/untagged |
+| `revalidateProfile(nick)` | `profiles`, `profile-[nick]`, `search` | Profile update |
+| `revalidateProfiles()` | `profiles`, `search` | Member list changes |
+| `revalidateChallenges()` | `challenges`, `challenge-photos` | Challenge CRUD |
+| `revalidateChallenge(slug, id?)` | `challenge-[slug]`, `challenges`, `challenge-photos`, `challenge-photos-[id]` | Challenge detail changes |
+| `revalidatePhoto(shortId)` | `photo-[shortId]` | Photo metadata changes |
+| `revalidatePhotos(shortIds)` | `photo-[shortId]` (multiple) | Bulk photo changes |
+| `revalidatePhotoLikes(photoId, nick)` | `photo-likes-[photoId]`, `profile-[nick]` | Photo like/unlike |
+| `revalidateAlbumLikes(albumId, nick)` | `album-likes-[albumId]`, `profile-[nick]` | Album like/unlike |
+| `revalidateHome()` | `home` | Homepage content changes |
+| `revalidateChangelog()` | `changelog` | Changelog updates |
 | `revalidateAll()` | All tags | Admin operations |
 
 ## Adding New Cached Data
@@ -506,17 +536,17 @@ Only use `loading.tsx` for:
 
 ### Authenticated Routes Pattern (Client-Only)
 
-Routes that require authentication (e.g., `/account/*`) should never be cached. Use `unstable_noStore()` in the layout and make all page components client components:
+Routes that require authentication (e.g., `/account/*`) should never be cached. Use `connection()` from `next/server` in the layout and make all page components client components:
 
 ```typescript
 // src/app/account/layout.tsx
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
-import { unstable_noStore } from 'next/cache';
 
 export default async function AccountLayout({ children }) {
   // Opt out of static generation - account pages require authentication
-  unstable_noStore();
+  await connection();
 
   const { user, profile } = await getServerAuth();
 
@@ -543,7 +573,7 @@ export default function AccountPage() {
 ```
 
 **Key points for authenticated routes:**
-- Layout uses `unstable_noStore()` to opt out of static generation
+- Layout uses `await connection()` from `next/server` to opt out of static generation
 - All page components use `'use client'` directive
 - Data is fetched client-side using React Query hooks
 - Auth check in layout redirects unauthenticated users

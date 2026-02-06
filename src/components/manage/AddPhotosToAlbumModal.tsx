@@ -6,13 +6,14 @@ import PhotoListItem from '@/components/manage/PhotoListItem';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import Input from '@/components/shared/Input';
+import { useCreateAlbum } from '@/hooks/useAlbumMutations';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Image from 'next/image';
-import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type AlbumWithCount = Album & { photo_count?: number };
@@ -34,6 +35,7 @@ export default function AddPhotosToAlbumModal({
   const { user, profile } = useAuth();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const createAlbumMutation = useCreateAlbum(user?.id, profile?.nickname);
   const modalContext = useContext(ModalContext);
   const [albums, setAlbums] = useState<AlbumWithCount[]>([]);
   const [selectedAlbumIds, setSelectedAlbumIds] = useState<Set<string>>(new Set());
@@ -41,7 +43,6 @@ export default function AddPhotosToAlbumModal({
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newAlbumTitle, setNewAlbumTitle] = useState('');
-  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
 
   // Calculate which albums already contain ALL selected photos
   const albumsWithAllPhotos = useMemo(() => {
@@ -119,27 +120,18 @@ export default function AddPhotosToAlbumModal({
   const handleCreateAlbum = async () => {
     if (!user || !newAlbumTitle.trim()) return;
 
-    setIsCreatingAlbum(true);
     try {
       const slug = newAlbumTitle
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 
-      const { data: newAlbum, error } = await supabase
-        .from('albums')
-        .insert({
-          user_id: user.id,
-          title: newAlbumTitle.trim(),
-          slug,
-          is_public: true,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(error.message || 'Failed to create album');
-      }
+      const newAlbum = await createAlbumMutation.mutateAsync({
+        title: newAlbumTitle.trim(),
+        slug,
+        isPublic: true,
+        tags: [],
+      });
 
       setAlbums([newAlbum as Album, ...albums]);
       setSelectedAlbumIds((prev) => new Set([...prev, newAlbum.id]));
@@ -148,8 +140,6 @@ export default function AddPhotosToAlbumModal({
       const message = err instanceof Error ? err.message : 'Failed to create album';
       console.error('Error creating album:', err);
       setError(message);
-    } finally {
-      setIsCreatingAlbum(false);
     }
   };
 
@@ -408,8 +398,8 @@ export default function AddPhotosToAlbumModal({
           />
           <Button
             onClick={handleCreateAlbum}
-            disabled={!newAlbumTitle.trim() || isCreatingAlbum}
-            loading={isCreatingAlbum}
+            disabled={!newAlbumTitle.trim() || createAlbumMutation.isPending}
+            loading={createAlbumMutation.isPending}
             size="sm"
             icon={<PlusSVG
               className="size-4"

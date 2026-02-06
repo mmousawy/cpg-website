@@ -1,13 +1,13 @@
 import { ManageDataProvider } from '@/context/ManageDataContext';
-import { unstable_noStore } from 'next/cache';
+import { connection } from 'next/server';
 
-export default function ManageLayout({
+export default async function ManageLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   // Opt out of static generation - manage routes require authentication
-  unstable_noStore();
+  await connection();
 
   return <ManageDataProvider>
     {children}

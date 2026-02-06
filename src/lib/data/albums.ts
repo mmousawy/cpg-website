@@ -1,7 +1,6 @@
+import type { Tables } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
-import type { AlbumWithPhotosAndProfile } from '@/types/supabase-queries';
-import type { Tables } from '@/database.types';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -151,6 +150,7 @@ export async function getAlbumBySlug(nickname: string, albumSlug: string) {
   cacheLife('max');
   cacheTag('albums');
   cacheTag(`profile-${nickname}`);
+  cacheTag(`album-${nickname}-${albumSlug}`);
 
   const supabase = createPublicClient();
 

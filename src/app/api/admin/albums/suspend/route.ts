@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateAlbum } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -60,11 +60,9 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (owner?.nickname) {
-        revalidatePath(`/@${owner.nickname}/album/${album.slug}`);
-        revalidatePath(`/@${owner.nickname}`);
+        await revalidateAlbum(owner.nickname, album.slug);
       }
     }
-    revalidatePath('/galleries');
 
     // TODO: Send notification email to album owner
 

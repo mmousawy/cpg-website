@@ -1,0 +1,101 @@
+refactor: comprehensive cache revalidation audit
+
+Full audit of the server-side caching system — added granular cache tags,
+fixed missing revalidations, migrated deprecated APIs, and improved
+client-side cache consistency.
+
+Granular Cache Tags:
+- Add per-resource tags: album-[nick]-[slug], event-[slug], challenge-[slug], photo-[shortId]
+- Add challenge-photos-[id] for per-challenge photo invalidation
+- Add photo-likes-[photoId] and album-likes-[albumId] for per-entity like invalidation
+- Add notifications-[userId] for per-user notification invalidation
+- Register granular tags in data layer and cached server components
+
+New Revalidation Functions:
+- revalidateEventBySlug(slug) for single event invalidation
+- revalidateAlbumBySlug(nickname, slug) for single album invalidation
+- revalidatePhoto(shortId) and revalidatePhotos(shortIds) for photo invalidation
+- revalidateHome() and revalidateChangelog() for page-specific invalidation
+- Update revalidatePhotoLikes/revalidateAlbumLikes to accept entity IDs
+- Update revalidateChallenge to accept optional challengeId for granular photos
+
+Missing Revalidations Fixed:
+- Signup route now calls revalidateProfiles() after creating a user
+- Challenge announce route now calls revalidateChallenges()
+- Event announce route now calls revalidateEvents()
+- Mark-attendance route now calls revalidateEventAttendees()
+- Member delete now calls revalidateAll()
+- Comments route now calls revalidateGalleryData() for photo/event/challenge comments
+- Notification actions now revalidate notifications-[userId] tag
+- Notification creation now revalidates notifications-[userId] tag
+
+Admin Album Routes Cleanup:
+- Replace raw revalidatePath() calls with centralized revalidateAlbum/revalidateAlbums
+- Applies to suspend, unsuspend, and delete album routes
+
+React Query Client-Side Fixes:
+- Add onSuccess invalidation to useUpdateAlbum and useBulkUpdateAlbums
+- Add photo cache invalidation after reorder in useReorderPhotos
+- Add profile revalidation after public photo upload in usePhotoUpload
+- Pass photoShortId(s) through challenge review mutations for granular invalidation
+- Replace direct Supabase album inserts with useCreateAlbum hook in AlbumPicker and AddPhotosToAlbumModal
+
+Deprecated API Migration:
+- Replace unstable_noStore() with await connection() in account, admin, confirm, cancel layouts
+- Add await connection() to admin layout (was missing entirely)
+
+Build Compatibility:
+- Add generateStaticParams layout files for admin/challenges/[slug], admin/events/[eventId], admin/events/attendance/[eventId], unsubscribe/[token]
+- Add home and changelog tags to revalidateAll() and revalidate-all endpoint
+
+Documentation:
+- Update revalidation-system.md with all new tags, functions, and patterns
+- Update revalidation-quick-reference.md with expanded tag table and usage guide
+
+Files changed (42):
+
+New (4):
+- src/app/admin/challenges/[slug]/layout.tsx
+- src/app/admin/events/[eventId]/layout.tsx
+- src/app/admin/events/attendance/[eventId]/layout.tsx
+- src/app/unsubscribe/[token]/layout.tsx
+
+Modified (38):
+- src/app/actions/revalidate.ts
+- src/app/api/admin/albums/delete/route.ts
+- src/app/api/admin/albums/suspend/route.ts
+- src/app/api/admin/albums/unsuspend/route.ts
+- src/app/api/admin/challenges/announce/route.ts
+- src/app/api/admin/events/announce/route.ts
+- src/app/api/admin/mark-attendance/route.ts
+- src/app/api/admin/members/route.ts
+- src/app/api/auth/signup/route.ts
+- src/app/api/comments/route.ts
+- src/app/api/likes/route.ts
+- src/app/api/revalidate-all/route.ts
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/[nickname]/album/[albumSlug]/photo/[photoId]/page.tsx
+- src/app/[nickname]/photo/[photoId]/page.tsx
+- src/app/account/(manage)/layout.tsx
+- src/app/account/layout.tsx
+- src/app/admin/challenges/[slug]/page.tsx
+- src/app/admin/challenges/[slug]/submissions/page.tsx
+- src/app/admin/layout.tsx
+- src/app/cancel/[uuid]/page.tsx
+- src/app/confirm/[uuid]/page.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/components/manage/AddPhotosToAlbumModal.tsx
+- src/components/manage/AlbumPicker.tsx
+- src/hooks/useAlbumMutations.ts
+- src/hooks/useChallengeSubmissions.ts
+- src/hooks/usePhotoMutations.ts
+- src/hooks/usePhotoUpload.ts
+- src/lib/actions/likes.ts
+- src/lib/actions/notifications.ts
+- src/lib/data/albums.ts
+- src/lib/data/challenges.ts
+- src/lib/data/events.ts
+- src/lib/data/profiles.ts
+- src/lib/notifications/create.ts
+- docs/revalidation-system.md
+- docs/revalidation-quick-reference.md

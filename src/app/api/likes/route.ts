@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       // If liked === isCurrentlyLiked, no action needed (already in sync)
 
       if (ownerNickname) {
-        await revalidatePhotoLikes(ownerNickname);
+        await revalidatePhotoLikes(entityId, ownerNickname);
       }
     } else {
       // Album like
@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (ownerNickname) {
-        await revalidateAlbumLikes(ownerNickname);
+        await revalidateAlbumLikes(entityId, ownerNickname);
       }
     }
 

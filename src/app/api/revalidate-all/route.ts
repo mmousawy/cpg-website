@@ -35,10 +35,18 @@ export async function GET(request: NextRequest) {
     revalidateTag('gallery', 'max');
     revalidateTag('profiles', 'max');
     revalidateTag('interests', 'max');
+    revalidateTag('challenges', 'max');
+    revalidateTag('challenge-photos', 'max');
+    revalidateTag('search', 'max');
+    revalidateTag('home', 'max');
+    revalidateTag('changelog', 'max');
 
     return NextResponse.json({
       success: true,
-      revalidated: ['events', 'event-attendees', 'albums', 'gallery', 'profiles', 'interests'],
+      revalidated: [
+        'events', 'event-attendees', 'albums', 'gallery', 'profiles',
+        'interests', 'challenges', 'challenge-photos', 'search', 'home', 'changelog',
+      ],
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

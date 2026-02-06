@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import ConfirmBlock from './ConfirmBlock';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { createNoIndexMetadata } from '@/utils/metadata';
-import { unstable_noStore } from 'next/cache';
+import { connection } from 'next/server';
 
 // Provide sample params for build-time validation (required with cacheComponents)
 export async function generateStaticParams() {
@@ -22,7 +22,7 @@ export default async function Confirm({
   params: Promise<{ uuid: string }>
 }) {
   // Opt out of static generation - this route requires cookies/auth
-  unstable_noStore();
+  await connection();
 
   const supabase = await createClient();
   const { uuid } = await params;

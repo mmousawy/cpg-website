@@ -3,6 +3,7 @@
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
+import { useCreateAlbum } from '@/hooks/useAlbumMutations';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
 import { useEffect, useState } from 'react';
@@ -18,12 +19,12 @@ export default function AlbumPicker({
   onSelectionChange,
   onCreateNew,
 }: AlbumPickerProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const supabase = useSupabase();
+  const createAlbumMutation = useCreateAlbum(user?.id, profile?.nickname);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newAlbumTitle, setNewAlbumTitle] = useState('');
-  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -63,27 +64,18 @@ export default function AlbumPicker({
   const handleCreateAlbum = async () => {
     if (!user || !newAlbumTitle.trim()) return;
 
-    setIsCreatingAlbum(true);
     try {
       const slug = newAlbumTitle
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 
-      const { data: newAlbum, error } = await supabase
-        .from('albums')
-        .insert({
-          user_id: user.id,
-          title: newAlbumTitle.trim(),
-          slug,
-          is_public: true,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(error.message || 'Failed to create album');
-      }
+      const newAlbum = await createAlbumMutation.mutateAsync({
+        title: newAlbumTitle.trim(),
+        slug,
+        isPublic: true,
+        tags: [],
+      });
 
       setAlbums([newAlbum as Album, ...albums]);
       onSelectionChange([...selectedAlbumIds, newAlbum.id]);
@@ -92,8 +84,6 @@ export default function AlbumPicker({
       const message = err instanceof Error ? err.message : 'Failed to create album';
       console.error('Error creating album:', err);
       alert(message);
-    } finally {
-      setIsCreatingAlbum(false);
     }
   };
 
@@ -180,8 +170,8 @@ export default function AlbumPicker({
           />
           <Button
             onClick={handleCreateAlbum}
-            disabled={!newAlbumTitle.trim() || isCreatingAlbum}
-            loading={isCreatingAlbum}
+            disabled={!newAlbumTitle.trim() || createAlbumMutation.isPending}
+            loading={createAlbumMutation.isPending}
             size="sm"
           >
             Create

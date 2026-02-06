@@ -5,7 +5,7 @@ import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { CommentNotificationEmail } from '@/emails/comment-notification';
 import { encrypt } from '@/utils/encrypt';
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateGalleryData } from '@/app/actions/revalidate';
 import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -308,6 +308,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Revalidate event cache so comment count is reflected
+      await revalidateGalleryData();
+
       // Return early for events since we've handled all notifications
       return NextResponse.json({ success: true, commentId }, { status: 200 });
     }
@@ -431,9 +434,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Revalidate challenge cache so comment count is reflected
+      await revalidateGalleryData();
+
       // Return early for challenges since we've handled all notifications
       return NextResponse.json({ success: true, commentId }, { status: 200 });
     }
+  }
+
+  // Revalidate photo cache if comment is on a photo
+  if (entityType === 'photo') {
+    await revalidateGalleryData();
   }
 
   // Revalidate album page if comment is on an album

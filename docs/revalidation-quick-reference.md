@@ -5,27 +5,54 @@
 | Tag | What it caches |
 |-----|----------------|
 | `events` | Event listings, details |
+| `event-[slug]` | Specific event detail page |
 | `event-attendees` | RSVP lists per event |
 | `albums` | Album listings (gallery, homepage) |
+| `album-[nick]-[slug]` | Specific album detail page |
 | `gallery` | Community photostream, popular tags |
 | `profiles` | Members/organizers lists |
 | `profile-[nick]` | Specific user's data |
 | `tag-[tagname]` | Photos with a specific tag |
+| `challenges` | Challenge listings |
+| `challenge-[slug]` | Specific challenge detail page |
+| `challenge-photos` | Accepted photos in challenges |
+| `challenge-photos-[id]` | Photos for a specific challenge |
+| `photo-[shortId]` | Specific photo detail page |
+| `photo-likes-[photoId]` | Like count for a specific photo |
+| `album-likes-[albumId]` | Like count for a specific album |
+| `notifications-[userId]` | Notifications for a specific user |
+| `search` | Search results |
+| `home` | Homepage data |
+| `changelog` | Changelog data |
+| `interests` | All interests data |
+| `interest-[name]` | Members with a specific interest |
 
 ## When to Revalidate
 
 | Action | Call |
 |--------|------|
 | Event created/updated/deleted | `revalidateEvents()` |
+| Specific event changed | `revalidateEventBySlug(slug)` |
 | RSVP signup/confirm/cancel | `revalidateEventAttendees()` |
 | Album created/updated/deleted | `revalidateAlbum(nickname, slug)` |
+| Specific album changed (granular) | `revalidateAlbumBySlug(nickname, slug)` |
 | Bulk album operations | `revalidateAlbums(nickname, slugs)` |
 | Photo created/updated/deleted | `revalidateGalleryData()` |
+| Photo metadata changed | `revalidatePhoto(shortId)` |
+| Bulk photo changes | `revalidatePhotos(shortIds)` |
 | Photo tagged/untagged | `revalidateTagPhotos(tagName)` |
+| Photo liked/unliked | `revalidatePhotoLikes(photoId, nickname)` |
+| Album liked/unliked | `revalidateAlbumLikes(albumId, nickname)` |
 | User profile updated | `revalidateProfile(nickname)` |
 | User onboarding complete | `revalidateProfile(nickname)` |
+| New user signed up | `revalidateProfiles()` |
 | Photo added to album | `revalidateAlbum(nickname, slug)` |
+| Challenge created/updated/deleted | `revalidateChallenges()` |
+| Challenge detail changed | `revalidateChallenge(slug, id?)` |
+| Homepage content changed | `revalidateHome()` |
+| Changelog updated | `revalidateChangelog()` |
 | Admin suspends user | `revalidateAll()` |
+| Admin deletes user | `revalidateAll()` |
 
 ## Import
 
@@ -33,12 +60,22 @@
 import {
   revalidateEvents,
   revalidateEventAttendees,
+  revalidateEventBySlug,
   revalidateAlbum,
+  revalidateAlbumBySlug,
   revalidateAlbums,
   revalidateGalleryData,
   revalidateTagPhotos,
   revalidateProfile,
   revalidateProfiles,
+  revalidatePhoto,
+  revalidatePhotos,
+  revalidatePhotoLikes,
+  revalidateAlbumLikes,
+  revalidateChallenges,
+  revalidateChallenge,
+  revalidateHome,
+  revalidateChangelog,
   revalidateAll,
 } from '@/app/actions/revalidate';
 ```
@@ -120,7 +157,7 @@ export async function revalidateYourData() {
 | Dynamic route blocking error | Add `generateStaticParams` returning at least one sample |
 | Route needs loading skeleton | Add `loading.tsx` to route folder |
 | Third-party lib uses Date | Dynamic import with `ssr: false` in wrapper |
-| Authenticated routes | Use `unstable_noStore()` in layout + `'use client'` pages |
+| Authenticated routes | Use `await connection()` in layout + `'use client'` pages |
 
 > Note: With `cacheComponents: true`, client components that call `Math.random()` must sit under a `<Suspense>` boundary or Next.js will warn.
 

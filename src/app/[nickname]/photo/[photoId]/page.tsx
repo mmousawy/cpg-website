@@ -88,6 +88,7 @@ async function CachedPhotoContent({
 
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
+  cacheTag(`photo-${result.photo.short_id}`); // Granular invalidation for this specific photo
 
   return (
     <PhotoPageContent

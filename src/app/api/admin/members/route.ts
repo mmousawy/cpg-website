@@ -229,6 +229,9 @@ export async function DELETE(request: NextRequest) {
     // Also delete the profile (in case cascade doesn't work)
     await adminSupabase.from('profiles').delete().eq('id', userId);
 
+    // Revalidate all caches since deleted user affects many pages
+    await revalidateAll();
+
     return NextResponse.json({ success: true, message: 'User deleted' });
   } catch (error) {
     console.error('Error in members DELETE:', error);

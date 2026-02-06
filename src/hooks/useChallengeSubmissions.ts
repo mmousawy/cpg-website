@@ -1,4 +1,4 @@
-import { revalidateChallenge } from '@/app/actions/revalidate';
+import { revalidateChallenge, revalidatePhoto, revalidatePhotos } from '@/app/actions/revalidate';
 import type { SubmissionForReview, SubmissionWithDetails } from '@/types/challenges';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -181,11 +181,13 @@ export function useReviewSubmission() {
       status,
       rejectionReason,
       challengeSlug,
+      photoShortId,
     }: {
       submissionId: string;
       status: 'accepted' | 'rejected';
       rejectionReason?: string;
       challengeSlug: string;
+      photoShortId: string;
     }) => {
       const { error } = await supabase.rpc('review_challenge_submission', {
         p_submission_id: submissionId,
@@ -209,11 +211,13 @@ export function useReviewSubmission() {
         }),
       }).catch((err) => console.error('Failed to send notification:', err));
 
-      return { challengeSlug };
+      return { challengeSlug, photoShortId };
     },
     onSuccess: async (data) => {
       // Revalidate server-side cache for the challenge detail page
       await revalidateChallenge(data.challengeSlug);
+      // Revalidate the specific photo's cache
+      await revalidatePhoto(data.photoShortId);
 
       queryClient.invalidateQueries({
         queryKey: ['challenge-submissions'],
@@ -223,6 +227,11 @@ export function useReviewSubmission() {
       });
       queryClient.invalidateQueries({
         queryKey: ['challenge'],
+      });
+      // Invalidate photos query so manage grid shows updated challenge badges
+      // Note: This uses a broad prefix match but only affects client-side React Query cache
+      queryClient.invalidateQueries({
+        queryKey: ['photos'],
       });
     },
   });
@@ -240,11 +249,13 @@ export function useBulkReviewSubmissions() {
       status,
       rejectionReason,
       challengeSlug,
+      photoShortIds,
     }: {
       submissionIds: string[];
       status: 'accepted' | 'rejected';
       rejectionReason?: string;
       challengeSlug: string;
+      photoShortIds: string[];
     }) => {
       const { data, error } = await supabase.rpc('bulk_review_challenge_submissions', {
         p_submission_ids: submissionIds,
@@ -268,11 +279,13 @@ export function useBulkReviewSubmissions() {
         }),
       }).catch((err) => console.error('Failed to send notifications:', err));
 
-      return { count: data as number, challengeSlug };
+      return { count: data as number, challengeSlug, photoShortIds };
     },
     onSuccess: async (data) => {
       // Revalidate server-side cache for the challenge detail page
       await revalidateChallenge(data.challengeSlug);
+      // Revalidate specific photos' cache
+      await revalidatePhotos(data.photoShortIds);
 
       queryClient.invalidateQueries({
         queryKey: ['challenge-submissions'],
@@ -282,6 +295,11 @@ export function useBulkReviewSubmissions() {
       });
       queryClient.invalidateQueries({
         queryKey: ['challenge'],
+      });
+      // Invalidate photos query so manage grid shows updated challenge badges
+      // Note: This uses a broad prefix match but only affects client-side React Query cache
+      queryClient.invalidateQueries({
+        queryKey: ['photos'],
       });
     },
   });

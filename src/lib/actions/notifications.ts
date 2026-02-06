@@ -28,6 +28,7 @@ export async function markNotificationAsSeen(notificationId: string): Promise<{ 
     return { success: false, error: error.message };
   }
 
+  revalidateTag(`notifications-${user.id}`, 'max');
   return { success: true };
 }
 
@@ -54,6 +55,7 @@ export async function markAllNotificationsAsSeen(): Promise<{ success: boolean; 
     return { success: false, error: error.message };
   }
 
+  revalidateTag(`notifications-${user.id}`, 'max');
   return { success: true };
 }
 
@@ -102,6 +104,7 @@ export async function markNotificationsSeenByLink(pathname: string): Promise<{ s
     return { success: false, markedIds: [], error: updateError.message };
   }
 
+  revalidateTag(`notifications-${user.id}`, 'max');
   return { success: true, markedIds: ids };
 }
 
@@ -131,6 +134,7 @@ export async function dismissNotification(notificationId: string): Promise<{ suc
     return { success: false, error: error.message };
   }
 
+  revalidateTag(`notifications-${user.id}`, 'max');
   return { success: true };
 }
 

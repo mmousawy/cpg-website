@@ -3,6 +3,7 @@
 import type { Json } from '@/database.types';
 import type { CreateNotificationParams } from '@/types/notifications';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Create a notification in the database
@@ -28,6 +29,7 @@ export async function createNotification(params: CreateNotificationParams): Prom
       return { success: false, error: error.message };
     }
 
+    revalidateTag(`notifications-${params.userId}`, 'max');
     return { success: true };
   } catch (err) {
     const error = err instanceof Error ? err : new Error('Unknown error');

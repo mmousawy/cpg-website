@@ -431,6 +431,10 @@ export function useReorderPhotos(
       }
     },
     onSuccess: async () => {
+      // Invalidate photos cache to ensure fresh data
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['photos', userId, filter] });
+      }
       // Revalidate profile page (photostream order changed)
       if (nickname) {
         await revalidateProfile(nickname);

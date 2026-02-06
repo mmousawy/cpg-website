@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from 'react';
 
+import { revalidateChallenge, revalidateChallenges } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import AnnounceChallengeModal from '@/components/admin/AnnounceChallengeModal';
@@ -15,7 +16,6 @@ import Input from '@/components/shared/Input';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import Textarea from '@/components/shared/Textarea';
-import { revalidateChallenge, revalidateChallenges } from '@/app/actions/revalidate';
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeBySlug } from '@/hooks/useChallenges';
 import { useFormChanges } from '@/hooks/useFormChanges';

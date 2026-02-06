@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { ChallengeAnnouncementEmail } from '@/emails/challenge-announcement';
+import { revalidateChallenges } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
 import { createClient } from '@/utils/supabase/server';
 import { createNotification } from '@/lib/notifications/create';
@@ -257,6 +258,9 @@ export async function POST(request: NextRequest) {
     .from('challenges')
     .update({ announced_at: new Date().toISOString() })
     .eq('id', challengeId);
+
+  // Revalidate challenges cache so announced_at is reflected
+  await revalidateChallenges();
 
   return NextResponse.json(
     {

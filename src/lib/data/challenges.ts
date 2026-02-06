@@ -114,6 +114,7 @@ export async function getChallengeBySlug(slug: string) {
   'use cache';
   cacheLife('max');
   cacheTag('challenges');
+  cacheTag(`challenge-${slug}`);
 
   const supabase = createPublicClient();
 
@@ -172,6 +173,7 @@ export async function getChallengePhotos(challengeId: string) {
   'use cache';
   cacheLife('max');
   cacheTag('challenge-photos');
+  cacheTag(`challenge-photos-${challengeId}`);
 
   const supabase = createPublicClient();
 

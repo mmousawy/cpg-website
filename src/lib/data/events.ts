@@ -113,6 +113,7 @@ export async function getEventBySlug(slug: string) {
   'use cache';
   cacheLife('max');
   cacheTag('events');
+  cacheTag(`event-${slug}`);
 
   const supabase = createPublicClient();
 
