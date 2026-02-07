@@ -46,12 +46,12 @@ export default async function EventsPage() {
         className="mb-8"
       >
         <h1
-          className="text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold"
         >
           Events
         </h1>
         <p
-          className="mt-2 text-foreground/70"
+          className="text-base sm:text-lg mt-2 text-foreground/70"
         >
           Join us at our upcoming meetups or browse past events
         </p>

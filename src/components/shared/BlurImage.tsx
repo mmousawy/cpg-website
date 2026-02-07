@@ -1,13 +1,16 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 import { getBlurPlaceholderUrl } from '@/utils/supabaseImageLoader';
 
 // Threshold in ms - if image loads faster than this, it's likely from browser cache
-const CACHE_LOAD_THRESHOLD_MS = 50;
+const CACHE_LOAD_THRESHOLD_MS = 100;
+
+// Safe useLayoutEffect that falls back to useEffect during SSR
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   /** Blurhash string for instant placeholder (no network request) */
@@ -39,23 +42,48 @@ export default function BlurImage({
   onLoad: onLoadProp,
   ...props
 }: BlurImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [skipTransition, setSkipTransition] = useState(false);
-  const mountTime = useRef<number | null>(null);
-
-  // Set mount time on first render (client-side only)
-  useEffect(() => {
-    if (mountTime.current === null) {
-      mountTime.current = Date.now();
-    }
-  }, []);
-
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
 
+  // Track the current src to detect changes and reset state
+  const [currentSrc, setCurrentSrc] = useState(srcString);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [skipTransition, setSkipTransition] = useState(false);
+  const mountTime = useRef<number>(0);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const hasCalledOnLoad = useRef(false);
+
+  // Reset state when src changes (during render, not in effect)
+  if (srcString !== currentSrc) {
+    setCurrentSrc(srcString);
+    setIsLoaded(false);
+    setSkipTransition(false);
+  }
+
+  // Set mount time synchronously after render (before paint) and check for cached images
+  useIsomorphicLayoutEffect(() => {
+    // Reset refs for new image
+    mountTime.current = Date.now();
+    hasCalledOnLoad.current = false;
+
+    // Check if image is already complete (browser cache hit)
+    if (imageRef.current?.complete && imageRef.current?.naturalWidth > 0) {
+      hasCalledOnLoad.current = true;
+      setSkipTransition(true);
+      setIsLoaded(true);
+    }
+  }, [currentSrc]); // Re-run when src changes
+
   // Handler for image load - detects browser cache via timing
-  const handleImageLoad = () => {
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    // Store ref to the image element
+    imageRef.current = e.currentTarget;
+
+    // Prevent double-calling
+    if (hasCalledOnLoad.current) return;
+    hasCalledOnLoad.current = true;
+
     const now = Date.now();
-    const loadTime = mountTime.current !== null ? now - mountTime.current : Infinity;
+    const loadTime = mountTime.current > 0 ? now - mountTime.current : 0;
     const isCached = loadTime < CACHE_LOAD_THRESHOLD_MS;
 
     if (isCached) {

@@ -62,11 +62,24 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
-        className="w-full px-4 pt-4 md:p-4 gap-4 md:flex lg:gap-8 md:items-start md:min-h-[calc(100vh-90px)] lg:p-8 lg:min-h-[calc(100vh-106px)]"
+        className={clsx(
+          'w-full',
+          // Mobile: padding and min-height
+          'px-4 pt-4 min-h-[calc(100svh-57px)]',
+          // Desktop: flex layout with gap
+          'md:flex md:items-start md:gap-4 md:p-4 md:min-h-[calc(100svh-74px)]',
+          // Large: more gap and padding
+          'lg:gap-8 lg:p-8',
+        )}
       >
-        {/* Gallery column */}
+        {/* Gallery column - vertically centers content when short */}
         <div
-          className="relative w-full md:flex-1"
+          className={clsx(
+            'relative w-full flex flex-col justify-center',
+            // Desktop: flex-1 with min-height for vertical centering
+            'md:flex-1 md:min-h-[calc(100svh-105px)]',
+            'lg:min-h-[calc(100svh-137px)]',
+          )}
         >
           {/* Gallery */}
           <div
@@ -104,20 +117,20 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           )}
         </div>
 
-        {/* Metadata + Comments sidebar on desktop (sticky), below gallery on mobile */}
+        {/* Sidebar - sticky, scrollable */}
         <div
           className={clsx(
-            // Mobile: full-width card below gallery
-            'mt-4 pt-4 pb-8 -mx-4 px-4',
+            // Mobile: flows normally
+            'mt-4 -mx-4 pt-4 pb-8 px-4',
             'border-t border-t-border-color bg-background-light',
-            // Desktop: fixed-width sidebar card
-            'md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:px-6',
-            'md:w-96 md:shrink-0 md:rounded-lg',
-            'md:border md:border-border-color',
-            // Desktop: sticky positioning
+            // Desktop: sticky sidebar with fixed width
+            'md:mt-0 md:mx-0 md:w-96 md:shrink-0',
             'md:sticky md:self-start md:overflow-y-auto',
-            'md:top-[90px] md:h-[calc(100vh-106px)]',
-            'lg:top-[106px] lg:h-[calc(100vh-138px)]',
+            'md:top-[90px] lg:top-[106px] md:min-h-[calc(100svh-105px)] md:max-h-[calc(100svh-74px)]',
+            'lg:min-h-[calc(100svh-137px)] lg:max-h-[calc(100svh-138px)]',
+            // Desktop: card styling
+            'md:pt-6 md:pb-6 md:px-6',
+            'md:rounded-lg md:border md:border-border-color',
             // Flex layout for content
             'md:flex md:flex-col',
           )}

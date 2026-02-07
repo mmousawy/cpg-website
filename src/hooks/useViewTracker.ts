@@ -11,6 +11,9 @@ export function useViewTracker(type: 'photo' | 'album', id: string) {
   const tracked = useRef(false);
 
   useEffect(() => {
+    // Never track views in development
+    if (process.env.NODE_ENV === 'development') return;
+
     // Only track once per mount, and only if we have a valid ID
     if (tracked.current || !id) return;
     tracked.current = true;

@@ -1,79 +1,173 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+// Custom event name for triggering navigation progress
+const NAVIGATION_START_EVENT = 'navigation:start';
+
+/**
+ * Trigger the navigation progress bar manually.
+ * Usually not needed - use useProgressRouter() instead.
+ */
+export function triggerNavigationProgress() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(NAVIGATION_START_EVENT));
+  }
+}
+
+/**
+ * A drop-in replacement for useRouter() that automatically triggers
+ * the navigation progress bar on push() and replace().
+ *
+ * @example
+ * // Instead of:
+ * import { useRouter } from 'next/navigation';
+ * const router = useRouter();
+ *
+ * // Use:
+ * import { useProgressRouter } from '@/components/layout/NavigationProgress';
+ * const router = useProgressRouter();
+ *
+ * // Then use normally:
+ * router.push('/some-page');
+ */
+export function useProgressRouter(): AppRouterInstance {
+  const router = useRouter();
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+
+  return useMemo(() => ({
+    ...router,
+    push: (href: string, options?: Parameters<AppRouterInstance['push']>[1]) => {
+      // Only trigger progress if navigating to a different page
+      try {
+        const url = new URL(href, window.location.origin);
+        if (url.pathname !== pathname) {
+          triggerNavigationProgress();
+        }
+      } catch {
+        // If URL parsing fails, trigger anyway to be safe
+        triggerNavigationProgress();
+      }
+      return router.push(href, options);
+    },
+    replace: (href: string, options?: Parameters<AppRouterInstance['replace']>[1]) => {
+      // Only trigger progress if navigating to a different page
+      try {
+        const url = new URL(href, window.location.origin);
+        if (url.pathname !== pathname) {
+          triggerNavigationProgress();
+        }
+      } catch {
+        triggerNavigationProgress();
+      }
+      return router.replace(href, options);
+    },
+  }), [router, pathname]);
+}
 
 /**
  * Global navigation progress indicator.
  * Shows a thin loading bar at the top during route transitions.
- * Uses requestAnimationFrame for smooth progress animation.
+ *
+ * Detects navigation via:
+ * 1. Click events on <a> tags (automatic)
+ * 2. Custom 'navigation:start' events (from useProgressRouter)
+ *
+ * Completes when pathname changes.
  */
 export default function NavigationProgress() {
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const prevPathnameRef = useRef(pathname);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigationStartTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Start the progress animation
+  const startProgress = useCallback(() => {
+    cleanup();
+    navigationStartTimeRef.current = Date.now();
+    setIsNavigating(true);
+    setProgress(0);
+
+    const animate = () => {
+      if (!navigationStartTimeRef.current) return;
+
+      const elapsed = Date.now() - navigationStartTimeRef.current;
+      const minDuration = 400;
+
+      let currentProgress: number;
+      if (elapsed < minDuration) {
+        // Fast progress up to 90% during minimum duration
+        currentProgress = Math.min(90, (elapsed / minDuration) * 90);
+      } else {
+        // Slow progress from 90% to 95% (waiting for page)
+        const extraTime = elapsed - minDuration;
+        currentProgress = Math.min(95, 90 + (extraTime / 2000) * 5);
+      }
+
+      setProgress(currentProgress);
+
+      if (currentProgress < 95) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+  }, [cleanup]);
+
+  // Complete the progress animation
+  const completeProgress = useCallback(() => {
+    cleanup();
+    navigationStartTimeRef.current = null;
+    setProgress(100);
+
+    hideTimeoutRef.current = setTimeout(() => {
+      setIsNavigating(false);
+      setProgress(0);
+    }, 200);
+  }, [cleanup]);
 
   // Listen for click events on links to detect navigation start
   useEffect(() => {
     const handleLinkClick = (e: MouseEvent) => {
+      // Don't intercept if event was already handled
+      if (e.defaultPrevented) return;
+
       const target = e.target as HTMLElement;
       const link = target.closest('a');
 
-      if (link && link.href) {
+      if (link?.href) {
         try {
           const url = new URL(link.href);
-          const currentUrl = new URL(window.location.href);
 
           // Only handle internal navigation to different pages
           if (
-            url.origin === currentUrl.origin &&
-            url.pathname !== currentUrl.pathname &&
+            url.origin === window.location.origin &&
+            url.pathname !== window.location.pathname &&
             !link.hasAttribute('target') &&
             !link.hasAttribute('download') &&
             !e.ctrlKey &&
             !e.metaKey &&
             !e.shiftKey
           ) {
-            setIsLoading(true);
-            setProgress(0);
-
-            // Clear any existing timeouts/animations
-            if (loadingTimeoutRef.current) {
-              clearTimeout(loadingTimeoutRef.current);
-            }
-            if (animationFrameRef.current) {
-              cancelAnimationFrame(animationFrameRef.current);
-            }
-
-            // Animate progress using requestAnimationFrame
-            const startTime = Date.now();
-            const minDuration = 400; // Minimum animation duration
-
-            const updateProgress = () => {
-              const elapsed = Date.now() - startTime;
-
-              let currentProgress: number;
-              if (elapsed < minDuration) {
-                // Fast progress up to 90% during minimum duration
-                currentProgress = Math.min(90, (elapsed / minDuration) * 90);
-              } else {
-                // Slow progress from 90% to 95% (waiting for page)
-                const extraTime = elapsed - minDuration;
-                currentProgress = Math.min(95, 90 + (extraTime / 2000) * 5);
-              }
-
-              setProgress(currentProgress);
-
-              if (currentProgress < 95) {
-                animationFrameRef.current = requestAnimationFrame(updateProgress);
-              }
-            };
-
-            animationFrameRef.current = requestAnimationFrame(updateProgress);
+            startProgress();
           }
         } catch {
           // Invalid URL, ignore
@@ -81,70 +175,49 @@ export default function NavigationProgress() {
       }
     };
 
-    // Use capture phase to catch clicks early
+    // Use capture phase to detect clicks early, but check defaultPrevented
     document.addEventListener('click', handleLinkClick, true);
 
     return () => {
       document.removeEventListener('click', handleLinkClick, true);
     };
-  }, []);
+  }, [startProgress]);
 
-  // When pathname changes, complete the progress and hide
+  // Listen for custom navigation start events (from useProgressRouter)
+  useEffect(() => {
+    const handleNavigationStart = () => {
+      startProgress();
+    };
+
+    window.addEventListener(NAVIGATION_START_EVENT, handleNavigationStart);
+
+    return () => {
+      window.removeEventListener(NAVIGATION_START_EVENT, handleNavigationStart);
+    };
+  }, [startProgress]);
+
+  // When pathname changes, complete the progress
+  // Note: This is intentional - we need to respond to pathname changes from Next.js
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
-
-      // Clear any existing timeouts/animations
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-
-      // Complete the progress animation
-      const ensureCompleteAndHide = () => {
-        // Jump to 100%
-        setProgress(100);
-
-        // Wait for the animation to complete, then hide
-        loadingTimeoutRef.current = setTimeout(() => {
-          setIsLoading(false);
-          setProgress(0);
-        }, 200);
-      };
-
-      // Check if page is ready
-      if (document.readyState === 'complete') {
-        ensureCompleteAndHide();
-      } else {
-        // Wait for page to be ready
-        const handleReady = () => ensureCompleteAndHide();
-        window.addEventListener('load', handleReady, { once: true });
-
-        // Fallback timeout (3 seconds max)
-        loadingTimeoutRef.current = setTimeout(() => {
-          window.removeEventListener('load', handleReady);
-          ensureCompleteAndHide();
-        }, 3000);
-      }
+      // Use microtask to avoid synchronous setState warning
+      queueMicrotask(() => {
+        completeProgress();
+      });
     }
+  }, [pathname, completeProgress]);
 
-    return () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [pathname]);
+  // Cleanup on unmount
+  useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
 
-  if (!isLoading) return null;
+  if (!isNavigating) return null;
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-[9999] h-1 bg-primary/30"
+      className="fixed inset-x-0 top-0 z-9999 h-1 bg-primary/30"
     >
       <div
         className="h-full origin-left bg-primary transition-transform duration-150 ease-out"

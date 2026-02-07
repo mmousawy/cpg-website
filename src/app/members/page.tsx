@@ -33,12 +33,12 @@ export default async function MembersPage() {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="mb-2 text-2xl sm:text-3xl font-bold"
           >
             Discover our community
           </h1>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg opacity-70"
           >
             Sign in to discover and connect with our community members
           </p>

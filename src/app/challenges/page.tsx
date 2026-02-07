@@ -8,7 +8,7 @@ import { createMetadata } from '@/utils/metadata';
 import { getActiveChallenges, getPastChallenges } from '@/lib/data/challenges';
 
 export const metadata = createMetadata({
-  title: 'Photo Challenges',
+  title: 'Photography Challenges',
   description: 'Join our themed photo challenges! Submit your best shots, get featured, and showcase your creativity with the community.',
   canonical: '/challenges',
   keywords: ['photo challenges', 'photography contest', 'themed photography', 'photo submissions'],
@@ -34,12 +34,12 @@ export default async function ChallengesPage() {
         className="mb-8"
       >
         <h1
-          className="text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold"
         >
-          Photo challenges
+          Photography challenges
         </h1>
         <p
-          className="mt-2 text-foreground/70"
+          className="text-base sm:text-lg mt-2 text-foreground/70"
         >
           Join our themed challenges and showcase your photography skills
         </p>

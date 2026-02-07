@@ -1,10 +1,10 @@
 'use client';
 
 import BlurImage from '@/components/shared/BlurImage';
+import { useProgressRouter } from '@/components/layout/NavigationProgress';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import ArrowLeftFillSVG from 'public/icons/arrow-left-fill.svg';
 import ArrowRightFillSVG from 'public/icons/arrow-right-fill.svg';
 import { useEffect, useRef } from 'react';
@@ -29,7 +29,7 @@ export default function AlbumFilmstrip({
   nickname,
   albumSlug,
 }: AlbumFilmstripProps) {
-  const router = useRouter();
+  const router = useProgressRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeThumbnailRef = useRef<HTMLAnchorElement>(null);
   const hasScrolledRef = useRef(false);

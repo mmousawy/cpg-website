@@ -84,6 +84,7 @@ export default function PhotoWithLightbox({ url, title, width, height, blurhash,
           height={height}
           blurhash={blurhash}
           contain
+          unoptimized
           onLoad={() => setIsLoaded(true)}
           className={clsx(
             isInAlbum ? 'max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]'

@@ -43,12 +43,12 @@ export default async function GalleryPage() {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="mb-2 text-2xl sm:text-3xl font-bold"
           >
             Photography gallery
           </h1>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg opacity-70"
           >
             Explore beautiful photos from the community
           </p>

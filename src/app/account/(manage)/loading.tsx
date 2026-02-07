@@ -34,7 +34,7 @@ export default function ManageLoading() {
 
   return (
     <div
-      className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-73px)] w-full select-none"
+      className="flex h-[calc(100svh-57px)] md:h-[calc(100svh-74px)] w-full select-none"
     >
       {/* Left Panel - Content */}
       <div
@@ -128,7 +128,7 @@ export default function ManageLoading() {
 
       {/* Right Panel - Sidebar skeleton (hidden on mobile) */}
       <div
-        className="hidden md:flex h-[calc(100vh-73px)] w-[400px] shrink-0 flex-col items-center justify-center bg-background-light p-10 text-center"
+        className="hidden md:flex h-[calc(100vh-74px)] w-[400px] shrink-0 flex-col items-center justify-center bg-background-light p-10 text-center"
       >
         <Skeleton
           className="mb-2 size-10 rounded"
