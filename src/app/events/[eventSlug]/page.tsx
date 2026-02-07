@@ -1,5 +1,6 @@
 import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
+import EventCoverImage from '@/components/events/EventCoverImage';
 import EventSignupBar from '@/components/events/EventSignupBar';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
@@ -148,6 +149,7 @@ async function CachedEventContent({
 
   cacheLife('max');
   cacheTag('events');
+  cacheTag('event-attendees');
   cacheTag(`event-${event.slug}`);
 
   // Fetch hosts and attendees using cached functions
@@ -257,80 +259,93 @@ async function CachedEventContent({
             </div>
           )}
 
-          {/* Event Info - Date, Time, Location */}
+          {/* Content wrapper with clearfix for floated image */}
           <div
-            className="mb-8 space-y-3"
+            className="overflow-hidden"
           >
-            {/* Date & Time */}
-            <div
-              className="flex flex-wrap items-center gap-x-6 gap-y-2"
-            >
-              <span
-                className="flex items-center gap-2 text-[15px] font-semibold"
-              >
-                <CalendarSVG
-                  className="size-5 shrink-0 fill-foreground"
-                />
-                {formattedDate}
-              </span>
-              <span
-                className="flex items-center gap-2 text-[15px] font-semibold"
-              >
-                <TimeSVG
-                  className="size-5 shrink-0 fill-foreground"
-                />
-                {formattedTime}
-              </span>
-            </div>
+            {event.cover_image && (
+              <EventCoverImage
+                url={event.cover_image}
+                title={event.title || 'Event cover'}
+                blurhash={event.image_blurhash}
+              />
+            )}
 
-            {/* Location */}
-            {event.location && (
+            {/* Event Info - Date, Time, Location */}
+            <div
+              className="mb-8 space-y-3"
+            >
+              {/* Date & Time */}
               <div
-                className="flex items-start gap-2 text-[15px] font-semibold"
+                className="flex flex-wrap items-center gap-x-6 gap-y-2"
               >
-                <LocationSVG
-                  className="size-5 shrink-0 fill-foreground mt-0.5"
-                />
                 <span
-                  className="whitespace-pre-wrap"
+                  className="flex items-center gap-2 text-[15px] font-semibold"
                 >
-                  {event.location}
+                  <CalendarSVG
+                    className="size-5 shrink-0 fill-foreground"
+                  />
+                  {formattedDate}
+                </span>
+                <span
+                  className="flex items-center gap-2 text-[15px] font-semibold"
+                >
+                  <TimeSVG
+                    className="size-5 shrink-0 fill-foreground"
+                  />
+                  {formattedTime}
                 </span>
               </div>
-            )}
 
-            {/* Capacity info */}
-            {event.max_attendees && (
-              <p
-                className="text-sm text-foreground/70"
+              {/* Location */}
+              {event.location && (
+                <div
+                  className="flex items-start gap-2 text-[15px] font-semibold"
+                >
+                  <LocationSVG
+                    className="size-5 shrink-0 fill-foreground mt-0.5"
+                  />
+                  <span
+                    className="whitespace-pre-wrap"
+                  >
+                    {event.location}
+                  </span>
+                </div>
+              )}
+
+              {/* Capacity info */}
+              {event.max_attendees && (
+                <p
+                  className="text-sm text-foreground/70"
+                >
+                  {event.rsvp_count || 0}
+                  {' '}
+                  /
+                  {event.max_attendees}
+                  {' '}
+                  spots filled
+                </p>
+              )}
+            </div>
+
+            {/* Description Section */}
+            {event.description && (
+              <div
+                className="mb-8"
               >
-                {event.rsvp_count || 0}
-                {' '}
-                /
-                {event.max_attendees}
-                {' '}
-                spots filled
-              </p>
+                <h2
+                  className="mb-3 text-lg font-semibold"
+                >
+                  About this event
+                </h2>
+                <p
+                  className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]"
+                >
+                  {event.description}
+                </p>
+              </div>
             )}
           </div>
-
-          {/* Description Section */}
-          {event.description && (
-            <div
-              className="mb-8"
-            >
-              <h2
-                className="mb-3 text-lg font-semibold"
-              >
-                About this event
-              </h2>
-              <p
-                className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]"
-              >
-                {event.description}
-              </p>
-            </div>
-          )}
 
           {/* Hosts Section */}
           {hosts && hosts.length > 0 && (

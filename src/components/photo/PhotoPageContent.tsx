@@ -5,7 +5,7 @@ import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
-import ReportButton from '@/components/shared/ReportButton';
+import PhotoActionsPopover from '@/components/shared/PhotoActionsPopover';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
@@ -117,10 +117,21 @@ export default function PhotoPageContent({
 
         {/* Metadata + Comments sidebar on desktop, below photo on mobile */}
         <div
-          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col',
+          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
             currentAlbum ? 'mt-2' : 'mt-4',
           )}
         >
+          {/* More actions menu - top right */}
+          <div
+            className="absolute right-4 top-4 md:right-6 md:top-6"
+          >
+            <PhotoActionsPopover
+              photoId={photo.id}
+              photoTitle={photo.title}
+              photoUserId={photo.user_id}
+            />
+          </div>
+
           {/* Author row */}
           <div
             className="mb-6"
@@ -248,15 +259,6 @@ export default function PhotoPageContent({
                   />
                 </div>
               )}
-              {/* Report link */}
-              <ReportButton
-                entityType="photo"
-                entityId={photo.id}
-                entityLabel={`photo "${photo.title || 'Untitled'}"`}
-                entityOwnerId={photo.user_id || undefined}
-                variant="link"
-                className="text-xs text-foreground/60"
-              />
             </div>
 
 

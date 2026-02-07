@@ -22,7 +22,7 @@ export default function AuthorRow({ profile, className }: AuthorRowProps) {
     >
       <Link
         href={`/@${profile.nickname}`}
-        className="group flex items-center gap-2.5"
+        className="group flex items-center gap-2.5 w-fit"
       >
         <Avatar
           avatarUrl={profile.avatar_url}

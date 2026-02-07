@@ -2,8 +2,8 @@ import FullSizeGalleryButton from '@/components/photo/FullSizeGalleryButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
+import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
-import ReportButton from '@/components/shared/ReportButton';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
@@ -134,8 +134,21 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             'md:rounded-lg md:border md:border-border-color',
             // Flex layout for content
             'md:flex md:flex-col',
+            // Relative positioning for absolute children
+            'relative',
           )}
         >
+          {/* More actions menu - top right */}
+          <div
+            className="absolute right-4 top-4 md:right-6 md:top-6"
+          >
+            <AlbumActionsPopover
+              albumId={albumWithPhotos.id}
+              albumTitle={albumWithPhotos.title}
+              albumUserId={albumWithPhotos.user_id}
+            />
+          </div>
+
           {/* Author row */}
           <div
             className="mb-6"
@@ -221,15 +234,6 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                   />
                 </div>
               )}
-              {/* Report link */}
-              <ReportButton
-                entityType="album"
-                entityId={albumWithPhotos.id}
-                entityLabel={`album "${albumWithPhotos.title || 'Untitled'}"`}
-                entityOwnerId={albumWithPhotos.user_id}
-                variant="link"
-                className="text-xs text-foreground/60"
-              />
             </div>
 
             {/* Tags */}

@@ -377,6 +377,7 @@ Deploy to Vercel:
 - [x] Activity feed
 - [x] In-app notifications
 - [ ] Community photo albums
+- [ ] Reply to comments
 
 ### Discovery
 
@@ -396,6 +397,10 @@ Deploy to Vercel:
 ### Sharing
 
 - [ ] Social share buttons
+
+### Community
+
+- [ ] Forum (discussion boards, threads, categories)
 
 ### Moderation
 
