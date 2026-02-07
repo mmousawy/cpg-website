@@ -4,8 +4,8 @@ import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import InterestCloud from '@/components/shared/InterestCloud';
+import ProfileActionsPopover from '@/components/shared/ProfileActionsPopover';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
-import ReportButton from '@/components/shared/ReportButton';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
@@ -126,7 +126,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
         >
           {/* Avatar and Name */}
           <div
-            className="mb-3 sm:mb-6 flex items-center gap-3 sm:gap-4"
+            className="mb-3 sm:mb-6 flex items-start gap-3 sm:gap-4 relative"
           >
             <div
               className="relative shrink-0 rounded-full outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none"
@@ -202,6 +202,14 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                 </div>
               )}
             </div>
+
+            {/* More actions menu - top right */}
+            {profile.nickname && (
+              <ProfileActionsPopover
+                profileId={profile.id}
+                profileNickname={profile.nickname}
+              />
+            )}
           </div>
 
           {/* Links - Mobile only (full width below avatar) */}
@@ -246,20 +254,6 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
               ))}
             </div>
           )}
-
-          {/* Report button */}
-          <div
-            className="mb-4"
-          >
-            <ReportButton
-              entityType="profile"
-              entityId={profile.id}
-              entityLabel={`user @${profile.nickname}`}
-              entityOwnerId={profile.id}
-              variant="link"
-              className="text-xs text-foreground/60"
-            />
-          </div>
 
           {/* Bio */}
           {profile.bio && (

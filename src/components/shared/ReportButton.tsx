@@ -33,8 +33,9 @@ export default function ReportButton({
   const { user } = useAuth();
   const modalContext = useContext(ModalContext);
 
-  // Hide if user is reporting their own content
-  if (user && entityOwnerId && user.id === entityOwnerId) {
+  // Hide if user is reporting their own content (unless in development)
+  const isDev = process.env.NODE_ENV === 'development';
+  if (!isDev && user && entityOwnerId && user.id === entityOwnerId) {
     return null;
   }
 

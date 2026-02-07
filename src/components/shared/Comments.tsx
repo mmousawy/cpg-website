@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
-import ReportButton from './ReportButton';
+import CommentActionsPopover from './CommentActionsPopover';
 import Textarea from './Textarea';
 
 import SendSVG from 'public/icons/arrow-right.svg';
@@ -238,7 +238,7 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
               >
                 <Link
                   href={comment.profile?.nickname ? `/@${comment.profile.nickname}` : '#'}
-                  className="flex gap-2.5 group rounded-lg"
+                  className="flex gap-2.5 items-center group rounded-lg"
                 >
                   <Avatar
                     avatarUrl={comment.profile?.avatar_url}
@@ -252,28 +252,22 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
                     >
                       {comment.profile?.full_name || 'Anonymous'}
                     </p>
-                    <p
-                      className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
-                    >
-                      @
-                      {comment.profile?.nickname}
-                      {' '}
-                      ·
-                      {' '}
-                      {formatDate(comment.created_at)}
-                    </p>
+                    {comment.profile?.nickname && (
+                      <p
+                        className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+                      >
+                        @
+                        {comment.profile.nickname}
+                      </p>
+                    )}
                   </div>
                 </Link>
                 <div
                   className="flex items-center gap-1"
                 >
-                  <ReportButton
-                    entityType="comment"
-                    entityId={comment.id}
-                    entityLabel="this comment"
-                    entityOwnerId={comment.user_id}
-                    variant="link"
-                    className="text-xs text-foreground/60"
+                  <CommentActionsPopover
+                    commentId={comment.id}
+                    commentUserId={comment.user_id}
                   />
                   {(user?.id === comment.user_id || isAdmin) && (
                     <button
@@ -289,7 +283,12 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
                 </div>
               </div>
               <p
-                className="text-sm text-foreground/90 ml-[50px]"
+                className="text-xs text-foreground/50 mb-2"
+              >
+                {formatDate(comment.created_at)}
+              </p>
+              <p
+                className="text-sm text-foreground/90"
               >
                 {comment.comment_text}
               </p>
