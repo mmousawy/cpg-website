@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.20.0](https://github.com/mmousawy/cpg-website/compare/v1.19.1...v1.20.0) (2026-02-07)
+
+
+### Features
+
+* Add album filmstrip navigation and improve photo viewing UX ([50ac406](https://github.com/mmousawy/cpg-website/commit/50ac406862726218972130f6c8a6d33fd7795b4f))
+* Mobile UI optimizations and challenge badges for photos ([ffd9b20](https://github.com/mmousawy/cpg-website/commit/ffd9b2073e2a8503f129f5d18615108aba3abb8d))
+
+
+### Bug Fixes
+
+* add page-level caching and optimize proxy for performance ([6a0d1de](https://github.com/mmousawy/cpg-website/commit/6a0d1de499dacd1fd0339e2b61a9ae0e5e48edf8))
+* Adjust test ([693f18d](https://github.com/mmousawy/cpg-website/commit/693f18dbefb7dc9b092fee2a49f44f073fd07c81))
+* Adjust test ([49d4216](https://github.com/mmousawy/cpg-website/commit/49d4216f5107fbd284af72b2378f53a7c2dd6206))
+* wrap signup revalidation in try catch. ([8957eb9](https://github.com/mmousawy/cpg-website/commit/8957eb96f2ed7f0c6c85793a89e9d05f332489bf))
+
 ## [1.19.1](https://github.com/mmousawy/cpg-website/compare/v1.19.0...v1.19.1) (2026-02-04)
 
 
