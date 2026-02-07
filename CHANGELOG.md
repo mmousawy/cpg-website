@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/mmousawy/cpg-website/compare/v1.21.0...v1.22.0) (2026-02-07)
+
+
+### Features
+
+* comment replies and responsive sidebar improvements ([ab4b8e2](https://github.com/mmousawy/cpg-website/commit/ab4b8e28f2b98eb3348fd447d11e248c654c8e8b))
+
 ## [1.21.0](https://github.com/mmousawy/cpg-website/compare/v1.20.0...v1.21.0) (2026-02-07)
 
 
