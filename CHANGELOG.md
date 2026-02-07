@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.21.0](https://github.com/mmousawy/cpg-website/compare/v1.20.0...v1.21.0) (2026-02-07)
+
+
+### Features
+
+* report content feature and UI consistency improvements ([17bd625](https://github.com/mmousawy/cpg-website/commit/17bd625b633a0a4ac08bb8d282e7671df7c0d922))
+
+
+### Bug Fixes
+
+* Update layout and styling ([cb494e7](https://github.com/mmousawy/cpg-website/commit/cb494e7e33d397198ebff2f2ec7dc4e92be1ec42))
+* Update report link position and popovers ([ecd65ca](https://github.com/mmousawy/cpg-website/commit/ecd65ca4b94874caea11bf648f32ad41798d16dc))
+
 ## [1.20.0](https://github.com/mmousawy/cpg-website/compare/v1.19.1...v1.20.0) (2026-02-07)
 
 
