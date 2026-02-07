@@ -3,12 +3,79 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { CommentNotificationEmail } from '@/emails/comment-notification';
 import { encrypt } from '@/utils/encrypt';
 import { revalidateAlbum, revalidateGalleryData } from '@/app/actions/revalidate';
 import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
+
+export async function DELETE(request: NextRequest) {
+  const supabase = await createClient();
+
+  // Get the authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const commentId = searchParams.get('id');
+
+  if (!commentId) {
+    return NextResponse.json({ message: 'Comment ID is required' }, { status: 400 });
+  }
+
+  // Check if user is admin
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  const isAdmin = profile?.is_admin === true;
+
+  // Get the comment to verify ownership
+  const { data: comment, error: fetchError } = await supabase
+    .from('comments')
+    .select('id, user_id')
+    .eq('id', commentId)
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !comment) {
+    return NextResponse.json({ message: 'Comment not found' }, { status: 404 });
+  }
+
+  // Check permission: must be comment owner or admin
+  if (comment.user_id !== user.id && !isAdmin) {
+    return NextResponse.json({ message: 'You do not have permission to delete this comment' }, { status: 403 });
+  }
+
+  // Use admin client if user is admin (to bypass RLS), otherwise use regular client
+  const deleteClient = isAdmin ? createAdminClient() : supabase;
+
+  // Soft delete the comment
+  const { data, error } = await deleteClient
+    .from('comments')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', commentId)
+    .is('deleted_at', null)
+    .select('id');
+
+  if (error) {
+    console.error('Error deleting comment:', error);
+    return NextResponse.json({ message: 'Failed to delete comment' }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ message: 'Comment could not be deleted' }, { status: 500 });
+  }
+
+  return new NextResponse(null, { status: 204 });
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();

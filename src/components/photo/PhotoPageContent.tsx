@@ -1,5 +1,6 @@
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
+import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
@@ -9,6 +10,7 @@ import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
+import clsx from 'clsx';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
 
@@ -34,6 +36,13 @@ interface Challenge {
   cover_image_url?: string | null;
 }
 
+interface SiblingPhoto {
+  shortId: string;
+  url: string;
+  blurhash: string | null;
+  sortOrder: number;
+}
+
 interface PhotoPageContentProps {
   photo: Photo & { tags?: SimpleTag[] };
   profile: Profile;
@@ -43,6 +52,8 @@ interface PhotoPageContentProps {
   albums?: Album[];
   /** Challenges this photo was accepted in */
   challenges?: Challenge[];
+  /** Sibling photos in the current album (for filmstrip navigation) */
+  siblingPhotos?: SiblingPhoto[];
 }
 
 export default function PhotoPageContent({
@@ -51,6 +62,7 @@ export default function PhotoPageContent({
   currentAlbum,
   albums = [],
   challenges = [],
+  siblingPhotos,
 }: PhotoPageContentProps) {
   const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
   const nickname = profile.nickname;
@@ -73,20 +85,40 @@ export default function PhotoPageContent({
       >
         {/* Photo column - sticky on desktop, vertically centered */}
         <div
-          className="md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)]"
+          className="md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col"
         >
-          <PhotoWithLightbox
-            url={photo.url}
-            title={photo.title}
-            width={photo.width || 1200}
-            height={photo.height || 800}
-            blurhash={photo.blurhash}
-          />
+          <div
+            className="flex-1 flex items-center justify-center"
+          >
+            <PhotoWithLightbox
+              url={photo.url}
+              title={photo.title || ''}
+              width={photo.width || 1200}
+              height={photo.height || 800}
+              blurhash={photo.blurhash || ''}
+              isInAlbum={!!currentAlbum}
+            />
+          </div>
+          {/* Filmstrip navigation - only show when viewing within an album */}
+          {currentAlbum && siblingPhotos && siblingPhotos.length > 1 && (
+            <div
+              className="lg:translate-y-4"
+            >
+              <AlbumFilmstrip
+                photos={siblingPhotos}
+                currentPhotoShortId={photo.short_id}
+                nickname={nickname}
+                albumSlug={currentAlbum.slug}
+              />
+            </div>
+          )}
         </div>
 
         {/* Metadata + Comments sidebar on desktop, below photo on mobile */}
         <div
-          className="mt-4 pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col"
+          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col',
+            currentAlbum ? 'mt-2' : 'mt-4',
+          )}
         >
           {/* Author row */}
           <div

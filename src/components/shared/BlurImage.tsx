@@ -1,16 +1,23 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 import { getBlurPlaceholderUrl } from '@/utils/supabaseImageLoader';
+
+// Threshold in ms - if image loads faster than this, it's likely from browser cache
+const CACHE_LOAD_THRESHOLD_MS = 50;
 
 type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   /** Blurhash string for instant placeholder (no network request) */
   blurhash?: string | null;
   /** Disable blur placeholder */
   noBlur?: boolean;
+  /** Use object-contain instead of object-cover (for sized images) */
+  contain?: boolean;
+  /** Callback when image finishes loading */
+  onLoad?: () => void;
 };
 
 /**
@@ -19,7 +26,7 @@ type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
  * If `blurhash` is provided: Decodes to data URL for instant placeholder (no network)
  * Otherwise: Fetches tiny version from Supabase (requires network)
  *
- * Images fade in smoothly when loaded.
+ * Images fade in smoothly when loaded (unless loaded from browser cache).
  */
 export default function BlurImage({
   src,
@@ -28,11 +35,43 @@ export default function BlurImage({
   blurhash,
   noBlur = false,
   fill,
+  contain = false,
+  onLoad: onLoadProp,
   ...props
 }: BlurImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [skipTransition, setSkipTransition] = useState(false);
+  const mountTime = useRef<number | null>(null);
+
+  // Set mount time on first render (client-side only)
+  useEffect(() => {
+    if (mountTime.current === null) {
+      mountTime.current = Date.now();
+    }
+  }, []);
 
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
+
+  // Handler for image load - detects browser cache via timing
+  const handleImageLoad = () => {
+    const now = Date.now();
+    const loadTime = mountTime.current !== null ? now - mountTime.current : Infinity;
+    const isCached = loadTime < CACHE_LOAD_THRESHOLD_MS;
+
+    if (isCached) {
+      // Image loaded very quickly - from browser cache, show instantly
+      setSkipTransition(true);
+      setIsLoaded(true);
+    } else {
+      // Image took time to load - use fade-in transition
+      requestAnimationFrame(() => {
+        setIsLoaded(true);
+      });
+    }
+
+    // Call external onLoad callback
+    onLoadProp?.();
+  };
 
   // Get image dimensions for aspect ratio
   const imgWidth = typeof props.width === 'number' ? props.width : parseInt(String(props.width), 10);
@@ -55,10 +94,10 @@ export default function BlurImage({
     return (
       <Image
         src={src}
-        alt={alt}
-        className={`${className} transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        alt={alt || ''}
+        className={`${className} ${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         fill={fill}
-        onLoadingComplete={() => setIsLoaded(true)}
+        onLoad={handleImageLoad}
         {...props}
       />
     );
@@ -101,10 +140,10 @@ export default function BlurImage({
         {/* Main image - fades in on top when loaded */}
         <Image
           src={src}
-          alt={alt}
+          alt={alt || ''}
           fill
-          className={`${className} transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoadingComplete={() => setIsLoaded(true)}
+          className={`${className} ${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={handleImageLoad}
           {...props}
         />
       </>
@@ -112,21 +151,51 @@ export default function BlurImage({
   }
 
   // For sized images: use a wrapper with the blur as background, main image on top
-  // Only set explicit width if no responsive width class (w-full, w-auto, etc.) is provided
+  // Only set explicit width if no responsive width class AND not using contain mode
   const hasResponsiveWidth = /\bw-(full|auto|screen|\d+|px|\[)/.test(className);
+
+  // Merge passed style prop with wrapper styles
+  const passedStyle = (props as any).style || {};
+
+  // For contain mode: simpler structure where image drives the sizing
+  if (contain) {
+    return (
+      <span
+        className={`block relative ${className}`}
+        style={{
+          backgroundImage: blurhashDataUrl ? `url(${blurhashDataUrl})` : undefined,
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          ...passedStyle,
+        }}
+      >
+        <Image
+          src={src}
+          alt={alt || ''}
+          className={`${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={handleImageLoad}
+          {...props}
+        />
+      </span>
+    );
+  }
 
   return (
     <span
       className={`relative block overflow-hidden ${className}`}
-      style={hasResponsiveWidth ? undefined : {
-        width: imgWidth ? `${imgWidth}px` : undefined,
-        maxWidth: '100%',
+      style={{
+        ...(hasResponsiveWidth ? {} : {
+          width: imgWidth ? `${imgWidth}px` : undefined,
+          maxWidth: '100%',
+        }),
+        ...passedStyle,
       }}
     >
       {/* Blur placeholder as background div - matches the main image dimensions */}
       {blurhashDataUrl ? (
         <div
-          className="w-full"
+          className={`w-full ${isLoaded ? 'invisible' : ''}`}
           style={{
             backgroundImage: `url(${blurhashDataUrl})`,
             backgroundSize: 'cover',
@@ -142,14 +211,14 @@ export default function BlurImage({
           aria-hidden="true"
           width={props.width}
           height={props.height}
-          className={`${className}`}
+          className={`${className} ${isLoaded ? 'invisible' : ''}`}
           preload
           quality={30}
           sizes="64px"
         />
       ) : (
         <div
-          className="w-full bg-neutral-200 dark:bg-neutral-800"
+          className={`w-full bg-neutral-200 dark:bg-neutral-800 ${isLoaded ? 'invisible' : ''}`}
           style={{
             aspectRatio: imgWidth && imgHeight ? `${imgWidth} / ${imgHeight}` : undefined,
           }}
@@ -160,9 +229,9 @@ export default function BlurImage({
       {/* Main image - absolutely positioned on top, fades in */}
       <Image
         src={src}
-        alt={alt}
-        className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoadingComplete={() => setIsLoaded(true)}
+        alt={alt || ''}
+        className={`absolute inset-0 w-full h-full object-cover ${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={handleImageLoad}
         {...props}
       />
     </span>

@@ -9,6 +9,7 @@ import ViewTracker from '@/components/shared/ViewTracker';
 import { getPhotosByUrls } from '@/lib/data/albums';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo, SimpleTag } from '@/types/photos';
+import clsx from 'clsx';
 import { cacheLife, cacheTag } from 'next/cache';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import PhotoStackIcon from 'public/icons/photo-stack.svg';
@@ -61,11 +62,11 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
-        className="w-full px-4 pt-4 md:p-4 md:flex md:gap-8 md:items-start md:min-h-[calc(100vh-90px)] lg:p-8 lg:min-h-[calc(100vh-106px)]"
+        className="w-full px-4 pt-4 md:p-4 gap-4 md:flex lg:gap-8 md:items-start md:min-h-[calc(100vh-90px)] lg:p-8 lg:min-h-[calc(100vh-106px)]"
       >
-        {/* Gallery column - vertically centered */}
+        {/* Gallery column */}
         <div
-          className="relative w-full md:flex-1 md:flex md:flex-col md:justify-center md:min-h-[calc(100vh-106px)] lg:min-h-[calc(100vh-138px)]"
+          className="relative w-full md:flex-1"
         >
           {/* Gallery */}
           <div
@@ -97,15 +98,29 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             >
               <FullSizeGalleryButton
                 photos={photos}
-                className="text-xs bg-foreground/5 dark:bg-border-color/70"
+                className="text-xs bg-background/70 dark:bg-border-color/70 backdrop-blur-md hover:bg-background/90! dark:hover:bg-border-color/90!"
               />
             </div>
           )}
         </div>
 
-        {/* Metadata + Comments sidebar on desktop, below gallery on mobile */}
+        {/* Metadata + Comments sidebar on desktop (sticky), below gallery on mobile */}
         <div
-          className="mt-4 pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col md:min-h-[calc(100vh-106px)] lg:min-h-[calc(100vh-138px)]"
+          className={clsx(
+            // Mobile: full-width card below gallery
+            'mt-4 pt-4 pb-8 -mx-4 px-4',
+            'border-t border-t-border-color bg-background-light',
+            // Desktop: fixed-width sidebar card
+            'md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:px-6',
+            'md:w-96 md:shrink-0 md:rounded-lg',
+            'md:border md:border-border-color',
+            // Desktop: sticky positioning
+            'md:sticky md:self-start md:overflow-y-auto',
+            'md:top-[90px] md:h-[calc(100vh-106px)]',
+            'lg:top-[106px] lg:h-[calc(100vh-138px)]',
+            // Flex layout for content
+            'md:flex md:flex-col',
+          )}
         >
           {/* Author row */}
           <div

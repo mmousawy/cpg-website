@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useTransition, useEffect, useCallback } from 'react';
 import Button from '../shared/Button';
 import AlbumGrid from '../album/AlbumGrid';
 import type { AlbumWithPhotos } from '@/types/albums';
@@ -13,6 +13,23 @@ type AlbumsPaginatedProps = {
   initialSort?: 'recent' | 'popular';
 };
 
+// Session storage key prefix
+const STORAGE_KEY_PREFIX = 'albums-paginated-';
+
+// Get storage key for current page state
+function getStorageKey(pathname: string, sort: string): string {
+  return `${STORAGE_KEY_PREFIX}${pathname}-${sort}`;
+}
+
+type CachedState = {
+  albums: AlbumWithPhotos[];
+  hasMore: boolean;
+  timestamp: number;
+};
+
+// Cache expires after 5 minutes
+const CACHE_EXPIRY_MS = 5 * 60 * 1000;
+
 export default function AlbumsPaginated({
   initialAlbums,
   perPage = 20,
@@ -20,14 +37,70 @@ export default function AlbumsPaginated({
   initialSort = 'recent',
 }: AlbumsPaginatedProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [albums, setAlbums] = useState<AlbumWithPhotos[]>(initialAlbums);
+
+  // Initialize state from sessionStorage if available
+  const getInitialState = useCallback((): { albums: AlbumWithPhotos[]; hasMore: boolean } => {
+    if (typeof window === 'undefined') {
+      return {
+        albums: initialAlbums,
+        hasMore: initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage,
+      };
+    }
+
+    try {
+      const key = getStorageKey(pathname, initialSort);
+      const cached = sessionStorage.getItem(key);
+      if (cached) {
+        const parsed: CachedState = JSON.parse(cached);
+        // Check if cache is still valid
+        if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS && parsed.albums.length > 0) {
+          return { albums: parsed.albums, hasMore: parsed.hasMore };
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
+    return {
+      albums: initialAlbums,
+      hasMore: initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage,
+    };
+  }, [pathname, initialSort, initialAlbums, initialHasMore, perPage]);
+
+  const [albums, setAlbums] = useState<AlbumWithPhotos[]>(() => getInitialState().albums);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
-  // If initialHasMore is provided, use it; otherwise check if we got a full page
-  const [hasMore, setHasMore] = useState(
-    initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage,
-  );
+  const [hasMore, setHasMore] = useState(() => getInitialState().hasMore);
   const [isPending, startTransition] = useTransition();
+
+  // Restore state from sessionStorage on mount (client-side only)
+  useEffect(() => {
+    const { albums: cachedAlbums, hasMore: cachedHasMore } = getInitialState();
+    // Only restore if we have more than initial albums
+    if (cachedAlbums.length > initialAlbums.length) {
+      setAlbums(cachedAlbums);
+      setHasMore(cachedHasMore);
+    }
+  }, [getInitialState, initialAlbums.length]);
+
+  // Persist state to sessionStorage when albums change
+  useEffect(() => {
+    // Only cache if we have more than the initial albums
+    if (albums.length > initialAlbums.length) {
+      try {
+        const key = getStorageKey(pathname, sortBy);
+        const state: CachedState = {
+          albums,
+          hasMore,
+          timestamp: Date.now(),
+        };
+        sessionStorage.setItem(key, JSON.stringify(state));
+      } catch {
+        // Ignore storage errors (quota exceeded, etc.)
+      }
+    }
+  }, [albums, hasMore, pathname, sortBy, initialAlbums.length]);
 
   const loadMore = () => {
     startTransition(async () => {
@@ -50,6 +123,14 @@ export default function AlbumsPaginated({
 
   const handleSortChange = (newSort: 'recent' | 'popular') => {
     if (newSort === sortBy) return;
+
+    // Clear cached state for the old sort
+    try {
+      const oldKey = getStorageKey(pathname, sortBy);
+      sessionStorage.removeItem(oldKey);
+    } catch {
+      // Ignore storage errors
+    }
 
     setSortBy(newSort);
 

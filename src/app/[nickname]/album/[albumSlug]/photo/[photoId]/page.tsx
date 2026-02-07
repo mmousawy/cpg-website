@@ -101,6 +101,7 @@ async function CachedAlbumPhotoContent({
       currentAlbum={result.currentAlbum}
       albums={result.albums}
       challenges={result.challenges}
+      siblingPhotos={result.siblingPhotos}
     />
   );
 }

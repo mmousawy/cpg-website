@@ -168,18 +168,17 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
     if (!confirmed) return;
 
     try {
-      // Soft delete comment
-      const { error } = await supabase
-        .from('comments')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', commentId)
-        .is('deleted_at', null);
+      // Use API route for deletion (handles admin permissions via service role)
+      const response = await fetch(`/api/comments?id=${commentId}`, {
+        method: 'DELETE',
+      });
 
-      if (error) {
-        console.error('Error deleting comment:', error);
-        alert('Failed to delete comment');
-      } else {
+      if (response.ok) {
         setComments(comments.filter(c => c.id !== commentId));
+      } else {
+        const data = await response.json();
+        console.error('Error deleting comment:', data.message);
+        alert(data.message || 'Failed to delete comment');
       }
     } catch (err) {
       console.error('Unexpected error:', err);

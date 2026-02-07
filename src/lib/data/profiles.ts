@@ -321,6 +321,35 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     return null;
   }
 
+  // Get all photos in this album (for filmstrip navigation)
+  const { data: siblingPhotosData } = await supabase
+    .from('album_photos_active')
+    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash)')
+    .eq('album_id', album.id)
+    .order('sort_order', { ascending: true });
+
+  type SiblingPhotoData = {
+    photo_url: string | null;
+    sort_order: number | null;
+    photo: {
+      short_id: string;
+      url: string;
+      blurhash: string | null;
+    } | null;
+  };
+
+  const siblingPhotos = (siblingPhotosData || [])
+    .map((sp: SiblingPhotoData) => {
+      if (!sp.photo) return null;
+      return {
+        shortId: sp.photo.short_id,
+        url: sp.photo.url,
+        blurhash: sp.photo.blurhash,
+        sortOrder: sp.sort_order ?? 0,
+      };
+    })
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
+
   // Get all albums this photo is in
   const { data: albumPhotosData } = await supabase
     .from('album_photos')
@@ -394,6 +423,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     currentAlbum: album,
     albums,
     challenges,
+    siblingPhotos,
   };
 }
 

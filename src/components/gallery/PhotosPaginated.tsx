@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useTransition, useEffect, useCallback } from 'react';
 import Button from '../shared/Button';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
 import type { StreamPhoto } from '@/lib/data/gallery';
@@ -20,6 +20,23 @@ type PhotosPaginatedProps = {
   showSortToggle?: boolean;
 };
 
+// Session storage key prefix
+const STORAGE_KEY_PREFIX = 'photos-paginated-';
+
+// Get storage key for current page state
+function getStorageKey(pathname: string, sort: string): string {
+  return `${STORAGE_KEY_PREFIX}${pathname}-${sort}`;
+}
+
+type CachedState = {
+  batches: PhotoBatch[];
+  hasMore: boolean;
+  timestamp: number;
+};
+
+// Cache expires after 5 minutes
+const CACHE_EXPIRY_MS = 5 * 60 * 1000;
+
 export default function PhotosPaginated({
   initialPhotos,
   perPage = 20,
@@ -29,18 +46,72 @@ export default function PhotosPaginated({
   showSortToggle = true,
 }: PhotosPaginatedProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Initialize state from sessionStorage if available
+  const getInitialState = useCallback((): { batches: PhotoBatch[]; hasMore: boolean } => {
+    if (typeof window === 'undefined') {
+      return {
+        batches: [{ id: 'initial', photos: initialPhotos }],
+        hasMore: initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
+      };
+    }
+
+    try {
+      const key = getStorageKey(pathname, initialSort);
+      const cached = sessionStorage.getItem(key);
+      if (cached) {
+        const parsed: CachedState = JSON.parse(cached);
+        // Check if cache is still valid
+        if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS && parsed.batches.length > 0) {
+          return { batches: parsed.batches, hasMore: parsed.hasMore };
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
+    return {
+      batches: [{ id: 'initial', photos: initialPhotos }],
+      hasMore: initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
+    };
+  }, [pathname, initialSort, initialPhotos, initialHasMore, perPage]);
+
   // Track batches of photos - each batch has its own stable layout
-  const [batches, setBatches] = useState<PhotoBatch[]>([
-    { id: 'initial', photos: initialPhotos },
-  ]);
+  const [batches, setBatches] = useState<PhotoBatch[]>(() => getInitialState().batches);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
-  // If initialHasMore is provided, use it; otherwise check if we got a full page
-  const [hasMore, setHasMore] = useState(
-    initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
-  );
+  const [hasMore, setHasMore] = useState(() => getInitialState().hasMore);
   const [isPending, startTransition] = useTransition();
   const [isSorting, setIsSorting] = useState(false);
+
+  // Restore state from sessionStorage on mount (client-side only)
+  useEffect(() => {
+    const { batches: cachedBatches, hasMore: cachedHasMore } = getInitialState();
+    // Only restore if we have more than initial batch
+    if (cachedBatches.length > 1) {
+      setBatches(cachedBatches);
+      setHasMore(cachedHasMore);
+    }
+  }, [getInitialState]);
+
+  // Persist state to sessionStorage when batches change
+  useEffect(() => {
+    // Only cache if we have more than the initial batch
+    if (batches.length > 1) {
+      try {
+        const key = getStorageKey(pathname, sortBy);
+        const state: CachedState = {
+          batches,
+          hasMore,
+          timestamp: Date.now(),
+        };
+        sessionStorage.setItem(key, JSON.stringify(state));
+      } catch {
+        // Ignore storage errors (quota exceeded, etc.)
+      }
+    }
+  }, [batches, hasMore, pathname, sortBy]);
 
   // Calculate total photo count for offset
   const totalPhotoCount = batches.reduce((sum, batch) => sum + batch.photos.length, 0);
@@ -71,6 +142,14 @@ export default function PhotosPaginated({
 
   const handleSortChange = (newSort: 'recent' | 'popular') => {
     if (newSort === sortBy) return;
+
+    // Clear cached state for the old sort
+    try {
+      const oldKey = getStorageKey(pathname, sortBy);
+      sessionStorage.removeItem(oldKey);
+    } catch {
+      // Ignore storage errors
+    }
 
     setSortBy(newSort);
 
