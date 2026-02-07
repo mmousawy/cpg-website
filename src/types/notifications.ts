@@ -17,9 +17,11 @@ export type NotificationType =
   | 'new_submission'
   | 'submission_accepted'
   | 'submission_rejected'
-  | 'admin_message';
+  | 'admin_message'
+  | 'report_submitted'
+  | 'report_resolved';
 
-export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system';
+export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system' | 'report';
 
 // Data stored in the notification's JSON `data` field
 export type NotificationData = {

@@ -150,12 +150,12 @@ export default function AdminEventAttendancePage() {
         className="mb-6"
       >
         <h1
-          className="mb-2 text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold"
         >
           Event attendance
         </h1>
         <p
-          className="text-lg opacity-70"
+          className="text-base sm:text-lg mt-2 text-foreground/70"
         >
           Manage attendee check-ins for this event
         </p>

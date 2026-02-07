@@ -3,6 +3,7 @@ import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
+import ReportButton from '@/components/shared/ReportButton';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
@@ -220,6 +221,15 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                   />
                 </div>
               )}
+              {/* Report link */}
+              <ReportButton
+                entityType="album"
+                entityId={albumWithPhotos.id}
+                entityLabel={`album "${albumWithPhotos.title || 'Untitled'}"`}
+                entityOwnerId={albumWithPhotos.user_id}
+                variant="link"
+                className="text-xs text-foreground/60"
+              />
             </div>
 
             {/* Tags */}

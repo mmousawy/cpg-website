@@ -5,6 +5,7 @@ import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
+import ReportButton from '@/components/shared/ReportButton';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
@@ -220,7 +221,7 @@ export default function PhotoPageContent({
 
             {/* Date */}
             <div
-              className='flex items-center gap-4'
+              className='flex items-center gap-4 flex-wrap'
             >
               <div
                 className="flex items-center gap-1.5"
@@ -247,6 +248,15 @@ export default function PhotoPageContent({
                   />
                 </div>
               )}
+              {/* Report link */}
+              <ReportButton
+                entityType="photo"
+                entityId={photo.id}
+                entityLabel={`photo "${photo.title || 'Untitled'}"`}
+                entityOwnerId={photo.user_id || undefined}
+                variant="link"
+                className="text-xs text-foreground/60"
+              />
             </div>
 
 
@@ -279,7 +289,6 @@ export default function PhotoPageContent({
             className="pt-6 border-t border-border-color mt-6 space-y-3"
           >
             {/* Action bar - likes only (views shown above with date/exif) */}
-
             <PhotoActionBar
               entityType="photo"
               entityId={photo.id}

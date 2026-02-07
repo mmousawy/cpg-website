@@ -52,7 +52,7 @@ export default function EventCoverUpload({
       <label
         className="text-sm font-medium"
       >
-        Cover Image *
+        Cover image *
       </label>
 
       {(coverImagePreview || coverImageFile) ? (
@@ -78,7 +78,7 @@ export default function EventCoverUpload({
               variant="secondary"
               size="sm"
             >
-              Change Image
+              Change image
             </Button>
             <Button
               type="button"

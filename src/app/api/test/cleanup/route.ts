@@ -134,7 +134,7 @@ export async function POST(request: Request) {
 
             if (storagePaths.length > 0) {
               const { error: storageError } = await adminClient.storage
-                .from('user-albums')
+                .from('user-photos')
                 .remove(storagePaths);
               if (storageError) {
                 console.error(`Storage cleanup error for ${email}:`, storageError);
@@ -144,11 +144,11 @@ export async function POST(request: Request) {
 
           // Delete user's entire storage folder (catches any missed files)
           const { data: remainingFiles } = await adminClient.storage
-            .from('user-albums')
+            .from('user-photos')
             .list(user.id);
           if (remainingFiles && remainingFiles.length > 0) {
             const paths = remainingFiles.map(f => `${user.id}/${f.name}`);
-            await adminClient.storage.from('user-albums').remove(paths);
+            await adminClient.storage.from('user-photos').remove(paths);
           }
 
           // Delete notifications (sent to and from)
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
               .select('id')
               .eq('user_id', user.id);
             const { data: remainingStorage } = await adminClient.storage
-              .from('user-albums')
+              .from('user-photos')
               .list(user.id);
 
             if (remainingPhotos?.length || remainingAlbums?.length || remainingStorage?.length) {

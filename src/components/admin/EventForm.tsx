@@ -64,7 +64,7 @@ export default function EventForm({
               htmlFor="title"
               className="text-sm font-medium"
             >
-              Event Title *
+              Event title *
             </label>
             <Input
               id="title"
@@ -84,7 +84,7 @@ export default function EventForm({
               htmlFor="slug"
               className="text-sm font-medium"
             >
-              URL Slug *
+              URL slug *
             </label>
             <Input
               id="slug"

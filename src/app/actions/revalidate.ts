@@ -21,6 +21,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  * - 'challenges' - All challenge data
  * - 'challenge-photos' - Accepted photos in challenges
  * - 'search' - Search results cache
+ * - 'reports' - Reports data
  *
  * @see docs/revalidation-system.md for usage details
  */
@@ -334,4 +335,16 @@ export async function revalidateEvent(eventSlug?: string) {
 export async function revalidateGallery() {
   revalidateTag('albums', 'max');
   revalidateTag('gallery', 'max');
+}
+
+// ============================================================================
+// Reports Revalidation
+// ============================================================================
+
+/**
+ * Revalidate reports data
+ * Use when: Resolving or dismissing reports
+ */
+export async function revalidateReports() {
+  revalidateTag('reports', 'max');
 }

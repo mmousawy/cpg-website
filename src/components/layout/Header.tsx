@@ -170,13 +170,10 @@ export default function Header() {
                 Search
               </span>
               <kbd
-                className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-[10px] font-medium text-foreground/50"
+                className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50"
               >
-                <span
-                  className="text-xs"
-                >
-                  {isMac ? '⌘' : 'Ctrl'}
-                </span>
+                {isMac ? '⌘' : 'Ctrl'}
+                {' + '}
                 K
               </kbd>
             </button>

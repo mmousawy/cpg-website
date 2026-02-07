@@ -144,12 +144,12 @@ export default function AdminMembersPage() {
       >
         <div>
           <h1
-            className="text-2xl font-bold"
+            className="text-2xl sm:text-3xl font-bold"
           >
-            Manage Members
+            Manage members
           </h1>
           <p
-            className="text-sm text-foreground/60"
+            className="text-base sm:text-lg mt-2 text-foreground/70"
           >
             {total}
             {' '}

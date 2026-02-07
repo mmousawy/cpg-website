@@ -7,12 +7,12 @@ export default function AdminToolsPage() {
   return (
     <PageContainer>
       <h1
-        className="text-3xl font-bold"
+        className="text-2xl sm:text-3xl font-bold"
       >
-        Admin Tools
+        Admin tools
       </h1>
       <p
-        className="mt-2 text-sm text-foreground/70"
+        className="text-base sm:text-lg mt-2 text-foreground/70"
       >
         Administrative utilities and settings
       </p>

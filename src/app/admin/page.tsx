@@ -7,6 +7,7 @@ import PageContainer from '@/components/layout/PageContainer';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import TrophySVG from 'public/icons/trophy.svg';
+import WarningMicroSVG from 'public/icons/warning-micro.svg';
 
 type AdminCard = {
   title: string
@@ -39,7 +40,7 @@ export default function AdminDashboardPage() {
       enabled: true,
     },
     {
-      title: 'Manage Members',
+      title: 'Manage members',
       description: 'View and manage community members',
       icon: (
         <svg
@@ -57,6 +58,15 @@ export default function AdminDashboardPage() {
         </svg>
       ),
       href: '/admin/members',
+      enabled: true,
+    },
+    {
+      title: 'Content reports',
+      description: 'Review and manage user-submitted reports',
+      icon: <WarningMicroSVG
+        className="h-8 w-8"
+      />,
+      href: '/admin/reports',
       enabled: true,
     },
     {
@@ -115,9 +125,9 @@ export default function AdminDashboardPage() {
         className="mb-8"
       >
         <h1
-          className="text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold"
         >
-          Admin Dashboard
+          Admin dashboard
         </h1>
       </div>
 

@@ -31,8 +31,8 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
   // Determine if we're in static mode (props provided) or dynamic mode (using current user)
   const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined;
 
-  // Get size config
-  const sizeConfig = SIZE_MAP[size];
+  // Get size config - fallback to 'md' if invalid size provided
+  const sizeConfig = SIZE_MAP[size] || SIZE_MAP.md;
 
   // Get avatar data - profile.avatar_url is the single source of truth
   const avatarUrl = isStaticMode ? staticAvatarUrl : profile?.avatar_url;

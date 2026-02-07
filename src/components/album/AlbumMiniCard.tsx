@@ -4,6 +4,17 @@ import FolderSVG from 'public/icons/folder.svg';
 import BlurImage from '../shared/BlurImage';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 
+/** Format date in user-friendly format */
+function formatDate(dateString: string | null | undefined): string | null {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 interface AlbumMiniCardProps {
   title: string;
   slug: string;
@@ -11,6 +22,8 @@ interface AlbumMiniCardProps {
   href: string;
   /** Number of photos in the album */
   photoCount?: number;
+  /** Created date of the album */
+  createdAt?: string | null;
   /** Highlight this album (e.g., current album context) */
   highlighted?: boolean;
   className?: string;
@@ -25,6 +38,7 @@ export default function AlbumMiniCard({
   coverImageUrl,
   href,
   photoCount,
+  createdAt,
   highlighted = false,
   className = '',
 }: AlbumMiniCardProps) {
@@ -63,14 +77,11 @@ export default function AlbumMiniCard({
         >
           {title}
         </span>
-        {photoCount !== undefined && (
+        {createdAt && formatDate(createdAt) && (
           <span
-            className="text-xs text-foreground/70"
+            className="text-xs text-foreground/60"
           >
-            {photoCount}
-            {' '}
-            photo
-            {photoCount !== 1 ? 's' : ''}
+            {formatDate(createdAt)}
           </span>
         )}
       </div>

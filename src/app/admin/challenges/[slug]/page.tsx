@@ -319,12 +319,12 @@ export default function AdminChallengeFormPage() {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold"
           >
             {isNewChallenge ? 'Create new challenge' : 'Edit challenge'}
           </h1>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg mt-2 text-foreground/70"
           >
             {isNewChallenge
             ? 'Set up a new photo challenge'
@@ -388,7 +388,7 @@ export default function AdminChallengeFormPage() {
                     htmlFor="slug"
                     className="text-sm font-medium"
                   >
-                    URL Slug *
+                    URL slug *
                   </label>
                   <Input
                     id="slug"
@@ -416,7 +416,7 @@ export default function AdminChallengeFormPage() {
                     htmlFor="prompt"
                     className="text-sm font-medium"
                   >
-                    Prompt / Description *
+                    Prompt / description *
                   </label>
                   <Textarea
                     id="prompt"
@@ -518,7 +518,7 @@ export default function AdminChallengeFormPage() {
                   <label
                     className="text-sm font-medium"
                   >
-                    Cover Image
+                    Cover image
                   </label>
                   {coverImagePreview ? (
                     <div
@@ -543,7 +543,7 @@ export default function AdminChallengeFormPage() {
                           variant="secondary"
                           size="sm"
                         >
-                          Change Image
+                          Change image
                         </Button>
                         <Button
                           type="button"

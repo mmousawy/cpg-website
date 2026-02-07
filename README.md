@@ -29,6 +29,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Add photos to albums modal
 - Challenge badges on photos (shows which challenges a photo was accepted in)
 - Admin moderation (suspend/unsuspend)
+- Content reporting system (report photos, albums, profiles, comments)
 
 ### Photo Challenges
 - Themed challenges with prompts created by admins
@@ -61,6 +62,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Photo challenge management (create, edit, announce)
 - Submission review queue with bulk actions
 - Album moderation (suspend/unsuspend)
+- Content reports review queue with resolution workflow
 
 ### Search
 - Global search (Cmd/Ctrl+K)
@@ -226,9 +228,14 @@ src/
 │   ├── search/             # Global search modal
 │   └── shared/             # Reusable UI
 ├── config/                 # Routes, socials
-├── context/                # React context
-├── emails/                 # Email templates
+├── context/                # React context (Auth, Manage, UnsavedChanges)
+├── emails/                 # Email templates (React Email)
 ├── hooks/                  # Custom hooks
+├── lib/
+│   ├── actions/            # Server actions (likes, notifications)
+│   ├── data/               # Server-side data fetching functions
+│   ├── notifications/      # Notification creation logic
+│   └── sync/               # Real-time sync handlers (Supabase Realtime)
 ├── types/                  # TypeScript types
 └── utils/                  # Utilities, Supabase clients
 
@@ -263,11 +270,13 @@ supabase/
 | `interests` | Central interests table with usage counts |
 | `profile_interests` | Profile-interests junction |
 | `auth_tokens` | Email verification & password reset tokens |
+| `reports` | User-submitted content reports (photos, albums, profiles, comments) |
 
 ### Storage Buckets
 
+- `cpg-public` - General public assets
 - `user-avatars` - Profile pictures
-- `user-albums` - Gallery photos
+- `user-photos` - Gallery photos
 - `event-covers` - Event and challenge cover images
 
 ## Generate Supabase Types
@@ -390,4 +399,4 @@ Deploy to Vercel:
 
 ### Moderation
 
-- [ ] Report content
+- [x] Report content

@@ -1,0 +1,94 @@
+feat: report content feature and UI consistency improvements
+
+Implemented comprehensive content reporting system allowing users to report photos, albums, profiles, and comments. Added admin review queue with resolution workflow and email notifications. Standardized UI text to sentence case across admin pages and forms.
+
+Database:
+- Add reports table with support for authenticated and anonymous reporters
+- Add RLS policies for user and admin access
+- Add indexes for status, entity, and reporter lookups
+- Add foreign keys to profiles for reporter and reviewer tracking
+
+Report System:
+- Add ReportModal component with preview of reported content
+- Add ReportButton component for reporting from various pages
+- Add admin reports page with tabbed interface (pending/resolved/dismissed)
+- Add ResolveReportModal for admin resolution workflow
+- Add email notifications for admins on new reports
+- Add email notifications for reporters when reports are resolved
+- Support BotID verification for anonymous reports
+- Add preview components showing reported content with navigation links
+- Add bulk resolve/dismiss actions for admins
+- Add detailed entity information in resolution emails
+
+UI Consistency:
+- Convert all admin page titles to sentence case
+- Convert all form labels to sentence case
+- Standardize admin page header styling across all pages
+- Update report links to use consistent tiny link styling
+
+Components:
+- Update PhotoListItem to support vertical centering and custom padding
+- Update AlbumMiniCard to display created_at date and accept className
+- Fix Avatar component to handle edge cases with size prop
+- Add ReportButton to Comments, AlbumContent, and profile pages
+
+API Routes:
+- Add /api/reports endpoint for submitting reports
+- Add /api/reports/resolved/notify endpoint for reporter notifications
+- Add /api/reports/notify endpoint for admin notifications
+- Add revalidation for reports data
+
+Email Templates:
+- Add report-notification.tsx for admin notifications
+- Add report-resolved.tsx for reporter notifications with detailed entity info
+
+Documentation:
+- Consolidate duplicate update-changelog commands into single .cursor/commands version
+- Add README.md update step to changelog process
+
+Files changed (45):
+
+New (15):
+- supabase/migrations/20260203000000_add_reports.sql
+- src/app/admin/reports/page.tsx
+- src/app/api/reports/route.ts
+- src/app/api/reports/notify/route.ts
+- src/app/api/reports/resolved/notify/route.ts
+- src/components/admin/ResolveReportModal.tsx
+- src/components/shared/ReportButton.tsx
+- src/components/shared/ReportModal.tsx
+- src/emails/report-notification.tsx
+- src/emails/report-resolved.tsx
+- src/hooks/useReports.ts
+- src/lib/data/reports.ts
+- src/types/reports.ts
+- public/icons/content.svg
+- .cursor/commands/update-changelog.md
+
+Modified (30):
+- README.md
+- commands/update-changelog.md (deleted)
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/[nickname]/page.tsx
+- src/app/actions/revalidate.ts
+- src/app/admin/challenges/[slug]/page.tsx
+- src/app/admin/challenges/[slug]/submissions/page.tsx
+- src/app/admin/challenges/page.tsx
+- src/app/admin/events/[eventId]/page.tsx
+- src/app/admin/events/attendance/[eventId]/page.tsx
+- src/app/admin/events/page.tsx
+- src/app/admin/members/page.tsx
+- src/app/admin/page.tsx
+- src/app/admin/tools/page.tsx
+- src/app/api/test/cleanup/route.ts
+- src/components/admin/EventCoverUpload.tsx
+- src/components/admin/EventForm.tsx
+- src/components/album/AlbumMiniCard.tsx
+- src/components/auth/Avatar.tsx
+- src/components/layout/Header.tsx
+- src/components/manage/PhotoListItem.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/Comments.tsx
+- src/database.types.ts
+- src/types/notifications.ts
+- supabase/storage-policies.sql

@@ -10,10 +10,11 @@ import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-/** Get display name for a photo: title -> original_filename -> short id */
+/** Get display name for a photo: title (short_id) -> short_id */
 export function getPhotoDisplayName(photo: Photo | PhotoWithAlbums): string {
-  if (photo.title) return photo.title;
-  if (photo.original_filename) return photo.original_filename;
+  if (photo.title) {
+    return photo.short_id ? `${photo.title} (${photo.short_id})` : photo.title;
+  }
   return photo.short_id || photo.id.slice(0, 8);
 }
 
@@ -267,9 +268,17 @@ export default function PhotoListItem({
     }
   };
 
+  // Check if className overrides items alignment
+  const hasItemsOverride = className.includes('items-center') || className.includes('items-end');
+  const baseClasses = clsx(
+    'flex gap-2 border border-border-color bg-background-medium p-0',
+    hasItemsOverride ? '' : 'items-start',
+    className,
+  );
+
   return (
     <div
-      className={`flex items-start gap-2 border border-border-color bg-background-medium p-0 ${className}`}
+      className={baseClasses}
     >
       <div
         className={clsx(
@@ -393,26 +402,15 @@ export default function PhotoListItem({
         <div
           className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/60"
         >
-          {photo.original_filename && (
+          {photo.created_at && formatDate(photo.created_at) && (
             <div
-              className="col-span-2 truncate"
+              className={isDetailed ? 'truncate' : 'col-span-2 truncate'}
             >
-              <span
-                title={photo.original_filename}
-              >
-                {photo.original_filename}
-              </span>
+              {formatDate(photo.created_at)}
             </div>
           )}
           {isDetailed && (
             <>
-              {photo.created_at && formatDate(photo.created_at) && (
-                <div
-                  className="truncate"
-                >
-                  {formatDate(photo.created_at)}
-                </div>
-              )}
               <div
                 className="truncate"
               >

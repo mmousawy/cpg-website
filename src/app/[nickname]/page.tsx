@@ -5,6 +5,7 @@ import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
+import ReportButton from '@/components/shared/ReportButton';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
@@ -245,6 +246,20 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
               ))}
             </div>
           )}
+
+          {/* Report button */}
+          <div
+            className="mb-4"
+          >
+            <ReportButton
+              entityType="profile"
+              entityId={profile.id}
+              entityLabel={`user @${profile.nickname}`}
+              entityOwnerId={profile.id}
+              variant="link"
+              className="text-xs text-foreground/60"
+            />
+          </div>
 
           {/* Bio */}
           {profile.bio && (

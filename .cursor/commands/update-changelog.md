@@ -76,6 +76,14 @@ When analyzing git changes:
   - `perf:` - Performance optimizations, query reductions, RPC functions
   - `docs:` - Documentation updates only
 
+5. **Check and update `README.md`:**
+   - Review the changes made in this update
+   - Check if any new features should be added to the "Features" section
+   - Check if any completed roadmap items should be moved from "In Progress" or other sections to completed
+   - Update the roadmap section if new items were completed or if priorities changed
+   - Update any relevant sections (Tech Stack, Database, Storage Buckets, etc.) if new technologies or infrastructure were added
+   - Keep the README accurate and up-to-date with the current state of the application
+
 ## Important Notes
 
 - Do NOT modify `CHANGELOG.md` unless explicitly asked
@@ -83,3 +91,4 @@ When analyzing git changes:
 - Ensure the folder name follows the date pattern with suffixes if needed
 - Generate the changelog entry completely automatically - do not ask the user for information
 - If changes are unclear after analysis, make reasonable inferences based on file contents and git diff
+- Always check and update README.md as part of the changelog process to keep documentation in sync

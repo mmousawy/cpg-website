@@ -54,12 +54,12 @@ export default function AdminEventsPage() {
       >
         <div>
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold"
           >
             Manage events
           </h1>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg mt-2 text-foreground/70"
           >
             Create, edit, and delete events
           </p>

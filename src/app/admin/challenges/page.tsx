@@ -25,12 +25,12 @@ export default function AdminChallengesPage() {
       >
         <div>
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold"
           >
             Manage challenges
           </h1>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg mt-2 text-foreground/70"
           >
             Create, edit, and review photo challenges
           </p>

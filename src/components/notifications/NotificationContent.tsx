@@ -37,6 +37,8 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   submission_accepted: CheckSVG,
   submission_rejected: CancelSVG,
   admin_message: MegaphoneSVG,
+  report_submitted: MegaphoneSVG,
+  report_resolved: CheckSVG,
 };
 
 export const notificationMessages: Record<NotificationType, (actor: string | null, data: NotificationData | null) => string> = {
@@ -67,6 +69,13 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
       : 'Your submission was not accepted';
   },
   admin_message: () => 'Admin message',
+  report_submitted: () => 'Report submitted',
+  report_resolved: (_, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `Your report has been resolved: ${title}`
+      : 'Your report has been resolved';
+  },
 };
 
 type NotificationContentProps = {

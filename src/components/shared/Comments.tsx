@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
+import ReportButton from './ReportButton';
 import Textarea from './Textarea';
 
 import SendSVG from 'public/icons/arrow-right.svg';
@@ -263,17 +264,29 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
                     </p>
                   </div>
                 </Link>
-                {(user?.id === comment.user_id || isAdmin) && (
-                  <button
-                    onClick={() => handleDeleteComment(comment.id)}
-                    className="rounded p-1 hover:bg-red-600/10"
-                    aria-label="Delete comment"
-                  >
-                    <TrashSVG
-                      className="size-4 text-red-600"
-                    />
-                  </button>
-                )}
+                <div
+                  className="flex items-center gap-1"
+                >
+                  <ReportButton
+                    entityType="comment"
+                    entityId={comment.id}
+                    entityLabel="this comment"
+                    entityOwnerId={comment.user_id}
+                    variant="link"
+                    className="text-xs text-foreground/60"
+                  />
+                  {(user?.id === comment.user_id || isAdmin) && (
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="rounded p-1 hover:bg-red-600/10"
+                      aria-label="Delete comment"
+                    >
+                      <TrashSVG
+                        className="size-4 text-red-600"
+                      />
+                    </button>
+                  )}
+                </div>
               </div>
               <p
                 className="text-sm text-foreground/90 ml-[50px]"

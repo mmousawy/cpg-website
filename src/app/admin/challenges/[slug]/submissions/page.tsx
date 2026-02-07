@@ -103,7 +103,7 @@ export default function ReviewQueuePage() {
     const confirmed = await confirm({
       title: 'Accept selected submissions?',
       message: `Are you sure you want to accept ${selectedIds.size} submission${selectedIds.size !== 1 ? 's' : ''}?`,
-      confirmLabel: 'Accept All',
+      confirmLabel: 'Accept all',
       cancelLabel: 'Cancel',
     });
 
@@ -181,13 +181,13 @@ export default function ReviewQueuePage() {
             Back to challenge
           </ArrowLink>
           <h1
-            className="text-2xl font-bold mb-2"
+            className="text-2xl sm:text-3xl font-bold"
           >
             Review submissions
           </h1>
           {challenge && (
             <p
-              className="text-foreground/60"
+              className="text-base sm:text-lg mt-2 text-foreground/70"
             >
               {challenge.title}
             </p>

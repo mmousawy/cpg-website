@@ -539,12 +539,12 @@ export default function AdminEventFormPage() {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold"
           >
             {isNewEvent ? 'Create new event' : 'Edit event'}
           </h1>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg mt-2 text-foreground/70"
           >
             {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
           </p>
