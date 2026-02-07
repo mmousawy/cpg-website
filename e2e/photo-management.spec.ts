@@ -104,9 +104,9 @@ test.describe('Photo Management Flow', () => {
     await expect(page.getByText(/add to album/i)).not.toBeVisible({ timeout: 5000 });
 
     // Verify success - the photo should now be associated with the album
-    // We can check by clicking the photo again and seeing the album in "Seen in" section
+    // We can check by clicking the photo again and seeing the album in "In albums" section
     await photoCard.click();
-    await expect(page.getByText(/seen in/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/in albums/i)).toBeVisible({ timeout: 5000 });
 
     // Clean up: Delete the photo
     const deleteButton = page.getByRole('button', { name: /delete/i }).first();
