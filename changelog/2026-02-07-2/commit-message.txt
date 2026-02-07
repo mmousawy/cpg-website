@@ -1,0 +1,58 @@
+feat: comment replies and responsive sidebar improvements
+
+Implemented comprehensive comment reply system with nested threading, notifications, and improved UI. Made sidebar responsive with different widths for tablet and desktop.
+
+Database:
+- Add parent_comment_id column to comments table with self-referencing foreign key
+- Add index for fast reply lookups
+- Update add_comment, add_event_comment, and add_challenge_comment functions to support optional parent_comment_id parameter
+- Flatten replies to original parent comment (single-level threading)
+
+Comment Replies:
+- Add reply UI with nested comment display
+- Support replying to top-level comments and other replies
+- Track which comment a reply was responding to for visual context
+- Add "replied to @nickname" links that scroll to and highlight parent comment
+- Implement reply text persistence in localStorage
+- Add collapse/expand functionality for nested replies
+- Show reply count badges with expand/collapse controls
+- Optimize rendering with React.memo and careful prop management
+
+API Routes:
+- Update POST /api/comments to accept parentCommentId parameter
+- Fetch parent comment author for reply notifications
+- Send notifications to both entity owner and parent comment author when replying
+
+Notifications:
+- Add comment_reply notification type
+- Notify parent comment author when their comment receives a reply
+- Update email templates to handle reply notifications with appropriate messaging
+- Support email opt-out preferences for reply notifications
+
+UI Improvements:
+- Make sidebar responsive: 384px on tablet (md), 512px on desktop (lg)
+- Update filmstrip max-width calculations for wider desktop sidebar
+- Convert reply button to use Button component with floating bottom-right positioning
+- Style reply button as tiny ghost button matching design system
+
+Components:
+- Refactor Comments component with CommentItem subcomponent for better organization
+- Add memoization to prevent unnecessary re-renders
+- Improve comment card layout with relative positioning for floating reply button
+
+Files changed (11):
+
+New (1):
+- supabase/migrations/20260207120000_add_comment_replies.sql
+
+Modified (10):
+- README.md
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/api/comments/route.ts
+- src/components/notifications/NotificationContent.tsx
+- src/components/photo/AlbumFilmstrip.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/Comments.tsx
+- src/database.types.ts
+- src/emails/comment-notification.tsx
+- src/types/notifications.ts

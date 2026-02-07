@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { entityType, entityId, commentText } = body;
+  const { entityType, entityId, commentText, parentCommentId } = body;
 
   if (!entityType || !entityId || !commentText?.trim()) {
     return NextResponse.json(
@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.rpc('add_event_comment', {
       p_event_id: eventIdNum,
       p_comment_text: commentText.trim(),
+      p_parent_comment_id: parentCommentId || null,
     });
     commentId = data ?? null;
     commentError = error;
@@ -128,6 +129,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.rpc('add_challenge_comment', {
       p_challenge_id: entityId,
       p_comment_text: commentText.trim(),
+      p_parent_comment_id: parentCommentId || null,
     });
     commentId = data ?? null;
     commentError = error;
@@ -136,6 +138,7 @@ export async function POST(request: NextRequest) {
       p_entity_type: entityType,
       p_entity_id: entityId,
       p_comment_text: commentText.trim(),
+      p_parent_comment_id: parentCommentId || null,
     });
     commentId = data ?? null;
     commentError = error;
@@ -162,6 +165,32 @@ export async function POST(request: NextRequest) {
   const commenterProfileLink = commenterNickname
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/@${commenterNickname}`
     : null;
+
+  // Handle reply notifications - fetch parent comment author if replying
+  let parentCommentAuthorId: string | null = null;
+  let parentCommentAuthorProfile: { id: string; email: string | null; full_name: string | null; nickname: string | null } | null = null;
+  if (parentCommentId) {
+    const { data: parentComment } = await supabase
+      .from('comments')
+      .select('user_id, profiles!comments_user_id_fkey(id, email, full_name, nickname)')
+      .eq('id', parentCommentId)
+      .is('deleted_at', null)
+      .single();
+
+    if (parentComment) {
+      parentCommentAuthorId = parentComment.user_id;
+      // Extract profile from the join result
+      const profile = (parentComment as any).profiles;
+      if (profile) {
+        parentCommentAuthorProfile = {
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          nickname: profile.nickname,
+        };
+      }
+    }
+  }
 
   // Get owner info and entity details
   let ownerId: string | null = null;
@@ -375,6 +404,96 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // If replying, also notify parent comment author
+      if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
+        await createNotification({
+          userId: parentCommentAuthorId,
+          actorId: user.id,
+          type: 'comment_reply',
+          entityType: 'event',
+          entityId: entityId,
+          data: {
+            title: entityTitle,
+            thumbnail: entityThumbnail,
+            link: entityLink,
+            actorName: commenterName,
+            actorNickname: commenterNickname,
+            actorAvatar: commenterAvatarUrl,
+          },
+        });
+
+        // Send email to parent comment author if they haven't opted out
+        if (parentCommentAuthorProfile.email) {
+          const { data: notificationsEmailType } = await supabase
+            .from('email_types')
+            .select('id')
+            .eq('type_key', 'notifications')
+            .single();
+
+          let shouldSendEmail = true;
+          if (notificationsEmailType) {
+            const { data: preference } = await supabase
+              .from('email_preferences')
+              .select('opted_out')
+              .eq('user_id', parentCommentAuthorId)
+              .eq('email_type_id', notificationsEmailType.id)
+              .single();
+
+            if (preference && preference.opted_out === true) {
+              shouldSendEmail = false;
+            }
+          }
+
+          if (shouldSendEmail) {
+            let optOutLink: string | undefined;
+            try {
+              const encrypted = encrypt(JSON.stringify({
+                userId: parentCommentAuthorId,
+                emailType: 'notifications',
+              }));
+              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+            } catch (error) {
+              console.error('Error generating opt-out link:', error);
+            }
+
+            const parentAuthorName = parentCommentAuthorProfile.full_name || parentCommentAuthorProfile.email.split('@')[0] || 'Friend';
+
+            try {
+              const emailResult = await resend.emails.send({
+                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+                to: parentCommentAuthorProfile.email,
+                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+                subject: `${commenterName} replied to your comment on the event "${entityTitle}"`,
+                html: await render(
+                  CommentNotificationEmail({
+                    ownerName: parentAuthorName,
+                    commenterName,
+                    commenterNickname,
+                    commenterAvatarUrl,
+                    commenterProfileLink,
+                    commentText: commentText.trim(),
+                    entityType: 'event',
+                    entityTitle,
+                    entityThumbnail,
+                    entityLink,
+                    optOutLink,
+                    isReply: true,
+                  }),
+                ),
+              });
+
+              if (emailResult.error) {
+                console.error(`Error sending event reply notification to ${parentCommentAuthorProfile.email}:`, emailResult.error);
+              } else {
+                console.log(`📨 Event reply notification sent to ${parentCommentAuthorProfile.email}`);
+              }
+            } catch (err) {
+              console.error(`Error sending event reply notification to ${parentCommentAuthorProfile.email}:`, err);
+            }
+          }
+        }
+      }
+
       // Revalidate event cache so comment count is reflected
       await revalidateGalleryData();
 
@@ -501,6 +620,96 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // If replying, also notify parent comment author
+      if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
+        await createNotification({
+          userId: parentCommentAuthorId,
+          actorId: user.id,
+          type: 'comment_reply',
+          entityType: 'challenge',
+          entityId: entityId,
+          data: {
+            title: entityTitle,
+            thumbnail: entityThumbnail,
+            link: entityLink,
+            actorName: commenterName,
+            actorNickname: commenterNickname,
+            actorAvatar: commenterAvatarUrl,
+          },
+        });
+
+        // Send email to parent comment author if they haven't opted out
+        if (parentCommentAuthorProfile.email) {
+          const { data: notificationsEmailType } = await supabase
+            .from('email_types')
+            .select('id')
+            .eq('type_key', 'notifications')
+            .single();
+
+          let shouldSendEmail = true;
+          if (notificationsEmailType) {
+            const { data: preference } = await supabase
+              .from('email_preferences')
+              .select('opted_out')
+              .eq('user_id', parentCommentAuthorId)
+              .eq('email_type_id', notificationsEmailType.id)
+              .single();
+
+            if (preference && preference.opted_out === true) {
+              shouldSendEmail = false;
+            }
+          }
+
+          if (shouldSendEmail) {
+            let optOutLink: string | undefined;
+            try {
+              const encrypted = encrypt(JSON.stringify({
+                userId: parentCommentAuthorId,
+                emailType: 'notifications',
+              }));
+              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+            } catch (error) {
+              console.error('Error generating opt-out link:', error);
+            }
+
+            const parentAuthorName = parentCommentAuthorProfile.full_name || parentCommentAuthorProfile.email.split('@')[0] || 'Friend';
+
+            try {
+              const emailResult = await resend.emails.send({
+                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+                to: parentCommentAuthorProfile.email,
+                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+                subject: `${commenterName} replied to your comment on the challenge "${entityTitle}"`,
+                html: await render(
+                  CommentNotificationEmail({
+                    ownerName: parentAuthorName,
+                    commenterName,
+                    commenterNickname,
+                    commenterAvatarUrl,
+                    commenterProfileLink,
+                    commentText: commentText.trim(),
+                    entityType: 'challenge',
+                    entityTitle,
+                    entityThumbnail,
+                    entityLink,
+                    optOutLink,
+                    isReply: true,
+                  }),
+                ),
+              });
+
+              if (emailResult.error) {
+                console.error(`Error sending challenge reply notification to ${parentCommentAuthorProfile.email}:`, emailResult.error);
+              } else {
+                console.log(`📨 Challenge reply notification sent to ${parentCommentAuthorProfile.email}`);
+              }
+            } catch (err) {
+              console.error(`Error sending challenge reply notification to ${parentCommentAuthorProfile.email}:`, err);
+            }
+          }
+        }
+      }
+
       // Revalidate challenge cache so comment count is reflected
       await revalidateGalleryData();
 
@@ -527,9 +736,28 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Handle reply notifications - notify parent comment author
+  if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
+    await createNotification({
+      userId: parentCommentAuthorId,
+      actorId: user.id,
+      type: 'comment_reply',
+      entityType,
+      entityId,
+      data: {
+        title: entityTitle,
+        thumbnail: entityThumbnail,
+        link: entityLink,
+        actorName: commenterName,
+        actorNickname: commenterNickname,
+        actorAvatar: commenterAvatarUrl,
+      },
+    });
+  }
+
   // Create in-app notification for album and photo comments (not events)
-  // Skip if commenting on own content
-  if (ownerId && ownerId !== user.id && ownerProfile && (entityType === 'album' || entityType === 'photo')) {
+  // Skip if commenting on own content or if it's a reply (replies notify parent author instead)
+  if (!parentCommentId && ownerId && ownerId !== user.id && ownerProfile && (entityType === 'album' || entityType === 'photo')) {
     const notificationType = entityType === 'album' ? 'comment_album' : 'comment_photo';
 
     await createNotification({
@@ -549,11 +777,88 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // Handle email notifications for replies
+  if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile && parentCommentAuthorProfile.email) {
+    // Check if parent comment author has opted out
+    const { data: notificationsEmailType } = await supabase
+      .from('email_types')
+      .select('id')
+      .eq('type_key', 'notifications')
+      .single();
+
+    let shouldSendEmail = true;
+    if (notificationsEmailType) {
+      const { data: preference } = await supabase
+        .from('email_preferences')
+        .select('opted_out')
+        .eq('user_id', parentCommentAuthorId)
+        .eq('email_type_id', notificationsEmailType.id)
+        .single();
+
+      if (preference && preference.opted_out === true) {
+        shouldSendEmail = false;
+      }
+    }
+
+    if (shouldSendEmail) {
+      // Generate opt-out link
+      let optOutLink: string | undefined;
+      try {
+        const encrypted = encrypt(JSON.stringify({
+          userId: parentCommentAuthorId,
+          emailType: 'notifications',
+        }));
+        optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+      } catch (error) {
+        console.error('Error generating opt-out link:', error);
+      }
+
+      const parentAuthorName = parentCommentAuthorProfile.full_name || parentCommentAuthorProfile.email.split('@')[0] || 'Friend';
+
+      try {
+        const emailResult = await resend.emails.send({
+          from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+          to: parentCommentAuthorProfile.email,
+          replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+          subject: `${commenterName} replied to your comment on ${entityTitle}`,
+          html: await render(
+            CommentNotificationEmail({
+              ownerName: parentAuthorName,
+              commenterName,
+              commenterNickname,
+              commenterAvatarUrl,
+              commenterProfileLink,
+              commentText: commentText.trim(),
+              entityType,
+              entityTitle,
+              entityThumbnail,
+              entityLink,
+              optOutLink,
+              isReply: true,
+            }),
+          ),
+        });
+
+        if (emailResult.error) {
+          console.error('Error sending reply notification email:', emailResult.error);
+        } else {
+          console.log(`📨 Reply notification email sent to ${parentCommentAuthorProfile.email}`);
+        }
+      } catch (err) {
+        console.error('Error sending reply notification email:', err);
+      }
+    }
+
+    // For replies, return early (don't send entity owner email)
+    return NextResponse.json({ success: true, commentId }, { status: 200 });
+  }
+
   // Don't send email notification if:
   // 1. Owner not found
   // 2. Owner has no email
   // 3. Commenting on own content
-  if (!ownerId || ownerId === user.id || !ownerProfile || !ownerProfile.email) {
+  // 4. It's a reply (handled above)
+  if (!ownerId || ownerId === user.id || !ownerProfile || !ownerProfile.email || parentCommentId) {
     return NextResponse.json({ success: true, commentId }, { status: 200 });
   }
 

@@ -125,7 +125,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             'mt-4 -mx-4 pt-4 pb-8 px-4',
             'border-t border-t-border-color bg-background-light',
             // Desktop: sticky sidebar with fixed width
-            'md:mt-0 md:mx-0 md:w-96 md:shrink-0',
+            'md:mt-0 md:mx-0 md:w-96 lg:w-128 md:shrink-0',
             'md:sticky md:self-start md:overflow-y-auto',
             'md:top-[90px] lg:top-[106px] md:min-h-[calc(100svh-105px)] md:max-h-[calc(100svh-74px)]',
             'lg:min-h-[calc(100svh-137px)] lg:max-h-[calc(100svh-138px)]',

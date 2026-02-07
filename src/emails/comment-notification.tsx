@@ -32,6 +32,7 @@ export const CommentNotificationEmail = ({
   entityThumbnail,
   entityLink,
   optOutLink,
+  isReply,
 }: {
   preview?: boolean;
   ownerName: string;
@@ -45,6 +46,7 @@ export const CommentNotificationEmail = ({
   entityThumbnail: string | null;
   entityLink: string;
   optOutLink?: string;
+  isReply?: boolean;
 }) => {
   if (preview) {
     ownerName = 'Jane Doe';
@@ -60,7 +62,9 @@ export const CommentNotificationEmail = ({
     optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
 
-  const previewText = `${commenterName} commented on your ${entityType}`;
+  const previewText = isReply
+    ? `${commenterName} replied to your comment on ${entityTitle}`
+    : `${commenterName} commented on your ${entityType}`;
 
   // Truncate comment text if too long
   const displayComment = commentText.length > 200
@@ -85,9 +89,9 @@ export const CommentNotificationEmail = ({
             <Heading
               className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
             >
-              New comment on your
-              {' '}
-              {entityType === 'album' ? 'album' : 'photo'}
+              {isReply
+                ? 'New reply to your comment'
+                : `New comment on your ${entityType === 'album' ? 'album' : 'photo'}`}
             </Heading>
 
             <Text
@@ -101,10 +105,9 @@ export const CommentNotificationEmail = ({
             <Text
               className="text-[14px] leading-[24px] text-[#171717]"
             >
-              Someone commented on your
-              {' '}
-              {entityType}
-              :
+              {isReply
+                ? `Someone replied to your comment on ${entityTitle}:`
+                : `Someone commented on your ${entityType}:`}
             </Text>
 
             {/* Entity thumbnail and title */}

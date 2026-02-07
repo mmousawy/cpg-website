@@ -113,7 +113,7 @@ export default function AlbumFilmstrip({
   return (
     <div
       className={clsx('flex items-center gap-2 pb-0 pt-2 md:py-2 w-full',
-        'md:max-w-[calc(100vw-432px)] lg:max-w-[calc(100vw-480px)]',
+        'md:max-w-[calc(100vw-432px)] lg:max-w-[calc(100vw-608px)]',
       )}
     >
       {/* Prev button - always visible, disabled when no prev */}

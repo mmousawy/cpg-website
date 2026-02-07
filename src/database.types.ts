@@ -493,6 +493,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
+          parent_comment_id: string | null
           updated_at: string
           user_id: string
         }
@@ -501,6 +502,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          parent_comment_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -509,10 +511,18 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
+          parent_comment_id?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'comments_parent_comment_id_fkey'
+            columns: ['parent_comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'comments_user_id_fkey'
             columns: ['user_id']
@@ -1291,7 +1301,11 @@ export type Database = {
     }
     Functions: {
       add_challenge_comment: {
-        Args: { p_challenge_id: string; p_comment_text: string }
+        Args: {
+          p_challenge_id: string
+          p_comment_text: string
+          p_parent_comment_id?: string
+        }
         Returns: string
       }
       add_comment: {
@@ -1299,11 +1313,16 @@ export type Database = {
           p_comment_text: string
           p_entity_id: string
           p_entity_type: string
+          p_parent_comment_id?: string
         }
         Returns: string
       }
       add_event_comment: {
-        Args: { p_comment_text: string; p_event_id: number }
+        Args: {
+          p_comment_text: string
+          p_event_id: number
+          p_parent_comment_id?: string
+        }
         Returns: string
       }
       add_photos_to_album: {

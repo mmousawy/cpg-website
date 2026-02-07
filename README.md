@@ -19,7 +19,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - User albums with drag-and-drop reordering
 - Photo uploads with EXIF extraction (camera, lens, settings, GPS)
 - Photo captions
-- Album comments and tags
+- Album comments and tags with reply threading
 - Public/private visibility
 - Full-size viewing (PhotoSwipe)
 - Masonry grid layout
@@ -377,7 +377,7 @@ Deploy to Vercel:
 - [x] Activity feed
 - [x] In-app notifications
 - [ ] Community photo albums
-- [ ] Reply to comments
+- [x] Reply to comments
 
 ### Discovery
 

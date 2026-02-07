@@ -117,7 +117,7 @@ export default function PhotoPageContent({
 
         {/* Metadata + Comments sidebar on desktop, below photo on mobile */}
         <div
-          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
+          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 lg:w-128 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
             currentAlbum ? 'mt-2' : 'mt-4',
           )}
         >

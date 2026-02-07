@@ -10,6 +10,7 @@ export type NotificationType =
   | 'comment_album'
   | 'comment_event'
   | 'comment_challenge'
+  | 'comment_reply'
   | 'follow'
   | 'event_reminder'
   | 'event_announcement'
