@@ -287,21 +287,6 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
         <WidePageContainer
           className="!pt-0"
         >
-          <div
-            className="mb-6"
-          >
-            <h2
-              className="text-xl font-semibold"
-            >
-              Photostream
-            </h2>
-            <p
-              className="mt-1 text-sm text-foreground/60"
-            >
-              Latest photos by @
-              {profile.nickname}
-            </p>
-          </div>
           <JustifiedPhotoGrid
             photos={publicPhotos.map((photo) => ({
               ...photo,
@@ -313,6 +298,23 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
             })) as StreamPhoto[]}
             profileNickname={profile.nickname || nickname}
             showAttribution
+            header={
+              <div
+                className="mb-6"
+              >
+                <h2
+                  className="text-xl font-semibold"
+                >
+                  Photostream
+                </h2>
+                <p
+                  className="mt-1 text-sm text-foreground/60"
+                >
+                  Latest photos by @
+                  {profile.nickname}
+                </p>
+              </div>
+            }
           />
         </WidePageContainer>
       )}

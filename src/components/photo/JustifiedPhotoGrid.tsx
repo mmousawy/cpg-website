@@ -21,6 +21,8 @@ interface JustifiedPhotoGridProps {
   maxRowHeight?: number;
   /** Minimum photos per row (default varies by breakpoint: 2 for all) */
   minPhotosPerRow?: number;
+  /** Optional header element rendered above the grid, aligned with the photo rows */
+  header?: React.ReactNode;
 }
 
 // Reference widths for different breakpoints
@@ -43,6 +45,7 @@ export default function JustifiedPhotoGrid({
   showAttribution = false,
   maxRowHeight = 350,
   minPhotosPerRow,
+  header,
 }: JustifiedPhotoGridProps) {
   // Collect short_ids for batch fetching - must be before any early returns
   const shortIds = photos
@@ -114,6 +117,7 @@ export default function JustifiedPhotoGrid({
           albumSlug={albumSlug}
           showAttribution={showAttribution}
           maxDisplayWidth={900}
+          header={header}
         />
       </div>
 
@@ -129,6 +133,7 @@ export default function JustifiedPhotoGrid({
           albumSlug={albumSlug}
           showAttribution={showAttribution}
           maxDisplayWidth={1350}
+          header={header}
         />
       </div>
 
@@ -144,6 +149,7 @@ export default function JustifiedPhotoGrid({
           albumSlug={albumSlug}
           showAttribution={showAttribution}
           maxDisplayWidth={1800}
+          header={header}
         />
       </div>
     </div>
@@ -158,6 +164,7 @@ function PhotoRows({
   albumSlug,
   showAttribution,
   maxDisplayWidth,
+  header,
 }: {
   rows: PhotoRow[];
   photoMap: Map<string, Photo | StreamPhoto>;
@@ -166,14 +173,29 @@ function PhotoRows({
   albumSlug?: string;
   showAttribution: boolean;
   maxDisplayWidth: number;
+  header?: React.ReactNode;
 }) {
+  // Check if the first row is constrained (narrower than container)
+  // to align the header with the centered grid content
+  const firstRow = rows[0];
+  const firstRowConstrained = firstRow?.width !== undefined;
 
   return (
     <div
       className="w-full"
     >
+      {header && (
+        <div
+          style={firstRowConstrained ? {
+            maxWidth: firstRow.width,
+            marginInline: 'auto',
+          } : undefined}
+        >
+          {header}
+        </div>
+      )}
       {rows.map((row, rowIndex) => {
-        // If row has a constrained width (single portrait photo), center it
+        // If row has a constrained width (height-capped portrait photos), items use fixed sizes
         const isConstrained = row.width !== undefined;
 
         return (
