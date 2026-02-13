@@ -129,6 +129,7 @@ export default function PhotoPageContent({
               photoId={photo.id}
               photoTitle={photo.title}
               photoUserId={photo.user_id}
+              storagePath={photo.storage_path}
             />
           </div>
 

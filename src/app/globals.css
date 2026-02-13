@@ -178,6 +178,10 @@ body {
   animation: fade-in 0.6s ease-out forwards;
 }
 
+.animate-fade-in-fast {
+  animation: fade-in 0.3s ease-in-out forwards;
+}
+
 /* Hide scrollbars utility */
 .scrollbar-hide {
   scrollbar-width: none;

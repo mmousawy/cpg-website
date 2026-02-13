@@ -1,13 +1,18 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useEffect, useMemo, useRef, useState } from 'react';
 
 import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 import { getBlurPlaceholderUrl } from '@/utils/supabaseImageLoader';
 
-// Threshold in ms - if image loads faster than this, it's likely from browser cache
-const CACHE_LOAD_THRESHOLD_MS = 100;
+// Threshold in ms - if image loads faster than this, it's likely from browser cache.
+const CACHE_LOAD_THRESHOLD_MS = 50;
+
+// SPA-level cache: tracks image src strings that have been fully loaded during
+// this JS context. Once an image loads, subsequent renders (e.g. navigating back)
+// can skip the fade because the browser will serve it from memory/disk cache.
+const loadedImages = typeof window !== 'undefined' ? new Set<string>() : null;
 
 // Safe useLayoutEffect that falls back to useEffect during SSR
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -44,62 +49,74 @@ export default function BlurImage({
 }: BlurImageProps) {
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
 
-  // Track the current src to detect changes and reset state
+  // Cache key includes 'unoptimized' flag because the same base URL produces
+  // very different fetches: thumbnails go through the custom loader (?width=X),
+  // while unoptimized images fetch the raw full-size file. A cached thumbnail
+  // does NOT mean the full-size image is cached.
+  const isUnoptimized = !!props.unoptimized;
+  const cacheKey = srcString ? (isUnoptimized ? `raw:${srcString}` : srcString) : null;
+
+  // Three visual states: 'loading' | 'fade-in' | 'visible'
+  // - loading: image not loaded yet (opacity-0, blur placeholder visible)
+  // - fade-in: image loaded from network, CSS animation 0→1 (300ms)
+  // - visible: fully visible, no animation (cached or animation done)
   const [currentSrc, setCurrentSrc] = useState(srcString);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [skipTransition, setSkipTransition] = useState(false);
+  const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>('loading');
   const mountTime = useRef<number>(0);
-  const imageRef = useRef<HTMLImageElement | null>(null);
   const hasCalledOnLoad = useRef(false);
 
   // Reset state when src changes (during render, not in effect)
   if (srcString !== currentSrc) {
     setCurrentSrc(srcString);
-    setIsLoaded(false);
-    setSkipTransition(false);
+    setLoadState('loading');
   }
 
-  // Set mount time synchronously after render (before paint) and check for cached images
+  // Before paint: check the SPA cache. If this image was loaded before in this
+  // JS context, show it instantly (the browser has it in memory/disk cache).
+  // Using layout effect ensures no flash of opacity-0 before switching to visible.
   useIsomorphicLayoutEffect(() => {
-    // Reset refs for new image
-    mountTime.current = Date.now();
-    hasCalledOnLoad.current = false;
-
-    // Check if image is already complete (browser cache hit)
-    if (imageRef.current?.complete && imageRef.current?.naturalWidth > 0) {
+    const known = !!(cacheKey && loadedImages?.has(cacheKey));
+    if (known) {
       hasCalledOnLoad.current = true;
-      setSkipTransition(true);
-      setIsLoaded(true);
+      setLoadState('visible');
+    } else {
+      hasCalledOnLoad.current = false;
+      mountTime.current = Date.now();
     }
-  }, [currentSrc]); // Re-run when src changes
+  }, [currentSrc, cacheKey]);
 
-  // Handler for image load - detects browser cache via timing
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    // Store ref to the image element
-    imageRef.current = e.currentTarget;
-
-    // Prevent double-calling
-    if (hasCalledOnLoad.current) return;
+  // Handler for image load - fires when the <img> element actually finishes loading.
+  const handleImageLoad = () => {
+    if (hasCalledOnLoad.current) {
+      // Already handled (SPA cache path). Still notify parent.
+      onLoadProp?.();
+      return;
+    }
     hasCalledOnLoad.current = true;
 
-    const now = Date.now();
-    const loadTime = mountTime.current > 0 ? now - mountTime.current : 0;
+    // Timing heuristic — loaded faster than threshold means browser cache hit
+    const loadTime = mountTime.current > 0 ? Date.now() - mountTime.current : Infinity;
     const isCached = loadTime < CACHE_LOAD_THRESHOLD_MS;
 
-    if (isCached) {
-      // Image loaded very quickly - from browser cache, show instantly
-      setSkipTransition(true);
-      setIsLoaded(true);
-    } else {
-      // Image took time to load - use fade-in transition
-      requestAnimationFrame(() => {
-        setIsLoaded(true);
-      });
-    }
+    // Remember this image for future navigations
+    if (cacheKey) loadedImages?.add(cacheKey);
+
+    // Cached → show instantly. Not cached → trigger CSS fade-in animation.
+    setLoadState(isCached ? 'visible' : 'fade-in');
 
     // Call external onLoad callback
     onLoadProp?.();
   };
+
+  // Map loadState to CSS class.
+  // Uses a CSS @keyframes animation for fade-in (works in a single React commit)
+  // instead of CSS transitions which are unreliable with React's batched rendering.
+  const opacityClass =
+    loadState === 'visible' ? 'opacity-100' :
+    loadState === 'fade-in' ? 'animate-fade-in-fast' :
+    'opacity-0';
+
+  const isLoaded = loadState !== 'loading';
 
   // Get image dimensions for aspect ratio
   const imgWidth = typeof props.width === 'number' ? props.width : parseInt(String(props.width), 10);
@@ -123,7 +140,7 @@ export default function BlurImage({
       <Image
         src={src}
         alt={alt || ''}
-        className={`${className} ${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`${className} ${opacityClass}`}
         fill={fill}
         onLoad={handleImageLoad}
         {...props}
@@ -170,7 +187,7 @@ export default function BlurImage({
           src={src}
           alt={alt || ''}
           fill
-          className={`${className} ${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`${className} ${opacityClass}`}
           onLoad={handleImageLoad}
           {...props}
         />
@@ -192,16 +209,14 @@ export default function BlurImage({
         className={`block relative ${className}`}
         style={{
           backgroundImage: blurhashDataUrl ? `url(${blurhashDataUrl})` : undefined,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
+          backgroundSize: '100% 100%', // Stretch to fill — tiny ratio mismatch from blurhash rounding is imperceptible
           ...passedStyle,
         }}
       >
         <Image
           src={src}
           alt={alt || ''}
-          className={`${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={opacityClass}
           onLoad={handleImageLoad}
           {...props}
         />
@@ -258,7 +273,7 @@ export default function BlurImage({
       <Image
         src={src}
         alt={alt || ''}
-        className={`absolute inset-0 w-full h-full object-cover ${skipTransition ? '' : 'transition-opacity duration-300'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 w-full h-full object-cover ${opacityClass}`}
         onLoad={handleImageLoad}
         {...props}
       />

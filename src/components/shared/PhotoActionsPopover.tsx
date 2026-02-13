@@ -8,9 +8,11 @@ type PhotoActionsPopoverProps = {
   photoId: string;
   photoTitle: string | null;
   photoUserId: string | null;
+  /** Storage path of the photo (needed for owner delete) */
+  storagePath?: string | null;
 };
 
-export default function PhotoActionsPopover({ photoId, photoTitle, photoUserId }: PhotoActionsPopoverProps) {
+export default function PhotoActionsPopover({ photoId, photoTitle, photoUserId, storagePath }: PhotoActionsPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -45,6 +47,7 @@ export default function PhotoActionsPopover({ photoId, photoTitle, photoUserId }
         photoId={photoId}
         photoTitle={photoTitle}
         photoUserId={photoUserId}
+        storagePath={storagePath}
         onActionClick={() => setIsOpen(false)}
       />
     </Popover>

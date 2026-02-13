@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { useState, useTransition, useEffect, useCallback } from 'react';
 import Button from '../shared/Button';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
@@ -45,7 +45,6 @@ export default function PhotosPaginated({
   apiEndpoint = '/api/gallery/photos',
   showSortToggle = true,
 }: PhotosPaginatedProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -153,15 +152,17 @@ export default function PhotosPaginated({
 
     setSortBy(newSort);
 
-    // Update URL query parameter
+    // Update URL query parameter without triggering a server navigation.
+    // Using window.history directly avoids Next.js re-rendering the server component
+    // (which would race with our client-side fetch and cause the tab to snap back).
     const params = new URLSearchParams(searchParams.toString());
     if (newSort === 'recent') {
       params.delete('sort');
     } else {
       params.set('sort', newSort);
     }
-    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
-    router.replace(newUrl, { scroll: false });
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    window.history.replaceState(window.history.state, '', newUrl);
 
     setIsSorting(true);
     startTransition(async () => {
