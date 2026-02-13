@@ -53,7 +53,7 @@ export default function InterestCloud({
             href={`/members/interest/${encodeURIComponent(interest.name)}`}
             className={clsx(
               'border-border-color-strong bg-background-light inline-flex items-center gap-2 rounded-full border px-3 py-2 leading-none transition-colors',
-              'hover:border-primary hover:text-primary',
+              'hover:border-primary',
               getSizeClass(count),
               isActive
                 ? 'border-primary bg-primary text-white'
@@ -66,7 +66,7 @@ export default function InterestCloud({
               {interest.name}
             </span>
             <span
-              className={clsx('text-[0.75em] leading-none opacity-60', isActive && 'opacity-80')}
+              className={clsx('-mt-[0.1em] text-[0.75em] leading-none opacity-70')}
             >
               {count}
             </span>

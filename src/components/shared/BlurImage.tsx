@@ -1,13 +1,10 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useLayoutEffect, useEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 
 import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
 import { getBlurPlaceholderUrl } from '@/utils/supabaseImageLoader';
-
-// Threshold in ms - if image loads faster than this, it's likely from browser cache.
-const CACHE_LOAD_THRESHOLD_MS = 50;
 
 // SPA-level cache: tracks image src strings that have been fully loaded during
 // this JS context. Once an image loads, subsequent renders (e.g. navigating back)
@@ -49,12 +46,15 @@ export default function BlurImage({
 }: BlurImageProps) {
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
 
-  // Cache key includes 'unoptimized' flag because the same base URL produces
-  // very different fetches: thumbnails go through the custom loader (?width=X),
-  // while unoptimized images fetch the raw full-size file. A cached thumbnail
-  // does NOT mean the full-size image is cached.
+  // Cache key must uniquely identify the actual fetched resource.
+  // The same base URL produces very different fetches depending on props:
+  // - The custom loader appends ?width=X&quality=Y based on `sizes`/`width`
+  // - `unoptimized` bypasses the loader entirely (raw full-size file)
+  // Without this, a 72px thumbnail would "poison" the cache for a 2400px hero.
   const isUnoptimized = !!props.unoptimized;
-  const cacheKey = srcString ? (isUnoptimized ? `raw:${srcString}` : srcString) : null;
+  const cacheKey = srcString
+    ? `${srcString}|s=${props.sizes || ''}|w=${props.width || ''}|q=${props.quality || ''}|u=${isUnoptimized ? 1 : 0}`
+    : null;
 
   // Three visual states: 'loading' | 'fade-in' | 'visible'
   // - loading: image not loaded yet (opacity-0, blur placeholder visible)
@@ -62,8 +62,10 @@ export default function BlurImage({
   // - visible: fully visible, no animation (cached or animation done)
   const [currentSrc, setCurrentSrc] = useState(srcString);
   const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>('loading');
-  const mountTime = useRef<number>(0);
   const hasCalledOnLoad = useRef(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const onLoadPropRef = useRef(onLoadProp);
+  useEffect(() => { onLoadPropRef.current = onLoadProp; }, [onLoadProp]);
 
   // Reset state when src changes (during render, not in effect)
   if (srcString !== currentSrc) {
@@ -71,42 +73,72 @@ export default function BlurImage({
     setLoadState('loading');
   }
 
-  // Before paint: check the SPA cache. If this image was loaded before in this
-  // JS context, show it instantly (the browser has it in memory/disk cache).
-  // Using layout effect ensures no flash of opacity-0 before switching to visible.
+  const shortSrc = srcString ? '...' + srcString.slice(-60) : '?';
+
+  // Callback ref — stores the underlying <img> element so the layout effect
+  // can check img.complete as a safety net.
+  const imgCallbackRef = useCallback((node: HTMLImageElement | null) => {
+    imgRef.current = node;
+    console.log('[BlurImage] ref', shortSrc, node ? `complete=${node.complete} naturalWidth=${node.naturalWidth}` : 'null');
+  }, [shortSrc]);
+
+  // Before paint: determine the correct initial state for this image.
+  // Runs after callback refs are set, so imgRef.current is available.
+  //
+  // Priority:
+  // 1. SPA cache hit → 'visible' (instant, no animation)
+  // 2. img.complete (SSR-preloaded, already decoded) → 'fade-in'
+  // 3. Otherwise → stay 'loading', wait for onLoad
   useIsomorphicLayoutEffect(() => {
     const known = !!(cacheKey && loadedImages?.has(cacheKey));
     if (known) {
+      console.log('[BlurImage] layoutEffect → visible (SPA cache)', shortSrc);
       hasCalledOnLoad.current = true;
       setLoadState('visible');
-    } else {
-      hasCalledOnLoad.current = false;
-      mountTime.current = Date.now();
+      return;
     }
+
+    // Not in SPA cache. Check if the browser already loaded this image
+    // (happens with SSR + preload — the image finishes before React hydrates).
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      console.log('[BlurImage] layoutEffect → fade-in (img.complete)', shortSrc);
+      hasCalledOnLoad.current = true;
+      if (cacheKey) loadedImages?.add(cacheKey);
+      setLoadState('fade-in');
+      onLoadPropRef.current?.();
+      return;
+    }
+
+    console.log('[BlurImage] layoutEffect → loading (waiting)', shortSrc, `imgRef=${!!imgRef.current} complete=${imgRef.current?.complete} naturalWidth=${imgRef.current?.naturalWidth}`);
+    // Image not ready yet — reset and wait for onLoad handler.
+    hasCalledOnLoad.current = false;
   }, [currentSrc, cacheKey]);
 
   // Handler for image load - fires when the <img> element actually finishes loading.
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
     if (hasCalledOnLoad.current) {
-      // Already handled (SPA cache path). Still notify parent.
+      console.log('[BlurImage] onLoad(skip)', shortSrc);
+      // Already handled (SPA cache or layout effect safety net). Still notify parent.
       onLoadProp?.();
       return;
     }
     hasCalledOnLoad.current = true;
 
-    // Timing heuristic — loaded faster than threshold means browser cache hit
-    const loadTime = mountTime.current > 0 ? Date.now() - mountTime.current : Infinity;
-    const isCached = loadTime < CACHE_LOAD_THRESHOLD_MS;
-
     // Remember this image for future navigations
     if (cacheKey) loadedImages?.add(cacheKey);
 
-    // Cached → show instantly. Not cached → trigger CSS fade-in animation.
-    setLoadState(isCached ? 'visible' : 'fade-in');
+    console.log('[BlurImage] onLoad → fade-in', shortSrc);
+
+    // Always fade in. The SPA cache (checked in the layout effect above) is the
+    // only reliable way to skip the fade — timing heuristics are unreliable because
+    // SSR-preloaded images fire onLoad almost instantly during hydration even though
+    // they were fetched from the network.
+    setLoadState('fade-in');
 
     // Call external onLoad callback
     onLoadProp?.();
-  };
+  }, [cacheKey, onLoadProp, shortSrc]);
 
   // Map loadState to CSS class.
   // Uses a CSS @keyframes animation for fade-in (works in a single React commit)
@@ -138,6 +170,7 @@ export default function BlurImage({
   if (!blurUrl) {
     return (
       <Image
+        ref={imgCallbackRef}
         src={src}
         alt={alt || ''}
         className={`${className} ${opacityClass}`}
@@ -184,6 +217,7 @@ export default function BlurImage({
 
         {/* Main image - fades in on top when loaded */}
         <Image
+          ref={imgCallbackRef}
           src={src}
           alt={alt || ''}
           fill
@@ -214,6 +248,7 @@ export default function BlurImage({
         }}
       >
         <Image
+          ref={imgCallbackRef}
           src={src}
           alt={alt || ''}
           className={opacityClass}
@@ -271,6 +306,7 @@ export default function BlurImage({
 
       {/* Main image - absolutely positioned on top, fades in */}
       <Image
+        ref={imgCallbackRef}
         src={src}
         alt={alt || ''}
         className={`absolute inset-0 w-full h-full object-cover ${opacityClass}`}
