@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.23.0](https://github.com/mmousawy/cpg-website/compare/v1.22.0...v1.23.0) (2026-02-13)
+
+
+### Features
+
+* enhance photo management and loading experience ([bb4035b](https://github.com/mmousawy/cpg-website/commit/bb4035b0dd859ac5fca51e44581a4db1218a74d4))
+
+
+### Bug Fixes
+
+* adjust justified grid layout. ([0e0966b](https://github.com/mmousawy/cpg-website/commit/0e0966b27a4b6fde72bd29a9207080e29caeb371))
+
 ## [1.22.0](https://github.com/mmousawy/cpg-website/compare/v1.21.0...v1.22.0) (2026-02-07)
 
 
