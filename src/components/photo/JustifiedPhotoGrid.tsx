@@ -241,7 +241,7 @@ function PhotoRows({
                 <Link
                   key={item.photo.id}
                   href={photoHref}
-                  className="group relative block overflow-hidden bg-background-light transition-all hover:brightness-110"
+                  className="group relative block overflow-hidden bg-background-light"
                   aria-label={ariaLabel}
                   style={isConstrained ? {
                     width: item.displayWidth,
@@ -257,7 +257,7 @@ function PhotoRows({
                     alt={photo?.title || 'Photo'}
                     blurhash={photo?.blurhash}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-all duration-200 group-hover:brightness-110"
                     sizes={`${Math.ceil(item.displayWidth * 2)}px`}
                     loading='lazy'
                     quality={85}
