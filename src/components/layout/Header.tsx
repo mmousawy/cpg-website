@@ -147,7 +147,7 @@ export default function Header() {
             {/* Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/70 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-3 lg:py-1.5 lg:text-sm lg:hover:border-primary"
+              className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/70 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-2 lg:py-1.5 lg:text-sm lg:hover:border-primary"
               aria-label="Search"
             >
               <svg
@@ -170,7 +170,7 @@ export default function Header() {
                 Search
               </span>
               <kbd
-                className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50"
+                className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50 [word-spacing:-0.25em]"
               >
                 {isMac ? '⌘' : 'Ctrl'}
                 {' + '}
