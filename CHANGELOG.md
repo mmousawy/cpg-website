@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.23.1](https://github.com/mmousawy/cpg-website/compare/v1.23.0...v1.23.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* Adjust search component word spacing. ([31d0bed](https://github.com/mmousawy/cpg-website/commit/31d0bed98a93e3807490698ae087defee90314b9))
+* BlurImage and styling ([5204211](https://github.com/mmousawy/cpg-website/commit/5204211f1f6cad6a9ede9a6bbf4767987f465842))
+* Fix hover in justified photo grid. ([06619f4](https://github.com/mmousawy/cpg-website/commit/06619f41872d55130ccfbc4a00ce77cef8c0add5))
+
 ## [1.23.0](https://github.com/mmousawy/cpg-website/compare/v1.22.0...v1.23.0) (2026-02-13)
 
 
