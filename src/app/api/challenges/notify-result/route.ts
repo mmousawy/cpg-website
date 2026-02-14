@@ -117,11 +117,29 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-    const challengeLink = `${baseUrl}/challenges/${challenge.slug}`;
+    // Full URL for emails
+    const challengeLinkFull = `${baseUrl}/challenges/${challenge.slug}`;
+    // Relative URL for in-app notifications
+    const challengeLinkRelative = `/challenges/${challenge.slug}`;
 
-    // Process each submission
-    const notificationsCreated: string[] = [];
-    const emailsSent: string[] = [];
+    // Group submissions by user
+    const submissionsByUser = new Map<
+      string,
+      {
+        user: {
+          id: string;
+          email: string | null;
+          full_name: string | null;
+          nickname: string | null;
+        };
+        photos: Array<{
+          id: string;
+          short_id: string;
+          url: string;
+          title: string | null;
+        }>;
+      }
+    >();
 
     for (const submission of submissions) {
       const submissionUser = submission.user as {
@@ -139,7 +157,23 @@ export async function POST(request: NextRequest) {
 
       if (!submissionUser || !photo) continue;
 
-      // Create in-app notification
+      const existing = submissionsByUser.get(submissionUser.id);
+      if (existing) {
+        existing.photos.push(photo);
+      } else {
+        submissionsByUser.set(submissionUser.id, {
+          user: submissionUser,
+          photos: [photo],
+        });
+      }
+    }
+
+    // Process each user (one notification + one email per user)
+    const notificationsCreated: string[] = [];
+    const emailsSent: string[] = [];
+
+    for (const [userId, { user: submissionUser, photos }] of submissionsByUser) {
+      // Create in-app notification (one per user, includes photo count)
       try {
         await createNotification({
           userId: submissionUser.id,
@@ -149,14 +183,15 @@ export async function POST(request: NextRequest) {
           entityId: challenge.id,
           data: {
             title: challenge.title,
-            photoId: photo.id,
-            photoShortId: photo.short_id,
-            photoTitle: photo.title,
-            link: challengeLink,
+            photoCount: photos.length,
+            photoId: photos[0].id,
+            photoShortId: photos[0].short_id,
+            photoTitle: photos.length === 1 ? photos[0].title : null,
+            link: challengeLinkRelative,
             rejectionReason: status === 'rejected' ? rejectionReason : undefined,
           },
         });
-        notificationsCreated.push(submissionUser.id);
+        notificationsCreated.push(userId);
       } catch (err) {
         console.error('Failed to create notification:', err);
       }
@@ -180,23 +215,27 @@ export async function POST(request: NextRequest) {
             SubmissionResultEmail({
               userName: submissionUser.full_name || submissionUser.nickname || 'there',
               status,
-              photoUrl: photo.url,
-              photoTitle: photo.title,
+              photos: photos.map((p) => ({ url: p.url, title: p.title })),
               challengeTitle: challenge.title,
-              challengeLink,
+              challengeLink: challengeLinkFull,
               rejectionReason: status === 'rejected' ? rejectionReason : undefined,
               optOutLink,
             }),
           );
 
+          const isSingle = photos.length === 1;
           await resend.emails.send({
             from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
             replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
             to: submissionUser.email,
             subject:
               status === 'accepted'
-                ? `Your photo was accepted for "${challenge.title}"!`
-                : `Update on your submission to "${challenge.title}"`,
+                ? isSingle
+                  ? `Your photo was accepted for "${challenge.title}"!`
+                  : `${photos.length} photos accepted for "${challenge.title}"!`
+                : isSingle
+                  ? `Update on your submission to "${challenge.title}"`
+                  : `Update on your submissions to "${challenge.title}"`,
             html: emailHtml,
           });
 

@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         if (ownerProfile?.nickname) {
           entityOwnerNickname = ownerProfile.nickname;
           if (photo.short_id) {
-            entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}`;
+            entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}`;
           }
         }
       }
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         if (ownerProfile?.nickname) {
           entityOwnerNickname = ownerProfile.nickname;
           if (album.slug) {
-            entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}`;
+            entityLink = `/@${ownerProfile.nickname}/album/${album.slug}`;
           }
         }
         // Get photo count
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         entityThumbnail = profile.avatar_url;
         if (profile.nickname) {
           entityOwnerNickname = profile.nickname;
-          entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${profile.nickname}`;
+          entityLink = `/@${profile.nickname}`;
         }
       }
     }
@@ -182,6 +182,10 @@ export async function POST(request: NextRequest) {
     // Check email preferences for authenticated users
     // Always send report resolution emails - users cannot unsubscribe from report updates
     // since it's a user-triggered action and they need to know the status of their report
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    // Convert relative link to full URL for email
+    const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
+
     if (reporterEmail) {
       try {
 
@@ -193,7 +197,7 @@ export async function POST(request: NextRequest) {
             entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
             entityTitle,
             entityThumbnail,
-            entityLink,
+            entityLink: entityLinkFull,
             entityOwnerNickname,
             entityShortId,
             entityCreatedAt,

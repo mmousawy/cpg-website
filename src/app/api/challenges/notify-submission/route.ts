@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     .limit(6); // Limit to 6 photos for email display
 
   const photoUrls = (photos || []).map((p) => p.url);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
   // Get submitter info
   const { data: submitterProfile } = await supabase
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
   const submitterNickname = submitterProfile?.nickname || null;
   const submitterAvatarUrl = submitterProfile?.avatar_url || null;
   const submitterProfileLink = submitterNickname
-    ? `${process.env.NEXT_PUBLIC_SITE_URL}/@${submitterNickname}`
+    ? `${baseUrl}/@${submitterNickname}`
     : null;
 
   // Get challenge info
@@ -67,8 +68,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Challenge not found' }, { status: 404 });
   }
 
-  const challengeLink = `${process.env.NEXT_PUBLIC_SITE_URL}/challenges/${challenge.slug}`;
-  const reviewLink = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/challenges/${challenge.slug}/submissions`;
+  // Full URLs for emails
+  const challengeLink = `${baseUrl}/challenges/${challenge.slug}`;
+  const reviewLinkFull = `${baseUrl}/admin/challenges/${challenge.slug}/submissions`;
+  // Relative URL for in-app notifications
+  const reviewLinkRelative = `/admin/challenges/${challenge.slug}/submissions`;
 
   // Get all admin users (use admin client to bypass RLS for email access)
   const { data: admins, error: adminsError } = await adminSupabase
@@ -99,7 +103,7 @@ export async function POST(request: NextRequest) {
       data: {
         title: challenge.title,
         thumbnail: challenge.cover_image_url,
-        link: reviewLink,
+        link: reviewLinkRelative,
         actorName: submitterName,
         actorNickname: submitterNickname,
         actorAvatar: submitterAvatarUrl,
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
           challengeTitle: challenge.title,
           challengeThumbnail: challenge.cover_image_url,
           challengeLink,
-          reviewLink,
+          reviewLink: reviewLinkFull,
           optOutLink,
         }),
       );

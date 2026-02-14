@@ -51,9 +51,7 @@ export async function POST(request: NextRequest) {
         reporterName = reporterProfile.full_name || reporterProfile.nickname || 'User';
         reporterNickname = reporterProfile.nickname;
         reporterAvatarUrl = reporterProfile.avatar_url;
-        reporterProfileLink = reporterNickname
-          ? `${process.env.NEXT_PUBLIC_SITE_URL}/@${reporterNickname}`
-          : null;
+        reporterProfileLink = reporterNickname ? `/@${reporterNickname}` : null;
       }
     } else {
       // Anonymous reporter
@@ -81,7 +79,7 @@ export async function POST(request: NextRequest) {
           .eq('id', photo.user_id)
           .single();
         if (ownerProfile?.nickname && photo.short_id) {
-          entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}`;
+          entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}`;
         }
       }
     } else if (report.entity_type === 'album') {
@@ -100,7 +98,7 @@ export async function POST(request: NextRequest) {
           .eq('id', album.user_id)
           .single();
         if (ownerProfile?.nickname && album.slug) {
-          entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}`;
+          entityLink = `/@${ownerProfile.nickname}/album/${album.slug}`;
         }
       }
     } else if (report.entity_type === 'profile') {
@@ -114,7 +112,7 @@ export async function POST(request: NextRequest) {
         entityTitle = profile.full_name || profile.nickname || 'Profile';
         entityThumbnail = profile.avatar_url;
         if (profile.nickname) {
-          entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${profile.nickname}`;
+          entityLink = `/@${profile.nickname}`;
         }
       }
     } else if (report.entity_type === 'comment') {
@@ -122,7 +120,9 @@ export async function POST(request: NextRequest) {
       entityTitle = 'Comment';
     }
 
-    const reviewLink = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/reports`;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    const reviewLinkRelative = '/admin/reports';
+    const reviewLinkFull = `${baseUrl}/admin/reports`;
 
     // Get all admin users
     const { data: admins, error: adminsError } = await adminSupabase
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, notifiedCount: 0 });
     }
 
-    // Create in-app notifications for all admins
+    // Create in-app notifications for all admins (use relative links)
     const notificationPromises = admins.map((admin) =>
       createNotification({
         userId: admin.id,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         data: {
           title: `Report: ${entityTitle}`,
           thumbnail: entityThumbnail,
-          link: reviewLink,
+          link: reviewLinkRelative,
           actorName: reporterName,
           actorNickname: reporterNickname,
           actorAvatar: reporterAvatarUrl,
@@ -181,14 +181,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, notifiedCount: admins.length });
     }
 
-    // Send emails in batch
+    // Send emails in batch (use full URLs for emails)
+    // Convert relative links to full URLs for email
+    const reporterProfileLinkFull = reporterProfileLink ? `${baseUrl}${reporterProfileLink}` : null;
+    const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
+
     try {
       const emailPromises = adminsToEmail.map(async (admin) => {
         const optOutToken = encrypt(JSON.stringify({
           userId: admin.id,
           emailType: 'admin_notifications',
         }));
-        const optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(optOutToken)}`;
+        const optOutLink = `${baseUrl}/unsubscribe/${encodeURIComponent(optOutToken)}`;
 
         const html = await render(
           ReportNotificationEmail({
@@ -197,14 +201,14 @@ export async function POST(request: NextRequest) {
             reporterNickname,
             reporterEmail: report.reporter_email,
             reporterAvatarUrl,
-            reporterProfileLink,
+            reporterProfileLink: reporterProfileLinkFull,
             entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
             entityTitle,
             entityThumbnail,
-            entityLink,
+            entityLink: entityLinkFull,
             reason: report.reason,
             details: report.details,
-            reviewLink,
+            reviewLink: reviewLinkFull,
             optOutLink,
             isAnonymous: !report.reporter_id,
           }),

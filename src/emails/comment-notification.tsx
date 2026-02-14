@@ -62,6 +62,11 @@ export const CommentNotificationEmail = ({
     optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
 
+  // Ensure entityLink is a full URL for emails
+  const fullEntityLink = entityLink.startsWith('/') ? `${baseUrl}${entityLink}` : entityLink;
+  // Ensure commenterProfileLink is a full URL for emails
+  const fullCommenterProfileLink = commenterProfileLink?.startsWith('/') ? `${baseUrl}${commenterProfileLink}` : commenterProfileLink;
+
   const previewText = isReply
     ? `${commenterName} replied to your comment on ${entityTitle}`
     : `${commenterName} commented on your ${entityType}`;
@@ -115,7 +120,7 @@ export const CommentNotificationEmail = ({
               className="my-[20px]"
             >
               <Link
-                href={entityLink}
+                href={fullEntityLink}
               >
                 <Row>
                   {entityThumbnail && (
@@ -153,9 +158,9 @@ export const CommentNotificationEmail = ({
                   width="40"
                   className="align-top"
                 >
-                  {commenterProfileLink ? (
+                  {fullCommenterProfileLink ? (
                     <Link
-                      href={commenterProfileLink}
+                      href={fullCommenterProfileLink}
                     >
                       {commenterAvatarUrl ? (
                         <Img
@@ -218,9 +223,9 @@ export const CommentNotificationEmail = ({
                 <Column
                   className="pl-3 align-top"
                 >
-                  {commenterProfileLink ? (
+                  {fullCommenterProfileLink ? (
                     <Link
-                      href={commenterProfileLink}
+                      href={fullCommenterProfileLink}
                       className="text-[#171717] no-underline"
                     >
                       <Text
@@ -237,9 +242,9 @@ export const CommentNotificationEmail = ({
                     </Text>
                   )}
                   {commenterNickname && (
-                    commenterProfileLink ? (
+                    fullCommenterProfileLink ? (
                       <Link
-                        href={commenterProfileLink}
+                        href={fullCommenterProfileLink}
                         className="text-[#666666] no-underline"
                       >
                         <Text
@@ -271,7 +276,7 @@ export const CommentNotificationEmail = ({
               className="my-[20px]"
             >
               <Link
-                href={entityLink}
+                href={fullEntityLink}
                 className="inline-block rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
               >
                 View comment

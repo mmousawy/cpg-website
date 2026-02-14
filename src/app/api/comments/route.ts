@@ -225,9 +225,9 @@ export async function POST(request: NextRequest) {
         nickname: owner.nickname,
       } : null;
 
-      // Build album link with comments anchor
+      // Build album link with comments anchor (relative for notifications)
       if (ownerProfile?.nickname) {
-        entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}#comments`;
+        entityLink = `/@${ownerProfile.nickname}/album/${album.slug}#comments`;
       }
     }
   } else if (entityType === 'photo') {
@@ -274,12 +274,12 @@ export async function POST(request: NextRequest) {
           const typedAlbumPhoto = albumPhoto as AlbumPhotoWithAlbum;
           const album = typedAlbumPhoto.albums;
           if (album) {
-            entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/album/${album.slug}/photo/${photo.short_id}#comments`;
+            entityLink = `/@${ownerProfile.nickname}/album/${album.slug}/photo/${photo.short_id}#comments`;
           } else {
-            entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
+            entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
           }
         } else {
-          entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
+          entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
         }
       }
     }
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
     if (event) {
       entityTitle = event.title || 'Event';
       entityThumbnail = event.cover_image;
-      entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.slug}#comments`;
+      entityLink = `/events/${event.slug}#comments`;
 
       // Get all admins (excluding the commenter)
       const { data: admins } = await supabase
@@ -511,7 +511,7 @@ export async function POST(request: NextRequest) {
     if (challenge) {
       entityTitle = challenge.title || 'Challenge';
       entityThumbnail = challenge.cover_image_url;
-      entityLink = `${process.env.NEXT_PUBLIC_SITE_URL}/challenges/${challenge.slug}#comments`;
+      entityLink = `/challenges/${challenge.slug}#comments`;
 
       // Get all admins (excluding the commenter)
       const { data: admins } = await supabase

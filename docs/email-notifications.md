@@ -189,6 +189,88 @@ const batchEmails = await Promise.all(
 const result = await resend.batch.send(batchEmails);
 ```
 
+## Notification Link Patterns
+
+### URL Strategy
+
+The system uses different URL patterns for in-app notifications vs email links:
+
+- **In-app notifications**: Store **relative URLs** (e.g., `/admin/reports`, `/@user/photo/abc123`)
+- **Email links**: Convert to **full URLs** using `NEXT_PUBLIC_SITE_URL` (e.g., `https://creativephotography.group/admin/reports`)
+
+This ensures in-app notifications work correctly regardless of the domain, while emails always contain clickable full URLs.
+
+### Implementation Pattern
+
+When creating notifications and sending emails from the same API route:
+
+```typescript
+// Define base URL from environment
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+
+// Relative URL for in-app notifications
+const linkRelative = `/challenges/${challenge.slug}`;
+// Full URL for emails
+const linkFull = `${baseUrl}/challenges/${challenge.slug}`;
+
+// In-app notification uses relative link
+await createNotification({
+  userId: user.id,
+  type: 'challenge_announced',
+  data: {
+    title: challenge.title,
+    link: linkRelative,  // Relative!
+  },
+});
+
+// Email uses full link
+const html = await render(
+  ChallengeAnnouncementEmail({
+    challengeLink: linkFull,  // Full URL!
+  })
+);
+```
+
+### Email Templates with Relative URL Support
+
+Email templates should handle both relative and full URLs by converting relative URLs to full URLs:
+
+```typescript
+// In email template
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+
+// Convert relative to full if needed
+const fullLink = link.startsWith('/') ? `${baseUrl}${link}` : link;
+```
+
+This pattern is used in `src/emails/comment-notification.tsx` and other templates.
+
+### Common Link Patterns
+
+| Entity Type | Relative Link Pattern | Example |
+|-------------|----------------------|---------|
+| User Profile | `/@{nickname}` | `/@johndoe` |
+| Photo | `/@{nickname}/photo/{short_id}` | `/@johndoe/photo/abc123` |
+| Album | `/@{nickname}/album/{slug}` | `/@johndoe/album/nature` |
+| Photo in Album | `/@{nickname}/album/{slug}/photo/{short_id}` | `/@johndoe/album/nature/photo/abc123` |
+| Event | `/events/{slug}` | `/events/photo-walk` |
+| Challenge | `/challenges/{slug}` | `/challenges/february-2026` |
+| Admin Reports | `/admin/reports` | `/admin/reports` |
+| Admin Submissions | `/admin/challenges/{slug}/submissions` | `/admin/challenges/february-2026/submissions` |
+
+### Files Using This Pattern
+
+| File | Notification Type |
+|------|-------------------|
+| `src/app/api/comments/route.ts` | Comment notifications |
+| `src/app/api/challenges/notify-submission/route.ts` | New submission (admin) |
+| `src/app/api/challenges/notify-result/route.ts` | Submission accepted/rejected |
+| `src/app/api/reports/notify/route.ts` | New report (admin) |
+| `src/app/api/reports/resolved/notify/route.ts` | Report resolved |
+| `src/app/api/admin/events/announce/route.ts` | Event announcements |
+| `src/app/api/admin/challenges/announce/route.ts` | Challenge announcements |
+| `src/app/api/likes/route.ts` | Like notifications |
+
 ## Environment Variables
 
 Required email-related environment variables:

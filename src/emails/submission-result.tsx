@@ -19,12 +19,16 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 import Footer from './components/Footer';
 import EmailHeader from './components/Header';
 
+interface PhotoInfo {
+  url: string;
+  title: string | null;
+}
+
 export const SubmissionResultEmail = ({
   preview,
   userName,
   status,
-  photoUrl,
-  photoTitle,
+  photos,
   challengeTitle,
   challengeLink,
   rejectionReason,
@@ -33,8 +37,7 @@ export const SubmissionResultEmail = ({
   preview?: boolean;
   userName: string;
   status: 'accepted' | 'rejected';
-  photoUrl: string;
-  photoTitle: string | null;
+  photos: PhotoInfo[];
   challengeTitle: string;
   challengeLink: string;
   rejectionReason?: string | null;
@@ -43,8 +46,10 @@ export const SubmissionResultEmail = ({
   if (preview) {
     userName = 'John Smith';
     status = 'accepted';
-    photoUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
-    photoTitle = 'Golden Hour';
+    photos = [
+      { url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg', title: 'Golden Hour' },
+      { url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg', title: 'City Lights' },
+    ];
     challengeTitle = 'Urban Photography Challenge';
     challengeLink = `${baseUrl}/challenges/urban-photography`;
     rejectionReason = null;
@@ -52,9 +57,16 @@ export const SubmissionResultEmail = ({
   }
 
   const isAccepted = status === 'accepted';
+  const photoCount = photos.length;
+  const isSingle = photoCount === 1;
+
   const previewText = isAccepted
-    ? `Your photo was accepted for "${challengeTitle}"!`
-    : `Update on your submission to "${challengeTitle}"`;
+    ? isSingle
+      ? `Your photo was accepted for "${challengeTitle}"!`
+      : `${photoCount} photos were accepted for "${challengeTitle}"!`
+    : isSingle
+      ? `Update on your submission to "${challengeTitle}"`
+      : `Update on your submissions to "${challengeTitle}"`;
 
   return (
     <Html>
@@ -75,8 +87,12 @@ export const SubmissionResultEmail = ({
               className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
             >
               {isAccepted
-                ? 'Your photo was accepted!'
-                : 'Update on your submission'}
+                ? isSingle
+                  ? 'Your photo was accepted!'
+                  : `${photoCount} photos were accepted!`
+                : isSingle
+                  ? 'Update on your submission'
+                  : 'Update on your submissions'}
             </Heading>
 
             <Text
@@ -92,62 +108,137 @@ export const SubmissionResultEmail = ({
               className="text-[14px] leading-[24px] text-[#171717]"
             >
               {isAccepted ? (
-                <>
-                  Great news! Your photo
-                  {photoTitle ? ` "${photoTitle}"` : ''}
-                  {' '}
-                  has been accepted for
-                  the
-                  <strong>
-                    {challengeTitle}
-                  </strong>
-                  {' '}
-                  challenge and is now
-                  visible in the challenge gallery.
-                </>
+                isSingle ? (
+                  <>
+                    Great news! Your photo
+                    {photos[0].title ? ` "${photos[0].title}"` : ''}
+                    {' '}
+                    has been accepted for the
+                    {' '}
+                    <strong>
+                      {challengeTitle}
+                    </strong>
+                    {' '}
+                    challenge and is now visible in the challenge gallery.
+                  </>
+                ) : (
+                  <>
+                    Great news!
+                    {' '}
+                    {photoCount}
+                    {' '}
+                    of your photos have been accepted for the
+                    {' '}
+                    <strong>
+                      {challengeTitle}
+                    </strong>
+                    {' '}
+                    challenge and are now visible in the challenge gallery.
+                  </>
+                )
               ) : (
-                <>
-                  Your photo
-                  {photoTitle ? ` "${photoTitle}"` : ''}
-                  {' '}
-                  was not accepted for
-                  the
-                  <strong>
-                    {challengeTitle}
-                  </strong>
-                  {' '}
-                  challenge.
-                </>
+                isSingle ? (
+                  <>
+                    Your photo
+                    {photos[0].title ? ` "${photos[0].title}"` : ''}
+                    {' '}
+                    was not accepted for the
+                    {' '}
+                    <strong>
+                      {challengeTitle}
+                    </strong>
+                    {' '}
+                    challenge.
+                  </>
+                ) : (
+                  <>
+                    {photoCount}
+                    {' '}
+                    of your photos were not accepted for the
+                    {' '}
+                    <strong>
+                      {challengeTitle}
+                    </strong>
+                    {' '}
+                    challenge.
+                  </>
+                )
               )}
             </Text>
 
-            {/* Photo thumbnail */}
+            {/* Photo thumbnails grid */}
             <Section
               className="my-[24px]"
             >
-              <Row>
-                <Column
-                  align="center"
-                  className="w-full"
+              <table
+                cellPadding="0"
+                cellSpacing="4"
+                style={{ borderCollapse: 'separate', margin: '0 auto' }}
+              >
+                <tbody>
+                  <tr>
+                    {photos.slice(0, 3).map((photo, index) => (
+                      <td
+                        key={index}
+                        style={{ padding: '2px' }}
+                      >
+                        <Link
+                          href={challengeLink}
+                        >
+                          <Img
+                            src={photo.url}
+                            alt={photo.title || `Photo ${index + 1}`}
+                            width="120"
+                            height="120"
+                            style={{
+                              borderRadius: '8px',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                        </Link>
+                      </td>
+                    ))}
+                  </tr>
+                  {photos.length > 3 && (
+                    <tr>
+                      {photos.slice(3, 6).map((photo, index) => (
+                        <td
+                          key={index}
+                          style={{ padding: '2px' }}
+                        >
+                          <Link
+                            href={challengeLink}
+                          >
+                            <Img
+                              src={photo.url}
+                              alt={photo.title || `Photo ${index + 4}`}
+                              width="120"
+                              height="120"
+                              style={{
+                                borderRadius: '8px',
+                                objectFit: 'cover',
+                                display: 'block',
+                              }}
+                            />
+                          </Link>
+                        </td>
+                      ))}
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              {photos.length > 6 && (
+                <Text
+                  className="mt-2! text-center text-[12px] text-[#666666]"
                 >
-                  <Link
-                    href={challengeLink}
-                  >
-                    <Img
-                      src={photoUrl}
-                      alt={photoTitle || 'Your submission'}
-                      width={200}
-                      height={200}
-                      className="rounded-lg object-cover"
-                      style={{
-                        objectFit: 'cover',
-                        width: '200px',
-                        height: '200px',
-                      }}
-                    />
-                  </Link>
-                </Column>
-              </Row>
+                  +
+                  {photos.length - 6}
+                  {' '}
+                  more photo
+                  {photos.length - 6 !== 1 ? 's' : ''}
+                </Text>
+              )}
             </Section>
 
             {/* Rejection reason */}
@@ -191,8 +282,7 @@ export const SubmissionResultEmail = ({
               <Text
                 className="text-[14px] leading-[24px] text-[#666666]"
               >
-                Don&apos;t be discouraged! You can submit other photos to this
-                or future challenges.
+                Don&apos;t be discouraged! You can submit other photos to this or future challenges.
               </Text>
             )}
 
