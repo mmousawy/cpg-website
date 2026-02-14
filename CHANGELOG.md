@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.2](https://github.com/mmousawy/cpg-website/compare/v1.23.1...v1.23.2) (2026-02-14)
+
+
+### Bug Fixes
+
+* improve notification and email handling for photo submissions ([f7bcd0c](https://github.com/mmousawy/cpg-website/commit/f7bcd0cde86b26ea2ab9f539256aff7b3a51ca90))
+
 ## [1.23.1](https://github.com/mmousawy/cpg-website/compare/v1.23.0...v1.23.1) (2026-02-13)
 
 
