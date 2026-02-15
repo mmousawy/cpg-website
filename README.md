@@ -1,5 +1,17 @@
 # Creative Photography Group Website
 
+[![CI](https://github.com/mmousawy/cpg-website/actions/workflows/ci.yml/badge.svg)](https://github.com/mmousawy/cpg-website/actions/workflows/ci.yml)
+[![Unit Tests](https://img.shields.io/badge/tests-Vitest-6E9F18?logo=vitest&logoColor=white)](https://github.com/mmousawy/cpg-website/actions/workflows/ci.yml)
+[![E2E Tests](https://img.shields.io/badge/e2e-Playwright-2EAD33?logo=playwright&logoColor=white)](https://github.com/mmousawy/cpg-website/actions/workflows/ci.yml)
+[![Release](https://github.com/mmousawy/cpg-website/actions/workflows/release-please.yml/badge.svg)](https://github.com/mmousawy/cpg-website/actions/workflows/release-please.yml)
+[![GitHub release](https://img.shields.io/github/v/release/mmousawy/cpg-website)](https://github.com/mmousawy/cpg-website/releases)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase&logoColor=white)
+![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000?logo=vercel&logoColor=white)
+
 Community platform for photography enthusiasts built with Next.js and Supabase. Features event management, photo galleries, and user profiles.
 
 ## Features
@@ -11,8 +23,9 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
   - RSVP reminders (5 days before) for non-attendees
   - Attendee reminders (1 day before) for confirmed RSVPs
 - Calendar integration (Google, Outlook, Apple/iCal)
-- Attendee list with Gravatar fallback
+- Attendee list with avatars
 - Attendance tracking for admins
+- "You went!" badge on past events you attended
 - reCAPTCHA protection
 
 ### Photo Galleries
@@ -56,6 +69,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Discord OAuth
 - Email/password
 - Password reset
+- Sign-up CTAs on gallery, events, challenges, and members pages
 
 ### Admin
 - Event CRUD with attendance tracking
@@ -76,11 +90,12 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Tag-based caching with `use cache`
 - Loading skeletons
 - Custom 404 page
+- Help & FAQ page with contextual help links
 - Email notifications (React Email + Resend)
 - In-app notifications with real-time toast notifications (Supabase Realtime)
 - Activity feed page with notification management
 - Weekly notification digest emails
-- Automated cron jobs (Vercel Cron)
+- Automated cron jobs (Vercel Cron): reminders, digest, hourly events revalidation
 - Changelog page with version history
 
 ## Tech Stack
@@ -358,6 +373,7 @@ Deploy to Vercel:
 ### Events
 
 - [x] Email reminders before events
+- [x] "Happening now" status badge with timezone-aware event times (Europe/Amsterdam)
 
 ### Challenges
 

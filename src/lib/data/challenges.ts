@@ -187,7 +187,8 @@ export async function getChallengePhotos(challengeId: string) {
 }
 
 /**
- * Get contributors (unique users with accepted photos) for a challenge
+ * Get contributors (unique users with accepted photos) for a challenge,
+ * ordered by who submitted first.
  * Tagged with 'challenge-photos' for granular cache invalidation
  */
 export async function getChallengeContributors(challengeId: string) {
@@ -197,31 +198,47 @@ export async function getChallengeContributors(challengeId: string) {
 
   const supabase = createPublicClient();
 
-  // Get unique user IDs from accepted submissions
+  // Get accepted submissions ordered by submitted_at (first submitter first)
   const { data: submissions } = await supabase
     .from('challenge_submissions')
-    .select('user_id')
+    .select('user_id, submitted_at')
     .eq('challenge_id', challengeId)
-    .eq('status', 'accepted');
+    .eq('status', 'accepted')
+    .order('submitted_at', { ascending: true });
 
   if (!submissions || submissions.length === 0) {
     return [];
   }
 
-  const uniqueUserIds = [...new Set(submissions.map((s) => s.user_id))];
+  // Dedupe by user_id while preserving order of first submission
+  const orderedUserIds: string[] = [];
+  const seen = new Set<string>();
+  for (const s of submissions) {
+    if (!seen.has(s.user_id)) {
+      seen.add(s.user_id);
+      orderedUserIds.push(s.user_id);
+    }
+  }
 
   // Get profile info for contributors
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, nickname, avatar_url, full_name')
-    .in('id', uniqueUserIds);
+    .in('id', orderedUserIds);
 
-  return (profiles || []).map((p) => ({
-    user_id: p.id,
-    nickname: p.nickname,
-    avatar_url: p.avatar_url,
-    full_name: p.full_name,
-  }));
+  if (!profiles || profiles.length === 0) return [];
+
+  // Build a map for lookup, then return in submission order
+  const profileMap = new Map(profiles.map((p) => [p.id, p]));
+  return orderedUserIds
+    .map((id) => profileMap.get(id))
+    .filter((p): p is NonNullable<typeof p> => p != null)
+    .map((p) => ({
+      user_id: p.id,
+      nickname: p.nickname,
+      avatar_url: p.avatar_url,
+      full_name: p.full_name,
+    }));
 }
 
 /**
@@ -266,15 +283,15 @@ async function addSubmissionCounts(
   Object.values(statsMap).forEach((s) => s.acceptedUserIds.forEach((id) => allUserIds.add(id)));
 
   // Fetch profile info for all contributors in one query
-  let profilesMap: Map<string, { id: string; nickname: string | null; avatar_url: string | null }> = new Map();
+  let profilesMap: Map<string, { id: string; nickname: string | null; full_name: string | null; avatar_url: string | null }> = new Map();
   if (allUserIds.size > 0) {
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url')
+      .select('id, nickname, full_name, avatar_url')
       .in('id', Array.from(allUserIds));
 
     for (const p of profiles || []) {
-      profilesMap.set(p.id, { id: p.id, nickname: p.nickname, avatar_url: p.avatar_url });
+      profilesMap.set(p.id, { id: p.id, nickname: p.nickname, full_name: p.full_name, avatar_url: p.avatar_url });
     }
   }
 
@@ -283,7 +300,7 @@ async function addSubmissionCounts(
     const contributors = stats
       ? Array.from(stats.acceptedUserIds)
         .map((id) => profilesMap.get(id))
-        .filter((p): p is { id: string; nickname: string | null; avatar_url: string | null } => !!p)
+        .filter((p): p is { id: string; nickname: string | null; full_name: string | null; avatar_url: string | null } => !!p)
       : [];
 
     return {

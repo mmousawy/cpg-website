@@ -17,6 +17,30 @@ export type EmailPreference = {
 };
 
 /**
+ * Email preference types (from email_types table).
+ * Users can opt in/out per type in Account → App preferences.
+ *
+ * | type_key           | What it controls |
+ * |--------------------|------------------|
+ * | events             | Event announcements, RSVP reminders (5 days before for non-RSVPs) |
+ * | notifications      | Comment notifications (photos, albums, replies) |
+ * | photo_challenges   | Challenge announcements, submission results |
+ * | challenge_comment  | Comments on challenges you participated in |
+ * | weekly_digest      | Weekly activity summary |
+ * | newsletter         | General announcements |
+ * | admin_notifications| Admin-only (filtered from user UI) |
+ */
+export const EMAIL_TYPE_OVERVIEW = {
+  events: 'Event announcements and RSVP reminders',
+  notifications: 'Comment and activity notifications',
+  photo_challenges: 'Challenge announcements and results',
+  challenge_comment: 'Comments on challenges you joined',
+  weekly_digest: 'Weekly activity digest',
+  newsletter: 'General announcements',
+  admin_notifications: 'Admin-only (internal)',
+} as const;
+
+/**
  * Get all email types from the database
  */
 export async function getEmailTypes(): Promise<EmailTypeData[]> {

@@ -40,6 +40,7 @@ export type ChallengeWithStats = Challenge & {
   contributors?: Array<{
     id: string;
     nickname: string | null;
+    full_name: string | null;
     avatar_url: string | null;
   }>;
 };

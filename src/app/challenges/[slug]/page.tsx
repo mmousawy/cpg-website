@@ -20,6 +20,7 @@ import SubmitButton from '@/components/challenges/SubmitButton';
 import ChallengeComments from './ChallengeComments';
 
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import AwardStarSVG from 'public/icons/award-star.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -359,11 +360,19 @@ export default async function ChallengePage({
                   </span>
                 )}
               </div>
-              <h2
-                className="mb-3 text-lg font-semibold"
+              <div
+                className="flex items-center gap-2 mb-3"
               >
-                About this challenge
-              </h2>
+                <h2
+                  className="text-lg font-semibold"
+                >
+                  About this challenge
+                </h2>
+                <HelpLink
+                  href="how-challenges-work"
+                  label="How photo challenges work"
+                />
+              </div>
               <p
                 className="whitespace-pre-line max-sm:text-sm text-foreground/90 leading-relaxed max-w-[50ch] mb-4"
               >

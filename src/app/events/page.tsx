@@ -3,6 +3,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
+import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
@@ -45,11 +46,19 @@ export default async function EventsPage() {
       <div
         className="mb-8"
       >
-        <h1
-          className="text-2xl sm:text-3xl font-bold"
+        <div
+          className="flex items-center gap-2 mb-2"
         >
-          Events
-        </h1>
+          <h1
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            Events
+          </h1>
+          <HelpLink
+            href="join-events"
+            label="How to find and join events"
+          />
+        </div>
         <p
           className="text-base sm:text-lg mt-2 text-foreground/70"
         >

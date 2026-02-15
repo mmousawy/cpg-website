@@ -11,6 +11,7 @@ import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import {
@@ -206,19 +207,25 @@ export default function AlbumsPage() {
     <>
       <ManageLayout
         actions={
-          <Button
-            onClick={handleCreateNewAlbum}
-            icon={<FolderAddMiniSVG
-              className="size-5 -ml-0.5"
-            />}
-            variant="primary"
-          >
-            <span
-              className="hidden md:inline-block"
+          <>
+            <HelpLink
+              href="manage-albums"
+              label="How to manage albums"
+            />
+            <Button
+              onClick={handleCreateNewAlbum}
+              icon={<FolderAddMiniSVG
+                className="size-5 -ml-0.5"
+              />}
+              variant="primary"
             >
-              New album
-            </span>
-          </Button>
+              <span
+                className="hidden md:inline-block"
+              >
+                New album
+              </span>
+            </Button>
+          </>
         }
         sidebar={
           <AlbumEditSidebar

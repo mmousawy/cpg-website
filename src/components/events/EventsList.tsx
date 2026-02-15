@@ -1,7 +1,6 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import clsx from 'clsx';
-import crypto from 'crypto';
 import Link from 'next/link';
 
 import Button from '@/components/shared/Button';
@@ -10,7 +9,7 @@ import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 import { SIZE_MAP } from '../auth/Avatar';
-import EventCard, { isEventPast } from './EventCard';
+import EventCard, { getEventStatus, isEventPast } from './EventCard';
 import EventImage from './EventImage';
 
 type EventsListVariant = 'full' | 'compact';
@@ -48,11 +47,9 @@ type EventsListProps = {
 // Transform attendees to AvatarPerson format for the shared component
 function transformAttendeesToAvatarPeople(attendees: EventAttendee[]): AvatarPerson[] {
   return attendees.map((attendee) => {
-    const customAvatar = attendee.profiles?.avatar_url;
-    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
     return {
       id: attendee.id.toString(),
-      avatarUrl: customAvatar || gravatarUrl,
+      avatarUrl: attendee.profiles?.avatar_url || null,
       fullName: attendee.profiles?.full_name || null,
       nickname: attendee.profiles?.nickname || null,
     };
@@ -119,8 +116,8 @@ export default function EventsList({
       .sort((a, b) => {
         const aDate = a.date ? new Date(a.date) : null;
         const bDate = b.date ? new Date(b.date) : null;
-        const aIsPast = isEventPast(a.date, serverNow);
-        const bIsPast = isEventPast(b.date, serverNow);
+        const aIsPast = isEventPast(a.date, serverNow, a.time);
+        const bIsPast = isEventPast(b.date, serverNow, b.time);
 
         // Upcoming events come first
         if (!aIsPast && bIsPast) return -1;
@@ -169,7 +166,8 @@ export default function EventsList({
   return (
     <>
       {displayEvents.map((event) => {
-        const isPast = isEventPast(event.date, serverNow);
+        const status = getEventStatus(event.date, event.time, serverNow);
+        const isPast = status === 'past';
         const attendees = attendeesByEvent[event.id] || [];
 
         return (
@@ -193,14 +191,18 @@ export default function EventsList({
               <div
                 className="flex-1"
               >
-                {isPast && (
+                {(status === 'past' || status === 'now') && (
                   <div
                     className="flex items-center gap-2 mb-1"
                   >
                     <span
-                      className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2.5 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap"
+                      className={clsx(
+                        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap',
+                        status === 'past' && 'bg-foreground/10 text-foreground/60',
+                        status === 'now' && 'bg-green-600 text-white',
+                      )}
                     >
-                      Past event
+                      {status === 'past' ? 'Past event' : 'Happening now'}
                     </span>
                   </div>
                 )}

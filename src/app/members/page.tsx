@@ -1,5 +1,6 @@
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
 import Tag from '@/components/shared/Tag';
@@ -32,11 +33,19 @@ export default async function MembersPage() {
         <div
           className="mb-8"
         >
-          <h1
-            className="mb-2 text-2xl sm:text-3xl font-bold"
+          <div
+            className="flex items-center gap-2 mb-2"
           >
-            Discover our community
-          </h1>
+            <h1
+              className="text-2xl sm:text-3xl font-bold"
+            >
+              Discover our community
+            </h1>
+            <HelpLink
+              href="navigating"
+              label="Help navigating the site"
+            />
+          </div>
           <p
             className="text-base sm:text-lg opacity-70"
           >
@@ -102,11 +111,19 @@ export default async function MembersPage() {
         <div
           className="mb-8"
         >
-          <h1
-            className="mb-2 text-3xl font-bold"
+          <div
+            className="flex items-center gap-2 mb-2"
           >
-            Discover our community
-          </h1>
+            <h1
+              className="text-3xl font-bold"
+            >
+              Discover our community
+            </h1>
+            <HelpLink
+              href="navigating"
+              label="Help navigating the site"
+            />
+          </div>
           <p
             className="text-lg opacity-70"
           >

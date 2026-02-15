@@ -31,6 +31,7 @@ export const metadata = createMetadata({
   keywords: ['photography', 'photography meetups', 'Netherlands', 'photo walks', 'photography community'],
 });
 
+import SignUpCTA from '@/components/shared/SignUpCTA';
 import CameraWithFlash from 'public/camera-with-flash.png';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
@@ -261,9 +262,7 @@ export default async function Home() {
         </Container>
 
         {/* About Section */}
-        <Container
-          variant="gradient"
-        >
+        <Container>
           <h2
             className="text-2xl font-bold mb-4"
           >
@@ -301,7 +300,7 @@ export default async function Home() {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-2 text-sm font-medium font-[family-name:var(--font-geist-mono)] text-foreground transition-colors hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
+                    className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-1.5 text-sm font-medium font-[family-name:var(--font-geist-mono)] text-foreground transition-colors hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
                     style={{
                       '--hover-color': social.color,
                       '--hover-bg': `${social.color}15`,
@@ -319,12 +318,18 @@ export default async function Home() {
             </div>
           </div>
         </Container>
+      </PageContainer>
 
+      <SignUpCTA
+        variant="banner"
+      />
+
+      <PageContainer>
         <div
           className='w-full max-w-screen-md mx-auto'
         >
           <div
-            className='py-4 sm:py-10'
+            className='pb-4 sm:pt-1 sm:pb-14'
           >
             <h2
               className="text-2xl text-center font-bold mb-6 px-2 sm:px-4"
@@ -336,9 +341,7 @@ export default async function Home() {
         </div>
 
         {/* Meet the Community Section */}
-        <Container
-          variant="gradient"
-        >
+        <Container>
           <h2
             className="text-2xl font-bold mb-4"
           >

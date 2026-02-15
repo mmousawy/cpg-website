@@ -9,9 +9,13 @@ type AvatarProps = {
   // For static mode: provide user data directly
   avatarUrl?: string | null
   fullName?: string | null
-  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  /** Fallback for initials when fullName is empty (e.g. nickname) */
+  nickname?: string | null
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'fill'
   className?: string
   hoverEffect?: boolean
+  /** When true, show person icon instead of initials when no image (e.g. header avatar) */
+  usePersonIconFallback?: boolean
 }
 
 // Size mappings
@@ -22,26 +26,40 @@ export const SIZE_MAP = {
   md: { wrapper: 'w-12 h-12', icon: 'w-6 h-6', fontSize: 24 },
   lg: { wrapper: 'w-16 h-16', icon: 'w-8 h-8', fontSize: 32 },
   xl: { wrapper: 'w-24 h-24', icon: 'w-12 h-12', fontSize: 48 },
+  fill: { wrapper: 'size-full', icon: 'w-6 h-6', fontSize: 24 },
 } as const;
 
-export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, size = 'md', className, hoverEffect = false }: AvatarProps) {
+function getInitials(
+  fullName: string | null | undefined,
+  nickname: string | null | undefined,
+  emailFallback: string | null | undefined,
+): string {
+  if (fullName) {
+    const fromName = fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+    return fromName || nickname?.slice(0, 2).toUpperCase() || '?';
+  }
+  if (nickname) return nickname.slice(0, 2).toUpperCase();
+  if (emailFallback) return emailFallback.slice(0, 2).toUpperCase();
+  return '?';
+}
+
+export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, nickname: staticNickname, size = 'md', className, hoverEffect = false, usePersonIconFallback = false }: AvatarProps) {
   const { user, profile, isLoading } = useAuth();
   const mounted = useMounted();
 
   // Determine if we're in static mode (props provided) or dynamic mode (using current user)
-  const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined;
+  const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined || staticNickname !== undefined;
 
   // Get size config - fallback to 'md' if invalid size provided
-  const sizeConfig = SIZE_MAP[size] || SIZE_MAP.md;
+  const sizeConfig = SIZE_MAP[size as keyof typeof SIZE_MAP] || SIZE_MAP.md;
 
   // Get avatar data - profile.avatar_url is the single source of truth
   const avatarUrl = isStaticMode ? staticAvatarUrl : profile?.avatar_url;
   const fullName = isStaticMode ? staticFullName : profile?.full_name;
+  const nickname = isStaticMode ? staticNickname : profile?.nickname;
 
-  // For initials, also check user email as fallback
-  const initials = fullName
-    ? fullName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : (user?.email?.slice(0, 2).toUpperCase()) || null;
+  // Consistent initials: fullName -> nickname -> email (dynamic mode only) -> "?"
+  const initials = getInitials(fullName, nickname, isStaticMode ? null : user?.email ?? undefined);
 
   // Loading state (dynamic mode only, and only after JS mounts)
   // Without JS: mounted stays false, so we skip loading and show fallback icon
@@ -70,30 +88,31 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
       );
     }
 
-    if (initials) {
+    // Person icon fallback (e.g. header avatar)
+    if (usePersonIconFallback) {
       return (
         <div
-          className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none"
-          style={{ fontSize: sizeConfig.fontSize * 0.875 }}
+          className="flex w-full h-full items-center justify-center bg-[#b9c1ca] dark:bg-[#6e7277]"
         >
-          {initials}
+          <svg
+            className={clsx('fill-white/90', sizeConfig.icon)}
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+            />
+          </svg>
         </div>
       );
     }
 
-    // Fallback: person icon
+    // Show initials (including "?" when no name data)
     return (
       <div
-        className="flex w-full h-full items-center justify-center bg-[#b9c1ca] dark:bg-[#6e7277]"
+        className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none"
+        style={{ fontSize: sizeConfig.fontSize * 0.875 }}
       >
-        <svg
-          className={clsx('fill-white/90', sizeConfig.icon)}
-          viewBox="0 0 24 24"
-        >
-          <path
-            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-          />
-        </svg>
+        {initials}
       </div>
     );
   };

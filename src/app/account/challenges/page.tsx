@@ -8,6 +8,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useAllMySubmissions, useWithdrawSubmission } from '@/hooks/useChallengeSubmissions';
 import type { SubmissionWithDetails } from '@/types/challenges';
@@ -78,11 +79,19 @@ export default function MyChallengesPage() {
       <div
         className="mb-8"
       >
-        <h1
-          className="text-3xl font-bold mb-2"
+        <div
+          className="flex items-center gap-2 mb-2"
         >
-          My challenge submissions
-        </h1>
+          <h1
+            className="text-3xl font-bold"
+          >
+            My challenge submissions
+          </h1>
+          <HelpLink
+            href="submit-challenge"
+            label="Help with challenge submissions"
+          />
+        </div>
         <p
           className="text-base sm:text-lg opacity-70"
         >

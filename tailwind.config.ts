@@ -18,6 +18,7 @@ export default {
     extend: {
       colors: {
         primary: 'var(--primary)',
+        'primary-light': 'var(--primary-light)',
         'primary-alt': 'var(--primary-alt)',
         background: 'var(--background)',
         'background-medium': 'var(--background-medium)',

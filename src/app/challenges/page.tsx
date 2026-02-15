@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
+import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
 
 // Cached data functions
@@ -33,11 +34,19 @@ export default async function ChallengesPage() {
       <div
         className="mb-8"
       >
-        <h1
-          className="text-2xl sm:text-3xl font-bold"
+        <div
+          className="flex items-center gap-2 mb-2"
         >
-          Photography challenges
-        </h1>
+          <h1
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            Photography challenges
+          </h1>
+          <HelpLink
+            href="how-challenges-work"
+            label="How photo challenges work"
+          />
+        </div>
         <p
           className="text-base sm:text-lg mt-2 text-foreground/70"
         >

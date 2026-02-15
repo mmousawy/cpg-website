@@ -88,6 +88,17 @@ export default function Footer() {
           >
             {routes.contact.label}
           </Link>
+          <span
+            className="opacity-25 max-sm:hidden"
+          >
+            •
+          </span>
+          <Link
+            href={routes.help.url}
+            className="opacity-70 hover:opacity-100 transition-opacity"
+          >
+            {routes.help.label}
+          </Link>
           {appVersion && (
             <>
               <span

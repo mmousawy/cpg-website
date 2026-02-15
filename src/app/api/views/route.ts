@@ -102,7 +102,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, error: error.message }, { status: 200 });
     }
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    // Fetch the updated view count so the client can display it immediately
+    const table = type === 'photo' ? 'photos' : 'albums';
+    const { data: entity } = await supabase
+      .from(table)
+      .select('view_count')
+      .eq('id', id)
+      .single();
+
+    return NextResponse.json({ ok: true, view_count: entity?.view_count ?? null }, { status: 200 });
   } catch (error) {
     console.error('Error in views API:', error);
     // Don't fail the request - view tracking is non-critical

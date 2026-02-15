@@ -7,7 +7,6 @@ import Comments from '@/components/shared/Comments';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import PhotoActionsPopover from '@/components/shared/PhotoActionsPopover';
 import TagsSection from '@/components/shared/TagsSection';
-import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
@@ -75,11 +74,6 @@ export default function PhotoPageContent({
 
   return (
     <>
-      <ViewTracker
-        type="photo"
-        id={photo.id}
-      />
-
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
         className="w-full px-4 pt-4 md:p-4 md:flex md:gap-4 md:items-stretch lg:p-8 lg:gap-8"
@@ -251,15 +245,15 @@ export default function PhotoPageContent({
                 })}
                 </p>
               </div>
-              {/* Views */}
-              {(photo.view_count ?? 0) > 0 && (
-                <div>
-                  <ViewCount
-                    count={photo.view_count ?? 0}
-                    compact
-                  />
-                </div>
-              )}
+              {/* Views - live updating via ViewTracker */}
+              <div>
+                <ViewTracker
+                  type="photo"
+                  id={photo.id}
+                  initialCount={photo.view_count ?? 0}
+                  compact
+                />
+              </div>
             </div>
 
 

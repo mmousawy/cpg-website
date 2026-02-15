@@ -120,6 +120,7 @@ export default function StackedAvatarsPopover({
                   <Avatar
                     avatarUrl={person.avatarUrl}
                     fullName={person.fullName}
+                    nickname={person.nickname}
                     size={avatarSize}
                   />
                 </div>
@@ -155,6 +156,7 @@ export default function StackedAvatarsPopover({
                   <Avatar
                     avatarUrl={person.avatarUrl}
                     fullName={person.fullName}
+                    nickname={person.nickname}
                     size={avatarSize}
                   />
                 </div>
@@ -287,6 +289,7 @@ export default function StackedAvatarsPopover({
                   <Avatar
                     avatarUrl={person.avatarUrl}
                     fullName={person.fullName}
+                    nickname={person.nickname}
                     size="xs"
                     hoverEffect
                   />
@@ -314,6 +317,7 @@ export default function StackedAvatarsPopover({
                   <Avatar
                     avatarUrl={person.avatarUrl}
                     fullName={person.fullName}
+                    nickname={person.nickname}
                     size="xs"
                   />
                   <div

@@ -1,13 +1,17 @@
 import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
+import { getEventStatus } from '@/components/events/EventCard';
 import EventCoverImage from '@/components/events/EventCoverImage';
 import EventSignupBar from '@/components/events/EventSignupBar';
+import UserWentBadge from '@/components/events/UserWentBadge';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
+import HelpLink from '@/components/shared/HelpLink';
+import SignUpCTA from '@/components/shared/SignUpCTA';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { Tables } from '@/database.types';
-import crypto from 'crypto';
+import clsx from 'clsx';
 import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -71,11 +75,9 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
 // Transform attendees to AvatarPerson format for the shared component
 function transformAttendeesToAvatarPeople(attendees: AttendeeWithProfile[]): AvatarPerson[] {
   return attendees.map((attendee) => {
-    const customAvatar = attendee.profiles?.avatar_url;
-    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
     return {
       id: attendee.id.toString(),
-      avatarUrl: customAvatar || gravatarUrl,
+      avatarUrl: attendee.profiles?.avatar_url || null,
       fullName: attendee.profiles?.full_name || null,
       nickname: attendee.profiles?.nickname || null,
     };
@@ -172,10 +174,8 @@ async function CachedEventContent({
   // Format time
   const formattedTime = event.time ? event.time.substring(0, 5) : 'Time TBD';
 
-  // Check if event is in the past using server timestamp from cache
-  const serverDate = new Date(serverNow);
-  serverDate.setHours(0, 0, 0, 0);
-  const isPastEvent = eventDate ? eventDate < serverDate : false;
+  const status = getEventStatus(event.date, event.time, serverNow);
+  const isPastEvent = status === 'past';
 
   return (
     <>
@@ -211,20 +211,28 @@ async function CachedEventContent({
             <div
               className="mx-auto max-w-screen-md"
             >
-              {isPastEvent && (
-                <span
-                  className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm"
-                >
-                  Past event
-                </span>
-              )}
-              {!isPastEvent && (
-                <span
-                  className="mb-2 inline-block rounded-full bg-primary/60 px-3 py-1 text-xs font-medium text-[#fff] backdrop-blur-sm"
-                >
-                  Upcoming event
-                </span>
-              )}
+              <div
+                className="mb-2 flex flex-wrap items-center gap-2"
+              >
+                {(status === 'past' || status === 'now' || status === 'upcoming') && (
+                  <span
+                    className={clsx(
+                      'inline-block rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm',
+                      status === 'past' && 'bg-white/20 text-foreground',
+                      status === 'now' && 'bg-green-600/90 text-white',
+                      status === 'upcoming' && 'bg-primary/60 text-white',
+                    )}
+                  >
+                    {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
+                  </span>
+                )}
+                {status === 'past' && (
+                  <UserWentBadge
+                    eventId={event.id}
+                    variant="overlay"
+                  />
+                )}
+              </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl"
               >
@@ -244,13 +252,28 @@ async function CachedEventContent({
             <div
               className="mb-6"
             >
-              {isPastEvent && (
-                <span
-                  className="mb-2 inline-block rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium"
-                >
-                  Past event
-                </span>
-              )}
+              <div
+                className="mb-2 flex flex-wrap items-center gap-2"
+              >
+                {(status === 'past' || status === 'now' || status === 'upcoming') && (
+                  <span
+                    className={clsx(
+                      'inline-block rounded-full px-3 py-1 text-xs font-medium',
+                      status === 'past' && 'bg-foreground/10 text-foreground/70',
+                      status === 'now' && 'bg-green-600 text-white',
+                      status === 'upcoming' && 'bg-primary text-white',
+                    )}
+                  >
+                    {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
+                  </span>
+                )}
+                {status === 'past' && (
+                  <UserWentBadge
+                    eventId={event.id}
+                    variant="default"
+                  />
+                )}
+              </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl"
               >
@@ -333,11 +356,19 @@ async function CachedEventContent({
               <div
                 className="mb-8"
               >
-                <h2
-                  className="mb-3 text-lg font-semibold"
+                <div
+                  className="flex items-center gap-2 mb-3"
                 >
-                  About this event
-                </h2>
+                  <h2
+                    className="text-lg font-semibold"
+                  >
+                    About this event
+                  </h2>
+                  <HelpLink
+                    href="join-events"
+                    label="Help with events"
+                  />
+                </div>
                 <p
                   className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]"
                 >
@@ -417,6 +448,14 @@ async function CachedEventContent({
             />
           </div>
         </Container>
+
+        <div
+          className="mt-8"
+        >
+          <SignUpCTA
+            variant="inline"
+          />
+        </div>
       </PageContainer>
 
       {/* Sticky Action Bar - only show for upcoming events */}

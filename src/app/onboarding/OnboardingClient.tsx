@@ -10,6 +10,7 @@ import OnboardingProfileSection from '@/components/onboarding/OnboardingProfileS
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import HelpLink from '@/components/shared/HelpLink';
 import PageLoading from '@/components/shared/PageLoading';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -442,11 +443,19 @@ export default function OnboardingClient() {
             {displayName ? `, ${displayName.split(' ')[0]}` : ''}
             !
           </h1>
-          <p
-            className="text-lg opacity-70 mb-8"
+          <div
+            className="flex items-center justify-center gap-2 mb-8"
           >
-            Let&apos;s set up your profile
-          </p>
+            <p
+              className="text-lg opacity-70"
+            >
+              Let&apos;s set up your profile
+            </p>
+            <HelpLink
+              href="setup-profile"
+              label="Help with profile setup"
+            />
+          </div>
         </div>
 
         <form

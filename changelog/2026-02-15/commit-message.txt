@@ -1,0 +1,98 @@
+feat: Help & FAQ page, sign-up CTAs, and event attendance badges
+
+Help & FAQ:
+- Add /help page with full FAQ content (getting started, events, photos, challenges, account)
+- Create HelpAccordion component for expandable Q&A sections
+- Add HelpLink component (question-mark icon) for contextual help links
+- Desktop: sticky sidebar with section navigation
+- Mobile: sticky expandable bottom bar ("Jump to section") placed outside container
+- Add help route and footer link
+- Smooth scroll with scroll-padding-top for anchor navigation
+
+Sign-up CTAs:
+- Add SignUpCTA component with banner and inline variants
+- Banner: hero image with "Share Your Vision" messaging and Learn more link to help
+- Inline: compact gradient card for sign-up prompt
+- Integrate SignUpCTA across gallery, events, challenges, members, and home pages
+
+Events:
+- Add UserWentBadge component showing "You went!" when user attended a past event
+- Integrate badge in EventCard (overlay variant for hero, default for list)
+- Add revalidate-events cron job (hourly) to refresh events and home cache
+- Update vercel.json with new cron schedule
+
+Avatar & UI:
+- Standardize avatar fallbacks (initials, person icon) across Avatar, ClickableAvatar, MemberTable, NotificationContent, ChallengeCard
+- Add usePersonIconFallback for header avatar when no image
+- Fix challenge contributors ordering (by first submission) and "?" initials for contributors without full_name/nickname
+
+Other:
+- View tracker and useViewTracker enhancements
+- globals.css: scroll-behavior smooth, scroll-padding-top 7rem
+
+Files changed (59):
+
+New (15):
+- public/icons/question-mark-circle.svg
+- src/app/api/cron/revalidate-events/route.ts
+- src/app/help/page.tsx
+- src/components/events/UserWentBadge.tsx
+- src/components/help/HelpMobileNav.tsx
+- src/components/shared/HelpAccordion.tsx
+- src/components/shared/HelpLink.tsx
+- src/components/shared/SignUpCTA.tsx
+- src/content/help/account.tsx
+- src/content/help/challenges.tsx
+- src/content/help/events.tsx
+- src/content/help/getting-started.tsx
+- src/content/help/index.ts
+- src/content/help/photos.tsx
+- src/content/help/types.ts
+
+Modified (44):
+- README.md
+- docs/README.md
+- next.config.ts
+- tailwind.config.ts
+- vercel.json
+- src/app/globals.css
+- src/app/page.tsx
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/account/(manage)/albums/page.tsx
+- src/app/account/(manage)/photos/page.tsx
+- src/app/account/activity/ActivityContent.tsx
+- src/app/account/challenges/page.tsx
+- src/app/account/events/page.tsx
+- src/app/admin/events/page.tsx
+- src/app/api/views/route.ts
+- src/app/challenges/[slug]/page.tsx
+- src/app/challenges/page.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/app/events/page.tsx
+- src/app/forgot-password/ForgotPasswordClient.tsx
+- src/app/gallery/albums/page.tsx
+- src/app/gallery/page.tsx
+- src/app/gallery/photos/page.tsx
+- src/app/login/LoginClient.tsx
+- src/app/members/page.tsx
+- src/app/onboarding/OnboardingClient.tsx
+- src/app/signup/SignupClient.tsx
+- src/components/admin/MemberTable.tsx
+- src/components/auth/Avatar.tsx
+- src/components/challenges/ChallengeCard.tsx
+- src/components/events/EventCard.tsx
+- src/components/events/EventsList.tsx
+- src/components/layout/Footer.tsx
+- src/components/layout/Header.tsx
+- src/components/layout/UserMenu.tsx
+- src/components/notifications/NotificationContent.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/ActivitiesSlider.tsx
+- src/components/shared/ClickableAvatar.tsx
+- src/components/shared/StackedAvatarsPopover.tsx
+- src/components/shared/ViewTracker.tsx
+- src/config/routes.ts
+- src/hooks/useViewTracker.ts
+- src/lib/data/challenges.ts
+- src/types/challenges.ts
+- src/utils/supabaseImageLoader.ts

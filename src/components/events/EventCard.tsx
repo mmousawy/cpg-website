@@ -1,7 +1,6 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { EventAttendee } from '@/types/events';
 import clsx from 'clsx';
-import crypto from 'crypto';
 import Link from 'next/link';
 
 import BlurImage from '@/components/shared/BlurImage';
@@ -25,11 +24,9 @@ export type EventCardData = {
 // Transform attendees to AvatarPerson format
 function transformAttendeesToAvatarPeople(attendees: EventAttendee[]): AvatarPerson[] {
   return attendees.map((attendee) => {
-    const customAvatar = attendee.profiles?.avatar_url;
-    const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(attendee.email || '').digest('hex')}?s=64`;
     return {
       id: attendee.id.toString(),
-      avatarUrl: customAvatar || gravatarUrl,
+      avatarUrl: attendee.profiles?.avatar_url || null,
       fullName: attendee.profiles?.full_name || null,
       nickname: attendee.profiles?.nickname || null,
     };
@@ -84,20 +81,63 @@ type EventCardProps = {
   serverNow?: number;
 };
 
+const EVENT_END_HOUR = 17; // Events considered over at 17:00 Amsterdam time
+const EVENT_TIMEZONE = 'Europe/Amsterdam';
+
+export type EventStatus = 'past' | 'now' | 'upcoming';
+
 /**
- * Check if an event date is in the past
+ * Get event status (past / now / upcoming) using Europe/Amsterdam timezone.
+ * "Now" = event day, between start time and 17:00. After 17:00 on event day = past.
+ *
+ * @param date - Event date string (YYYY-MM-DD)
+ * @param time - Event start time (e.g. "14:00:00")
+ * @param now - Current timestamp. REQUIRED for server components with Cache Components.
+ */
+export function getEventStatus(
+  date: string | null,
+  time: string | null,
+  now?: number,
+): EventStatus {
+  if (!date) return 'upcoming';
+
+  const nowTs = now ?? Date.now();
+
+  const nowInAmsterdam = new Date(nowTs).toLocaleDateString('en-CA', { timeZone: EVENT_TIMEZONE });
+  const eventDateStr = date;
+
+  if (eventDateStr < nowInAmsterdam) return 'past';
+
+  if (eventDateStr === nowInAmsterdam) {
+    const nowHour = Number(
+      new Date(nowTs).toLocaleString('en-US', { timeZone: EVENT_TIMEZONE, hour: 'numeric', hour12: false }),
+    );
+    const nowMinute = Number(
+      new Date(nowTs).toLocaleString('en-US', { timeZone: EVENT_TIMEZONE, minute: 'numeric' }),
+    );
+    const nowMinutes = nowHour * 60 + nowMinute;
+
+    if (nowMinutes >= EVENT_END_HOUR * 60) return 'past';
+
+    if (time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const startMinutes = hours * 60 + (minutes || 0);
+      if (nowMinutes >= startMinutes) return 'now';
+    }
+  }
+
+  return 'upcoming';
+}
+
+/**
+ * Check if an event is in the past (date before today, or event day after 17:00 Amsterdam).
+ * Delegates to getEventStatus() for timezone-aware logic.
+ *
  * @param date - Event date string
  * @param now - Current timestamp. REQUIRED for server components with Cache Components.
- *              Optional for client components (defaults to Date.now()).
  */
-export function isEventPast(date: string | null, now?: number): boolean {
-  if (!date) return false;
-  const eventDate = new Date(date);
-  eventDate.setHours(0, 0, 0, 0);
-  // Client components can use the default; server components must pass now
-  const nowDate = new Date(now ?? Date.now());
-  nowDate.setHours(0, 0, 0, 0);
-  return eventDate < nowDate;
+export function isEventPast(date: string | null, now?: number, time?: string | null): boolean {
+  return getEventStatus(date, time ?? null, now) === 'past';
 }
 
 /**
@@ -123,6 +163,41 @@ export function formatEventTime(time: string): string {
   return time.substring(0, 5);
 }
 
+function getStatusLabel(status: EventStatus): string {
+  switch (status) {
+    case 'past':
+      return 'Past';
+    case 'now':
+      return 'Happening now';
+    case 'upcoming':
+      return 'Upcoming';
+  }
+}
+
+function EventStatusBadge({ status, size }: { status: EventStatus; size: 'sm' | 'md' }) {
+  const label = getStatusLabel(status);
+  const isSm = size === 'sm';
+  return (
+    <span
+      className={clsx(
+        'inline-flex items-center gap-1 rounded-full font-medium',
+        isSm ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs',
+        status === 'past' && 'bg-foreground/10 text-foreground/60',
+        status === 'now' && 'bg-green-600 text-white',
+        status === 'upcoming' && 'bg-primary text-white',
+      )}
+    >
+      {status === 'now' && (
+        <span
+          className="size-1 shrink-0 rounded-full bg-white/90 animate-pulse"
+          aria-hidden
+        />
+      )}
+      {label}
+    </span>
+  );
+}
+
 /**
  * Unified event card component for displaying events across the app
  */
@@ -137,8 +212,10 @@ export default function EventCard({
   disableAttendeesPopover = false,
   serverNow,
 }: EventCardProps) {
-  // Use serverNow if provided, otherwise assume client-side rendering
-  const isPast = serverNow !== undefined ? isEventPast(event.date, serverNow) : false;
+  const status =
+    serverNow !== undefined
+      ? getEventStatus(event.date, event.time, serverNow)
+      : 'upcoming';
   const imageSrc = event.cover_image;
   const attendeePeople = transformAttendeesToAvatarPeople(attendees);
 
@@ -152,16 +229,10 @@ export default function EventCard({
           className="sm:hidden float-right ml-2 mb-1 flex flex-col items-end gap-1.5"
         >
           {showBadge && (
-            <span
-              className={clsx(
-                'rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-                isPast
-                  ? 'bg-foreground/10 text-foreground/60'
-                  : 'bg-primary text-white',
-              )}
-            >
-              {isPast ? 'Past' : 'Upcoming'}
-            </span>
+            <EventStatusBadge
+              status={status}
+              size="sm"
+            />
           )}
           <div
             className="relative h-14 w-18 overflow-hidden rounded-md bg-background-light"
@@ -183,14 +254,12 @@ export default function EventCard({
       {/* Mobile: Badge only (when no image) */}
       {!imageSrc && showBadge && (
         <span
-          className={clsx(
-            'sm:hidden float-right ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-            isPast
-              ? 'bg-foreground/10 text-foreground/60'
-              : 'bg-primary text-white',
-          )}
+          className="sm:hidden float-right ml-2"
         >
-          {isPast ? 'Past' : 'Upcoming'}
+          <EventStatusBadge
+            status={status}
+            size="sm"
+          />
         </span>
       )}
 
@@ -273,16 +342,10 @@ export default function EventCard({
           className="hidden sm:flex flex-col items-end gap-2 shrink-0"
         >
           {showBadge && (
-            <span
-              className={clsx(
-                'rounded-full px-2 py-0.5 text-xs font-medium',
-                isPast
-                  ? 'bg-foreground/10 text-foreground/60'
-                  : 'bg-primary text-white',
-              )}
-            >
-              {isPast ? 'Past' : 'Upcoming'}
-            </span>
+            <EventStatusBadge
+              status={status}
+              size="md"
+            />
           )}
           <div
             className="relative aspect-video w-44 overflow-hidden rounded-md bg-background-light"
@@ -304,14 +367,12 @@ export default function EventCard({
       {/* Desktop: Badge only (when no image) */}
       {!imageSrc && showBadge && (
         <span
-          className={clsx(
-            'hidden sm:inline-flex shrink-0 self-start rounded-full px-2 py-0.5 text-xs font-medium',
-            isPast
-              ? 'bg-foreground/10 text-foreground/60'
-              : 'bg-primary text-white',
-          )}
+          className="hidden sm:inline-flex shrink-0 self-start"
         >
-          {isPast ? 'Past' : 'Upcoming'}
+          <EventStatusBadge
+            status={status}
+            size="md"
+          />
         </span>
       )}
 

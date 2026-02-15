@@ -108,7 +108,7 @@ export function getSquareThumbnailUrl(
 /**
  * Custom image loader that uses Supabase transformations for Supabase-hosted images.
  *
- * Note: External images (gravatar, discord, google, meetupstatic, etc.) are returned
+ * Note: External images (discord, google, meetupstatic, etc.) are returned
  * as-is because Next.js doesn't proxy external URLs through /_next/image when using
  * a custom loader. They will load but won't be optimized.
  */
@@ -176,7 +176,7 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
     return url.toString();
   }
 
-  // For other remote images (gravatar, discord, google, meetupstatic, etc.)
+  // For other remote images (discord, google, meetupstatic, etc.)
   // We must include width in URL to satisfy Next.js loader requirements
   // Adding width as a query param (most CDNs ignore unknown params)
   if (typeof imageSrc === 'string') {

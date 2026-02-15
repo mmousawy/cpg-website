@@ -219,6 +219,7 @@ export default function Header() {
                 size="sm"
                 avatarUrl={profile?.avatar_url}
                 fullName={profile?.full_name}
+                usePersonIconFallback
               />
             </button>
 

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 
+import Avatar from '@/components/auth/Avatar';
+
 type ClickableAvatarProps = {
   avatarUrl: string | null
   fullName: string | null
@@ -60,24 +62,14 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
     };
   }, [avatarUrl, dimensions, galleryId]);
 
-  // Generate initials for fallback
-  const initials = fullName
-    ? fullName
-      .split(' ')
-      .map((n: string) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-    : '?';
-
   if (!avatarUrl) {
-    // Non-clickable fallback with initials
     return (
-      <div
-        className={`flex items-center justify-center bg-[#5e9b84] text-white font-bold text-2xl ${className || ''}`}
-      >
-        {initials}
-      </div>
+      <Avatar
+        avatarUrl={null}
+        fullName={fullName}
+        size="fill"
+        className={className}
+      />
     );
   }
 

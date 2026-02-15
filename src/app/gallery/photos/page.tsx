@@ -1,5 +1,6 @@
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import PageContainer from '@/components/layout/PageContainer';
+import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { createMetadata } from '@/utils/metadata';
 
@@ -30,11 +31,19 @@ export default async function PhotosPage({ searchParams }: PageProps) {
     <>
       <PageContainer>
         <div>
-          <h1
-            className="mb-2 text-3xl font-bold"
+          <div
+            className="flex items-center gap-2 mb-2"
           >
-            Community photos
-          </h1>
+            <h1
+              className="text-3xl font-bold"
+            >
+              Community photos
+            </h1>
+            <HelpLink
+              href="photos"
+              label="Help with photos and gallery"
+            />
+          </div>
           <p
             className="text-lg opacity-70"
           >

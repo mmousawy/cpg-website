@@ -86,6 +86,10 @@
   --challenge-badge: #2c96d3;
 }
 
+html {
+  scroll-padding-top: 7rem;
+}
+
 body {
   text-rendering: optimizeLegibility;
 }

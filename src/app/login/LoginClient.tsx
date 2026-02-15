@@ -11,6 +11,7 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { routes } from '@/config/routes';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import HelpLink from '@/components/shared/HelpLink';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 
 import DiscordSVG from 'public/icons/discord2.svg';
@@ -93,11 +94,19 @@ function LoginForm() {
         >
           Welcome back
         </h1>
-        <p
-          className="mb-6 text-center text-sm text-foreground/70"
+        <div
+          className="flex items-center justify-center gap-2 mb-6"
         >
-          Log in to your account to continue
-        </p>
+          <p
+            className="text-center text-sm text-foreground/70"
+          >
+            Log in to your account to continue
+          </p>
+          <HelpLink
+            href="change-password"
+            label="Help with account access"
+          />
+        </div>
 
         {verified && (
           <SuccessMessage

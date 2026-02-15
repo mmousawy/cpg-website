@@ -74,12 +74,13 @@ export default function ChallengeCard({
   const photoCount = challenge.accepted_count || 0;
 
   // Transform contributors for StackedAvatarsPopover
+  // Use id prefix as fallback when both full_name and nickname are null (e.g. incomplete profiles)
   const contributorAvatars = useMemo(() =>
     (challenge.contributors || []).map((c) => ({
       id: c.id,
-      name: c.nickname || 'Anonymous',
       avatarUrl: c.avatar_url,
-      href: c.nickname ? `/@${c.nickname}` : undefined,
+      fullName: c.full_name,
+      nickname: c.nickname ?? (c.id ? c.id.slice(0, 2).toUpperCase() : null),
     })),
   [challenge.contributors]);
 

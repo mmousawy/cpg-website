@@ -1,5 +1,6 @@
 import AlbumsPaginated from '@/components/gallery/AlbumsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
+import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { createMetadata } from '@/utils/metadata';
 
@@ -30,11 +31,19 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
     <>
       <PageContainer>
         <div>
-          <h1
-            className="mb-2 text-3xl font-bold"
+          <div
+            className="flex items-center gap-2 mb-2"
           >
-            Photo albums
-          </h1>
+            <h1
+              className="text-3xl font-bold"
+            >
+              Photo albums
+            </h1>
+            <HelpLink
+              href="manage-albums"
+              label="Help with albums"
+            />
+          </div>
           <p
             className="text-lg opacity-70"
           >

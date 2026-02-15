@@ -127,11 +127,12 @@ export default function NotificationContent({
               className="h-full w-full object-cover"
             />
           </div>
-        ) : notification.actor?.avatar_url ? (
+        ) : notification.actor ? (
           <Avatar
             size="sm"
             avatarUrl={notification.actor.avatar_url}
             fullName={notification.actor.full_name}
+            nickname={notification.actor.nickname}
           />
         ) : (
           <div

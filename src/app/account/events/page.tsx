@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import EventCard, { isEventPast, type EventCardData } from '@/components/events/EventCard';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -79,10 +80,10 @@ export default function MyEventsPage() {
 
   // Sort: upcoming (soonest first), past (most recent first)
   const upcomingRSVPs = rsvps
-    .filter(r => !r.canceled_at && r.events && !isEventPast(r.events.date))
+    .filter(r => !r.canceled_at && r.events && !isEventPast(r.events.date, undefined, r.events.time))
     .sort((a, b) => new Date(a.events.date).getTime() - new Date(b.events.date).getTime());
   const pastRSVPs = rsvps
-    .filter(r => !r.canceled_at && r.events && isEventPast(r.events.date))
+    .filter(r => !r.canceled_at && r.events && isEventPast(r.events.date, undefined, r.events.time))
     .sort((a, b) => new Date(b.events.date).getTime() - new Date(a.events.date).getTime());
   const canceledRSVPs = rsvps.filter(r => r.canceled_at);
 
@@ -91,11 +92,19 @@ export default function MyEventsPage() {
       <div
         className="mb-8"
       >
-        <h1
-          className="text-3xl font-bold mb-2"
+        <div
+          className="flex items-center gap-2 mb-2"
         >
-          My events
-        </h1>
+          <h1
+            className="text-3xl font-bold"
+          >
+            My events
+          </h1>
+          <HelpLink
+            href="rsvp"
+            label="Help with events and RSVP"
+          />
+        </div>
         <p
           className="text-base sm:text-lg opacity-70"
         >
@@ -286,13 +295,15 @@ function RsvpEventCard({
     )
   ) : null; // No badge for upcoming events - they're all confirmed by default
 
+  const cardClassName = 'rounded-lg border border-border-color bg-background-light p-4';
+
   // Only show badge if it exists (past events or canceled)
   if (!statusBadge) {
     return (
       <EventCard
         event={event as EventCardData}
         description={event.description}
-        className="bg-background-light"
+        className={cardClassName}
       />
     );
   }
@@ -307,7 +318,7 @@ function RsvpEventCard({
         >
           {statusBadge}
         </div>}
-        className="bg-background-light"
+        className={cardClassName}
       />
       {/* Mobile: Show status badge below card */}
       <div

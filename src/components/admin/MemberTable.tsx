@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Tables } from '@/database.types';
+import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
@@ -228,25 +229,11 @@ export default function MemberTable({
                     <div
                       className="flex items-center gap-3"
                     >
-                      <div
-                        className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-primary/20"
-                      >
-                        {member.avatar_url ? (
-                          <Image
-                            src={member.avatar_url}
-                            alt=""
-                            width={40}
-                            height={40}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            className="flex h-full w-full items-center justify-center text-sm font-bold text-primary"
-                          >
-                            {(member.full_name || member.email || '?')[0].toUpperCase()}
-                          </div>
-                        )}
-                      </div>
+                      <Avatar
+                        avatarUrl={member.avatar_url}
+                        fullName={member.full_name || member.email || undefined}
+                        size="sm"
+                      />
                       <div>
                         <div
                           className="font-medium"

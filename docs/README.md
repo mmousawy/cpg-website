@@ -31,7 +31,7 @@ The project uses a custom image loader (`src/utils/supabaseImageLoader.ts`) that
 |------------|-------------|
 | **Supabase images** | Resized via `/render/image/public/` endpoint with width/quality params |
 | **Local images** | Served directly with width hint for Next.js compatibility |
-| **External images** | Served as-is (gravatar, discord, google, meetupstatic) |
+| **External images** | Served as-is (discord, google, meetupstatic) |
 
 Key optimizations:
 - **HeroImage**: Responsive sizes with 1200px max width cap

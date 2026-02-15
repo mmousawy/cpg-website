@@ -15,6 +15,7 @@ import MobileActionBar from '@/components/manage/MobileActionBar';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
+import HelpLink from '@/components/shared/HelpLink';
 import PageLoading from '@/components/shared/PageLoading';
 import Select from '@/components/shared/Select';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
@@ -263,6 +264,10 @@ export default function PhotosPage() {
       <ManageLayout
         actions={
           <>
+            <HelpLink
+              href="upload-photos"
+              label="How to upload photos"
+            />
             <Select
               value={photoFilter}
               onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}

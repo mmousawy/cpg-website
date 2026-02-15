@@ -6,7 +6,9 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import PopularTagsSection from '@/components/shared/PopularTagsSection';
+import SignUpCTA from '@/components/shared/SignUpCTA';
 import { routes } from '@/config/routes';
 import { createMetadata } from '@/utils/metadata';
 
@@ -42,11 +44,19 @@ export default async function GalleryPage() {
         <div
           className="mb-8"
         >
-          <h1
-            className="mb-2 text-2xl sm:text-3xl font-bold"
+          <div
+            className="flex items-center gap-2 mb-2"
           >
-            Photography gallery
-          </h1>
+            <h1
+              className="text-2xl sm:text-3xl font-bold"
+            >
+              Photography gallery
+            </h1>
+            <HelpLink
+              href="photos"
+              label="Help with photos and gallery"
+            />
+          </div>
           <p
             className="text-base sm:text-lg opacity-70"
           >
@@ -233,6 +243,14 @@ export default async function GalleryPage() {
               </div>
             </>
           )}
+        </div>
+
+        <div
+          className="mt-12"
+        >
+          <SignUpCTA
+            variant="inline"
+          />
         </div>
       </WidePageContainer>
     </>

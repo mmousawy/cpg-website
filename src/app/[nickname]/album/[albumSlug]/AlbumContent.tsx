@@ -5,7 +5,6 @@ import Comments from '@/components/shared/Comments';
 import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import TagsSection from '@/components/shared/TagsSection';
-import ViewCount from '@/components/shared/ViewCount';
 import ViewTracker from '@/components/shared/ViewTracker';
 import { getPhotosByUrls } from '@/lib/data/albums';
 import type { AlbumWithPhotos } from '@/types/albums';
@@ -56,11 +55,6 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
   return (
     <>
-      <ViewTracker
-        type="album"
-        id={albumWithPhotos.id}
-      />
-
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
         className={clsx(
@@ -225,15 +219,15 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                   })}
                 </p>
               </div>
-              {/* Views */}
-              {(albumWithPhotos.view_count ?? 0) > 0 && (
-                <div>
-                  <ViewCount
-                    count={albumWithPhotos.view_count ?? 0}
-                    compact
-                  />
-                </div>
-              )}
+              {/* Views - live updating via ViewTracker */}
+              <div>
+                <ViewTracker
+                  type="album"
+                  id={albumWithPhotos.id}
+                  initialCount={albumWithPhotos.view_count ?? 0}
+                  compact
+                />
+              </div>
             </div>
 
             {/* Tags */}

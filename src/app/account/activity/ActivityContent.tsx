@@ -2,6 +2,7 @@
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import NotificationItem from '@/components/notifications/NotificationItem';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
@@ -108,11 +109,19 @@ export default function ActivityContent() {
         <div
           className="mb-8"
         >
-          <h1
-            className="text-3xl font-bold mb-2"
+          <div
+            className="flex items-center gap-2 mb-2"
           >
-            Activity
-          </h1>
+            <h1
+              className="text-3xl font-bold"
+            >
+              Activity
+            </h1>
+            <HelpLink
+              href="notifications"
+              label="Help with notifications"
+            />
+          </div>
           <p
             className="text-base sm:text-lg opacity-70"
           >
@@ -140,11 +149,19 @@ export default function ActivityContent() {
         <div
           className="flex items-center justify-between mb-2"
         >
-          <h1
-            className="text-3xl font-bold"
+          <div
+            className="flex items-center gap-2"
           >
-            Activity
-          </h1>
+            <h1
+              className="text-3xl font-bold"
+            >
+              Activity
+            </h1>
+            <HelpLink
+              href="notifications"
+              label="Help with notifications"
+            />
+          </div>
           <div
             className="flex items-center gap-4"
           >

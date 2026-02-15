@@ -80,6 +80,7 @@ export default function UserMenu() {
             size="md"
             avatarUrl={profile?.avatar_url}
             fullName={profile?.full_name}
+            usePersonIconFallback
           />
         )}
       </summary>

@@ -1,14 +1,25 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Hook for tracking views on photos and albums.
- * Fires a fire-and-forget API call on mount to increment view count.
+ * Fires an API call on mount to increment view count and returns the updated count.
  * Uses keepalive to ensure the request completes even if user navigates away.
+ *
+ * @param type - 'photo' or 'album'
+ * @param id - The entity ID
+ * @param initialCount - The server-rendered view count (used until the API responds)
+ * @returns The current view count (updates after tracking completes)
  */
-export function useViewTracker(type: 'photo' | 'album', id: string) {
+export function useViewTracker(type: 'photo' | 'album', id: string, initialCount: number = 0) {
+  const [viewCount, setViewCount] = useState(initialCount);
   const tracked = useRef(false);
+
+  // Sync initial count from server props (handles navigation between pages)
+  useEffect(() => {
+    setViewCount(initialCount);
+  }, [initialCount]);
 
   useEffect(() => {
     // Never track views in development
@@ -18,14 +29,22 @@ export function useViewTracker(type: 'photo' | 'album', id: string) {
     if (tracked.current || !id) return;
     tracked.current = true;
 
-    // Fire-and-forget - don't await, don't block rendering
     fetch('/api/views', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, id }),
       keepalive: true, // Ensures completion even if user navigates away
-    }).catch(() => {
-      // Silently ignore errors - view tracking is non-critical
-    });
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.view_count != null) {
+          setViewCount(data.view_count);
+        }
+      })
+      .catch(() => {
+        // Silently ignore errors - view tracking is non-critical
+      });
   }, [type, id]);
+
+  return viewCount;
 }

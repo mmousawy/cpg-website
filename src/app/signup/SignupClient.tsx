@@ -10,6 +10,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import HelpLink from '@/components/shared/HelpLink';
 import Input from '@/components/shared/Input';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -127,11 +128,19 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
         >
           Create an account
         </h1>
-        <p
-          className="mb-8 text-center text-sm text-foreground/70"
+        <div
+          className="flex items-center justify-center gap-2 mb-8"
         >
-          Join the Creative Photography Group community
-        </p>
+          <p
+            className="text-center text-sm text-foreground/70"
+          >
+            Join the Creative Photography Group community
+          </p>
+          <HelpLink
+            href="create-account"
+            label="Help with creating an account"
+          />
+        </div>
 
         {/* Social Login Buttons */}
         <div

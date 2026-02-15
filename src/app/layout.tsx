@@ -13,6 +13,7 @@ import NotificationToastManager from '@/components/notifications/NotificationToa
 import VersionLogger from '@/components/VersionLogger';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import Modal from '@/components/shared/Modal';
+import SmoothScrollProvider from '@/components/shared/SmoothScrollProvider';
 import PageLoading from '@/components/shared/PageLoading';
 import { AuthProvider } from '@/context/AuthContext';
 import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
@@ -105,6 +106,7 @@ export default function RootLayout({
         >
           <NavigationProgress />
         </Suspense>
+        <SmoothScrollProvider />
         <VersionLogger />
         <SupabaseProvider>
           <QueryProvider>

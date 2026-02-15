@@ -32,9 +32,6 @@ const nextConfig: NextConfig = {
     qualities: [85],
     remotePatterns: [
       {
-        hostname: 'gravatar.com',
-      },
-      {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',
       },
       {

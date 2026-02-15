@@ -41,10 +41,10 @@ export default function AdminEventsPage() {
 
   // Sort: upcoming (soonest first), then past (most recent first)
   const upcomingEvents = events
-    .filter(e => !isEventPast(e.date))
+    .filter(e => !isEventPast(e.date, undefined, e.time))
     .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime());
   const pastEvents = events
-    .filter(e => isEventPast(e.date))
+    .filter(e => isEventPast(e.date, undefined, e.time))
     .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime());
 
   return (

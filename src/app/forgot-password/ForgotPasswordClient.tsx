@@ -10,6 +10,7 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { routes } from '@/config/routes';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import HelpLink from '@/components/shared/HelpLink';
 
 import CheckSVG from 'public/icons/check.svg';
 import ArrowLink from '@/components/shared/ArrowLink';
@@ -95,11 +96,19 @@ export default function ForgotPasswordClient() {
         >
           Forgot password?
         </h1>
-        <p
-          className="mb-8 text-center text-sm text-foreground/70"
+        <div
+          className="flex items-center justify-center gap-2 mb-8"
         >
-          No worries, we&apos;ll send you reset instructions.
-        </p>
+          <p
+            className="text-center text-sm text-foreground/70"
+          >
+            No worries, we&apos;ll send you reset instructions.
+          </p>
+          <HelpLink
+            href="change-password"
+            label="Help with password reset"
+          />
+        </div>
 
         <form
           onSubmit={handleSubmit}

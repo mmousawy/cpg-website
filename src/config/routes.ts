@@ -75,6 +75,10 @@ export const routes = {
     label: 'Contact',
     url: '/contact',
   },
+  help: {
+    label: 'Help',
+    url: '/help',
+  },
   changelog: {
     label: 'Changelog',
     url: '/changelog',
