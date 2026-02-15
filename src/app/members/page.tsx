@@ -42,8 +42,8 @@ export default async function MembersPage() {
               Discover our community
             </h1>
             <HelpLink
-              href="navigating"
-              label="Help navigating the site"
+              href="discover-members"
+              label="Help with discovering members"
             />
           </div>
           <p
@@ -120,8 +120,8 @@ export default async function MembersPage() {
               Discover our community
             </h1>
             <HelpLink
-              href="navigating"
-              label="Help navigating the site"
+              href="discover-members"
+              label="Help with discovering members"
             />
           </div>
           <p

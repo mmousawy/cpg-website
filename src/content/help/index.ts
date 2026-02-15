@@ -4,6 +4,7 @@ import { accountFAQ } from './account';
 import { challengesFAQ } from './challenges';
 import { eventsFAQ } from './events';
 import { gettingStartedFAQ } from './getting-started';
+import { membersFAQ } from './members';
 import { photosFAQ } from './photos';
 
 export const helpSections: FAQSection[] = [
@@ -11,5 +12,6 @@ export const helpSections: FAQSection[] = [
   eventsFAQ,
   photosFAQ,
   challengesFAQ,
+  membersFAQ,
   accountFAQ,
 ];

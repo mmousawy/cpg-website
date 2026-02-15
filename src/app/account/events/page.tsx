@@ -2,19 +2,24 @@
 
 import { useEffect, useState } from 'react';
 
-import EventCard, { isEventPast, type EventCardData } from '@/components/events/EventCard';
+import { formatEventDate, formatEventTime, isEventPast } from '@/components/events/EventCard';
 import PageContainer from '@/components/layout/PageContainer';
+import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
+import Link from 'next/link';
 
 import { routes } from '@/config/routes';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
+import CalendarSVG from 'public/icons/calendar2.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
+import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
+import TimeSVG from 'public/icons/time.svg';
 
 // RSVP with joined event data - use non-null date since we filter for valid events
 type RSVP = Pick<Tables<'events_rsvps'>, 'id' | 'uuid' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'> & {
@@ -223,7 +228,7 @@ export default function MyEventsPage() {
               Canceled RSVPs
             </h2>
             <div
-              className="space-y-3 opacity-40"
+              className="space-y-3"
             >
               {canceledRSVPs.map((rsvp) => (
                 <RsvpEventCard
@@ -263,7 +268,7 @@ function RsvpEventCard({
   // Determine the status badge - only show for past events (attended/not attended) or canceled
   const statusBadge = isCanceled ? (
     <span
-      className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap"
+      className="flex items-center gap-1 w-fit rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap"
     >
       <CancelSVG
         className="h-3 w-3 fill-red-500"
@@ -273,59 +278,162 @@ function RsvpEventCard({
   ) : isPast ? (
     rsvp.attended_at ? (
       <span
-        className="flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap"
+        className="flex w-fit items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary whitespace-nowrap"
       >
         <CheckSVG
-          className="h-3 w-3 fill-green-600"
+          className="h-3 w-3 fill-primary"
         />
         Attended
       </span>
     ) : isWithinSevenDays ? (
       <span
-        className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 whitespace-nowrap"
+        className="flex items-center gap-1 w-fit rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 whitespace-nowrap"
       >
         Pending confirmation
       </span>
     ) : (
       <span
-        className="flex items-center gap-1 rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap"
+        className="flex items-center gap-1 w-fit rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap"
       >
         Not attended
       </span>
     )
-  ) : null; // No badge for upcoming events - they're all confirmed by default
-
-  const cardClassName = 'rounded-lg border border-border-color bg-background-light p-4';
-
-  // Only show badge if it exists (past events or canceled)
-  if (!statusBadge) {
-    return (
-      <EventCard
-        event={event as EventCardData}
-        description={event.description}
-        className={cardClassName}
+  ) : (
+    <span
+      className="flex items-center gap-1 w-fit rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap"
+    >
+      <CheckSVG
+        className="h-3 w-3 fill-green-600"
       />
-    );
-  }
+      You&apos;re going!
+    </span>
+  );
 
+  const cardClassName = 'rounded-lg border border-border-color bg-background-light p-4 transition-colors hover:border-primary';
+
+  // Consistent card layout for all states
   return (
-    <div>
-      <EventCard
-        event={event as EventCardData}
-        description={event.description}
-        rightSlot={<div
-          className="hidden sm:block"
-        >
-          {statusBadge}
-        </div>}
-        className={cardClassName}
-      />
-      {/* Mobile: Show status badge below card */}
-      <div
-        className="mt-2 sm:hidden"
+    <div
+      className={cardClassName}
+    >
+      <Link
+        href={event.slug ? `/events/${event.slug}` : '#'}
+        className="block group"
       >
-        {statusBadge}
-      </div>
+        <div
+          className="sm:flex sm:items-start sm:gap-4"
+        >
+          {/* Content */}
+          <div
+            className="sm:flex-1 sm:min-w-0"
+          >
+            {/* Mobile: float badge and thumbnail to the right */}
+            {(statusBadge || event.cover_image) && (
+              <div
+                className="sm:hidden float-right ml-2 mb-1 flex flex-col items-end gap-1.5"
+              >
+                {statusBadge}
+                {event.cover_image && (
+                  <div
+                    className="relative aspect-video w-18 overflow-hidden rounded-md bg-background"
+                  >
+                    <BlurImage
+                      src={event.cover_image}
+                      alt={event.title || 'Event cover'}
+                      sizes="72px"
+                      loading="lazy"
+                      quality={85}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            <div
+              className="mb-1.5"
+            >
+              <h4
+                className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2"
+              >
+                {event.title}
+              </h4>
+              {statusBadge && (
+                <div
+                  className="max-sm:hidden mt-1.5"
+                >
+                  {statusBadge}
+                </div>
+              )}
+            </div>
+            <div
+              className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-1 text-sm text-foreground/70"
+            >
+              {event.date && (
+                <span
+                  className="flex items-center gap-1"
+                >
+                  <CalendarSVG
+                    className="size-3.5 fill-foreground/60"
+                  />
+                  {formatEventDate(event.date)}
+                </span>
+              )}
+              {event.time && (
+                <span
+                  className="flex items-center gap-1"
+                >
+                  <TimeSVG
+                    className="size-3.5 fill-foreground/60"
+                  />
+                  {formatEventTime(event.time)}
+                </span>
+              )}
+              {event.location && (
+                <span
+                  className="flex items-center gap-1"
+                >
+                  <LocationSVG
+                    className="size-3.5 fill-foreground/60"
+                  />
+                  <span
+                    className="line-clamp-1"
+                  >
+                    {event.location.split('\n')[0]}
+                  </span>
+                </span>
+              )}
+            </div>
+            {event.description && (
+              <p
+                className="max-sm:hidden max-w-[50ch] text-foreground/90 text-sm line-clamp-3"
+              >
+                {event.description}
+              </p>
+            )}
+          </div>
+          {/* Right side: thumbnail only (badge is now below title) */}
+          {event.cover_image && (
+            <div
+              className="hidden sm:block shrink-0"
+            >
+              <div
+                className="relative aspect-video w-44 overflow-hidden rounded-md bg-background"
+              >
+                <BlurImage
+                  src={event.cover_image}
+                  alt={event.title || 'Event cover'}
+                  sizes="176px"
+                  loading="lazy"
+                  quality={85}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </Link>
     </div>
   );
 }
