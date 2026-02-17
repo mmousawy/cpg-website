@@ -10,7 +10,11 @@
     },
     {
       "path": "/api/cron/revalidate-events",
-      "schedule": "1 * * * *"
+      "schedule": "1 13 * * *"
+    },
+    {
+      "path": "/api/cron/revalidate-events",
+      "schedule": "1 17 * * *"
     }
   ]
 }
