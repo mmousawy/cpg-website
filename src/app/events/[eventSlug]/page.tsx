@@ -6,9 +6,10 @@ import EventSignupBar from '@/components/events/EventSignupBar';
 import UserWentBadge from '@/components/events/UserWentBadge';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import HelpLink from '@/components/shared/HelpLink';
-import SignUpCTA from '@/components/shared/SignUpCTA';
+import { SignUpCTASection } from '@/components/shared/SignUpCTA';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { Tables } from '@/database.types';
 import clsx from 'clsx';
@@ -17,6 +18,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
+import { getEventAlbum } from '@/lib/data/albums';
 import { getAllEventSlugs, getEventAttendeesForEvent, getEventBySlug } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
@@ -25,6 +27,8 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
+import EventPhotosSection from '@/components/events/EventPhotosSection';
+import { hasEventPhotos } from '@/lib/eventAlbums';
 import EventComments from './EventComments';
 
 // Type for attendee with joined profile data
@@ -154,10 +158,11 @@ async function CachedEventContent({
   cacheTag('event-attendees');
   cacheTag(`event-${event.slug}`);
 
-  // Fetch hosts and attendees using cached functions
-  const [hosts, attendees] = await Promise.all([
+  // Fetch hosts, attendees and event album using cached functions
+  const [hosts, attendees, eventAlbum] = await Promise.all([
     getOrganizers(5),
     getEventAttendeesForEvent(event.id),
+    getEventAlbum(event.id),
   ]);
 
   // Format the event date
@@ -244,7 +249,10 @@ async function CachedEventContent({
       )}
 
       <PageContainer
-        className={event.cover_image ? '!pt-6 sm:!pt-8' : ''}
+        className={clsx(
+          event.cover_image ? '!pt-6 sm:!pt-8' : '',
+          '!pb-4',
+        )}
       >
         <Container>
           {/* Title (if no cover image) */}
@@ -449,14 +457,36 @@ async function CachedEventContent({
           </div>
         </Container>
 
-        <div
-          className="mt-8"
-        >
-          <SignUpCTA
-            variant="inline"
-          />
-        </div>
+        {/* Event Photos - separate section, narrow column when empty */}
+        {eventAlbum && (
+          <div
+            className="mt-8"
+          >
+            {!hasEventPhotos(eventAlbum) && (
+              <EventPhotosSection
+                eventId={event.id}
+                eventSlug={event.slug || ''}
+                album={eventAlbum}
+              />
+            )}
+          </div>
+        )}
       </PageContainer>
+
+      {/* Event Photos - full width grid (right after heading, before SignUpCTA) */}
+      {hasEventPhotos(eventAlbum) && eventAlbum && (
+        <WidePageContainer
+          className="pt-0! md:pb-12!"
+        >
+          <EventPhotosSection
+            eventId={event.id}
+            eventSlug={event.slug || ''}
+            album={eventAlbum}
+          />
+        </WidePageContainer>
+      )}
+
+      <SignUpCTASection />
 
       {/* Sticky Action Bar - only show for upcoming events */}
       {!isPastEvent && <EventSignupBar

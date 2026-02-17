@@ -47,7 +47,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
     };
 
     checkRSVP();
-  }, [user, event]);
+  }, [user, event, supabase]);
 
   const openModal = () => {
     modalContext.setTitle(`${event.title}`);

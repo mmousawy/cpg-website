@@ -20,6 +20,7 @@ interface Album {
   slug: string;
   cover_image_url?: string | null;
   photo_count?: number;
+  profile_nickname?: string | null;
 }
 
 interface Profile {
@@ -46,6 +47,8 @@ interface SiblingPhoto {
 interface PhotoPageContentProps {
   photo: Photo & { tags?: SimpleTag[] };
   profile: Profile;
+  /** The album owner's nickname (for building album navigation URLs) */
+  albumOwnerNickname?: string;
   /** The album this photo is being viewed from (for back link context) */
   currentAlbum?: Album;
   /** All albums this photo is part of */
@@ -59,6 +62,7 @@ interface PhotoPageContentProps {
 export default function PhotoPageContent({
   photo,
   profile,
+  albumOwnerNickname,
   currentAlbum,
   albums = [],
   challenges = [],
@@ -66,6 +70,8 @@ export default function PhotoPageContent({
 }: PhotoPageContentProps) {
   const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
   const nickname = profile.nickname;
+  // For album navigation URLs, use the album owner's nickname (album lives under their profile)
+  const albumNickname = albumOwnerNickname || nickname;
 
   // Filter out current album from the list of other albums
   const otherAlbums = currentAlbum
@@ -102,7 +108,7 @@ export default function PhotoPageContent({
               <AlbumFilmstrip
                 photos={siblingPhotos}
                 currentPhotoShortId={photo.short_id}
-                nickname={nickname}
+                nickname={albumNickname}
                 albumSlug={currentAlbum.slug}
               />
             </div>
@@ -206,9 +212,10 @@ export default function PhotoPageContent({
                       title={currentAlbum.title}
                       slug={currentAlbum.slug}
                       coverImageUrl={currentAlbum.cover_image_url}
-                      href={`/@${nickname}/album/${currentAlbum.slug}`}
+                      href={`/@${currentAlbum.profile_nickname || albumNickname}/album/${currentAlbum.slug}`}
                       photoCount={currentAlbum.photo_count}
                       highlighted
+                      ownerNickname={albumNickname !== nickname ? albumNickname : undefined}
                     />
                 )}
                   {otherAlbums.map((album) => (
@@ -217,8 +224,9 @@ export default function PhotoPageContent({
                       title={album.title}
                       slug={album.slug}
                       coverImageUrl={album.cover_image_url}
-                      href={`/@${nickname}/album/${album.slug}`}
+                      href={`/@${album.profile_nickname || nickname}/album/${album.slug}`}
                       photoCount={album.photo_count}
+                      ownerNickname={album.profile_nickname && album.profile_nickname !== nickname ? album.profile_nickname : undefined}
                     />
                 ))}
                 </div>

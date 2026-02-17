@@ -207,27 +207,29 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (album) {
-      ownerId = album.user_id;
+      ownerId = album.user_id ?? null;
       entityTitle = album.title;
       entityThumbnail = album.cover_image_url;
 
-      // Get owner profile
-      const { data: owner } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, nickname')
-        .eq('id', album.user_id)
-        .single();
+      // Get owner profile (skip for event albums with null user_id)
+      if (album.user_id) {
+        const { data: owner } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, nickname')
+          .eq('id', album.user_id)
+          .single();
 
-      ownerProfile = owner ? {
-        id: owner.id,
-        email: owner.email,
-        full_name: owner.full_name,
-        nickname: owner.nickname,
-      } : null;
+        ownerProfile = owner ? {
+          id: owner.id,
+          email: owner.email,
+          full_name: owner.full_name,
+          nickname: owner.nickname,
+        } : null;
 
-      // Build album link with comments anchor (relative for notifications)
-      if (ownerProfile?.nickname) {
-        entityLink = `/@${ownerProfile.nickname}/album/${album.slug}#comments`;
+        // Build album link with comments anchor (relative for notifications)
+        if (ownerProfile?.nickname) {
+          entityLink = `/@${ownerProfile.nickname}/album/${album.slug}#comments`;
+        }
       }
     }
   } else if (entityType === 'photo') {

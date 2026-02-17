@@ -17,7 +17,7 @@ interface PhotoEditSidebarProps {
   /** Handler for bulk deletion. If provided, used for multi-select delete (more efficient). */
   onBulkDelete?: (photoIds: string[]) => Promise<void>;
   /** Handler for adding photos to album. If not provided, the Album button is hidden. */
-  onAddToAlbum?: (photoIds: string[]) => void;
+  onAddToAlbum?: (photoIds?: string[]) => void;
   /** Handler for removing photos from the current album (only shown in album view). */
   onRemoveFromAlbum?: (photoIds: string[]) => void;
   /** Handler for setting photo as album cover. If provided with currentAlbum, shows the button. */
@@ -37,6 +37,8 @@ interface PhotoEditSidebarProps {
   externalSuccess?: boolean;
   /** Hide title (when shown in parent container like BottomSheet) */
   hideTitle?: boolean;
+  /** When true, only "Remove from album" is available — editing/deleting is disabled (e.g. selection includes non-owned photos) */
+  readOnly?: boolean;
 }
 
 export default function PhotoEditSidebar({
@@ -56,6 +58,7 @@ export default function PhotoEditSidebar({
   externalError = null,
   externalSuccess = false,
   hideTitle = false,
+  readOnly = false,
 }: PhotoEditSidebarProps) {
   const photo = selectedPhotos[0];
   const isMultiple = selectedPhotos.length > 1;
@@ -87,6 +90,7 @@ export default function PhotoEditSidebar({
         externalError={externalError}
         externalSuccess={externalSuccess}
         hideTitle={hideTitle}
+        readOnly={readOnly}
       />
     );
   }
@@ -108,6 +112,7 @@ export default function PhotoEditSidebar({
       externalError={externalError}
       externalSuccess={externalSuccess}
       hideTitle={hideTitle}
+      readOnly={readOnly}
     />
   );
 }

@@ -1,25 +1,39 @@
 import { revalidateAlbum, revalidateAlbums } from '@/app/actions/revalidate';
 import type { AlbumFormData, BulkAlbumFormData } from '@/components/manage';
+import type { SharedAlbumFormData } from '@/components/manage/SharedAlbumEditForm';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+function isSharedAlbumFormData(data: AlbumFormData | SharedAlbumFormData): data is SharedAlbumFormData {
+  return 'joinPolicy' in data;
+}
 
 export function useCreateAlbum(userId: string | undefined, nickname: string | null | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: AlbumFormData) => {
+    mutationFn: async (data: AlbumFormData | SharedAlbumFormData) => {
       if (!userId) throw new Error('User not authenticated');
+
+      const isShared = isSharedAlbumFormData(data);
+
+      const insertPayload = {
+        user_id: userId,
+        title: data.title.trim(),
+        slug: data.slug.trim(),
+        description: data.description?.trim() || null,
+        is_public: data.isPublic,
+        ...(isShared && {
+          is_shared: true,
+          join_policy: data.joinPolicy,
+          max_photos_per_user: data.maxPhotosPerUser ?? null,
+        }),
+      };
 
       const { data: newAlbum, error: createError } = await supabase
         .from('albums')
-        .insert({
-          user_id: userId,
-          title: data.title.trim(),
-          slug: data.slug.trim(),
-          description: data.description?.trim() || null,
-          is_public: data.isPublic,
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
@@ -27,27 +41,25 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
         throw new Error(createError.message || 'Failed to create album');
       }
 
-      // Add tags for new album
       if (data.tags && data.tags.length > 0 && newAlbum) {
         await supabase
           .from('album_tags')
           .insert(data.tags.map((tag) => ({ album_id: newAlbum.id, tag: tag.toLowerCase() })));
       }
 
-      // Optimistically add to cache
-      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
+      const cacheFilter = isShared ? 'shared' : 'personal';
+      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId, cacheFilter], (old) => {
         const newAlbumWithPhotos: AlbumWithPhotos = {
           ...newAlbum,
           photos: [],
-          tags: undefined, // Tags will be loaded when album is fetched
+          tags: undefined,
         };
         return old ? [newAlbumWithPhotos, ...old] : [newAlbumWithPhotos];
       });
 
-      // Invalidate counts
       queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
 
-      // Revalidate album pages if album is public
       if (nickname && data.isPublic && newAlbum) {
         await revalidateAlbum(nickname, newAlbum.slug);
       }
@@ -61,39 +73,51 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
   const queryClient = useQueryClient();
 
   return useMutation<
-    { albumId: string; data: AlbumFormData; previousAlbums: AlbumWithPhotos[] | undefined },
+    {
+      albumId: string;
+      data: AlbumFormData | SharedAlbumFormData;
+      previousAlbums?: AlbumWithPhotos[] | undefined;
+    },
     Error,
-    { albumId: string; data: AlbumFormData },
+    { albumId: string; data: AlbumFormData | SharedAlbumFormData },
     { previousAlbums: AlbumWithPhotos[] | undefined }
   >({
-    mutationFn: async ({ albumId, data }: { albumId: string; data: AlbumFormData }) => {
+    mutationFn: async ({
+      albumId,
+      data,
+    }: {
+      albumId: string;
+      data: AlbumFormData | SharedAlbumFormData;
+    }) => {
       if (!userId) throw new Error('User not authenticated');
 
-      // Optimistically update cache
-      const previousAlbums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId]);
-      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
-        if (!old) return old;
-        return old.map((a) =>
-          a.id === albumId
-            ? {
-              ...a,
-              title: data.title.trim(),
-              slug: data.slug.trim(),
-              description: data.description?.trim() || null,
-              is_public: data.isPublic,
-            }
-            : a,
-        );
-      });
+      const isShared = isSharedAlbumFormData(data);
+
+      const updatePayload: Record<string, unknown> = {
+        title: data.title.trim(),
+        slug: data.slug.trim(),
+        description: data.description?.trim() || null,
+        is_public: data.isPublic,
+        is_shared: isShared,
+        join_policy: isShared ? data.joinPolicy : null,
+        max_photos_per_user: isShared ? (data.maxPhotosPerUser ?? null) : null,
+      };
+
+      // Optimistically update all album sub-caches
+      for (const filter of ['personal', 'shared', 'event'] as const) {
+        queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId, filter], (old) => {
+          if (!old) return old;
+          return old.map((a) =>
+            a.id === albumId
+              ? { ...a, ...updatePayload }
+              : a,
+          );
+        });
+      }
 
       const { error: updateError } = await supabase
         .from('albums')
-        .update({
-          title: data.title.trim(),
-          slug: data.slug.trim(),
-          description: data.description?.trim() || null,
-          is_public: data.isPublic,
-        })
+        .update(updatePayload)
         .eq('id', albumId)
         .eq('user_id', userId)
         .is('deleted_at', null);
@@ -102,7 +126,15 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
         throw new Error(updateError.message || 'Failed to update album');
       }
 
-      // Update tags
+      if (isShared) {
+        const { error: ownerError } = await supabase.rpc('add_shared_album_owner', {
+          p_album_id: albumId,
+        });
+        if (ownerError) {
+          throw new Error(ownerError.message || 'Failed to add album owner as member');
+        }
+      }
+
       await supabase.from('album_tags').delete().eq('album_id', albumId);
       if (data.tags && data.tags.length > 0) {
         await supabase.from('album_tags').insert(
@@ -110,36 +142,40 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
         );
       }
 
-      // Update tags in cache
-      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
-        if (!old) return old;
-        return old.map((a) =>
-          a.id === albumId
-            ? {
-              ...a,
-              tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
-            } as AlbumWithPhotos
-            : a,
-        );
-      });
+      for (const filter of ['personal', 'shared', 'event'] as const) {
+        queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId, filter], (old) => {
+          if (!old) return old;
+          return old.map((a) =>
+            a.id === albumId
+              ? {
+                ...a,
+                tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) ?? [],
+              } as AlbumWithPhotos
+              : a,
+          );
+        });
+      }
 
-      // Revalidate album pages
       if (nickname) {
         await revalidateAlbum(nickname, data.slug);
       }
 
-      return { albumId, data, previousAlbums };
+      return { albumId, data };
     },
-    onError: (err, variables, context) => {
-      // Rollback on error
-      if (userId && context?.previousAlbums) {
-        queryClient.setQueryData(['albums', userId], context.previousAlbums);
+    onError: () => {
+      // Rollback on error — invalidate all album queries to refetch
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       // Invalidate albums cache to ensure fresh data after server revalidation
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['albums', userId] });
+        queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
+        if (result?.data?.slug) {
+          queryClient.invalidateQueries({ queryKey: ['album', userId, result.data.slug] });
+        }
       }
     },
   });
@@ -149,16 +185,13 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
   const queryClient = useQueryClient();
 
   return useMutation<
-    { albumIds: string[]; data: BulkAlbumFormData; previousAlbums: AlbumWithPhotos[] | undefined },
+    { albumIds: string[]; data: BulkAlbumFormData; previousAlbums?: AlbumWithPhotos[] | undefined },
     Error,
     { albumIds: string[]; data: BulkAlbumFormData },
     { previousAlbums: AlbumWithPhotos[] | undefined }
   >({
     mutationFn: async ({ albumIds, data }: { albumIds: string[]; data: BulkAlbumFormData }) => {
       if (!userId) throw new Error('User not authenticated');
-
-      // Optimistically update cache
-      const previousAlbums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId]);
 
       // Pre-compute tag sets for optimistic update
       const desiredTagsForCache = data.tags !== undefined
@@ -171,21 +204,18 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
         ? new Set([...originalCommonTagsForCache].filter((tag) => !desiredTagsForCache.has(tag)))
         : new Set<string>();
 
-      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
+      // Optimistically update all album sub-caches
+      const optimisticUpdate = (old: AlbumWithPhotos[] | undefined) => {
         if (!old) return old;
         return old.map((a) => {
           if (!albumIds.includes(a.id)) return a;
 
-          // For tags, we need to preserve partial tags (not in originalCommonTags)
-          // and only apply changes to common tags
           let newTags = a.tags;
           if (desiredTagsForCache !== null) {
             const existingTags = a.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
-            // Keep tags that are: (1) in desired set, OR (2) not explicitly removed (partial tags)
             const keptTags = existingTags.filter(
               (tag) => desiredTagsForCache.has(tag) || !explicitlyRemovedTagsForCache.has(tag),
             );
-            // Add new tags from desired set that don't exist yet
             const tagsToAdd = [...desiredTagsForCache].filter((tag) => !existingTags.includes(tag));
             newTags = [...new Set([...keptTags, ...tagsToAdd])].map((tag) => ({
               id: '', album_id: a.id, tag, created_at: null,
@@ -198,7 +228,11 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
             ...(desiredTagsForCache !== null && { tags: newTags }),
           };
         });
-      });
+      };
+
+      for (const filter of ['personal', 'shared', 'event'] as const) {
+        queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId, filter], optimisticUpdate);
+      }
 
       const updates: { is_public?: boolean } = {};
       if (data.isPublic !== null) {
@@ -296,25 +330,31 @@ export function useBulkUpdateAlbums(userId: string | undefined, nickname: string
 
       // Revalidate album pages (batch operation for efficiency)
       if (nickname) {
-        const albumsToRevalidate = previousAlbums?.filter((a) => albumIds.includes(a.id)) || [];
+        const allCached: AlbumWithPhotos[] = [];
+        for (const filter of ['personal', 'shared', 'event'] as const) {
+          const cached = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId, filter]);
+          if (cached) allCached.push(...cached);
+        }
+        const albumsToRevalidate = allCached.filter((a) => albumIds.includes(a.id));
         if (albumsToRevalidate.length > 0) {
           const albumSlugs = albumsToRevalidate.map((album) => album.slug);
           await revalidateAlbums(nickname, albumSlugs);
         }
       }
 
-      return { albumIds, data, previousAlbums };
+      return { albumIds, data };
     },
-    onError: (err, variables, context) => {
-      // Rollback on error
-      if (userId && context?.previousAlbums) {
-        queryClient.setQueryData(['albums', userId], context.previousAlbums);
+    onError: () => {
+      // Rollback on error — invalidate all album queries to refetch
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
       }
     },
     onSuccess: () => {
       // Invalidate albums cache to ensure fresh data after server revalidation
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['albums', userId] });
+        queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
       }
     },
   });
@@ -332,17 +372,25 @@ export function useDeleteAlbums(userId: string | undefined, nickname: string | n
     mutationFn: async (albumIds: string[]) => {
       if (!userId) throw new Error('User not authenticated');
 
-      // Get album slugs before deletion for revalidation
-      const albumsToDelete = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.filter((a) =>
-        albumIds.includes(a.id),
-      ) || [];
+      // Get album slugs before deletion from all cached album sub-queries
+      const albumIdSet = new Set(albumIds);
+      const allCached: AlbumWithPhotos[] = [];
+      for (const filter of ['personal', 'shared', 'event'] as const) {
+        const cached = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId, filter]);
+        if (cached) allCached.push(...cached);
+      }
+      const albumsToDelete = allCached.filter((a) => albumIdSet.has(a.id));
 
-      // Optimistically remove from cache
-      const previousAlbums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId]);
-      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
-        if (!old) return old;
-        return old.filter((a) => !albumIds.includes(a.id));
-      });
+      // Optimistically remove from all cached sub-queries
+      const previousCaches: Record<string, AlbumWithPhotos[] | undefined> = {};
+      for (const filter of ['personal', 'shared', 'event'] as const) {
+        const key = ['albums', userId, filter];
+        previousCaches[filter] = queryClient.getQueryData<AlbumWithPhotos[]>(key);
+        queryClient.setQueryData<AlbumWithPhotos[]>(key, (old) => {
+          if (!old) return old;
+          return old.filter((a) => !albumIdSet.has(a.id));
+        });
+      }
 
       // Delete albums one by one using the RPC function
       for (const albumId of albumIds) {
@@ -363,13 +411,14 @@ export function useDeleteAlbums(userId: string | undefined, nickname: string | n
 
       // Invalidate counts
       queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
 
-      return { albumIds, previousAlbums };
+      return { albumIds, previousAlbums: allCached };
     },
     onError: (err, variables, context) => {
-      // Rollback on error
-      if (userId && context?.previousAlbums) {
-        queryClient.setQueryData(['albums', userId], context.previousAlbums);
+      // Rollback on error — invalidate all album queries to refetch
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['albums', userId] });
       }
     },
   });

@@ -13,6 +13,8 @@ interface AddToAlbumContentProps {
   existingPhotoUrls: string[];
   onClose: () => void;
   onSuccess: () => void;
+  /** Use shared album RPC instead of owned album RPC */
+  isSharedAlbum?: boolean;
 }
 
 export default function AddToAlbumContent({
@@ -20,12 +22,14 @@ export default function AddToAlbumContent({
   existingPhotoUrls,
   onClose,
   onSuccess,
+  isSharedAlbum = false,
 }: AddToAlbumContentProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  /** Array preserves selection order (Set would lose it, causing reversed order in album) */
+  const [selectedPhotoIdsOrder, setSelectedPhotoIdsOrder] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,49 +69,47 @@ export default function AddToAlbumContent({
     [photos, existingPhotoUrls],
   );
 
-  const handleSelectPhoto = (photoId: string, isMultiSelect: boolean) => {
-    setSelectedPhotoIds((prev) => {
-      const newSet = new Set(prev);
-      if (isMultiSelect) {
-        if (newSet.has(photoId)) {
-          newSet.delete(photoId);
-        } else {
-          newSet.add(photoId);
-        }
-      } else {
-        if (newSet.has(photoId)) {
-          newSet.delete(photoId);
-        } else {
-          newSet.add(photoId);
-        }
+  const handleSelectPhoto = (photoId: string, _isMultiSelect: boolean) => {
+    setSelectedPhotoIdsOrder((prev) => {
+      const idx = prev.indexOf(photoId);
+      if (idx >= 0) {
+        return prev.filter((id) => id !== photoId);
       }
-      return newSet;
+      return [...prev, photoId];
     });
   };
 
   const handleClearSelection = () => {
-    setSelectedPhotoIds(new Set());
+    setSelectedPhotoIdsOrder([]);
   };
 
   const handleSelectMultiple = (ids: string[]) => {
-    setSelectedPhotoIds((prev) => {
-      const newSet = new Set(prev);
-      ids.forEach((id) => newSet.add(id));
-      return newSet;
+    setSelectedPhotoIdsOrder((prev) => {
+      const next = [...prev];
+      for (const id of ids) {
+        if (!next.includes(id)) next.push(id);
+      }
+      return next;
     });
   };
 
+  const selectedPhotoIdsSet = useMemo(
+    () => new Set(selectedPhotoIdsOrder),
+    [selectedPhotoIdsOrder],
+  );
+
   const handleAddToAlbum = async () => {
-    if (!user || selectedPhotoIds.size === 0) return;
+    if (!user || selectedPhotoIdsOrder.length === 0) return;
 
     setIsAdding(true);
     setError(null);
 
     try {
       // Use RPC to add photos - handles sort_order assignment automatically
-      const { error: rpcError } = await supabase.rpc('add_photos_to_album', {
+      const rpcName = isSharedAlbum ? 'add_photos_to_shared_album' : 'add_photos_to_album';
+      const { error: rpcError } = await supabase.rpc(rpcName, {
         p_album_id: albumId,
-        p_photo_ids: Array.from(selectedPhotoIds),
+        p_photo_ids: selectedPhotoIdsOrder,
       });
 
       if (rpcError) {
@@ -139,18 +141,19 @@ export default function AddToAlbumContent({
         </Button>
         <Button
           onClick={handleAddToAlbum}
-          disabled={isAdding || selectedPhotoIds.size === 0}
+          disabled={isAdding || selectedPhotoIdsOrder.length === 0}
           loading={isAdding}
         >
           Add
           {' '}
-          {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}
+          {selectedPhotoIdsOrder.length > 0 ? `${selectedPhotoIdsOrder.length} ` : ''}
           photo
-          {selectedPhotoIds.size !== 1 ? 's' : ''}
+          {selectedPhotoIdsOrder.length !== 1 ? 's' : ''}
         </Button>
       </div>,
     );
-  }, [selectedPhotoIds.size, isAdding, onClose, modalContext]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- modalContext is stable, including it causes infinite re-renders
+  }, [selectedPhotoIdsOrder.length, isAdding, onClose]);
 
   return (
     <div
@@ -190,7 +193,7 @@ export default function AddToAlbumContent({
         ) : (
           <PhotoGrid
             photos={availablePhotos}
-            selectedPhotoIds={selectedPhotoIds}
+            selectedPhotoIds={selectedPhotoIdsSet}
             onSelectPhoto={handleSelectPhoto}
             onPhotoClick={(photo) => handleSelectPhoto(photo.id, true)}
             onClearSelection={handleClearSelection}

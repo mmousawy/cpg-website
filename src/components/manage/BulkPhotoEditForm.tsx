@@ -10,7 +10,7 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
@@ -40,7 +40,7 @@ interface BulkPhotoEditFormProps {
   onBulkSave?: (photoIds: string[], data: BulkPhotoFormData) => Promise<void>;
   onDelete: (photoId: string) => Promise<void>;
   onBulkDelete?: (photoIds: string[]) => Promise<void>;
-  onAddToAlbum?: (photoIds: string[]) => void;
+  onAddToAlbum?: (photoIds?: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
@@ -50,6 +50,8 @@ interface BulkPhotoEditFormProps {
   externalSuccess?: boolean;
   /** Hide title (when shown in parent container like BottomSheet) */
   hideTitle?: boolean;
+  /** When true, only "Remove from album" is available — editing/deleting is disabled */
+  readOnly?: boolean;
 }
 
 export default function BulkPhotoEditForm({
@@ -66,6 +68,7 @@ export default function BulkPhotoEditForm({
   externalError = null,
   externalSuccess = false,
   hideTitle = false,
+  readOnly = false,
 }: BulkPhotoEditFormProps) {
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
@@ -122,7 +125,7 @@ export default function BulkPhotoEditForm({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { isDirty, isSubmitting },
   } = useForm<BulkPhotoFormData>({
@@ -135,7 +138,7 @@ export default function BulkPhotoEditForm({
     },
   });
 
-  const watchedTags = watch('tags');
+  const watchedTags = useWatch({ control, name: 'tags' });
   const isSaving = isSubmitting || externalIsSaving;
 
   // Memoize photo IDs string for dependency - only reset form when actual selection changes
@@ -253,29 +256,31 @@ export default function BulkPhotoEditForm({
 
   return (
     <SidebarPanel
-      title={`Edit ${selectedPhotos.length} photos`}
+      title={readOnly ? `${selectedPhotos.length} photos selected` : `Edit ${selectedPhotos.length} photos`}
       hideTitle={hideTitle}
       footer={
         <div
           className="flex gap-2 w-full"
         >
-          <Button
-            type="button"
-            variant="danger"
-            onClick={handleBulkDelete}
-            disabled={isSaving || isLoading || isDeleting}
-            loading={isDeleting}
-            icon={<TrashSVG
-              className="size-5 -ml-0.5"
-            />}
-          >
-            Delete
-          </Button>
-          {onAddToAlbum && (
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleBulkDelete}
+              disabled={isSaving || isLoading || isDeleting}
+              loading={isDeleting}
+              icon={<TrashSVG
+                className="size-5 -ml-0.5"
+              />}
+            >
+              Delete
+            </Button>
+          )}
+          {!readOnly && onAddToAlbum && (
             <Button
               type="button"
               variant="secondary"
-              onClick={() => onAddToAlbum(selectedPhotos.map((p) => p.id))}
+              onClick={() => onAddToAlbum?.()}
               icon={<FolderDownMiniSVG
                 className="size-5 -ml-0.5"
               />}
@@ -295,17 +300,19 @@ export default function BulkPhotoEditForm({
               Remove
             </Button>
           )}
-          <Button
-            onClick={triggerSubmit}
-            disabled={isSaving || isLoading || !isDirty}
-            loading={isSaving}
-            icon={<CheckMiniSVG
-              className="size-5 -ml-0.5"
-            />}
-            className="ml-auto"
-          >
-            {success ? 'Saved!' : 'Save'}
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={triggerSubmit}
+              disabled={isSaving || isLoading || !isDirty}
+              loading={isSaving}
+              icon={<CheckMiniSVG
+                className="size-5 -ml-0.5"
+              />}
+              className="ml-auto"
+            >
+              {success ? 'Saved!' : 'Save'}
+            </Button>
+          )}
         </div>
       }
     >
@@ -322,103 +329,113 @@ export default function BulkPhotoEditForm({
         ))}
       </div>
 
+      {readOnly && (
+        <p
+          className="text-sm text-foreground/50"
+        >
+          Selection includes photos from other users. You can only remove them from this album.
+        </p>
+      )}
+
       {/* Bulk edit form */}
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4"
-      >
-        <div
-          className="flex flex-col gap-2"
+      {!readOnly && (
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
         >
-          <label
-            htmlFor="bulk_title"
-            className="text-sm font-medium"
+          <div
+            className="flex flex-col gap-2"
           >
-            Title
-          </label>
-          <Input
-            id="bulk_title"
-            type="text"
-            {...register('title')}
-            placeholder="Set same title for all (leave empty to skip)"
-          />
-          <p
-            className="text-xs text-foreground/50"
-          >
-            Leave empty to keep existing titles
-          </p>
-        </div>
-
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            htmlFor="bulk_description"
-            className="text-sm font-medium"
-          >
-            Description
-          </label>
-          <Textarea
-            id="bulk_description"
-            {...register('description')}
-            rows={3}
-            placeholder="Set same description for all (leave empty to skip)"
-          />
-          <p
-            className="text-xs text-foreground/50"
-          >
-            Leave empty to keep existing descriptions
-          </p>
-        </div>
-
-        <div
-          className="flex flex-col gap-2"
-        >
-          <Toggle
-            id="bulk_is_public"
-            leftLabel="Private"
-            rightLabel="Public"
-            {...register('is_public')}
-            label="Visibility"
-          />
-          {mixedVisibility && (
-            <span
+            <label
+              htmlFor="bulk_title"
+              className="text-sm font-medium"
+            >
+              Title
+            </label>
+            <Input
+              id="bulk_title"
+              type="text"
+              {...register('title')}
+              placeholder="Set same title for all (leave empty to skip)"
+            />
+            <p
               className="text-xs text-foreground/50"
             >
-              (currently mixed)
-            </span>
-          )}
-        </div>
-
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
-          >
-            Tags
-          </label>
-          <TagInput
-            id="bulk_tags"
-            tags={watchedTags || []}
-            onAddTag={handleAddTag}
-            onRemoveTag={handleRemoveTag}
-            tagCounts={tagCounts}
-            totalCount={selectedPhotos.length}
-            readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
-            helperText="Tags will be synced to match the form. Partially shared tags are shown but won't be added to other items."
-          />
-        </div>
-
-        {error && (
-          <div
-            className="rounded-md bg-red-500/10 p-3 text-sm text-red-500"
-          >
-            {error}
+              Leave empty to keep existing titles
+            </p>
           </div>
-        )}
-      </form>
+
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="bulk_description"
+              className="text-sm font-medium"
+            >
+              Description
+            </label>
+            <Textarea
+              id="bulk_description"
+              {...register('description')}
+              rows={3}
+              placeholder="Set same description for all (leave empty to skip)"
+            />
+            <p
+              className="text-xs text-foreground/50"
+            >
+              Leave empty to keep existing descriptions
+            </p>
+          </div>
+
+          <div
+            className="flex flex-col gap-2"
+          >
+            <Toggle
+              id="bulk_is_public"
+              leftLabel="Private"
+              rightLabel="Public"
+              {...register('is_public')}
+              label="Visibility"
+            />
+            {mixedVisibility && (
+              <span
+                className="text-xs text-foreground/50"
+              >
+                (currently mixed)
+              </span>
+            )}
+          </div>
+
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+            >
+              Tags
+            </label>
+            <TagInput
+              id="bulk_tags"
+              tags={watchedTags || []}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              tagCounts={tagCounts}
+              totalCount={selectedPhotos.length}
+              readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
+              helperText="Partially shared tags are visible but are not editable and won't be added to other items."
+            />
+          </div>
+
+          {error && (
+            <div
+              className="rounded-md bg-red-500/10 p-3 text-sm text-red-500"
+            >
+              {error}
+            </div>
+          )}
+        </form>
+      )}
     </SidebarPanel>
   );
 }

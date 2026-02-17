@@ -451,7 +451,7 @@ export function useAccountForm() {
     };
 
     loadData();
-  }, [user, supabase]);
+  }, [user, supabase, reset]);
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

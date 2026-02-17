@@ -15,6 +15,7 @@ import {
   type BulkPhotoFormData,
   type PhotoFormData,
 } from '@/components/manage';
+import SidebarPanel from '@/components/manage/SidebarPanel';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
@@ -30,7 +31,7 @@ import {
   useUpdateAlbumPhoto,
 } from '@/hooks/useAlbumPhotoMutations';
 import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
-import { useAlbumBySlug } from '@/hooks/useAlbums';
+import { useAlbumBySlug, useSharedAlbumByOwnerAndSlug, type SharedWithMeAlbum } from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -38,9 +39,13 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
 import { useQueryClient } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import FolderSVG from 'public/icons/folder.svg';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+
+import Avatar from '@/components/auth/Avatar';
+import SharedAlbumMemberList from '@/components/albums/SharedAlbumMemberList';
+import { useSharedAlbumMembers } from '@/hooks/useSharedAlbumMembers';
 
 import CloseMiniSVG from 'public/icons/close-mini.svg';
 import GalleryMiniSVG from 'public/icons/gallery-mini.svg';
@@ -49,7 +54,10 @@ import PlusSVG from 'public/icons/plus.svg';
 export default function AlbumDetailClient() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
+  const ownerNickname = searchParams.get('owner');
+  const isSharedWithMe = !!ownerNickname;
 
   const { user, profile } = useAuth();
   const supabase = useSupabase();
@@ -64,9 +72,26 @@ export default function AlbumDetailClient() {
   const [isMobileEditSheetOpen, setIsMobileEditSheetOpen] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
 
-  // React Query hooks
-  const { data: album, isLoading: albumLoading, error: albumError } = useAlbumBySlug(user?.id, slug);
+  // React Query hooks — use different hook for shared-with-me albums
+  const ownAlbumQuery = useAlbumBySlug(
+    !isSharedWithMe ? user?.id : undefined,
+    !isSharedWithMe ? slug : undefined,
+  );
+  const sharedAlbumQuery = useSharedAlbumByOwnerAndSlug(
+    isSharedWithMe ? user?.id : undefined,
+    isSharedWithMe ? ownerNickname : undefined,
+    isSharedWithMe ? slug : undefined,
+  );
+
+  const {
+    data: album,
+    isLoading: albumLoading,
+    error: albumError,
+  } = isSharedWithMe ? sharedAlbumQuery : ownAlbumQuery;
   const { data: photos = [], isLoading: photosLoading } = useAlbumPhotos(album?.id);
+  const { data: sharedMembers = [] } = useSharedAlbumMembers(
+    isSharedWithMe && album?.id ? album.id : undefined,
+  );
   const updateAlbumPhotoMutation = useUpdateAlbumPhoto(album?.id, profile?.nickname);
   const bulkUpdateAlbumPhotosMutation = useBulkUpdateAlbumPhotos(album?.id, profile?.nickname);
   const deleteAlbumPhotoMutation = useDeleteAlbumPhoto(album?.id, user?.id, profile?.nickname);
@@ -209,6 +234,39 @@ export default function AlbumDetailClient() {
     }
   };
 
+  const handleRemoveFromSharedAlbum = async (photoIds: string[]) => {
+    if (!album) return;
+
+    const photosToRemove = photos.filter((p) => photoIds.includes(p.id));
+    if (photosToRemove.length === 0) return;
+
+    const confirmed = await confirm(confirmRemoveFromAlbum(photosToRemove, photoIds.length));
+    if (!confirmed) return;
+
+    const albumPhotoIds = photoIds
+      .map((id) => photos.find((p) => p.id === id)?.album_photo_id)
+      .filter((id): id is string => !!id);
+
+    if (albumPhotoIds.length > 0) {
+      photoEditDirtyRef.current = false;
+      setHasUnsavedChanges(albumEditDirtyRef.current);
+
+      const { error } = await supabase.rpc('remove_shared_album_photo', {
+        p_album_id: album.id,
+        p_album_photo_ids: albumPhotoIds,
+      });
+
+      if (error) {
+        console.error('Failed to remove photos from shared album:', error);
+        return;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
+      queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', user?.id] });
+      setSelectedPhotoIds(new Set());
+    }
+  };
+
   const handleReorderPhotos = async (newPhotos: PhotoWithAlbums[]) => {
     await reorderAlbumPhotosMutation.mutateAsync(newPhotos);
   };
@@ -252,15 +310,20 @@ export default function AlbumDetailClient() {
       <AddToAlbumContent
         albumId={album.id}
         existingPhotoUrls={photos.map((p) => p.url)}
+        isSharedAlbum={isSharedWithMe}
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={async () => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
           queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', user?.id] });
           queryClient.invalidateQueries({ queryKey: ['photos', user?.id] });
           queryClient.invalidateQueries({ queryKey: ['counts', user?.id] });
           // Revalidate server-side cache for public pages
-          if (profile?.nickname && album.is_public) {
-            await revalidateAlbum(profile.nickname, album.slug);
+          if (album.is_public) {
+            const albumOwnerNickname = isSharedWithMe ? ownerNickname : profile?.nickname;
+            if (albumOwnerNickname) {
+              await revalidateAlbum(albumOwnerNickname, album.slug);
+            }
           }
           modalContext.setIsOpen(false);
         }}
@@ -317,6 +380,14 @@ export default function AlbumDetailClient() {
 
   const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
   const selectedCount = selectedPhotoIds.size;
+  const hasNonOwnedSelected = selectedPhotos.some((p) => p.user_id !== user?.id);
+
+  // Build a map of photo ID → owner profile for photos not owned by the current user
+  const notOwnedProfiles = new Map(
+    photos
+      .filter((p) => p.user_id !== user?.id)
+      .map((p) => [p.id, (p as PhotoWithAlbums).owner_profile ?? null]),
+  );
 
   // Mobile handlers
   const handleMobileEdit = () => {
@@ -336,7 +407,11 @@ export default function AlbumDetailClient() {
 
   const handleMobileRemoveFromAlbum = async () => {
     if (selectedCount === 0) return;
-    await handleRemoveFromAlbum(Array.from(selectedPhotoIds));
+    if (isSharedWithMe) {
+      await handleRemoveFromSharedAlbum(Array.from(selectedPhotoIds));
+    } else {
+      await handleRemoveFromAlbum(Array.from(selectedPhotoIds));
+    }
   };
 
   if (albumLoading && !album) {
@@ -358,6 +433,72 @@ export default function AlbumDetailClient() {
     return null;
   }
 
+  // Shared-with-me: read-only sidebar showing album info
+  const sharedAlbumSidebar = album && isSharedWithMe ? (
+    <SidebarPanel
+      title="Album details"
+    >
+      <div
+        className="space-y-4"
+      >
+        <div>
+          <h3
+            className="text-lg font-semibold"
+          >
+            {album.title}
+          </h3>
+          {album.description && (
+            <p
+              className="mt-1 text-sm text-foreground/70"
+            >
+              {album.description}
+            </p>
+          )}
+        </div>
+        <div
+          className="text-sm text-foreground/60 space-y-2"
+        >
+          {ownerNickname && (
+            <div
+              className="flex items-center gap-1.5"
+            >
+              <Avatar
+                avatarUrl={(album as SharedWithMeAlbum).owner_profile?.avatar_url}
+                fullName={(album as SharedWithMeAlbum).owner_profile?.full_name}
+                size="xxs"
+              />
+              <span
+                className="text-foreground/80 font-medium"
+              >
+                @
+                {ownerNickname}
+              </span>
+            </div>
+          )}
+          <p>
+            {photos.length}
+            {' '}
+            {photos.length === 1 ? 'photo' : 'photos'}
+          </p>
+        </div>
+        {sharedMembers.length > 0 && (
+          <SharedAlbumMemberList
+            members={sharedMembers}
+            albumOwnerId={album.user_id ?? ''}
+            currentUserId={user?.id}
+            isOwner={false}
+            onInviteClick={() => {}}
+          />
+        )}
+        <div
+          className="pt-2 border-t border-border-color text-xs text-foreground/50"
+        >
+          You are a member of this shared album. You can view the photos but cannot edit the album settings.
+        </div>
+      </div>
+    </SidebarPanel>
+  ) : null;
+
   return (
     <>
       <ManageLayout
@@ -378,28 +519,32 @@ export default function AlbumDetailClient() {
                 Add from library
               </span>
             </Button>
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              icon={<PlusSVG
-                className="size-5 -ml-0.5"
-              />}
-              variant="primary"
-            >
-              <span
-                className="hidden md:inline"
-              >
-                {isUploading ? 'Uploading...' : 'Upload'}
-              </span>
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              multiple
-              onChange={handleUpload}
-              className="hidden"
-            />
+            {!isSharedWithMe && (
+              <>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  icon={<PlusSVG
+                    className="size-5 -ml-0.5"
+                  />}
+                  variant="primary"
+                >
+                  <span
+                    className="hidden md:inline"
+                  >
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                  </span>
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleUpload}
+                  className="hidden"
+                />
+              </>
+            )}
           </>
         }
         sidebar={
@@ -409,12 +554,15 @@ export default function AlbumDetailClient() {
               onSave={handleSavePhoto}
               onBulkSave={handleBulkSavePhotos}
               onDelete={handleDeletePhoto}
-              onRemoveFromAlbum={handleRemoveFromAlbum}
-              onSetAsCover={handleSetAsCover}
-              currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
+              onRemoveFromAlbum={isSharedWithMe ? handleRemoveFromSharedAlbum : handleRemoveFromAlbum}
+              onSetAsCover={!isSharedWithMe ? handleSetAsCover : undefined}
+              currentAlbum={!isSharedWithMe && album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
               isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handlePhotoDirtyChange}
+              readOnly={hasNonOwnedSelected}
             />
+          ) : isSharedWithMe ? (
+            sharedAlbumSidebar
           ) : (
             <AlbumEditSidebar
               selectedAlbums={album ? [album] : []}
@@ -433,6 +581,7 @@ export default function AlbumDetailClient() {
               selectedCount={selectedCount}
               onEdit={handleMobileEdit}
               onClearSelection={handleClearSelection}
+              hideEdit={hasNonOwnedSelected}
               actions={
                 <Button
                   onClick={handleMobileRemoveFromAlbum}
@@ -450,8 +599,8 @@ export default function AlbumDetailClient() {
                 </Button>
               }
             />
-          ) : (
-            // Show edit album button when no photos selected on mobile
+          ) : !isSharedWithMe ? (
+            // Show edit album button when no photos selected on mobile (owned albums only)
             <div
               className="md:hidden border-t border-border-color-strong bg-background-light px-2 py-3"
             >
@@ -463,19 +612,16 @@ export default function AlbumDetailClient() {
                 Edit Album
               </Button>
             </div>
-        )}
+          ) : undefined
+        }
       >
-        <DropZone
-          onDrop={handleFileDrop}
-          disabled={isUploading}
-          className="flex-1 flex flex-col min-h-0"
-          overlayMessage="Drop to add to album"
-        >
-          {photosLoading && photos.length === 0 ? (
+        {isSharedWithMe ? (
+          // Shared-with-me: view all photos, own photos are selectable/editable
+          photosLoading && photos.length === 0 ? (
             <PageLoading
               message="Loading photos..."
             />
-          ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
+          ) : photos.length === 0 ? (
             <div
               className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
             >
@@ -485,12 +631,7 @@ export default function AlbumDetailClient() {
               <p
                 className="mb-2 text-lg opacity-70"
               >
-                No photos in this album
-              </p>
-              <p
-                className="text-sm text-foreground/50"
-              >
-                Drag and drop photos here, or use the buttons above
+                No photos in this album yet
               </p>
             </div>
           ) : (
@@ -499,67 +640,115 @@ export default function AlbumDetailClient() {
               selectedPhotoIds={selectedPhotoIds}
               onSelectPhoto={handleSelectPhoto}
               onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
-              onReorder={handleReorderPhotos}
               onClearSelection={handleClearSelection}
               onSelectMultiple={handleSelectMultiple}
-              sortable
-              alwaysShowMobileSpacer
+              sortable={false}
+              alwaysShowMobileSpacer={false}
               albumCoverUrl={album?.cover_image_url}
               currentAlbumTitle={album?.title}
-              leadingContent={
-                uploadingPhotos.length > 0 ? (
-                  <>
-                    {uploadingPhotos.map((upload) => (
-                      <UploadingPhotoCard
-                        key={upload.id}
-                        upload={upload}
-                        onDismiss={dismissUpload}
-                      />
-                    ))}
-                  </>
-                ) : undefined
-              }
+              notOwnedProfiles={notOwnedProfiles}
             />
-          )}
-        </DropZone>
+          )
+        ) : (
+          <DropZone
+            onDrop={handleFileDrop}
+            disabled={isUploading}
+            className="flex-1 flex flex-col min-h-0"
+            overlayMessage="Drop to add to album"
+          >
+            {photosLoading && photos.length === 0 ? (
+              <PageLoading
+                message="Loading photos..."
+              />
+            ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
+              <div
+                className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
+              >
+                <FolderSVG
+                  className="size-10 mb-2 inline-block"
+                />
+                <p
+                  className="mb-2 text-lg opacity-70"
+                >
+                  No photos in this album
+                </p>
+                <p
+                  className="text-sm text-foreground/50"
+                >
+                  Drag and drop photos here, or use the buttons above
+                </p>
+              </div>
+            ) : (
+              <PhotoGrid
+                photos={photos}
+                selectedPhotoIds={selectedPhotoIds}
+                onSelectPhoto={handleSelectPhoto}
+                onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+                onReorder={handleReorderPhotos}
+                onClearSelection={handleClearSelection}
+                onSelectMultiple={handleSelectMultiple}
+                sortable
+                alwaysShowMobileSpacer
+                albumCoverUrl={album?.cover_image_url}
+                currentAlbumTitle={album?.title}
+                notOwnedProfiles={notOwnedProfiles}
+                leadingContent={
+                  uploadingPhotos.length > 0 ? (
+                    <>
+                      {uploadingPhotos.map((upload) => (
+                        <UploadingPhotoCard
+                          key={upload.id}
+                          upload={upload}
+                          onDismiss={dismissUpload}
+                        />
+                      ))}
+                    </>
+                  ) : undefined
+                }
+              />
+            )}
+          </DropZone>
+        )}
       </ManageLayout>
 
-      {/* Mobile Edit Sheet */}
-      <BottomSheet
-        isOpen={isMobileEditSheetOpen}
-        onClose={handleMobileEditClose}
-        title={selectedPhotos.length > 0
-          ? (selectedPhotos.length === 1 ? 'Edit photo' : `Edit ${selectedPhotos.length} photos`)
-          : 'Edit album'
-        }
-      >
-        {selectedPhotos.length > 0 ? (
-          <PhotoEditSidebar
-            selectedPhotos={selectedPhotos}
-            onSave={handleSavePhoto}
-            onBulkSave={handleBulkSavePhotos}
-            onDelete={handleDeletePhoto}
-            onRemoveFromAlbum={handleRemoveFromAlbum}
-            onSetAsCover={handleSetAsCover}
-            currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
-            isLoading={photosLoading}
-            onDirtyChange={handlePhotoDirtyChange}
-            hideTitle
-          />
-        ) : (
-          <AlbumEditSidebar
-            selectedAlbums={album ? [album] : []}
-            nickname={profile?.nickname}
-            onSave={handleSaveAlbum}
-            onDelete={handleDeleteAlbum}
-            onBulkSave={async () => {}}
-            onBulkDelete={async () => {}}
-            isLoading={photosLoading}
-            onDirtyChange={handleAlbumDirtyChange}
-            hideTitle
-          />
-        )}
-      </BottomSheet>
+      {/* Mobile Edit Sheet — only for owned albums */}
+      {!isSharedWithMe && (
+        <BottomSheet
+          isOpen={isMobileEditSheetOpen}
+          onClose={handleMobileEditClose}
+          title={selectedPhotos.length > 0
+            ? (selectedPhotos.length === 1 ? 'Edit photo' : `Edit ${selectedPhotos.length} photos`)
+            : 'Edit album'
+          }
+        >
+          {selectedPhotos.length > 0 ? (
+            <PhotoEditSidebar
+              selectedPhotos={selectedPhotos}
+              onSave={handleSavePhoto}
+              onBulkSave={handleBulkSavePhotos}
+              onDelete={handleDeletePhoto}
+              onRemoveFromAlbum={handleRemoveFromAlbum}
+              onSetAsCover={handleSetAsCover}
+              currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
+              isLoading={photosLoading}
+              onDirtyChange={handlePhotoDirtyChange}
+              hideTitle
+            />
+          ) : (
+            <AlbumEditSidebar
+              selectedAlbums={album ? [album] : []}
+              nickname={profile?.nickname}
+              onSave={handleSaveAlbum}
+              onDelete={handleDeleteAlbum}
+              onBulkSave={async () => {}}
+              onBulkDelete={async () => {}}
+              isLoading={photosLoading}
+              onDirtyChange={handleAlbumDirtyChange}
+              hideTitle
+            />
+          )}
+        </BottomSheet>
+      )}
     </>
   );
 }

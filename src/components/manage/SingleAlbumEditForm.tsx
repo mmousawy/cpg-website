@@ -10,9 +10,10 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbum } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
+import type { SharedAlbumFormData } from './SharedAlbumEditForm';
 import SidebarPanel from './SidebarPanel';
 
 import CheckMiniSVG from 'public/icons/check-mini.svg';
@@ -37,9 +38,9 @@ interface SingleAlbumEditFormProps {
   album: AlbumWithPhotos | null;
   isNewAlbum?: boolean;
   nickname?: string | null;
-  onSave: (albumId: string, data: AlbumFormData) => Promise<void>;
+  onSave: (albumId: string, data: AlbumFormData | SharedAlbumFormData) => Promise<void>;
   onDelete: (albumId: string) => Promise<void>;
-  onCreate?: (data: AlbumFormData) => Promise<void>;
+  onCreate?: (data: AlbumFormData | SharedAlbumFormData) => Promise<void>;
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   isDirtyRef?: React.MutableRefObject<boolean>;
@@ -49,6 +50,14 @@ interface SingleAlbumEditFormProps {
   /** Hide title (when shown in parent container like BottomSheet) */
   hideTitle?: boolean;
 }
+
+const formDefaultValues: AlbumFormData = {
+  title: '',
+  slug: '',
+  description: '',
+  isPublic: true,
+  tags: [],
+};
 
 export default function SingleAlbumEditForm({
   album,
@@ -71,19 +80,14 @@ export default function SingleAlbumEditForm({
   const [localSuccess, setLocalSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasEditedSlug, setHasEditedSlug] = useState(false);
-
-  const formDefaultValues: AlbumFormData = {
-    title: '',
-    slug: '',
-    description: '',
-    isPublic: true,
-    tags: [],
-  };
+  const [isSharingEnabled, setIsSharingEnabled] = useState(false);
+  const [joinPolicy, setJoinPolicy] = useState<'open' | 'closed'>('closed');
+  const [maxPhotosPerUser, setMaxPhotosPerUser] = useState<string>('');
 
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
     reset,
     formState: { errors, isDirty, isSubmitting },
@@ -92,9 +96,9 @@ export default function SingleAlbumEditForm({
     defaultValues: formDefaultValues,
   });
 
-  const watchedSlug = watch('slug');
-  const watchedTags = watch('tags');
-  const watchedIsPublic = watch('isPublic');
+  const watchedSlug = useWatch({ control, name: 'slug' });
+  const watchedTags = useWatch({ control, name: 'tags' });
+  const watchedIsPublic = useWatch({ control, name: 'isPublic' });
   const isSaving = isSubmitting || externalIsSaving;
 
   // Update dirty ref and call callback when dirty state changes
@@ -105,11 +109,20 @@ export default function SingleAlbumEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
-  // Load album data when album changes (tags are pre-fetched)
+  // Reset local state when album changes (React-recommended "adjusting state during rendering" pattern)
+  const [prevAlbumId, setPrevAlbumId] = useState(album?.id);
+  const [prevIsNewAlbum, setPrevIsNewAlbum] = useState(isNewAlbum);
+  if (prevAlbumId !== album?.id || prevIsNewAlbum !== isNewAlbum) {
+    setPrevAlbumId(album?.id);
+    setPrevIsNewAlbum(isNewAlbum);
+    setHasEditedSlug(false);
+    setIsSharingEnabled(album?.is_shared ?? false);
+  }
+
+  // Load album data into form when album changes
   useEffect(() => {
     if (!album || isNewAlbum) {
       reset(formDefaultValues);
-      setHasEditedSlug(false);
       return;
     }
 
@@ -127,25 +140,7 @@ export default function SingleAlbumEditForm({
       isPublic: album.is_public ?? true,
       tags: albumTags,
     });
-    setHasEditedSlug(false);
   }, [album, isNewAlbum, reset]);
-
-  // Handle Delete key for album deletion
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-      if (isNewAlbum || !album) return;
-
-      if (e.key === 'Delete' && !isSaving && !isDeleting) {
-        e.preventDefault();
-        handleDelete();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  });
 
   const generateSlug = (text: string) => {
     return text
@@ -187,9 +182,29 @@ export default function SingleAlbumEditForm({
 
     try {
       if (isNewAlbum && onCreate) {
-        await onCreate(data);
+        if (isSharingEnabled) {
+          const maxPhotos = maxPhotosPerUser === '' ? null : (parseInt(maxPhotosPerUser, 10) || null);
+          const sharedData: SharedAlbumFormData = {
+            ...data,
+            joinPolicy,
+            maxPhotosPerUser: maxPhotos,
+          };
+          await onCreate(sharedData);
+        } else {
+          await onCreate(data);
+        }
       } else if (album) {
-        await onSave(album.id, data);
+        if (isSharingEnabled) {
+          const maxPhotos = maxPhotosPerUser === '' ? null : (parseInt(maxPhotosPerUser, 10) || null);
+          const sharedData: SharedAlbumFormData = {
+            ...data,
+            joinPolicy,
+            maxPhotosPerUser: maxPhotos,
+          };
+          await onSave(album.id, sharedData);
+        } else {
+          await onSave(album.id, data);
+        }
         reset(data);
         setLocalSuccess(true);
         setTimeout(() => setLocalSuccess(false), 3000);
@@ -217,6 +232,23 @@ export default function SingleAlbumEditForm({
       setIsDeleting(false);
     }
   };
+
+  // Handle Delete key for album deletion
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      if (isNewAlbum || !album) return;
+
+      if (e.key === 'Delete' && !isSaving && !isDeleting) {
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
 
   const triggerSubmit = () => {
     formRef.current?.requestSubmit();
@@ -268,7 +300,7 @@ export default function SingleAlbumEditForm({
           )}
           <Button
             onClick={triggerSubmit}
-            disabled={isSaving || (!isNewAlbum && !isDirty)}
+            disabled={isSaving || (!isNewAlbum && !isDirty && !(isSharingEnabled !== (album?.is_shared ?? false)))}
             loading={isSaving}
             icon={<CheckMiniSVG
               className="size-5 -ml-0.5"
@@ -447,6 +479,78 @@ export default function SingleAlbumEditForm({
           >
             {errors.tags.message}
           </p>}
+        </div>
+
+        <hr
+          className="border-border-color"
+        />
+
+        <div
+          className="space-y-4"
+        >
+          <h3
+            className="text-sm font-medium"
+          >
+            Album sharing
+          </h3>
+          <Toggle
+            id="isSharingEnabled"
+            leftLabel="Off"
+            rightLabel="On"
+            label="Enable album sharing"
+            checked={isSharingEnabled}
+            onChange={(e) => {
+              setIsSharingEnabled(e.target.checked);
+            }}
+          />
+          {isSharingEnabled && (
+            <>
+              <Toggle
+                id="joinPolicy"
+                leftLabel="Anyone"
+                rightLabel="By request or invite"
+                label="Who can add photos"
+                checked={joinPolicy === 'closed'}
+                onChange={(e) => {
+                  setJoinPolicy(e.target.checked ? 'closed' : 'open');
+                }}
+              />
+              {joinPolicy === 'open' && (
+                <p
+                  className="text-xs text-amber-600 dark:text-amber-500"
+                >
+                  <WarningMicroSVG
+                    className="size-4 fill-amber-600 dark:fill-amber-500 inline-block"
+                  />
+                  {' '}
+                  Anyone with the link can add photos without requesting access.
+                </p>
+              )}
+              <div
+                className="flex flex-col gap-2"
+              >
+                <label
+                  htmlFor="maxPhotosPerUser"
+                  className="text-sm font-medium"
+                >
+                  Photos per member limit
+                </label>
+                <Input
+                  id="maxPhotosPerUser"
+                  type="number"
+                  min={1}
+                  placeholder="Unlimited"
+                  value={maxPhotosPerUser}
+                  onChange={(e) => setMaxPhotosPerUser(e.target.value)}
+                />
+                <p
+                  className="text-xs text-foreground/50"
+                >
+                  Leave empty for unlimited photos per member
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {error && (

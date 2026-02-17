@@ -140,6 +140,15 @@ export default function BlurImage({
     onLoadProp?.();
   }, [cacheKey, onLoadProp, shortSrc]);
 
+  // Transition to 'visible' once the fade-in animation completes.
+  // This lets us safely remove the blurhash background after the fade finishes,
+  // avoiding a Chrome compositing bug where the background bleeds through image edges.
+  const handleAnimationEnd = useCallback(() => {
+    if (loadState === 'fade-in') {
+      setLoadState('visible');
+    }
+  }, [loadState]);
+
   // Map loadState to CSS class.
   // Uses a CSS @keyframes animation for fade-in (works in a single React commit)
   // instead of CSS transitions which are unreliable with React's batched rendering.
@@ -240,19 +249,27 @@ export default function BlurImage({
   if (contain) {
     return (
       <span
-        className={`block relative ${className}`}
-        style={{
-          backgroundImage: blurhashDataUrl ? `url(${blurhashDataUrl})` : undefined,
-          backgroundSize: '100% 100%', // Stretch to fill — tiny ratio mismatch from blurhash rounding is imperceptible
-          ...passedStyle,
-        }}
+        className={`block relative overflow-hidden ${className}`}
+        style={passedStyle}
       >
+        {/* Blurhash placeholder as a separate layer behind the image */}
+        {blurhashDataUrl && (
+          <span
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: `url(${blurhashDataUrl})`,
+              backgroundSize: '100% 100%',
+            }}
+            aria-hidden="true"
+          />
+        )}
         <Image
           ref={imgCallbackRef}
           src={src}
           alt={alt || ''}
-          className={opacityClass}
+          className={`${opacityClass} relative z-10`}
           onLoad={handleImageLoad}
+          onAnimationEnd={handleAnimationEnd}
           {...props}
         />
       </span>

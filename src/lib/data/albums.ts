@@ -27,7 +27,7 @@ export async function getAllAlbumPaths() {
 
   const { data } = await supabase
     .from('albums')
-    .select('slug, profile:profiles!albums_user_id_fkey!inner(nickname)')
+    .select('slug, profile:profiles!albums_user_id_fkey(nickname)')
     .eq('is_public', true)
     .is('deleted_at', null);
 
@@ -167,12 +167,39 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
   return albumsWithPhotos as unknown as AlbumWithPhotos[];
 }
 
+/** Album returned by getAlbumBySlug (uses album_photos_active for photos) */
+export type AlbumBySlugResult = Pick<
+  Tables<'albums'>,
+  | 'id'
+  | 'title'
+  | 'description'
+  | 'slug'
+  | 'is_public'
+  | 'created_at'
+  | 'is_suspended'
+  | 'suspension_reason'
+  | 'likes_count'
+  | 'view_count'
+  | 'user_id'
+  | 'is_shared'
+  | 'join_policy'
+  | 'event_id'
+  | 'max_photos_per_user'
+> & {
+  profile: Pick<Tables<'profiles'>, 'full_name' | 'avatar_url' | 'nickname'> | null;
+  photos: Array<Pick<Tables<'album_photos_active'>, 'id' | 'photo_url' | 'title' | 'width' | 'height' | 'sort_order'>> | null;
+  tags: Array<Pick<Tables<'album_tags'>, 'tag'>> | null;
+};
+
 /**
  * Get a single public album by nickname and slug
  * Tagged with 'albums' and 'profile-[nickname]' for granular invalidation
  * Note: likes_count is now a column on the albums table (updated via triggers)
  */
-export async function getAlbumBySlug(nickname: string, albumSlug: string) {
+export async function getAlbumBySlug(
+  nickname: string,
+  albumSlug: string,
+): Promise<AlbumBySlugResult | null> {
   'use cache';
   cacheLife('max');
   cacheTag('albums');
@@ -213,6 +240,11 @@ export async function getAlbumBySlug(nickname: string, albumSlug: string) {
       suspension_reason,
       likes_count,
       view_count,
+      user_id,
+      is_shared,
+      join_policy,
+      event_id,
+      max_photos_per_user,
       profile:profiles!albums_user_id_fkey(full_name, avatar_url, nickname),
       photos:album_photos_active(
         id,
@@ -241,6 +273,32 @@ export async function getAlbumBySlug(nickname: string, albumSlug: string) {
   }
 
   return album;
+}
+
+/**
+ * Get profiles by user IDs - for photo owner attribution in shared albums
+ */
+export async function getProfilesByUserIds(
+  userIds: string[],
+): Promise<Map<string, Pick<Tables<'profiles'>, 'nickname' | 'full_name' | 'avatar_url'>>> {
+  'use cache';
+  cacheLife('max');
+  cacheTag('albums');
+
+  const uniqueIds = [...new Set(userIds.filter((id): id is string => id != null))];
+  if (uniqueIds.length === 0) return new Map();
+
+  const supabase = createPublicClient();
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, nickname, full_name, avatar_url')
+    .in('id', uniqueIds);
+
+  const map = new Map<string, Pick<Tables<'profiles'>, 'nickname' | 'full_name' | 'avatar_url'>>();
+  for (const p of profiles ?? []) {
+    map.set(p.id, { nickname: p.nickname, full_name: p.full_name, avatar_url: p.avatar_url });
+  }
+  return map;
 }
 
 /**
@@ -307,6 +365,7 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
     .eq('user_id', userId)
     .eq('is_public', true)
     .is('deleted_at', null)
+    .is('event_id', null)
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -331,6 +390,57 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
     }));
 
   return albumsWithPhotos as unknown as AlbumWithPhotos[];
+}
+
+/**
+ * Get event album for an event (auto-created by trigger)
+ * Tagged with 'albums' and 'events' for cache invalidation
+ */
+export async function getEventAlbum(eventId: number) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag('events');
+  cacheTag(`event-album-${eventId}`);
+
+  const supabase = createPublicClient();
+
+  const { data: album, error } = await supabase
+    .from('albums')
+    .select(`
+      id,
+      title,
+      slug,
+      user_id,
+      is_shared,
+      event_id,
+      max_photos_per_user,
+      profile:profiles!albums_user_id_fkey(nickname),
+      photos:album_photos(
+        id,
+        photo_url,
+        title,
+        width,
+        height,
+        sort_order,
+        added_by,
+        contributor:profiles!album_photos_added_by_fkey(nickname, full_name, avatar_url),
+        photo:photos!album_photos_photo_id_fkey(id, short_id, url, width, height, title, blurhash, user_id, deleted_at)
+      )
+    `)
+    .eq('event_id', eventId)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error || !album) return null;
+
+  // Filter out photos whose underlying photo record is deleted
+  const activePhotos = (album.photos || []).filter((p) => !p.photo?.deleted_at);
+
+  return {
+    ...album,
+    photos: activePhotos,
+  };
 }
 
 /**

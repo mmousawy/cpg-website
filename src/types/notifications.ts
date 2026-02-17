@@ -20,7 +20,12 @@ export type NotificationType =
   | 'submission_rejected'
   | 'admin_message'
   | 'report_submitted'
-  | 'report_resolved';
+  | 'report_resolved'
+  | 'shared_album_invite_received'
+  | 'shared_album_request_received'
+  | 'shared_album_request_accepted'
+  | 'shared_album_request_declined'
+  | 'shared_album_invite_accepted';
 
 export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system' | 'report';
 

@@ -3,7 +3,17 @@ import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { supabase } from '@/utils/supabase/client';
+import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+function findAlbumInCache(queryClient: QueryClient, userId: string, albumId: string): AlbumWithPhotos | undefined {
+  for (const filter of ['personal', 'shared', 'event'] as const) {
+    const cached = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId, filter]);
+    const found = cached?.find((a) => a.id === albumId);
+    if (found) return found;
+  }
+  return undefined;
+}
 
 export function useRemoveFromAlbum(
   albumId: string | undefined,
@@ -52,9 +62,7 @@ export function useRemoveFromAlbum(
 
       // Revalidate album page
       if (nickname && userId) {
-        const album = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.find(
-          (a) => a.id === albumId,
-        );
+        const album = findAlbumInCache(queryClient, userId, albumId);
         if (album?.slug) {
           await revalidateAlbum(nickname, album.slug);
         }
@@ -101,11 +109,15 @@ export function useReorderAlbumPhotos(
         await supabase.rpc('batch_update_album_photos', { photo_updates: updates });
 
         // Revalidate album page
-        if (nickname) {
-          const albums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums']);
-          const album = albums?.find((a) => a.id === albumId);
-          if (album?.slug) {
-            await revalidateAlbum(nickname, album.slug);
+        if (nickname && albumId) {
+          let albumSlug: string | undefined;
+          const queries = queryClient.getQueriesData<AlbumWithPhotos[]>({ queryKey: ['albums'] });
+          for (const [, cached] of queries) {
+            const found = cached?.find((a) => a.id === albumId);
+            if (found?.slug) { albumSlug = found.slug; break; }
+          }
+          if (albumSlug) {
+            await revalidateAlbum(nickname, albumSlug);
           }
         }
       }
@@ -198,20 +210,26 @@ export function useUpdateAlbumPhoto(
       await Promise.all(allAffectedTags.map((tag) => revalidateTagPhotos(tag)));
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
-      const albums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums']);
-      const userId =
-        previousPhotos?.find((p) => p.id === photoId)?.user_id ||
-        albums?.find((a) => a.id === albumId)?.user_id;
+      let userId = previousPhotos?.find((p) => p.id === photoId)?.user_id;
+      let albumSlug: string | undefined;
+      if (albumId) {
+        const queries = queryClient.getQueriesData<AlbumWithPhotos[]>({ queryKey: ['albums'] });
+        for (const [, cached] of queries) {
+          const found = cached?.find((a) => a.id === albumId);
+          if (found) {
+            if (!userId && found.user_id) userId = found.user_id;
+            if (found.slug) albumSlug = found.slug;
+            break;
+          }
+        }
+      }
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['photos', userId] });
       }
 
       // Revalidate album page
-      if (nickname) {
-        const album = albums?.find((a) => a.id === albumId);
-        if (album?.slug) {
-          await revalidateAlbum(nickname, album.slug);
-        }
+      if (nickname && albumSlug) {
+        await revalidateAlbum(nickname, albumSlug);
       }
 
       return { photoId, data, previousPhotos };
@@ -265,10 +283,8 @@ export function useDeleteAlbumPhoto(
       }
 
       // Revalidate album page
-      if (nickname && userId) {
-        const album = queryClient.getQueryData<AlbumWithPhotos[]>(['albums', userId])?.find(
-          (a) => a.id === albumId,
-        );
+      if (nickname && userId && albumId) {
+        const album = findAlbumInCache(queryClient, userId, albumId);
         if (album?.slug) {
           await revalidateAlbum(nickname, album.slug);
         }
@@ -454,20 +470,26 @@ export function useBulkUpdateAlbumPhotos(
       }
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
-      const albums = queryClient.getQueryData<AlbumWithPhotos[]>(['albums']);
-      const userId =
-        previousPhotos?.[0]?.user_id ||
-        albums?.find((a) => a.id === albumId)?.user_id;
+      let userId = previousPhotos?.[0]?.user_id;
+      let albumSlug: string | undefined;
+      if (albumId) {
+        const queries = queryClient.getQueriesData<AlbumWithPhotos[]>({ queryKey: ['albums'] });
+        for (const [, cached] of queries) {
+          const found = cached?.find((a) => a.id === albumId);
+          if (found) {
+            if (!userId && found.user_id) userId = found.user_id;
+            if (found.slug) albumSlug = found.slug;
+            break;
+          }
+        }
+      }
       if (userId) {
         queryClient.invalidateQueries({ queryKey: ['photos', userId] });
       }
 
       // Revalidate album page
-      if (nickname) {
-        const album = albums?.find((a) => a.id === albumId);
-        if (album?.slug) {
-          await revalidateAlbum(nickname, album.slug);
-        }
+      if (nickname && albumSlug) {
+        await revalidateAlbum(nickname, albumSlug);
       }
 
       return { photoIds, data, previousPhotos };
@@ -524,13 +546,15 @@ export function useSetAlbumCover(
         throw new Error(error.message || 'Failed to set album cover');
       }
 
-      // Update albums cache
-      queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId], (old) => {
-        if (!old) return old;
-        return old.map((a) =>
-          a.id === albumId ? { ...a, cover_image_url: photoUrl, cover_is_manual: true } : a,
-        );
-      });
+      // Update all album sub-caches
+      for (const filter of ['personal', 'shared', 'event'] as const) {
+        queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId, filter], (old) => {
+          if (!old) return old;
+          return old.map((a) =>
+            a.id === albumId ? { ...a, cover_image_url: photoUrl, cover_is_manual: true } : a,
+          );
+        });
+      }
 
       // Update album-by-slug cache (used by AlbumDetailClient)
       if (albumSlug) {

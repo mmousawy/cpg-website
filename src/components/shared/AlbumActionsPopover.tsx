@@ -7,7 +7,7 @@ import AlbumActionsMenu from '@/components/shared/AlbumActionsMenu';
 type AlbumActionsPopoverProps = {
   albumId: string;
   albumTitle: string | null;
-  albumUserId: string;
+  albumUserId: string | null;
 };
 
 export default function AlbumActionsPopover({ albumId, albumTitle, albumUserId }: AlbumActionsPopoverProps) {

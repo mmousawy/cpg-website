@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 
@@ -11,13 +12,6 @@ export default function ToastProvider() {
 
   // Check if current path has full-width header
   const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
-
-  // Calculate right offset to align with max-w-screen-md content
-  // On full-width pages: use small offset (8px)
-  // On constrained pages: use calc to align with centered max-w-screen-md container
-  const containerStyle = isFullWidth
-    ? { right: '0.5rem' }
-    : { right: 'max(0.5rem, calc((100vw - 768px) / 2 + 0.5rem))' };
 
   return (
     <Toaster
@@ -33,8 +27,7 @@ export default function ToastProvider() {
         },
         className: 'notification-toast',
       }}
-      style={containerStyle}
-      className="toast-container"
+      className={clsx('toast-container', isFullWidth && 'toast-container--full-width')}
     />
   );
 }

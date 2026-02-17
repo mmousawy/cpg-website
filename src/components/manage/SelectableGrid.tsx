@@ -53,6 +53,8 @@ interface SelectableGridProps<T> {
   trailingContent?: React.ReactNode;
   /** Set of item IDs that are disabled (non-selectable, no checkbox) */
   disabledIds?: Set<string>;
+  /** Reduce top padding (e.g. when inside a collapsible section header) */
+  reducedTopPadding?: boolean;
 }
 
 
@@ -73,6 +75,7 @@ export default function SelectableGrid<T>({
   leadingContent,
   trailingContent,
   disabledIds,
+  reducedTopPadding = false,
 }: SelectableGridProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Track the anchor item for shift-click range selection
@@ -367,6 +370,7 @@ export default function SelectableGrid<T>({
   };
 
   if (items.length === 0 && !leadingContent && !trailingContent) {
+    if (!emptyMessage) return null;
     return (
       <div
         className="rounded-lg border-2 border-dashed border-border-color p-12 text-center"
@@ -445,7 +449,8 @@ export default function SelectableGrid<T>({
       <div
         className={clsx(
           'relative grid gap-3 grid-cols-[repeat(auto-fill,minmax(144px,1fr))]',
-          'p-3 md:p-6 content-start select-none',
+          reducedTopPadding ? 'p-3 md:p-6' : 'p-3 md:p-6',
+          'content-start select-none',
           className,
         )}
       >
@@ -453,15 +458,17 @@ export default function SelectableGrid<T>({
         {leadingContent}
 
         {items.length === 0 && !leadingContent && !trailingContent ? (
-          <div
-            className="col-span-full rounded-lg border-2 border-dashed border-border-color p-12 text-center"
-          >
-            <p
-              className="opacity-70"
+          emptyMessage ? (
+            <div
+              className="col-span-full rounded-lg border-2 border-dashed border-border-color p-12 text-center"
             >
-              {emptyMessage}
-            </p>
-          </div>
+              <p
+                className="opacity-70"
+              >
+                {emptyMessage}
+              </p>
+            </div>
+          ) : null
         ) : (
           items.map((item) => {
             const id = getId(item);

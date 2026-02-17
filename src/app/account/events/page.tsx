@@ -81,7 +81,7 @@ export default function MyEventsPage() {
     };
 
     loadRSVPs();
-  }, [user]);
+  }, [user, supabase]);
 
   // Sort: upcoming (soonest first), past (most recent first)
   const upcomingRSVPs = rsvps

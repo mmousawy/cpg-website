@@ -107,12 +107,16 @@ export default function ReportModal({
 
       if (albumError || !albumData) return null;
 
-      // Fetch profile nickname
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('id', albumData.user_id)
-        .single();
+      // Fetch profile nickname (skip for event albums with null user_id)
+      let profileNickname: string | null = null;
+      if (albumData.user_id) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', albumData.user_id)
+          .single();
+        profileNickname = profileData?.nickname || null;
+      }
 
       // Filter out deleted photos
       const activePhotos = (albumData.photos || []).filter((ap: any) => !ap.photo?.deleted_at);
@@ -122,7 +126,7 @@ export default function ReportModal({
           ...albumData,
           photos: activePhotos,
         },
-        profileNickname: profileData?.nickname || null,
+        profileNickname,
       };
     },
     enabled: entityType === 'album',

@@ -23,6 +23,12 @@
 
 - **[view-tracking-caching.md](./view-tracking-caching.md)** - View count tracking and caching strategy
 
+### Shared Albums
+
+- **[shared-albums.md](./shared-albums.md)** - Community photo albums, membership model, user flows
+- **[shared-albums-revalidation.md](./shared-albums-revalidation.md)** - Cache tags and invalidation for shared albums
+- **[event-albums.md](./event-albums.md)** - Event album auto-creation, event page integration, repair strategy
+
 ### Image Optimization
 
 The project uses a custom image loader (`src/utils/supabaseImageLoader.ts`) that handles different image sources:

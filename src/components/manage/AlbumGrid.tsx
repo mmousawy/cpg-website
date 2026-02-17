@@ -14,6 +14,8 @@ interface AlbumGridProps {
   onClearSelection?: () => void;
   onSelectMultiple?: (albumIds: string[]) => void;
   className?: string;
+  /** Reduce top padding (e.g. when inside a collapsible section) */
+  reducedTopPadding?: boolean;
 }
 
 export default function AlbumGrid({
@@ -25,6 +27,7 @@ export default function AlbumGrid({
   onClearSelection,
   onSelectMultiple,
   className,
+  reducedTopPadding = false,
 }: AlbumGridProps) {
   return (
     <LazySelectableGrid
@@ -32,13 +35,11 @@ export default function AlbumGrid({
       selectedIds={selectedAlbumIds}
       getId={(album) => album.id}
       onSelect={(id, isMulti) => {
-        // Single click: always select (don't navigate)
         if (onSelectAlbum) {
           onSelectAlbum(id, isMulti);
         }
       }}
       onItemDoubleClick={(album) => {
-        // Double click: navigate to album
         if (onAlbumDoubleClick) {
           onAlbumDoubleClick(album);
         } else if (onAlbumClick) {
@@ -47,8 +48,10 @@ export default function AlbumGrid({
       }}
       onClearSelection={onClearSelection}
       onSelectMultiple={onSelectMultiple}
+      emptyMessage=""
+      reducedTopPadding={reducedTopPadding}
       className={clsx(
-        'grid gap-3 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] select-none p-3 sm:p-6 content-start',
+        'grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]',
         className,
       )}
       renderItem={(album, isSelected, _isDragging, isHovered) => (

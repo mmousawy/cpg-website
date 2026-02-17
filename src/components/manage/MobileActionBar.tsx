@@ -18,6 +18,8 @@ interface MobileActionBarProps {
   actions?: ReactNode;
   /** Whether the bar should be visible */
   visible?: boolean;
+  /** Hide the Edit button (e.g. when selection includes non-owned photos) */
+  hideEdit?: boolean;
 }
 
 export default function MobileActionBar({
@@ -26,6 +28,7 @@ export default function MobileActionBar({
   onClearSelection,
   actions,
   visible = true,
+  hideEdit = false,
 }: MobileActionBarProps) {
   if (!visible || selectedCount === 0) return null;
 
@@ -77,20 +80,22 @@ export default function MobileActionBar({
             className="flex items-center gap-2"
           >
             {actions}
-            <Button
-              onClick={onEdit}
-              variant="primary"
-              size="sm"
-              icon={<EditMiniSVG
-                className="size-5 -ml-0.5"
-              />}
-            >
-              <span
-                className="hidden md:inline-block"
+            {!hideEdit && (
+              <Button
+                onClick={onEdit}
+                variant="primary"
+                size="sm"
+                icon={<EditMiniSVG
+                  className="size-5 -ml-0.5"
+                />}
               >
-                Edit
-              </span>
-            </Button>
+                <span
+                  className="hidden md:inline-block"
+                >
+                  Edit
+                </span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

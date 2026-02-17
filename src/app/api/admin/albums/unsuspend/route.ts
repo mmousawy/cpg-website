@@ -48,19 +48,26 @@ export async function POST(request: NextRequest) {
     // Get album info for revalidation
     const { data: album } = await supabase
       .from('albums')
-      .select('slug, user_id')
+      .select('slug, user_id, event_id')
       .eq('id', albumId)
       .single();
 
     if (album) {
-      const { data: owner } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('id', album.user_id)
-        .single();
+      if (album.user_id) {
+        const { data: owner } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', album.user_id)
+          .single();
 
-      if (owner?.nickname) {
-        await revalidateAlbum(owner.nickname, album.slug);
+        if (owner?.nickname) {
+          await revalidateAlbum(owner.nickname, album.slug);
+        }
+      } else if (album.event_id) {
+        const { revalidateTag } = await import('next/cache');
+        revalidateTag('albums', 'max');
+        revalidateTag('events', 'max');
+        revalidateTag(`event-album-${album.event_id}`, 'max');
       }
     }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Photo } from '@/types/photos';
+import type { Photo, PhotoOwnerProfile } from '@/types/photos';
 import LazySelectableGrid from './LazySelectableGrid';
 import PhotoCard from './PhotoCard';
 
@@ -34,6 +34,8 @@ interface PhotoGridProps {
   pendingIds?: Set<string>;
   /** Set of photo IDs that were accepted (for challenge submissions) */
   acceptedIds?: Set<string>;
+  /** Map of photo IDs not owned by the current user to their owner profile (shows avatar badge) */
+  notOwnedProfiles?: Map<string, PhotoOwnerProfile | null>;
 }
 
 export default function PhotoGrid({
@@ -56,13 +58,21 @@ export default function PhotoGrid({
   rejectedIds,
   pendingIds,
   acceptedIds,
+  notOwnedProfiles,
 }: PhotoGridProps) {
-  // Combine all non-selectable IDs for the grid (controls checkbox visibility)
-  const allNonSelectableIds = new Set<string>();
-  disabledIds?.forEach((id) => allNonSelectableIds.add(id));
-  rejectedIds?.forEach((id) => allNonSelectableIds.add(id));
-  pendingIds?.forEach((id) => allNonSelectableIds.add(id));
-  acceptedIds?.forEach((id) => allNonSelectableIds.add(id));
+  // IDs that are fully non-selectable (no click, no checkbox)
+  const fullyDisabledIds = new Set<string>();
+  disabledIds?.forEach((id) => fullyDisabledIds.add(id));
+  rejectedIds?.forEach((id) => fullyDisabledIds.add(id));
+  pendingIds?.forEach((id) => fullyDisabledIds.add(id));
+  acceptedIds?.forEach((id) => fullyDisabledIds.add(id));
+
+  // IDs where checkbox is hidden but selection via click/drag is still allowed
+  const hideCheckboxIds = new Set<string>();
+  notOwnedProfiles?.forEach((_, id) => hideCheckboxIds.add(id));
+
+  // Combined set for checkbox hiding (passed to grid)
+  const allNoCheckboxIds = new Set<string>([...fullyDisabledIds, ...hideCheckboxIds]);
 
   return (
     <LazySelectableGrid
@@ -70,8 +80,8 @@ export default function PhotoGrid({
       selectedIds={selectedPhotoIds}
       getId={(photo) => photo.id}
       onSelect={(id, isMulti) => {
-        // Skip if disabled, rejected, pending, or accepted
-        if (allNonSelectableIds.has(id)) return;
+        // Skip if fully disabled (rejected, pending, accepted, etc.)
+        if (fullyDisabledIds.has(id)) return;
 
         if (isMulti) {
           onSelectPhoto(id, true);
@@ -93,7 +103,7 @@ export default function PhotoGrid({
       alwaysShowMobileSpacer={alwaysShowMobileSpacer}
       leadingContent={leadingContent}
       trailingContent={trailingContent}
-      disabledIds={allNonSelectableIds}
+      disabledIds={allNoCheckboxIds}
       renderItem={(photo, isSelected, isDragging, isHovered) => {
         const isDisabled = disabledIds?.has(photo.id) ?? false;
         const isRejected = rejectedIds?.has(photo.id) ?? false;
@@ -114,6 +124,7 @@ export default function PhotoGrid({
             rejected={isRejected}
             pending={isPending}
             accepted={isAccepted}
+            notOwnedProfile={notOwnedProfiles?.has(photo.id) ? (notOwnedProfiles.get(photo.id) ?? null) : undefined}
           />
         );
       }}

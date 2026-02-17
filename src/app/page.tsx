@@ -324,12 +324,14 @@ export default async function Home() {
         variant="banner"
       />
 
-      <PageContainer>
+      <PageContainer
+        className='pt-0!'
+      >
         <div
           className='w-full max-w-screen-md mx-auto'
         >
           <div
-            className='pb-4 sm:pt-1 sm:pb-14'
+            className='pb-6 sm:pb-14'
           >
             <h2
               className="text-2xl text-center font-bold mb-6 px-2 sm:px-4"

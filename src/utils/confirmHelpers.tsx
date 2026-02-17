@@ -153,3 +153,16 @@ export function confirmDeleteComment(): ConfirmOptions {
     variant: 'danger',
   };
 }
+
+export function confirmDisableAlbumSharing(album: AlbumWithPhotos): ConfirmOptions {
+  return {
+    title: 'Disable album sharing',
+    message: 'Existing members will lose access to this album. You can re-enable sharing later from the album settings.',
+    content: <AlbumListItem
+      album={album}
+      variant="detailed"
+    />,
+    confirmLabel: 'Disable sharing',
+    variant: 'danger',
+  };
+}

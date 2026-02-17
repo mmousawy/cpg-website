@@ -24,6 +24,12 @@ export type PhotoChallengeInfo = {
 /** Simplified tag object returned from queries (only need the tag name) */
 export type SimpleTag = { tag: string };
 
+export type PhotoOwnerProfile = {
+  nickname: string | null;
+  avatar_url: string | null;
+  full_name: string | null;
+};
+
 export type PhotoWithAlbums = Photo & {
   albums?: PhotoAlbumInfo[];
   challenges?: PhotoChallengeInfo[];
@@ -32,6 +38,8 @@ export type PhotoWithAlbums = Photo & {
   album_photo_id?: string;
   /** The album_photos.sort_order when in album context */
   album_sort_order?: number;
+  /** Profile of the photo owner (populated in shared album contexts) */
+  owner_profile?: PhotoOwnerProfile | null;
 };
 
 // Extended photo with EXIF (matches AlbumPhotoExtended pattern)

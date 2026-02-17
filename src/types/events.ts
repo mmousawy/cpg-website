@@ -1,7 +1,13 @@
 import { Database, Tables } from '@/database.types';
 
 // Exclude search_vector as it's only used for database FTS, not in app code
-export type CPGEvent = Omit<Database['public']['Tables']['events']['Row'], 'search_vector'>;
+export type CPGEvent = Omit<
+  Database['public']['Tables']['events']['Row'],
+  'search_vector'
+> & {
+  /** Populated when event is fetched with its auto-created album */
+  album_id?: string | null;
+};
 
 export const eventDateFilter = ['upcoming', 'past'] as const;
 

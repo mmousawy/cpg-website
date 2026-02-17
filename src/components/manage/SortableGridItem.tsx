@@ -183,13 +183,26 @@ export default function SortableGridItem<T>({
     onItemClick(item, e);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      onItemClick(item, e as unknown as React.MouseEvent);
+    }
+  };
+
+  const sortableProps = sortable && !isMobile ? { ...attributes, ...listeners } : {};
   return (
     <div
       ref={setNodeRef}
       style={style}
       data-item-id={id}
-      className={`relative group ${isDragging && !isMultiDragActive ? 'z-50' : ''}`}
+      {...sortableProps}
+      role="button"
+      tabIndex={0}
+      className={`relative group outline-none focus-visible:ring-2 focus-visible:ring-primary ${isDragging && !isMultiDragActive ? 'z-50' : ''}`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -201,7 +214,6 @@ export default function SortableGridItem<T>({
           onItemDoubleClick(item);
         }
       }}
-      {...(sortable && !isMobile ? { ...attributes, ...listeners } : {})}
     >
       {/* Selection checkbox - hidden for disabled items */}
       {!disabled && (

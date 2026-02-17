@@ -44,71 +44,71 @@ export default function AnnounceChallengeModal({
   }, [onClose]);
 
   useEffect(() => {
-    loadSubscribers();
-  }, [challengeId]);
+    const loadSubscribers = async () => {
+      setIsLoadingSubscribers(true);
+      setError(null);
 
-  const loadSubscribers = async () => {
-    setIsLoadingSubscribers(true);
-    setError(null);
+      try {
+        // Fetch all active profiles
+        const { data: allProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, nickname, created_at')
+          .is('suspended_at', null)
+          .not('email', 'is', null)
+          .order('created_at', { ascending: true });
 
-    try {
-      // Fetch all active profiles
-      const { data: allProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, nickname, created_at')
-        .is('suspended_at', null)
-        .not('email', 'is', null)
-        .order('created_at', { ascending: true });
+        if (profilesError) {
+          throw new Error('Failed to load profiles');
+        }
 
-      if (profilesError) {
-        throw new Error('Failed to load profiles');
-      }
+        if (!allProfiles || allProfiles.length === 0) {
+          setSubscribers([]);
+          setIsLoadingSubscribers(false);
+          return;
+        }
 
-      if (!allProfiles || allProfiles.length === 0) {
-        setSubscribers([]);
+        // Get the photo_challenges email type ID
+        const { data: challengesEmailType } = await supabase
+          .from('email_types')
+          .select('id')
+          .eq('type_key', 'photo_challenges')
+          .single();
+
+        if (!challengesEmailType) {
+          throw new Error('Photo challenges email type not found');
+        }
+
+        // Get all users who have opted out
+        const { data: optedOutUsers } = await supabase
+          .from('email_preferences')
+          .select('user_id')
+          .eq('email_type_id', challengesEmailType.id)
+          .eq('opted_out', true);
+
+        const optedOutUserIds = new Set(
+          (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
+        );
+
+        // Filter out opted-out users
+        const subscribersList = allProfiles
+          .filter((profile) => !optedOutUserIds.has(profile.id))
+          .map((profile) => ({
+            email: profile.email!,
+            name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
+            nickname: profile.nickname,
+            selected: true,
+          }));
+
+        setSubscribers(subscribersList);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load subscribers');
+      } finally {
         setIsLoadingSubscribers(false);
-        return;
       }
+    };
 
-      // Get the photo_challenges email type ID
-      const { data: challengesEmailType } = await supabase
-        .from('email_types')
-        .select('id')
-        .eq('type_key', 'photo_challenges')
-        .single();
-
-      if (!challengesEmailType) {
-        throw new Error('Photo challenges email type not found');
-      }
-
-      // Get all users who have opted out
-      const { data: optedOutUsers } = await supabase
-        .from('email_preferences')
-        .select('user_id')
-        .eq('email_type_id', challengesEmailType.id)
-        .eq('opted_out', true);
-
-      const optedOutUserIds = new Set(
-        (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
-      );
-
-      // Filter out opted-out users
-      const subscribersList = allProfiles
-        .filter((profile) => !optedOutUserIds.has(profile.id))
-        .map((profile) => ({
-          email: profile.email!,
-          name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
-          nickname: profile.nickname,
-          selected: true,
-        }));
-
-      setSubscribers(subscribersList);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load subscribers');
-    } finally {
-      setIsLoadingSubscribers(false);
-    }
-  };
+    loadSubscribers();
+  }, [challengeId, supabase]);
 
   const handleSend = useCallback(async () => {
     const selectedSubscribers = subscribers.filter((s) => s.selected);

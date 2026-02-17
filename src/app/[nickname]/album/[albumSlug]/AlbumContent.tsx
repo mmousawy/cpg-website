@@ -1,3 +1,4 @@
+import AlbumSharedActions from '@/components/albums/AlbumSharedActions';
 import FullSizeGalleryButton from '@/components/photo/FullSizeGalleryButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import AuthorRow from '@/components/shared/AuthorRow';
@@ -6,16 +7,19 @@ import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewTracker from '@/components/shared/ViewTracker';
-import { getPhotosByUrls } from '@/lib/data/albums';
-import type { AlbumWithPhotos } from '@/types/albums';
+import { getPhotosByUrls, getProfilesByUserIds } from '@/lib/data/albums';
+import type { Tables } from '@/database.types';
+import type { AlbumJoinPolicy } from '@/types/albums';
 import type { Photo, SimpleTag } from '@/types/photos';
 import clsx from 'clsx';
 import { cacheLife, cacheTag } from 'next/cache';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import PhotoStackIcon from 'public/icons/photo-stack.svg';
 
+import type { AlbumBySlugResult } from '@/lib/data/albums';
+
 type AlbumContentProps = {
-  album: NonNullable<Awaited<ReturnType<typeof import('@/lib/data/albums').getAlbumBySlug>>>;
+  album: AlbumBySlugResult;
   nickname: string;
   albumSlug: string;
 };
@@ -29,29 +33,45 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
   cacheTag(`profile-${nickname}`);
   cacheTag(`album-${nickname}-${albumSlug}`);
 
-  const albumWithPhotos = album as unknown as AlbumWithPhotos;
-
   // Sort photos by sort_order
-  const sortedAlbumPhotos = [...(albumWithPhotos.photos || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const sortedAlbumPhotos = [...(album.photos || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  // Fetch photo metadata using cached function
-  const photoUrls = sortedAlbumPhotos.map((p) => p.photo_url);
+  // Fetch photo metadata and owner profiles (for shared album attribution)
+  const photoUrls = sortedAlbumPhotos
+    .map((p) => p.photo_url)
+    .filter((url): url is string => url != null);
+  const isSharedAlbum = album.is_shared ?? false;
   const photosData = await getPhotosByUrls(photoUrls);
+  const ownerProfilesMap = isSharedAlbum
+    ? await getProfilesByUserIds((photosData ?? []).map((p) => p.user_id).filter((id): id is string => id != null))
+    : new Map<string, Pick<Tables<'profiles'>, 'nickname' | 'full_name' | 'avatar_url'>>();
 
-  // Create a map of url -> photo for quick lookup
   const photosMap = new Map((photosData || []).map((p) => [p.url, p as Photo]));
 
-  // Convert album_photos to Photo format, preserving sort order
-  const photos: Photo[] = sortedAlbumPhotos
-    .map((ap) => {
+  type PhotoWithContributor = Photo & {
+    profile?: Pick<Tables<'profiles'>, 'nickname' | 'full_name' | 'avatar_url'> | null;
+  };
+  const photos: PhotoWithContributor[] = sortedAlbumPhotos
+    .map((ap): PhotoWithContributor | null => {
+      if (!ap.photo_url) return null;
       const photo = photosMap.get(ap.photo_url);
       if (!photo) return null;
+      const ownerProfile = isSharedAlbum && photo.user_id
+        ? ownerProfilesMap.get(photo.user_id)
+        : undefined;
       return {
         ...photo,
         title: ap.title || photo.title,
-      } as Photo;
+        ...(ownerProfile && {
+          profile: {
+            nickname: ownerProfile.nickname,
+            full_name: ownerProfile.full_name ?? null,
+            avatar_url: ownerProfile.avatar_url ?? null,
+          },
+        }),
+      };
     })
-    .filter((p): p is Photo => p !== null);
+    .filter((p): p is PhotoWithContributor => p !== null);
 
   return (
     <>
@@ -95,6 +115,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 photos={photos}
                 profileNickname={nickname}
                 albumSlug={albumSlug}
+                showAttribution={isSharedAlbum}
               />
             )}
           </div>
@@ -137,42 +158,44 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             className="absolute right-4 top-4 md:right-6 md:top-6"
           >
             <AlbumActionsPopover
-              albumId={albumWithPhotos.id}
-              albumTitle={albumWithPhotos.title}
-              albumUserId={albumWithPhotos.user_id}
+              albumId={album.id}
+              albumTitle={album.title}
+              albumUserId={album.user_id ?? null}
             />
           </div>
 
-          {/* Author row */}
-          <div
-            className="mb-6"
-          >
-            <AuthorRow
-              profile={{
-                full_name: albumWithPhotos.profile?.full_name || null,
-                nickname: albumWithPhotos.profile?.nickname || nickname,
-                avatar_url: albumWithPhotos.profile?.avatar_url || null,
-              }}
-            />
-          </div>
-
-          {/* Title and Description */}
-          {(albumWithPhotos.title || albumWithPhotos.description) && (
+          {/* Author row - hide for event albums (no owner) */}
+          {album.profile && (
             <div
               className="mb-6"
             >
-              {albumWithPhotos.title && (
+              <AuthorRow
+                profile={{
+                  full_name: album.profile?.full_name || null,
+                  nickname: album.profile?.nickname || nickname,
+                  avatar_url: album.profile?.avatar_url || null,
+                }}
+              />
+            </div>
+          )}
+
+          {/* Title and Description */}
+          {(album.title || album.description) && (
+            <div
+              className="mb-6"
+            >
+              {album.title && (
                 <h1
                   className="text-2xl md:text-xl font-bold mb-3"
                 >
-                  {albumWithPhotos.title}
+                  {album.title}
                 </h1>
               )}
-              {albumWithPhotos.description && (
+              {album.description && (
                 <p
                   className="text-base md:text-sm opacity-80 whitespace-pre-wrap"
                 >
-                  {albumWithPhotos.description}
+                  {album.description}
                 </p>
               )}
             </div>
@@ -212,7 +235,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 <p
                   className="text-xs text-foreground/60"
                 >
-                  {new Date(albumWithPhotos.created_at || '').toLocaleDateString('en-US', {
+                  {new Date(album.created_at || '').toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -223,8 +246,8 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
               <div>
                 <ViewTracker
                   type="album"
-                  id={albumWithPhotos.id}
-                  initialCount={albumWithPhotos.view_count ?? 0}
+                  id={album.id}
+                  initialCount={album.view_count ?? 0}
                   compact
                 />
               </div>
@@ -232,7 +255,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
             {/* Tags */}
             <TagsSection
-              tags={(albumWithPhotos.tags || []) as SimpleTag[]}
+              tags={(album.tags || []) as SimpleTag[]}
               className="mt-4"
             />
           </div>
@@ -241,16 +264,29 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           <div
             className="pt-6 border-t border-border-color mt-6 space-y-3"
           >
+            {/* Shared album actions - Join and Add photos */}
+            {album.is_shared && (
+              <AlbumSharedActions
+                albumId={album.id}
+                albumSlug={albumSlug}
+                albumTitle={album.title}
+                ownerNickname={album.profile?.nickname ?? nickname}
+                ownerId={album.user_id ?? undefined}
+                joinPolicy={(album.join_policy as AlbumJoinPolicy | null) ?? null}
+                maxPhotosPerUser={album.max_photos_per_user}
+                isEventAlbum={!!album.event_id}
+              />
+            )}
             {/* Action bar - likes only (views shown above with date) */}
             <PhotoActionBar
               entityType="album"
-              entityId={albumWithPhotos.id}
-              initialLikesCount={albumWithPhotos.likes_count ?? 0}
+              entityId={album.id}
+              initialLikesCount={album.likes_count ?? 0}
             />
 
             {/* Comments */}
             <Comments
-              albumId={albumWithPhotos.id}
+              albumId={album.id}
             />
           </div>
         </div>

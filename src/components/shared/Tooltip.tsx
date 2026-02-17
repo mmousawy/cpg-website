@@ -107,7 +107,7 @@ export default function Tooltip({
       }, 0);
       return () => clearTimeout(timeoutId);
     }
-  }, [isVisible]);
+  }, [isVisible, updatePosition]);
 
   // Update position on scroll/resize
   useEffect(() => {

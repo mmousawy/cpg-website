@@ -43,97 +43,97 @@ export default function EmailAttendeesModal({
   }, [onClose]);
 
   useEffect(() => {
-    loadRecipients();
-  }, [eventId]);
+    const loadRecipients = async () => {
+      setIsLoadingRecipients(true);
+      setError(null);
 
-  const loadRecipients = async () => {
-    setIsLoadingRecipients(true);
-    setError(null);
+      try {
+        // Fetch confirmed RSVPs with user profiles for nicknames and joined date
+        const { data: rsvps, error: rsvpsError } = await supabase
+          .from('events_rsvps')
+          .select('id, email, name, user_id, profiles!events_rsvps_user_id_profiles_fkey(nickname, created_at)')
+          .eq('event_id', eventId)
+          .not('confirmed_at', 'is', null)
+          .is('canceled_at', null)
+          .not('email', 'is', null);
 
-    try {
-      // Fetch confirmed RSVPs with user profiles for nicknames and joined date
-      const { data: rsvps, error: rsvpsError } = await supabase
-        .from('events_rsvps')
-        .select('id, email, name, user_id, profiles!events_rsvps_user_id_profiles_fkey(nickname, created_at)')
-        .eq('event_id', eventId)
-        .not('confirmed_at', 'is', null)
-        .is('canceled_at', null)
-        .not('email', 'is', null);
-
-      if (rsvpsError) {
-        throw new Error('Failed to load RSVPs');
-      }
-
-      // Fetch all admin profiles (hosts), sorted by joined date
-      const { data: admins, error: adminsError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, nickname, created_at')
-        .eq('is_admin', true)
-        .is('suspended_at', null)
-        .not('email', 'is', null)
-        .order('created_at', { ascending: true }); // Oldest first
-
-      if (adminsError) {
-        throw new Error('Failed to load admin profiles');
-      }
-
-      // Combine and deduplicate by email, preserving joined date for sorting
-      const recipientMap = new Map<string, EmailRecipient & { joinedAt: string | null }>();
-
-      // Add RSVPs
-      if (rsvps) {
-        rsvps.forEach((rsvp) => {
-          if (rsvp.email) {
-            const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
-            recipientMap.set(rsvp.email.toLowerCase(), {
-              email: rsvp.email,
-              name: rsvp.name || rsvp.email.split('@')[0] || 'Friend',
-              nickname: profile?.nickname || null,
-              type: 'attendee',
-              selected: true, // All recipients selected by default
-              joinedAt: profile?.created_at || null,
-            });
-          }
-        });
-      }
-
-      // Add admins
-      if (admins) {
-        admins.forEach((admin) => {
-          if (admin.email) {
-            recipientMap.set(admin.email.toLowerCase(), {
-              email: admin.email,
-              name: admin.full_name || admin.email.split('@')[0] || 'Friend',
-              nickname: admin.nickname,
-              type: 'host',
-              selected: true, // All recipients selected by default
-              joinedAt: admin.created_at || null,
-            });
-          }
-        });
-      }
-
-      // Convert to array and sort by joined date (oldest first)
-      const recipientsList = Array.from(recipientMap.values()).sort((a, b) => {
-        // If both have joined dates, sort by date (oldest first)
-        if (a.joinedAt && b.joinedAt) {
-          return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
+        if (rsvpsError) {
+          throw new Error('Failed to load RSVPs');
         }
-        // If only one has a date, prioritize it
-        if (a.joinedAt && !b.joinedAt) return -1;
-        if (!a.joinedAt && b.joinedAt) return 1;
-        // If neither has a date, maintain order
-        return 0;
-      });
 
-      // Remove joinedAt from final recipients (it was only for sorting)
-      setRecipients(recipientsList.map(({ joinedAt, ...recipient }) => recipient));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load recipients');
-    } finally {
-      setIsLoadingRecipients(false);
-    }
-  };
+        // Fetch all admin profiles (hosts), sorted by joined date
+        const { data: admins, error: adminsError } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, nickname, created_at')
+          .eq('is_admin', true)
+          .is('suspended_at', null)
+          .not('email', 'is', null)
+          .order('created_at', { ascending: true }); // Oldest first
+
+        if (adminsError) {
+          throw new Error('Failed to load admin profiles');
+        }
+
+        // Combine and deduplicate by email, preserving joined date for sorting
+        const recipientMap = new Map<string, EmailRecipient & { joinedAt: string | null }>();
+
+        // Add RSVPs
+        if (rsvps) {
+          rsvps.forEach((rsvp) => {
+            if (rsvp.email) {
+              const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
+              recipientMap.set(rsvp.email.toLowerCase(), {
+                email: rsvp.email,
+                name: rsvp.name || rsvp.email.split('@')[0] || 'Friend',
+                nickname: profile?.nickname || null,
+                type: 'attendee',
+                selected: true, // All recipients selected by default
+                joinedAt: profile?.created_at || null,
+              });
+            }
+          });
+        }
+
+        // Add admins
+        if (admins) {
+          admins.forEach((admin) => {
+            if (admin.email) {
+              recipientMap.set(admin.email.toLowerCase(), {
+                email: admin.email,
+                name: admin.full_name || admin.email.split('@')[0] || 'Friend',
+                nickname: admin.nickname,
+                type: 'host',
+                selected: true, // All recipients selected by default
+                joinedAt: admin.created_at || null,
+              });
+            }
+          });
+        }
+
+        // Convert to array and sort by joined date (oldest first)
+        const recipientsList = Array.from(recipientMap.values()).sort((a, b) => {
+          // If both have joined dates, sort by date (oldest first)
+          if (a.joinedAt && b.joinedAt) {
+            return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
+          }
+          // If only one has a date, prioritize it
+          if (a.joinedAt && !b.joinedAt) return -1;
+          if (!a.joinedAt && b.joinedAt) return 1;
+          // If neither has a date, maintain order
+          return 0;
+        });
+
+        // Remove joinedAt from final recipients (it was only for sorting)
+        setRecipients(recipientsList.map(({ joinedAt, ...recipient }) => recipient));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load recipients');
+      } finally {
+        setIsLoadingRecipients(false);
+      }
+    };
+
+    loadRecipients();
+  }, [eventId, supabase]);
 
   const handleSend = useCallback(async () => {
     if (!message.trim()) {
@@ -189,7 +189,7 @@ export default function EmailAttendeesModal({
     } finally {
       setIsSending(false);
     }
-  }, [eventId, message, recipients, onSuccess, onClose]);
+  }, [eventId, message, recipients, onSuccess]);
 
   // Update ref when handleSend changes
   useEffect(() => {

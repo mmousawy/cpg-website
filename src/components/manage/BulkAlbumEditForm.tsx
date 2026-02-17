@@ -8,7 +8,7 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbums } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
 import SidebarPanel from './SidebarPanel';
@@ -109,7 +109,7 @@ export default function BulkAlbumEditForm({
   });
 
   const {
-    watch,
+    control,
     setValue,
     handleSubmit,
     reset,
@@ -122,8 +122,8 @@ export default function BulkAlbumEditForm({
     },
   });
 
-  const watchedTags = watch('tags');
-  const watchedIsPublic = watch('isPublic');
+  const watchedTags = useWatch({ control, name: 'tags' });
+  const watchedIsPublic = useWatch({ control, name: 'isPublic' });
   const isSaving = isSubmitting || externalIsSaving;
 
   // Memoize album IDs string for dependency - only reset form when actual selection changes
@@ -324,7 +324,7 @@ export default function BulkAlbumEditForm({
             tagCounts={tagCounts}
             totalCount={selectedAlbums.length}
             readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
-            helperText="Tags will be synced to match the form. Partially shared tags are shown but won't be added to other items."
+            helperText="Partially shared tags are visible but are not editable and won't be added to other items."
           />
         </div>
 

@@ -7,6 +7,7 @@ import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import FolderSVG from 'public/icons/folder.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
+import UsersMicroSVG from 'public/icons/users-micro.svg';
 import { memo, useMemo } from 'react';
 
 interface AlbumCardProps {
@@ -24,19 +25,27 @@ function AlbumCard({
   const photoCount = album.photos?.length || 0;
 
   const badges = useMemo(() => {
-    if (!album.is_public) {
-      return [
-        {
-          icon: <PrivateMicroSVG
-            className="size-4"
-          />,
-          variant: 'private' as const,
-          tooltip: 'Private (only visible to you)',
-        },
-      ];
+    const badgeList = [];
+    if (album.is_shared) {
+      badgeList.push({
+        icon: <UsersMicroSVG
+          className="size-4"
+        />,
+        variant: 'in-album' as const,
+        tooltip: 'Shared album',
+      });
     }
-    return [];
-  }, [album.is_public]);
+    if (!album.is_public) {
+      badgeList.push({
+        icon: <PrivateMicroSVG
+          className="size-4"
+        />,
+        variant: 'private' as const,
+        tooltip: 'Private (only visible to you)',
+      });
+    }
+    return badgeList;
+  }, [album.is_public, album.is_shared]);
 
   return (
     <div
@@ -109,6 +118,7 @@ export default memo(AlbumCard, (prevProps, nextProps) => {
     prevProps.album.title === nextProps.album.title &&
     prevProps.album.cover_image_url === nextProps.album.cover_image_url &&
     prevProps.album.is_public === nextProps.album.is_public &&
+    prevProps.album.is_shared === nextProps.album.is_shared &&
     prevProps.album.photos?.length === nextProps.album.photos?.length &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isHovered === nextProps.isHovered

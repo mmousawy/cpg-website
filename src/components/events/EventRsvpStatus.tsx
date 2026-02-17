@@ -57,7 +57,7 @@ export default function EventRsvpStatus({ className, event }: Props) {
     };
 
     checkRSVP();
-  }, [user, event]);
+  }, [user, event, supabase]);
 
   const openModal = () => {
     modalContext.setTitle(`${event?.title}`);

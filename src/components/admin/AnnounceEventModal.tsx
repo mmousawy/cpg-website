@@ -39,79 +39,79 @@ export default function AnnounceEventModal({
   }, [onClose]);
 
   useEffect(() => {
-    loadSubscribers();
-  }, [eventId]);
+    const loadSubscribers = async () => {
+      setIsLoadingSubscribers(true);
+      setError(null);
 
-  const loadSubscribers = async () => {
-    setIsLoadingSubscribers(true);
-    setError(null);
+      try {
+        // Fetch all active profiles (not suspended, with email), sorted by joined date
+        const { data: allProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, nickname, created_at')
+          .is('suspended_at', null)
+          .not('email', 'is', null)
+          .order('created_at', { ascending: true }); // Oldest first
 
-    try {
-      // Fetch all active profiles (not suspended, with email), sorted by joined date
-      const { data: allProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, nickname, created_at')
-        .is('suspended_at', null)
-        .not('email', 'is', null)
-        .order('created_at', { ascending: true }); // Oldest first
+        if (profilesError) {
+          throw new Error('Failed to load profiles');
+        }
 
-      if (profilesError) {
-        throw new Error('Failed to load profiles');
-      }
+        if (!allProfiles || allProfiles.length === 0) {
+          setSubscribers([]);
+          setIsLoadingSubscribers(false);
+          return;
+        }
 
-      if (!allProfiles || allProfiles.length === 0) {
-        setSubscribers([]);
+        // Get the events email type ID
+        const { data: eventsEmailType } = await supabase
+          .from('email_types')
+          .select('id')
+          .eq('type_key', 'events')
+          .single();
+
+        if (!eventsEmailType) {
+          throw new Error('Events email type not found');
+        }
+
+        const eventsEmailTypeId = eventsEmailType.id;
+
+        // Get all users who have opted out of "events" email type
+        const { data: optedOutUsers, error: optedOutError } = await supabase
+          .from('email_preferences')
+          .select('user_id')
+          .eq('email_type_id', eventsEmailTypeId)
+          .eq('opted_out', true);
+
+        if (optedOutError) {
+          console.error('Error fetching opted-out users:', optedOutError);
+        }
+
+        const optedOutUserIds = new Set(
+          (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
+        );
+
+        // Filter out users who have opted out
+        // Note: Users without a preference record are considered opted IN (default behavior)
+        // Profiles are already sorted by created_at DESC from the query
+        const subscribersList = allProfiles
+          .filter(profile => !optedOutUserIds.has(profile.id))
+          .map(profile => ({
+            email: profile.email!,
+            name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
+            nickname: profile.nickname,
+            selected: true, // All users selected by default
+          }));
+
+        setSubscribers(subscribersList);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load subscribers');
+      } finally {
         setIsLoadingSubscribers(false);
-        return;
       }
+    };
 
-      // Get the events email type ID
-      const { data: eventsEmailType } = await supabase
-        .from('email_types')
-        .select('id')
-        .eq('type_key', 'events')
-        .single();
-
-      if (!eventsEmailType) {
-        throw new Error('Events email type not found');
-      }
-
-      const eventsEmailTypeId = eventsEmailType.id;
-
-      // Get all users who have opted out of "events" email type
-      const { data: optedOutUsers, error: optedOutError } = await supabase
-        .from('email_preferences')
-        .select('user_id')
-        .eq('email_type_id', eventsEmailTypeId)
-        .eq('opted_out', true);
-
-      if (optedOutError) {
-        console.error('Error fetching opted-out users:', optedOutError);
-      }
-
-      const optedOutUserIds = new Set(
-        (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
-      );
-
-      // Filter out users who have opted out
-      // Note: Users without a preference record are considered opted IN (default behavior)
-      // Profiles are already sorted by created_at DESC from the query
-      const subscribersList = allProfiles
-        .filter(profile => !optedOutUserIds.has(profile.id))
-        .map(profile => ({
-          email: profile.email!,
-          name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
-          nickname: profile.nickname,
-          selected: true, // All users selected by default
-        }));
-
-      setSubscribers(subscribersList);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load subscribers');
-    } finally {
-      setIsLoadingSubscribers(false);
-    }
-  };
+    loadSubscribers();
+  }, [eventId, supabase]);
 
   const handleSend = useCallback(async () => {
     const selectedSubscribers = subscribers.filter(s => s.selected);
@@ -161,7 +161,7 @@ export default function AnnounceEventModal({
     } finally {
       setIsSending(false);
     }
-  }, [eventId, subscribers, onSuccess, onClose]);
+  }, [eventId, subscribers, onSuccess]);
 
   // Update ref when handleSend changes
   useEffect(() => {

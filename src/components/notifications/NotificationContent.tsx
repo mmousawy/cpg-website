@@ -40,6 +40,11 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   admin_message: MegaphoneSVG,
   report_submitted: MegaphoneSVG,
   report_resolved: CheckSVG,
+  shared_album_invite_received: PhotoStackSVG,
+  shared_album_request_received: PhotoStackSVG,
+  shared_album_request_accepted: CheckSVG,
+  shared_album_request_declined: CancelSVG,
+  shared_album_invite_accepted: CheckSVG,
 };
 
 export const notificationMessages: Record<NotificationType, (actor: string | null, data: NotificationData | null) => string> = {
@@ -77,6 +82,36 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
     return title
       ? `Your report has been resolved: ${title}`
       : 'Your report has been resolved';
+  },
+  shared_album_invite_received: (actor, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `${actor || 'Someone'} invited you to the album "${title}"`
+      : `${actor || 'Someone'} invited you to an album`;
+  },
+  shared_album_request_received: (actor, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `${actor || 'Someone'} requested to join "${title}"`
+      : `${actor || 'Someone'} requested to join your album`;
+  },
+  shared_album_request_accepted: (_, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `Your request to join "${title}" was accepted`
+      : 'Your request to join the album was accepted';
+  },
+  shared_album_request_declined: (_, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `Your request to join "${title}" was declined`
+      : 'Your request to join the album was declined';
+  },
+  shared_album_invite_accepted: (actor, data) => {
+    const title = data?.title as string | undefined;
+    return title
+      ? `${actor || 'Someone'} accepted your invite to "${title}"`
+      : `${actor || 'Someone'} accepted your invite`;
   },
 };
 

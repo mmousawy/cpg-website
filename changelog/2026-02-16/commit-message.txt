@@ -1,0 +1,159 @@
+feat: Shared albums, event albums, and code quality fixes
+
+Shared Albums:
+- Add shared album support: albums can be collaborative with open or closed join policies
+- Member management: join, invite, accept/decline requests, remove members
+- Per-user photo limits (max_photos_per_user) for shared albums
+- Submit photos to shared albums (upload or from library) with duplicate detection
+- Photo attribution: show contributor avatars/nicknames on shared album photos
+- Shared album edit form with member list, invite modal, and request panel
+- "Shared with you" and "Your shared albums" sections in album management
+- Album detail page supports viewing/managing shared-with-me albums (read-only sidebar)
+- AlbumSwitcher includes shared and event album sections
+- AddPhotosToAlbumModal supports shared albums with separate RPC
+- Notification system for album requests, invites, and acceptances
+
+Event Albums:
+- Auto-created albums for events (database trigger on event INSERT)
+- Any logged-in member can add photos to event albums (no join required)
+- EventPhotosSection component for event pages with justified photo grid
+- Event album photos show contributor attribution
+- Event albums section in album management and switcher
+- Backfill existing events with albums via baseline migration
+
+Database:
+- Add shared_album_members and shared_album_requests tables
+- Add RPCs: add_photos_to_shared_album, remove_shared_album_photo, join_shared_album,
+  leave_shared_album, invite_to_shared_album, resolve_album_request, remove_album_member,
+  add_shared_album_owner
+- Add event album trigger and backfill
+- Albums table: is_shared, join_policy, max_photos_per_user, event_id fields
+- Album photos: added_by field for contributor tracking
+- Fix soft-delete stats in get_user_stats and get_profile_stats RPCs
+- Admin permissions for event album management
+- Consolidate 16 old migrations into baseline
+
+Photo Attribution:
+- Shared album photos show owner profile (avatar, nickname) in grid and detail views
+- Photo detail page shows actual photo owner, not album owner, for shared albums
+- Filmstrip navigation uses album owner nickname for correct URL routing
+- getAlbumPhotoByShortId returns albumOwnerNickname separately from photo profile
+
+BlurImage Chrome Fix:
+- Fix Chrome compositing bug where blurhash background bleeds through image edges during fade
+- Render blurhash as separate absolutely-positioned element instead of parent backgroundImage
+- Add onAnimationEnd handler to transition from fade-in to visible state
+
+Code Quality:
+- Replace React Hook Form watch() with useWatch() for React Compiler compatibility
+- Fix ESLint warnings: missing deps, unnecessary deps, incompatible library usage
+- Fix TypeScript errors: PromiseLike vs Promise, null handling, duplicate props
+- Move form default values to module-level constants
+- Refactor setState-in-effect to render-phase state adjustments
+- Replace native <img> with next/image in InviteMembersModal
+- Fix SortableGridItem prop spreading order for role/tabIndex
+
+API Routes:
+- Add /api/albums/requests/notify for shared album notification emails
+- Update admin album routes (delete/suspend/unsuspend) for shared album support
+- Update comments route for shared album context
+
+Files changed (92):
+
+New (19):
+- docs/event-albums.md
+- docs/shared-albums.md
+- docs/shared-albums-revalidation.md
+- public/icons/lock-micro.svg
+- public/icons/users-micro.svg
+- src/app/api/albums/requests/notify/route.ts
+- src/components/albums/AlbumRequestsPanel.tsx
+- src/components/albums/AlbumSharedActions.tsx
+- src/components/albums/InviteMembersModal.tsx
+- src/components/albums/JoinAlbumButton.tsx
+- src/components/albums/SharedAlbumMemberList.tsx
+- src/components/albums/SubmitToSharedAlbumButton.tsx
+- src/components/albums/SubmitToSharedAlbumContent.tsx
+- src/components/events/EventPhotosSection.tsx
+- src/components/manage/SharedAlbumEditForm.tsx
+- src/hooks/useSharedAlbumMembers.ts
+- src/hooks/useSharedAlbumSubmissions.ts
+- src/lib/eventAlbums.ts
+- supabase/migrations/20260216300000_admin_event_album_permissions.sql
+
+Modified (73):
+- README.md
+- docs/README.md
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/[nickname]/album/[albumSlug]/photo/[photoId]/page.tsx
+- src/app/account/(manage)/albums/[slug]/AlbumDetailClient.tsx
+- src/app/account/(manage)/albums/page.tsx
+- src/app/account/(manage)/photos/page.tsx
+- src/app/account/events/page.tsx
+- src/app/api/admin/albums/delete/route.ts
+- src/app/api/admin/albums/suspend/route.ts
+- src/app/api/admin/albums/unsuspend/route.ts
+- src/app/api/comments/route.ts
+- src/app/challenges/[slug]/page.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/app/globals.css
+- src/app/help/page.tsx
+- src/app/page.tsx
+- src/app/signup/SignupClient.tsx
+- src/components/admin/AnnounceChallengeModal.tsx
+- src/components/admin/AnnounceEventModal.tsx
+- src/components/admin/EmailAttendeesModal.tsx
+- src/components/album/AlbumMiniCard.tsx
+- src/components/challenges/SubmitToChallengeContent.tsx
+- src/components/events/EventRsvpStatus.tsx
+- src/components/events/EventSignupBar.tsx
+- src/components/layout/Layout.tsx
+- src/components/layout/PageContainer.tsx
+- src/components/manage/AddPhotosToAlbumModal.tsx
+- src/components/manage/AddToAlbumContent.tsx
+- src/components/manage/AlbumCard.tsx
+- src/components/manage/AlbumEditSidebar.tsx
+- src/components/manage/AlbumGrid.tsx
+- src/components/manage/AlbumPicker.tsx
+- src/components/manage/AlbumSwitcher.tsx
+- src/components/manage/BulkAlbumEditForm.tsx
+- src/components/manage/BulkPhotoEditForm.tsx
+- src/components/manage/ManageLayout.tsx
+- src/components/manage/MobileActionBar.tsx
+- src/components/manage/PhotoCard.tsx
+- src/components/manage/PhotoEditSidebar.tsx
+- src/components/manage/PhotoGrid.tsx
+- src/components/manage/SelectableGrid.tsx
+- src/components/manage/SingleAlbumEditForm.tsx
+- src/components/manage/SinglePhotoEditForm.tsx
+- src/components/manage/SortableGridItem.tsx
+- src/components/notifications/NotificationContent.tsx
+- src/components/notifications/ToastProvider.tsx
+- src/components/photo/JustifiedPhotoGrid.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/AlbumActionsMenu.tsx
+- src/components/shared/AlbumActionsPopover.tsx
+- src/components/shared/BlurImage.tsx
+- src/components/shared/Button.tsx
+- src/components/shared/ReportModal.tsx
+- src/components/shared/SignUpCTA.tsx
+- src/components/shared/Tooltip.tsx
+- src/content/help/photos.tsx
+- src/context/ManageDataContext.tsx
+- src/database.types.ts
+- src/hooks/useAccountForm.ts
+- src/hooks/useActiveHelpSection.ts
+- src/hooks/useAlbumMutations.ts
+- src/hooks/useAlbumPhotoMutations.ts
+- src/hooks/useAlbumPhotos.ts
+- src/hooks/useAlbums.ts
+- src/lib/actions/likes.ts
+- src/lib/data/albums.ts
+- src/lib/data/likes.ts
+- src/lib/data/profiles.ts
+- src/types/albums.ts
+- src/types/events.ts
+- src/types/notifications.ts
+- src/types/photos.ts
+- src/utils/confirmHelpers.tsx
+- supabase/migrations/00000000000000_baseline.sql

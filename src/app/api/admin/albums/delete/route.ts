@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Get album info for logging
     const { data: album } = await supabase
       .from('albums')
-      .select('id, title, user_id, slug')
+      .select('id, title, user_id, slug, event_id')
       .eq('id', albumId)
       .single();
 
@@ -61,15 +61,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to delete album' }, { status: 500 });
     }
 
-    // Revalidate album caches
-    const { data: owner } = await supabase
-      .from('profiles')
-      .select('nickname')
-      .eq('id', album.user_id)
-      .single();
+    // Revalidate album caches (skip owner lookup for event albums with null user_id)
+    if (album.user_id) {
+      const { data: owner } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('id', album.user_id)
+        .single();
 
-    if (owner?.nickname) {
-      await revalidateAlbums(owner.nickname);
+      if (owner?.nickname) {
+        await revalidateAlbums(owner.nickname);
+      }
+    } else if (album.event_id) {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag('albums', 'max');
+      revalidateTag('events', 'max');
+      revalidateTag(`event-album-${album.event_id}`, 'max');
     }
 
     // TODO: Send notification email to album owner about deletion

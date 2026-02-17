@@ -198,15 +198,15 @@ export async function toggleLike(
     }
 
     // Get owner nickname
-    // Use explicit relationship name to avoid ambiguity with album_likes
+    // Use left join (no !inner) so event albums with null user_id are included
     const { data: album } = await supabase
       .from('albums')
-      .select('user_id, profile:profiles!albums_user_id_fkey!inner(nickname)')
+      .select('user_id, profile:profiles!albums_user_id_fkey(nickname)')
       .eq('id', entityId)
       .maybeSingle();
 
     type AlbumWithProfile = {
-      user_id: string;
+      user_id: string | null;
       profile: { nickname: string } | null;
     };
 
@@ -252,8 +252,8 @@ export async function toggleLike(
         return { liked: false, count: 0, error: 'Insert succeeded but no data returned' };
       }
 
-      // Create notification if owner exists and is not the current user
-      if (album && album.user_id !== user.id) {
+      // Create notification if owner exists and is not the current user (skip for event albums with null user_id)
+      if (album?.user_id && album.user_id !== user.id) {
         // Get actor (current user) profile
         const { data: actorProfile } = await supabase
           .from('profiles')

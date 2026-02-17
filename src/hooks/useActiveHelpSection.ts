@@ -8,12 +8,13 @@ import { useEffect, useState } from 'react';
  */
 export function useActiveHelpSection(sectionIds: string[]) {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const sectionKey = sectionIds.join(',');
 
   useEffect(() => {
     if (sectionIds.length === 0) return;
 
     function update() {
-      const atTop = window.scrollY < 100;
+      const atTop = window.scrollY < 300;
       const atBottom =
         window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 100;
 
@@ -44,7 +45,7 @@ export function useActiveHelpSection(sectionIds: string[]) {
     update();
     window.addEventListener('scroll', update, { passive: true });
     return () => window.removeEventListener('scroll', update);
-  }, [sectionIds.join(',')]);
+  }, [sectionKey, sectionIds]);
 
   return activeSectionId;
 }

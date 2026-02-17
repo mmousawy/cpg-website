@@ -1,7 +1,7 @@
 'use client';
 
 import { usePhotos } from '@/hooks/usePhotos';
-import { useAlbums } from '@/hooks/useAlbums';
+import { useAlbumSectionCounts, usePendingAlbumInvites, usePersonalAlbums, useSharedWithMeAlbums, useYourSharedAlbums } from '@/hooks/useAlbums';
 import { usePhotoCounts } from '@/hooks/usePhotoCounts';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -16,7 +16,11 @@ export function ManageDataProvider({ children }: { children: React.ReactNode }) 
   // Prefetch all data using React Query hooks
   // This populates the cache so pages can use cached data immediately
   usePhotoCounts(user?.id);
-  useAlbums(user?.id);
+  useAlbumSectionCounts(user?.id);
+  usePersonalAlbums(user?.id);
+  useYourSharedAlbums(user?.id);
+  useSharedWithMeAlbums(user?.id);
+  usePendingAlbumInvites(user?.id);
 
   // Prefetch all photo filter variants to warm up cache
   usePhotos(user?.id, 'all');

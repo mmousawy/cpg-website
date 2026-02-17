@@ -8,11 +8,12 @@ import Input from '@/components/shared/Input';
 import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
+import { useAuth } from '@/hooks/useAuth';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhoto } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
@@ -39,7 +40,7 @@ interface SinglePhotoEditFormProps {
   photo: PhotoWithAlbums;
   onSave: (photoId: string, data: PhotoFormData) => Promise<void>;
   onDelete: (photoId: string) => Promise<void>;
-  onAddToAlbum?: (photoIds: string[]) => void;
+  onAddToAlbum?: (photoIds?: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
   onSetAsCover?: (photoUrl: string, albumId: string) => Promise<void>;
   currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
@@ -51,6 +52,8 @@ interface SinglePhotoEditFormProps {
   externalSuccess?: boolean;
   /** Hide title (when shown in parent container like BottomSheet) */
   hideTitle?: boolean;
+  /** When true, only "Remove from album" is available — editing/deleting is disabled */
+  readOnly?: boolean;
 }
 
 export default function SinglePhotoEditForm({
@@ -68,8 +71,10 @@ export default function SinglePhotoEditForm({
   externalError = null,
   externalSuccess = false,
   hideTitle = false,
+  readOnly = false,
 }: SinglePhotoEditFormProps) {
   const confirm = useConfirm();
+  const { profile: currentProfile } = useAuth();
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSuccess, setLocalSuccess] = useState(false);
@@ -84,7 +89,7 @@ export default function SinglePhotoEditForm({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { isDirty, isSubmitting },
   } = useForm<PhotoFormData>({
@@ -97,7 +102,7 @@ export default function SinglePhotoEditForm({
     },
   });
 
-  const watchedTags = watch('tags');
+  const watchedTags = useWatch({ control, name: 'tags' });
   const isSaving = isSubmitting || externalIsSaving;
 
   const handleAddTag = (tag: string) => {
@@ -151,7 +156,7 @@ export default function SinglePhotoEditForm({
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
-      if (e.key === 'Delete' && !isSaving && !isLoading) {
+      if (e.key === 'Delete' && !isSaving && !isLoading && !readOnly) {
         e.preventDefault();
         handleDelete();
       }
@@ -192,28 +197,30 @@ export default function SinglePhotoEditForm({
 
   return (
     <SidebarPanel
-      title="Edit photo"
+      title={readOnly ? 'Photo details' : 'Edit photo'}
       hideTitle={hideTitle}
       footer={
         <div
           className="flex gap-2 w-full"
         >
-          <Button
-            type="button"
-            variant="danger"
-            onClick={handleDelete}
-            disabled={isSaving || isLoading}
-            icon={<TrashSVG
-              className="size-5 -ml-0.5"
-            />}
-          >
-            Delete
-          </Button>
-          {onAddToAlbum && (
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleDelete}
+              disabled={isSaving || isLoading}
+              icon={<TrashSVG
+                className="size-5 -ml-0.5"
+              />}
+            >
+              Delete
+            </Button>
+          )}
+          {!readOnly && onAddToAlbum && (
             <Button
               type="button"
               variant="secondary"
-              onClick={() => onAddToAlbum([photo.id])}
+              onClick={() => onAddToAlbum?.()}
               icon={<FolderDownMiniSVG
                 className="size-5 -ml-0.5"
               />}
@@ -233,17 +240,19 @@ export default function SinglePhotoEditForm({
               Remove
             </Button>
           )}
-          <Button
-            onClick={triggerSubmit}
-            disabled={isSaving || isLoading || !isDirty}
-            loading={isSaving}
-            icon={<CheckMiniSVG
-              className="size-5 -ml-0.5"
-            />}
-            className="ml-auto"
-          >
-            {success ? 'Saved!' : 'Save'}
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={triggerSubmit}
+              disabled={isSaving || isLoading || !isDirty}
+              loading={isSaving}
+              icon={<CheckMiniSVG
+                className="size-5 -ml-0.5"
+              />}
+              className="ml-auto"
+            >
+              {success ? 'Saved!' : 'Save'}
+            </Button>
+          )}
         </div>
       }
     >
@@ -257,173 +266,225 @@ export default function SinglePhotoEditForm({
         />
       </div>
 
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4"
-      >
+      {readOnly && (
         <div
-          className="flex flex-col gap-2"
+          className="space-y-4"
         >
-          <label
-            htmlFor={`title-${photo.id}`}
-            className="text-sm font-medium"
+          <p
+            className="text-sm text-foreground/70"
           >
-            Title
-          </label>
-          <Input
-            id={`title-${photo.id}`}
-            type="text"
-            {...register('title')}
-            placeholder="Photo title (optional)"
-          />
-        </div>
+            This photo belongs to another user. You can only remove it from this album.
+          </p>
 
-        <div
-          className="flex flex-col gap-2"
+          {/* Album cover section - available even in readOnly mode since it's an album-level action */}
+          {currentAlbum && onSetAsCover && (
+            <div
+              className="flex flex-col gap-2"
+            >
+              <label
+                className="text-sm font-medium"
+              >
+                Album cover
+              </label>
+              {isCurrentCover ? (
+                <p
+                  className="text-sm text-foreground/70"
+                >
+                  This photo is the current cover of this album
+                </p>
+              ) : (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSetAsCover}
+                  loading={isSettingCover}
+                  disabled={isSettingCover}
+                  icon={<WallArtSVG
+                    className="size-4"
+                  />}
+                  className="self-start"
+                >
+                  Set as album cover
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!readOnly && (
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4"
         >
-          <label
-            htmlFor={`description-${photo.id}`}
-            className="text-sm font-medium"
+          <div
+            className="flex flex-col gap-2"
           >
-            Description
-          </label>
-          <Textarea
-            id={`description-${photo.id}`}
-            {...register('description')}
-            rows={3}
-            placeholder="Tell us about this photo..."
-          />
-        </div>
+            <label
+              htmlFor={`title-${photo.id}`}
+              className="text-sm font-medium"
+            >
+              Title
+            </label>
+            <Input
+              id={`title-${photo.id}`}
+              type="text"
+              {...register('title')}
+              placeholder="Photo title (optional)"
+            />
+          </div>
 
-        <Toggle
-          id={`is_public-${photo.id}`}
-          leftLabel="Private"
-          rightLabel="Public"
-          {...register('is_public')}
-          label="Visibility"
-        />
-
-        <div
-          className="flex flex-col gap-2"
-        >
-          <label
-            className="text-sm font-medium"
+          <div
+            className="flex flex-col gap-2"
           >
-            Tags
-          </label>
-          <TagInput
-            id={`tags-${photo.id}`}
-            tags={watchedTags || []}
-            onAddTag={handleAddTag}
-            onRemoveTag={handleRemoveTag}
-            helperText="Add up to 5 tags to help people discover your photo"
-          />
-        </div>
+            <label
+              htmlFor={`description-${photo.id}`}
+              className="text-sm font-medium"
+            >
+              Description
+            </label>
+            <Textarea
+              id={`description-${photo.id}`}
+              {...register('description')}
+              rows={3}
+              placeholder="Tell us about this photo..."
+            />
+          </div>
 
-        {/* Album cover section - only show when in album context */}
-        {currentAlbum && onSetAsCover && (
+          <Toggle
+            id={`is_public-${photo.id}`}
+            leftLabel="Private"
+            rightLabel="Public"
+            {...register('is_public')}
+            label="Visibility"
+          />
+
           <div
             className="flex flex-col gap-2"
           >
             <label
               className="text-sm font-medium"
             >
-              Album cover
+              Tags
             </label>
-            {isCurrentCover ? (
-              <p
-                className="text-sm text-foreground/70"
-              >
-                This photo is the current cover of this album
-              </p>
-            ) : (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleSetAsCover}
-                loading={isSettingCover}
-                disabled={isSettingCover}
-                icon={<WallArtSVG
-                  className="size-4"
-                />}
-                className="self-start"
-              >
-                Set as album cover
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Albums this photo belongs to */}
-        {photoAlbums.length > 0 && (
-          <>
-            <hr
-              className="my-4 border-border-color"
+            <TagInput
+              id={`tags-${photo.id}`}
+              tags={watchedTags || []}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              helperText="Add up to 5 tags to help people discover your photo"
             />
-            <div>
-              <h3
-                className="mb-2 text-sm font-medium"
-              >
-                In albums:
-              </h3>
-              <div
-                className="grid grid-cols-2 gap-2"
-              >
-                {photoAlbums.map((album) => (
-                  <AlbumMiniCard
-                    key={album.id}
-                    title={album.title}
-                    slug={album.slug}
-                    coverImageUrl={album.cover_image_url}
-                    href={`/account/albums/${album.slug}`}
-                    photoCount={album.photo_count}
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Challenges this photo was submitted to */}
-        {photoChallenges.length > 0 && (
-          <>
-            <hr
-              className="my-4 border-border-color"
-            />
-            <div>
-              <h3
-                className="mb-2 text-sm font-medium"
-              >
-                In challenges:
-              </h3>
-              <div
-                className="grid grid-cols-2 gap-2"
-              >
-                {photoChallenges.map((challenge) => (
-                  <ChallengeMiniCard
-                    key={challenge.id}
-                    title={challenge.title}
-                    slug={challenge.slug}
-                    coverImageUrl={challenge.cover_image_url}
-                    href={`/challenges/${challenge.slug}`}
-                    status={challenge.status}
-                    showStatus
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div
-            className="rounded-md bg-red-500/10 p-3 text-sm text-red-500"
-          >
-            {error}
           </div>
-        )}
-      </form>
+
+          {/* Album cover section - only show when in album context */}
+          {currentAlbum && onSetAsCover && (
+            <div
+              className="flex flex-col gap-2"
+            >
+              <label
+                className="text-sm font-medium"
+              >
+                Album cover
+              </label>
+              {isCurrentCover ? (
+                <p
+                  className="text-sm text-foreground/70"
+                >
+                  This photo is the current cover of this album
+                </p>
+              ) : (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSetAsCover}
+                  loading={isSettingCover}
+                  disabled={isSettingCover}
+                  icon={<WallArtSVG
+                    className="size-4"
+                  />}
+                  className="self-start"
+                >
+                  Set as album cover
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Albums this photo belongs to */}
+          {photoAlbums.length > 0 && (
+            <>
+              <hr
+                className="my-4 border-border-color"
+              />
+              <div>
+                <h3
+                  className="mb-2 text-sm font-medium"
+                >
+                  In albums:
+                </h3>
+                <div
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {photoAlbums.map((album) => {
+                    const isOtherOwner = album.profile_nickname && album.profile_nickname !== currentProfile?.nickname;
+                    return (
+                      <AlbumMiniCard
+                        key={album.id}
+                        title={album.title}
+                        slug={album.slug}
+                        coverImageUrl={album.cover_image_url}
+                        href={`/account/albums/${album.slug}`}
+                        photoCount={album.photo_count}
+                        ownerNickname={isOtherOwner ? album.profile_nickname : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Challenges this photo was submitted to */}
+          {photoChallenges.length > 0 && (
+            <>
+              <hr
+                className="my-4 border-border-color"
+              />
+              <div>
+                <h3
+                  className="mb-2 text-sm font-medium"
+                >
+                  In challenges:
+                </h3>
+                <div
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {photoChallenges.map((challenge) => (
+                    <ChallengeMiniCard
+                      key={challenge.id}
+                      title={challenge.title}
+                      slug={challenge.slug}
+                      coverImageUrl={challenge.cover_image_url}
+                      href={`/challenges/${challenge.slug}`}
+                      status={challenge.status}
+                      showStatus
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {error && (
+            <div
+              className="rounded-md bg-red-500/10 p-3 text-sm text-red-500"
+            >
+              {error}
+            </div>
+          )}
+        </form>
+      )}
     </SidebarPanel>
   );
 }

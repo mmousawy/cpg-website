@@ -166,6 +166,7 @@ export default function Button({
         href={href}
         className={classes}
         {...linkProps}
+        scroll
       >
         {content}
       </Link>

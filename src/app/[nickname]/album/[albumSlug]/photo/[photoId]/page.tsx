@@ -98,6 +98,7 @@ async function CachedAlbumPhotoContent({
     <PhotoPageContent
       photo={result.photo}
       profile={result.profile}
+      albumOwnerNickname={result.albumOwnerNickname}
       currentAlbum={result.currentAlbum}
       albums={result.albums}
       challenges={result.challenges}

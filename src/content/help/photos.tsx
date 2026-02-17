@@ -60,6 +60,57 @@ export const photosFAQ: FAQSection = {
       ),
     },
     {
+      id: 'shared-albums',
+      title: 'Shared albums',
+      content: (
+        <>
+          <p
+            className="mb-3"
+          >
+            Shared albums let multiple people contribute photos to the same album. When creating a new album, expand the
+            {' '}
+            <strong>
+              Shared album configuration
+            </strong>
+            {' '}
+            section to enable sharing.
+          </p>
+          <p
+            className="mb-3"
+          >
+            The
+            {' '}
+            <strong>
+              Who can add photos
+            </strong>
+            {' '}
+            setting controls access:
+          </p>
+          <ul
+            className="mb-4 ml-6 list-disc"
+          >
+            <li>
+              <strong>
+                Anyone
+              </strong>
+              {' '}
+              — Anyone with the link can add photos without requesting access
+            </li>
+            <li>
+              <strong>
+                By request or invite
+              </strong>
+              {' '}
+              — People must request to join or be invited before they can add photos
+            </li>
+          </ul>
+          <p>
+            You can also set a per-member photo limit. Event albums are automatically created as shared albums so attendees can contribute their photos.
+          </p>
+        </>
+      ),
+    },
+    {
       id: 'photo-privacy',
       title: 'Photo visibility and privacy',
       content: (

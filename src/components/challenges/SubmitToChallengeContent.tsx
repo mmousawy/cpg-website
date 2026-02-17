@@ -39,7 +39,8 @@ export default function SubmitToChallengeContent({
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  /** Array preserves selection/upload order (Set would lose it, causing reversed order) */
+  const [selectedPhotoIdsOrder, setSelectedPhotoIdsOrder] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -158,41 +159,31 @@ export default function SubmitToChallengeContent({
     // Skip non-selectable photos (private, rejected, pending, accepted)
     if (nonSelectablePhotoIds.has(photoId)) return;
 
-    setSelectedPhotoIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(photoId)) {
-        newSet.delete(photoId);
-      } else {
-        // If at quota limit, replace selection instead of blocking
-        if (remainingQuota !== null && newSet.size >= remainingQuota) {
-          // Clear existing selection and add the new photo
-          newSet.clear();
-          newSet.add(photoId);
-        } else {
-          newSet.add(photoId);
-        }
+    setSelectedPhotoIdsOrder((prev) => {
+      const idx = prev.indexOf(photoId);
+      if (idx >= 0) {
+        return prev.filter((id) => id !== photoId);
       }
-      return newSet;
+      if (remainingQuota !== null && prev.length >= remainingQuota) {
+        return [photoId];
+      }
+      return [...prev, photoId];
     });
   };
 
   const handleClearSelection = () => {
-    setSelectedPhotoIds(new Set());
+    setSelectedPhotoIdsOrder([]);
   };
 
   const handleSelectMultiple = (ids: string[]) => {
-    setSelectedPhotoIds((prev) => {
-      const newSet = new Set(prev);
+    setSelectedPhotoIdsOrder((prev) => {
+      const next = [...prev];
       for (const id of ids) {
-        // Skip private or rejected photos
-        if (nonSelectablePhotoIds.has(id)) continue;
-        // Stop adding if we've reached the quota
-        if (remainingQuota !== null && newSet.size >= remainingQuota) {
-          break;
-        }
-        newSet.add(id);
+        if (nonSelectablePhotoIds.has(id) || next.includes(id)) continue;
+        if (remainingQuota !== null && next.length >= remainingQuota) break;
+        next.push(id);
       }
-      return newSet;
+      return next;
     });
   };
 
@@ -220,15 +211,13 @@ export default function SubmitToChallengeContent({
 
       // Auto-select newly uploaded photos (if within quota)
       if (uploadedPhotos.length > 0) {
-        setSelectedPhotoIds((prev) => {
-          const newSet = new Set(prev);
+        setSelectedPhotoIdsOrder((prev) => {
+          const next = [...prev];
           for (const photo of uploadedPhotos) {
-            if (remainingQuota !== null && newSet.size >= remainingQuota) {
-              break;
-            }
-            newSet.add(photo.id);
+            if (remainingQuota !== null && next.length >= remainingQuota) break;
+            if (!next.includes(photo.id)) next.push(photo.id);
           }
-          return newSet;
+          return next;
         });
       }
     } catch (err) {
@@ -247,17 +236,25 @@ export default function SubmitToChallengeContent({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Get selected photos for confirmation
+  const selectedPhotoIdsSet = useMemo(
+    () => new Set(selectedPhotoIdsOrder),
+    [selectedPhotoIdsOrder],
+  );
+
+  // Get selected photos for confirmation (preserves selection/upload order)
   const selectedPhotos = useMemo(
-    () => photos.filter((p) => selectedPhotoIds.has(p.id)),
-    [photos, selectedPhotoIds],
+    () =>
+      selectedPhotoIdsOrder
+        .map((id) => photos.find((p) => p.id === id))
+        .filter((p): p is Photo => p != null),
+    [photos, selectedPhotoIdsOrder],
   );
 
   // Show confirmation step
   const handleReview = useCallback(() => {
-    if (selectedPhotoIds.size === 0) return;
+    if (selectedPhotoIdsOrder.length === 0) return;
     setShowConfirm(true);
-  }, [selectedPhotoIds.size]);
+  }, [selectedPhotoIdsOrder.length]);
 
   // Keep ref updated
   const handleReviewRef = useRef<(() => void) | undefined>(undefined);
@@ -272,18 +269,18 @@ export default function SubmitToChallengeContent({
     if (hasReachedLimit) {
       return `Maximum ${maxPhotosPerUser} reached`;
     }
-    if (selectedPhotoIds.size > 0) {
+    if (selectedPhotoIdsOrder.length > 0) {
       if (remainingQuota !== null) {
-        const remaining = remainingQuota - selectedPhotoIds.size;
+        const remaining = remainingQuota - selectedPhotoIdsOrder.length;
         return `${remaining} more photo${remaining !== 1 ? 's' : ''} allowed`;
       }
-      return `${selectedPhotoIds.size} photo${selectedPhotoIds.size !== 1 ? 's' : ''} selected`;
+      return `${selectedPhotoIdsOrder.length} photo${selectedPhotoIdsOrder.length !== 1 ? 's' : ''} selected`;
     }
     if (remainingQuota !== null) {
       return `Max ${remainingQuota} photo${remainingQuota !== 1 ? 's' : ''}`;
     }
     return 'Uploaded photos from this modal will be public';
-  }, [selectedPhotoIds.size, remainingQuota, hasReachedLimit, maxPhotosPerUser]);
+  }, [selectedPhotoIdsOrder.length, remainingQuota, hasReachedLimit, maxPhotosPerUser]);
 
   // Footer content - memoized to prevent infinite loops
   const footerContent = useMemo(
@@ -318,18 +315,18 @@ export default function SubmitToChallengeContent({
           </Button>
           <Button
             onClick={() => handleReviewRef.current?.()}
-            disabled={selectedPhotoIds.size === 0 || isUploading}
+            disabled={selectedPhotoIdsOrder.length === 0 || isUploading}
           >
             Review
             {' '}
-            {selectedPhotoIds.size > 0 ? `${selectedPhotoIds.size} ` : ''}
+            {selectedPhotoIdsOrder.length > 0 ? `${selectedPhotoIdsOrder.length} ` : ''}
             photo
-            {selectedPhotoIds.size !== 1 ? 's' : ''}
+            {selectedPhotoIdsOrder.length !== 1 ? 's' : ''}
           </Button>
         </div>
       </div>
     ),
-    [selectedPhotoIds.size, isUploading, hasReachedLimit, infoText],
+    [selectedPhotoIdsOrder.length, isUploading, hasReachedLimit, infoText],
   );
 
   // Set modal footer with action buttons (only when not showing confirm)
@@ -446,7 +443,7 @@ export default function SubmitToChallengeContent({
           ) : (
             <PhotoGrid
               photos={photos}
-              selectedPhotoIds={selectedPhotoIds}
+              selectedPhotoIds={selectedPhotoIdsSet}
               onSelectPhoto={handleSelectPhoto}
               onPhotoClick={(photo) => handleSelectPhoto(photo.id)}
               onClearSelection={handleClearSelection}

@@ -413,22 +413,29 @@ export default async function ChallengePage({
             )}
           </div>
         </Container>
+
+        {/* Empty state - separate section, narrow column when no photos */}
+        {photos.length === 0 && (
+          <div
+            className="mt-8"
+          >
+            <ChallengeEmptyState
+              isEnded={isEnded}
+            />
+          </div>
+        )}
       </PageContainer>
 
-      {/* Photo Gallery */}
-      <WidePageContainer
-        className="pt-0!"
-      >
-        {photos.length > 0 ? (
+      {/* Photo Gallery - full width only when we have photos */}
+      {photos.length > 0 && (
+        <WidePageContainer
+          className="pt-0!"
+        >
           <ChallengeGallery
             photos={photos}
           />
-        ) : (
-          <ChallengeEmptyState
-            isEnded={isEnded}
-          />
-        )}
-      </WidePageContainer>
+        </WidePageContainer>
+      )}
 
       {/* Comments Section */}
       <PageContainer

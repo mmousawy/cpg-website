@@ -82,15 +82,15 @@ export async function getAlbumLikes(albumId: string): Promise<{
   const supabase = createPublicClient();
 
   // Get album to determine owner nickname for cache tag
-  // Use explicit relationship name to avoid ambiguity with album_likes
+  // Use left join (no !inner) so event albums with null user_id are included
   const { data: album } = await supabase
     .from('albums')
-    .select('user_id, profile:profiles!albums_user_id_fkey!inner(nickname)')
+    .select('user_id, profile:profiles!albums_user_id_fkey(nickname)')
     .eq('id', albumId)
     .maybeSingle();
 
   type AlbumWithProfile = {
-    user_id: string;
+    user_id: string | null;
     profile: { nickname: string } | null;
   };
 

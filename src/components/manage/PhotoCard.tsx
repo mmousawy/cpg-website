@@ -1,8 +1,9 @@
 'use client';
 
+import Avatar from '@/components/auth/Avatar';
 import BlurImage from '@/components/shared/BlurImage';
 import CardBadges from '@/components/shared/CardBadges';
-import type { Photo, PhotoWithAlbums } from '@/types/photos';
+import type { Photo, PhotoOwnerProfile, PhotoWithAlbums } from '@/types/photos';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
@@ -35,6 +36,8 @@ interface PhotoCardProps {
   pending?: boolean;
   /** Whether this photo was accepted (for challenge submissions) */
   accepted?: boolean;
+  /** Profile of the photo owner if not owned by the current user (shows avatar badge) */
+  notOwnedProfile?: PhotoOwnerProfile | null;
 }
 
 function PhotoCard({
@@ -50,6 +53,7 @@ function PhotoCard({
   rejected = false,
   pending = false,
   accepted = false,
+  notOwnedProfile,
 }: PhotoCardProps) {
   // Generate square cropped thumbnail URL (256x256px, center-cropped)
   const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
@@ -130,7 +134,22 @@ function PhotoCard({
         tooltip: albumNames ? `In albums: ${albumNames}` : 'In album',
       });
     }
-    if (!photo.is_public) {
+    if (notOwnedProfile) {
+      const ownerLabel = notOwnedProfile.nickname
+        ? `@${notOwnedProfile.nickname}`
+        : notOwnedProfile.full_name || 'Another user';
+      badgeList.push({
+        icon: <Avatar
+          avatarUrl={notOwnedProfile.avatar_url}
+          fullName={notOwnedProfile.full_name}
+          size="xxs"
+          className="w-4! h-4!"
+        />,
+        variant: 'in-album' as const,
+        tooltip: ownerLabel,
+      });
+    }
+    if (!photo.is_public && !notOwnedProfile) {
       badgeList.push({
         icon: <PrivateMicroSVG
           className="size-4"
@@ -140,7 +159,7 @@ function PhotoCard({
       });
     }
     return badgeList;
-  }, [accepted, pending, rejected, isAlbumCover, isInAlbum, isInAcceptedChallenge, acceptedChallengeNames, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage]);
+  }, [accepted, pending, rejected, isAlbumCover, isInAlbum, isInAcceptedChallenge, acceptedChallengeNames, photo.is_public, photoWithAlbums.albums, currentAlbumTitle, coverAlbumNames, disabledMessage, notOwnedProfile]);
 
   return (
     <div
@@ -231,6 +250,7 @@ export default memo(PhotoCard, (prevProps, nextProps) => {
     prevProps.currentAlbumTitle === nextProps.currentAlbumTitle &&
     prevProps.disabled === nextProps.disabled &&
     prevProps.disabledMessage === nextProps.disabledMessage &&
-    prevProps.rejected === nextProps.rejected
+    prevProps.rejected === nextProps.rejected &&
+    prevProps.notOwnedProfile === nextProps.notOwnedProfile
   );
 });

@@ -9,7 +9,7 @@ import WarningMicroSVG from 'public/icons/warning-micro.svg';
 type AlbumActionsMenuProps = {
   albumId: string;
   albumTitle: string | null;
-  albumUserId: string;
+  albumUserId: string | null;
   onActionClick?: () => void; // Callback to close the popover
 };
 
@@ -17,9 +17,9 @@ export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onA
   const { user } = useAuth();
   const modalContext = useContext(ModalContext);
 
-  // Hide if user is reporting their own content (unless in development)
+  // Hide if user is reporting their own content (unless in development). Event albums have no owner (albumUserId null).
   const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev && user && user.id === albumUserId) {
+  if (!isDev && user && albumUserId && user.id === albumUserId) {
     return null;
   }
 

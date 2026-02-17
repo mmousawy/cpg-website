@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -14,14 +15,27 @@ type LayoutProps = {
 export default function Layout({ children }: LayoutProps) {
   const pathname = usePathname();
   const hideFooter = noFooterPaths.some((path) => pathname?.startsWith(path));
+  const isFullHeight = hideFooter;
+
+  // Prevent body scrolling on full-height manage pages
+  useEffect(() => {
+    if (isFullHeight) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isFullHeight]);
 
   return (
     <div
-      className="flex min-h-full flex-col"
+      className={isFullHeight ? 'flex h-full flex-col overflow-hidden' : 'flex min-h-full flex-col'}
     >
       <Header />
       <main
-        className="flex grow flex-col"
+        className={isFullHeight ? 'flex flex-col flex-1 min-h-0 overflow-hidden' : 'flex grow flex-col'}
       >
         {children}
       </main>

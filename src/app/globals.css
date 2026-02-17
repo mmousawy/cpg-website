@@ -60,7 +60,7 @@
   --primary-light: rgb(95, 160, 135);
   --primary-alt: #58c287;
   --background: #171718;
-  --background-medium: hsl(200, 2%, 10%);
+  --background-medium: hsl(240, 3%, 12%);
   --background-light: #252527;
   --foreground: #ededed;
   --text-muted: #a3a3a3;
@@ -356,6 +356,13 @@ textarea:focus-visible {
   .toast-container [data-sonner-toast] {
     width: auto !important;
     max-width: 400px !important;
+  }
+}
+
+/* Manage pages: full-width header, position toast at right edge */
+@media (min-width: 640px) {
+  .toast-container.toast-container--full-width {
+    right: 1rem !important;
   }
 }
 

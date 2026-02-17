@@ -2,8 +2,8 @@
 
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
-import { useAuth } from '@/hooks/useAuth';
 import { useCreateAlbum } from '@/hooks/useAlbumMutations';
+import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
 import { useEffect, useState } from 'react';
@@ -38,7 +38,7 @@ export default function AlbumPicker({
           .eq('user_id', user.id)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
-          .limit(50);
+          .limit(100);
 
         if (error) {
           console.error('Error fetching albums:', error);

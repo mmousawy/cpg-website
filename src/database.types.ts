@@ -74,6 +74,7 @@ export type Database = {
       }
       album_photos: {
         Row: {
+          added_by: string | null
           album_id: string
           created_at: string | null
           description: string | null
@@ -86,6 +87,7 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          added_by?: string | null
           album_id: string
           created_at?: string | null
           description?: string | null
@@ -98,6 +100,7 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          added_by?: string | null
           album_id?: string
           created_at?: string | null
           description?: string | null
@@ -110,6 +113,13 @@ export type Database = {
           width?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: 'album_photos_added_by_fkey'
+            columns: ['added_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'album_photos_album_id_fkey'
             columns: ['album_id']
@@ -186,12 +196,17 @@ export type Database = {
           cover_image_url: string | null
           cover_is_manual: boolean | null
           created_at: string | null
+          created_by_system: boolean
           deleted_at: string | null
           description: string | null
+          event_id: number | null
           id: string
           is_public: boolean | null
+          is_shared: boolean
           is_suspended: boolean | null
+          join_policy: string | null
           likes_count: number
+          max_photos_per_user: number | null
           search_vector: unknown
           slug: string
           suspended_at: string | null
@@ -199,19 +214,24 @@ export type Database = {
           suspension_reason: string | null
           title: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           view_count: number
         }
         Insert: {
           cover_image_url?: string | null
           cover_is_manual?: boolean | null
           created_at?: string | null
+          created_by_system?: boolean
           deleted_at?: string | null
           description?: string | null
+          event_id?: number | null
           id?: string
           is_public?: boolean | null
+          is_shared?: boolean
           is_suspended?: boolean | null
+          join_policy?: string | null
           likes_count?: number
+          max_photos_per_user?: number | null
           search_vector?: unknown
           slug: string
           suspended_at?: string | null
@@ -219,19 +239,24 @@ export type Database = {
           suspension_reason?: string | null
           title: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           view_count?: number
         }
         Update: {
           cover_image_url?: string | null
           cover_is_manual?: boolean | null
           created_at?: string | null
+          created_by_system?: boolean
           deleted_at?: string | null
           description?: string | null
+          event_id?: number | null
           id?: string
           is_public?: boolean | null
+          is_shared?: boolean
           is_suspended?: boolean | null
+          join_policy?: string | null
           likes_count?: number
+          max_photos_per_user?: number | null
           search_vector?: unknown
           slug?: string
           suspended_at?: string | null
@@ -239,10 +264,17 @@ export type Database = {
           suspension_reason?: string | null
           title?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           view_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: 'albums_event_id_fkey'
+            columns: ['event_id']
+            isOneToOne: false
+            referencedRelation: 'events'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'albums_user_id_fkey'
             columns: ['user_id']
@@ -1204,6 +1236,103 @@ export type Database = {
           },
         ]
       }
+      shared_album_members: {
+        Row: {
+          album_id: string
+          created_at: string
+          id: number
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          id?: number
+          joined_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          id?: number
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'shared_album_members_album_id_fkey'
+            columns: ['album_id']
+            isOneToOne: false
+            referencedRelation: 'albums'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'shared_album_members_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      shared_album_requests: {
+        Row: {
+          album_id: string
+          created_at: string
+          id: number
+          initiated_by: string
+          resolved_at: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          id?: number
+          initiated_by: string
+          resolved_at?: string | null
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          id?: number
+          initiated_by?: string
+          resolved_at?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'shared_album_requests_album_id_fkey'
+            columns: ['album_id']
+            isOneToOne: false
+            referencedRelation: 'albums'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'shared_album_requests_initiated_by_fkey'
+            columns: ['initiated_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'shared_album_requests_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       tags: {
         Row: {
           count: number | null
@@ -1329,6 +1458,14 @@ export type Database = {
         Args: { p_album_id: string; p_photo_ids: string[] }
         Returns: number
       }
+      add_photos_to_shared_album: {
+        Args: { p_album_id: string; p_photo_ids: string[] }
+        Returns: number
+      }
+      add_shared_album_owner: {
+        Args: { p_album_id: string }
+        Returns: undefined
+      }
       admin_delete_album: { Args: { p_album_id: string }; Returns: boolean }
       batch_update_album_photos: {
         Args: { photo_updates: Json }
@@ -1349,6 +1486,7 @@ export type Database = {
         Returns: number
       }
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
+      create_event_album: { Args: { p_event_id: number }; Returns: string }
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
       generate_short_id: { Args: { size?: number }; Returns: string }
       get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
@@ -1376,6 +1514,28 @@ export type Database = {
       }
       increment_view_count: {
         Args: { p_entity_id: string; p_entity_type: string }
+        Returns: undefined
+      }
+      invite_to_shared_album: {
+        Args: { p_album_id: string; p_user_ids: string[] }
+        Returns: Json
+      }
+      is_shared_album_member: {
+        Args: { p_album_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      join_shared_album: { Args: { p_album_id: string }; Returns: Json }
+      leave_shared_album: { Args: { p_album_id: string }; Returns: undefined }
+      remove_album_member: {
+        Args: { p_album_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      remove_shared_album_photo: {
+        Args: { p_album_id: string; p_album_photo_ids: string[] }
+        Returns: number
+      }
+      resolve_album_request: {
+        Args: { p_action: string; p_request_id: number }
         Returns: undefined
       }
       restore_album: { Args: { p_album_id: string }; Returns: boolean }

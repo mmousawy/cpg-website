@@ -218,9 +218,11 @@ function PhotoRows({
               // Use raw URL - custom loader adds transform params automatically
               const thumbnailUrl = item.photo.url;
 
-              // Get nickname from photo's profile (community) or use provided profileNickname
+              // Get nickname: for album context use profileNickname (owner); otherwise use photo's profile (contributor)
               const streamPhoto = photo as StreamPhoto;
-              const nickname = streamPhoto?.profile?.nickname || profileNickname || '';
+              const nickname = albumSlug && profileNickname
+                ? profileNickname
+                : streamPhoto?.profile?.nickname || profileNickname || '';
 
               // Link to album photo page if albumSlug provided, otherwise standalone photo page
               const photoHref = albumSlug

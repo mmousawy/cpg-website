@@ -27,6 +27,8 @@ interface AlbumMiniCardProps {
   /** Highlight this album (e.g., current album context) */
   highlighted?: boolean;
   className?: string;
+  /** Album owner nickname (shown when album belongs to another user) */
+  ownerNickname?: string | null;
 }
 
 /**
@@ -41,6 +43,7 @@ export default function AlbumMiniCard({
   createdAt,
   highlighted = false,
   className = '',
+  ownerNickname,
 }: AlbumMiniCardProps) {
   return (
     <Link
@@ -77,6 +80,14 @@ export default function AlbumMiniCard({
         >
           {title}
         </span>
+        {ownerNickname && (
+          <span
+            className="text-xs text-foreground/50"
+          >
+            @
+            {ownerNickname}
+          </span>
+        )}
         {createdAt && formatDate(createdAt) && (
           <span
             className="text-xs text-foreground/60"

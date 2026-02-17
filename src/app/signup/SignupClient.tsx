@@ -252,7 +252,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder=""
               required
               minLength={6}
             />
@@ -277,7 +277,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder=""
               required
               minLength={6}
             />

@@ -30,6 +30,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 
 ### Photo Galleries
 - User albums with drag-and-drop reordering
+- Community photo albums: shared albums (open or closed membership), event albums auto-created per event (ownerless, any member can add), contributor attribution
 - Photo uploads with EXIF extraction (camera, lens, settings, GPS)
 - Photo captions
 - Album comments and tags with reply threading
@@ -267,8 +268,10 @@ supabase/
 | `profiles` | User profiles |
 | `events` | Events/meetups |
 | `events_rsvps` | RSVPs and attendance |
-| `albums` | Photo albums (with likes_count, view_count) |
-| `album_photos` | Album-photo junction |
+| `albums` | Photo albums (with likes_count, view_count, sharing settings) |
+| `album_photos` | Album-photo junction (with added_by for attribution) |
+| `shared_album_members` | Shared album membership |
+| `shared_album_requests` | Join requests and invites for shared albums |
 | `photos` | Photo metadata + EXIF (with likes_count, view_count) |
 | `photo_tags` | Photo tags |
 | `photo_likes` | Photo likes |
@@ -374,6 +377,7 @@ Deploy to Vercel:
 
 - [x] Email reminders before events
 - [x] "Happening now" status badge with timezone-aware event times (Europe/Amsterdam)
+- [x] Event photo albums (auto-created per event, any member can contribute)
 
 ### Challenges
 
@@ -392,15 +396,15 @@ Deploy to Vercel:
 - [ ] Follow photographers
 - [x] Activity feed
 - [x] In-app notifications
-- [ ] Community photo albums
+- [x] Community photo albums
 - [x] Reply to comments
 
 ### Discovery
 
 - [x] Member interests in profile
 - [x] Members page (only for logged-in users)
-- [x] Browse by tags (`/gallery/tag/[tag]`, `/members/tag/[tag]`)
-- [x] Browse by interests (`/members/interest/[interest]`)
+- [x] Browse by tags
+- [x] Browse by interests
 - [x] Member discovery sections:
   - Popular interests
   - Recently active members

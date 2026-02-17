@@ -175,8 +175,11 @@ export default function PhotosPage() {
     setSelectedPhotoIds(new Set());
   };
 
-  const handleAddToAlbum = (photoIds: string[]) => {
-    const photosToAdd = photos.filter((p) => photoIds.includes(p.id));
+  const handleAddToAlbum = (photoIds?: string[]) => {
+    const ids = photoIds ?? Array.from(selectedPhotoIds);
+    const photosToAdd = ids
+      .map((id) => photos.find((p) => p.id === id))
+      .filter((p): p is PhotoWithAlbums => p != null);
     if (photosToAdd.length === 0) return;
 
     modalContext.setTitle('Add to album');
