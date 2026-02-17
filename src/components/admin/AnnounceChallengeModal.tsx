@@ -89,15 +89,17 @@ export default function AnnounceChallengeModal({
           (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
         );
 
-        // Filter out opted-out users
-        const subscribersList = allProfiles
-          .filter((profile) => !optedOutUserIds.has(profile.id))
-          .map((profile) => ({
+        // Include all users; mark opted-out users as disabled (visible but not selectable)
+        const subscribersList = allProfiles.map((profile) => {
+          const optedOut = optedOutUserIds.has(profile.id);
+          return {
             email: profile.email!,
             name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
             nickname: profile.nickname,
-            selected: true,
-          }));
+            selected: !optedOut,
+            disabled: optedOut,
+          };
+        });
 
         setSubscribers(subscribersList);
       } catch (err) {

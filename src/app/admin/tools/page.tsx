@@ -1,5 +1,6 @@
 'use client';
 
+import NewsletterComposer from '@/components/admin/NewsletterComposer';
 import SignupBypassGenerator from '@/components/admin/SignupBypassGenerator';
 import PageContainer from '@/components/layout/PageContainer';
 
@@ -20,6 +21,7 @@ export default function AdminToolsPage() {
       <div
         className="space-y-6 mt-8"
       >
+        <NewsletterComposer />
         <SignupBypassGenerator />
       </div>
     </PageContainer>

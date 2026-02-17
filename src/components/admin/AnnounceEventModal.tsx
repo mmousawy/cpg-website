@@ -90,17 +90,17 @@ export default function AnnounceEventModal({
           (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
         );
 
-        // Filter out users who have opted out
-        // Note: Users without a preference record are considered opted IN (default behavior)
-        // Profiles are already sorted by created_at DESC from the query
-        const subscribersList = allProfiles
-          .filter(profile => !optedOutUserIds.has(profile.id))
-          .map(profile => ({
+        // Include all users; mark opted-out users as disabled (visible but not selectable)
+        const subscribersList = allProfiles.map(profile => {
+          const optedOut = optedOutUserIds.has(profile.id);
+          return {
             email: profile.email!,
             name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
             nickname: profile.nickname,
-            selected: true, // All users selected by default
-          }));
+            selected: !optedOut,
+            disabled: optedOut,
+          };
+        });
 
         setSubscribers(subscribersList);
       } catch (err) {

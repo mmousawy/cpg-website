@@ -78,6 +78,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Submission review queue with bulk actions
 - Album moderation (suspend/unsuspend)
 - Content reports review queue with resolution workflow
+- Newsletter tool: compose and send newsletters to members (respects opt-out preferences)
 
 ### Search
 - Global search (Cmd/Ctrl+K)

@@ -10,6 +10,7 @@ export type Recipient = {
   name: string;
   nickname: string | null;
   selected: boolean;
+  disabled?: boolean;
   sendStatus?: 'success' | 'error' | null;
   errorMessage?: string | null;
   // Allow additional properties for extensibility
@@ -33,20 +34,27 @@ export default function RecipientList({
   emptyMessage = 'No recipients found',
   maxHeight = 'md',
 }: RecipientListProps) {
+  const selectableRecipients = useMemo(
+    () => recipients.filter(r => !r.disabled),
+    [recipients],
+  );
+
   const selectedCount = useMemo(
     () => recipients.filter(r => r.selected).length,
     [recipients],
   );
 
-  const allSelected = recipients.length > 0 && recipients.every(r => r.selected);
+  const allSelected = selectableRecipients.length > 0 && selectableRecipients.every(r => r.selected);
 
   const handleSelectAll = (checked: boolean) => {
-    onRecipientsChange(recipients.map(r => ({ ...r, selected: checked })));
+    onRecipientsChange(
+      recipients.map(r => (r.disabled ? r : { ...r, selected: checked })),
+    );
   };
 
   const handleToggleRecipient = (email: string, checked: boolean) => {
     onRecipientsChange(
-      recipients.map(r => (r.email === email ? { ...r, selected: checked } : r)),
+      recipients.map(r => (r.email === email && !r.disabled ? { ...r, selected: checked } : r)),
     );
   };
 
@@ -70,9 +78,19 @@ export default function RecipientList({
         {' '}
         of
         {' '}
-        {recipients.length}
+        {selectableRecipients.length}
         {' '}
-        selected)
+        selected
+        {recipients.length > selectableRecipients.length && (
+          <>
+            ,
+            {' '}
+            {recipients.length - selectableRecipients.length}
+            {' '}
+            opted out
+          </>
+        )}
+        )
       </h3>
 
       <div
@@ -99,6 +117,7 @@ export default function RecipientList({
                     id="select-all"
                     checked={allSelected}
                     onChange={(e) => handleSelectAll(e.target.checked)}
+                    disabled={selectableRecipients.length === 0}
                   />
                 </th>
                 <th
@@ -136,7 +155,7 @@ export default function RecipientList({
               {recipients.map((recipient, idx) => (
                 <tr
                   key={`${recipient.email}-${idx}`}
-                  className="hover:bg-background"
+                  className={recipient.disabled ? 'bg-background-light/50 opacity-60' : 'hover:bg-background'}
                 >
                   <td
                     className="px-4 py-2"
@@ -145,22 +164,27 @@ export default function RecipientList({
                       id={`select-${idx}`}
                       checked={recipient.selected}
                       onChange={(e) => handleToggleRecipient(recipient.email, e.target.checked)}
+                      disabled={recipient.disabled}
                     />
                   </td>
                   <td
                     className="px-4 py-2"
                   >
-                    {recipient.sendStatus === 'success' && (
+                    {recipient.disabled ? (
+                      <span
+                        className="text-xs text-foreground/50"
+                      >
+                        Opted out
+                      </span>
+                    ) : recipient.sendStatus === 'success' ? (
                       <CheckSVG
                         className="size-4 fill-green-600"
                       />
-                    )}
-                    {recipient.sendStatus === 'error' && (
+                    ) : recipient.sendStatus === 'error' ? (
                       <CloseSVG
                         className="size-4 fill-red-600"
                       />
-                    )}
-                    {!recipient.sendStatus && (
+                    ) : (
                       <span
                         className="text-xs text-foreground/40"
                       >

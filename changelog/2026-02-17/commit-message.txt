@@ -1,0 +1,36 @@
+feat: Newsletter admin tool and opted-out user visibility in email tools
+
+Newsletter Admin Tool:
+- Add NewsletterComposer to Admin Tools page (/admin/tools)
+- Compose and send newsletters with subject and body (plain text, line breaks preserved)
+- Recipient list filtered by newsletter email preference (email_preferences + legacy newsletter_opt_in)
+- Send test email to admin's own inbox before full send
+- Batch sending via Resend (100 per batch, 500ms delay) - same pattern as event/challenge announcements
+- React Email template (newsletter.tsx) with Header, Footer, newsletter unsubscribe link
+- POST /api/admin/newsletter/send - accepts subject, body, recipientEmails, testEmail flag
+
+RecipientList and Email Tools:
+- RecipientList supports disabled state for opted-out users
+- Opted-out users visible in list but checkbox disabled, row grayed out, "Opted out" in Status column
+- Header shows "Recipients (X of Y selected, Z opted out)" when applicable
+- Select-all only affects selectable (non-opted-out) recipients
+- AnnounceEventModal: show all users, disable those who opted out of events
+- AnnounceChallengeModal: show all users, disable those who opted out of photo_challenges
+- NewsletterComposer: show all users, disable those who opted out of newsletter
+
+Other:
+- Fix ProfileSection typo: "andgallery" → "and gallery"
+
+Files changed (9):
+
+New (3):
+- src/app/api/admin/newsletter/send/route.ts
+- src/components/admin/NewsletterComposer.tsx
+- src/emails/newsletter.tsx
+
+Modified (6):
+- src/app/admin/tools/page.tsx
+- src/components/account/ProfileSection.tsx
+- src/components/admin/AnnounceChallengeModal.tsx
+- src/components/admin/AnnounceEventModal.tsx
+- src/components/admin/RecipientList.tsx

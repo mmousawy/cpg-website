@@ -203,7 +203,7 @@ export default function ProfileSection({
             <p
               className="text-foreground/50 text-xs"
             >
-              Your nickname is used in your profile andgallery URLs and cannot be changed.
+              Your nickname is used in your profile and gallery URLs and cannot be changed.
               <br />
               URL:
               {' '}
