@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.2](https://github.com/mmousawy/cpg-website/compare/v1.25.1...v1.25.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* Fix email rendering. ([16bc309](https://github.com/mmousawy/cpg-website/commit/16bc3090d7f568c057c1f44c376507940150b621))
+
 ## [1.25.1](https://github.com/mmousawy/cpg-website/compare/v1.25.0...v1.25.1) (2026-02-18)
 
 
