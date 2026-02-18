@@ -18,6 +18,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 import EventDetails from './components/EventDetails';
 import Footer from './components/Footer';
 import EmailHeader from './components/Header';
+import RichContent from './components/RichContent';
 
 export const AttendeeMessageEmail = ({
   preview,
@@ -36,7 +37,7 @@ export const AttendeeMessageEmail = ({
 }) => {
   if (preview) {
     fullName = 'John Doe';
-    message = "This is a sample message from the event organizers. We're looking forward to seeing everyone at the meetup!";
+    message = '<p>This is a sample message from the event organizers.</p><p>We\'re looking forward to seeing everyone at the meetup! Feel free to <strong>bring your camera</strong> and share your photos.</p>';
 
     event = {
       title: 'Contours, compositions and cropping',
@@ -52,16 +53,6 @@ export const AttendeeMessageEmail = ({
   }
 
   const previewText = `Message about: ${event?.title}`;
-
-  // Convert line breaks to HTML breaks
-  const formattedMessage = message.split('\n').map((line, i) => (
-    <Text
-      key={i}
-      className="text-[14px] leading-[24px] text-[#171717]"
-    >
-      {line || '\u00A0'}
-    </Text>
-  ));
 
   return (
     <Html>
@@ -103,7 +94,9 @@ export const AttendeeMessageEmail = ({
             <div
               className="my-[20px] rounded-lg bg-[#f7f7f7] p-4"
             >
-              {formattedMessage}
+              <RichContent
+                html={message}
+              />
             </div>
 
             <Hr

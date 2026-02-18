@@ -4,8 +4,9 @@ import RecipientList, { Recipient } from '@/components/admin/RecipientList';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
+import RichTextEditor, { isEmptyContent } from '@/components/shared/RichTextEditor';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import Textarea from '@/components/shared/Textarea';
+import { useEmailImageUpload } from '@/hooks/useEmailImageUpload';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -25,6 +26,7 @@ type SendResult = {
 
 export default function NewsletterComposer() {
   const supabase = useSupabase();
+  const uploadImage = useEmailImageUpload();
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -113,7 +115,7 @@ export default function NewsletterComposer() {
       setError('Please enter a subject');
       return;
     }
-    if (!body.trim()) {
+    if (isEmptyContent(body)) {
       setError('Please enter the newsletter content');
       return;
     }
@@ -153,7 +155,7 @@ export default function NewsletterComposer() {
       setError('Please enter a subject');
       return;
     }
-    if (!body.trim()) {
+    if (isEmptyContent(body)) {
       setError('Please enter the newsletter content');
       return;
     }
@@ -203,7 +205,7 @@ export default function NewsletterComposer() {
     }
   }, [subject, body, subscribers]);
 
-  const canSend = subject.trim() && body.trim();
+  const canSend = subject.trim() && !isEmptyContent(body);
   const selectedCount = subscribers.filter(s => s.selected).length;
 
   return (
@@ -266,20 +268,15 @@ export default function NewsletterComposer() {
                 *
               </span>
             </label>
-            <Textarea
+            <RichTextEditor
               id="newsletter-body"
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={setBody}
+              onImageUpload={uploadImage}
               placeholder="Enter your newsletter content..."
-              rows={8}
               disabled={isSending || isSendingTest}
-              error={!!error && !body.trim()}
+              error={!!error && isEmptyContent(body)}
             />
-            <p
-              className="mt-1 text-xs text-foreground/50"
-            >
-              Line breaks will be preserved in the email.
-            </p>
           </div>
 
           {/* Recipients */}

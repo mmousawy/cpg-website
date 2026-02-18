@@ -4,8 +4,9 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import RecipientList, { Recipient } from '@/components/admin/RecipientList';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import RichTextEditor, { isEmptyContent } from '@/components/shared/RichTextEditor';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import Textarea from '@/components/shared/Textarea';
+import { useEmailImageUpload } from '@/hooks/useEmailImageUpload';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -25,6 +26,7 @@ export default function EmailAttendeesModal({
   onSuccess,
 }: EmailAttendeesModalProps) {
   const supabase = useSupabase();
+  const uploadImage = useEmailImageUpload();
   const modalContext = useContext(ModalContext);
   const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
   const [isLoadingRecipients, setIsLoadingRecipients] = useState(true);
@@ -136,7 +138,7 @@ export default function EmailAttendeesModal({
   }, [eventId, supabase]);
 
   const handleSend = useCallback(async () => {
-    if (!message.trim()) {
+    if (isEmptyContent(message)) {
       setError('Please enter a message');
       return;
     }
@@ -212,7 +214,7 @@ export default function EmailAttendeesModal({
         <Button
           variant="primary"
           onClick={() => handleSendRef.current?.()}
-          disabled={isSending || !message.trim() || recipients.filter(r => r.selected).length === 0}
+          disabled={isSending || isEmptyContent(message) || recipients.filter(r => r.selected).length === 0}
           loading={isSending}
         >
           Send email
@@ -274,20 +276,15 @@ export default function EmailAttendeesModal({
               *
             </span>
           </label>
-          <Textarea
+          <RichTextEditor
             id="message"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={setMessage}
+            onImageUpload={uploadImage}
             placeholder="Enter your message to attendees..."
-            rows={6}
             disabled={isSending || recipients.filter(r => r.selected).length === 0}
-            error={!!error && !message.trim()}
+            error={!!error && isEmptyContent(message)}
           />
-          <p
-            className="mt-1 text-xs text-foreground/50"
-          >
-            This message will be included in the email along with event details.
-          </p>
         </div>
 
         {/* Error Message */}

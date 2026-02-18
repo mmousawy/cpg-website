@@ -13,6 +13,7 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 import Footer from './components/Footer';
 import EmailHeader from './components/Header';
+import RichContent from './components/RichContent';
 
 export const NewsletterEmail = ({
   preview,
@@ -29,22 +30,12 @@ export const NewsletterEmail = ({
 }) => {
   if (preview) {
     fullName = 'John Doe';
-    subject = 'Newsletter: Creative Photography Group Update';
-    body = "Hi everyone!\n\nWe're excited to share our latest news and updates with you. This is a sample newsletter to show how your message will appear.\n\nThank you for being part of our community!";
+    subject = 'What\'s new on Creative Photography Group';
+    body = '<p>We\'ve been busy building new features and we\'re excited to share what\'s new!</p><h2>Photo Challenges</h2><p>Photo Challenges are <strong>themed creative prompts</strong> designed to push your photography in new directions. Submit your best shots and see your work featured in the challenge gallery.</p><p>Head to the <a href="/challenges">Challenges page</a> to see what\'s currently running.</p><h2>Shared Albums</h2><p>Albums can now be <strong>collaborative</strong>. Create a shared album, invite other members, and build a collection together.</p><p>Thank you for being part of <em>Creative Photography Group</em>. We\'re glad you\'re here.</p>';
     optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
 
   const previewText = subject;
-
-  // Convert line breaks to HTML breaks
-  const formattedBody = body.split('\n').map((line, i) => (
-    <Text
-      key={i}
-      className="text-[14px] leading-[24px] text-[#171717]"
-    >
-      {line || '\u00A0'}
-    </Text>
-  ));
 
   return (
     <Html>
@@ -76,11 +67,9 @@ export const NewsletterEmail = ({
               ,
             </Text>
 
-            <div
-              className="my-[20px] rounded-lg bg-[#f7f7f7] p-4"
-            >
-              {formattedBody}
-            </div>
+            <RichContent
+              html={body}
+            />
 
             <Footer
               fullName={fullName}

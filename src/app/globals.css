@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
+@import "react-quill-new/dist/quill.snow.css";
 
 /* Base/fallback: use system preference when JS is disabled */
 :root {
@@ -377,4 +378,221 @@ textarea:focus-visible {
   .toast-container [data-sonner-toast] {
     width: 100% !important;
   }
+}
+
+/* RichTextEditor (Quill) - match form styling */
+.ql-toolbar.ql-snow {
+  border-color: var(--border-color);
+  border-radius: 0.375rem 0.375rem 0 0;
+  background: var(--background-medium);
+}
+.ql-snow .ql-stroke {
+  stroke: var(--foreground);
+}
+.ql-snow .ql-fill {
+  fill: var(--foreground);
+}
+.ql-snow .ql-picker {
+  color: var(--foreground);
+}
+.ql-snow .ql-picker-options {
+  background: var(--background-light);
+  border-color: var(--border-color);
+}
+.ql-container.ql-snow {
+  border-color: var(--border-color);
+  border-radius: 0 0 0.375rem 0.375rem;
+  background: #f7f7f7;
+  font-size: 14px;
+  line-height: 24px;
+  color: #171717;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.ql-editor {
+  min-height: 8rem;
+  position: relative;
+  max-width: 465px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-left: 1px solid #e5e7ea;
+  border-right: 1px solid #e5e7ea;
+}
+.ql-editor:focus-visible {
+  outline: none;
+}
+.ql-editor.ql-blank::before {
+  color: var(--text-muted);
+  font-style: normal;
+  top: 22px;
+  left: 20px;
+  right: 20px;
+}
+
+/* Quill editor content — match email output exactly */
+.ql-snow .ql-editor p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  line-height: 1.65em;
+}
+.ql-snow .ql-editor h2 {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 24px 0 4px 0;
+  color: #38785f;
+  line-height: 1.5em;
+  padding-bottom: 6px;
+}
+.ql-snow .ql-editor h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 16px 0 4px 0;
+  line-height: 1.5em;
+}
+.ql-snow .ql-editor a {
+  color: #38785f;
+  text-decoration: underline;
+}
+.ql-snow .ql-editor ul,
+.ql-snow .ql-editor ol {
+  margin: 8px 0;
+  padding-left: 6px;
+  font-size: 14px;
+  line-height: 1.65em;
+}
+.ql-snow .ql-editor li {
+  margin: 4px 0;
+}
+.ql-snow .ql-editor blockquote {
+  margin: 8px 0;
+  padding-left: 16px;
+  border-left: 4px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.65em;
+}
+.ql-snow .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+  display: block;
+  cursor: pointer;
+}
+.ql-snow .ql-editor img.img-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+.ql-snow .ql-editor img.img-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+.ql-snow .ql-editor img.img-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+.ql-snow .ql-editor img:hover {
+  outline: 2px solid var(--border-color-strong);
+  outline-offset: 2px;
+}
+
+/* Image size toolbar */
+.rich-text-editor {
+  position: relative;
+}
+.rte-image-size-toolbar {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  background: var(--background-light);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+}
+.rte-image-size-btn {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--foreground);
+  line-height: 20px;
+}
+.rte-image-size-btn:hover {
+  background: var(--background-medium);
+}
+.rte-image-size-btn--active {
+  background: var(--primary);
+  color: white;
+}
+.rte-image-size-btn--active:hover {
+  background: var(--primary-light);
+}
+.rte-image-toolbar-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 2px;
+  background: var(--border-color);
+}
+
+/* Source view toggle */
+.rte-source-toggle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: monospace;
+  line-height: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--background-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 11;
+}
+.rte-source-toggle:hover {
+  color: var(--foreground);
+  background: var(--background-light);
+}
+.rte-source-textarea {
+  width: 100%;
+  min-height: 12rem;
+  padding: 12px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--background-medium);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  resize: vertical;
+  tab-size: 2;
+}
+.rte-source-textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+/* Error and focus states */
+.rich-text-editor--error .ql-toolbar.ql-snow,
+.rich-text-editor--error .ql-container.ql-snow {
+  border-color: var(--error-red);
+}
+.rich-text-editor--error .ql-container.ql-snow:focus-within {
+  border-color: transparent;
+  outline: 2px solid var(--error-red);
+  outline-offset: 0;
+}
+.ql-container.ql-snow:focus-within {
+  border-color: transparent;
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
 }
