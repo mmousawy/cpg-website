@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { CommentNotificationEmail } from '@/emails/comment-notification';
 import { encrypt } from '@/utils/encrypt';
+import { render } from '@react-email/render';
 import { revalidateAlbum, revalidateGalleryData } from '@/app/actions/revalidate';
 import { createNotification } from '@/lib/notifications/create';
 

@@ -1,10 +1,10 @@
-import { render } from '@react-email/render';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { ReportResolvedEmail } from '@/emails/report-resolved';
 import { createNotification } from '@/lib/notifications/create';
 import { encrypt } from '@/utils/encrypt';
+import { render } from '@react-email/render';
 import { adminSupabase } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);

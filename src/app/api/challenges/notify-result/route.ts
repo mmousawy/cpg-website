@@ -1,10 +1,10 @@
-import { render } from '@react-email/components';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import SubmissionResultEmail from '@/emails/submission-result';
 import { createNotification } from '@/lib/notifications/create';
 import { encrypt } from '@/utils/encrypt';
+import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY);

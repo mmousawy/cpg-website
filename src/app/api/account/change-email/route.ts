@@ -1,9 +1,9 @@
-import { render } from '@react-email/render';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import ChangeEmailTemplate from '@/emails/auth/change-email';
+import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 

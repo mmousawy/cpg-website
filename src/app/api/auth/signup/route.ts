@@ -1,4 +1,3 @@
-import { render } from '@react-email/render';
 import { checkBotId } from 'botid/server';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
@@ -6,6 +5,7 @@ import { Resend } from 'resend';
 
 import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
+import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);

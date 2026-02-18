@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import ResetPasswordTemplate from '@/emails/auth/reset-password';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 

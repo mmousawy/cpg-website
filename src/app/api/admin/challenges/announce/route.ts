@@ -1,10 +1,10 @@
-import { render } from '@react-email/render';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { ChallengeAnnouncementEmail } from '@/emails/challenge-announcement';
 import { revalidateChallenges } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
+import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { createNotification } from '@/lib/notifications/create';
 

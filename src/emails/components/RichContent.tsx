@@ -88,9 +88,13 @@ interface RichContentProps {
 }
 
 export default function RichContent({ html }: RichContentProps) {
-  const content = isPlainText(html)
-    ? html.split('\n').map((line) => `<p style="${INLINE_STYLES.p}">${line ? sanitizeHtml(line, { allowedTags: [] }) : '&nbsp;'}</p>`).join('')
-    : sanitizeRichContent(html);
+  // Quill outputs &nbsp; for every space — replace with normal spaces so
+  // email clients can word-wrap naturally (Gmail inserts <wbr> around &nbsp; runs)
+  const normalized = html.replace(/&nbsp;/g, ' ');
+
+  const content = isPlainText(normalized)
+    ? normalized.split('\n').map((line) => `<p style="${INLINE_STYLES.p}">${line ? sanitizeHtml(line, { allowedTags: [] }) : '&nbsp;'}</p>`).join('')
+    : sanitizeRichContent(normalized);
 
   return (
     <div

@@ -1,10 +1,10 @@
-import { render } from '@react-email/render';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
 import { encrypt } from '@/utils/encrypt';
+import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { createNotification } from '@/lib/notifications/create';
 

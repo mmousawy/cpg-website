@@ -1,9 +1,9 @@
-import { render } from '@react-email/render';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { WeeklyDigestEmail } from '@/emails/weekly-digest';
 import { encrypt } from '@/utils/encrypt';
+import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
 import type { NotificationWithActor } from '@/types/notifications';
 
