@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.24.0](https://github.com/mmousawy/cpg-website/compare/v1.23.2...v1.24.0) (2026-02-17)
+
+
+### Features
+
+* Add Help & FAQ page, sign-up CTAs, and event attendance badges ([d705c96](https://github.com/mmousawy/cpg-website/commit/d705c96dc0560d82d84b5ddd3ad5ce40b05206b6))
+* Shared albums, event albums, and code quality fixes ([eb7e2b7](https://github.com/mmousawy/cpg-website/commit/eb7e2b7393ea572caf0b8f783df222bf4af38e7a))
+
+
+### Bug Fixes
+
+* Adjust cron timing. ([2fbf239](https://github.com/mmousawy/cpg-website/commit/2fbf239b6b93bfa64c70c250503556215cfa9f65))
+* adjust styling on various pages. ([322dc12](https://github.com/mmousawy/cpg-website/commit/322dc12132ea9971302eb7e05e2e970a5d148baa))
+
 ## [1.23.2](https://github.com/mmousawy/cpg-website/compare/v1.23.1...v1.23.2) (2026-02-14)
 
 
