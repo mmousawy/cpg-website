@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.0](https://github.com/mmousawy/cpg-website/compare/v1.24.0...v1.25.0) (2026-02-18)
+
+
+### Features
+
+* Integrate Rich Text Editor for email and newsletter composition ([922aac8](https://github.com/mmousawy/cpg-website/commit/922aac8c5f4da5db3f990be5a7b510747fff969b))
+* Newsletter admin tool and opted-out user visibility in email tools ([10b142f](https://github.com/mmousawy/cpg-website/commit/10b142fa2597212ba2bc3a30e2ac606b797cc4d6))
+
 ## [1.24.0](https://github.com/mmousawy/cpg-website/compare/v1.23.2...v1.24.0) (2026-02-17)
 
 
