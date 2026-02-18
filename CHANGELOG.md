@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.1](https://github.com/mmousawy/cpg-website/compare/v1.25.0...v1.25.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* Update changelog generation process and improve version-slug mapping ([01c5ba9](https://github.com/mmousawy/cpg-website/commit/01c5ba9f3a02f9552386e1892532705b2829c0d1))
+
 ## [1.25.0](https://github.com/mmousawy/cpg-website/compare/v1.24.0...v1.25.0) (2026-02-18)
 
 
