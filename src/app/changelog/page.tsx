@@ -1,6 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import { getChangelogSlugs, getSlugsForDate } from '@/lib/changelog';
+import { buildVersionSlugMaps } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
 import { readFile } from 'fs/promises';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -107,48 +107,7 @@ export default async function ChangelogPage() {
   }
 
   const entries = changelogContent ? parseChangelog(changelogContent) : [];
-  const changelogSlugs = await getChangelogSlugs();
-
-  // Build version <-> slug mappings
-  // Each slug's date prefix is matched to a CHANGELOG entry with the same date
-  const slugToVersion = new Map<string, string>();
-  const versionToSlug = new Map<string, string>();
-
-  // Group entries by date for quick lookup
-  const entriesByDate = new Map<string, string[]>();
-  for (const entry of entries) {
-    const versions = entriesByDate.get(entry.date) || [];
-    versions.push(entry.version);
-    entriesByDate.set(entry.date, versions);
-  }
-
-  // For each slug, extract the date and find the matching version(s)
-  for (const slug of changelogSlugs) {
-    // Extract date from slug: "2026-01-18-1" -> "2026-01-18", "2026-01-30" -> "2026-01-30"
-    const dateMatch = slug.match(/^(\d{4}-\d{2}-\d{2})/);
-    if (dateMatch) {
-      const date = dateMatch[1];
-      const versions = entriesByDate.get(date);
-      if (versions && versions.length > 0) {
-        // If multiple versions for this date, assign based on slug suffix
-        // e.g., 2026-01-18-1 gets first version (oldest), 2026-01-18-2 gets second, etc.
-        const slugsForDate = getSlugsForDate(changelogSlugs, date);
-        const slugIndex = slugsForDate.indexOf(slug);
-        // Versions are in newest-first order, so reverse to get oldest-first
-        const versionsOldestFirst = [...versions].reverse();
-        if (slugIndex >= 0 && slugIndex < versionsOldestFirst.length) {
-          const version = versionsOldestFirst[slugIndex];
-          slugToVersion.set(slug, version);
-          versionToSlug.set(version, slug);
-        } else if (versionsOldestFirst.length > 0) {
-          // More slugs than versions: assign last version to remaining slugs
-          const version = versionsOldestFirst[versionsOldestFirst.length - 1];
-          slugToVersion.set(slug, version);
-          // Don't overwrite versionToSlug - keep first slug for each version
-        }
-      }
-    }
-  }
+  const { versionToSlug } = await buildVersionSlugMaps();
 
   // Section order preference
   const sectionOrder = ['Features', 'Bug Fixes', 'Performance', 'Refactoring', 'Documentation', 'Maintenance', 'Tests', 'CI/CD'];

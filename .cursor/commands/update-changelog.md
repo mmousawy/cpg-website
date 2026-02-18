@@ -26,7 +26,12 @@ Create a new changelog entry following the existing pattern in the `/changelog/`
      - Grouped sections of changes (e.g., "Database:", "API Routes:", "Performance:")
      - List of all files changed (new and modified, excluding deleted migrations that were consolidated)
 
-3. **Create `commit-message.txt`:**
+3. **Create `sha.txt`:**
+   - Run `git rev-parse --short HEAD` to get the current commit's short SHA
+   - Write ONLY the short SHA (e.g., `922aac8`) to `changelog/<folder-name>/sha.txt`
+   - This links the changelog entry to the git commit so the app can match it to a version in CHANGELOG.md
+
+4. **Create `commit-message.txt`:**
    - Format: `<type>: <title>` (determined from analysis)
    - Follow with grouped sections, each with bullet points
    - Group changes logically (Database, API Routes, Components, Performance, etc.)
@@ -35,7 +40,7 @@ Create a new changelog entry following the existing pattern in the `/changelog/`
    - Exclude deleted migration files that were consolidated into baseline
    - Use the same tone and style as existing entries (see `changelog/2026-01-22/commit-message.txt`)
 
-4. **Create `files-changed.md`:**
+5. **Create `files-changed.md`:**
    - Start with `# Files Changed - <Title>`
    - Include an "Overview" section with the overview paragraph
    - Create detailed sections explaining what was changed and why
@@ -76,7 +81,7 @@ When analyzing git changes:
   - `perf:` - Performance optimizations, query reductions, RPC functions
   - `docs:` - Documentation updates only
 
-5. **Check and update `README.md`:**
+6. **Check and update `README.md`:**
    - Review the changes made in this update
    - Check if any new features should be added to the "Features" section
    - Check if any completed roadmap items should be moved from "In Progress" or other sections to completed
@@ -87,7 +92,7 @@ When analyzing git changes:
 ## Important Notes
 
 - Do NOT modify `CHANGELOG.md` unless explicitly asked
-- Create both files in the new date folder automatically
+- Create all three files (`sha.txt`, `commit-message.txt`, `files-changed.md`) in the new date folder automatically
 - Ensure the folder name follows the date pattern with suffixes if needed
 - Generate the changelog entry completely automatically - do not ask the user for information
 - If changes are unclear after analysis, make reasonable inferences based on file contents and git diff
