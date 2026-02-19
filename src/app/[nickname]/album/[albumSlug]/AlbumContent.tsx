@@ -6,7 +6,7 @@ import Comments from '@/components/shared/Comments';
 import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import TagsSection from '@/components/shared/TagsSection';
-import ViewTracker from '@/components/shared/ViewTracker';
+import ViewCount from '@/components/shared/ViewCount';
 import { getPhotosByUrls, getProfilesByUserIds } from '@/lib/data/albums';
 import type { Tables } from '@/database.types';
 import type { AlbumJoinPolicy } from '@/types/albums';
@@ -242,15 +242,10 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                   })}
                 </p>
               </div>
-              {/* Views - live updating via ViewTracker */}
-              <div>
-                <ViewTracker
-                  type="album"
-                  id={album.id}
-                  initialCount={album.view_count ?? 0}
-                  compact
-                />
-              </div>
+              <ViewCount
+                count={album.view_count ?? 0}
+                compact
+              />
             </div>
 
             {/* Tags */}

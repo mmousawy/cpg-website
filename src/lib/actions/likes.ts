@@ -123,30 +123,7 @@ export async function toggleLike(
           .maybeSingle();
 
         if (ownerProfile?.nickname && photoDetails) {
-          // Try to find which album this photo is in
-          const { data: albumPhoto } = await supabase
-            .from('album_photos')
-            .select('albums!inner(slug)')
-            .eq('photo_id', entityId)
-            .limit(1)
-            .maybeSingle();
-
-          type AlbumPhotoWithAlbum = {
-            albums: { slug: string } | null;
-          };
-
-          let link: string;
-          if (albumPhoto) {
-            const typedAlbumPhoto = albumPhoto as AlbumPhotoWithAlbum;
-            const album = typedAlbumPhoto.albums;
-            if (album) {
-              link = `/@${ownerProfile.nickname}/album/${album.slug}/photo/${photoDetails.short_id}`;
-            } else {
-              link = `/@${ownerProfile.nickname}/photo/${photoDetails.short_id}`;
-            }
-          } else {
-            link = `/@${ownerProfile.nickname}/photo/${photoDetails.short_id}`;
-          }
+          const link = `/@${ownerProfile.nickname}/photo/${photoDetails.short_id}`;
 
           await createNotification({
             userId: photo.user_id,

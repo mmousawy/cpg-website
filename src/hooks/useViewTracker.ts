@@ -4,46 +4,52 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * Hook for tracking views on photos and albums.
- * Fires an API call on mount to increment view count and returns the updated count.
- * Uses keepalive to ensure the request completes even if user navigates away.
+ * Fires an API call to increment view count on each unique visit.
  *
- * @param type - 'photo' or 'album'
- * @param id - The entity ID
- * @param initialCount - The server-rendered view count (used until the API responds)
- * @returns The current view count (updates after tracking completes)
+ * Tracks by entity key (type + id) and resets on cleanup (unmount or dep change),
+ * so navigating to a different entity or re-mounting the component will re-track.
+ * Should be rendered outside 'use cache' boundaries to ensure it runs on every navigation.
  */
 export function useViewTracker(type: 'photo' | 'album', id: string, initialCount: number = 0) {
   const [viewCount, setViewCount] = useState(initialCount);
-  const tracked = useRef(false);
+  const trackedKey = useRef<string | null>(null);
 
-  // Sync initial count from server props (handles navigation between pages)
   useEffect(() => {
     setViewCount(initialCount);
   }, [initialCount]);
 
   useEffect(() => {
-    // Never track views in development
     if (process.env.NODE_ENV === 'development') return;
+    if (!id) return;
 
-    // Only track once per mount, and only if we have a valid ID
-    if (tracked.current || !id) return;
-    tracked.current = true;
+    const entityKey = `${type}:${id}`;
 
-    fetch('/api/views', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, id }),
-      keepalive: true, // Ensures completion even if user navigates away
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.view_count != null) {
-          setViewCount(data.view_count);
-        }
+    function trackView() {
+      if (trackedKey.current === entityKey) return;
+      trackedKey.current = entityKey;
+
+      fetch('/api/views', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, id }),
+        keepalive: true,
       })
-      .catch(() => {
-        // Silently ignore errors - view tracking is non-critical
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.view_count != null) {
+            setViewCount(data.view_count);
+          }
+        })
+        .catch(() => {});
+    }
+
+    trackView();
+
+    return () => {
+      // Reset on unmount/dep change so re-mounting or navigating
+      // to a different entity (or back to this one) will re-track.
+      trackedKey.current = null;
+    };
   }, [type, id]);
 
   return viewCount;

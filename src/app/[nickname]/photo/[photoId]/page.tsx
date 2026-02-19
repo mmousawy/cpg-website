@@ -1,4 +1,5 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import ViewTracker from '@/components/shared/ViewTracker';
 import { getPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -69,11 +70,18 @@ export default async function PhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Pass to cached content component
-  return <CachedPhotoContent
-    result={result}
-    nickname={nickname}
-  />;
+  return (
+    <>
+      <ViewTracker
+        type="photo"
+        id={result.photo.id}
+      />
+      <CachedPhotoContent
+        result={result}
+        nickname={nickname}
+      />
+    </>
+  );
 }
 
 // Separate cached component for the content

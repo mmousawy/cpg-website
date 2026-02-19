@@ -258,31 +258,8 @@ export async function POST(request: NextRequest) {
         nickname: owner.nickname,
       } : null;
 
-      // Build photo link - need to find which album it's in or use standalone link
       if (ownerProfile?.nickname) {
-        // Try to get first album this photo is in
-        const { data: albumPhoto } = await supabase
-          .from('album_photos')
-          .select('albums!inner(slug)')
-          .eq('photo_id', photo.id)
-          .limit(1)
-          .single();
-
-        type AlbumPhotoWithAlbum = {
-          albums: { slug: string } | null;
-        };
-
-        if (albumPhoto) {
-          const typedAlbumPhoto = albumPhoto as AlbumPhotoWithAlbum;
-          const album = typedAlbumPhoto.albums;
-          if (album) {
-            entityLink = `/@${ownerProfile.nickname}/album/${album.slug}/photo/${photo.short_id}#comments`;
-          } else {
-            entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
-          }
-        } else {
-          entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
-        }
+        entityLink = `/@${ownerProfile.nickname}/photo/${photo.short_id}#comments`;
       }
     }
   } else if (entityType === 'event') {

@@ -7,7 +7,7 @@ import Comments from '@/components/shared/Comments';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import PhotoActionsPopover from '@/components/shared/PhotoActionsPopover';
 import TagsSection from '@/components/shared/TagsSection';
-import ViewTracker from '@/components/shared/ViewTracker';
+import ViewCount from '@/components/shared/ViewCount';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
 import clsx from 'clsx';
@@ -253,15 +253,10 @@ export default function PhotoPageContent({
                 })}
                 </p>
               </div>
-              {/* Views - live updating via ViewTracker */}
-              <div>
-                <ViewTracker
-                  type="photo"
-                  id={photo.id}
-                  initialCount={photo.view_count ?? 0}
-                  compact
-                />
-              </div>
+              <ViewCount
+                count={photo.view_count ?? 0}
+                compact
+              />
             </div>
 
 

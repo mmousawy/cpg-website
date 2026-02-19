@@ -1,4 +1,4 @@
-import { createPublicClient } from '@/utils/supabase/server';
+import { createClient, createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -87,10 +87,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use public client (no auth needed for view tracking)
     const supabase = createPublicClient();
 
-    // Call RPC function to atomically increment view count
+    // Skip self-views: don't count when a logged-in user views their own content
+    try {
+      const authClient = await createClient();
+      const { data: { user } } = await authClient.auth.getUser();
+      if (user) {
+        const table = type === 'photo' ? 'photos' : 'albums';
+        const { data: entity } = await supabase
+          .from(table)
+          .select('user_id, view_count')
+          .eq('id', id)
+          .single();
+
+        if (entity?.user_id === user.id) {
+          return NextResponse.json(
+            { ok: true, skipped: 'self', view_count: entity.view_count ?? null },
+            { status: 200 },
+          );
+        }
+      }
+    } catch {
+      // Auth check failed — proceed with tracking (non-critical)
+    }
+
     const { error } = await supabase.rpc('increment_view_count', {
       p_entity_type: type,
       p_entity_id: id,

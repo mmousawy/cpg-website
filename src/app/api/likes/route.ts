@@ -86,20 +86,7 @@ export async function POST(request: NextRequest) {
           if (ownerProfile?.nickname) {
             ownerNickname = ownerProfile.nickname;
 
-            // Find album for link
-            const { data: albumPhoto } = await supabase
-              .from('album_photos')
-              .select('albums!inner(slug)')
-              .eq('photo_id', entityId)
-              .limit(1)
-              .maybeSingle();
-
-            type AlbumPhotoWithAlbum = { albums: { slug: string } | null };
-            const typedAlbumPhoto = albumPhoto as AlbumPhotoWithAlbum | null;
-
-            const link = typedAlbumPhoto?.albums
-              ? `/@${ownerProfile.nickname}/album/${typedAlbumPhoto.albums.slug}/photo/${photo.short_id}`
-              : `/@${ownerProfile.nickname}/photo/${photo.short_id}`;
+            const link = `/@${ownerProfile.nickname}/photo/${photo.short_id}`;
 
             await createNotification({
               userId: photo.user_id,
