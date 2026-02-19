@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.3](https://github.com/mmousawy/cpg-website/compare/v1.25.2...v1.25.3) (2026-02-19)
+
+
+### Bug Fixes
+
+* view count not incrementing, incorrect notification urls. ([7a11318](https://github.com/mmousawy/cpg-website/commit/7a113186b6c42dc1a03c9b171dff15af7cc9a5ab))
+
 ## [1.25.2](https://github.com/mmousawy/cpg-website/compare/v1.25.1...v1.25.2) (2026-02-18)
 
 
