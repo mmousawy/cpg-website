@@ -1,17 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 /**
  * Hook for tracking views on photos and albums.
- * Fires an API call to increment view count on each unique visit.
+ * Fires an API call to increment view count on each page visit.
  *
- * Tracks by entity key (type + id) and resets on cleanup (unmount or dep change),
- * so navigating to a different entity or re-mounting the component will re-track.
- * Should be rendered outside 'use cache' boundaries to ensure it runs on every navigation.
+ * Uses pathname as an effect dependency so that client-side navigations
+ * (even back to the same page) trigger a new tracking call. This is
+ * necessary because the component may live inside a 'use cache' boundary
+ * where React reuses the component instance without remounting.
  */
 export function useViewTracker(type: 'photo' | 'album', id: string, initialCount: number = 0) {
   const [viewCount, setViewCount] = useState(initialCount);
+  const pathname = usePathname();
   const trackedKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -22,35 +25,28 @@ export function useViewTracker(type: 'photo' | 'album', id: string, initialCount
     if (process.env.NODE_ENV === 'development') return;
     if (!id) return;
 
-    const entityKey = `${type}:${id}`;
+    const trackKey = `${type}:${id}:${pathname}`;
+    if (trackedKey.current === trackKey) return;
+    trackedKey.current = trackKey;
 
-    function trackView() {
-      if (trackedKey.current === entityKey) return;
-      trackedKey.current = entityKey;
-
-      fetch('/api/views', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, id }),
-        keepalive: true,
+    fetch('/api/views', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, id }),
+      keepalive: true,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.view_count != null) {
+          setViewCount(data.view_count);
+        }
       })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.view_count != null) {
-            setViewCount(data.view_count);
-          }
-        })
-        .catch(() => {});
-    }
-
-    trackView();
+      .catch(() => {});
 
     return () => {
-      // Reset on unmount/dep change so re-mounting or navigating
-      // to a different entity (or back to this one) will re-track.
       trackedKey.current = null;
     };
-  }, [type, id]);
+  }, [type, id, pathname]);
 
   return viewCount;
 }

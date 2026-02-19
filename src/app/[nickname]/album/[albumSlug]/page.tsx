@@ -1,4 +1,3 @@
-import ViewTracker from '@/components/shared/ViewTracker';
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -76,16 +75,10 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
   }
 
   return (
-    <>
-      <ViewTracker
-        type="album"
-        id={album.id}
-      />
-      <AlbumContent
-        album={album}
-        nickname={nickname}
-        albumSlug={albumSlug}
-      />
-    </>
+    <AlbumContent
+      album={album}
+      nickname={nickname}
+      albumSlug={albumSlug}
+    />
   );
 }

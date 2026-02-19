@@ -1,5 +1,4 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import ViewTracker from '@/components/shared/ViewTracker';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -74,16 +73,10 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
   }
 
   return (
-    <>
-      <ViewTracker
-        type="photo"
-        id={result.photo.id}
-      />
-      <CachedAlbumPhotoContent
-        result={result}
-        nickname={nickname}
-      />
-    </>
+    <CachedAlbumPhotoContent
+      result={result}
+      nickname={nickname}
+    />
   );
 }
 
