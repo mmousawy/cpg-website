@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.4](https://github.com/mmousawy/cpg-website/compare/v1.25.3...v1.25.4) (2026-02-19)
+
+
+### Bug Fixes
+
+* replace ViewCount with ViewTracker ([f932c1f](https://github.com/mmousawy/cpg-website/commit/f932c1f12c0220a55bfed3c6ac66d32546e30de1))
+
 ## [1.25.3](https://github.com/mmousawy/cpg-website/compare/v1.25.2...v1.25.3) (2026-02-19)
 
 
