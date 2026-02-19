@@ -1,0 +1,39 @@
+fix: View counter reliability, challenge submission UX, mini card cleanup
+
+View Tracking:
+- Fix view count not updating after initial cached render — ViewTracker now fetches fresh count from API instead of relying on stale server-cached initialCount
+- Fix useViewTracker not re-tracking on client-side navigations — use pathname as effect dependency so navigating away and back re-triggers tracking
+- Skip view increment for own content — API checks logged-in user against entity owner
+- Add GET endpoint to /api/views for fetching count without incrementing (used in development)
+- In development mode, fetch view count without incrementing to avoid inflating stats
+
+Challenge Submissions (My Challenges page):
+- Submitted photo now links to photo detail page (clickable overlay)
+- Add short_id and user profile to challenge submission queries
+- Add check-circle-filled icon next to submission date
+- Show full "Ended on <date>" instead of just "Ended" for past deadlines
+- Move deadline badge from image overlay to content area
+
+Mini Card Cleanup:
+- AlbumMiniCard: replace template literal className with clsx, adjust spacing
+- ChallengeMiniCard: replace template literal className with clsx, adjust spacing
+
+Other:
+- PhotoListItem: simplify display name to just title (drop short_id suffix)
+
+Files changed (11):
+
+New (1):
+- public/icons/check-circle-filled.svg
+
+Modified (10):
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/account/challenges/page.tsx
+- src/app/api/views/route.ts
+- src/components/album/AlbumMiniCard.tsx
+- src/components/challenges/ChallengeMiniCard.tsx
+- src/components/manage/PhotoListItem.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/ViewTracker.tsx
+- src/hooks/useChallengeSubmissions.ts
+- src/hooks/useViewTracker.ts

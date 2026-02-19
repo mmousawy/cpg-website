@@ -1,42 +1,47 @@
 'use client';
 
 import { useViewTracker } from '@/hooks/useViewTracker';
-import ViewCount from '@/components/shared/ViewCount';
+import clsx from 'clsx';
+import EyeIcon from 'public/icons/eye.svg';
 
 interface ViewTrackerProps {
   type: 'photo' | 'album';
   id: string;
-  /** Initial view count from the server. When provided, renders a live ViewCount. */
-  initialCount?: number;
-  /** Whether to use compact display (passed to ViewCount) */
+  /** Whether to use compact display */
   compact?: boolean;
-  /** Additional className for the ViewCount wrapper */
+  /** Additional className */
   className?: string;
 }
 
 /**
- * Client component that tracks views for photos and albums.
- *
- * When `initialCount` is provided, it also renders a live-updating ViewCount
- * that shows the server-rendered count immediately, then updates to the real
- * count after the view tracking API responds.
- *
- * When `initialCount` is omitted, it renders nothing (backward-compatible).
+ * Client component that tracks views and displays a fresh count.
+ * Shows the eye icon immediately; the number appears once the API responds.
  */
-export default function ViewTracker({ type, id, initialCount, compact, className }: ViewTrackerProps) {
-  const viewCount = useViewTracker(type, id, initialCount);
+export default function ViewTracker({ type, id, compact = false, className }: ViewTrackerProps) {
+  const viewCount = useViewTracker(type, id);
 
-  // If no initial count provided, just track silently (backward-compatible)
-  if (initialCount === undefined) {
-    return null;
-  }
-
-  // Render live view count
   return (
-    <ViewCount
-      count={viewCount}
-      compact={compact}
-      className={className}
-    />
+    <div
+      className={clsx(
+        'flex items-center gap-1.5 text-foreground/60',
+        compact ? 'text-xs' : 'text-sm',
+        className,
+      )}
+    >
+      <EyeIcon
+        className="size-4"
+      />
+      {viewCount != null && viewCount > 0 && (
+        <span>
+          {viewCount.toLocaleString()}
+          {!compact && (
+            <>
+              {' '}
+              {viewCount === 1 ? 'view' : 'views'}
+            </>
+          )}
+        </span>
+      )}
+    </div>
   );
 }

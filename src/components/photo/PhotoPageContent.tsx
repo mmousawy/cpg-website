@@ -256,7 +256,6 @@ export default function PhotoPageContent({
               <ViewTracker
                 type="photo"
                 id={photo.id}
-                initialCount={photo.view_count ?? 0}
                 compact
               />
             </div>

@@ -1,8 +1,8 @@
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
+import clsx from 'clsx';
 import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
-
 import BlurImage from '../shared/BlurImage';
-import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 
 /** Format date in user-friendly format */
 function formatDate(dateString: string | null | undefined): string | null {
@@ -48,12 +48,13 @@ export default function AlbumMiniCard({
   return (
     <Link
       href={href}
-      className={`group inline-flex items-center gap-2 min-w-32 border pr-3 text-sm transition-colors border-border-color-strong hover:border-primary hover:text-primary ${
-        className} ${
-        highlighted
-          ? 'bg-background-light'
-          : 'bg-background-medium'
-      }`}
+      className={clsx(
+        'group inline-flex items-center gap-2.5 w-fit min-w-32 max-w-54 border pr-2.5',
+        'text-sm transition-colors',
+        'border-border-color-strong hover:border-primary hover:text-primary',
+        highlighted ? 'bg-background-light' : 'bg-background-medium',
+        className,
+      )}
     >
       <div
         className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"

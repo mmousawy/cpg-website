@@ -12,36 +12,46 @@ import { usePathname } from 'next/navigation';
  * necessary because the component may live inside a 'use cache' boundary
  * where React reuses the component instance without remounting.
  */
-export function useViewTracker(type: 'photo' | 'album', id: string, initialCount: number = 0) {
-  const [viewCount, setViewCount] = useState(initialCount);
+export function useViewTracker(type: 'photo' | 'album', id: string) {
+  const [viewCount, setViewCount] = useState<number | null>(null);
   const pathname = usePathname();
   const trackedKey = useRef<string | null>(null);
 
   useEffect(() => {
-    setViewCount(initialCount);
-  }, [initialCount]);
-
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') return;
     if (!id) return;
 
     const trackKey = `${type}:${id}:${pathname}`;
     if (trackedKey.current === trackKey) return;
     trackedKey.current = trackKey;
 
-    fetch('/api/views', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, id }),
-      keepalive: true,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.view_count != null) {
-          setViewCount(data.view_count);
-        }
+    const isDev = process.env.NODE_ENV === 'development';
+
+    // In dev, just fetch the current count without incrementing
+    if (isDev) {
+      const table = type === 'photo' ? 'photos' : 'albums';
+      fetch(`/api/views?table=${table}&id=${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.view_count != null) {
+            setViewCount(data.view_count);
+          }
+        })
+        .catch(() => {});
+    } else {
+      fetch('/api/views', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, id }),
+        keepalive: true,
       })
-      .catch(() => {});
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.view_count != null) {
+            setViewCount(data.view_count);
+          }
+        })
+        .catch(() => {});
+    }
 
     return () => {
       trackedKey.current = null;

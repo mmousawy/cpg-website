@@ -1,7 +1,7 @@
+import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
+import clsx from 'clsx';
 import Link from 'next/link';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
-
-import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import BlurImage from '../shared/BlurImage';
 
 interface ChallengeMiniCardProps {
@@ -38,7 +38,12 @@ export default function ChallengeMiniCard({
   return (
     <Link
       href={href}
-      className={`group inline-flex items-center gap-2 min-w-32 border pr-3 text-sm transition-colors border-border-color-strong hover:border-primary hover:text-primary bg-background-medium ${className}`}
+      className={clsx(
+        'group inline-flex items-center gap-2.5 w-fit min-w-32 max-w-64 border pr-2.5',
+        'text-sm transition-colors bg-background-medium',
+        'border-border-color-strong hover:border-primary hover:text-primary',
+        className,
+      )}
     >
       <div
         className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"

@@ -245,7 +245,6 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
               <ViewTracker
                 type="album"
                 id={album.id}
-                initialCount={album.view_count ?? 0}
                 compact
               />
             </div>

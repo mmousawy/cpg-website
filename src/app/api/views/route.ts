@@ -51,6 +51,29 @@ function isBot(userAgent: string | null): boolean {
   return BOT_PATTERNS.some((pattern) => ua.includes(pattern));
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const table = searchParams.get('table');
+    const id = searchParams.get('id');
+
+    if (!table || !id || (table !== 'photos' && table !== 'albums')) {
+      return NextResponse.json({ error: 'Invalid params' }, { status: 400 });
+    }
+
+    const supabase = createPublicClient();
+    const { data: entity } = await supabase
+      .from(table)
+      .select('view_count')
+      .eq('id', id)
+      .single();
+
+    return NextResponse.json({ ok: true, view_count: entity?.view_count ?? null });
+  } catch {
+    return NextResponse.json({ ok: true, view_count: null });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check User-Agent for bots

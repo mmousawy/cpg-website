@@ -16,7 +16,8 @@ async function fetchMySubmissionsForChallenge(
       `
       *,
       photo:photos (id, short_id, url, width, height, title, blurhash),
-      challenge:challenges (id, slug, title)
+      challenge:challenges (id, slug, title),
+      user:profiles!challenge_submissions_user_id_fkey (nickname, full_name, avatar_url)
     `,
     )
     .eq('user_id', userId)
@@ -53,8 +54,9 @@ async function fetchAllMySubmissions(userId: string): Promise<SubmissionWithDeta
     .select(
       `
       *,
-      photo:photos (id, url, width, height, title, blurhash),
-      challenge:challenges (id, slug, title, cover_image_url, image_blurhash, ends_at, is_active)
+      photo:photos (id, short_id, url, width, height, title, blurhash),
+      challenge:challenges (id, slug, title, cover_image_url, image_blurhash, ends_at, is_active),
+      user:profiles!challenge_submissions_user_id_fkey (nickname, full_name, avatar_url)
     `,
     )
     .eq('user_id', userId)

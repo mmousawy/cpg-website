@@ -16,6 +16,7 @@ import type { SubmissionWithDetails } from '@/types/challenges';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CancelSVG from 'public/icons/cancel.svg';
+import CheckCircleFilledSVG from 'public/icons/check-circle-filled.svg';
 import CheckSVG from 'public/icons/check.svg';
 import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import UndoSVG from 'public/icons/undo.svg';
@@ -30,7 +31,11 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
   const now = new Date(serverNow);
   const diff = deadline.getTime() - now.getTime();
 
-  if (diff <= 0) return 'Ended';
+  if (diff <= 0) return 'Ended on ' + deadline.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -236,7 +241,10 @@ function SubmissionCard({
   const photo = submission.photo;
   const challenge = submission.challenge;
   const deadline = challenge?.ends_at ? formatDeadline(challenge.ends_at, serverNow) : null;
-  const isEnded = deadline === 'Ended' || !challenge?.is_active;
+  const isEnded = deadline?.includes('Ended') || !challenge?.is_active;
+  const photoHref = submission.user?.nickname && photo?.short_id
+    ? `/@${submission.user.nickname}/photo/${photo.short_id}`
+    : null;
 
   const statusConfigs = {
     pending: {
@@ -336,14 +344,22 @@ function SubmissionCard({
             )}
           >
             {photo?.url ? (
-              <BlurImage
-                src={photo.url}
-                alt={photo.title || 'Submitted photo'}
-                fill
-                className="object-cover"
-                sizes="200px"
-                blurhash={photo.blurhash}
-              />
+              <>
+                <BlurImage
+                  src={photo.url}
+                  alt={photo.title || 'Submitted photo'}
+                  fill
+                  className="object-cover"
+                  sizes="200px"
+                  blurhash={photo.blurhash}
+                />
+                {photoHref && (
+                  <Link
+                    href={photoHref}
+                    className="absolute inset-0 z-10"
+                  />
+                )}
+              </>
             ) : (
               <div
                 className="flex h-full w-full items-center justify-center bg-background-medium text-foreground/30"
@@ -373,22 +389,6 @@ function SubmissionCard({
           {/* Status badge */}
           {statusConfig.badge}
         </div>
-
-        {/* Deadline badge - bottom right */}
-        {!isEnded && deadline && (
-          <div
-            className="absolute bottom-3 right-3"
-          >
-            <span
-              className="flex items-center gap-1.5 rounded-full bg-black/50 backdrop-blur-sm px-2 py-1 text-xs text-white/90 text-shadow-sm border border-black/30"
-            >
-              <ClockMiniSVG
-                className="h-3.5 w-3.5 fill-current"
-              />
-              {deadline}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Content */}
@@ -405,11 +405,28 @@ function SubmissionCard({
           </Link>
         )}
 
+        {/* Deadline badge - bottom right */}
+        {!isEnded && deadline && (
+          <div
+            className="flex items-center gap-1.5 text-xs text-foreground/70"
+          >
+            <ClockMiniSVG
+              className="size-4 fill-current shrink-0"
+            />
+            {deadline}
+          </div>
+        )}
+
         {/* Meta info */}
         <div
           className="flex items-center justify-between text-xs text-foreground/70"
         >
-          <span>
+          <span
+            className="flex items-center gap-1.5"
+          >
+            <CheckCircleFilledSVG
+              className="size-4 fill-current shrink-0"
+            />
             Submitted
             {' '}
             {new Date(submission.submitted_at).toLocaleDateString('en-US', {

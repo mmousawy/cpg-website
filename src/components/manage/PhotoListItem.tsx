@@ -13,7 +13,7 @@ import { createPortal } from 'react-dom';
 /** Get display name for a photo: title (short_id) -> short_id */
 export function getPhotoDisplayName(photo: Photo | PhotoWithAlbums): string {
   if (photo.title) {
-    return photo.short_id ? `${photo.title} (${photo.short_id})` : photo.title;
+    return photo.title;
   }
   return photo.short_id || photo.id.slice(0, 8);
 }

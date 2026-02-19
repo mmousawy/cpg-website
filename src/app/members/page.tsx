@@ -133,132 +133,158 @@ export default async function MembersPage() {
 
         {/* Popular Interests Section */}
         <Suspense
-          fallback={
-            <div
-              className="mb-10"
-            >
-              <div
-                className="mb-3 h-7 w-48 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="h-32 animate-pulse rounded bg-background-light"
-              />
-            </div>
-          }
+          fallback={<InterestsSkeleton />}
         >
           <PopularInterestsSection />
         </Suspense>
 
         {/* Random Interests with Members */}
         <Suspense
-          fallback={
-            <div
-              className="mb-10"
-            >
-              <div
-                className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              >
-                {Array.from({ length: 15 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-32 animate-pulse rounded-lg bg-background-light"
-                  />
-                ))}
-              </div>
-            </div>
-          }
+          fallback={(
+            <MemberGridSkeleton
+              title
+              count={15}
+            />
+          )}
         >
           <RandomInterestsSection />
         </Suspense>
 
         {/* Recently Active Members */}
         <Suspense
-          fallback={
-            <div
-              className="mb-10"
-            >
-              <div
-                className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              >
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-32 animate-pulse rounded-lg bg-background-light"
-                  />
-                ))}
-              </div>
-            </div>
-          }
+          fallback={(
+            <MemberGridSkeleton
+              title
+              subtitle
+              count={12}
+            />
+          )}
         >
           <RecentlyActiveSection />
         </Suspense>
 
         {/* Explore by Photo Style (Tags) */}
         <Suspense
-          fallback={
-            <div
-              className="mb-10"
-            >
-              <div
-                className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="flex flex-wrap gap-2"
-              >
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-8 w-20 animate-pulse rounded-full bg-background-light"
-                  />
-                ))}
-              </div>
-            </div>
-          }
+          fallback={<TagsSkeleton />}
         >
           <PopularTagsSection />
         </Suspense>
 
         {/* New Members */}
         <Suspense
-          fallback={
-            <div
-              className=""
-            >
-              <div
-                className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
-              />
-              <div
-                className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-              >
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-32 animate-pulse rounded-lg bg-background-light"
-                  />
-                ))}
-              </div>
-            </div>
-          }
+          fallback={(
+            <MemberGridSkeleton
+              title
+              subtitle
+              count={12}
+            />
+          )}
         >
           <NewMembersSection />
         </Suspense>
       </PageContainer>
     </>
+  );
+}
+
+function MemberCardSkeleton() {
+  return (
+    <div
+      className="animate-pulse rounded-lg border border-border-color bg-background-light px-2 py-3 flex flex-col items-center gap-2"
+    >
+      <div
+        className="size-16 rounded-full bg-background-medium"
+      />
+      <div
+        className="space-y-1.5 w-full flex flex-col items-center"
+      >
+        <div
+          className="h-3.5 bg-background-medium rounded w-3/4"
+        />
+        <div
+          className="h-3 bg-background-medium rounded w-1/2"
+        />
+      </div>
+    </div>
+  );
+}
+
+function MemberGridSkeleton({ title, subtitle, count = 10 }: { title?: boolean; subtitle?: boolean; count?: number }) {
+  return (
+    <div
+      className="mb-10"
+    >
+      {title && (
+        <div
+          className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
+        />
+      )}
+      {subtitle && (
+        <div
+          className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
+        />
+      )}
+      <div
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      >
+        {Array.from({ length: count }).map((_, i) => (
+          <MemberCardSkeleton
+            key={i}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const PILL_WIDTHS = [80, 100, 68, 112, 76, 96, 88, 104, 72, 92, 84, 108];
+
+function InterestsSkeleton() {
+  return (
+    <div
+      className="mb-10"
+    >
+      <div
+        className="mb-3 h-7 w-48 animate-pulse rounded bg-background-light"
+      />
+      <div
+        className="flex flex-wrap gap-2"
+      >
+        {PILL_WIDTHS.map((w, i) => (
+          <div
+            key={i}
+            className="h-8 animate-pulse rounded-full bg-background-light"
+            style={{ width: w }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TagsSkeleton() {
+  return (
+    <div
+      className="mb-10"
+    >
+      <div
+        className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
+      />
+      <div
+        className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
+      />
+      <div
+        className="flex flex-wrap gap-2"
+      >
+        {PILL_WIDTHS.slice(0, 10).map((w, i) => (
+          <div
+            key={i}
+            className="h-8 animate-pulse rounded-full bg-background-light"
+            style={{ width: w }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
