@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.5](https://github.com/mmousawy/cpg-website/compare/v1.25.4...v1.25.5) (2026-02-19)
+
+
+### Bug Fixes
+
+* View counter reliability, challenge submission UX, mini card cleanup ([429d804](https://github.com/mmousawy/cpg-website/commit/429d804cf2ec29202f8f3a443b727e9f2593827e))
+
 ## [1.25.4](https://github.com/mmousawy/cpg-website/compare/v1.25.3...v1.25.4) (2026-02-19)
 
 
