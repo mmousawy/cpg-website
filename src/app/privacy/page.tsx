@@ -259,7 +259,7 @@ export default function PrivacyPage() {
               We use cookies and similar technologies only where necessary. We do not use tracking cookies or share data with third parties for advertising purposes.
             </p>
             <h3
-              className="mb-3 text-lg font-medium sm:text-xl"
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl"
             >
               Functional cookies (authentication)
             </h3>
@@ -299,7 +299,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
             <h3
-              className="mb-3 text-lg font-medium sm:text-xl"
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl"
             >
               Web analytics (no cookies)
             </h3>
