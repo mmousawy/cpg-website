@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.6](https://github.com/mmousawy/cpg-website/compare/v1.25.5...v1.25.6) (2026-02-24)
+
+
+### Bug Fixes
+
+* Update privacy page styling. ([462ebd5](https://github.com/mmousawy/cpg-website/commit/462ebd505e29280038d842b3e0d4cd85f3272584))
+* Update PrivacyPage content. ([f8d54f8](https://github.com/mmousawy/cpg-website/commit/f8d54f89b5c35658ad7800099b7a4be0219d95cd))
+
 ## [1.25.5](https://github.com/mmousawy/cpg-website/compare/v1.25.4...v1.25.5) (2026-02-19)
 
 
