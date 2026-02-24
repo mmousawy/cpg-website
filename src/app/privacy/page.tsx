@@ -29,7 +29,7 @@ export default function PrivacyPage() {
             <p
               className="text-sm text-foreground/70"
             >
-              Last updated: January 21, 2026
+              Last updated: February 24, 2026
             </p>
           </div>
 
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
                 Your photos (stored securely in Supabase storage)
               </li>
               <li>
-                Metadata associated with photos (titles, descriptions, tags, album associations)
+                Metadata associated with photos (titles, descriptions, tags, album associations). We also extract and store EXIF data embedded in your photos, such as camera make and model, lens, exposure settings, focal length, date taken, and GPS coordinates. This data is displayed alongside your photos on the site.
               </li>
               <li>
                 Thumbnails and optimized versions for faster loading
@@ -119,48 +119,40 @@ export default function PrivacyPage() {
             <h2
               className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
             >
-              How we use your information
+              How we use your information and legal basis
             </h2>
             <p>
-              We use your information to:
+              Under the GDPR (AVG), we need a legal basis for processing your data. Here is what we do and why:
             </p>
             <ul
               className="mb-4 ml-6 list-disc"
             >
               <li>
-                Provide and operate the Creative Photography Group service
+                <strong>
+                  Contract performance:
+                </strong>
+                {' '}
+                Storing and displaying your photos in galleries, albums, and your profile. Managing your account and profile. Handling event RSVPs and sending confirmations. Sending service-related emails such as event reminders, comment notifications, and challenge updates.
               </li>
               <li>
-                Display your photos in galleries, albums, and your profile
+                <strong>
+                  Legitimate interest:
+                </strong>
+                {' '}
+                Analyzing anonymous usage data (via Vercel Analytics) to improve the website. Detecting and preventing spam or abuse. Maintaining the security of the platform.
               </li>
               <li>
-                Send you important service updates and notifications (you can opt out of marketing emails)
-              </li>
-              <li>
-                Improve our service and fix technical issues
-              </li>
-              <li>
-                Ensure security and prevent abuse
+                <strong>
+                  Consent:
+                </strong>
+                {' '}
+                Sending newsletters and promotional announcements. Signing in with a third-party provider like Google or Discord.
               </li>
             </ul>
             <p>
               <strong>
                 We do not sell, rent, or share your personal information or photos with third parties for their commercial purposes.
               </strong>
-            </p>
-          </section>
-
-          <section>
-            <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
-            >
-              How we store your data
-            </h2>
-            <p>
-              Your data is stored securely using Supabase, a modern database and storage platform. Your photos are stored in secure cloud storage, and your account information is stored in a protected database.
-            </p>
-            <p>
-              We implement appropriate technical and organizational measures to protect your data against unauthorized access, alteration, disclosure, or destruction.
             </p>
           </section>
 
@@ -181,39 +173,62 @@ export default function PrivacyPage() {
                   Access your data:
                 </strong>
                 {' '}
-                View all information we have about you
+                Request a copy of the personal data we hold about you
               </li>
               <li>
                 <strong>
                   Update your data:
                 </strong>
                 {' '}
-                Modify your profile information at any time
+                Edit your profile, name, bio, and avatar through your account settings
               </li>
               <li>
                 <strong>
                   Delete your data:
                 </strong>
                 {' '}
-                Delete your photos and account at any time
+                Delete your photos yourself, or request full account deletion by contacting us
               </li>
               <li>
                 <strong>
                   Data portability:
                 </strong>
                 {' '}
-                Download your photos and data
+                Request a copy of your data in a portable format
               </li>
               <li>
                 <strong>
-                  Opt out:
+                  Manage email preferences:
                 </strong>
                 {' '}
-                Unsubscribe from marketing emails while keeping important service notifications
+                Unsubscribe from specific email categories (newsletters, event updates, challenge announcements, notifications) using the unsubscribe link in any email, or through your account settings
+              </li>
+              <li>
+                <strong>
+                  Object to processing:
+                </strong>
+                {' '}
+                Ask us to stop processing your data for purposes based on legitimate interest. If you object, we will stop unless we have compelling grounds to continue.
+              </li>
+              <li>
+                <strong>
+                  Lodge a complaint:
+                </strong>
+                {' '}
+                File a complaint with the Autoriteit Persoonsgegevens (Dutch Data Protection Authority) at
+                {' '}
+                <a
+                  href="https://autoriteitpersoonsgegevens.nl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:no-underline"
+                >
+                  autoriteitpersoonsgegevens.nl
+                </a>
               </li>
             </ul>
             <p>
-              To exercise these rights, use the account settings in the app or contact us directly.
+              To exercise these rights, contact us through our website.
             </p>
           </section>
 
@@ -221,21 +236,16 @@ export default function PrivacyPage() {
             <h2
               className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
             >
-              Data retention
+              Data storage, retention, and third parties
             </h2>
+            <p>
+              Your account information, photos, and related data are stored using Supabase (authentication, database, and cloud storage). Anonymous web analytics are collected via Vercel Analytics, which does not use cookies or collect personal data (see the Cookies and tracking section below).
+            </p>
+            <p>
+              These services may process data outside the EU/EEA (e.g. in the United States) under appropriate safeguards for international data transfers, including Standard Contractual Clauses (SCCs) approved by the European Commission. We do not share your data with other third parties except as necessary to provide the service.
+            </p>
             <p>
               We retain your data for as long as your account is active. When you delete content or your account, we remove the data from our active systems. Some data may remain in backups for a limited period for disaster recovery purposes, but it will not be accessible through the service.
-            </p>
-          </section>
-
-          <section>
-            <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
-            >
-              Third-party services
-            </h2>
-            <p>
-              We use Supabase for authentication, database, and storage services. Supabase processes your data according to their privacy policy and security standards. We do not share your data with other third parties except as necessary to provide the service.
             </p>
           </section>
 
@@ -246,7 +256,58 @@ export default function PrivacyPage() {
               Cookies and tracking
             </h2>
             <p>
-              We use cookies and similar technologies to maintain your session, remember your preferences, and improve the service. You can control cookies through your browser settings.
+              We use cookies and similar technologies only where necessary. We do not use tracking cookies or share data with third parties for advertising purposes.
+            </p>
+            <h3
+              className="mb-3 text-lg font-medium sm:text-xl"
+            >
+              Functional cookies (authentication)
+            </h3>
+            <p>
+              When you log in, we use cookies to maintain your session. These are essential for the website to function and do not require your consent under Dutch law (Telecommunicatiewet).
+            </p>
+            <ul
+              className="mb-4 ml-6 list-disc"
+            >
+              <li>
+                <strong>
+                  Cookie names:
+                </strong>
+                {' '}
+                sb-*-auth-token (set by Supabase)
+              </li>
+              <li>
+                <strong>
+                  Purpose:
+                </strong>
+                {' '}
+                Authentication and session management
+              </li>
+              <li>
+                <strong>
+                  Type:
+                </strong>
+                {' '}
+                Functional / essential
+              </li>
+              <li>
+                <strong>
+                  Retention:
+                </strong>
+                {' '}
+                Duration of your session (until you log out or the session expires)
+              </li>
+            </ul>
+            <h3
+              className="mb-3 text-lg font-medium sm:text-xl"
+            >
+              Web analytics (no cookies)
+            </h3>
+            <p>
+              We use Vercel Analytics to understand how visitors use our website. This service does not use cookies. It collects anonymous, aggregated data only (e.g. page views) and cannot identify individual visitors or track you across other websites. No personal data is collected.
+            </p>
+            <p>
+              You can control or delete cookies through your browser settings. Note that disabling functional cookies may prevent you from logging in or using certain features.
             </p>
           </section>
 
@@ -257,7 +318,18 @@ export default function PrivacyPage() {
               Children&apos;s privacy
             </h2>
             <p>
-              Our service is not intended for users under the age of 13. We do not knowingly collect personal information from children under 13.
+              Our service is not intended for users under the age of 16. In the Netherlands and the EU, we do not knowingly collect personal information from children under 16 without parental consent.
+            </p>
+          </section>
+
+          <section>
+            <h2
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+            >
+              Data controller and contact
+            </h2>
+            <p>
+              The data controller responsible for your personal data is Creative Photography Group. If you have questions about this Privacy Policy or your data, please contact us through our website or community channels.
             </p>
           </section>
 
@@ -268,18 +340,7 @@ export default function PrivacyPage() {
               Changes to this policy
             </h2>
             <p>
-              We may update this Privacy Policy from time to time. We will notify users of significant changes, and continued use of the service after changes constitutes acceptance of the updated policy.
-            </p>
-          </section>
-
-          <section>
-            <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
-            >
-              Contact
-            </h2>
-            <p>
-              If you have questions about this Privacy Policy or your data, please contact us through our website or community channels.
+              We may update this Privacy Policy from time to time. We will notify users of significant changes through our website or email. We encourage you to review this page periodically.
             </p>
           </section>
         </div>
