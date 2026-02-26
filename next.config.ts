@@ -28,8 +28,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2678400,
     // Single format reduces variants (Supabase uses WebP automatically)
     formats: ['image/webp'],
-    // Single quality level - all components will use 85
-    qualities: [85],
+    // 30 for blur placeholders, 85 for full images
+    qualities: [30, 85],
     remotePatterns: [
       {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',

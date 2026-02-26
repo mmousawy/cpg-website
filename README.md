@@ -42,6 +42,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Bulk photo and album editing (multi-select, batch operations)
 - Add photos to albums modal
 - Challenge badges on photos (shows which challenges a photo was accepted in)
+- Copyright & licensing: per-photo license selection (All Rights Reserved, CC BY, CC BY-NC, CC BY-NC-ND, CC0), automatic watermarking (corner or diagonal text), EXIF copyright embedding
 - Admin moderation (suspend/unsuspend)
 - Content reporting system (report photos, albums, profiles, comments)
 
@@ -92,7 +93,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Tag-based caching with `use cache`
 - Loading skeletons
 - Custom 404 page
-- Help & FAQ page with contextual help links
+- Help & FAQ pages with contextual help links (including licenses guide)
 - Email notifications (React Email + Resend)
 - In-app notifications with real-time toast notifications (Supabase Realtime)
 - Activity feed page with notification management
@@ -372,6 +373,7 @@ Deploy to Vercel:
 - [x] Member profile photo stream
 - [x] Manual album cover selection
 - [x] Tags on individual photos
+- [x] Copyright & licensing (per-photo licenses, watermarking, EXIF copyright)
 - [ ] Mobile-friendly drag/drop
 
 ### Events

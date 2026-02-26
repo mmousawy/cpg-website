@@ -256,24 +256,23 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
   }
 
   return (
-    <div
-      className=""
-    >
+    <div>
       <h2
-        className="mb-4 text-md font-semibold opacity-70"
+        className="mb-3 sm:mb-4 text-md font-semibold opacity-70"
       >
         Achievements
       </h2>
+      {/* Mobile: break out of container for edge-to-edge scroll, Desktop: grid */}
       <div
-        className="grid gap-3 grid-cols-2 sm:grid-cols-5"
+        className="-mx-2 flex gap-2 overflow-x-auto px-2 pb-3 md:mx-0 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:px-0 md:pb-0"
       >
         {badges.map((badge, index) => (
           <div
             key={index}
-            className="badge-gradient rounded-md px-3 py-4 flex flex-col items-center text-center shadow-xl shadow-foreground/3 hover:shadow-primary/20 dark:hover:shadow-primary-alt/20 transition-all duration-300"
+            className="badge-gradient rounded-md shrink-0 px-3 py-2 sm:py-4 flex flex-col items-center text-center shadow-md sm:shadow-xl shadow-foreground/3 hover:shadow-primary/20 dark:hover:shadow-primary-alt/20 transition-all duration-300 min-w-20 max-w-25 sm:min-w-0 sm:max-w-none"
           >
             <div
-              className="mb-2"
+              className="mb-1 sm:mb-2"
             >
               <div
                 className="size-6 sm:size-8 text-primary flex items-center justify-center"
@@ -282,12 +281,12 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
               </div>
             </div>
             <p
-              className="text-base sm:text-lg font-bold text-foreground mb-0.5"
+              className="text-sm sm:text-lg font-bold text-foreground mb-0.5"
             >
               {badge.value}
             </p>
             <p
-              className="text-xs text-foreground/60 leading-tight"
+              className="text-[10px] sm:text-xs text-foreground/60 leading-tight"
             >
               {badge.label}
               {badge.suffix && ` ${badge.suffix}`}

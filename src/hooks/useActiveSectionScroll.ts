@@ -3,10 +3,15 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Tracks which help section is currently in view by finding the section
- * that "owns" the vertical center of the viewport on every scroll frame.
+ * Tracks which section is currently in view.
+ *
+ * Uses a top-biased threshold (1/3 of viewport) so that clicking a sidebar
+ * link — which scrolls the section to the top — correctly highlights the
+ * target section. For sections near the bottom of the page that can never
+ * scroll high enough, it falls back to the lowest section visible in the
+ * top 2/3 of the viewport.
  */
-export function useActiveHelpSection(sectionIds: string[]) {
+export function useActiveSectionScroll(sectionIds: string[]) {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const sectionKey = sectionIds.join(',');
 
@@ -14,27 +19,21 @@ export function useActiveHelpSection(sectionIds: string[]) {
     if (sectionIds.length === 0) return;
 
     function update() {
-      const atTop = window.scrollY < 300;
       const atBottom =
         window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 100;
-
-      if (atTop) {
-        setActiveSectionId(sectionIds[0]);
-        return;
-      }
 
       if (atBottom) {
         setActiveSectionId(sectionIds[sectionIds.length - 1]);
         return;
       }
 
-      const center = window.innerHeight / 2;
+      const threshold = window.innerHeight / 3;
       let activeId: string | null = null;
 
       for (const id of sectionIds) {
         const el = document.getElementById(id);
         if (!el) continue;
-        if (el.getBoundingClientRect().top <= center) {
+        if (el.getBoundingClientRect().top <= threshold) {
           activeId = id;
         }
       }

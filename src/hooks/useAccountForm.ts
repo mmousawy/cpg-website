@@ -34,6 +34,14 @@ const socialLinkSchema = z.object({
     .startsWith('https://', 'URL must start with https://'),
 });
 
+const licenseTypeSchema = z.enum([
+  'all-rights-reserved',
+  'cc-by-nc-nd-4.0',
+  'cc-by-nc-4.0',
+  'cc-by-4.0',
+  'cc0',
+]);
+
 export const accountFormSchema = z.object({
   fullName: z.string().optional(),
   bio: z.string().optional(),
@@ -43,6 +51,13 @@ export const accountFormSchema = z.object({
   albumCardStyle: z.enum(['large', 'compact']),
   theme: z.enum(['system', 'light', 'dark', 'midnight']),
   emailPreferences: z.record(z.string(), z.boolean()),
+  defaultLicense: licenseTypeSchema,
+  copyrightName: z.string().optional(),
+  watermarkEnabled: z.boolean(),
+  watermarkStyle: z.enum(['text', 'diagonal']),
+  watermarkText: z.string().optional(),
+  embedCopyrightExif: z.boolean(),
+  exifCopyrightText: z.string().optional(),
 });
 
 export type AccountFormData = z.infer<typeof accountFormSchema>;
@@ -65,6 +80,13 @@ export type Profile = Pick<
   album_card_style: 'large' | 'compact' | null;
   theme?: 'light' | 'dark' | 'midnight' | 'system' | null;
   newsletter_opt_in?: boolean | null;
+  default_license?: string | null;
+  copyright_name?: string | null;
+  watermark_enabled?: boolean | null;
+  watermark_style?: 'text' | 'diagonal' | null;
+  watermark_text?: string | null;
+  exif_copyright_text?: string | null;
+  embed_copyright_exif?: boolean | null;
 };
 
 export type AccountStats = {
@@ -144,6 +166,13 @@ export function useAccountForm() {
       albumCardStyle: 'large',
       theme: 'system',
       emailPreferences: {},
+      defaultLicense: 'all-rights-reserved',
+      copyrightName: '',
+      watermarkEnabled: false,
+      watermarkStyle: 'text',
+      watermarkText: '',
+      embedCopyrightExif: false,
+      exifCopyrightText: '',
     },
   });
 
@@ -214,7 +243,7 @@ export function useAccountForm() {
         const { data, error } = await supabase
           .from('profiles')
           .select(
-            'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in',
+            'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text',
           )
           .eq('id', user.id)
           .single();
@@ -240,13 +269,17 @@ export function useAccountForm() {
                 social_links: (newProfile.social_links as SocialLink[] | null) ?? null,
                 album_card_style: (newProfile.album_card_style === 'large' ||
               newProfile.album_card_style === 'compact'
-                ? newProfile.album_card_style
-                : null) as 'large' | 'compact' | null,
+              ? newProfile.album_card_style
+              : null) as 'large' | 'compact' | null,
                 theme: (newProfile.theme &&
               ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
-                ? newProfile.theme
-                : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+              ? newProfile.theme
+              : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
                 newsletter_opt_in: newProfile.newsletter_opt_in ?? false,
+                watermark_style: (newProfile.watermark_style &&
+              ['text', 'diagonal'].includes(newProfile.watermark_style)
+              ? newProfile.watermark_style
+              : null) as 'text' | 'diagonal' | null | undefined,
               });
               setNickname(newProfile.nickname || '');
               setSavedAvatarUrl(newProfile.avatar_url);
@@ -285,6 +318,13 @@ export function useAccountForm() {
                 albumCardStyle: albumStyle,
                 theme: 'system',
                 emailPreferences: emailPrefs,
+                defaultLicense: (newProfile.default_license as AccountFormData['defaultLicense']) || 'all-rights-reserved',
+                copyrightName: newProfile.copyright_name || newProfile.full_name || '',
+                watermarkEnabled: newProfile.watermark_enabled ?? false,
+                watermarkStyle: (['text', 'diagonal'].includes(newProfile.watermark_style ?? '') ? newProfile.watermark_style : 'text') as AccountFormData['watermarkStyle'],
+                watermarkText: newProfile.watermark_text || '',
+                embedCopyrightExif: newProfile.embed_copyright_exif ?? false,
+                exifCopyrightText: newProfile.exif_copyright_text || '',
               };
               reset(formValues);
               setSavedFormValues(formValues);
@@ -325,6 +365,13 @@ export function useAccountForm() {
               albumCardStyle: 'large',
               theme: 'system',
               emailPreferences: emailPrefs,
+              defaultLicense: 'all-rights-reserved',
+              copyrightName: user.user_metadata?.full_name || '',
+              watermarkEnabled: false,
+              watermarkStyle: 'text',
+              watermarkText: '',
+              embedCopyrightExif: false,
+              exifCopyrightText: '',
             };
             reset(formValues);
             setSavedFormValues(formValues);
@@ -340,6 +387,10 @@ export function useAccountForm() {
             theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
             ? data.theme
             : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
+            watermark_style: (data.watermark_style &&
+              ['text', 'diagonal'].includes(data.watermark_style)
+              ? data.watermark_style
+              : null) as 'text' | 'diagonal' | null | undefined,
           });
           setNickname(data.nickname || '');
           setSavedAvatarUrl(data.avatar_url);
@@ -382,6 +433,13 @@ export function useAccountForm() {
             albumCardStyle: albumStyle,
             theme: profileTheme,
             emailPreferences: emailPrefs,
+            defaultLicense: (data.default_license as AccountFormData['defaultLicense']) || 'all-rights-reserved',
+            copyrightName: data.copyright_name || data.full_name || '',
+            watermarkEnabled: data.watermark_enabled ?? false,
+            watermarkStyle: (['text', 'diagonal'].includes(data.watermark_style ?? '') ? data.watermark_style : 'text') as AccountFormData['watermarkStyle'],
+            watermarkText: data.watermark_text || '',
+            embedCopyrightExif: data.embed_copyright_exif ?? false,
+            exifCopyrightText: data.exif_copyright_text || '',
           };
           reset(formValues);
           setSavedFormValues(formValues);
@@ -632,6 +690,13 @@ export function useAccountForm() {
           theme: data.theme,
           newsletter_opt_in: newsletterOptIn,
           avatar_url: newAvatarUrl,
+          default_license: data.defaultLicense,
+          copyright_name: data.copyrightName || null,
+          watermark_enabled: data.watermarkEnabled,
+          watermark_style: data.watermarkStyle,
+          watermark_text: data.watermarkText || null,
+          embed_copyright_exif: data.embedCopyrightExif,
+          exif_copyright_text: data.exifCopyrightText || null,
         })
         .eq('id', user.id);
 
@@ -677,6 +742,13 @@ export function useAccountForm() {
           albumCardStyle: data.albumCardStyle,
           theme: data.theme,
           emailPreferences: savedEmailPrefs,
+          defaultLicense: data.defaultLicense,
+          copyrightName: data.copyrightName || data.fullName || '',
+          watermarkEnabled: data.watermarkEnabled,
+          watermarkStyle: data.watermarkStyle,
+          watermarkText: data.watermarkText || '',
+          embedCopyrightExif: data.embedCopyrightExif,
+          exifCopyrightText: data.exifCopyrightText || '',
         };
 
         // Reset form to saved values and update baseline

@@ -5,29 +5,43 @@ import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
+import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import { useAuth } from '@/hooks/useAuth';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
+import HelpLink from '@/components/shared/HelpLink';
+import { routes } from '@/config/routes';
 import { confirmDeletePhoto } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
 
+import Link from 'next/link';
 import CheckMiniSVG from 'public/icons/check-mini.svg';
 import CloseMiniSVG from 'public/icons/close-mini.svg';
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
 import TrashSVG from 'public/icons/trash.svg';
 import WallArtSVG from 'public/icons/wall-art.svg';
 
+const licenseTypeSchema = z.enum([
+  'all-rights-reserved',
+  'cc-by-nc-nd-4.0',
+  'cc-by-nc-4.0',
+  'cc-by-4.0',
+  'cc0',
+]);
+
 const photoFormSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   is_public: z.boolean(),
+  license: licenseTypeSchema,
   tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed'),
 });
 
@@ -98,6 +112,7 @@ export default function SinglePhotoEditForm({
       title: photo.title || null,
       description: photo.description || null,
       is_public: photo.is_public ?? true,
+      license: (photo.license as PhotoFormData['license']) || 'all-rights-reserved',
       tags: photo.tags?.map((t) => t.tag) || [],
     },
   });
@@ -143,6 +158,7 @@ export default function SinglePhotoEditForm({
       title: photo.title || null,
       description: photo.description || null,
       is_public: photo.is_public ?? true,
+      license: (photo.license as PhotoFormData['license']) || 'all-rights-reserved',
       tags: photo.tags?.map((t) => t.tag) || [],
     });
     setLocalError(null);
@@ -263,6 +279,13 @@ export default function SinglePhotoEditForm({
         <PhotoListItem
           photo={photo}
           variant="detailed"
+          photoPageUrl={(() => {
+            const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
+            if (!nickname) return undefined;
+            return currentAlbum
+              ? `/@${nickname}/album/${currentAlbum.slug}/photo/${photo.short_id}`
+              : `/@${nickname}/photo/${photo.short_id}`;
+          })()}
         />
       </div>
 
@@ -377,6 +400,48 @@ export default function SinglePhotoEditForm({
             />
           </div>
 
+          <div
+            className="flex flex-col gap-2"
+          >
+            <span
+              className="text-sm font-medium flex items-center"
+            >
+              License
+              <HelpLink
+                href={routes.helpLicenses.url}
+                label="Learn about licenses"
+                className="size-5!"
+                iconClassName="size-4"
+              />
+            </span>
+            <Controller
+              name="license"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  options={LICENSE_ORDER.map((value) => ({
+                    value,
+                    label: LICENSE_TYPES[value].shortName,
+                  }))}
+                  disabled={isSaving}
+                />
+              )}
+            />
+            <Controller
+              name="license"
+              control={control}
+              render={({ field }) => (
+                <p
+                  className="text-foreground/50 text-xs"
+                >
+                  {LICENSE_TYPES[field.value].description}
+                </p>
+              )}
+            />
+          </div>
+
           {/* Album cover section - only show when in album context */}
           {currentAlbum && onSetAsCover && (
             <div
@@ -428,6 +493,7 @@ export default function SinglePhotoEditForm({
                 >
                   {photoAlbums.map((album) => {
                     const isOtherOwner = album.profile_nickname && album.profile_nickname !== currentProfile?.nickname;
+                    const albumOwner = album.profile_nickname || currentProfile?.nickname;
                     return (
                       <AlbumMiniCard
                         key={album.id}
@@ -435,6 +501,7 @@ export default function SinglePhotoEditForm({
                         slug={album.slug}
                         coverImageUrl={album.cover_image_url}
                         href={`/account/albums/${album.slug}`}
+                        publicUrl={albumOwner ? `/@${albumOwner}/album/${album.slug}` : undefined}
                         photoCount={album.photo_count}
                         ownerNickname={isOtherOwner ? album.profile_nickname : undefined}
                       />

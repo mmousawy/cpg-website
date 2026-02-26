@@ -6,14 +6,19 @@ import { formatAperture, formatExposure, formatFocalLength, formatISO } from '@/
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
+import Link from 'next/link';
+import LinkSVG from 'public/icons/link.svg';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-/** Get display name for a photo: title (short_id) -> short_id */
+/** Get display name for a photo: title -> original filename (no ext) -> short_id */
 export function getPhotoDisplayName(photo: Photo | PhotoWithAlbums): string {
   if (photo.title) {
     return photo.title;
+  }
+  if (photo.original_filename) {
+    return photo.original_filename.replace(/\.[^.]+$/, '');
   }
   return photo.short_id || photo.id.slice(0, 8);
 }
@@ -119,6 +124,8 @@ interface PhotoListItemProps {
   photo: Photo | PhotoWithAlbums;
   /** 'compact' shows thumbnail + name + resolution, 'detailed' shows all metadata */
   variant?: PhotoListItemVariant;
+  /** URL to the public photo page (shown as "Open page" link in detailed view) */
+  photoPageUrl?: string;
   className?: string;
 }
 
@@ -131,6 +138,7 @@ interface PhotoListItemProps {
 export default function PhotoListItem({
   photo,
   variant = 'compact',
+  photoPageUrl,
   className = '',
 }: PhotoListItemProps) {
   const displayName = getPhotoDisplayName(photo);
@@ -271,7 +279,7 @@ export default function PhotoListItem({
   // Check if className overrides items alignment
   const hasItemsOverride = className.includes('items-center') || className.includes('items-end');
   const baseClasses = clsx(
-    'flex gap-2 border border-border-color bg-background-medium p-0',
+    'relative flex gap-2 border border-border-color bg-background-medium p-0',
     hasItemsOverride ? '' : 'items-start',
     className,
   );
@@ -305,21 +313,26 @@ export default function PhotoListItem({
           />
         </div>
       </div>
-      <div
-        className="min-w-0 flex-1 py-1 pr-1 space-y-0.5 relative"
-      >
-        {/* Primary name (title or fallback) */}
+      {isDetailed && (
         <div
-          className="flex items-start justify-between gap-2"
+          className="absolute top-0.5 right-0.5 z-10 flex items-center"
         >
-          <p
-            className="line-clamp-2 text-sm font-medium leading-tight flex-1"
-            title={displayName}
-          >
-            {displayName}
-          </p>
-          {/* EXIF Info Button - only in detailed view */}
-          {isDetailed && hasExif && (
+          {photoPageUrl && (
+            <Link
+              href={photoPageUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
+              title="Open photo page"
+              aria-label="Open photo page"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <LinkSVG
+                className="size-3.5"
+              />
+            </Link>
+          )}
+          {hasExif && (
             <>
               <button
                 ref={buttonRef}
@@ -327,10 +340,9 @@ export default function PhotoListItem({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!showExif && buttonRef.current) {
-                    // Calculate position before showing popover to prevent flash
                     const rect = buttonRef.current.getBoundingClientRect();
                     setPopoverPosition({
-                      top: rect.bottom + 4, // 4px gap
+                      top: rect.bottom + 4,
                       right: window.innerWidth - rect.right,
                     });
                     setShowExif(true);
@@ -338,7 +350,7 @@ export default function PhotoListItem({
                     setShowExif(false);
                   }
                 }}
-                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground shrink-0"
+                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
                 title="View EXIF data"
                 aria-label="View EXIF data"
               >
@@ -347,7 +359,6 @@ export default function PhotoListItem({
                 />
               </button>
 
-              {/* EXIF Popover - rendered via portal outside scroll container */}
               {showExif &&
                 popoverPosition &&
                 typeof window !== 'undefined' &&
@@ -398,6 +409,17 @@ export default function PhotoListItem({
             </>
           )}
         </div>
+      )}
+      <div
+        className="min-w-0 flex-1 py-1 pr-1 space-y-0.5"
+      >
+        {/* Primary name (title or fallback) */}
+        <p
+          className="line-clamp-1 text-sm font-medium leading-tight pr-12"
+          title={displayName}
+        >
+          {displayName}
+        </p>
 
         <div
           className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/60"

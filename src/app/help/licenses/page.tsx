@@ -1,23 +1,23 @@
-import Link from 'next/link';
-
 import SectionMobileNav from '@/components/shared/SectionMobileNav';
 import SectionSidebar from '@/components/shared/SectionSidebar';
 import Container from '@/components/layout/Container';
-import { SectionScrollProvider } from '@/context/SectionScrollContext';
 import PageContainer from '@/components/layout/PageContainer';
+import ArrowLink from '@/components/shared/ArrowLink';
 import HelpAccordion from '@/components/shared/HelpAccordion';
 import { routes } from '@/config/routes';
-import { helpSections } from '@/content/help';
+import { licensesHelpSections } from '@/content/help/licenses';
+import { SectionScrollProvider } from '@/context/SectionScrollContext';
 import { createMetadata } from '@/utils/metadata';
 
 export const metadata = createMetadata({
-  title: 'Help & FAQ',
-  description: 'Get help with your Creative Photography Group account, events, photos, and more.',
-  canonical: '/help',
+  title: 'Copyright & licensing',
+  description:
+    'Learn about photo licenses, watermarking, and EXIF copyright on Creative Photography Group.',
+  canonical: '/help/licenses',
 });
 
-export default function HelpPage() {
-  const sectionIds = helpSections.map((s) => s.id);
+export default function LicensesHelpPage() {
+  const sectionIds = licensesHelpSections.map((s) => s.id);
 
   return (
     <SectionScrollProvider
@@ -27,36 +27,38 @@ export default function HelpPage() {
         <div
           className="mb-8"
         >
-          <div
-            className="flex items-center gap-2 mb-2"
+          <ArrowLink
+            href={routes.help.url}
+            direction="left"
+            className="mb-2"
           >
-            <h1
-              className="text-2xl sm:text-3xl font-bold"
-            >
-              Help & FAQ
-            </h1>
-          </div>
+            Help
+          </ArrowLink>
+          <h1
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            Copyright & licensing
+          </h1>
           <p
             className="text-base sm:text-lg mt-2 text-foreground/70"
           >
-            Find answers to common questions about using Creative Photography Group.
+            Set licenses for your photos, add watermarks, and embed copyright in
+            EXIF metadata.
           </p>
         </div>
 
         <div
           className="flex flex-col md:flex-row md:gap-4 lg:gap-8"
         >
-          {/* Sticky sidebar - desktop only */}
           <SectionSidebar
-            sections={helpSections}
+            sections={licensesHelpSections}
             ariaLabel="Help sections"
           />
 
-          {/* Main content */}
           <div
             className="min-w-0 flex-1 space-y-3 sm:space-y-8 text-sm sm:text-base"
           >
-            {helpSections.map((section) => (
+            {licensesHelpSections.map((section) => (
               <section
                 key={section.id}
                 id={section.id}
@@ -64,7 +66,7 @@ export default function HelpPage() {
               >
                 <Container
                   variant="default"
-                  className='pb-1! md:pb-2!'
+                  className="pb-1! md:pb-2!"
                 >
                   <h2
                     className="mb-4 text-xl font-semibold sm:text-2xl"
@@ -88,24 +90,20 @@ export default function HelpPage() {
               </section>
             ))}
 
-            <p>
-              Still have questions?
-              {' '}
-              <Link
-                href={routes.contact.url}
-                className="text-primary hover:underline underline-offset-4"
-              >
-                Contact us
-              </Link>
-            </p>
+            <ArrowLink
+              href={routes.help.url}
+              direction="left"
+            >
+              Back to Help
+            </ArrowLink>
           </div>
         </div>
-      </PageContainer>
 
-      <SectionMobileNav
-        sections={helpSections}
-        ariaLabel="Help sections"
-      />
+        <SectionMobileNav
+          sections={licensesHelpSections}
+          ariaLabel="Help sections"
+        />
+      </PageContainer>
     </SectionScrollProvider>
   );
 }

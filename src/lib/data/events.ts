@@ -31,7 +31,7 @@ export async function getRecentEvents(limit = 6) {
   const supabase = createPublicClient();
   const { data } = await supabase
     .from('events')
-    .select('id, title, date, location, time, cover_image, slug, description')
+    .select('id, title, date, location, time, cover_image, image_blurhash, image_height, image_width, slug, description')
     .order('date', { ascending: false })
     .limit(limit);
 

@@ -86,6 +86,23 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
         }
       }
 
+      // Fetch user profile for default license and copyright (used for all uploads in this batch)
+      let defaultLicense: 'all-rights-reserved' | 'cc-by-nc-nd-4.0' | 'cc-by-nc-4.0' | 'cc-by-4.0' | 'cc0' = 'all-rights-reserved';
+      let copyrightNotice: string | null = null;
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('default_license, copyright_name, full_name, watermark_enabled, embed_copyright_exif')
+        .eq('id', userId)
+        .maybeSingle();
+      if (profileData) {
+        defaultLicense = (profileData.default_license as typeof defaultLicense) || 'all-rights-reserved';
+        const copyrightName = profileData.copyright_name || profileData.full_name;
+        if (copyrightName) {
+          const { formatCopyrightNotice } = await import('@/utils/licenses');
+          copyrightNotice = formatCopyrightNotice(copyrightName, new Date().getFullYear(), defaultLicense);
+        }
+      }
+
       // Upload files sequentially to maintain order and show progress clearly
       for (let i = 0; i < newUploads.length; i++) {
         const upload = newUploads[i];
@@ -174,12 +191,25 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
               short_id: shortId,
               original_filename: file.name,
               sort_order: sortOrderStart + i,
+              license: defaultLicense,
+              copyright_notice: copyrightNotice,
             })
             .select()
             .single();
 
           if (insertError) {
             throw new Error(`Failed to save photo: ${insertError.message}`);
+          }
+
+          // Trigger server-side processing (watermark, EXIF) if user has it enabled
+          if (profileData?.watermark_enabled || profileData?.embed_copyright_exif) {
+            fetch('/api/photos/process', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ photoId: photoData.id }),
+            }).catch(() => {
+              // Non-blocking: processing failure doesn't fail the upload
+            });
           }
 
           // Add to albums if specified

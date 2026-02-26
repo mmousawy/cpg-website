@@ -31,9 +31,7 @@ export default function PublicProfileSection({
   const { fields, append, remove } = socialLinksFieldArray;
 
   return (
-    <div
-      className="mt-8"
-    >
+    <div>
       <h2
         className="mb-4 text-lg font-semibold opacity-70"
       >

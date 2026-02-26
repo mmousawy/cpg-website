@@ -146,7 +146,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
               className="flex-1 min-w-0"
             >
               <h1
-                className="sm:text-3xl text-xl font-bold truncate"
+                className="sm:text-3xl text-xl font-bold line-clamp-2 pr-8"
               >
                 {profile.full_name || `@${profile.nickname}`}
               </h1>

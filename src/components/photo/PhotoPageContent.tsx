@@ -10,7 +10,9 @@ import TagsSection from '@/components/shared/TagsSection';
 import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
+import { getLicenseInfo } from '@/utils/licenses';
 import clsx from 'clsx';
+import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
 
@@ -260,6 +262,40 @@ export default function PhotoPageContent({
               />
             </div>
 
+            {/* License & copyright */}
+            {(() => {
+              const license = photo.license || 'all-rights-reserved';
+              const info = getLicenseInfo(license);
+              return (
+                <div
+                  className="flex flex-col gap-1"
+                >
+                  <div
+                    className="flex items-center gap-1.5"
+                  >
+                    <span
+                      className="text-foreground/60 shrink-0 text-xs"
+                      aria-hidden
+                    >
+                      ©
+                    </span>
+                    <Link
+                      href="/help/licenses"
+                      className="text-xs text-foreground/60 hover:text-primary hover:underline underline-offset-2"
+                    >
+                      {info.shortName}
+                    </Link>
+                  </div>
+                  {photo.copyright_notice && (
+                    <p
+                      className="text-xs text-foreground/60"
+                    >
+                      {photo.copyright_notice}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* EXIF metadata */}
             {exifString && (

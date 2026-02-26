@@ -79,6 +79,10 @@ export const routes = {
     label: 'Help',
     url: '/help',
   },
+  helpLicenses: {
+    label: 'Copyright & licensing',
+    url: '/help/licenses',
+  },
   changelog: {
     label: 'Changelog',
     url: '/changelog',

@@ -3,15 +3,17 @@
 import Link from 'next/link';
 
 import Container from '@/components/layout/Container';
-import type { FAQSection } from '@/content/help/types';
-import { useHelpScroll } from '@/context/HelpScrollContext';
+import { useSectionScroll } from '@/context/SectionScrollContext';
 
-interface HelpSidebarProps {
-  sections: FAQSection[];
+export type SectionNavItem = { id: string; title: string };
+
+interface SectionSidebarProps {
+  sections: SectionNavItem[];
+  ariaLabel?: string;
 }
 
-export default function HelpSidebar({ sections }: HelpSidebarProps) {
-  const { activeSectionId, pinSection } = useHelpScroll();
+export default function SectionSidebar({ sections, ariaLabel = 'Page sections' }: SectionSidebarProps) {
+  const { activeSectionId, pinSection } = useSectionScroll();
 
   return (
     <aside
@@ -26,7 +28,7 @@ export default function HelpSidebar({ sections }: HelpSidebarProps) {
           className="rounded-lg!"
         >
           <nav
-            aria-label="Help sections"
+            aria-label={ariaLabel}
           >
             <ul
               className="space-y-1 text-sm"
@@ -40,9 +42,9 @@ export default function HelpSidebar({ sections }: HelpSidebarProps) {
                     <Link
                       href={`#${section.id}`}
                       onClick={() => pinSection(section.id)}
-                      className={`block rounded-md px-2 py-1.5 ${
+                      className={`block rounded-md px-2 py-1.5 font-medium ${
                         isActive
-                          ? 'bg-primary/10 text-primary font-semibold shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]'
+                          ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]'
                           : 'text-foreground/80 hover:bg-background-medium hover:text-foreground'
                       }`}
                     >

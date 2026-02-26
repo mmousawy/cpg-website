@@ -457,12 +457,13 @@ textarea:focus-visible {
 .ql-snow .ql-editor ul,
 .ql-snow .ql-editor ol {
   margin: 8px 0;
-  padding-left: 6px;
+  padding-left: 16px;
   font-size: 14px;
   line-height: 1.65em;
 }
 .ql-snow .ql-editor li {
   margin: 4px 0;
+  padding-left: 0;
 }
 .ql-snow .ql-editor blockquote {
   margin: 8px 0;

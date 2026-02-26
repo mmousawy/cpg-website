@@ -1006,6 +1006,7 @@ export type Database = {
       photos: {
         Row: {
           blurhash: string | null
+          copyright_notice: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
@@ -1014,6 +1015,7 @@ export type Database = {
           height: number
           id: string
           is_public: boolean
+          license: Database['public']['Enums']['license_type']
           likes_count: number
           mime_type: string
           original_filename: string | null
@@ -1029,6 +1031,7 @@ export type Database = {
         }
         Insert: {
           blurhash?: string | null
+          copyright_notice?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -1037,6 +1040,7 @@ export type Database = {
           height: number
           id?: string
           is_public?: boolean
+          license?: Database['public']['Enums']['license_type']
           likes_count?: number
           mime_type: string
           original_filename?: string | null
@@ -1052,6 +1056,7 @@ export type Database = {
         }
         Update: {
           blurhash?: string | null
+          copyright_notice?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -1060,6 +1065,7 @@ export type Database = {
           height?: number
           id?: string
           is_public?: boolean
+          license?: Database['public']['Enums']['license_type']
           likes_count?: number
           mime_type?: string
           original_filename?: string | null
@@ -1109,8 +1115,12 @@ export type Database = {
           album_card_style: string | null
           avatar_url: string | null
           bio: string | null
+          copyright_name: string | null
           created_at: string | null
+          default_license: Database['public']['Enums']['license_type']
           email: string | null
+          embed_copyright_exif: boolean
+          exif_copyright_text: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
@@ -1124,14 +1134,21 @@ export type Database = {
           terms_accepted_at: string | null
           theme: string | null
           updated_at: string | null
+          watermark_enabled: boolean
+          watermark_style: string | null
+          watermark_text: string | null
           website: string | null
         }
         Insert: {
           album_card_style?: string | null
           avatar_url?: string | null
           bio?: string | null
+          copyright_name?: string | null
           created_at?: string | null
+          default_license?: Database['public']['Enums']['license_type']
           email?: string | null
+          embed_copyright_exif?: boolean
+          exif_copyright_text?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
@@ -1145,14 +1162,21 @@ export type Database = {
           terms_accepted_at?: string | null
           theme?: string | null
           updated_at?: string | null
+          watermark_enabled?: boolean
+          watermark_style?: string | null
+          watermark_text?: string | null
           website?: string | null
         }
         Update: {
           album_card_style?: string | null
           avatar_url?: string | null
           bio?: string | null
+          copyright_name?: string | null
           created_at?: string | null
+          default_license?: Database['public']['Enums']['license_type']
           email?: string | null
+          embed_copyright_exif?: boolean
+          exif_copyright_text?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
@@ -1166,6 +1190,9 @@ export type Database = {
           terms_accepted_at?: string | null
           theme?: string | null
           updated_at?: string | null
+          watermark_enabled?: boolean
+          watermark_style?: string | null
+          watermark_text?: string | null
           website?: string | null
         }
         Relationships: []
@@ -1555,7 +1582,12 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      license_type:
+        | 'all-rights-reserved'
+        | 'cc-by-nc-nd-4.0'
+        | 'cc-by-nc-4.0'
+        | 'cc-by-4.0'
+        | 'cc0'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1682,7 +1714,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      license_type: [
+        'all-rights-reserved',
+        'cc-by-nc-nd-4.0',
+        'cc-by-nc-4.0',
+        'cc-by-4.0',
+        'cc0',
+      ],
+    },
   },
 } as const;
 

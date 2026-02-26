@@ -321,6 +321,7 @@ export default function SingleAlbumEditForm({
           <AlbumListItem
             album={album}
             variant="detailed"
+            publicUrl={nickname ? `/@${nickname}/album/${album.slug}` : undefined}
           />
         </div>
       )}
