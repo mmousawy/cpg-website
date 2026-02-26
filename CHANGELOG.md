@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.26.0](https://github.com/mmousawy/cpg-website/compare/v1.25.6...v1.26.0) (2026-02-26)
+
+
+### Features
+
+* Copyright & licensing system, photo/album page links, UI polish ([fd498d3](https://github.com/mmousawy/cpg-website/commit/fd498d38e3dfe1e0e52174e09f00d2fc33dd3aca))
+* Copyright & licensing system, photo/album page links, UI polish ([5725bff](https://github.com/mmousawy/cpg-website/commit/5725bffa2926a3b28f0163434c4edfdaf869c722))
+
 ## [1.25.6](https://github.com/mmousawy/cpg-website/compare/v1.25.5...v1.25.6) (2026-02-24)
 
 
