@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import BlurImage from '@/components/shared/BlurImage';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 
-const MAX_SIZE_DESKTOP = 256;
+const MAX_SIZE_DESKTOP = 320;
 
 interface EventCoverImageProps {
   url: string;
@@ -96,7 +96,7 @@ export default function EventCoverImage({
     <>
       {/* Mobile: full width, fixed height at top */}
       <div
-        className="event-cover-gallery sm:hidden relative rounded-xl overflow-hidden bg-background-medium mb-4 group cursor-zoom-in w-full h-40"
+        className="event-cover-gallery sm:hidden relative rounded-md sm:rounded-xl overflow-hidden bg-background-medium mb-4 group cursor-zoom-in w-full h-40"
       >
         {imageContent}
       </div>

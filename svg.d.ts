@@ -30,3 +30,5 @@ declare module 'public/*.jpeg' {
   const value: string;
   export default value;
 }
+
+declare module 'piexifjs';

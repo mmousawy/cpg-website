@@ -3,17 +3,18 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { FAQSection } from '@/content/help/types';
-import { useHelpScroll } from '@/context/HelpScrollContext';
+import { useSectionScroll } from '@/context/SectionScrollContext';
+import type { SectionNavItem } from '@/components/shared/SectionSidebar';
 
-interface HelpMobileNavProps {
-  sections: FAQSection[];
+interface SectionMobileNavProps {
+  sections: SectionNavItem[];
+  ariaLabel?: string;
 }
 
-export default function HelpMobileNav({ sections }: HelpMobileNavProps) {
+export default function SectionMobileNav({ sections, ariaLabel = 'Page sections' }: SectionMobileNavProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const { activeSectionId, pinSection } = useHelpScroll();
+  const { activeSectionId, pinSection } = useSectionScroll();
   const activeSection = sections.find((s) => s.id === activeSectionId);
 
   const close = useCallback(() => setIsExpanded(false), []);
@@ -84,7 +85,7 @@ export default function HelpMobileNav({ sections }: HelpMobileNavProps) {
         style={{ maxHeight: isExpanded ? 280 : 0 }}
       >
         <nav
-          aria-label="Help sections"
+          aria-label={ariaLabel}
           className="border-t border-border-color overflow-y-auto overscroll-contain max-h-[260px]"
         >
           <ul

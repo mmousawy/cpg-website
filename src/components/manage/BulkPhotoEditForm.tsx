@@ -3,14 +3,19 @@
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
+import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
+import { useAuth } from '@/hooks/useAuth';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
+import HelpLink from '@/components/shared/HelpLink';
+import { routes } from '@/config/routes';
 import { confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
@@ -20,11 +25,20 @@ import CloseMiniSVG from 'public/icons/close-mini.svg';
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
+const licenseTypeSchema = z.enum([
+  'all-rights-reserved',
+  'cc-by-nc-nd-4.0',
+  'cc-by-nc-4.0',
+  'cc-by-4.0',
+  'cc0',
+]);
+
 // Bulk edit schema - all fields optional (only apply changed values)
 const bulkPhotoFormSchema = z.object({
   title: z.string().nullable(),
   description: z.string().nullable(),
   is_public: z.boolean().nullable(),
+  license: licenseTypeSchema.nullable(),
   tags: z.array(z.string()).max(5, 'Maximum 5 tags allowed').optional(),
   // Original common tags when form was loaded - used to determine which tags were removed
   originalCommonTags: z.array(z.string()).optional(),
@@ -42,6 +56,8 @@ interface BulkPhotoEditFormProps {
   onBulkDelete?: (photoIds: string[]) => Promise<void>;
   onAddToAlbum?: (photoIds?: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
+  /** Current album context - used to build correct photo page URLs */
+  currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   isDirtyRef?: React.MutableRefObject<boolean>;
@@ -61,6 +77,7 @@ export default function BulkPhotoEditForm({
   onBulkDelete,
   onAddToAlbum,
   onRemoveFromAlbum,
+  currentAlbum,
   isLoading,
   onDirtyChange,
   isDirtyRef,
@@ -70,6 +87,7 @@ export default function BulkPhotoEditForm({
   hideTitle = false,
   readOnly = false,
 }: BulkPhotoEditFormProps) {
+  const { profile: currentProfile } = useAuth();
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -80,6 +98,14 @@ export default function BulkPhotoEditForm({
   const allPublic = selectedPhotos.every((p) => p.is_public);
   const allPrivate = selectedPhotos.every((p) => !p.is_public);
   const mixedVisibility = !allPublic && !allPrivate;
+
+  // Check if all photos have the same license
+  const getCommonLicense = (photos: PhotoWithAlbums[]) => {
+    if (photos.length === 0) return null;
+    const first = photos[0].license;
+    return photos.every((p) => p.license === first) ? first : null;
+  };
+  const commonLicense = getCommonLicense(selectedPhotos);
 
   // Find tags that are common across ALL selected photos
   const getCommonTags = (photos: PhotoWithAlbums[]): string[] => {
@@ -134,6 +160,7 @@ export default function BulkPhotoEditForm({
       title: null,
       description: null,
       is_public: mixedVisibility ? null : allPublic,
+      license: commonLicense,
       tags: commonTags, // Only include fully shared tags in form
     },
   });
@@ -152,10 +179,12 @@ export default function BulkPhotoEditForm({
     const newAllPublic = photos.every((p) => p.is_public);
     const newAllPrivate = photos.every((p) => !p.is_public);
     const newMixedVisibility = !newAllPublic && !newAllPrivate;
+    const newCommonLicense = getCommonLicense(photos);
     reset({
       title: null,
       description: null,
       is_public: newMixedVisibility ? null : newAllPublic,
+      license: newCommonLicense,
       tags: newCommonTags, // Only reset to common tags
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -325,6 +354,13 @@ export default function BulkPhotoEditForm({
             key={photo.id}
             photo={photo}
             variant="detailed"
+            photoPageUrl={(() => {
+              const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
+              if (!nickname) return undefined;
+              return currentAlbum
+                ? `/@${nickname}/album/${currentAlbum.slug}/photo/${photo.short_id}`
+                : `/@${nickname}/photo/${photo.short_id}`;
+            })()}
           />
         ))}
       </div>
@@ -424,6 +460,51 @@ export default function BulkPhotoEditForm({
               totalCount={selectedPhotos.length}
               readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
               helperText="Partially shared tags are visible but are not editable and won't be added to other items."
+            />
+          </div>
+
+          <div
+            className="flex flex-col gap-2"
+          >
+            <span
+              className="text-sm font-medium flex items-center"
+            >
+              License
+              <HelpLink
+                href={routes.helpLicenses.url}
+                label="Learn about licenses"
+                className="size-5!"
+                iconClassName="size-4"
+              />
+            </span>
+            <Controller
+              name="license"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value ?? ''}
+                  onValueChange={(v) => field.onChange(v || null)}
+                  options={LICENSE_ORDER.map((value) => ({
+                    value,
+                    label: LICENSE_TYPES[value].shortName,
+                  }))}
+                  placeholder={commonLicense ? undefined : 'Mixed — select to apply to all'}
+                  disabled={isSaving}
+                />
+              )}
+            />
+            <Controller
+              name="license"
+              control={control}
+              render={({ field }) => field.value ? (
+                <p
+                  className="text-foreground/50 text-xs"
+                >
+                  {LICENSE_TYPES[field.value].description}
+                </p>
+              ) : (
+                <></>
+              )}
             />
           </div>
 

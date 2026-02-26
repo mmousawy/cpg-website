@@ -1,0 +1,101 @@
+feat: Copyright & licensing system, photo/album page links, UI polish
+
+Copyright & Licensing:
+- Add license selection to photo edit forms (single and bulk) with short descriptions
+- Add /help/licenses page with inline SVG icons for each Creative Commons license type
+- Add copyright settings section to account page (watermark style, text, EXIF copyright)
+- Add watermark and EXIF copyright processing API (POST /api/photos/process)
+- Pre-fill copyright holder name from user's full_name if not set
+- Display license on photo detail pages with link to help page
+- Add license utilities (LICENSE_TYPES, LICENSE_ORDER, getLicenseInfo)
+
+Photo & Album Management UX:
+- Add "Open page" link icon to PhotoListItem, AlbumListItem, and AlbumMiniCard
+- Links open the public page in a new tab, correctly handling album context and other users' content
+- Limit photo/album display names to 1 line (was 2)
+- Add "View photo page" shortcut from photo edit sidebar
+- Show original_filename as fallback when photo title is missing
+
+Shared Section Navigation:
+- Replace help-specific HelpSidebar/HelpMobileNav with reusable SectionSidebar/SectionMobileNav
+- Create SectionScrollContext with pin-on-click behavior for reliable sidebar highlighting
+- Use top-biased scroll threshold (1/3 viewport) for active section detection
+- Pin stays active until next user scroll (fixes sections near bottom of page)
+- Refactor /account page to use same section navigation pattern as /help
+
+UI Polish:
+- Mobile-optimized ProfileStatsBadges (horizontal scroll, compact cards)
+- Mobile-optimized InterestCloud (smaller pills)
+- Profile name allows 2 lines with padding to avoid report button overlap
+- Fix sidebar link width jumping on active state (removed font-weight change)
+- Add HelpLink component with consistent spacing for (?) icons
+- Remove debug console.log statements from BlurImage
+- Fix link.svg to use currentColor for theme compatibility
+- Increase list indentation in emails and Quill editor (6px → 16px)
+
+Database:
+- Add license_type enum and copyright fields to profiles table (database.types.ts)
+- Migration to pre-fill copyright_name from full_name for existing users
+
+Files changed (51):
+
+New (17):
+- public/icons/licenses/by.svg
+- public/icons/licenses/cc.svg
+- public/icons/licenses/copyright.svg
+- public/icons/licenses/nc.svg
+- public/icons/licenses/nd.svg
+- public/icons/licenses/zero.svg
+- src/app/api/photos/process/route.ts
+- src/app/help/licenses/page.tsx
+- src/components/account/CopyrightSettingsSection.tsx
+- src/components/shared/SectionMobileNav.tsx
+- src/components/shared/SectionSidebar.tsx
+- src/content/help/licenses.tsx
+- src/context/SectionScrollContext.tsx
+- src/hooks/useActiveSectionScroll.ts
+- src/lib/exifWriter.ts
+- src/lib/watermark.ts
+- src/utils/licenses.ts
+
+Modified (30):
+- next.config.ts
+- package.json
+- public/icons/link.svg
+- src/app/[nickname]/page.tsx
+- src/app/account/page.tsx
+- src/app/globals.css
+- src/app/help/page.tsx
+- src/components/account/PreferencesSection.tsx
+- src/components/account/PublicProfileSection.tsx
+- src/components/album/AlbumMiniCard.tsx
+- src/components/events/EventCoverImage.tsx
+- src/components/manage/AlbumListItem.tsx
+- src/components/manage/BulkAlbumEditForm.tsx
+- src/components/manage/BulkPhotoEditForm.tsx
+- src/components/manage/PhotoEditSidebar.tsx
+- src/components/manage/PhotoListItem.tsx
+- src/components/manage/SharedAlbumEditForm.tsx
+- src/components/manage/SingleAlbumEditForm.tsx
+- src/components/manage/SinglePhotoEditForm.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/BlurImage.tsx
+- src/components/shared/HelpLink.tsx
+- src/components/shared/InterestCloud.tsx
+- src/components/shared/ProfileStatsBadges.tsx
+- src/components/shared/StickyActionBar.tsx
+- src/components/shared/Toggle.tsx
+- src/config/routes.ts
+- src/content/help/photos.tsx
+- src/database.types.ts
+- src/emails/components/RichContent.tsx
+- src/hooks/useAccountForm.ts
+- src/hooks/usePhotoMutations.ts
+- src/hooks/usePhotoUpload.ts
+- src/lib/data/events.ts
+
+Deleted (4):
+- src/components/help/HelpMobileNav.tsx
+- src/components/help/HelpSidebar.tsx
+- src/context/HelpScrollContext.tsx
+- src/hooks/useActiveHelpSection.ts

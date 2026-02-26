@@ -130,6 +130,7 @@ export function useUpdatePhoto(
               title: data.title,
               description: data.description,
               is_public: data.is_public,
+              license: data.license,
               tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
             }
             : p,
@@ -142,6 +143,7 @@ export function useUpdatePhoto(
           title: data.title,
           description: data.description,
           is_public: data.is_public,
+          license: data.license,
         })
         .eq('id', photoId)
         .eq('user_id', userId)
@@ -256,6 +258,7 @@ export function useBulkUpdatePhotos(
             ...(data.title && { title: data.title }),
             ...(data.description && { description: data.description }),
             ...(data.is_public !== null && { is_public: data.is_public }),
+            ...(data.license && { license: data.license }),
             ...(desiredTagsForCache !== null && { tags: newTags }),
           };
         });
@@ -266,6 +269,7 @@ export function useBulkUpdatePhotos(
         ...(data.title && { title: data.title }),
         ...(data.description && { description: data.description }),
         ...(data.is_public !== null && { is_public: data.is_public }),
+        ...(data.license && { license: data.license }),
       }));
 
       const { error } = await supabase.rpc('batch_update_photos', {

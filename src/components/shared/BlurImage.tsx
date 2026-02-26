@@ -73,14 +73,11 @@ export default function BlurImage({
     setLoadState('loading');
   }
 
-  const shortSrc = srcString ? '...' + srcString.slice(-60) : '?';
-
   // Callback ref — stores the underlying <img> element so the layout effect
   // can check img.complete as a safety net.
   const imgCallbackRef = useCallback((node: HTMLImageElement | null) => {
     imgRef.current = node;
-    console.log('[BlurImage] ref', shortSrc, node ? `complete=${node.complete} naturalWidth=${node.naturalWidth}` : 'null');
-  }, [shortSrc]);
+  }, []);
 
   // Before paint: determine the correct initial state for this image.
   // Runs after callback refs are set, so imgRef.current is available.
@@ -92,7 +89,6 @@ export default function BlurImage({
   useIsomorphicLayoutEffect(() => {
     const known = !!(cacheKey && loadedImages?.has(cacheKey));
     if (known) {
-      console.log('[BlurImage] layoutEffect → visible (SPA cache)', shortSrc);
       hasCalledOnLoad.current = true;
       setLoadState('visible');
       return;
@@ -102,7 +98,6 @@ export default function BlurImage({
     // (happens with SSR + preload — the image finishes before React hydrates).
     const img = imgRef.current;
     if (img && img.complete && img.naturalWidth > 0) {
-      console.log('[BlurImage] layoutEffect → fade-in (img.complete)', shortSrc);
       hasCalledOnLoad.current = true;
       if (cacheKey) loadedImages?.add(cacheKey);
       setLoadState('fade-in');
@@ -110,7 +105,6 @@ export default function BlurImage({
       return;
     }
 
-    console.log('[BlurImage] layoutEffect → loading (waiting)', shortSrc, `imgRef=${!!imgRef.current} complete=${imgRef.current?.complete} naturalWidth=${imgRef.current?.naturalWidth}`);
     // Image not ready yet — reset and wait for onLoad handler.
     hasCalledOnLoad.current = false;
   }, [currentSrc, cacheKey]);
@@ -118,7 +112,6 @@ export default function BlurImage({
   // Handler for image load - fires when the <img> element actually finishes loading.
   const handleImageLoad = useCallback(() => {
     if (hasCalledOnLoad.current) {
-      console.log('[BlurImage] onLoad(skip)', shortSrc);
       // Already handled (SPA cache or layout effect safety net). Still notify parent.
       onLoadProp?.();
       return;
@@ -128,8 +121,6 @@ export default function BlurImage({
     // Remember this image for future navigations
     if (cacheKey) loadedImages?.add(cacheKey);
 
-    console.log('[BlurImage] onLoad → fade-in', shortSrc);
-
     // Always fade in. The SPA cache (checked in the layout effect above) is the
     // only reliable way to skip the fade — timing heuristics are unreliable because
     // SSR-preloaded images fire onLoad almost instantly during hydration even though
@@ -138,7 +129,7 @@ export default function BlurImage({
 
     // Call external onLoad callback
     onLoadProp?.();
-  }, [cacheKey, onLoadProp, shortSrc]);
+  }, [cacheKey, onLoadProp]);
 
   // Transition to 'visible' once the fade-in animation completes.
   // This lets us safely remove the blurhash background after the fade finishes,

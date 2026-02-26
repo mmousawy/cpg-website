@@ -80,6 +80,18 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
 
 
+CREATE TYPE "public"."license_type" AS ENUM (
+    'all-rights-reserved',
+    'cc-by-nc-nd-4.0',
+    'cc-by-nc-4.0',
+    'cc-by-4.0',
+    'cc0'
+);
+
+
+ALTER TYPE "public"."license_type" OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -598,7 +610,8 @@ BEGIN
     title = COALESCE(update_item->>'title', public.photos.title),
     description = COALESCE(update_item->>'description', public.photos.description),
     is_public = COALESCE((update_item->>'is_public')::boolean, public.photos.is_public),
-    sort_order = COALESCE((update_item->>'sort_order')::int, public.photos.sort_order)
+    sort_order = COALESCE((update_item->>'sort_order')::int, public.photos.sort_order),
+    license = COALESCE((update_item->>'license')::public.license_type, public.photos.license)
   FROM jsonb_array_elements(photo_updates) AS update_item
   WHERE public.photos.id = (update_item->>'id')::uuid
     AND public.photos.user_id = auth.uid();
@@ -2182,7 +2195,9 @@ CREATE TABLE IF NOT EXISTS "public"."photos" (
     "deleted_at" timestamp with time zone,
     "likes_count" integer DEFAULT 0 NOT NULL,
     "view_count" integer DEFAULT 0 NOT NULL,
-    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("title", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("description", ''::"text")), 'B'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("original_filename", ''::"text")), 'C'::"char"))) STORED
+    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("title", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("description", ''::"text")), 'B'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("original_filename", ''::"text")), 'C'::"char"))) STORED,
+    "license" "public"."license_type" DEFAULT 'all-rights-reserved'::"public"."license_type" NOT NULL,
+    "copyright_notice" "text"
 );
 
 
@@ -2353,10 +2368,18 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "newsletter_opt_in" boolean DEFAULT false NOT NULL,
     "terms_accepted_at" timestamp with time zone,
     "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("full_name", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("nickname", ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("bio", ''::"text")), 'B'::"char"))) STORED,
+    "default_license" "public"."license_type" DEFAULT 'all-rights-reserved'::"public"."license_type" NOT NULL,
+    "copyright_name" "text",
+    "watermark_enabled" boolean DEFAULT false NOT NULL,
+    "watermark_style" "text" DEFAULT 'text'::"text",
+    "embed_copyright_exif" boolean DEFAULT false NOT NULL,
+    "watermark_text" "text",
+    "exif_copyright_text" "text",
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_nickname_format" CHECK ((("nickname" IS NULL) OR ("nickname" ~ '^[a-z0-9-]+$'::"text"))),
     CONSTRAINT "profiles_nickname_length" CHECK ((("nickname" IS NULL) OR (("length"("nickname") >= 3) AND ("length"("nickname") <= 30)))),
+    CONSTRAINT "profiles_watermark_style_check" CHECK (("watermark_style" = ANY (ARRAY['text'::"text", 'diagonal'::"text"]))),
     CONSTRAINT "theme_check" CHECK ((("theme" IS NULL) OR ("theme" = ANY (ARRAY['light'::"text", 'dark'::"text", 'midnight'::"text", 'system'::"text"]))))
 );
 

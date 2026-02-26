@@ -83,6 +83,7 @@ export default function PhotoEditSidebar({
         onBulkDelete={onBulkDelete}
         onAddToAlbum={onAddToAlbum}
         onRemoveFromAlbum={onRemoveFromAlbum}
+        currentAlbum={currentAlbum}
         isLoading={isLoading}
         onDirtyChange={onDirtyChange}
         isDirtyRef={isDirtyRef}

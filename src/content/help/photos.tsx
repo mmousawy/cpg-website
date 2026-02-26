@@ -1,4 +1,6 @@
 import type { FAQSection } from './types';
+import Link from 'next/link';
+import { routes } from '@/config/routes';
 
 export const photosFAQ: FAQSection = {
   id: 'photos',
@@ -146,6 +148,22 @@ export const photosFAQ: FAQSection = {
       content: (
         <p>
           When you upload photos, we automatically extract EXIF data (camera, lens, settings, and GPS if available). This info is displayed to viewers on the photo detail page, so others can see how you captured the shot.
+        </p>
+      ),
+    },
+    {
+      id: 'copyright-licensing',
+      title: 'Copyright and licensing',
+      content: (
+        <p>
+          You can set a license for each photo (e.g. All Rights Reserved, Creative Commons) to control how others may use it. You can also enable automatic watermarking and EXIF copyright embedding in Account settings.
+          {' '}
+          <Link
+            href={routes.helpLicenses.url}
+            className="text-primary hover:underline underline-offset-4"
+          >
+            Learn more about copyright and licensing
+          </Link>
         </p>
       ),
     },

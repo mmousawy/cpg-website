@@ -9,8 +9,10 @@ type StickyActionBarProps = {
   /** Position of the bar */
   position?: 'top' | 'bottom'
   /** Whether to constrain width (for page layouts vs sidebars) */
-  constrainWidth?: boolean,
+  constrainWidth?: boolean
   variant?: 'default' | 'compact'
+  /** Whether the bar is sticky (set false when stacked inside another sticky container) */
+  sticky?: boolean
 }
 
 export default function StickyActionBar({
@@ -19,12 +21,13 @@ export default function StickyActionBar({
   position = 'bottom',
   constrainWidth = false,
   variant = 'default',
+  sticky = true,
 }: StickyActionBarProps) {
   return (
     <div
       className={clsx(
-        'sticky z-30',
-        position === 'bottom' ? 'bottom-0' : 'top-0',
+        sticky && 'sticky z-30',
+        sticky && (position === 'bottom' ? 'bottom-0' : 'top-0'),
         className,
       )}
     >

@@ -4,6 +4,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Button from '@/components/shared/Button';
 import TagInput from '@/components/shared/TagInput';
 import Toggle from '@/components/shared/Toggle';
+import { useAuth } from '@/hooks/useAuth';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { confirmDeleteAlbums } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,6 +58,7 @@ export default function BulkAlbumEditForm({
   externalSuccess = false,
   hideTitle = false,
 }: BulkAlbumEditFormProps) {
+  const { profile } = useAuth();
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -276,6 +278,7 @@ export default function BulkAlbumEditForm({
             key={album.id}
             album={album}
             variant="detailed"
+            publicUrl={profile?.nickname ? `/@${profile.nickname}/album/${album.slug}` : undefined}
           />
         ))}
       </div>

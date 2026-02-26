@@ -3,7 +3,9 @@
 import BlurImage from '@/components/shared/BlurImage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import clsx from 'clsx';
+import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
+import LinkSVG from 'public/icons/link.svg';
 
 /** Get display name for an album: title -> slug -> short id */
 export function getAlbumDisplayName(album: AlbumWithPhotos): string {
@@ -29,6 +31,8 @@ interface AlbumListItemProps {
   album: AlbumWithPhotos;
   /** 'compact' shows thumbnail + name, 'detailed' shows all metadata */
   variant?: AlbumListItemVariant;
+  /** URL to the public album page (shown as link icon button in detailed view) */
+  publicUrl?: string;
   className?: string;
 }
 
@@ -40,6 +44,7 @@ interface AlbumListItemProps {
 export default function AlbumListItem({
   album,
   variant = 'compact',
+  publicUrl,
   className = '',
 }: AlbumListItemProps) {
   const displayName = getAlbumDisplayName(album);
@@ -49,8 +54,23 @@ export default function AlbumListItem({
 
   return (
     <div
-      className={`flex items-center gap-2 border border-border-color bg-background-medium p-0 ${className}`}
+      className={`relative flex items-center gap-2 border border-border-color bg-background-medium p-0 ${className}`}
     >
+      {isDetailed && publicUrl && (
+        <Link
+          href={publicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-0.5 right-0.5 p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground z-10"
+          title="Open album page"
+          aria-label="Open album page"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <LinkSVG
+            className="size-3.5"
+          />
+        </Link>
+      )}
       <div
         className={clsx(
           'relative shrink-0 overflow-hidden bg-background flex items-center justify-center',
@@ -77,7 +97,7 @@ export default function AlbumListItem({
       >
         {/* Primary name (title or fallback) */}
         <p
-          className="mb-0.5 line-clamp-2 text-sm font-medium leading-none"
+          className="mb-0.5 line-clamp-1 text-sm font-medium leading-none pr-8"
           title={displayName}
         >
           {displayName}

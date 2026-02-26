@@ -81,7 +81,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             {/* Toggle knob */}
             <span
               className={clsx(
-                'pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform',
+                'pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-white shadow-sm transition-transform',
                 'group-has-[input:checked]:translate-x-5',
               )}
             />
