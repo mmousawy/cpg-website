@@ -493,7 +493,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
   // Get all albums this photo is in (including album owner profile)
   const { data: albumPhotos } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname))')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug))')
     .eq('photo_id', photo.id);
 
   type AlbumPhotoWithAlbum = {
@@ -506,6 +506,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
       deleted_at: string | null;
       album_photos_active: Array<{ count: number }>;
       profile: { nickname: string | null } | null;
+      event: { slug: string | null } | null;
     } | null;
   };
 
@@ -520,9 +521,10 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
         cover_image_url: album.cover_image_url,
         photo_count: album.album_photos_active?.[0]?.count ?? 0,
         profile_nickname: album.profile?.nickname || null,
+        event_slug: album.event?.slug || null,
       };
     })
-    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null }>;
+    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null }>;
 
   // Get accepted challenge submissions for this photo
   const { data: challengeSubmissions } = await supabase

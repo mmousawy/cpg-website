@@ -68,7 +68,7 @@ export default async function Home() {
   const [albums, organizers, members, eventsData, challengesData, photos] = await Promise.all([
     getRecentAlbums(3),
     getOrganizers(5),
-    getRecentMembers(12),
+    getRecentMembers(50),
     getRecentEvents(6),
     getActiveChallenges(),
     getPublicPhotostream(7),

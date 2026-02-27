@@ -59,6 +59,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
         onRSVPChange={setHasRSVP}
       />,
     );
+    modalContext.setFooter(null);
     modalContext.setIsOpen(true);
   };
 
@@ -80,6 +81,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
           {formatEventDate(event.date || '', { includeYear: true })}
           {' '}
           at
+          {' '}
           {formatEventTime(event.time || '')}
         </p>
 

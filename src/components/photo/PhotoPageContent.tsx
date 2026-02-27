@@ -15,6 +15,8 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
+import CopyrightIcon from 'public/icons/licenses/copyright-outline.svg';
+import CreativeCommonsIcon from 'public/icons/licenses/cc.svg';
 
 interface Album {
   id: string;
@@ -23,6 +25,7 @@ interface Album {
   cover_image_url?: string | null;
   photo_count?: number;
   profile_nickname?: string | null;
+  event_slug?: string | null;
 }
 
 interface Profile {
@@ -119,7 +122,7 @@ export default function PhotoPageContent({
 
         {/* Metadata + Comments sidebar on desktop, below photo on mobile */}
         <div
-          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 lg:w-128 md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
+          className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 lg:w-lg md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
             currentAlbum ? 'mt-2' : 'mt-4',
           )}
         >
@@ -214,7 +217,9 @@ export default function PhotoPageContent({
                       title={currentAlbum.title}
                       slug={currentAlbum.slug}
                       coverImageUrl={currentAlbum.cover_image_url}
-                      href={`/@${currentAlbum.profile_nickname || albumNickname}/album/${currentAlbum.slug}`}
+                      href={currentAlbum.event_slug
+                        ? `/events/${currentAlbum.event_slug}`
+                        : `/@${currentAlbum.profile_nickname || albumNickname}/album/${currentAlbum.slug}`}
                       photoCount={currentAlbum.photo_count}
                       highlighted
                       ownerNickname={albumNickname !== nickname ? albumNickname : undefined}
@@ -226,7 +231,9 @@ export default function PhotoPageContent({
                       title={album.title}
                       slug={album.slug}
                       coverImageUrl={album.cover_image_url}
-                      href={`/@${album.profile_nickname || nickname}/album/${album.slug}`}
+                      href={album.event_slug
+                        ? `/events/${album.event_slug}`
+                        : `/@${album.profile_nickname || nickname}/album/${album.slug}`}
                       photoCount={album.photo_count}
                       ownerNickname={album.profile_nickname && album.profile_nickname !== nickname ? album.profile_nickname : undefined}
                     />
@@ -262,41 +269,6 @@ export default function PhotoPageContent({
               />
             </div>
 
-            {/* License & copyright */}
-            {(() => {
-              const license = photo.license || 'all-rights-reserved';
-              const info = getLicenseInfo(license);
-              return (
-                <div
-                  className="flex flex-col gap-1"
-                >
-                  <div
-                    className="flex items-center gap-1.5"
-                  >
-                    <span
-                      className="text-foreground/60 shrink-0 text-xs"
-                      aria-hidden
-                    >
-                      ©
-                    </span>
-                    <Link
-                      href="/help/licenses"
-                      className="text-xs text-foreground/60 hover:text-primary hover:underline underline-offset-2"
-                    >
-                      {info.shortName}
-                    </Link>
-                  </div>
-                  {photo.copyright_notice && (
-                    <p
-                      className="text-xs text-foreground/60"
-                    >
-                      {photo.copyright_notice}
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
-
             {/* EXIF metadata */}
             {exifString && (
               <div
@@ -312,6 +284,40 @@ export default function PhotoPageContent({
                 </p>
               </div>
             )}
+
+            {/* License & copyright */}
+            {(() => {
+              const license = photo.license || 'all-rights-reserved';
+              const info = getLicenseInfo(license);
+              const isCC = license !== 'all-rights-reserved';
+              const IconComponent = isCC ? CreativeCommonsIcon : CopyrightIcon;
+              return (
+                <div
+                  className="flex items-start gap-1.5"
+                >
+                  <IconComponent
+                    className="size-4 text-foreground/60 shrink-0"
+                  />
+                  <div
+                    className="flex flex-col gap-0.5"
+                  >
+                    <Link
+                      href="/help/licenses"
+                      className="text-xs text-foreground/60 hover:text-primary hover:underline underline-offset-2"
+                    >
+                      {info.shortName}
+                    </Link>
+                    {photo.copyright_notice && (
+                      <p
+                        className="text-xs text-foreground/60"
+                      >
+                        {photo.copyright_notice}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Tags */}
             <TagsSection

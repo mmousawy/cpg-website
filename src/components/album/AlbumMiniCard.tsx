@@ -96,7 +96,7 @@ export default function AlbumMiniCard({
         className="min-w-0 flex-1 flex-col gap-0.5"
       >
         <span
-          className="text-sm font-medium line-clamp-1 leading-none pr-6"
+          className="text-sm font-medium line-clamp-2 leading-tight pr-6"
         >
           {title}
         </span>

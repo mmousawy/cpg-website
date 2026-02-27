@@ -67,6 +67,7 @@ export default function EventRsvpStatus({ className, event }: Props) {
       rsvpUuid={rsvpUuid}
       onRSVPChange={setHasRSVP}
     />);
+    modalContext.setFooter(null);
     modalContext.setIsOpen(true);
   };
 
