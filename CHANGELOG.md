@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.2](https://github.com/mmousawy/cpg-website/compare/v1.26.1...v1.26.2) (2026-02-27)
+
+
+### Bug Fixes
+
+* Enhance photo and event components with licensing and event slug support ([a9824f4](https://github.com/mmousawy/cpg-website/commit/a9824f43a0996ab4738b3286303b71c21572a678))
+
 ## [1.26.1](https://github.com/mmousawy/cpg-website/compare/v1.26.0...v1.26.1) (2026-02-27)
 
 
