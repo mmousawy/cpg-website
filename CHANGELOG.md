@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/mmousawy/cpg-website/compare/v1.26.0...v1.26.1) (2026-02-27)
+
+
+### Bug Fixes
+
+* Update app for SEO. ([6687efd](https://github.com/mmousawy/cpg-website/commit/6687efd2f6a5c9a4fe2417cff57105bd92dbe6ac))
+
 ## [1.26.0](https://github.com/mmousawy/cpg-website/compare/v1.25.6...v1.26.0) (2026-02-26)
 
 
