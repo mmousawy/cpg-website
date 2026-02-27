@@ -6,13 +6,14 @@ import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/St
 import { notFound } from 'next/navigation';
 
 // Cached data functions
+import JsonLd from '@/components/shared/JsonLd';
 import {
   getAllChallengeSlugs,
   getChallengeBySlug,
   getChallengeContributors,
   getChallengePhotos,
 } from '@/lib/data/challenges';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
 import ChallengeCoverImage from '@/components/challenges/ChallengeCoverImage';
 import ChallengeGallery from '@/components/challenges/ChallengeGallery';
@@ -152,8 +153,37 @@ export default async function ChallengePage({
     nickname: c.nickname,
   }));
 
+  const challengeUrl = getAbsoluteUrl(`/challenges/${slug}`);
+  const creativeWorkJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: challenge.title,
+    description: challenge.prompt,
+    url: challengeUrl,
+    ...(challenge.cover_image_url && { image: challenge.cover_image_url }),
+    ...(challenge.created_at && { dateCreated: challenge.created_at }),
+    author: {
+      '@type': 'Organization',
+      name: siteConfig.name,
+      url: siteConfig.url,
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.url },
+      { '@type': 'ListItem', position: 2, name: 'Challenges', item: getAbsoluteUrl('/challenges') },
+      { '@type': 'ListItem', position: 3, name: challenge.title, item: challengeUrl },
+    ],
+  };
+
   return (
     <>
+      <JsonLd
+        data={[creativeWorkJsonLd, breadcrumbJsonLd]}
+      />
       {/* Hero Section with Cover Image */}
       {challenge.cover_image_url && (
         <div
@@ -235,7 +265,7 @@ export default async function ChallengePage({
       )}
 
       <PageContainer
-        className={challenge.cover_image_url ? '!pt-6 sm:!pt-8' : ''}
+        className={challenge.cover_image_url ? 'pt-6! sm:pt-8!' : ''}
       >
         <Container>
           {/* Title (if no cover image) */}

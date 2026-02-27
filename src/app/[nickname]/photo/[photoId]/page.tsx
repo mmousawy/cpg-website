@@ -1,6 +1,7 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
@@ -91,12 +92,45 @@ async function CachedPhotoContent({
   cacheTag(`profile-${nickname}`);
   cacheTag(`photo-${result.photo.short_id}`); // Granular invalidation for this specific photo
 
+  const photoUrl = getAbsoluteUrl(`/${encodeURIComponent(nickname)}/photo/${encodeURIComponent(result.photo.short_id || '')}`);
+  const profileUrl = getAbsoluteUrl(`/${encodeURIComponent(nickname)}`);
+
+  const imageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ImageObject',
+    name: result.photo.title || 'Photo',
+    description: result.photo.description || `Photo by @${nickname}`,
+    contentUrl: result.photo.url,
+    url: photoUrl,
+    creator: {
+      '@type': 'Person',
+      name: result.profile.full_name || `@${nickname}`,
+      url: profileUrl,
+    },
+    ...(result.photo.created_at && { dateCreated: result.photo.created_at }),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.url },
+      { '@type': 'ListItem', position: 2, name: result.profile.full_name || `@${nickname}`, item: profileUrl },
+      { '@type': 'ListItem', position: 3, name: result.photo.title || 'Photo', item: photoUrl },
+    ],
+  };
+
   return (
-    <PhotoPageContent
-      photo={result.photo}
-      profile={result.profile}
-      albums={result.albums}
-      challenges={result.challenges}
-    />
+    <>
+      <JsonLd
+        data={[imageJsonLd, breadcrumbJsonLd]}
+      />
+      <PhotoPageContent
+        photo={result.photo}
+        profile={result.profile}
+        albums={result.albums}
+        challenges={result.challenges}
+      />
+    </>
   );
 }

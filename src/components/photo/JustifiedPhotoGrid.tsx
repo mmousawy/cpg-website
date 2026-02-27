@@ -284,7 +284,7 @@ function PhotoRows({
                   {/* Top gradient overlay */}
                   {photo?.title && (
                     <div
-                      className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                      className="absolute inset-x-0 top-0 h-20 bg-linear-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                     />
                   )}
                   {/* Title - top left, visible on hover */}
@@ -313,7 +313,7 @@ function PhotoRows({
                   {/* Bottom gradient overlay */}
                   {showAttribution && streamPhoto?.profile && (
                     <div
-                      className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                      className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                     />
                   )}
                   {/* Attribution - bottom left, visible on hover */}

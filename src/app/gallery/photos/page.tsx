@@ -1,8 +1,9 @@
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
+import JsonLd from '@/components/shared/JsonLd';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
 // Cached data functions
 import { getPublicPhotostream } from '@/lib/data/gallery';
@@ -27,8 +28,21 @@ export default async function PhotosPage({ searchParams }: PageProps) {
   const photos = allPhotos.slice(0, 20);
   const hasMore = allPhotos.length > 20;
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.url },
+      { '@type': 'ListItem', position: 2, name: 'Gallery', item: getAbsoluteUrl('/gallery') },
+      { '@type': 'ListItem', position: 3, name: 'Photos', item: getAbsoluteUrl('/gallery/photos') },
+    ],
+  };
+
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd}
+      />
       <PageContainer>
         <div>
           <div

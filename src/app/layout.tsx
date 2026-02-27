@@ -7,17 +7,19 @@ import ConfirmProvider from '@/app/providers/ConfirmProvider';
 import ModalProvider from '@/app/providers/ModalProvider';
 import QueryProvider from '@/app/providers/QueryProvider';
 import { ThemeProviderWrapper as ThemeProvider } from '@/app/providers/ThemeProvider';
+import VersionLogger from '@/components/VersionLogger';
 import Layout from '@/components/layout/Layout';
 import NavigationProgress from '@/components/layout/NavigationProgress';
 import NotificationToastManager from '@/components/notifications/NotificationToastManager';
-import VersionLogger from '@/components/VersionLogger';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import JsonLd from '@/components/shared/JsonLd';
 import Modal from '@/components/shared/Modal';
-import SmoothScrollProvider from '@/components/shared/SmoothScrollProvider';
 import PageLoading from '@/components/shared/PageLoading';
+import SmoothScrollProvider from '@/components/shared/SmoothScrollProvider';
+import { socialLinks } from '@/config/socials';
 import { AuthProvider } from '@/context/AuthContext';
 import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
-import { siteConfig, defaultOgImage, defaultTwitterImage, getAbsoluteUrl, truncateDescription } from '@/utils/metadata';
+import { defaultOgImage, defaultTwitterImage, getAbsoluteUrl, siteConfig, truncateDescription } from '@/utils/metadata';
 import SupabaseProvider from './providers/SupabaseProvider';
 
 import './globals.css';
@@ -25,11 +27,13 @@ import './globals.css';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -99,8 +103,29 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-[family-name:var(--font-geist-sans)] text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
       >
+        <JsonLd
+          data={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: siteConfig.name,
+              url: siteConfig.url,
+              description: siteConfig.description,
+              publisher: {
+                '@type': 'Organization',
+                name: siteConfig.name,
+                url: siteConfig.url,
+                logo: {
+                  '@type': 'ImageObject',
+                  url: getAbsoluteUrl('/opengraph-image.jpg'),
+                },
+                sameAs: socialLinks.map((s) => s.url),
+              },
+            },
+          ]}
+        />
         <Suspense
           fallback={null}
         >

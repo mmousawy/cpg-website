@@ -50,7 +50,6 @@ export default function Modal() {
 
     const closeModal = () => {
       setIsOpen(false);
-      console.log('closeModal');
     };
 
     if (modal && !modal.dataset.isMounted) {
@@ -100,7 +99,7 @@ export default function Modal() {
         >
           {/* Fixed header */}
           <div
-            className="flex-shrink-0 flex items-start justify-between gap-4 p-4 pb-0"
+            className="shrink-0 flex items-start justify-between gap-4 p-4 pb-0"
           >
             <h2
               className="text-2xl font-bold max-sm:text-xl"
@@ -108,7 +107,7 @@ export default function Modal() {
               {title}
             </h2>
             <button
-              className="flex-shrink-0 rounded-full border border-border-color p-1 hover:bg-background"
+              className="shrink-0 rounded-full border border-border-color p-1 hover:bg-background"
               onClick={closeModal}
             >
               <CloseSVG
@@ -125,10 +124,10 @@ export default function Modal() {
           {/* Fixed footer for actions */}
           {footer && (
             <div
-              className="relative flex-shrink-0 border-t border-border-color-strong p-4"
+              className="relative shrink-0 border-t border-border-color-strong p-4"
             >
               <div
-                className="absolute -top-[17px] left-0 right-0 bg-gradient-to-b from-transparent to-background-light h-4 w-full pointer-events-none"
+                className="absolute -top-[17px] left-0 right-0 bg-linear-to-b from-transparent to-background-light h-4 w-full pointer-events-none"
               ></div>
               {footer}
             </div>

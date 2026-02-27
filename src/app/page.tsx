@@ -124,7 +124,7 @@ export default async function Home() {
                 height={60}
                 width={60}
                 alt="Camera with flash"
-                className="inline-block ml-2 align-top h-12 w-auto md:h-[3.75rem]"
+                className="inline-block ml-2 align-top h-12 w-auto md:h-15"
               />
             </h1>
             <p
@@ -300,14 +300,14 @@ export default async function Home() {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-1.5 text-sm font-medium font-[family-name:var(--font-geist-mono)] text-foreground transition-colors hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
+                    className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-1.5 text-sm font-medium font-(family-name:--font-geist-mono) text-foreground transition-colors hover:bg-(--hover-bg) hover:border-(--hover-color) hover:text-(--hover-color)"
                     style={{
                       '--hover-color': social.color,
                       '--hover-bg': `${social.color}15`,
                     } as React.CSSProperties}
                   >
                     <Icon
-                      className="size-6 shrink-0 transition-colors group-hover:fill-[var(--hover-color)]"
+                      className="size-6 shrink-0 transition-colors group-hover:fill-(--hover-color)"
                     />
                     <span>
                       {social.name}
@@ -428,7 +428,7 @@ export default async function Home() {
                     href={member.nickname ? `/@${member.nickname}` : '#'}
                     variant="secondary"
                     size="sm"
-                    className="!px-2"
+                    className="px-2!"
                     icon={
                       <Avatar
                         avatarUrl={member.avatar_url}

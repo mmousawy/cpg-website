@@ -11,6 +11,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
+import JsonLd from '@/components/shared/JsonLd';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import {
@@ -20,7 +21,7 @@ import {
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl } from '@/utils/metadata';
 
 type SocialLink = { label: string; url: string };
 
@@ -117,8 +118,25 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
 
   const socialLinks = (profile.social_links || []) as SocialLink[];
 
+  const profileUrl = getAbsoluteUrl(`/${encodeURIComponent(nickname)}`);
+  const profileJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name: profile.full_name || `@${profile.nickname}`,
+      url: profileUrl,
+      ...(profile.bio && { description: profile.bio }),
+      ...(profile.avatar_url && { image: profile.avatar_url }),
+      ...(socialLinks.length > 0 && { sameAs: socialLinks.map((l) => l.url) }),
+    },
+  };
+
   return (
     <>
+      <JsonLd
+        data={profileJsonLd}
+      />
       <PageContainer>
         {/* Profile Header */}
         <div
@@ -285,7 +303,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
       {/* Photostream - Wide container */}
       {publicPhotos.length > 0 && (
         <WidePageContainer
-          className="!pt-0"
+          className="pt-0!"
         >
           <JustifiedPhotoGrid
             photos={publicPhotos.map((photo) => ({
@@ -322,7 +340,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
       {/* Albums - Wide container */}
       {albums.length > 0 && (
         <WidePageContainer
-          className={publicPhotos.length > 0 ? '!pt-0' : ''}
+          className={publicPhotos.length > 0 ? 'pt-0!' : ''}
         >
           <div
             className="mb-6"

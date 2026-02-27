@@ -18,10 +18,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
+import JsonLd from '@/components/shared/JsonLd';
 import { getEventAlbum } from '@/lib/data/albums';
 import { getAllEventSlugs, getEventAttendeesForEvent, getEventBySlug } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -182,8 +183,52 @@ async function CachedEventContent({
   const status = getEventStatus(event.date, event.time, serverNow);
   const isPastEvent = status === 'past';
 
+  // Build ISO startDate for Event schema (date + time)
+  const startDate = event.date
+    ? event.time
+      ? `${event.date}T${event.time.length === 5 ? `${event.time}:00` : event.time}`
+      : `${event.date}T00:00:00`
+    : null;
+
+  const eventUrl = getAbsoluteUrl(`/events/${event.slug}`);
+  const eventJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: event.title,
+    description: event.description || `Join us for ${event.title || 'this event'}`,
+    ...(startDate && { startDate }),
+    url: eventUrl,
+    ...(event.cover_image && { image: getAbsoluteUrl(event.cover_image) }),
+    organizer: {
+      '@type': 'Organization',
+      name: siteConfig.name,
+      url: siteConfig.url,
+    },
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    ...(event.location && {
+      location: {
+        '@type': 'Place',
+        name: event.location,
+      },
+    }),
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.url },
+      { '@type': 'ListItem', position: 2, name: 'Events', item: getAbsoluteUrl('/events') },
+      { '@type': 'ListItem', position: 3, name: event.title || 'Event', item: eventUrl },
+    ],
+  };
+
   return (
     <>
+      <JsonLd
+        data={[eventJsonLd, breadcrumbJsonLd]}
+      />
       {/* Hero Section with Cover Image */}
       {event.cover_image && (
         <div
@@ -250,8 +295,8 @@ async function CachedEventContent({
 
       <PageContainer
         className={clsx(
-          event.cover_image ? '!pt-6 sm:!pt-8' : '',
-          '!pb-4',
+          event.cover_image ? 'pt-6! sm:pt-8!' : '',
+          'pb-4!',
         )}
       >
         <Container>

@@ -1,8 +1,9 @@
 import AlbumsPaginated from '@/components/gallery/AlbumsPaginated';
+import JsonLd from '@/components/shared/JsonLd';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
 // Cached data functions
 import { getPublicAlbums } from '@/lib/data/albums';
@@ -27,8 +28,21 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
   const albums = allAlbums.slice(0, 20);
   const hasMore = allAlbums.length > 20;
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteConfig.url },
+      { '@type': 'ListItem', position: 2, name: 'Gallery', item: getAbsoluteUrl('/gallery') },
+      { '@type': 'ListItem', position: 3, name: 'Albums', item: getAbsoluteUrl('/gallery/albums') },
+    ],
+  };
+
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd}
+      />
       <PageContainer>
         <div>
           <div
