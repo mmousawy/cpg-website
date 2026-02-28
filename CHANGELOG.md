@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.27.0](https://github.com/mmousawy/cpg-website/compare/v1.26.3...v1.27.0) (2026-02-28)
+
+
+### Features
+
+* Add color draw feature for events ([32f70a1](https://github.com/mmousawy/cpg-website/commit/32f70a1a2cd576b0088b34ef07b41bdb39246136))
+
+
+### Bug Fixes
+
+* Reimplement color drawing into challenges. ([03e820b](https://github.com/mmousawy/cpg-website/commit/03e820b92946e34542668be8761017a3ee59bace))
+
 ## [1.26.3](https://github.com/mmousawy/cpg-website/compare/v1.26.2...v1.26.3) (2026-02-28)
 
 
