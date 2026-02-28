@@ -56,6 +56,15 @@ export async function revalidateEventBySlug(slug: string) {
   revalidateTag(`event-${slug}`, 'max');
 }
 
+/**
+ * Revalidate event color draws
+ * Use when: User draws or swaps a color
+ */
+export async function revalidateEventColorDraws(eventId: number) {
+  revalidateTag('event-color-draws', 'max');
+  revalidateTag(`event-color-draws-${eventId}`, 'max');
+}
+
 // ============================================================================
 // Album Revalidation
 // ============================================================================

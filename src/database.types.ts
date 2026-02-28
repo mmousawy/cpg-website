@@ -663,6 +663,51 @@ export type Database = {
           },
         ]
       }
+      event_color_draws: {
+        Row: {
+          color: string
+          created_at: string
+          event_id: number
+          guest_nickname: string | null
+          id: string
+          swapped_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          event_id: number
+          guest_nickname?: string | null
+          id?: string
+          swapped_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          event_id?: number
+          guest_nickname?: string | null
+          id?: string
+          swapped_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'event_color_draws_event_id_fkey'
+            columns: ['event_id']
+            isOneToOne: false
+            referencedRelation: 'events'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'event_color_draws_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       event_comments: {
         Row: {
           comment_id: string

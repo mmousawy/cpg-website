@@ -201,3 +201,48 @@ export async function getEventAttendees(eventIds: number[]) {
 
   return attendeesByEvent;
 }
+
+/** Event slugs that have the Color Photography Challenge / color draw feature */
+export const COLOR_DRAW_EVENT_SLUGS = ['color-photography-challenge'] as const;
+
+export function isColorDrawEvent(slug: string | null): boolean {
+  return slug ? COLOR_DRAW_EVENT_SLUGS.includes(slug as (typeof COLOR_DRAW_EVENT_SLUGS)[number]) : false;
+}
+
+/**
+ * Get color draws for an event (Color Photography Challenge)
+ */
+export async function getEventColorDraws(eventId: number) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('event-color-draws');
+  cacheTag(`event-color-draws-${eventId}`);
+
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('event_color_draws')
+    .select(`
+      id,
+      event_id,
+      user_id,
+      guest_nickname,
+      color,
+      swapped_at,
+      created_at,
+      profiles (avatar_url, full_name, nickname)
+    `)
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: true });
+
+  return (data || []) as Array<{
+    id: string;
+    event_id: number;
+    user_id: string | null;
+    guest_nickname: string | null;
+    color: string;
+    swapped_at: string | null;
+    created_at: string;
+    profiles: { avatar_url: string | null; full_name: string | null; nickname: string | null } | null;
+  }>;
+}
