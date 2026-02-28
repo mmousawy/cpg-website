@@ -7,7 +7,7 @@ import { getColorLabel } from '@/lib/colorDraw';
 
 export type ColorDrawParticipant = {
   id: string;
-  event_id: number;
+  challenge_id: string;
   user_id: string | null;
   guest_nickname: string | null;
   color: string;

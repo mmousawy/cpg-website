@@ -2318,6 +2318,21 @@ COMMENT ON TABLE "public"."challenge_announcements" IS 'Track challenge announce
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."challenge_color_draws" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "challenge_id" "uuid" NOT NULL,
+    "user_id" "uuid",
+    "guest_nickname" "text",
+    "color" "text" NOT NULL,
+    "swapped_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "challenge_color_draws_user_or_guest_check" CHECK (((("user_id" IS NOT NULL) AND ("guest_nickname" IS NULL)) OR (("user_id" IS NULL) AND ("guest_nickname" IS NOT NULL) AND (TRIM(BOTH FROM "guest_nickname") <> ''::"text"))))
+);
+
+
+ALTER TABLE "public"."challenge_color_draws" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."challenge_comments" (
     "challenge_id" "uuid" NOT NULL,
     "comment_id" "uuid" NOT NULL
@@ -2439,7 +2454,9 @@ CREATE TABLE IF NOT EXISTS "public"."challenges" (
     "is_active" boolean DEFAULT true NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "max_photos_per_user" integer
+    "max_photos_per_user" integer,
+    "has_color_draw" boolean DEFAULT false NOT NULL,
+    "color_draw_guest_key" "text"
 );
 
 
@@ -2521,21 +2538,6 @@ CREATE TABLE IF NOT EXISTS "public"."event_announcements" (
 
 
 ALTER TABLE "public"."event_announcements" OWNER TO "supabase_admin";
-
-
-CREATE TABLE IF NOT EXISTS "public"."event_color_draws" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "event_id" integer NOT NULL,
-    "user_id" "uuid",
-    "guest_nickname" "text",
-    "color" "text" NOT NULL,
-    "swapped_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "event_color_draws_user_or_guest_check" CHECK (((("user_id" IS NOT NULL) AND ("guest_nickname" IS NULL)) OR (("user_id" IS NULL) AND ("guest_nickname" IS NOT NULL) AND (TRIM(BOTH FROM "guest_nickname") <> ''::"text"))))
-);
-
-
-ALTER TABLE "public"."event_color_draws" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."event_comments" (
@@ -2881,6 +2883,11 @@ ALTER TABLE ONLY "public"."challenge_announcements"
 
 
 
+ALTER TABLE ONLY "public"."challenge_color_draws"
+    ADD CONSTRAINT "challenge_color_draws_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."challenge_comments"
     ADD CONSTRAINT "challenge_comments_pkey" PRIMARY KEY ("challenge_id", "comment_id");
 
@@ -2933,11 +2940,6 @@ ALTER TABLE ONLY "public"."event_announcements"
 
 ALTER TABLE ONLY "public"."event_announcements"
     ADD CONSTRAINT "event_announcements_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."event_color_draws"
-    ADD CONSTRAINT "event_color_draws_pkey" PRIMARY KEY ("id");
 
 
 
@@ -3083,19 +3085,19 @@ CREATE UNIQUE INDEX "albums_user_id_slug_key" ON "public"."albums" USING "btree"
 
 
 
+CREATE UNIQUE INDEX "challenge_color_draws_challenge_guest_unique" ON "public"."challenge_color_draws" USING "btree" ("challenge_id", "guest_nickname") WHERE ("guest_nickname" IS NOT NULL);
+
+
+
+CREATE INDEX "challenge_color_draws_challenge_id_idx" ON "public"."challenge_color_draws" USING "btree" ("challenge_id");
+
+
+
+CREATE UNIQUE INDEX "challenge_color_draws_challenge_user_unique" ON "public"."challenge_color_draws" USING "btree" ("challenge_id", "user_id") WHERE ("user_id" IS NOT NULL);
+
+
+
 CREATE INDEX "comments_parent_comment_id_idx" ON "public"."comments" USING "btree" ("parent_comment_id") WHERE ("parent_comment_id" IS NOT NULL);
-
-
-
-CREATE UNIQUE INDEX "event_color_draws_event_guest_unique" ON "public"."event_color_draws" USING "btree" ("event_id", "guest_nickname") WHERE ("guest_nickname" IS NOT NULL);
-
-
-
-CREATE INDEX "event_color_draws_event_id_idx" ON "public"."event_color_draws" USING "btree" ("event_id");
-
-
-
-CREATE UNIQUE INDEX "event_color_draws_event_user_unique" ON "public"."event_color_draws" USING "btree" ("event_id", "user_id") WHERE ("user_id" IS NOT NULL);
 
 
 
@@ -3590,6 +3592,16 @@ ALTER TABLE ONLY "public"."challenge_announcements"
 
 
 
+ALTER TABLE ONLY "public"."challenge_color_draws"
+    ADD CONSTRAINT "challenge_color_draws_challenge_id_fkey" FOREIGN KEY ("challenge_id") REFERENCES "public"."challenges"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."challenge_color_draws"
+    ADD CONSTRAINT "challenge_color_draws_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."challenge_comments"
     ADD CONSTRAINT "challenge_comments_challenge_id_fkey" FOREIGN KEY ("challenge_id") REFERENCES "public"."challenges"("id") ON DELETE CASCADE;
 
@@ -3652,16 +3664,6 @@ ALTER TABLE ONLY "public"."event_announcements"
 
 ALTER TABLE ONLY "public"."event_announcements"
     ADD CONSTRAINT "event_announcements_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."event_color_draws"
-    ADD CONSTRAINT "event_color_draws_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."event_color_draws"
-    ADD CONSTRAINT "event_color_draws_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -3843,7 +3845,11 @@ CREATE POLICY "Album views are publicly readable" ON "public"."album_views" FOR 
 
 
 
-CREATE POLICY "Anon can create guest color draw" ON "public"."event_color_draws" FOR INSERT TO "anon" WITH CHECK ((("user_id" IS NULL) AND ("guest_nickname" IS NOT NULL) AND (TRIM(BOTH FROM "guest_nickname") <> ''::"text")));
+CREATE POLICY "Anon can create guest color draw" ON "public"."challenge_color_draws" FOR INSERT TO "anon" WITH CHECK ((("user_id" IS NULL) AND ("guest_nickname" IS NOT NULL) AND (TRIM(BOTH FROM "guest_nickname") <> ''::"text")));
+
+
+
+CREATE POLICY "Anon can update guest color draw" ON "public"."challenge_color_draws" FOR UPDATE TO "anon" USING (("user_id" IS NULL)) WITH CHECK (("user_id" IS NULL));
 
 
 
@@ -3867,7 +3873,7 @@ CREATE POLICY "Anyone can track photo views" ON "public"."photo_views" FOR INSER
 
 
 
-CREATE POLICY "Anyone can view event color draws" ON "public"."event_color_draws" FOR SELECT USING (true);
+CREATE POLICY "Anyone can view challenge color draws" ON "public"."challenge_color_draws" FOR SELECT USING (true);
 
 
 
@@ -3891,7 +3897,7 @@ CREATE POLICY "Authenticated users can add event comments" ON "public"."event_co
 
 
 
-CREATE POLICY "Authenticated users can create own color draw" ON "public"."event_color_draws" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("guest_nickname" IS NULL)));
+CREATE POLICY "Authenticated users can create own color draw" ON "public"."challenge_color_draws" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("guest_nickname" IS NULL)));
 
 
 
@@ -3911,7 +3917,7 @@ CREATE POLICY "Authenticated users can like photos" ON "public"."photo_likes" FO
 
 
 
-CREATE POLICY "Authenticated users can swap own color draw" ON "public"."event_color_draws" FOR UPDATE TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid"))) WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+CREATE POLICY "Authenticated users can swap own color draw" ON "public"."challenge_color_draws" FOR UPDATE TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid"))) WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
@@ -4313,6 +4319,9 @@ ALTER TABLE "public"."auth_tokens" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."challenge_announcements" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."challenge_color_draws" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."challenge_comments" ENABLE ROW LEVEL SECURITY;
 
 
@@ -4332,9 +4341,6 @@ ALTER TABLE "public"."email_types" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."event_announcements" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."event_color_draws" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."event_comments" ENABLE ROW LEVEL SECURITY;
@@ -5034,6 +5040,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_color_draws" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_color_draws" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_color_draws" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_color_draws" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_comments" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_comments" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_comments" TO "authenticated";
@@ -5100,13 +5113,6 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcements" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcements" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcements" TO "service_role";
-
-
-
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_color_draws" TO "postgres";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_color_draws" TO "anon";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_color_draws" TO "authenticated";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_color_draws" TO "service_role";
 
 
 

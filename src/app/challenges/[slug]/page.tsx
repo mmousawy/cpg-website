@@ -10,6 +10,7 @@ import JsonLd from '@/components/shared/JsonLd';
 import {
   getAllChallengeSlugs,
   getChallengeBySlug,
+  getChallengeColorDraws,
   getChallengeContributors,
   getChallengePhotos,
 } from '@/lib/data/challenges';
@@ -18,6 +19,7 @@ import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 import ChallengeCoverImage from '@/components/challenges/ChallengeCoverImage';
 import ChallengeGallery from '@/components/challenges/ChallengeGallery';
 import SubmitButton from '@/components/challenges/SubmitButton';
+import ColorDrawSection from '@/components/challenges/ColorDraw/ColorDrawSection';
 import ChallengeComments from './ChallengeComments';
 
 import Button from '@/components/shared/Button';
@@ -121,13 +123,16 @@ export default async function ChallengePage({
   }
 
   // Fetch challenge data
-  const [challengeData, photos, contributors] = await Promise.all([
+  const [challengeData, photos, contributors, colorDraws] = await Promise.all([
     getChallengeBySlug(slug),
     getChallengeBySlug(slug).then((d) =>
       d.challenge ? getChallengePhotos(d.challenge.id) : [],
     ),
     getChallengeBySlug(slug).then((d) =>
       d.challenge ? getChallengeContributors(d.challenge.id) : [],
+    ),
+    getChallengeBySlug(slug).then((d) =>
+      d.challenge?.has_color_draw ? getChallengeColorDraws(d.challenge.id) : [],
     ),
   ]);
 
@@ -443,6 +448,15 @@ export default async function ChallengePage({
             )}
           </div>
         </Container>
+
+        {/* Color Draw - gated by has_color_draw */}
+        {challenge.has_color_draw && (
+          <ColorDrawSection
+            challengeId={challenge.id}
+            draws={colorDraws}
+            isEnded={isEnded}
+          />
+        )}
 
         {/* Empty state - separate section, narrow column when no photos */}
         {photos.length === 0 && (

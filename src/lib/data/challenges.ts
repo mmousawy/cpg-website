@@ -166,6 +166,44 @@ export async function getChallengeBySlug(slug: string) {
 }
 
 /**
+ * Get color draws for a challenge (Color Photography Challenge style)
+ */
+export async function getChallengeColorDraws(challengeId: string) {
+  'use cache';
+  cacheLife('max');
+  cacheTag('challenge-color-draws');
+  cacheTag(`challenge-color-draws-${challengeId}`);
+
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('challenge_color_draws')
+    .select(`
+      id,
+      challenge_id,
+      user_id,
+      guest_nickname,
+      color,
+      swapped_at,
+      created_at,
+      profiles (avatar_url, full_name, nickname)
+    `)
+    .eq('challenge_id', challengeId)
+    .order('created_at', { ascending: true });
+
+  return (data || []) as Array<{
+    id: string;
+    challenge_id: string;
+    user_id: string | null;
+    guest_nickname: string | null;
+    color: string;
+    swapped_at: string | null;
+    created_at: string;
+    profiles: { avatar_url: string | null; full_name: string | null; nickname: string | null } | null;
+  }>;
+}
+
+/**
  * Get accepted photos for a challenge (for gallery display)
  * Tagged with 'challenge-photos' for granular cache invalidation
  */

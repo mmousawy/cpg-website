@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export type ColorDrawWithProfile = {
   id: string;
-  event_id: number;
+  challenge_id: string;
   user_id: string | null;
   guest_nickname: string | null;
   color: string;
@@ -18,26 +18,25 @@ export type ColorDrawWithProfile = {
   } | null;
 };
 
+function isValidChallengeId(id: string): boolean {
+  return typeof id === 'string' && id.length > 0 && /^[0-9a-f-]{36}$/i.test(id);
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const eventId = searchParams.get('event_id');
+  const challengeId = searchParams.get('challenge_id');
 
-  if (!eventId) {
-    return NextResponse.json({ error: 'Missing event_id' }, { status: 400 });
-  }
-
-  const eventIdNum = parseInt(eventId, 10);
-  if (Number.isNaN(eventIdNum)) {
-    return NextResponse.json({ error: 'Invalid event_id' }, { status: 400 });
+  if (!challengeId || !isValidChallengeId(challengeId)) {
+    return NextResponse.json({ error: 'Missing or invalid challenge_id' }, { status: 400 });
   }
 
   const supabase = createPublicClient();
 
   const { data: draws, error } = await supabase
-    .from('event_color_draws')
+    .from('challenge_color_draws')
     .select(`
       id,
-      event_id,
+      challenge_id,
       user_id,
       guest_nickname,
       color,
@@ -45,7 +44,7 @@ export async function GET(request: NextRequest) {
       created_at,
       profiles (avatar_url, full_name, nickname)
     `)
-    .eq('event_id', eventIdNum)
+    .eq('challenge_id', challengeId)
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -66,22 +65,38 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let body: { event_id: number; guest_nickname?: string; swap?: boolean };
+  let body: { challenge_id: string; guest_nickname?: string; guest_key?: string; swap?: boolean };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { event_id, guest_nickname, swap } = body;
+  const { challenge_id, guest_nickname, guest_key, swap } = body;
 
-  if (!event_id) {
-    return NextResponse.json({ error: 'Missing event_id' }, { status: 400 });
+  if (!challenge_id || !isValidChallengeId(challenge_id)) {
+    return NextResponse.json({ error: 'Missing or invalid challenge_id' }, { status: 400 });
   }
 
-  const eventIdNum = typeof event_id === 'string' ? parseInt(event_id, 10) : event_id;
-  if (Number.isNaN(eventIdNum)) {
-    return NextResponse.json({ error: 'Invalid event_id' }, { status: 400 });
+  // Fetch challenge for validation
+  const publicClient = createPublicClient();
+  const { data: challenge } = await publicClient
+    .from('challenges')
+    .select('is_active, ends_at, color_draw_guest_key')
+    .eq('id', challenge_id)
+    .single();
+
+  if (challenge) {
+    const now = new Date();
+    const isEnded =
+      !challenge.is_active ||
+      Boolean(challenge.ends_at && new Date(challenge.ends_at) < now);
+    if (isEnded) {
+      return NextResponse.json(
+        { error: 'Color draw has ended for this challenge' },
+        { status: 400 },
+      );
+    }
   }
 
   const isAuthenticated = !!user;
@@ -89,9 +104,9 @@ export async function POST(request: NextRequest) {
   if (isAuthenticated) {
     // Logged-in user: draw or swap
     const { data: existing } = await supabase
-      .from('event_color_draws')
+      .from('challenge_color_draws')
       .select('id, color, swapped_at')
-      .eq('event_id', eventIdNum)
+      .eq('challenge_id', challenge_id)
       .eq('user_id', user!.id)
       .single();
 
@@ -101,15 +116,15 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'You have already used your one swap' }, { status: 400 });
         }
         const { data: allDraws } = await supabase
-          .from('event_color_draws')
+          .from('challenge_color_draws')
           .select('color')
-          .eq('event_id', eventIdNum);
+          .eq('challenge_id', challenge_id);
         const taken = new Set((allDraws || []).map((d) => d.color));
         taken.add(existing.color);
         const newColor = pickRandomColor(taken);
 
         const { data: updated, error: updateError } = await supabase
-          .from('event_color_draws')
+          .from('challenge_color_draws')
           .update({ color: newColor, swapped_at: new Date().toISOString() })
           .eq('id', existing.id)
           .select()
@@ -119,25 +134,25 @@ export async function POST(request: NextRequest) {
           console.error('Error swapping color:', updateError);
           return NextResponse.json({ error: 'Failed to swap color' }, { status: 500 });
         }
-        revalidateTag('event-color-draws', 'max');
-        revalidateTag(`event-color-draws-${eventIdNum}`, 'max');
+        revalidateTag('challenge-color-draws', 'max');
+        revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
         return NextResponse.json({ draw: updated, swapped: true });
       }
-      return NextResponse.json({ error: 'You have already drawn a color for this event' }, { status: 400 });
+      return NextResponse.json({ error: 'You have already drawn a color for this challenge' }, { status: 400 });
     }
 
     // New draw for authenticated user
     const { data: allDraws } = await supabase
-      .from('event_color_draws')
+      .from('challenge_color_draws')
       .select('color')
-      .eq('event_id', eventIdNum);
+      .eq('challenge_id', challenge_id);
     const taken = new Set((allDraws || []).map((d) => d.color));
     const color = pickRandomColor(taken);
 
     const { data: inserted, error: insertError } = await supabase
-      .from('event_color_draws')
+      .from('challenge_color_draws')
       .insert({
-        event_id: eventIdNum,
+        challenge_id,
         user_id: user!.id,
         guest_nickname: null,
         color,
@@ -149,22 +164,30 @@ export async function POST(request: NextRequest) {
       console.error('Error creating color draw:', insertError);
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
-    revalidateTag('event-color-draws', 'max');
-    revalidateTag(`event-color-draws-${eventIdNum}`, 'max');
+    revalidateTag('challenge-color-draws', 'max');
+    revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
     return NextResponse.json({ draw: inserted });
   }
 
-  // Guest: require nickname
+  // Guest: require nickname and valid guest_key (from ?guest=KEY in URL, must match challenge config)
   const nickname = typeof guest_nickname === 'string' ? guest_nickname.trim() : '';
   if (!nickname) {
     return NextResponse.json({ error: 'Guest nickname is required' }, { status: 400 });
   }
 
+  const expectedKey = challenge?.color_draw_guest_key?.trim();
+  if (!expectedKey || typeof guest_key !== 'string' || guest_key !== expectedKey) {
+    return NextResponse.json(
+      { error: 'Guest access requires a valid invite link' },
+      { status: 403 },
+    );
+  }
+
   if (swap) {
     const { data: existing } = await supabase
-      .from('event_color_draws')
+      .from('challenge_color_draws')
       .select('id, color, swapped_at')
-      .eq('event_id', eventIdNum)
+      .eq('challenge_id', challenge_id)
       .eq('guest_nickname', nickname)
       .is('user_id', null)
       .single();
@@ -177,15 +200,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: allDraws } = await supabase
-      .from('event_color_draws')
+      .from('challenge_color_draws')
       .select('color')
-      .eq('event_id', eventIdNum);
+      .eq('challenge_id', challenge_id);
     const taken = new Set((allDraws || []).map((d) => d.color));
     taken.add(existing.color);
     const newColor = pickRandomColor(taken);
 
     const { data: updated, error: updateError } = await supabase
-      .from('event_color_draws')
+      .from('challenge_color_draws')
       .update({ color: newColor, swapped_at: new Date().toISOString() })
       .eq('id', existing.id)
       .select()
@@ -195,34 +218,34 @@ export async function POST(request: NextRequest) {
       console.error('Error swapping color:', updateError);
       return NextResponse.json({ error: 'Failed to swap color' }, { status: 500 });
     }
-    revalidateTag('event-color-draws', 'max');
-    revalidateTag(`event-color-draws-${eventIdNum}`, 'max');
+    revalidateTag('challenge-color-draws', 'max');
+    revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
     return NextResponse.json({ draw: updated, swapped: true });
   }
 
   const { data: existing } = await supabase
-    .from('event_color_draws')
+    .from('challenge_color_draws')
     .select('id')
-    .eq('event_id', eventIdNum)
+    .eq('challenge_id', challenge_id)
     .eq('guest_nickname', nickname)
     .is('user_id', null)
     .single();
 
   if (existing) {
-    return NextResponse.json({ error: 'This nickname has already drawn a color for this event' }, { status: 400 });
+    return NextResponse.json({ error: 'This nickname has already drawn a color for this challenge' }, { status: 400 });
   }
 
   const { data: allDraws } = await supabase
-    .from('event_color_draws')
+    .from('challenge_color_draws')
     .select('color')
-    .eq('event_id', eventIdNum);
+    .eq('challenge_id', challenge_id);
   const taken = new Set((allDraws || []).map((d) => d.color));
   const color = pickRandomColor(taken);
 
   const { data: inserted, error: insertError } = await supabase
-    .from('event_color_draws')
+    .from('challenge_color_draws')
     .insert({
-      event_id: eventIdNum,
+      challenge_id,
       user_id: null,
       guest_nickname: nickname,
       color,
@@ -234,7 +257,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating guest color draw:', insertError);
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
-  revalidateTag('event-color-draws', 'max');
-  revalidateTag(`event-color-draws-${eventIdNum}`, 'max');
+  revalidateTag('challenge-color-draws', 'max');
+  revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
   return NextResponse.json({ draw: inserted });
 }

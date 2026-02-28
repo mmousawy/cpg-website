@@ -5,32 +5,38 @@ import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
 import { useAuth } from '@/hooks/useAuth';
 import { getColorLabel } from '@/lib/colorDraw';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ColorFullscreen from './ColorFullscreen';
 import ColorSwatch from './ColorSwatch';
 import ParticipantsList, { type ColorDrawParticipant } from './ParticipantsList';
 
-const GUEST_NICKNAME_KEY = (eventId: number) => `colorDraw_guest_${eventId}`;
+const GUEST_NICKNAME_KEY = (challengeId: string) => `colorDraw_guest_${challengeId}`;
 
 type ColorDrawClientProps = {
-  eventId: number;
+  challengeId: string;
   initialDraws: ColorDrawParticipant[];
+  isEnded: boolean;
 };
 
-export default function ColorDrawClient({ eventId, initialDraws }: ColorDrawClientProps) {
+export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: ColorDrawClientProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, profile } = useAuth();
   const [draws, setDraws] = useState<ColorDrawParticipant[]>(initialDraws);
+
+  // Guest join is only allowed when the URL has ?guest=KEY (key must match server env)
+  const guestKey = searchParams.get('guest');
+  const allowGuest = useMemo(() => !!guestKey, [guestKey]);
   const [fullscreenColor, setFullscreenColor] = useState<string | null>(null);
   const [guestNickname, setGuestNickname] = useState('');
   const [isDrawing, setIsDrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(GUEST_NICKNAME_KEY(eventId));
+    const stored = localStorage.getItem(GUEST_NICKNAME_KEY(challengeId));
     if (stored) setGuestNickname(stored);
-  }, [eventId]);
+  }, [challengeId]);
 
   const myDraw = draws.find(
     (d) =>
@@ -38,29 +44,29 @@ export default function ColorDrawClient({ eventId, initialDraws }: ColorDrawClie
       (!user && d.guest_nickname && d.guest_nickname === guestNickname.trim()),
   );
 
-  const canDraw = !myDraw;
-  const canSwap = myDraw && !myDraw.swapped_at;
+  const canDraw = !myDraw && !isEnded;
+  const canSwap = myDraw && !myDraw.swapped_at && !isEnded;
 
   const fetchDraws = useCallback(async () => {
     const res = await fetch(
-      `/api/events/color-draw?event_id=${eventId}&_t=${Date.now()}`,
+      `/api/challenges/color-draw?challenge_id=${challengeId}&_t=${Date.now()}`,
       { cache: 'no-store' },
     );
     if (res.ok) {
       const { draws: nextDraws } = await res.json();
       setDraws(nextDraws || []);
     }
-  }, [eventId]);
+  }, [challengeId]);
 
   const handleDraw = useCallback(async () => {
     setError(null);
     if (user) {
       setIsDrawing(true);
       try {
-        const res = await fetch('/api/events/color-draw', {
+        const res = await fetch('/api/challenges/color-draw', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event_id: eventId }),
+          body: JSON.stringify({ challenge_id: challengeId }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -82,14 +88,18 @@ export default function ColorDrawClient({ eventId, initialDraws }: ColorDrawClie
     }
     setIsDrawing(true);
     try {
-      const res = await fetch('/api/events/color-draw', {
+      const res = await fetch('/api/challenges/color-draw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: eventId, guest_nickname: nick }),
+        body: JSON.stringify({
+          challenge_id: challengeId,
+          guest_nickname: nick,
+          guest_key: guestKey,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem(GUEST_NICKNAME_KEY(eventId), nick);
+        localStorage.setItem(GUEST_NICKNAME_KEY(challengeId), nick);
         await fetchDraws();
         router.refresh();
       } else {
@@ -98,20 +108,23 @@ export default function ColorDrawClient({ eventId, initialDraws }: ColorDrawClie
     } finally {
       setIsDrawing(false);
     }
-  }, [eventId, user, guestNickname, fetchDraws, router]);
+  }, [challengeId, user, guestNickname, guestKey, fetchDraws, router]);
 
   const handleSwap = useCallback(async () => {
     if (!myDraw || myDraw.swapped_at) return;
     setError(null);
     setIsDrawing(true);
     try {
-      const res = await fetch('/api/events/color-draw', {
+      const res = await fetch('/api/challenges/color-draw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          event_id: eventId,
+          challenge_id: challengeId,
           swap: true,
-          ...(!user && { guest_nickname: guestNickname.trim() }),
+          ...(!user && {
+            guest_nickname: guestNickname.trim(),
+            guest_key: guestKey,
+          }),
         }),
       });
       const data = await res.json();
@@ -124,7 +137,7 @@ export default function ColorDrawClient({ eventId, initialDraws }: ColorDrawClie
     } finally {
       setIsDrawing(false);
     }
-  }, [eventId, user, guestNickname, myDraw, fetchDraws, router]);
+  }, [challengeId, user, guestNickname, guestKey, myDraw, fetchDraws, router]);
 
   return (
     <div
@@ -140,33 +153,72 @@ export default function ColorDrawClient({ eventId, initialDraws }: ColorDrawClie
         <div
           className="space-y-3"
         >
-          {!user && (
-            <div>
-              <label
-                htmlFor="guest-nickname"
-                className="mb-1 block text-sm font-medium"
+          {!user && !allowGuest && (
+            <p
+              className="text-sm text-foreground/70"
+            >
+              Sign in to draw a color and join as a participant.
+            </p>
+          )}
+          {!user && allowGuest && (
+            <div
+              className="flex items-center gap-2"
+            >
+              <div
+                className="max-w-[75%]"
               >
-                Your nickname
-              </label>
-              <Input
-                id="guest-nickname"
-                type="text"
-                placeholder="e.g. Alex"
-                value={guestNickname}
-                onChange={(e) => setGuestNickname(e.target.value)}
-                maxLength={50}
-              />
+                <label
+                  htmlFor="guest-nickname"
+                  className="mb-1 block text-sm font-medium"
+                >
+                  Join as a guest
+                </label>
+                <Input
+                  id="guest-nickname"
+                  type="text"
+                  placeholder="Enter your name here..."
+                  value={guestNickname}
+                  onChange={(e) => setGuestNickname(e.target.value)}
+                  maxLength={50}
+                />
+              </div>
+              <Button
+                variant="primary"
+                onClick={handleDraw}
+                loading={isDrawing}
+                disabled={!guestNickname.trim()}
+                className="self-end"
+              >
+                Draw your color
+              </Button>
             </div>
           )}
-          <Button
-            variant="primary"
-            onClick={handleDraw}
-            loading={isDrawing}
-            disabled={!user && !guestNickname.trim()}
-          >
-            Draw your color
-          </Button>
+          {user && (
+            <div>
+              You are joining as
+              {' '}
+              {profile?.nickname ? `@${profile.nickname}` : 'Participant'}
+              .
+
+              <Button
+                variant="primary"
+                onClick={handleDraw}
+                loading={isDrawing}
+                disabled={!user && !guestNickname.trim()}
+              >
+                Draw your color
+              </Button>
+            </div>
+          )}
         </div>
+      )}
+
+      {!myDraw && isEnded && (
+        <p
+          className="text-sm text-foreground/70"
+        >
+          Color draw has ended. You can still view participants below.
+        </p>
       )}
 
       {myDraw && (

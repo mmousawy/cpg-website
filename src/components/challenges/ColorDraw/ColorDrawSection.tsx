@@ -3,11 +3,12 @@ import ColorDrawClient from './ColorDrawClient';
 import type { ColorDrawParticipant } from './ParticipantsList';
 
 type ColorDrawSectionProps = {
-  eventId: number;
+  challengeId: string;
   draws: ColorDrawParticipant[];
+  isEnded: boolean;
 };
 
-export default function ColorDrawSection({ eventId, draws }: ColorDrawSectionProps) {
+export default function ColorDrawSection({ challengeId, draws, isEnded }: ColorDrawSectionProps) {
   return (
     <div
       className="mt-8"
@@ -19,8 +20,9 @@ export default function ColorDrawSection({ eventId, draws }: ColorDrawSectionPro
       </h2>
       <Container>
         <ColorDrawClient
-          eventId={eventId}
+          challengeId={challengeId}
           initialDraws={draws}
+          isEnded={isEnded}
         />
       </Container>
     </div>

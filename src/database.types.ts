@@ -359,6 +359,51 @@ export type Database = {
           },
         ]
       }
+      challenge_color_draws: {
+        Row: {
+          challenge_id: string
+          color: string
+          created_at: string
+          guest_nickname: string | null
+          id: string
+          swapped_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id: string
+          color: string
+          created_at?: string
+          guest_nickname?: string | null
+          id?: string
+          swapped_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string
+          color?: string
+          created_at?: string
+          guest_nickname?: string | null
+          id?: string
+          swapped_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'challenge_color_draws_challenge_id_fkey'
+            columns: ['challenge_id']
+            isOneToOne: false
+            referencedRelation: 'challenges'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'challenge_color_draws_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       challenge_comments: {
         Row: {
           challenge_id: string
@@ -457,10 +502,12 @@ export type Database = {
       challenges: {
         Row: {
           announced_at: string | null
+          color_draw_guest_key: string | null
           cover_image_url: string | null
           created_at: string
           created_by: string
           ends_at: string | null
+          has_color_draw: boolean
           id: string
           image_blurhash: string | null
           image_height: number | null
@@ -475,10 +522,12 @@ export type Database = {
         }
         Insert: {
           announced_at?: string | null
+          color_draw_guest_key?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by: string
           ends_at?: string | null
+          has_color_draw?: boolean
           id?: string
           image_blurhash?: string | null
           image_height?: number | null
@@ -493,10 +542,12 @@ export type Database = {
         }
         Update: {
           announced_at?: string | null
+          color_draw_guest_key?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string
           ends_at?: string | null
+          has_color_draw?: boolean
           id?: string
           image_blurhash?: string | null
           image_height?: number | null
@@ -659,51 +710,6 @@ export type Database = {
             columns: ['event_id']
             isOneToOne: true
             referencedRelation: 'events'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      event_color_draws: {
-        Row: {
-          color: string
-          created_at: string
-          event_id: number
-          guest_nickname: string | null
-          id: string
-          swapped_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          color: string
-          created_at?: string
-          event_id: number
-          guest_nickname?: string | null
-          id?: string
-          swapped_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          color?: string
-          created_at?: string
-          event_id?: number
-          guest_nickname?: string | null
-          id?: string
-          swapped_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'event_color_draws_event_id_fkey'
-            columns: ['event_id']
-            isOneToOne: false
-            referencedRelation: 'events'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'event_color_draws_user_id_fkey'
-            columns: ['user_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
         ]

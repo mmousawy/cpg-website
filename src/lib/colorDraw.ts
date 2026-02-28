@@ -1,6 +1,6 @@
 /**
  * Color palette and CSS mappings for the Color Photography Challenge.
- * Standard colors + wildcards (pastel, neon, metallic, earth tones).
+ * All colors are specific hues to avoid ambiguity.
  */
 
 export const COLOR_PALETTE = [
@@ -20,10 +20,10 @@ export const COLOR_PALETTE = [
   'navy',
   'lime',
   'gray',
-  'pastel',
-  'neon',
-  'metallic',
-  'earth tones',
+  'lavender',
+  'magenta',
+  'silver',
+  'terracotta',
 ] as const;
 
 export type ColorName = (typeof COLOR_PALETTE)[number];
@@ -47,10 +47,10 @@ export function getColorLabel(color: string): string {
     navy: 'Navy',
     lime: 'Lime',
     gray: 'Gray',
-    pastel: 'Pastel',
-    neon: 'Neon',
-    metallic: 'Metallic',
-    'earth tones': 'Earth Tones',
+    lavender: 'Lavender',
+    magenta: 'Magenta',
+    silver: 'Silver',
+    terracotta: 'Terracotta',
   };
   return labels[color.toLowerCase()] ?? color;
 }
@@ -91,22 +91,14 @@ export function getColorSwatchStyle(color: string): React.CSSProperties {
       return { backgroundColor: '#84cc16' };
     case 'gray':
       return { backgroundColor: '#6b7280' };
-    case 'pastel':
-      return {
-        background: 'linear-gradient(135deg, #fecaca, #fed7aa, #fef08a, #bbf7d0, #bfdbfe, #e9d5ff)',
-      };
-    case 'neon':
-      return {
-        background: 'linear-gradient(135deg, #ff006e, #00f5d4, #fee440, #7b2cbf)',
-      };
-    case 'metallic':
-      return {
-        background: 'linear-gradient(135deg, #94a3b8, #e2e8f0, #64748b)',
-      };
-    case 'earth tones':
-      return {
-        background: 'linear-gradient(135deg, #78350f, #854d0e, #4d7c0f)',
-      };
+    case 'lavender':
+      return { backgroundColor: '#a78bfa' };
+    case 'magenta':
+      return { backgroundColor: '#c026d3' };
+    case 'silver':
+      return { backgroundColor: '#94a3b8' };
+    case 'terracotta':
+      return { backgroundColor: '#c2410c' };
     default:
       return { backgroundColor: '#6b7280' };
   }
@@ -115,5 +107,5 @@ export function getColorSwatchStyle(color: string): React.CSSProperties {
 /** Whether the color is light (needs dark text for contrast) */
 export function isLightColor(color: string): boolean {
   const c = color.toLowerCase();
-  return ['yellow', 'white', 'lime', 'pastel', 'neon', 'metallic', 'coral', 'gray'].includes(c);
+  return ['yellow', 'white', 'lime', 'lavender', 'coral', 'gray'].includes(c);
 }

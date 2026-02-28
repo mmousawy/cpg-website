@@ -24,8 +24,6 @@ import {
   getAllEventSlugs,
   getEventAttendeesForEvent,
   getEventBySlug,
-  getEventColorDraws,
-  isColorDrawEvent,
 } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
@@ -34,7 +32,6 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
-import ColorDrawSection from '@/components/events/ColorDraw/ColorDrawSection';
 import EventPhotosSection from '@/components/events/EventPhotosSection';
 import { hasEventPhotos } from '@/lib/eventAlbums';
 import EventComments from './EventComments';
@@ -166,12 +163,11 @@ async function CachedEventContent({
   cacheTag('event-attendees');
   cacheTag(`event-${event.slug}`);
 
-  // Fetch hosts, attendees, event album, and color draws (if applicable)
-  const [hosts, attendees, eventAlbum, colorDraws] = await Promise.all([
+  // Fetch hosts, attendees, event album
+  const [hosts, attendees, eventAlbum] = await Promise.all([
     getOrganizers(5),
     getEventAttendeesForEvent(event.id),
     getEventAlbum(event.id),
-    isColorDrawEvent(event.slug) ? getEventColorDraws(event.id) : Promise.resolve([]),
   ]);
 
   // Format the event date
@@ -509,14 +505,6 @@ async function CachedEventContent({
             />
           </div>
         </Container>
-
-        {/* Color Draw - below main container */}
-        {isColorDrawEvent(event.slug) && (
-          <ColorDrawSection
-            eventId={event.id}
-            draws={colorDraws as Parameters<typeof ColorDrawSection>[0]['draws']}
-          />
-        )}
 
         {/* Event Photos - separate section, narrow column when empty */}
         {eventAlbum && (

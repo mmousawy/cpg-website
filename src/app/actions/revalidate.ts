@@ -57,12 +57,12 @@ export async function revalidateEventBySlug(slug: string) {
 }
 
 /**
- * Revalidate event color draws
+ * Revalidate challenge color draws
  * Use when: User draws or swaps a color
  */
-export async function revalidateEventColorDraws(eventId: number) {
-  revalidateTag('event-color-draws', 'max');
-  revalidateTag(`event-color-draws-${eventId}`, 'max');
+export async function revalidateChallengeColorDraws(challengeId: string) {
+  revalidateTag('challenge-color-draws', 'max');
+  revalidateTag(`challenge-color-draws-${challengeId}`, 'max');
 }
 
 // ============================================================================
@@ -283,8 +283,10 @@ export async function revalidateChallenge(challengeSlug: string, challengeId?: s
   revalidateTag('challenges', 'max');
   if (challengeId) {
     revalidateTag(`challenge-photos-${challengeId}`, 'max');
+    revalidateTag(`challenge-color-draws-${challengeId}`, 'max');
   }
   revalidateTag('challenge-photos', 'max');
+  revalidateTag('challenge-color-draws', 'max');
   revalidatePath(`/challenges/${challengeSlug}`);
 }
 

@@ -57,6 +57,8 @@ export default function AdminChallengeFormPage() {
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [hasColorDraw, setHasColorDraw] = useState(false);
+  const [colorDrawGuestKey, setColorDrawGuestKey] = useState('');
   const [maxPhotosPerUser, setMaxPhotosPerUser] = useState<string>('');
   const [coverImage, setCoverImage] = useState('');
   const [savedFormValues, setSavedFormValues] = useState<Record<string, unknown> | null>(null);
@@ -71,6 +73,8 @@ export default function AdminChallengeFormPage() {
     setStartsAt(existingChallenge.starts_at?.split('T')[0] || '');
     setEndsAt(existingChallenge.ends_at?.split('T')[0] || '');
     setIsActive(existingChallenge.is_active);
+    setHasColorDraw(existingChallenge.has_color_draw ?? false);
+    setColorDrawGuestKey(existingChallenge.color_draw_guest_key ?? '');
     setMaxPhotosPerUser(existingChallenge.max_photos_per_user?.toString() || '');
     setCoverImage(existingChallenge.cover_image_url || '');
     setCoverImagePreview(existingChallenge.cover_image_url || null);
@@ -82,6 +86,8 @@ export default function AdminChallengeFormPage() {
       startsAt: existingChallenge.starts_at?.split('T')[0] || '',
       endsAt: existingChallenge.ends_at?.split('T')[0] || '',
       isActive: existingChallenge.is_active,
+      hasColorDraw: existingChallenge.has_color_draw ?? false,
+      colorDrawGuestKey: existingChallenge.color_draw_guest_key ?? '',
       maxPhotosPerUser: existingChallenge.max_photos_per_user?.toString() || '',
       coverImage: existingChallenge.cover_image_url || '',
     });
@@ -142,6 +148,8 @@ export default function AdminChallengeFormPage() {
     startsAt,
     endsAt,
     isActive,
+    hasColorDraw,
+    colorDrawGuestKey,
     maxPhotosPerUser,
     coverImage,
   };
@@ -258,6 +266,8 @@ export default function AdminChallengeFormPage() {
         starts_at: startsAt ? new Date(startsAt).toISOString() : new Date().toISOString(),
         ends_at: endsAt ? new Date(endsAt).toISOString() : null,
         is_active: isActive,
+        has_color_draw: hasColorDraw,
+        color_draw_guest_key: hasColorDraw && colorDrawGuestKey.trim() ? colorDrawGuestKey.trim() : null,
         max_photos_per_user: maxPhotosPerUser ? parseInt(maxPhotosPerUser, 10) : null,
         cover_image_url: coverImageUrl || null,
         image_blurhash: coverImageFile ? imageBlurhash : existingChallenge?.image_blurhash,
@@ -482,6 +492,61 @@ export default function AdminChallengeFormPage() {
                     label="Active (accepting submissions)"
                     labelClassName="flex items-center gap-3 cursor-pointer"
                   />
+                </div>
+
+                {/* Color Draw Toggle */}
+                <div
+                  className="flex flex-col gap-1"
+                >
+                  <div
+                    className="flex items-center gap-3"
+                  >
+                    <Checkbox
+                      id="hasColorDraw"
+                      checked={hasColorDraw}
+                      onChange={(e) => setHasColorDraw(e.target.checked)}
+                      label="Enable color draw"
+                      labelClassName="flex items-center gap-3 cursor-pointer"
+                    />
+                  </div>
+                  <p
+                    className="text-xs text-muted-foreground"
+                  >
+                    Let participants draw a random color for this challenge
+                  </p>
+                  {hasColorDraw && (
+                    <div
+                      className="mt-2 flex flex-col gap-1"
+                    >
+                      <label
+                        htmlFor="colorDrawGuestKey"
+                        className="text-sm font-medium"
+                      >
+                        Guest invite key
+                      </label>
+                      <Input
+                        id="colorDrawGuestKey"
+                        type="text"
+                        value={colorDrawGuestKey}
+                        onChange={(e) => setColorDrawGuestKey(e.target.value)}
+                        placeholder="e.g. meetup2025"
+                        className="max-w-xs"
+                      />
+                      <p
+                        className="text-xs text-muted-foreground"
+                      >
+                        Share the URL with
+                        {' '}
+                        <code
+                          className="rounded bg-muted px-1 py-0.5 font-mono text-xs"
+                        >
+                          ?guest=
+                        </code>
+                        {' '}
+                        this value. Leave empty to allow only logged-in users.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Max Photos Per User */}
