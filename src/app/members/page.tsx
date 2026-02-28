@@ -1,3 +1,4 @@
+import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
@@ -311,7 +312,7 @@ async function PopularInterestsSection() {
 }
 
 async function RandomInterestsSection() {
-  const randomInterests = await getRandomInterestsWithMembers(6, 3);
+  const randomInterests = await getRandomInterestsWithMembers(6, 10);
 
   if (randomInterests.length === 0) return null;
 
@@ -320,47 +321,74 @@ async function RandomInterestsSection() {
       className="mb-10"
     >
       <h2
-        className="mb-1 text-lg font-semibold"
+        className="mb-4 text-xl font-semibold"
       >
         Explore by interests
       </h2>
       <div
-        className="space-y-8"
+        className="grid gap-3 xs:grid-cols-2 md:grid-cols-3"
       >
         {randomInterests.map(({ interest, members }) => (
-          <div
+          <Link
             key={interest.id}
+            href={`/members/interest/${encodeURIComponent(interest.name)}`}
+            className="group rounded-lg border border-border-color bg-background-light px-4 py-3 transition-colors hover:border-primary hover:bg-background"
           >
             <div
-              className="mb-3 flex items-center justify-between"
+              className="flex items-center gap-3 mb-3"
             >
-              <Link
-                href={`/members/interest/${encodeURIComponent(interest.name)}`}
-                className="text-lg font-medium hover:text-primary"
+              <div
+                className="min-w-0 flex-1"
               >
-                {interest.name}
-              </Link>
-              <Link
-                href={`/members/interest/${encodeURIComponent(interest.name)}`}
-                className="text-sm text-foreground/60 hover:text-primary"
+                <span
+                  className="font-medium text-sm group-hover:text-primary transition-colors"
+                >
+                  {interest.name}
+                </span>
+                <span
+                  className="ml-2 text-xs text-foreground/40"
+                >
+                  {interest.count || 0}
+                  {' '}
+                  {(interest.count || 0) === 1 ? 'member' : 'members'}
+                </span>
+              </div>
+              <svg
+                className="size-4 shrink-0 text-foreground/30 group-hover:text-primary transition-colors"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
               >
-                View all (
-                {interest.count || 0}
-                {' '}
-                members) →
-              </Link>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </div>
             <div
-              className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              className="flex -space-x-2 items-center"
             >
-              {members.map((member) => (
-                <MemberCard
+              {members.slice(0, 4).map((member) => (
+                <Avatar
                   key={member.id}
-                  member={member}
+                  avatarUrl={member.avatar_url}
+                  fullName={member.full_name}
+                  size="md"
+                  className="ring-2 ring-background-light"
                 />
               ))}
+              {members.length > 4 && (
+                <div
+                  className="z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-background-medium border-2 border-background text-sm font-semibold text-foreground/70"
+                >
+                  +
+                  {members.length - 4}
+                </div>
+              )}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

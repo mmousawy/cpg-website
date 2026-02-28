@@ -80,7 +80,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const textareaClasses = clsx(
       // Base styles
       'rounded border border-border-color-strong bg-background-medium px-3 py-2 text-sm transition-colors',
-      'focus:border-primary focus:outline-none',
+      'focus-visible:border-primary focus-visible:outline-none',
       // Width
       fullWidth && 'w-full',
       // Border color

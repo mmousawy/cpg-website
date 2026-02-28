@@ -46,7 +46,7 @@ export const photosFAQ: FAQSection = {
             className="mb-4 ml-6 list-disc"
           >
             <li>
-              Go to Account → Manage albums
+              Go to Manage photos (via your avatar menu) and switch to the Albums tab
             </li>
             <li>
               Click &quot;New album&quot; and give it a name and optional description
@@ -72,7 +72,7 @@ export const photosFAQ: FAQSection = {
             Shared albums let multiple people contribute photos to the same album. When creating a new album, expand the
             {' '}
             <strong>
-              Shared album configuration
+              Album sharing
             </strong>
             {' '}
             section to enable sharing.
@@ -147,7 +147,7 @@ export const photosFAQ: FAQSection = {
       title: 'EXIF data and camera info',
       content: (
         <p>
-          When you upload photos, we automatically extract EXIF data (camera, lens, settings, and GPS if available). This info is displayed to viewers on the photo detail page, so others can see how you captured the shot.
+          When you upload photos, we automatically extract EXIF data (camera, lens, and settings). This info is displayed to viewers on the photo detail page, so others can see how you captured the shot.
         </p>
       ),
     },

@@ -130,7 +130,7 @@ export default function AlbumPicker({
                   type="checkbox"
                   checked={selectedAlbumIds.includes(album.id)}
                   onChange={() => handleToggleAlbum(album.id)}
-                  className="size-4 rounded border-border-color text-primary focus:ring-primary"
+                  className="size-4 rounded border-border-color text-primary focus-visible:border-primary focus-visible:outline-none"
                 />
                 <span
                   className="flex-1 text-sm"

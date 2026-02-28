@@ -30,7 +30,7 @@ export default function PreferencesSection({
       <h2
         className="mb-4 text-lg font-semibold opacity-70"
       >
-        App preferences
+        Preferences
       </h2>
       <Container>
         <div
@@ -138,14 +138,14 @@ export default function PreferencesSection({
             </p>
           </div>
 
-          {/* Gallery card style */}
+          {/* Album card style */}
           <div
             className="flex flex-col gap-2"
           >
             <label
               className="text-sm font-medium"
             >
-              Gallery card style
+              Album card style
             </label>
             <Controller
               name="albumCardStyle"

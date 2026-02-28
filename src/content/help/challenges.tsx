@@ -131,7 +131,7 @@ export const challengesFAQ: FAQSection = {
           <p
             className="mb-4"
           >
-            When submitting to a challenge, you can either select from your existing photos (filter by public/private) or upload new photos directly in the submission modal. Both options are available — choose whichever fits your workflow.
+            When submitting to a challenge, you can either select from your existing photos or upload new photos directly in the submission modal. Private photos are shown but cannot be selected. Both options are available — choose whichever fits your workflow.
           </p>
           <p
             className="text-foreground/80"

@@ -75,7 +75,7 @@ export const gettingStartedFAQ: FAQSection = {
             </li>
             <li>
               <strong>
-                Avatar
+                Profile picture
               </strong>
               {' '}
               — A profile photo. You can upload one or skip and add it later.

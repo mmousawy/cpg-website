@@ -8,9 +8,9 @@ import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
 import Toggle from '@/components/shared/Toggle';
 import { routes } from '@/config/routes';
-import Link from 'next/link';
 import type { AccountFormData } from '@/hooks/useAccountForm';
-import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
+import { formatCopyrightNotice, LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
+import Link from 'next/link';
 
 interface CopyrightSettingsSectionProps {
   control: Control<AccountFormData>;
@@ -35,6 +35,7 @@ export default function CopyrightSettingsSection({
   isSaving,
 }: CopyrightSettingsSectionProps) {
   const copyrightName = useWatch({ control, name: 'copyrightName' });
+  const defaultLicense = useWatch({ control, name: 'defaultLicense' });
   const displayName = copyrightName || 'Your Name';
 
   return (
@@ -160,7 +161,7 @@ export default function CopyrightSettingsSection({
             <p
               className="text-foreground/50 text-xs"
             >
-              Add a text overlay to your photos when uploaded
+              Add a text overlay to your photos on new uploads
             </p>
             <Controller
               name="watermarkEnabled"
@@ -290,7 +291,7 @@ export default function CopyrightSettingsSection({
                         <Input
                           type="text"
                           {...textField}
-                          placeholder={`© ${new Date().getFullYear()} ${displayName}. All Rights Reserved.`}
+                          placeholder={formatCopyrightNotice(displayName, new Date().getFullYear(), defaultLicense)}
                           disabled={isSaving}
                         />
                       )}

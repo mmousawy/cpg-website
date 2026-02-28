@@ -62,7 +62,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
           className={clsx(
             // Base styles - matching Input component
             'inline-flex items-center justify-between rounded border bg-background px-3 py-1.5 text-sm font-[family-name:var(--font-geist-mono)]',
-            'transition-colors focus:border-primary focus:outline-none',
+            'transition-colors focus-visible:border-primary focus-visible:outline-none',
             // Width
             fullWidth && 'w-full',
             // Border color

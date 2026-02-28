@@ -30,7 +30,7 @@ export const accountFAQ: FAQSection = {
           <p
             className="mb-4"
           >
-            Go to Account → App preferences to control which emails you receive. Each category can be turned on or off independently. You can change these settings anytime.
+            Go to Account → Preferences to control which emails you receive. Each category can be turned on or off independently. You can change these settings anytime.
           </p>
           <p
             className="mb-2 font-medium"
@@ -119,7 +119,7 @@ export const accountFAQ: FAQSection = {
           <strong>
             Dark
           </strong>
-          . You can also set the gallery card style to
+          . You can also set the album card style to
           {' '}
           <strong>
             Large
@@ -140,7 +140,7 @@ export const accountFAQ: FAQSection = {
       title: 'Activity feed and notifications',
       content: (
         <p>
-          The Activity page (Header → Notifications → View all notifications) shows your notifications: likes, comments, replies, follows, event reminders and announcements, challenge results and announcements, and report resolutions. Notifications are grouped by time (Today, Yesterday, This week, Earlier). You can mark them as seen or dismiss them.
+          The Activity page (Header → Notifications → View all notifications) shows your notifications: likes, comments, replies, event reminders and announcements, challenge results and announcements, and report resolutions. Notifications are grouped by time (Today, Yesterday, This week, Earlier). You can mark them as seen or dismiss them.
         </p>
       ),
     },

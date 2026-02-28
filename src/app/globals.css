@@ -337,8 +337,9 @@ a, button, input, textarea, select, [tabindex] {
 }
 
 input:focus-visible,
-textarea:focus-visible {
-  border-color: var(--border-color);
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 
 /* Toast container positioning - below header */

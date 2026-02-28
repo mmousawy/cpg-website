@@ -33,7 +33,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               'block peer size-5 cursor-pointer appearance-none rounded border-2 transition-all',
               'border-border-color-strong bg-background',
               'checked:border-primary checked:bg-primary',
-              'focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none',
+              'focus-visible:border-primary focus-visible:outline-none',
               className,
             )}
             {...props}

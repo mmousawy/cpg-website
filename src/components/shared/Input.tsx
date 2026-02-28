@@ -57,7 +57,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputClasses = clsx(
       // Base styles
       'rounded border border-border-color-strong bg-background-medium text-sm transition-colors',
-      'focus:border-primary focus:outline-none',
+      'focus-visible:border-primary focus-visible:outline-none',
       // Padding - adjusted when addons are present
       hasAddons ? 'py-2' : 'px-3 py-2',
       leftAddon && 'pl-8',

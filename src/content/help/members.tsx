@@ -33,7 +33,7 @@ export const membersFAQ: FAQSection = {
             </li>
             <li>
               <strong>
-                Recent activity
+                Recently active
               </strong>
               {' '}
               — See who has been sharing photos and albums recently.
@@ -54,7 +54,7 @@ export const membersFAQ: FAQSection = {
       title: 'Viewing member profiles',
       content: (
         <p>
-          Click on any member card to visit their profile. You can see their bio, interests, public photos, and albums. Profiles also show when they joined and their recent activity.
+          Click on any member card to visit their profile. You can see their bio, interests, public photos, and albums. Profiles also show when they joined and their achievements and stats.
         </p>
       ),
     },
@@ -63,7 +63,7 @@ export const membersFAQ: FAQSection = {
       title: 'How interests work',
       content: (
         <p>
-          Interests are tags like &quot;street photography&quot; or &quot;landscape&quot; that members add to their profile during onboarding or from account settings. They help you find like-minded photographers. The Members page shows popular interests and groups members by shared interests so you can discover new people to follow.
+          Interests are tags like &quot;street photography&quot; or &quot;landscape&quot; that members add to their profile during onboarding or from account settings. They help you find like-minded photographers. The Members page shows popular interests and groups members by shared interests so you can discover like-minded photographers.
         </p>
       ),
     },

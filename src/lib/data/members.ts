@@ -222,39 +222,31 @@ export async function getMembersByTagUsage(limit = 12) {
 }
 
 /**
- * Get featured interests with member samples
- * Uses deterministic selection based on interest count to ensure cacheability
- * Tagged with 'interests' and 'profiles' for cache invalidation
+ * Get random interests with member samples for the discovery page
+ * Truly randomized on every request — not cached so each page load shows different interests
  * Optimized: Uses 3 bulk queries instead of 2*N queries
  */
 export async function getRandomInterestsWithMembers(interestLimit = 6, membersPerInterest = 3) {
-  'use cache';
-  cacheLife('max');
-  cacheTag('interests');
-  cacheTag('profiles');
-
   const supabase = createPublicClient();
 
-  // Get top interests (deterministic - no randomization for cacheability)
-  // We'll select every Nth interest to get variety while maintaining cache
   const { data: allInterests } = await supabase
     .from('interests')
     .select('*')
     .order('count', { ascending: false })
-    .limit(interestLimit * 3); // Get more to select from
+    .gt('count', 0)
+    .limit(interestLimit * 4);
 
   if (!allInterests || allInterests.length === 0) {
     return [];
   }
 
-  // Deterministic selection: take every Nth interest starting from index 1
-  // This gives variety while maintaining cache consistency
-  const step = Math.max(1, Math.floor(allInterests.length / interestLimit));
-  const selectedInterests = allInterests.filter((_, index) => index % step === 1).slice(0, interestLimit);
-
-  if (selectedInterests.length === 0) {
-    return [];
+  // Fisher-Yates shuffle to get truly random selection
+  const shuffled = [...allInterests];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
+  const selectedInterests = shuffled.slice(0, interestLimit);
 
   // Bulk fetch all profile_interests for selected interests (1 query instead of N)
   const interestNames = selectedInterests.map((i) => i.name);
@@ -277,10 +269,13 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
     profileIdsByInterest.set(pi.interest, existing);
   }
 
-  // Get all unique profile IDs we need to fetch (limited per interest)
+  // Shuffle members per interest too, then pick N
   const allProfileIds = new Set<string>();
   for (const [, profileIds] of profileIdsByInterest) {
-    // Take first N members per interest (deterministic)
+    for (let i = profileIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [profileIds[i], profileIds[j]] = [profileIds[j], profileIds[i]];
+    }
     profileIds.slice(0, membersPerInterest).forEach((id) => allProfileIds.add(id));
   }
 
@@ -300,15 +295,12 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
     return [];
   }
 
-  // Create a profile lookup map
   const profileMap = new Map(allProfiles.map((p) => [p.id, p]));
 
-  // Build results by mapping interests to their members
   const results: InterestWithMembers[] = [];
 
   for (const interest of selectedInterests) {
     const profileIds = profileIdsByInterest.get(interest.name) || [];
-    // Get profiles for this interest (limited to membersPerInterest)
     const members = profileIds
       .slice(0, membersPerInterest)
       .map((id) => profileMap.get(id))

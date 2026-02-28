@@ -3,6 +3,7 @@
 import { Control, Controller, UseFormRegister } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
+import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import InterestInput from '@/components/shared/InterestInput';
@@ -10,6 +11,21 @@ import Textarea from '@/components/shared/Textarea';
 import type { AccountFormData } from '@/hooks/useAccountForm';
 import CloseSVG from 'public/icons/close.svg';
 import PlusIconSVG from 'public/icons/plus.svg';
+
+const SOCIAL_LABEL_SUGGESTIONS = [
+  'Instagram',
+  'Facebook',
+  'X (Twitter)',
+  'Flickr',
+  '500px',
+  'YouTube',
+  'LinkedIn',
+  'Threads',
+  'Bluesky',
+  'TikTok',
+  'Behance',
+  'SmugMug',
+];
 
 interface PublicProfileSectionProps {
   register: UseFormRegister<AccountFormData>;
@@ -113,12 +129,19 @@ export default function PublicProfileSection({
                   key={field.id}
                   className="border-border-color bg-background-light flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0"
                 >
-                  <Input
-                    type="text"
-                    {...register(`socialLinks.${index}.label`)}
-                    placeholder="Label (e.g., Instagram)"
-                    fullWidth={false}
-                    className="w-full sm:w-1/3"
+                  <Controller
+                    name={`socialLinks.${index}.label`}
+                    control={control}
+                    render={({ field: labelField }) => (
+                      <AutocompleteInput
+                        value={labelField.value}
+                        onChange={labelField.onChange}
+                        suggestions={SOCIAL_LABEL_SUGGESTIONS}
+                        placeholder="Label (e.g. Instagram)"
+                        containerClassName="w-1/3"
+                        className="w-full"
+                      />
+                    )}
                   />
                   <Input
                     type="url"
