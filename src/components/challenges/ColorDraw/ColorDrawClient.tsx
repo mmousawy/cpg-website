@@ -194,12 +194,14 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
             </div>
           )}
           {user && (
-            <div>
-              You are joining as
-              {' '}
-              {profile?.nickname ? `@${profile.nickname}` : 'Participant'}
-              .
-
+            <div
+              className="flex items-center gap-4"
+            >
+              <p>
+                You are joining as
+                {' '}
+                {profile?.nickname ? `@${profile.nickname}` : 'Participant'}
+              </p>
               <Button
                 variant="primary"
                 onClick={handleDraw}
