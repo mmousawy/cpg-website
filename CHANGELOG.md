@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.3](https://github.com/mmousawy/cpg-website/compare/v1.26.2...v1.26.3) (2026-02-28)
+
+
+### Bug Fixes
+
+* Enhance UI components and improve accessibility ([18e04f6](https://github.com/mmousawy/cpg-website/commit/18e04f6d40f351784beb32705439e706761148cf))
+
 ## [1.26.2](https://github.com/mmousawy/cpg-website/compare/v1.26.1...v1.26.2) (2026-02-27)
 
 
