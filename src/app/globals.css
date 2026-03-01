@@ -381,7 +381,7 @@ select:focus-visible {
   }
 }
 
-/* RichTextEditor (Quill) - match form styling */
+/* RichTextEditor (Quill) - base form styling */
 .ql-toolbar.ql-snow {
   border-color: var(--border-color);
   border-radius: 0.375rem 0.375rem 0 0;
@@ -403,22 +403,18 @@ select:focus-visible {
 .ql-container.ql-snow {
   border-color: var(--border-color);
   border-radius: 0 0 0.375rem 0.375rem;
-  background: #f7f7f7;
-  font-size: 14px;
-  line-height: 24px;
-  color: #171717;
+  background: var(--background-medium);
+  font-size: inherit;
+  line-height: 1.65;
+  color: var(--foreground);
   max-height: 60vh;
   overflow-y: auto;
 }
 .ql-editor {
   min-height: 8rem;
   position: relative;
-  max-width: 465px;
-  margin: 0 auto;
-  padding: 20px;
-  background: white;
-  border-left: 1px solid #e5e7ea;
-  border-right: 1px solid #e5e7ea;
+  padding: 1rem;
+  background: var(--background);
 }
 .ql-editor:focus-visible {
   outline: none;
@@ -426,40 +422,49 @@ select:focus-visible {
 .ql-editor.ql-blank::before {
   color: var(--text-muted);
   font-style: normal;
-  top: 22px;
-  left: 20px;
-  right: 20px;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
 }
 
-/* Quill editor content — match email output exactly */
+/* Quill editor content — web form style (matches RichDescription for WYSIWYG) */
 .ql-snow .ql-editor p {
-  margin: 0 0 8px 0;
-  font-size: 14px;
+  margin: 0 0 1.5em 0;
+  font-size: inherit;
   line-height: 1.65em;
 }
+.ql-snow .ql-editor p:last-child {
+  margin-bottom: 0;
+}
 .ql-snow .ql-editor h2 {
-  font-size: 15px;
+  font-size: 1.125rem;
   font-weight: bold;
-  margin: 24px 0 4px 0;
-  color: #38785f;
+  margin: 1.5rem 0 0.25rem 0;
+  color: var(--primary);
   line-height: 1.5em;
-  padding-bottom: 6px;
+  padding-bottom: 0.375rem;
+}
+.ql-snow .ql-editor h2:first-child {
+  margin-top: 0;
 }
 .ql-snow .ql-editor h3 {
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 600;
-  margin: 16px 0 4px 0;
+  margin: 1rem 0 0.25rem 0;
   line-height: 1.5em;
 }
+.ql-snow .ql-editor h3:first-child {
+  margin-top: 0;
+}
 .ql-snow .ql-editor a {
-  color: #38785f;
+  color: var(--primary);
   text-decoration: underline;
 }
 .ql-snow .ql-editor ul,
 .ql-snow .ql-editor ol {
   margin: 8px 0;
-  padding-left: 16px;
-  font-size: 14px;
+  padding-left: 1.5rem;
+  font-size: inherit;
   line-height: 1.65em;
 }
 .ql-snow .ql-editor li {
@@ -468,10 +473,10 @@ select:focus-visible {
 }
 .ql-snow .ql-editor blockquote {
   margin: 8px 0;
-  padding-left: 16px;
+  padding-left: 1rem;
   border-left: 4px solid var(--border-color);
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: inherit;
   line-height: 1.65em;
 }
 .ql-snow .ql-editor img {
@@ -497,6 +502,141 @@ select:focus-visible {
 .ql-snow .ql-editor img:hover {
   outline: 2px solid var(--border-color-strong);
   outline-offset: 2px;
+}
+
+/* RichTextEditor variant: email — compact preview matching email output (newsletters, attendee messages) */
+.rich-text-editor--email .ql-container.ql-snow {
+  background: #f7f7f7;
+  font-size: 14px;
+  line-height: 24px;
+  color: #171717;
+}
+.rich-text-editor--email .ql-editor {
+  max-width: 465px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-left: 1px solid #e5e7ea;
+  border-right: 1px solid #e5e7ea;
+}
+.rich-text-editor--email .ql-editor.ql-blank::before {
+  top: 22px;
+  left: 20px;
+  right: 20px;
+}
+.rich-text-editor--email .ql-snow .ql-editor p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+.rich-text-editor--email .ql-snow .ql-editor h2 {
+  font-size: 15px;
+  margin: 24px 0 4px 0;
+  color: #38785f;
+  padding-bottom: 6px;
+}
+.rich-text-editor--email .ql-snow .ql-editor h2:first-child {
+  margin-top: 0;
+}
+.rich-text-editor--email .ql-snow .ql-editor h3 {
+  font-size: 14px;
+  margin: 16px 0 4px 0;
+}
+.rich-text-editor--email .ql-snow .ql-editor h3:first-child {
+  margin-top: 0;
+}
+.rich-text-editor--email .ql-snow .ql-editor a {
+  color: #38785f;
+}
+.rich-text-editor--email .ql-snow .ql-editor ul,
+.rich-text-editor--email .ql-snow .ql-editor ol {
+  margin: 8px 0;
+  padding-left: 16px;
+  font-size: 14px;
+}
+.rich-text-editor--email .ql-snow .ql-editor blockquote {
+  margin: 8px 0;
+  padding-left: 16px;
+  font-size: 14px;
+}
+
+/* RichDescription — read-only web display of sanitized HTML */
+.rich-description p {
+  margin: 0 0 1.5em 0;
+  font-size: inherit;
+  line-height: 1.65em;
+}
+.rich-description p:last-child {
+  margin-bottom: 0;
+}
+.rich-description h2 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin: 1.5rem 0 0.25rem 0;
+  color: var(--primary);
+  line-height: 1.5em;
+  padding-bottom: 0.375rem;
+}
+.rich-description h2:first-child {
+  margin-top: 0;
+}
+.rich-description h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.25rem 0;
+  line-height: 1.5em;
+}
+.rich-description h3:first-child {
+  margin-top: 0;
+}
+.rich-description a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.rich-description a:hover {
+  text-decoration: underline;
+}
+.rich-description ul,
+.rich-description ol {
+  margin: 8px 0;
+  padding-left: 1.5rem;
+  font-size: inherit;
+  line-height: 1.65em;
+}
+.rich-description li {
+  margin: 4px 0;
+  padding-left: 0;
+}
+.rich-description blockquote {
+  margin: 8px 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: inherit;
+  line-height: 1.65em;
+}
+.rich-description img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+  display: block;
+}
+.rich-description img.img-align-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+.rich-description img.img-align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+.rich-description img.img-align-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+.rich-description hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1.25rem 0;
 }
 
 /* Image size toolbar */

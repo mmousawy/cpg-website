@@ -353,7 +353,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
   // Get all albums this photo is in (including album owner profile)
   const { data: albumPhotosData } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname))')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(cover_image))')
     .eq('photo_id', photo.id);
 
   type AlbumPhotoWithAlbum = {
@@ -366,6 +366,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
       deleted_at: string | null;
       album_photos_active: Array<{ count: number }>;
       profile: { nickname: string | null } | null;
+      event: { cover_image: string | null } | null;
     } | null;
   };
 
@@ -377,7 +378,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
         id: albumInfo.id,
         title: albumInfo.title,
         slug: albumInfo.slug,
-        cover_image_url: albumInfo.cover_image_url,
+        cover_image_url: albumInfo.cover_image_url || albumInfo.event?.cover_image || null,
         photo_count: albumInfo.album_photos_active?.[0]?.count ?? 0,
         profile_nickname: albumInfo.profile?.nickname || null,
       };
@@ -493,7 +494,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
   // Get all albums this photo is in (including album owner profile)
   const { data: albumPhotos } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug))')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, cover_image))')
     .eq('photo_id', photo.id);
 
   type AlbumPhotoWithAlbum = {
@@ -506,7 +507,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
       deleted_at: string | null;
       album_photos_active: Array<{ count: number }>;
       profile: { nickname: string | null } | null;
-      event: { slug: string | null } | null;
+      event: { slug: string | null; cover_image: string | null } | null;
     } | null;
   };
 
@@ -518,7 +519,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
         id: album.id,
         title: album.title,
         slug: album.slug,
-        cover_image_url: album.cover_image_url,
+        cover_image_url: album.cover_image_url || album.event?.cover_image || null,
         photo_count: album.album_photos_active?.[0]?.count ?? 0,
         profile_nickname: album.profile?.nickname || null,
         event_slug: album.event?.slug || null,

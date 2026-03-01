@@ -75,7 +75,7 @@ export default async function ChallengesPage() {
         {pastChallenges.length > 0 && (
           <section>
             <h2
-              className="text-lg font-semibold mb-4"
+              className="text-lg font-semibold mb-4 opacity-70"
             >
               Past challenges
             </h2>

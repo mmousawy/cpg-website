@@ -13,6 +13,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import Link from 'next/link';
 
 import { routes } from '@/config/routes';
+import { stripHtml } from '@/utils/stripHtml';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import CancelSVG from 'public/icons/cancel.svg';
@@ -268,10 +269,10 @@ function RsvpEventCard({
   // Determine the status badge - only show for past events (attended/not attended) or canceled
   const statusBadge = isCanceled ? (
     <span
-      className="flex items-center gap-1 w-fit rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500 whitespace-nowrap"
+      className="flex items-center gap-1 w-fit rounded-full bg-red-600/10 px-3 py-1 text-xs font-medium text-red-600 whitespace-nowrap"
     >
       <CancelSVG
-        className="h-3 w-3 fill-red-500"
+        className="h-3 w-3 fill-red-600"
       />
       Canceled
     </span>
@@ -309,7 +310,7 @@ function RsvpEventCard({
     </span>
   );
 
-  const cardClassName = 'rounded-lg border border-border-color bg-background-light p-4 transition-colors hover:border-primary';
+  const cardClassName = 'rounded-lg border border-border-color bg-background-light p-4 transition-colors hover:border-primary overflow-hidden';
 
   // Consistent card layout for all states
   return (
@@ -330,7 +331,7 @@ function RsvpEventCard({
             {/* Mobile: float badge and thumbnail to the right */}
             {(statusBadge || event.cover_image) && (
               <div
-                className="sm:hidden float-right ml-2 mb-1 flex flex-col items-end gap-1.5"
+                className="sm:hidden float-right ml-2 mb-2 flex flex-col items-end gap-1.5"
               >
                 {statusBadge}
                 {event.cover_image && (
@@ -351,23 +352,16 @@ function RsvpEventCard({
               </div>
             )}
             <div
-              className="mb-1.5"
+              className="mb-3"
             >
               <h4
-                className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2"
+                className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-3"
               >
                 {event.title}
               </h4>
-              {statusBadge && (
-                <div
-                  className="max-sm:hidden mt-1.5"
-                >
-                  {statusBadge}
-                </div>
-              )}
             </div>
             <div
-              className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-1 text-sm text-foreground/70"
+              className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-0 text-sm font-semibold text-foreground/70"
             >
               {event.date && (
                 <span
@@ -391,45 +385,45 @@ function RsvpEventCard({
               )}
               {event.location && (
                 <span
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 shrink-0"
                 >
                   <LocationSVG
                     className="size-3.5 fill-foreground/60"
                   />
-                  <span
-                    className="line-clamp-1"
-                  >
-                    {event.location.split('\n')[0]}
-                  </span>
+
+                  {event.location.split('\n')[0]}
                 </span>
               )}
             </div>
             {event.description && (
               <p
-                className="max-sm:hidden max-w-[50ch] text-foreground/90 text-sm line-clamp-3"
+                className="max-sm:hidden max-w-[50ch] text-foreground/90 text-sm line-clamp-3 mt-2"
               >
-                {event.description}
+                {stripHtml(event.description)}
               </p>
             )}
           </div>
-          {/* Right side: thumbnail only (badge is now below title) */}
-          {event.cover_image && (
+          {/* Right side: badge above thumbnail */}
+          {(statusBadge || event.cover_image) && (
             <div
-              className="hidden sm:block shrink-0"
+              className="hidden sm:flex sm:flex-col sm:items-end shrink-0 gap-1.5"
             >
-              <div
-                className="relative aspect-video w-44 overflow-hidden rounded-md bg-background"
-              >
-                <BlurImage
-                  src={event.cover_image}
-                  alt={event.title || 'Event cover'}
-                  sizes="176px"
-                  loading="lazy"
-                  quality={85}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              {statusBadge}
+              {event.cover_image && (
+                <div
+                  className="relative aspect-video w-44 overflow-hidden rounded-md bg-background"
+                >
+                  <BlurImage
+                    src={event.cover_image}
+                    alt={event.title || 'Event cover'}
+                    sizes="176px"
+                    loading="lazy"
+                    quality={85}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

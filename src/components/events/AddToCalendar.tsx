@@ -8,6 +8,7 @@ import {
 } from '@react-email/components';
 
 import Button from '@/components/shared/Button';
+import { stripHtml } from '@/utils/stripHtml';
 import CalendarAddSVG from 'public/icons/calendar-add-16.svg';
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
@@ -19,7 +20,7 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
     endDate: calendarDate.add(3, 'hour').format('YYYYMMDDTHHmmssZ'),
     outlookStartDate: calendarDate.format('YYYY-MM-DDTHH:mm:ssZ'),
     outlookEndDate: calendarDate.add(3, 'hour').format('YYYY-MM-DDTHH:mm:ssZ'),
-    description: event.description,
+    description: stripHtml(event.description ?? ''),
     location: event.location?.replace(/\n/gm, ', '),
   };
 

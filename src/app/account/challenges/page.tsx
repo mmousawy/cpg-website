@@ -51,6 +51,21 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
   }
 }
 
+/** Short format for mobile */
+function formatDeadlineShort(endsAt: string | null, serverNow: number): string | null {
+  if (!endsAt) return null;
+  const deadline = new Date(endsAt);
+  const now = new Date(serverNow);
+  const diff = deadline.getTime() - now.getTime();
+  if (diff <= 0) return 'Ended';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 7) return `${Math.ceil(days / 7)}w`;
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  return 'Soon';
+}
+
 export default function MyChallengesPage() {
   const { user } = useAuth();
   const { data: submissions, isLoading } = useAllMySubmissions(user?.id);
@@ -241,6 +256,7 @@ function SubmissionCard({
   const photo = submission.photo;
   const challenge = submission.challenge;
   const deadline = challenge?.ends_at ? formatDeadline(challenge.ends_at, serverNow) : null;
+  const deadlineShort = challenge?.ends_at ? formatDeadlineShort(challenge.ends_at, serverNow) : null;
   const isEnded = deadline?.includes('Ended') || !challenge?.is_active;
   const photoHref = submission.user?.nickname && photo?.short_id
     ? `/@${submission.user.nickname}/photo/${photo.short_id}`
@@ -250,12 +266,16 @@ function SubmissionCard({
     pending: {
       badge: (
         <span
-          className="flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white border border-amber-500/90"
+          className="flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-amber-500/90"
         >
           <ClockMiniSVG
-            className="size-4 -ml-0.5 fill-current"
+            className="size-4 -ml-0.5 shrink-0 fill-current"
           />
-          Pending
+          <span
+            className="hidden sm:inline"
+          >
+            Pending
+          </span>
         </span>
       ),
       accent: 'ring-amber-500',
@@ -263,12 +283,16 @@ function SubmissionCard({
     accepted: {
       badge: (
         <span
-          className="flex items-center gap-1.5 rounded-full bg-green-600/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white border border-green-600/90"
+          className="flex items-center gap-1.5 rounded-full bg-green-600/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-green-600/90"
         >
           <CheckSVG
-            className="size-4 fill-current"
+            className="size-4 shrink-0 fill-current"
           />
-          Accepted
+          <span
+            className="hidden sm:inline"
+          >
+            Accepted
+          </span>
         </span>
       ),
       accent: 'ring-green-600',
@@ -276,12 +300,16 @@ function SubmissionCard({
     rejected: {
       badge: (
         <span
-          className="flex items-center gap-1.5 rounded-full bg-red-700/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white border border-red-700/90"
+          className="flex items-center gap-1.5 rounded-full bg-red-700/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-red-700/90"
         >
           <CancelSVG
-            className="size-4 fill-current"
+            className="size-4 shrink-0 fill-current"
           />
-          Rejected
+          <span
+            className="hidden sm:inline"
+          >
+            Rejected
+          </span>
         </span>
       ),
       accent: 'ring-red-700',
@@ -374,14 +402,16 @@ function SubmissionCard({
         <div
           className="absolute inset-x-0 top-0 flex items-start justify-between p-3"
         >
-          {/* Challenge badge */}
+          {/* Challenge badge - icon only on mobile to save space */}
           <div
-            className="flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
+            className="flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-medium text-white border border-challenge-badge/90"
           >
             <AwardStarMiniSVG
-              className="size-4 fill-current"
+              className="size-4 fill-current shrink-0"
             />
-            <span>
+            <span
+              className="hidden sm:inline"
+            >
               Challenge
             </span>
           </div>
@@ -405,15 +435,24 @@ function SubmissionCard({
           </Link>
         )}
 
-        {/* Deadline badge - bottom right */}
-        {!isEnded && deadline && (
+        {/* Deadline badge - short on mobile */}
+        {!isEnded && deadline && deadlineShort && (
           <div
             className="flex items-center gap-1.5 text-xs text-foreground/70"
           >
             <ClockMiniSVG
               className="size-4 fill-current shrink-0"
             />
-            {deadline}
+            <span
+              className="hidden sm:inline"
+            >
+              {deadline}
+            </span>
+            <span
+              className="sm:hidden"
+            >
+              {deadlineShort}
+            </span>
           </div>
         )}
 
@@ -427,13 +466,25 @@ function SubmissionCard({
             <CheckCircleFilledSVG
               className="size-4 fill-current shrink-0"
             />
-            Submitted
-            {' '}
-            {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+            <span
+              className="hidden sm:inline"
+            >
+              Submitted
+              {' '}
+              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </span>
+            <span
+              className="sm:hidden"
+            >
+              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
           </span>
         </div>
 

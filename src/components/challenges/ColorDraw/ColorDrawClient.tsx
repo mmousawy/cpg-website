@@ -252,6 +252,7 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
                 size="sm"
                 onClick={handleSwap}
                 loading={isDrawing}
+                className="ml-2"
               >
                 Swap
               </Button>

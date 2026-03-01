@@ -276,6 +276,7 @@ export default function NewsletterComposer() {
               placeholder="Enter your newsletter content..."
               disabled={isSending || isSendingTest}
               error={!!error && isEmptyContent(body)}
+              variant="email"
             />
           </div>
 

@@ -1,4 +1,5 @@
 import BlurImage from '@/components/shared/BlurImage';
+import { RichDescription } from '@/components/shared/RichDescription';
 import type { ChallengeWithStats } from '@/types/challenges';
 
 import AwardStarSVG from 'public/icons/award-star.svg';
@@ -97,11 +98,10 @@ export default function ChallengeHeader({
             </span>
           )}
         </div>
-        <p
-          className="mt-3 text-lg text-foreground/80 whitespace-pre-wrap"
-        >
-          {challenge.prompt}
-        </p>
+        <RichDescription
+          html={challenge.prompt}
+          className="mt-3 text-lg text-foreground/80"
+        />
       </div>
 
       {/* Stats Bar */}

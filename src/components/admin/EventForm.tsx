@@ -2,6 +2,7 @@
 
 import Container from '@/components/layout/Container';
 import Input from '@/components/shared/Input';
+import { RichTextDescriptionField } from '@/components/shared/RichTextDescriptionField';
 import Textarea from '@/components/shared/Textarea';
 import EventCoverUpload from './EventCoverUpload';
 
@@ -107,23 +108,12 @@ export default function EventForm({
             </p>
           </div>
 
-          <div
-            className="flex flex-col gap-2"
-          >
-            <label
-              htmlFor="description"
-              className="text-sm font-medium"
-            >
-              Description
-            </label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => onFormDataChange({ description: e.target.value })}
-              rows={6}
-              placeholder="Describe your event, what to expect, any special notes..."
-            />
-          </div>
+          <RichTextDescriptionField
+            id="description"
+            value={formData.description}
+            onChange={(val) => onFormDataChange({ description: val })}
+            placeholder="Describe your event, what to expect, any special notes..."
+          />
 
           <div
             className="grid grid-cols-1 gap-4 sm:grid-cols-2"

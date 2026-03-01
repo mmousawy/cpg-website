@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
       photos:album_photos_active!inner(
         id,
         photo_url
-      )
+      ),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -68,19 +69,24 @@ export async function GET(request: NextRequest) {
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
+    event: { cover_image: string | null } | null;
   };
 
   const albumsWithPhotos = (albums || [])
     .filter((album: AlbumQueryResult): album is AlbumQueryResult & { photos: Array<AlbumPhotoActive> } => {
       return !!album.photos && album.photos.length > 0;
-    });
+    })
+    .map((album) => ({
+      ...album,
+      event_cover_image: album.event?.cover_image || null,
+    }));
 
   // Check if there are more by seeing if we got more than requested
   const hasMore = albumsWithPhotos.length > limit;
   const albumsToReturn = hasMore ? albumsWithPhotos.slice(0, limit) : albumsWithPhotos;
 
   return NextResponse.json({
-    albums: albumsToReturn as AlbumWithPhotos[],
+    albums: albumsToReturn as unknown as AlbumWithPhotos[],
     hasMore,
   });
 }

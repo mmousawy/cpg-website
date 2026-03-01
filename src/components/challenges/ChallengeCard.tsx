@@ -51,6 +51,21 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
   }
 }
 
+/** Short format for mobile */
+function formatDeadlineShort(endsAt: string | null, serverNow: number): string | null {
+  if (!endsAt) return null;
+  const deadline = new Date(endsAt);
+  const now = new Date(serverNow);
+  const diff = deadline.getTime() - now.getTime();
+  if (diff <= 0) return 'Ended';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 7) return `${Math.ceil(days / 7)}w`;
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  return 'Soon';
+}
+
 /**
  * Format date for display (short)
  */
@@ -70,6 +85,7 @@ export default function ChallengeCard({
   showAdminActions = false,
 }: ChallengeCardProps) {
   const deadline = formatDeadline(challenge.ends_at, serverNow);
+  const deadlineShort = formatDeadlineShort(challenge.ends_at, serverNow);
   const isEnded = deadline === 'Ended' || isPast;
   const photoCount = challenge.accepted_count || 0;
 
@@ -139,46 +155,62 @@ export default function ChallengeCard({
       <div
         className="absolute inset-x-0 top-0 flex items-start justify-between p-2"
       >
-        {/* Challenge badge */}
+        {/* Challenge badge - icon only on mobile */}
         <div
-          className="flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
+          className="flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-1 py-1 sm:px-2 text-xs font-medium text-white border border-challenge-badge/90"
         >
           <AwardStarMiniSVG
-            className="h-4 w-4 -ml-0.5 fill-current"
+            className="h-4 w-4 sm:-ml-0.5 shrink-0 fill-current"
           />
-          <span>
+          <span
+            className="hidden sm:inline"
+          >
             Challenge
           </span>
         </div>
 
-        {/* Deadline/Status badge */}
+        {/* Deadline/Status badge - short on mobile */}
         {isEnded ? (
           <div
-            className="flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+            className="flex items-center gap-1.5 rounded-full bg-black/50 px-1.5 py-1 sm:px-2 text-xs font-medium text-white/90 backdrop-blur-sm"
           >
             <ClockMiniSVG
-              className="h-4 w-4 -ml-0.5 fill-current"
+              className="h-4 w-4 sm:-ml-0.5 shrink-0 fill-current"
             />
-            <span>
+            <span
+              className="hidden sm:inline"
+            >
               Ended
               {' '}
               {formatDate(challenge.ends_at)}
             </span>
+            <span
+              className="sm:hidden"
+            >
+              Ended
+            </span>
           </div>
-        ) : deadline ? (
+        ) : deadline && deadlineShort ? (
           <div
-            className="flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white border border-amber-500/90"
+            className="flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-amber-500/90"
           >
             <ClockMiniSVG
-              className="h-4 w-4 -ml-0.5 fill-current"
+              className="h-4 w-4 sm:-ml-0.5 shrink-0 fill-current"
             />
-            <span>
+            <span
+              className="hidden sm:inline"
+            >
               {deadline}
+            </span>
+            <span
+              className="sm:hidden"
+            >
+              {deadlineShort}
             </span>
           </div>
         ) : (
           <div
-            className="flex items-center gap-1 rounded-full bg-green-600/70 px-2.5 py-1 text-xs font-semibold text-white shadow-md text-shadow-sm backdrop-blur-sm border border-green-600/90"
+            className="flex items-center gap-1 rounded-full bg-green-600/70 px-1.5 py-1 sm:px-2.5 text-xs font-semibold text-white shadow-md text-shadow-sm backdrop-blur-sm border border-green-600/90"
           >
             <span>
               Open
@@ -218,20 +250,43 @@ export default function ChallengeCard({
           className="flex items-center gap-1.5"
         >
           <PhotoStackMiniSVG
-            className="size-4 fill-current"
+            className="size-4 shrink-0 fill-current"
           />
           <span
             className="overflow-hidden text-ellipsis whitespace-nowrap"
           >
             {photoCount > 0 && (
               <>
-                {photoCount}
-                {' '}
-                submission
-                {photoCount !== 1 ? 's' : ''}
+                <span
+                  className="hidden sm:inline"
+                >
+                  {photoCount}
+                  {' '}
+                  submission
+                  {photoCount !== 1 ? 's' : ''}
+                </span>
+                <span
+                  className="sm:hidden"
+                >
+                  {photoCount}
+                  {photoCount !== 1 ? ' photos' : ' photo'}
+                </span>
               </>
             )}
-            {!photoCount && 'No submissions yet'}
+            {!photoCount && (
+              <>
+                <span
+                  className="hidden sm:inline"
+                >
+                  No submissions yet
+                </span>
+                <span
+                  className="sm:hidden"
+                >
+                  None yet
+                </span>
+              </>
+            )}
           </span>
         </div>
 
@@ -287,32 +342,59 @@ export default function ChallengeCard({
               className="flex items-center gap-1 text-green-600"
             >
               <CheckCircleSVG
-                className="size-3.5 fill-current"
+                className="size-3.5 shrink-0 fill-current"
               />
-              {photoCount}
-              {' '}
-              accepted
+              <span
+                className="hidden sm:inline"
+              >
+                {photoCount}
+                {' '}
+                accepted
+              </span>
+              <span
+                className="sm:hidden"
+              >
+                {photoCount}
+              </span>
             </span>
             <span
               className="flex items-center gap-1 text-amber-600"
             >
               <ClockSVG
-                className="size-3.5 fill-current"
+                className="size-3.5 shrink-0 fill-current"
               />
-              {pendingCount}
-              {' '}
-              pending
+              <span
+                className="hidden sm:inline"
+              >
+                {pendingCount}
+                {' '}
+                pending
+              </span>
+              <span
+                className="sm:hidden"
+              >
+                {pendingCount}
+              </span>
             </span>
             {rejectedCount > 0 && (
               <span
                 className="flex items-center gap-1 text-red-500"
               >
                 <CancelSVG
-                  className="size-3.5 fill-current"
+                  className="size-3.5 shrink-0 fill-current"
                 />
-                {rejectedCount}
-                {' '}
-                rejected
+                <span
+                  className="hidden sm:inline"
+                >
+                  {rejectedCount}
+                  {' '}
+                  rejected
+                </span>
+                <span
+                  className="sm:hidden"
+                >
+                  {rejectedCount}
+                </span>
               </span>
             )}
           </div>

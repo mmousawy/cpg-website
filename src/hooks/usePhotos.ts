@@ -20,7 +20,8 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
           cover_image_url,
           deleted_at,
           profile:profiles!albums_user_id_fkey(nickname),
-          album_photos_active(count)
+          album_photos_active(count),
+          event:events!albums_event_id_fkey(cover_image)
         )
       ),
       challenge_submissions!challenge_submissions_photo_id_fkey(
@@ -59,6 +60,7 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
     album: (AlbumRow & {
       profile: ProfileRow | null;
       album_photos_active: Array<{ count: number }>;
+      event: { cover_image: string | null } | null;
     }) | null;
   };
   type ChallengeSubmissionJoin = {
@@ -80,7 +82,7 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
         id: a.id,
         title: a.title,
         slug: a.slug,
-        cover_image_url: a.cover_image_url,
+        cover_image_url: a.cover_image_url || a.event?.cover_image || null,
         profile_nickname: a.profile?.nickname || null,
         photo_count: a.album_photos_active?.[0]?.count ?? 0,
       }));

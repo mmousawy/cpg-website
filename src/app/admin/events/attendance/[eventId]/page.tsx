@@ -14,6 +14,7 @@ import SadSVG from 'public/icons/sad.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import CheckSVG from 'public/icons/check.svg';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
+import WarningSVG from 'public/icons/warning-micro.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
@@ -25,6 +26,7 @@ type RSVP = Pick<Tables<'events_rsvps'>,
   | 'confirmed_at'
   | 'canceled_at'
   | 'attended_at'
+  | 'no_show_at'
   | 'created_at'
 >
 
@@ -55,7 +57,7 @@ export default function AdminEventAttendancePage() {
     // Load RSVPs for this event
     const { data: rsvpsData } = await supabase
       .from('events_rsvps')
-      .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at')
+      .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, no_show_at, created_at')
       .eq('event_id', eventId)
       .order('created_at', { ascending: false });
 
@@ -79,7 +81,7 @@ export default function AdminEventAttendancePage() {
       // Load RSVPs for this event
       const { data: rsvpsData } = await supabase
         .from('events_rsvps')
-        .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at')
+        .select('id, uuid, name, email, confirmed_at, canceled_at, attended_at, no_show_at, created_at')
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
@@ -95,7 +97,23 @@ export default function AdminEventAttendancePage() {
 
     const result = await fetch('/api/admin/mark-attendance', {
       method: 'POST',
-      body: JSON.stringify({ rsvp_id: rsvpId }),
+      body: JSON.stringify({ rsvp_id: rsvpId, action: 'attended' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (result.ok) {
+      await loadData();
+    }
+
+    setMarkingId(null);
+  };
+
+  const handleMarkNoShow = async (rsvpId: number) => {
+    setMarkingId(rsvpId);
+
+    const result = await fetch('/api/admin/mark-attendance', {
+      method: 'POST',
+      body: JSON.stringify({ rsvp_id: rsvpId, action: 'no_show' }),
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -143,6 +161,7 @@ export default function AdminEventAttendancePage() {
 
   const confirmedRSVPs = rsvps.filter(r => r.confirmed_at && !r.canceled_at);
   const attendedRSVPs = rsvps.filter(r => r.attended_at);
+  const noShowRSVPs = rsvps.filter(r => r.no_show_at);
 
   return (
     <PageContainer>
@@ -218,6 +237,15 @@ export default function AdminEventAttendancePage() {
                 {' '}
                 attended
               </span>
+              {noShowRSVPs.length > 0 && (
+                <span
+                  className="font-medium text-red-500"
+                >
+                  {noShowRSVPs.length}
+                  {' '}
+                  no-show
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -254,6 +282,7 @@ export default function AdminEventAttendancePage() {
                   className={clsx(
                     'flex items-center justify-between rounded-lg border border-border-color p-3',
                     rsvp.attended_at && 'bg-green-500/5',
+                    rsvp.no_show_at && !rsvp.attended_at && 'border-red-500/30 bg-red-500/5',
                   )}
                 >
                   <div>
@@ -267,6 +296,13 @@ export default function AdminEventAttendancePage() {
                     >
                       {rsvp.email}
                     </p>
+                    {rsvp.no_show_at && !rsvp.attended_at && (
+                      <p
+                        className="text-xs font-medium text-red-500 mt-0.5"
+                      >
+                        No-show
+                      </p>
+                    )}
                   </div>
                   <div
                     className="flex items-center gap-2"
@@ -280,18 +316,40 @@ export default function AdminEventAttendancePage() {
                         />
                         Attended
                       </span>
-                    ) : (
-                      <Button
-                        onClick={() => handleMarkAttended(rsvp.id)}
-                        disabled={markingId === rsvp.id}
-                        size="sm"
-                        className="rounded-full border-green-500/30 text-green-600 hover:border-green-500 hover:bg-green-500/10"
+                    ) : rsvp.no_show_at ? (
+                      <span
+                        className="flex items-center gap-1 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500"
                       >
-                        <CheckCircleSVG
-                          className="size-4"
+                        <WarningSVG
+                          className="h-3 w-3 fill-red-500"
                         />
-                        {markingId === rsvp.id ? 'Marking...' : 'Mark attended'}
-                      </Button>
+                        No-show
+                      </span>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => handleMarkNoShow(rsvp.id)}
+                          disabled={markingId === rsvp.id}
+                          size="sm"
+                          variant="danger"
+                        >
+                          <WarningSVG
+                            className="size-4"
+                          />
+                          {markingId === rsvp.id ? 'Marking...' : 'No-show'}
+                        </Button>
+                        <Button
+                          onClick={() => handleMarkAttended(rsvp.id)}
+                          disabled={markingId === rsvp.id}
+                          size="sm"
+                          className="rounded-full border-green-500/30 text-green-600 hover:border-green-500 hover:bg-green-500/10"
+                        >
+                          <CheckCircleSVG
+                            className="size-4"
+                          />
+                          {markingId === rsvp.id ? 'Marking...' : 'Mark attended'}
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>

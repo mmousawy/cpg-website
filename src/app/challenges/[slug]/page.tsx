@@ -15,6 +15,7 @@ import {
   getChallengePhotos,
 } from '@/lib/data/challenges';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { stripHtml } from '@/utils/stripHtml';
 
 import ChallengeCoverImage from '@/components/challenges/ChallengeCoverImage';
 import ChallengeGallery from '@/components/challenges/ChallengeGallery';
@@ -24,6 +25,7 @@ import ChallengeComments from './ChallengeComments';
 
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
+import { RichDescription } from '@/components/shared/RichDescription';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import AwardStarSVG from 'public/icons/award-star.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -63,7 +65,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return createMetadata({
     title: challenge.title,
-    description: challenge.prompt,
+    description: stripHtml(challenge.prompt),
     image: challenge.cover_image_url,
     canonical: `/challenges/${slug}`,
     type: 'article',
@@ -163,7 +165,7 @@ export default async function ChallengePage({
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
     name: challenge.title,
-    description: challenge.prompt,
+    description: stripHtml(challenge.prompt),
     url: challengeUrl,
     ...(challenge.cover_image_url && { image: challenge.cover_image_url }),
     ...(challenge.created_at && { dateCreated: challenge.created_at }),
@@ -408,11 +410,10 @@ export default async function ChallengePage({
                   label="How photo challenges work"
                 />
               </div>
-              <p
-                className="whitespace-pre-line max-sm:text-sm text-foreground/90 leading-relaxed max-w-[50ch] mb-4"
-              >
-                {challenge.prompt}
-              </p>
+              <RichDescription
+                html={challenge.prompt}
+                className="max-sm:text-sm text-foreground/90 leading-relaxed max-w-[50ch] mb-4"
+              />
             </div>
           </div>
 
@@ -477,6 +478,7 @@ export default async function ChallengePage({
         >
           <ChallengeGallery
             photos={photos}
+            challengeSlug={slug}
           />
         </WidePageContainer>
       )}

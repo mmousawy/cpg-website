@@ -4,7 +4,7 @@ import Image, { type ImageProps } from 'next/image';
 import { useLayoutEffect, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 
 import { blurhashToDataURL, getBlurhashDimensions } from '@/utils/decodeBlurhash';
-import { getBlurPlaceholderUrl } from '@/utils/supabaseImageLoader';
+import { getBlurPlaceholderUrl, getRawObjectUrl, isSupabaseUrl } from '@/utils/supabaseImageLoader';
 
 // SPA-level cache: tracks image src strings that have been fully loaded during
 // this JS context. Once an image loads, subsequent renders (e.g. navigating back)
@@ -56,6 +56,9 @@ export default function BlurImage({
     ? `${srcString}|s=${props.sizes || ''}|w=${props.width || ''}|q=${props.quality || ''}|u=${isUnoptimized ? 1 : 0}`
     : null;
 
+  // Fallback: if the transformed image fails, serve the raw object URL unoptimized
+  const [useRawFallback, setUseRawFallback] = useState(false);
+
   // Three visual states: 'loading' | 'fade-in' | 'visible'
   // - loading: image not loaded yet (opacity-0, blur placeholder visible)
   // - fade-in: image loaded from network, CSS animation 0→1 (300ms)
@@ -71,7 +74,14 @@ export default function BlurImage({
   if (srcString !== currentSrc) {
     setCurrentSrc(srcString);
     setLoadState('loading');
+    setUseRawFallback(false);
   }
+
+  const handleImageError = useCallback(() => {
+    if (!useRawFallback && srcString && isSupabaseUrl(srcString)) {
+      setUseRawFallback(true);
+    }
+  }, [useRawFallback, srcString]);
 
   // Callback ref — stores the underlying <img> element so the layout effect
   // can check img.complete as a safety net.
@@ -150,6 +160,10 @@ export default function BlurImage({
 
   const isLoaded = loadState !== 'loading';
 
+  // When transform fails, fall back to the raw /object/public/ URL
+  const effectiveSrc = useRawFallback ? getRawObjectUrl(srcString) : src;
+  const effectiveUnoptimized = useRawFallback ? true : props.unoptimized;
+
   // Get image dimensions for aspect ratio
   const imgWidth = typeof props.width === 'number' ? props.width : parseInt(String(props.width), 10);
   const imgHeight = typeof props.height === 'number' ? props.height : parseInt(String(props.height), 10);
@@ -171,12 +185,14 @@ export default function BlurImage({
     return (
       <Image
         ref={imgCallbackRef}
-        src={src}
+        src={effectiveSrc}
         alt={alt || ''}
         className={`${className} ${opacityClass}`}
         fill={fill}
         onLoad={handleImageLoad}
+        onError={handleImageError}
         {...props}
+        unoptimized={effectiveUnoptimized}
       />
     );
   }
@@ -218,12 +234,14 @@ export default function BlurImage({
         {/* Main image - fades in on top when loaded */}
         <Image
           ref={imgCallbackRef}
-          src={src}
+          src={effectiveSrc}
           alt={alt || ''}
           fill
           className={`${className} ${opacityClass}`}
           onLoad={handleImageLoad}
+          onError={handleImageError}
           {...props}
+          unoptimized={effectiveUnoptimized}
         />
       </>
     );
@@ -256,12 +274,14 @@ export default function BlurImage({
         )}
         <Image
           ref={imgCallbackRef}
-          src={src}
+          src={effectiveSrc}
           alt={alt || ''}
           className={`${opacityClass} relative z-10`}
           onLoad={handleImageLoad}
+          onError={handleImageError}
           onAnimationEnd={handleAnimationEnd}
           {...props}
+          unoptimized={effectiveUnoptimized}
         />
       </span>
     );
@@ -315,11 +335,13 @@ export default function BlurImage({
       {/* Main image - absolutely positioned on top, fades in */}
       <Image
         ref={imgCallbackRef}
-        src={src}
+        src={effectiveSrc}
         alt={alt || ''}
         className={`absolute inset-0 w-full h-full object-cover ${opacityClass}`}
         onLoad={handleImageLoad}
+        onError={handleImageError}
         {...props}
+        unoptimized={effectiveUnoptimized}
       />
     </span>
   );

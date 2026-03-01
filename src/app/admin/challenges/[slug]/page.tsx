@@ -15,12 +15,13 @@ import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import Textarea from '@/components/shared/Textarea';
+import { RichTextDescriptionField } from '@/components/shared/RichTextDescriptionField';
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeBySlug } from '@/hooks/useChallenges';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { generateBlurhash } from '@/utils/generateBlurhash';
+import { validateImage } from '@/utils/imageValidation';
 import Image from 'next/image';
 
 import MegaphoneSVG from 'public/icons/megaphone.svg';
@@ -113,16 +114,12 @@ export default function AdminChallengeFormPage() {
     setSlug(generateSlug(newSlug));
   };
 
-  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        setError('Invalid file type. Please use JPEG, PNG, GIF, or WebP.');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        setError('File too large. Maximum size is 5 MB.');
+      const validationError = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+      if (validationError) {
+        setError(validationError.message);
         return;
       }
       setCoverImageFile(file);
@@ -419,24 +416,14 @@ export default function AdminChallengeFormPage() {
                 </div>
 
                 {/* Prompt */}
-                <div
-                  className="flex flex-col gap-2"
-                >
-                  <label
-                    htmlFor="prompt"
-                    className="text-sm font-medium"
-                  >
-                    Prompt / description *
-                  </label>
-                  <Textarea
-                    id="prompt"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    rows={4}
-                    required
-                    placeholder="Describe the theme and what kind of photos you're looking for..."
-                  />
-                </div>
+                <RichTextDescriptionField
+                  label="Prompt / description"
+                  id="prompt"
+                  value={prompt}
+                  onChange={setPrompt}
+                  required
+                  placeholder="Describe the theme and what kind of photos you're looking for..."
+                />
 
                 {/* Dates */}
                 <div

@@ -9,6 +9,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import HelpLink from '@/components/shared/HelpLink';
+import { RichDescription } from '@/components/shared/RichDescription';
 import { SignUpCTASection } from '@/components/shared/SignUpCTA';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { Tables } from '@/database.types';
@@ -27,6 +28,7 @@ import {
 } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { stripHtml } from '@/utils/stripHtml';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -199,7 +201,7 @@ async function CachedEventContent({
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: event.title,
-    description: event.description || `Join us for ${event.title || 'this event'}`,
+    description: stripHtml(event.description ?? '') || `Join us for ${event.title || 'this event'}`,
     ...(startDate && { startDate }),
     url: eventUrl,
     ...(event.cover_image && { image: getAbsoluteUrl(event.cover_image) }),
@@ -426,11 +428,10 @@ async function CachedEventContent({
                     label="Help with events"
                   />
                 </div>
-                <p
-                  className="whitespace-pre-line text-foreground/90 leading-relaxed max-w-[50ch]"
-                >
-                  {event.description}
-                </p>
+                <RichDescription
+                  html={event.description}
+                  className="text-foreground/90 leading-snug max-w-[50ch]"
+                />
               </div>
             )}
           </div>

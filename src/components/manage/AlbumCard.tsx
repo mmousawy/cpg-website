@@ -21,7 +21,7 @@ function AlbumCard({
   isSelected = false,
   isHovered = false,
 }: AlbumCardProps) {
-  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url;
+  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
 
   const badges = useMemo(() => {
@@ -112,11 +112,11 @@ function AlbumCard({
 }
 
 export default memo(AlbumCard, (prevProps, nextProps) => {
-  // Only re-render if album data, selection, or hover state changes
   return (
     prevProps.album.id === nextProps.album.id &&
     prevProps.album.title === nextProps.album.title &&
     prevProps.album.cover_image_url === nextProps.album.cover_image_url &&
+    prevProps.album.event_cover_image === nextProps.album.event_cover_image &&
     prevProps.album.is_public === nextProps.album.is_public &&
     prevProps.album.is_shared === nextProps.album.is_shared &&
     prevProps.album.photos?.length === nextProps.album.photos?.length &&

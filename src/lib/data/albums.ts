@@ -75,7 +75,8 @@ export async function getRecentAlbums(limit = 6) {
         id,
         photo_url,
         photo:photos!album_photos_photo_id_fkey(blurhash)
-      )
+      ),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -92,6 +93,7 @@ export async function getRecentAlbums(limit = 6) {
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
+    event: { cover_image: string | null } | null;
   };
 
   const albumsWithPhotos = (albums || [])
@@ -101,6 +103,7 @@ export async function getRecentAlbums(limit = 6) {
     .map((album) => ({
       ...album,
       cover_image_blurhash: resolveCoverBlurhash(album.cover_image_url, album.photos),
+      event_cover_image: album.event?.cover_image || null,
     }));
 
   return albumsWithPhotos as unknown as AlbumWithPhotos[];
@@ -137,7 +140,8 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
         id,
         photo_url,
         photo:photos!album_photos_photo_id_fkey(blurhash)
-      )
+      ),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -153,6 +157,7 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
+    event: { cover_image: string | null } | null;
   };
 
   const albumsWithPhotos = (albums || [])
@@ -162,6 +167,7 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
     .map((album) => ({
       ...album,
       cover_image_blurhash: resolveCoverBlurhash(album.cover_image_url, album.photos),
+      event_cover_image: album.event?.cover_image || null,
     }));
 
   return albumsWithPhotos as unknown as AlbumWithPhotos[];
@@ -360,7 +366,8 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
         id,
         photo_url,
         photo:photos!album_photos_photo_id_fkey(blurhash)
-      )
+      ),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .eq('user_id', userId)
     .eq('is_public', true)
@@ -378,6 +385,7 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
+    event: { cover_image: string | null } | null;
   };
 
   const albumsWithPhotos = (albums || [])
@@ -387,6 +395,7 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
     .map((album) => ({
       ...album,
       cover_image_blurhash: resolveCoverBlurhash(album.cover_image_url, album.photos),
+      event_cover_image: album.event?.cover_image || null,
     }));
 
   return albumsWithPhotos as unknown as AlbumWithPhotos[];
@@ -440,6 +449,197 @@ export async function getEventAlbum(eventId: number) {
   return {
     ...album,
     photos: activePhotos,
+  };
+}
+
+export type EventPhotoPageResult = {
+  photo: Photo;
+  profile: { id: string; full_name: string | null; nickname: string; avatar_url: string | null };
+  currentEvent: { id: number; title: string | null; slug: string; cover_image: string | null };
+  albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null }>;
+  challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
+  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number }>;
+};
+
+/**
+ * Get a photo within an event context by short_id
+ * Verifies the photo is in the event's album, returns sibling photos for filmstrip
+ * Tagged with 'albums', 'events' for granular cache invalidation
+ */
+export async function getEventPhotoByShortId(
+  eventSlug: string,
+  photoShortId: string,
+): Promise<EventPhotoPageResult | null> {
+  'use cache';
+  cacheLife('max');
+  cacheTag('albums');
+  cacheTag('events');
+  cacheTag(`photo-${photoShortId}`);
+
+  const supabase = createPublicClient();
+
+  // Get event by slug
+  const { data: event } = await supabase
+    .from('events')
+    .select('id, title, slug, cover_image')
+    .eq('slug', eventSlug)
+    .single();
+
+  if (!event) {
+    return null;
+  }
+
+  cacheTag(`event-album-${event.id}`);
+
+  // Get event album
+  const { data: album } = await supabase
+    .from('albums')
+    .select('id')
+    .eq('event_id', event.id)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (!album) {
+    return null;
+  }
+
+  // Get photo with tags
+  const { data: photo } = await supabase
+    .from('photos')
+    .select('*, tags:photo_tags(tag)')
+    .eq('short_id', photoShortId)
+    .is('deleted_at', null)
+    .single();
+
+  if (!photo) {
+    return null;
+  }
+
+  // Verify photo exists in event album
+  const { data: albumPhoto } = await supabase
+    .from('album_photos')
+    .select('id')
+    .eq('album_id', album.id)
+    .eq('photo_id', photo.id)
+    .single();
+
+  if (!albumPhoto) {
+    return null;
+  }
+
+  // Get sibling photos from event album, ordered by sort_order
+  const { data: siblingData } = await supabase
+    .from('album_photos')
+    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, deleted_at)')
+    .eq('album_id', album.id)
+    .order('sort_order', { ascending: true });
+
+  type AlbumPhotoRow = {
+    sort_order: number | null;
+    photo: { short_id: string | null; url: string | null; blurhash: string | null; deleted_at: string | null } | null;
+  };
+
+  const siblingPhotos = (siblingData || [])
+    .filter((ap: AlbumPhotoRow) => !ap.photo?.deleted_at)
+    .map((ap: AlbumPhotoRow, index) => {
+      const p = ap.photo;
+      if (!p?.short_id || !p?.url) return null;
+      return {
+        shortId: p.short_id,
+        url: p.url,
+        blurhash: p.blurhash ?? null,
+        sortOrder: index,
+      };
+    })
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
+
+  // Get photo owner profile
+  if (!photo.user_id) {
+    return null;
+  }
+
+  const { data: ownerProfile } = await supabase
+    .from('profiles')
+    .select('id, full_name, nickname, avatar_url')
+    .eq('id', photo.user_id)
+    .is('suspended_at', null)
+    .single();
+
+  if (!ownerProfile?.nickname) {
+    return null;
+  }
+
+  const profile = {
+    id: ownerProfile.id,
+    full_name: ownerProfile.full_name,
+    nickname: ownerProfile.nickname,
+    avatar_url: ownerProfile.avatar_url,
+  };
+
+  // Get all albums this photo is in (same pattern as challenges)
+  const { data: albumPhotosData } = await supabase
+    .from('album_photos')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, cover_image))')
+    .eq('photo_id', photo.id);
+
+  type AlbumPhotoWithAlbum = {
+    album_id: string;
+    albums: {
+      id: string;
+      title: string;
+      slug: string;
+      cover_image_url: string | null;
+      deleted_at: string | null;
+      album_photos_active: Array<{ count: number }>;
+      profile: { nickname: string | null } | null;
+      event: { slug: string | null; cover_image: string | null } | null;
+    } | null;
+  };
+
+  const albums = (albumPhotosData || [])
+    .map((ap: AlbumPhotoWithAlbum) => {
+      const albumRow = ap.albums;
+      if (!albumRow || albumRow.deleted_at) return null;
+      return {
+        id: albumRow.id,
+        title: albumRow.title,
+        slug: albumRow.slug,
+        cover_image_url: albumRow.cover_image_url || albumRow.event?.cover_image || null,
+        photo_count: albumRow.album_photos_active?.[0]?.count ?? 0,
+        profile_nickname: albumRow.profile?.nickname || null,
+        event_slug: albumRow.event?.slug || null,
+      };
+    })
+    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null }>;
+
+  // Get challenges this photo was accepted in (for "Featured in" section)
+  const { data: challengeSubmissions } = await supabase
+    .from('challenge_submissions')
+    .select('challenge_id, challenges(id, title, slug, cover_image_url)')
+    .eq('photo_id', photo.id)
+    .eq('status', 'accepted');
+
+  type ChallengeSubmissionWithChallenge = {
+    challenge_id: string;
+    challenges: { id: string; title: string; slug: string; cover_image_url: string | null } | null;
+  };
+
+  const challenges = (challengeSubmissions || [])
+    .map((cs: ChallengeSubmissionWithChallenge) => cs.challenges)
+    .filter((c): c is { id: string; title: string; slug: string; cover_image_url: string | null } => !!c);
+
+  return {
+    photo: photo as Photo,
+    profile,
+    currentEvent: {
+      id: event.id,
+      title: event.title,
+      slug: event.slug,
+      cover_image: event.cover_image,
+    },
+    albums,
+    challenges,
+    siblingPhotos,
   };
 }
 
@@ -512,7 +712,8 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
         id,
         photo_url,
         photo:photos!album_photos_photo_id_fkey(blurhash)
-      )
+      ),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .in('id', topAlbumIds)
     .eq('is_public', true)
@@ -539,6 +740,7 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
+    event: { cover_image: string | null } | null;
   };
 
   const albumsWithPhotos = (albums || [])
@@ -548,6 +750,7 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
     .map((album) => ({
       ...album,
       cover_image_blurhash: resolveCoverBlurhash(album.cover_image_url, album.photos),
+      event_cover_image: album.event?.cover_image || null,
     }));
 
   return albumsWithPhotos as unknown as AlbumWithPhotos[];

@@ -2600,7 +2600,8 @@ CREATE TABLE IF NOT EXISTS "public"."events_rsvps" (
     "confirmed_at" timestamp with time zone,
     "canceled_at" timestamp with time zone,
     "attended_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "no_show_at" timestamp with time zone
 );
 
 

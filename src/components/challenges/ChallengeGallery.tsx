@@ -6,6 +6,7 @@ import type { ChallengePhoto } from '@/types/challenges';
 
 type ChallengeGalleryProps = {
   photos: ChallengePhoto[];
+  challengeSlug: string;
 };
 
 /**
@@ -32,12 +33,13 @@ function transformPhotos(photos: ChallengePhoto[]): StreamPhoto[] {
   })) as StreamPhoto[];
 }
 
-export default function ChallengeGallery({ photos }: ChallengeGalleryProps) {
+export default function ChallengeGallery({ photos, challengeSlug }: ChallengeGalleryProps) {
   const gridPhotos = transformPhotos(photos);
 
   return (
     <JustifiedPhotoGrid
       photos={gridPhotos}
+      challengeSlug={challengeSlug}
       showAttribution={true}
     />
   );

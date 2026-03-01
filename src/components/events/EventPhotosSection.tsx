@@ -133,6 +133,7 @@ export default function EventPhotosSection({
     return (
       <JustifiedPhotoGrid
         photos={gridPhotos}
+        eventSlug={eventSlug}
         showAttribution={true}
       />
     );
@@ -145,6 +146,7 @@ export default function EventPhotosSection({
       {gridPhotos.length > 0 ? (
         <JustifiedPhotoGrid
           photos={gridPhotos}
+          eventSlug={eventSlug}
           showAttribution={true}
           header={<Header
             photoCount={gridPhotos.length}

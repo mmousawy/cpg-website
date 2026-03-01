@@ -99,6 +99,8 @@ export interface RichTextEditorProps {
   disabled?: boolean;
   error?: boolean;
   className?: string;
+  /** 'email' = compact preview matching email output (newsletters, attendee messages). 'web' = full-width form style (challenges, events). */
+  variant?: 'email' | 'web';
 }
 
 function isEmptyContent(html: string): boolean {
@@ -211,6 +213,7 @@ export function RichTextEditor({
   disabled = false,
   error = false,
   className,
+  variant = 'web',
 }: RichTextEditorProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<ReactQuillType>(null);
@@ -344,6 +347,7 @@ export function RichTextEditor({
       ref={wrapperRef}
       className={clsx(
         'rich-text-editor',
+        variant === 'email' && 'rich-text-editor--email',
         error && 'rich-text-editor--error',
         sourceView && 'rich-text-editor--source',
         className,

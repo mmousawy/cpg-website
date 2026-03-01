@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/components/shared/Button';
+import { validateImage } from '@/utils/imageValidation';
 import Image from 'next/image';
 import TrashSVG from 'public/icons/trash.svg';
 
@@ -23,20 +24,12 @@ export default function EventCoverUpload({
   coverImageInputRef,
   onError,
 }: EventCoverUploadProps) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        onError?.('Invalid file type. Please use JPEG, PNG, GIF, or WebP.');
-        return;
-      }
-
-      // Validate file size (max 5 MB)
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        onError?.('File too large. Maximum size is 5 MB.');
+      const validationError = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+      if (validationError) {
+        onError?.(validationError.message);
         return;
       }
 

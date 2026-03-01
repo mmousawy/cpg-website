@@ -16,6 +16,7 @@ import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
+import { validateImage } from '@/utils/imageValidation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -202,22 +203,14 @@ export default function OnboardingClient() {
     }
   };
 
-  // Handle avatar upload
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      setAvatarError('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setAvatarError('Image must be smaller than 5MB');
+    const error = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+    if (error) {
+      setAvatarError(error.message);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -231,7 +224,7 @@ export default function OnboardingClient() {
     // Store file and create preview
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
-    setRemoveAvatar(false); // Clear remove flag if uploading new image
+    setRemoveAvatar(false);
 
     // Clear the file input
     if (fileInputRef.current) {

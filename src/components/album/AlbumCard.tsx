@@ -28,7 +28,7 @@ export default function AlbumCard({
   onClick,
   likesCount,
 }: AlbumCardProps) {
-  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url;
+  const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
 
   // When isOwner but no onClick, link to the unified photos page

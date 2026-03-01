@@ -1,21 +1,16 @@
 import { useSupabase } from '@/hooks/useSupabase';
+import { validateImage } from '@/utils/imageValidation';
 import { useCallback } from 'react';
 
 const BUCKET = 'email-assets';
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
 
 export function useEmailImageUpload() {
   const supabase = useSupabase();
 
   const uploadImage = useCallback(async (file: File): Promise<string | null> => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      alert('Invalid file type. Allowed: JPEG, PNG, GIF, WebP');
-      return null;
-    }
-
-    if (file.size > MAX_SIZE) {
-      alert('File too large (max 5 MB)');
+    const validationError = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+    if (validationError) {
+      alert(validationError.message);
       return null;
     }
 

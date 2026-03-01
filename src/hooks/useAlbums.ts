@@ -27,7 +27,8 @@ async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise
         photo_url,
         photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
       ),
-      tags:album_tags(tag)
+      tags:album_tags(tag),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .eq('user_id', userId)
     .is('deleted_at', null)
@@ -74,6 +75,7 @@ async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise
   type AlbumQueryResult = AlbumRow & {
     photos: AlbumPhotoWithPhoto[] | null;
     tags: Array<{ tag: string }> | null;
+    event: { cover_image: string | null } | null;
   };
 
   // Filter out deleted photos from albums and resolve cover image blurhash
@@ -91,6 +93,7 @@ async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise
       ...album,
       photos: activePhotos,
       cover_image_blurhash,
+      event_cover_image: album.event?.cover_image || null,
     };
   });
 
@@ -221,7 +224,8 @@ async function fetchAllEventAlbums(): Promise<AlbumWithPhotos[]> {
         photo_url,
         photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
       ),
-      tags:album_tags(tag)
+      tags:album_tags(tag),
+      event:events!albums_event_id_fkey(cover_image)
     `)
     .not('event_id', 'is', null)
     .is('deleted_at', null)
@@ -258,6 +262,7 @@ async function fetchAllEventAlbums(): Promise<AlbumWithPhotos[]> {
   type AlbumQueryResult = AlbumRow & {
     photos: AlbumPhotoWithPhoto[] | null;
     tags: Array<{ tag: string }> | null;
+    event: { cover_image: string | null } | null;
   };
 
   const albumsWithFilteredPhotos = (data || []).map((album: AlbumQueryResult) => {
@@ -273,6 +278,7 @@ async function fetchAllEventAlbums(): Promise<AlbumWithPhotos[]> {
       ...album,
       photos: activePhotos,
       cover_image_blurhash,
+      event_cover_image: album.event?.cover_image || null,
     };
   });
 
@@ -308,7 +314,8 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
       photo_url,
       photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
     ),
-    tags:album_tags(tag)
+    tags:album_tags(tag),
+    event:events!albums_event_id_fkey(cover_image)
   `;
 
   // Try fetching album owned by the user first
@@ -364,8 +371,12 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
     tags: Array<{ tag: string }> | null;
   };
 
+  type AlbumQueryResultWithEvent = AlbumQueryResult & {
+    event: { cover_image: string | null } | null;
+  };
+
   // Filter out deleted photos from album and resolve cover image blurhash
-  const typedData = data as AlbumQueryResult;
+  const typedData = data as AlbumQueryResultWithEvent;
   const activePhotos = (typedData.photos || []).filter((ap) => !ap.photo?.deleted_at);
 
   const coverUrl = typedData.cover_image_url || activePhotos[0]?.photo_url;
@@ -378,6 +389,7 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
     ...typedData,
     photos: activePhotos,
     cover_image_blurhash,
+    event_cover_image: typedData.event?.cover_image || null,
   };
 
   return albumWithFilteredPhotos as unknown as AlbumWithPhotos;

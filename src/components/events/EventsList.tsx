@@ -1,5 +1,6 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { stripHtml } from '@/utils/stripHtml';
 import clsx from 'clsx';
 import Link from 'next/link';
 
@@ -275,7 +276,7 @@ export default function EventsList({
                 <p
                   className='whitespace-pre-line line-clamp-5'
                 >
-                  {event.description}
+                  {stripHtml(event.description ?? '')}
                 </p>
               </div>
               <EventImage

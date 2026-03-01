@@ -34,7 +34,7 @@ type Event = Pick<
 
 type RSVPWithProfile = Pick<
   Tables<'events_rsvps'>,
-  'id' | 'uuid' | 'name' | 'email' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'created_at'
+  'id' | 'uuid' | 'name' | 'email' | 'confirmed_at' | 'canceled_at' | 'attended_at' | 'no_show_at' | 'created_at'
 > & {
   profiles: Pick<Tables<'profiles'>, 'nickname'> | Pick<Tables<'profiles'>, 'nickname'>[] | null;
 };
@@ -196,7 +196,7 @@ export default function AdminEventFormPage() {
           const { data: rsvpsData } = await supabase
             .from('events_rsvps')
             .select(
-              'id, uuid, name, email, confirmed_at, canceled_at, attended_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)',
+              'id, uuid, name, email, confirmed_at, canceled_at, attended_at, no_show_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)',
             )
             .eq('event_id', data.id)
             .order('created_at', { ascending: false });
@@ -225,16 +225,37 @@ export default function AdminEventFormPage() {
 
     const result = await fetch('/api/admin/mark-attendance', {
       method: 'POST',
-      body: JSON.stringify({ rsvp_id: rsvpId, unmark }),
+      body: JSON.stringify({ rsvp_id: rsvpId, unmark, action: 'attended' }),
       headers: { 'Content-Type': 'application/json' },
     });
 
     if (result.ok) {
-      // Update local state instead of refetching everything
       setRsvps((prevRsvps) =>
         prevRsvps.map((rsvp) =>
           rsvp.id === rsvpId
-            ? { ...rsvp, attended_at: unmark ? null : new Date().toISOString() }
+            ? { ...rsvp, attended_at: unmark ? null : new Date().toISOString(), no_show_at: unmark ? rsvp.no_show_at : null }
+            : rsvp,
+        ),
+      );
+    }
+
+    setMarkingId(null);
+  };
+
+  const handleMarkNoShow = async (rsvpId: number, unmark: boolean = false) => {
+    setMarkingId(rsvpId);
+
+    const result = await fetch('/api/admin/mark-attendance', {
+      method: 'POST',
+      body: JSON.stringify({ rsvp_id: rsvpId, unmark, action: 'no_show' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (result.ok) {
+      setRsvps((prevRsvps) =>
+        prevRsvps.map((rsvp) =>
+          rsvp.id === rsvpId
+            ? { ...rsvp, no_show_at: unmark ? null : new Date().toISOString(), attended_at: unmark ? rsvp.attended_at : null }
             : rsvp,
         ),
       );
@@ -599,6 +620,7 @@ export default function AdminEventFormPage() {
                 rsvps={rsvps}
                 markingId={markingId}
                 onMarkAttended={handleMarkAttended}
+                onMarkNoShow={handleMarkNoShow}
               />
           )}
 

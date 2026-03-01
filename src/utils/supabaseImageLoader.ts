@@ -14,6 +14,28 @@ export function isSupabaseUrl(src: string): boolean {
 }
 
 /**
+ * Convert a Supabase image URL to the raw object URL, stripping transform params.
+ * Falls back to the original string if it's not a Supabase URL.
+ */
+export function getRawObjectUrl(src: string): string {
+  if (!isSupabaseUrl(src)) return src;
+  try {
+    const url = new URL(src);
+    url.pathname = url.pathname.replace(
+      '/storage/v1/render/image/public/',
+      '/storage/v1/object/public/',
+    );
+    url.searchParams.delete('width');
+    url.searchParams.delete('height');
+    url.searchParams.delete('quality');
+    url.searchParams.delete('resize');
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
+/**
  * Get a small placeholder URL for blur effect (32px, low quality)
  * Only works for Supabase-hosted images
  */

@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import exifr from 'exifr';
 import { customAlphabet } from 'nanoid';
 import { generateBlurhash } from './generateBlurhash';
+import { validateImage } from './imageValidation';
 
 // Lowercase alphanumeric without vowels to avoid profanity
 const nanoid = customAlphabet('bcdfghjklmnpqrstvwxyz0123456789', 5);
@@ -46,16 +47,10 @@ export async function uploadPhoto(
   // Use custom path prefix or default to userId/
   const prefix = pathPrefix ?? `${userId}/`;
 
-  // 1. Validate file type
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error(`Invalid file type: ${file.name}`);
-  }
-
-  // 2. Validate file size (max 5 MB)
-  const maxSize = 5 * 1024 * 1024;
-  if (file.size > maxSize) {
-    throw new Error(`File too large: ${file.name}`);
+  // Validate file type, size, and resolution
+  const validationError = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+  if (validationError) {
+    throw new Error(`${file.name}: ${validationError.message}`);
   }
 
   // 3. Generate random filename

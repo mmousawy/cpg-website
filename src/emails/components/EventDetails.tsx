@@ -9,11 +9,12 @@ import {
 
 import { CPGEvent } from '@/types/events';
 
+import RichContent from './RichContent';
+
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export default function EventDetails({ event, noDescription }: { event: CPGEvent, noDescription?: boolean }) {
   const eventLocationSeparated = event.location?.split(/\r\n/) || [];
-  const eventDescriptionFiltered = event.description?.replace(/\r\n/g, '<br>') || '';
 
   return (
     <Section
@@ -102,10 +103,9 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
         </Column>
       </Row>
 
-      {!noDescription && (
-        <Text
-          className="mb-0! text-[14px] leading-[24px] text-[#171717]"
-          dangerouslySetInnerHTML={{ __html: eventDescriptionFiltered }}
+      {!noDescription && event.description && (
+        <RichContent
+          html={event.description}
         />
       )}
     </Section>

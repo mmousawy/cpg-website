@@ -34,7 +34,7 @@ export default function ChallengesList({
 
   return (
     <div
-      className="grid gap-2 sm:gap-5 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
+      className="grid gap-2 sm:gap-5 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]"
     >
       {challenges.map((challenge) => (
         <ChallengeCard

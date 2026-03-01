@@ -1,6 +1,7 @@
 'use client';
 
 import type { Photo } from '@/types/photos';
+import { validateImageFile, validateImageResolution } from '@/utils/imageValidation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useState } from 'react';
 
@@ -112,13 +113,14 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           // Update status to uploading
           updateUploadingPhoto(upload.id, { status: 'uploading', progress: 0 });
 
-          // Validate file
-          const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-          if (!allowedTypes.includes(file.type)) {
-            throw new Error(`Invalid file type: ${file.name}`);
+          // Validate file type, size, and resolution
+          const fileError = validateImageFile(file, { maxSizeBytes: 10 * 1024 * 1024 });
+          if (fileError) {
+            throw new Error(`${file.name}: ${fileError.message}`);
           }
-          if (file.size > 10 * 1024 * 1024) {
-            throw new Error(`File too large: ${file.name}`);
+          const resError = await validateImageResolution(file);
+          if (resError) {
+            throw new Error(`${file.name}: ${resError.message}`);
           }
 
           // Generate path

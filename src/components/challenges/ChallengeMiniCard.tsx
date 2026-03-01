@@ -13,6 +13,8 @@ interface ChallengeMiniCardProps {
   status?: 'accepted' | 'pending' | 'rejected';
   /** Whether to show the status label */
   showStatus?: boolean;
+  /** Highlight this challenge (e.g. current challenge context) */
+  highlighted?: boolean;
   className?: string;
 }
 
@@ -26,6 +28,7 @@ export default function ChallengeMiniCard({
   href,
   status = 'accepted',
   showStatus = false,
+  highlighted = false,
   className = '',
 }: ChallengeMiniCardProps) {
   const statusLabel = status === 'accepted' ? 'Accepted' : status === 'pending' ? 'Pending' : 'Rejected';
@@ -39,9 +42,10 @@ export default function ChallengeMiniCard({
     <Link
       href={href}
       className={clsx(
-        'group inline-flex items-center gap-2.5 w-fit min-w-32 max-w-64 border pr-2.5',
-        'text-sm transition-colors bg-background-medium',
+        'group inline-flex items-center gap-2.5 max-w-54 w-fit min-w-32 border pr-2.5',
+        'text-sm transition-colors',
         'border-border-color-strong hover:border-primary hover:text-primary',
+        highlighted ? 'bg-background-light' : 'bg-background-medium',
         className,
       )}
     >

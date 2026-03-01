@@ -277,6 +277,7 @@ export default function EmailAttendeesModal({
             </span>
           </label>
           <RichTextEditor
+            variant="email"
             id="message"
             value={message}
             onChange={setMessage}

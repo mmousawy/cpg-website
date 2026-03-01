@@ -39,6 +39,8 @@ export type AlbumWithPhotos = Album & {
   };
   /** Blurhash of the cover image (resolved from the cover photo) */
   cover_image_blurhash?: string | null;
+  /** Cover image from the linked event (fallback when album has no cover_image_url) */
+  event_cover_image?: string | null;
   // likes_count and view_count are already in Album (from Tables<'albums'>)
 };
 

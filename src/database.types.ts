@@ -815,6 +815,7 @@ export type Database = {
           id: number
           ip_address: string | null
           name: string | null
+          no_show_at: string | null
           user_id: string | null
           uuid: string | null
         }
@@ -828,6 +829,7 @@ export type Database = {
           id?: number
           ip_address?: string | null
           name?: string | null
+          no_show_at?: string | null
           user_id?: string | null
           uuid?: string | null
         }
@@ -841,6 +843,7 @@ export type Database = {
           id?: number
           ip_address?: string | null
           name?: string | null
+          no_show_at?: string | null
           user_id?: string | null
           uuid?: string | null
         }

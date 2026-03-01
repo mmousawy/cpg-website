@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import ArrowLeftFillSVG from 'public/icons/arrow-left-fill.svg';
 import ArrowRightFillSVG from 'public/icons/arrow-right-fill.svg';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface SiblingPhoto {
   shortId: string;
@@ -19,8 +19,12 @@ interface SiblingPhoto {
 interface AlbumFilmstripProps {
   photos: SiblingPhoto[];
   currentPhotoShortId: string;
-  nickname: string;
-  albumSlug: string;
+  /** Album context: owner nickname */
+  nickname?: string;
+  /** Album context: album slug */
+  albumSlug?: string;
+  /** Alternative: base path for non-album context (e.g. /challenges/my-challenge) */
+  basePath?: string;
 }
 
 export default function AlbumFilmstrip({
@@ -28,7 +32,12 @@ export default function AlbumFilmstrip({
   currentPhotoShortId,
   nickname,
   albumSlug,
+  basePath,
 }: AlbumFilmstripProps) {
+  const getPhotoHref = useCallback((shortId: string) => basePath
+    ? `${basePath}/photo/${shortId}`
+    : `/@${nickname}/album/${albumSlug}/photo/${shortId}`,
+  [basePath, nickname, albumSlug]);
   const router = useProgressRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeThumbnailRef = useRef<HTMLAnchorElement>(null);
@@ -78,23 +87,23 @@ export default function AlbumFilmstrip({
       if (e.key === 'ArrowLeft' && hasPrev) {
         e.preventDefault();
         const prevPhoto = photos[currentIndex - 1];
-        router.push(`/@${nickname}/album/${albumSlug}/photo/${prevPhoto.shortId}`);
+        router.push(getPhotoHref(prevPhoto.shortId));
       } else if (e.key === 'ArrowRight' && hasNext) {
         e.preventDefault();
         const nextPhoto = photos[currentIndex + 1];
-        router.push(`/@${nickname}/album/${albumSlug}/photo/${nextPhoto.shortId}`);
+        router.push(getPhotoHref(nextPhoto.shortId));
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, hasPrev, hasNext, photos, nickname, albumSlug, router]);
+  }, [currentIndex, hasPrev, hasNext, photos, getPhotoHref, router]);
 
   const handlePrevClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (hasPrev) {
       const prevPhoto = photos[currentIndex - 1];
-      router.push(`/@${nickname}/album/${albumSlug}/photo/${prevPhoto.shortId}`);
+      router.push(getPhotoHref(prevPhoto.shortId));
     }
   };
 
@@ -102,7 +111,7 @@ export default function AlbumFilmstrip({
     e.preventDefault();
     if (hasNext) {
       const nextPhoto = photos[currentIndex + 1];
-      router.push(`/@${nickname}/album/${albumSlug}/photo/${nextPhoto.shortId}`);
+      router.push(getPhotoHref(nextPhoto.shortId));
     }
   };
 
@@ -150,7 +159,7 @@ export default function AlbumFilmstrip({
             <Link
               key={photo.shortId}
               ref={isActive ? activeThumbnailRef : null}
-              href={`/@${nickname}/album/${albumSlug}/photo/${photo.shortId}`}
+              href={getPhotoHref(photo.shortId)}
               className={clsx(
                 'relative shrink-0 size-12 rounded-sm overflow-hidden transition-all',
                 isActive

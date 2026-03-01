@@ -1,5 +1,6 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { EventAttendee } from '@/types/events';
+import { stripHtml } from '@/utils/stripHtml';
 import clsx from 'clsx';
 import Link from 'next/link';
 
@@ -316,7 +317,7 @@ export default function EventCard({
           <p
             className="max-sm:hidden w-full max-w-[40ch] text-foreground/90 text-sm line-clamp-2"
           >
-            {event.description}
+            {stripHtml(event.description)}
           </p>
         )}
 
@@ -392,7 +393,7 @@ export default function EventCard({
     <p
       className="sm:hidden mt-2 text-foreground/90 text-sm leading-snug line-clamp-3"
     >
-      {event.description}
+      {stripHtml(event.description)}
     </p>
   ) : null;
 

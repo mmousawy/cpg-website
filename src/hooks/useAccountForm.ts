@@ -11,6 +11,7 @@ import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
+import { validateImage } from '@/utils/imageValidation';
 import {
   getEmailTypes,
   getUserEmailPreferences,
@@ -511,21 +512,14 @@ export function useAccountForm() {
     loadData();
   }, [user, supabase, reset]);
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      setAvatarError('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setAvatarError('Image must be smaller than 5MB');
+    const error = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+    if (error) {
+      setAvatarError(error.message);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 

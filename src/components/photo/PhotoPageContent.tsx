@@ -42,6 +42,13 @@ interface Challenge {
   cover_image_url?: string | null;
 }
 
+interface Event {
+  id: number;
+  title: string | null;
+  slug: string;
+  cover_image?: string | null;
+}
+
 interface SiblingPhoto {
   shortId: string;
   url: string;
@@ -60,7 +67,11 @@ interface PhotoPageContentProps {
   albums?: Album[];
   /** Challenges this photo was accepted in */
   challenges?: Challenge[];
-  /** Sibling photos in the current album (for filmstrip navigation) */
+  /** The challenge this photo is being viewed from (for filmstrip context) */
+  currentChallenge?: Challenge;
+  /** The event this photo is being viewed from (for filmstrip context) */
+  currentEvent?: Event;
+  /** Sibling photos in the current album, challenge, or event (for filmstrip navigation) */
   siblingPhotos?: SiblingPhoto[];
 }
 
@@ -71,6 +82,8 @@ export default function PhotoPageContent({
   currentAlbum,
   albums = [],
   challenges = [],
+  currentChallenge,
+  currentEvent,
   siblingPhotos,
 }: PhotoPageContentProps) {
   const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
@@ -78,10 +91,12 @@ export default function PhotoPageContent({
   // For album navigation URLs, use the album owner's nickname (album lives under their profile)
   const albumNickname = albumOwnerNickname || nickname;
 
-  // Filter out current album from the list of other albums
+  // Filter out current album (or event album when in event context) from the list of other albums
   const otherAlbums = currentAlbum
     ? albums.filter((a) => a.id !== currentAlbum.id)
-    : albums;
+    : currentEvent
+      ? albums.filter((a) => a.event_slug !== currentEvent.slug)
+      : albums;
 
   return (
     <>
@@ -102,19 +117,22 @@ export default function PhotoPageContent({
               width={photo.width || 1200}
               height={photo.height || 800}
               blurhash={photo.blurhash || ''}
-              isInAlbum={!!currentAlbum}
+              isInAlbum={!!currentAlbum || !!currentChallenge || !!currentEvent}
             />
           </div>
-          {/* Filmstrip navigation - only show when viewing within an album */}
-          {currentAlbum && siblingPhotos && siblingPhotos.length > 1 && (
+          {/* Filmstrip navigation - show when viewing within album or challenge */}
+          {(currentAlbum || currentChallenge || currentEvent) && siblingPhotos && siblingPhotos.length > 1 && (
             <div
               className="lg:translate-y-4"
             >
               <AlbumFilmstrip
                 photos={siblingPhotos}
                 currentPhotoShortId={photo.short_id}
-                nickname={albumNickname}
-                albumSlug={currentAlbum.slug}
+                {...(currentAlbum
+                  ? { nickname: albumNickname, albumSlug: currentAlbum.slug }
+                  : currentChallenge
+                    ? { basePath: `/challenges/${currentChallenge.slug}` }
+                    : { basePath: `/events/${currentEvent!.slug}` })}
               />
             </div>
           )}
@@ -123,7 +141,7 @@ export default function PhotoPageContent({
         {/* Metadata + Comments sidebar on desktop, below photo on mobile */}
         <div
           className={clsx('pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 lg:w-lg md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
-            currentAlbum ? 'mt-2' : 'mt-4',
+            (currentAlbum || currentChallenge) ? 'mt-2' : 'mt-4',
           )}
         >
           {/* More actions menu - top right */}
@@ -193,14 +211,15 @@ export default function PhotoPageContent({
                       slug={challenge.slug}
                       coverImageUrl={challenge.cover_image_url}
                       href={`/challenges/${challenge.slug}`}
+                      highlighted={challenge.id === currentChallenge?.id}
                     />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Seen in albums */}
-            {(currentAlbum || otherAlbums.length > 0) && (
+            {/* Seen in albums (when in event context, event album may be in otherAlbums) */}
+            {(currentAlbum || currentEvent || otherAlbums.length > 0) && (
               <div
                 className="mb-4"
               >
@@ -224,7 +243,20 @@ export default function PhotoPageContent({
                       highlighted
                       ownerNickname={albumNickname !== nickname ? albumNickname : undefined}
                     />
-                )}
+                  )}
+                  {currentEvent && !currentAlbum && (() => {
+                    const eventAlbum = albums.find((a) => a.event_slug === currentEvent.slug);
+                    return eventAlbum ? (
+                      <AlbumMiniCard
+                        title={eventAlbum.title}
+                        slug={eventAlbum.slug}
+                        coverImageUrl={eventAlbum.cover_image_url}
+                        href={`/events/${eventAlbum.event_slug!}`}
+                        photoCount={eventAlbum.photo_count}
+                        highlighted
+                      />
+                    ) : null;
+                  })()}
                   {otherAlbums.map((album) => (
                     <AlbumMiniCard
                       key={album.id}
@@ -298,23 +330,12 @@ export default function PhotoPageContent({
                   <IconComponent
                     className="size-4 text-foreground/60 shrink-0"
                   />
-                  <div
-                    className="flex flex-col gap-0.5"
+                  <Link
+                    href="/help/licenses"
+                    className="text-xs text-foreground/60 hover:text-primary hover:underline underline-offset-2"
                   >
-                    <Link
-                      href="/help/licenses"
-                      className="text-xs text-foreground/60 hover:text-primary hover:underline underline-offset-2"
-                    >
-                      {info.shortName}
-                    </Link>
-                    {photo.copyright_notice && (
-                      <p
-                        className="text-xs text-foreground/60"
-                      >
-                        {photo.copyright_notice}
-                      </p>
-                    )}
-                  </div>
+                    {photo.copyright_notice || info.shortName}
+                  </Link>
                 </div>
               );
             })()}

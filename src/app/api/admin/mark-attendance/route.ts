@@ -23,16 +23,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
-  const { rsvp_id, unmark } = await request.json();
+  const { rsvp_id, unmark, action = 'attended' } = await request.json();
 
   if (!rsvp_id) {
     return NextResponse.json({ message: 'Missing rsvp_id' }, { status: 400 });
   }
 
-  // Mark or unmark attendance
+  const now = new Date().toISOString();
+  let updateData: Record<string, string | null>;
+
+  if (action === 'no_show') {
+    updateData = unmark
+      ? { no_show_at: null }
+      : { no_show_at: now, attended_at: null };
+  } else {
+    updateData = unmark
+      ? { attended_at: null }
+      : { attended_at: now, no_show_at: null };
+  }
+
   const { error } = await supabase
     .from('events_rsvps')
-    .update({ attended_at: unmark ? null : new Date().toISOString() })
+    .update(updateData)
     .eq('id', rsvp_id);
 
   if (error) {

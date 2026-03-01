@@ -15,6 +15,10 @@ interface JustifiedPhotoGridProps {
   profileNickname?: string;
   /** If provided, photos link to album photo pages instead of standalone photo pages */
   albumSlug?: string;
+  /** If provided, photos link to challenge photo pages (mutually exclusive with albumSlug) */
+  challengeSlug?: string;
+  /** If provided, photos link to event photo pages (event album context) */
+  eventSlug?: string;
   /** Show attribution overlay with user avatar/name on hover (for community photostream) */
   showAttribution?: boolean;
   /** Maximum row height in pixels (default: 350, use lower for embedded grids) */
@@ -42,6 +46,8 @@ export default function JustifiedPhotoGrid({
   photos,
   profileNickname,
   albumSlug,
+  challengeSlug,
+  eventSlug,
   showAttribution = false,
   maxRowHeight = 350,
   minPhotosPerRow,
@@ -115,6 +121,8 @@ export default function JustifiedPhotoGrid({
           batchLikesMap={batchLikesMap}
           profileNickname={profileNickname}
           albumSlug={albumSlug}
+          challengeSlug={challengeSlug}
+          eventSlug={eventSlug}
           showAttribution={showAttribution}
           maxDisplayWidth={900}
           header={header}
@@ -131,6 +139,8 @@ export default function JustifiedPhotoGrid({
           batchLikesMap={batchLikesMap}
           profileNickname={profileNickname}
           albumSlug={albumSlug}
+          challengeSlug={challengeSlug}
+          eventSlug={eventSlug}
           showAttribution={showAttribution}
           maxDisplayWidth={1350}
           header={header}
@@ -147,6 +157,8 @@ export default function JustifiedPhotoGrid({
           batchLikesMap={batchLikesMap}
           profileNickname={profileNickname}
           albumSlug={albumSlug}
+          challengeSlug={challengeSlug}
+          eventSlug={eventSlug}
           showAttribution={showAttribution}
           maxDisplayWidth={1800}
           header={header}
@@ -162,6 +174,8 @@ function PhotoRows({
   batchLikesMap,
   profileNickname,
   albumSlug,
+  challengeSlug,
+  eventSlug,
   showAttribution,
   maxDisplayWidth,
   header,
@@ -171,6 +185,8 @@ function PhotoRows({
   batchLikesMap: Map<string, number>;
   profileNickname?: string;
   albumSlug?: string;
+  challengeSlug?: string;
+  eventSlug?: string;
   showAttribution: boolean;
   maxDisplayWidth: number;
   header?: React.ReactNode;
@@ -224,10 +240,14 @@ function PhotoRows({
                 ? profileNickname
                 : streamPhoto?.profile?.nickname || profileNickname || '';
 
-              // Link to album photo page if albumSlug provided, otherwise standalone photo page
-              const photoHref = albumSlug
-                ? `/@${nickname}/album/${albumSlug}/photo/${item.photo.id}`
-                : `/@${nickname}/photo/${item.photo.id}`;
+              // Link: challenge > event > album > standalone
+              const photoHref = challengeSlug
+                ? `/challenges/${challengeSlug}/photo/${item.photo.id}`
+                : eventSlug
+                  ? `/events/${eventSlug}/photo/${item.photo.id}`
+                  : albumSlug
+                    ? `/@${nickname}/album/${albumSlug}/photo/${item.photo.id}`
+                    : `/@${nickname}/photo/${item.photo.id}`;
 
               // Get likes count from client-side batch fetch, fallback to server-provided column
               const shortId = photo?.short_id || photo?.id;
