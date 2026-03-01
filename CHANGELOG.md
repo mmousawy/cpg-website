@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/mmousawy/cpg-website/compare/v1.27.0...v1.27.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* color draw copy. ([2e1c881](https://github.com/mmousawy/cpg-website/commit/2e1c881c79bb8f8b442bdee251e19f8321880422))
+
 ## [1.27.0](https://github.com/mmousawy/cpg-website/compare/v1.26.3...v1.27.0) (2026-02-28)
 
 
