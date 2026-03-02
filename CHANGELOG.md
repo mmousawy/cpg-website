@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/mmousawy/cpg-website/compare/v1.27.1...v1.27.2) (2026-03-01)
+
+
+### Bug Fixes
+
+* Fix many bugs ([8080c2f](https://github.com/mmousawy/cpg-website/commit/8080c2ffe1da0f9bae2e7969b91b1f324790dec3))
+
 ## [1.27.1](https://github.com/mmousawy/cpg-website/compare/v1.27.0...v1.27.1) (2026-02-28)
 
 
