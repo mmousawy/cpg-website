@@ -20,6 +20,7 @@ type SubmitToSharedAlbumButtonProps = {
   albumSlug: string;
   ownerNickname: string | null;
   maxPhotosPerUser?: number | null;
+  eventId?: number | null;
   /** Event albums: any member can add. User shared albums: must be member. */
   canAddPhotos: boolean;
 };
@@ -30,6 +31,7 @@ export default function SubmitToSharedAlbumButton({
   albumSlug,
   ownerNickname,
   maxPhotosPerUser,
+  eventId,
   canAddPhotos,
 }: SubmitToSharedAlbumButtonProps) {
   const { user } = useAuth();
@@ -111,6 +113,7 @@ export default function SubmitToSharedAlbumButton({
         albumSlug={albumSlug}
         ownerNickname={ownerNickname}
         maxPhotosPerUser={maxPhotosPerUser}
+        eventId={eventId}
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={(submittedCount, photoUrls) => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });

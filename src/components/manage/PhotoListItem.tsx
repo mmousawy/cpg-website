@@ -146,7 +146,9 @@ export default function PhotoListItem({
   const lightboxRef = useRef<PhotoSwipeLightboxInstance | null>(null);
   const isOpeningRef = useRef(false);
   const [showExif, setShowExif] = useState(false);
+  const [showPrivateTooltip, setShowPrivateTooltip] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; right: number } | null>(null);
+  const privateLinkRef = useRef<HTMLButtonElement>(null);
   const exifData = photo.exif_data as Record<string, unknown> | null | undefined;
   const hasExif = exifData && Object.keys(exifData).length > 0;
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -214,6 +216,24 @@ export default function PhotoListItem({
       setPopoverPosition(null);
     }
   }, [showExif]);
+
+  // Close private tooltip on click outside
+  useEffect(() => {
+    if (!showPrivateTooltip) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (privateLinkRef.current && !privateLinkRef.current.contains(target)) {
+        setShowPrivateTooltip(false);
+      }
+    };
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClick, true);
+    }, 0);
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [showPrivateTooltip]);
 
   const handleViewFullSize = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -318,20 +338,60 @@ export default function PhotoListItem({
           className="absolute top-0.5 right-0.5 z-10 flex items-center"
         >
           {photoPageUrl && (
-            <Link
-              href={photoPageUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
-              title="Open photo page"
-              aria-label="Open photo page"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <LinkSVG
-                className="size-3.5"
-              />
-            </Link>
+            photo.is_public ? (
+              <Link
+                href={photoPageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
+                title="Open photo page"
+                aria-label="Open photo page"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <LinkSVG
+                  className="size-3.5"
+                />
+              </Link>
+            ) : (
+              <button
+                ref={privateLinkRef}
+                type="button"
+                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/30 hover:text-foreground/50"
+                title="Photo is private"
+                aria-label="Photo is private — no public page"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPrivateTooltip((v) => !v);
+                }}
+              >
+                <LinkSVG
+                  className="size-3.5"
+                />
+              </button>
+            )
           )}
+          {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
+            createPortal(
+              <div
+                className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/70"
+                style={{
+                  top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
+                  right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p
+                  className="font-medium text-foreground/90 mb-1"
+                >
+                  Private photo
+                </p>
+                <p>
+                  This photo is not public, so it doesn&apos;t have a detail page. Set it to public to generate a shareable link.
+                </p>
+              </div>,
+              document.body,
+            )
+          }
           {hasExif && (
             <>
               <button

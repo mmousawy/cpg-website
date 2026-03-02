@@ -57,6 +57,15 @@ export async function revalidateEventBySlug(slug: string) {
 }
 
 /**
+ * Revalidate an event album's cached data and its parent event page
+ * Use when: Photos are added to or removed from an event album
+ */
+export async function revalidateEventAlbum(eventId: number) {
+  revalidateTag(`event-album-${eventId}`, 'max');
+  revalidateTag('events', 'max');
+}
+
+/**
  * Revalidate challenge color draws
  * Use when: User draws or swaps a color
  */

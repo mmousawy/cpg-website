@@ -196,8 +196,10 @@ export default function PhotosPage() {
     modalContext.setIsOpen(true);
   };
 
-  const handleReorderPhotos = async (newPhotos: PhotoWithAlbums[]) => {
-    await reorderPhotosMutation.mutateAsync(newPhotos);
+  const handleReorderPhotos = (newPhotos: PhotoWithAlbums[]) => {
+    // Update cache synchronously so dnd-kit's transform clear and the new item order render in the same frame
+    queryClient.setQueryData<PhotoWithAlbums[]>(['photos', user?.id, photoFilter], newPhotos);
+    reorderPhotosMutation.mutate(newPhotos);
   };
 
   const handleUpload = async (files: File[]) => {

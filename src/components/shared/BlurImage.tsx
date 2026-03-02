@@ -64,7 +64,10 @@ export default function BlurImage({
   // - fade-in: image loaded from network, CSS animation 0→1 (300ms)
   // - visible: fully visible, no animation (cached or animation done)
   const [currentSrc, setCurrentSrc] = useState(srcString);
-  const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>('loading');
+  const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>(() => {
+    if (cacheKey && loadedImages?.has(cacheKey)) return 'visible';
+    return 'loading';
+  });
   const hasCalledOnLoad = useRef(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const onLoadPropRef = useRef(onLoadProp);

@@ -14,6 +14,7 @@ type AlbumSharedActionsProps = {
   ownerId?: string;
   joinPolicy: AlbumJoinPolicy | null;
   maxPhotosPerUser?: number | null;
+  eventId?: number | null;
   isEventAlbum: boolean;
 };
 
@@ -25,6 +26,7 @@ export default function AlbumSharedActions({
   ownerId,
   joinPolicy,
   maxPhotosPerUser,
+  eventId,
   isEventAlbum,
 }: AlbumSharedActionsProps) {
   const { user } = useAuth();
@@ -52,6 +54,7 @@ export default function AlbumSharedActions({
         albumSlug={albumSlug}
         ownerNickname={ownerNickname}
         maxPhotosPerUser={maxPhotosPerUser}
+        eventId={eventId}
         canAddPhotos={canAddPhotos}
       />
     </div>

@@ -285,6 +285,30 @@ export default function SelectableGrid<T>({
         return;
       }
 
+      // Don't show indicator when dropping directly next to selection (no-op)
+      const selectedItems = items.filter((item) => selectedIds.has(getId(item)));
+      const unselectedItems = items.filter((item) => !selectedIds.has(getId(item)));
+      let targetIndex = unselectedItems.findIndex((item) => getId(item) === overId);
+      if (targetIndex !== -1) {
+        const itemCenterX = overRect.left + overRect.width / 2;
+        const isAfter = currentX > itemCenterX;
+        if (isAfter) targetIndex += 1;
+        const newItems = [
+          ...unselectedItems.slice(0, targetIndex),
+          ...selectedItems,
+          ...unselectedItems.slice(targetIndex),
+        ];
+        const currentIds = items.map(getId);
+        const newIds = newItems.map(getId);
+        const isNoOp = currentIds.length === newIds.length && currentIds.every((id, i) => id === newIds[i]);
+        if (isNoOp) {
+          setDropIndicatorPos(null);
+          setPushLeftItemId(null);
+          setPushRightItemId(null);
+          return;
+        }
+      }
+
       updateDropIndicator(
         { left: overRect.left, top: overRect.top, width: overRect.width, height: overRect.height },
         currentX,
@@ -298,7 +322,6 @@ export default function SelectableGrid<T>({
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    // Also process on drag over to immediately show indicator when entering a new item
     processDropIndicator({ active: event.active, over: event.over });
   };
 
@@ -306,58 +329,72 @@ export default function SelectableGrid<T>({
     const { active, over } = event;
     const finalDropPosition = dropPositionRef.current;
 
-    setActiveDragId(null);
     setDropIndicatorPos(null);
     setPushLeftItemId(null);
     setPushRightItemId(null);
     isMultiDragRef.current = false;
 
     if (!over || active.id === over.id || !onReorder) {
+      setActiveDragId(null);
       return;
     }
 
     const draggedId = active.id as string;
     const targetId = over.id as string;
+    const isMulti = selectedIds.has(draggedId) && selectedIds.size > 1;
 
-    // Check if the dragged item is part of a multi-selection
-    if (selectedIds.has(draggedId) && selectedIds.size > 1) {
-      // Multi-item reorder: move all selected items to the target position
+    // Compute new items but defer the reorder + state cleanup to next frame.
+    // This prevents a flicker where dnd-kit clears transforms (items at old DOM positions)
+    // before React re-renders with the new order.
+    let pendingItems: T[] | null = null;
+
+    if (isMulti) {
       const selectedItems = items.filter((item) => selectedIds.has(getId(item)));
       const unselectedItems = items.filter((item) => !selectedIds.has(getId(item)));
 
-      // Find the target position in the unselected items
       let targetIndex = unselectedItems.findIndex((item) => getId(item) === targetId);
 
       if (targetIndex === -1) {
-        // Target is one of the selected items, no change needed
+        setActiveDragId(null);
         return;
       }
 
-      // Adjust for 'after' position
       if (finalDropPosition === 'after') {
         targetIndex += 1;
       }
 
-      // Insert selected items at the target position
       const newItems = [
         ...unselectedItems.slice(0, targetIndex),
         ...selectedItems,
         ...unselectedItems.slice(targetIndex),
       ];
 
-      onReorder(newItems);
-    } else {
-      // Single item reorder
-      const oldIndex = items.findIndex((item) => getId(item) === draggedId);
-      let newIndex = items.findIndex((item) => getId(item) === targetId);
-
-      // Adjust for 'after' position
-      if (finalDropPosition === 'after' && newIndex < items.length - 1) {
-        newIndex += 1;
+      // Disallow dropping directly next to the selection (would be a no-op)
+      const currentIds = items.map(getId);
+      const newIds = newItems.map(getId);
+      const isNoOp = currentIds.length === newIds.length && currentIds.every((id, i) => id === newIds[i]);
+      if (isNoOp) {
+        setActiveDragId(null);
+        return;
       }
 
-      const newItems = arrayMove(items, oldIndex, newIndex);
-      onReorder(newItems);
+      pendingItems = newItems;
+    } else {
+      const oldIndex = items.findIndex((item) => getId(item) === draggedId);
+      const newIndex = items.findIndex((item) => getId(item) === targetId);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        pendingItems = arrayMove(items, oldIndex, newIndex);
+      }
+    }
+
+    if (pendingItems) {
+      onReorder(pendingItems);
+      // Defer clearing activeDragId so the dragged item stays at 0.5 opacity
+      // during the frame where the DragOverlay disappears but items haven't repainted yet
+      requestAnimationFrame(() => setActiveDragId(null));
+    } else {
+      setActiveDragId(null);
     }
   };
 
@@ -509,6 +546,7 @@ export default function SelectableGrid<T>({
                 isMultiSelectMode={isMultiSelectMode}
                 onEnterMultiSelectMode={() => setIsMultiSelectModeActive(true)}
                 disabled={disabledIds?.has(id)}
+                isActiveDrag={activeDragId === id}
               />
             );
           })
@@ -604,7 +642,7 @@ export default function SelectableGrid<T>({
               {dragOverlayItems.map((item, index) => (
                 <div
                   key={getId(item)}
-                  className="absolute inset-0 overflow-hidden ring-2 ring-primary ring-offset-2 [&_*]:!cursor-grabbing drop-shadow-[2px_2px_3px_rgba(0,0,0,0.3)]"
+                  className="absolute inset-0 overflow-hidden ring-2 ring-primary ring-offset-2 **:cursor-grabbing! drop-shadow-[2px_2px_3px_rgba(0,0,0,0.3)]"
                   style={{
                     transform: `translate(${index * 8}px, ${index * 8}px) rotate(${index * 2 - 2}deg)`,
                     zIndex: dragOverlayItems.length - index,

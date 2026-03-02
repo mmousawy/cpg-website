@@ -2,9 +2,11 @@
 
 import GridCheckbox from '@/components/shared/GridCheckbox';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useSortable } from '@dnd-kit/sortable';
+import { useSortable, type AnimateLayoutChanges } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
+const animateLayoutChanges: AnimateLayoutChanges = () => false;
 
 export interface SortableItemProps<T> {
   item: T;
@@ -22,6 +24,7 @@ export interface SortableItemProps<T> {
   isMultiSelectMode: boolean; // True when in multi-select mode (after first long-press)
   onEnterMultiSelectMode: () => void; // Callback to enter multi-select mode
   disabled?: boolean; // If true, item is non-selectable and checkbox is hidden
+  isActiveDrag?: boolean; // True if this item is the one currently being dragged (from parent state, survives dnd-kit cleanup)
 }
 
 export default function SortableGridItem<T>({
@@ -40,6 +43,7 @@ export default function SortableGridItem<T>({
   isMultiSelectMode,
   onEnterMultiSelectMode,
   disabled = false,
+  isActiveDrag = false,
 }: SortableItemProps<T>) {
   const isMobile = useIsMobile();
 
@@ -56,10 +60,25 @@ export default function SortableGridItem<T>({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled: !sortable });
+  } = useSortable({ id, disabled: !sortable, animateLayoutChanges });
 
   // Apply opacity for direct drag or multi-drag
-  const isBeingDragged = isDragging || isMultiDragging;
+  // isActiveDrag keeps item faded even after dnd-kit clears isDragging on drag end
+  const isBeingDragged = isDragging || isMultiDragging || isActiveDrag;
+
+  // Track previous transform to detect when dnd-kit clears a non-zero transform (drop).
+  // When that happens, keep the old transform for one render so the displaced item doesn't
+  // flash at its old DOM position before the reorder moves it to the new position.
+  /* eslint-disable */
+  const prevTransformRef = useRef(transform);
+  const prevT = prevTransformRef.current;
+  const hadNonZeroTransform = prevT !== null && (prevT.x !== 0 || prevT.y !== 0);
+  const transformJustCleared = hadNonZeroTransform && transform === null;
+  const effectiveTransform = transformJustCleared ? prevT : transform;
+  // Update ref in useLayoutEffect (before paint, after render) to survive Strict Mode double-render
+  useLayoutEffect(() => {
+    prevTransformRef.current = transform;
+  });
 
   // For multi-drag, don't move ANY items - they all stay in place and we show a DragOverlay instead
   // Only apply transforms for single-item drag
@@ -76,25 +95,29 @@ export default function SortableGridItem<T>({
   // Use dnd-kit's transition for single-item drag, custom transition for multi-drag push effect
   const customTransition = 'transform 150ms ease, opacity 150ms ease';
 
-  // Calculate transform including long-press scale effect
   const getTransform = () => {
     const baseTransform = sortable && shouldTransform
-      ? CSS.Transform.toString(transform)
+      ? CSS.Translate.toString(effectiveTransform)
       : pushTransform;
 
     if (isPressing) {
-      // Apply scale during long-press
       return baseTransform ? `${baseTransform} scale(0.95)` : 'scale(0.95)';
     }
     return baseTransform;
   };
 
+  const computedTransform = getTransform();
+  const dndTransition = transformJustCleared ? 'none' : (transform ? transition : undefined);
+  const computedTransition = isPressing
+    ? 'transform 150ms ease, opacity 150ms ease'
+    : (sortable && shouldTransform ? dndTransition : customTransition);
+  const computedOpacity = isBeingDragged ? 0.5 : 1;
+  /* eslint-enable */
+
   const style: React.CSSProperties = {
-    transform: getTransform(),
-    transition: isPressing
-      ? 'transform 150ms ease, opacity 150ms ease'
-      : (sortable && shouldTransform ? transition : customTransition),
-    opacity: isBeingDragged ? 0.5 : 1,
+    transform: computedTransform,
+    transition: computedTransition,
+    opacity: computedOpacity,
   };
 
   // On mobile, always show checkbox; on desktop, show on hover or when selected

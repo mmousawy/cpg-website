@@ -401,17 +401,19 @@ export function useReorderPhotos(
   const queryClient = useQueryClient();
 
   return useMutation<
-    { photos: PhotoWithAlbums[]; previousPhotos: PhotoWithAlbums[] | undefined },
+    { photos: PhotoWithAlbums[] },
     Error,
     PhotoWithAlbums[],
     { previousPhotos: PhotoWithAlbums[] | undefined }
   >({
-    mutationFn: async (photos: PhotoWithAlbums[]) => {
-      if (!userId) throw new Error('User not authenticated');
-
-      // Optimistically update cache
+    onMutate: async (photos: PhotoWithAlbums[]) => {
+      await queryClient.cancelQueries({ queryKey: ['photos', userId, filter] });
       const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['photos', userId, filter]);
       queryClient.setQueryData<PhotoWithAlbums[]>(['photos', userId, filter], photos);
+      return { previousPhotos };
+    },
+    mutationFn: async (photos: PhotoWithAlbums[]) => {
+      if (!userId) throw new Error('User not authenticated');
 
       const updates = photos.map((photo, index) => ({
         id: photo.id,
@@ -426,10 +428,9 @@ export function useReorderPhotos(
         throw new Error(error.message || 'Failed to reorder photos');
       }
 
-      return { photos, previousPhotos };
+      return { photos };
     },
     onError: (err, variables, context) => {
-      // Rollback on error
       if (userId && context?.previousPhotos) {
         queryClient.setQueryData(['photos', userId, filter], context.previousPhotos);
       }

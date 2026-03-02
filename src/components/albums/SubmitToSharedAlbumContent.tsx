@@ -27,6 +27,7 @@ interface SubmitToSharedAlbumContentProps {
   albumSlug: string;
   ownerNickname: string | null;
   maxPhotosPerUser?: number | null;
+  eventId?: number | null;
   onClose: () => void;
   onSuccess: (submittedCount: number, photoUrls: string[]) => void;
 }
@@ -37,6 +38,7 @@ export default function SubmitToSharedAlbumContent({
   albumSlug,
   ownerNickname,
   maxPhotosPerUser,
+  eventId,
   onClose,
   onSuccess,
 }: SubmitToSharedAlbumContentProps) {
@@ -70,7 +72,7 @@ export default function SubmitToSharedAlbumContent({
 
   const { data: albumPhotoIds = [] } = useAlbumPhotoIds(albumId);
   const { data: myCountInAlbum = 0 } = useMyPhotoCountInAlbum(albumId, user?.id);
-  const addMutation = useAddPhotosToSharedAlbum(albumId, ownerNickname, albumSlug);
+  const addMutation = useAddPhotosToSharedAlbum(albumId, ownerNickname, albumSlug, eventId);
 
   const alreadyInAlbumIds = useMemo(() => new Set(albumPhotoIds), [albumPhotoIds]);
 

@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateAlbumBySlug, revalidateGalleryData } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData } from '@/app/actions/revalidate';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -49,6 +49,7 @@ export function useAddPhotosToSharedAlbum(
   albumId: string | undefined,
   ownerNickname: string | null,
   albumSlug: string,
+  eventId?: number | null,
 ) {
   const queryClient = useQueryClient();
 
@@ -71,6 +72,9 @@ export function useAddPhotosToSharedAlbum(
         revalidateAlbumBySlug(ownerNickname, albumSlug);
         revalidateAlbum(ownerNickname, albumSlug);
         revalidateGalleryData();
+      }
+      if (eventId) {
+        revalidateEventAlbum(eventId);
       }
     },
   });

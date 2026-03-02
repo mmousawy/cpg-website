@@ -66,6 +66,7 @@ export function EventPhotosAddButton({
   albumSlug,
   ownerNickname,
   maxPhotosPerUser,
+  eventId,
   inline,
 }: {
   albumId: string;
@@ -73,6 +74,7 @@ export function EventPhotosAddButton({
   albumSlug: string;
   ownerNickname: string | null;
   maxPhotosPerUser?: number | null;
+  eventId?: number | null;
   /** When true, no top margin (for use in header row) */
   inline?: boolean;
 }) {
@@ -86,13 +88,14 @@ export function EventPhotosAddButton({
         albumSlug={albumSlug}
         ownerNickname={ownerNickname}
         maxPhotosPerUser={maxPhotosPerUser}
+        eventId={eventId}
         canAddPhotos={true}
       />
     </div>
   );
 }
 
-function Header({ photoCount, album, albumSlug, ownerNickname }: { photoCount: number; album: EventAlbum; albumSlug: string; ownerNickname: string | null }) {
+function Header({ photoCount, album, albumSlug, ownerNickname, eventId }: { photoCount: number; album: EventAlbum; albumSlug: string; ownerNickname: string | null; eventId: number }) {
   const { user } = useAuth();
 
   return (
@@ -109,6 +112,7 @@ function Header({ photoCount, album, albumSlug, ownerNickname }: { photoCount: n
           albumSlug={albumSlug}
           ownerNickname={ownerNickname}
           maxPhotosPerUser={album.max_photos_per_user}
+          eventId={eventId}
           inline
         />
         )}
@@ -153,6 +157,7 @@ export default function EventPhotosSection({
             album={album}
             albumSlug={albumSlug}
             ownerNickname={ownerNickname}
+            eventId={eventId}
           />}
         />
       ) : (
@@ -162,6 +167,7 @@ export default function EventPhotosSection({
             album={album}
             albumSlug={albumSlug}
             ownerNickname={ownerNickname}
+            eventId={eventId}
           />
           <div
             className="rounded-lg border border-border-color bg-background-light p-8 text-center"

@@ -86,17 +86,19 @@ export function useReorderAlbumPhotos(
   const queryClient = useQueryClient();
 
   return useMutation<
-    { photos: PhotoWithAlbums[]; previousPhotos: PhotoWithAlbums[] | undefined },
+    { photos: PhotoWithAlbums[] },
     Error,
     PhotoWithAlbums[],
     { previousPhotos: PhotoWithAlbums[] | undefined }
   >({
-    mutationFn: async (photos: PhotoWithAlbums[]) => {
-      if (!albumId) throw new Error('Album ID required');
-
-      // Optimistically update cache
+    onMutate: async (photos: PhotoWithAlbums[]) => {
+      await queryClient.cancelQueries({ queryKey: ['album-photos', albumId] });
       const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['album-photos', albumId]);
       queryClient.setQueryData<PhotoWithAlbums[]>(['album-photos', albumId], photos);
+      return { previousPhotos };
+    },
+    mutationFn: async (photos: PhotoWithAlbums[]) => {
+      if (!albumId) throw new Error('Album ID required');
 
       const updates = photos
         .filter((photo) => photo.album_photo_id)
@@ -108,7 +110,6 @@ export function useReorderAlbumPhotos(
       if (updates.length > 0) {
         await supabase.rpc('batch_update_album_photos', { photo_updates: updates });
 
-        // Revalidate album page
         if (nickname && albumId) {
           let albumSlug: string | undefined;
           const queries = queryClient.getQueriesData<AlbumWithPhotos[]>({ queryKey: ['albums'] });
@@ -122,10 +123,9 @@ export function useReorderAlbumPhotos(
         }
       }
 
-      return { photos, previousPhotos };
+      return { photos };
     },
     onError: (err, variables, context) => {
-      // Rollback on error
       if (albumId && context?.previousPhotos) {
         queryClient.setQueryData(['album-photos', albumId], context.previousPhotos);
       }

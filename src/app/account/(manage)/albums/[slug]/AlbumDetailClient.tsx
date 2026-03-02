@@ -1,6 +1,6 @@
 'use client';
 
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateEventAlbum } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import {
@@ -267,8 +267,10 @@ export default function AlbumDetailClient() {
     }
   };
 
-  const handleReorderPhotos = async (newPhotos: PhotoWithAlbums[]) => {
-    await reorderAlbumPhotosMutation.mutateAsync(newPhotos);
+  const handleReorderPhotos = (newPhotos: PhotoWithAlbums[]) => {
+    if (!album) return;
+    queryClient.setQueryData<PhotoWithAlbums[]>(['album-photos', album.id], newPhotos);
+    reorderAlbumPhotosMutation.mutate(newPhotos);
   };
 
   const handleSetAsCover = async (photoUrl: string, albumId: string) => {
@@ -310,7 +312,7 @@ export default function AlbumDetailClient() {
       <AddToAlbumContent
         albumId={album.id}
         existingPhotoUrls={photos.map((p) => p.url)}
-        isSharedAlbum={isSharedWithMe}
+        isSharedAlbum={isSharedWithMe || !!album.event_id || !!album.is_shared}
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={async () => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
@@ -324,6 +326,10 @@ export default function AlbumDetailClient() {
             if (albumOwnerNickname) {
               await revalidateAlbum(albumOwnerNickname, album.slug);
             }
+          }
+          // Revalidate event page when photos are added to an event album
+          if (album.event_id) {
+            await revalidateEventAlbum(album.event_id);
           }
           modalContext.setIsOpen(false);
         }}
@@ -339,7 +345,7 @@ export default function AlbumDetailClient() {
     try {
       const uploadedPhotos = await uploadFiles(Array.from(files), user.id, supabase, {
         albumIds: [album.id],
-        isPublic: false,
+        isPublic: album.is_public || !!album.event_id,
         sortOrderStart: photos.length,
       });
 
@@ -357,6 +363,11 @@ export default function AlbumDetailClient() {
       // Revalidate server-side cache for public pages
       if (profile?.nickname && album.is_public) {
         await revalidateAlbum(profile.nickname, album.slug);
+      }
+
+      // Revalidate event page when photos are added to an event album
+      if (album.event_id) {
+        await revalidateEventAlbum(album.event_id);
       }
 
       // Clear completed uploads after query has refetched and images are preloaded
