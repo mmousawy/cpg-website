@@ -224,7 +224,12 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
               sort_order: sortOrderStart + i,
             }));
 
-            await supabase.from('album_photos').insert(albumPhotoInserts);
+            const { error: albumPhotosError } = await supabase
+              .from('album_photos')
+              .insert(albumPhotoInserts);
+            if (albumPhotosError) {
+              throw new Error(albumPhotosError.message || 'Failed to add photo to album');
+            }
 
             // Set first photo as manual cover for albums that don't have a cover yet
             if (i === 0) {

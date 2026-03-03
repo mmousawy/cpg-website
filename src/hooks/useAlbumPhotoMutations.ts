@@ -512,35 +512,25 @@ export function useSetAlbumCover(
   return useMutation<
     { albumId: string; photoUrl: string },
     Error,
-    { albumId: string; photoUrl: string }
+    { albumId: string; photoUrl: string; albumSlug?: string; isEventAlbum?: boolean }
   >({
-    mutationFn: async ({ albumId, photoUrl }) => {
+    mutationFn: async ({ albumId, photoUrl, albumSlug, isEventAlbum = false }) => {
       if (!userId) throw new Error('User not authenticated');
 
-      // Fetch album to get slug (needed for cache updates)
-      const { data: albumData, error: fetchError } = await supabase
-        .from('albums')
-        .select('slug')
-        .eq('id', albumId)
-        .eq('user_id', userId)
-        .is('deleted_at', null)
-        .single();
-
-      if (fetchError) {
-        throw new Error(fetchError.message || 'Failed to fetch album');
-      }
-
-      const albumSlug = albumData?.slug;
-
-      const { error } = await supabase
+      const updateQuery = supabase
         .from('albums')
         .update({
           cover_image_url: photoUrl,
           cover_is_manual: true,
         })
         .eq('id', albumId)
-        .eq('user_id', userId)
         .is('deleted_at', null);
+
+      if (!isEventAlbum) {
+        updateQuery.eq('user_id', userId);
+      }
+
+      const { error } = await updateQuery;
 
       if (error) {
         throw new Error(error.message || 'Failed to set album cover');
@@ -549,6 +539,15 @@ export function useSetAlbumCover(
       // Update all album sub-caches
       for (const filter of ['personal', 'shared', 'event'] as const) {
         queryClient.setQueryData<AlbumWithPhotos[]>(['albums', userId, filter], (old) => {
+          if (!old) return old;
+          return old.map((a) =>
+            a.id === albumId ? { ...a, cover_image_url: photoUrl, cover_is_manual: true } : a,
+          );
+        });
+      }
+
+      if (isEventAlbum) {
+        queryClient.setQueryData<AlbumWithPhotos[]>(['all-event-albums', userId], (old) => {
           if (!old) return old;
           return old.map((a) =>
             a.id === albumId ? { ...a, cover_image_url: photoUrl, cover_is_manual: true } : a,

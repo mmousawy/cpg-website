@@ -34,6 +34,7 @@ import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
 import { useAlbumBySlug, useSharedAlbumByOwnerAndSlug, type SharedWithMeAlbum } from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
+import { useAddPhotosToSharedAlbum } from '@/hooks/useSharedAlbumSubmissions';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
@@ -100,6 +101,12 @@ export default function AlbumDetailClient() {
   const updateAlbumMutation = useUpdateAlbum(user?.id, profile?.nickname);
   const deleteAlbumsMutation = useDeleteAlbums(user?.id, profile?.nickname);
   const setAlbumCoverMutation = useSetAlbumCover(user?.id, profile?.nickname);
+  const addPhotosToSharedAlbumMutation = useAddPhotosToSharedAlbum(
+    album?.id,
+    isSharedWithMe ? ownerNickname : null,
+    album?.slug ?? '',
+    album?.event_id ?? null,
+  );
 
   // Upload hook with progress tracking
   const { uploadingPhotos, uploadFiles, clearCompleted, dismissUpload } = usePhotoUpload();
@@ -274,7 +281,12 @@ export default function AlbumDetailClient() {
   };
 
   const handleSetAsCover = async (photoUrl: string, albumId: string) => {
-    await setAlbumCoverMutation.mutateAsync({ albumId, photoUrl });
+    await setAlbumCoverMutation.mutateAsync({
+      albumId,
+      photoUrl,
+      albumSlug: album?.slug,
+      isEventAlbum: album?.event_id != null,
+    });
   };
 
   const handleSaveAlbum = async (albumId: string, data: AlbumFormData) => {
@@ -342,12 +354,30 @@ export default function AlbumDetailClient() {
     const files = e.target.files;
     if (!files || files.length === 0 || !user || !album) return;
 
+    const useSharedAlbumPath =
+      album.event_id != null || (album.user_id != null && album.user_id !== user.id);
+
     try {
-      const uploadedPhotos = await uploadFiles(Array.from(files), user.id, supabase, {
-        albumIds: [album.id],
-        isPublic: album.is_public || !!album.event_id,
-        sortOrderStart: photos.length,
-      });
+      let uploadedPhotos: Awaited<ReturnType<typeof uploadFiles>>;
+
+      if (useSharedAlbumPath) {
+        // Event/shared albums: upload to library, then add via RPC (bypasses RLS)
+        uploadedPhotos = await uploadFiles(Array.from(files), user.id, supabase, {
+          isPublic: album.is_public || !!album.event_id,
+          sortOrderStart: 0,
+        });
+        if (uploadedPhotos.length > 0) {
+          const photoIds = uploadedPhotos.map((p) => p.id);
+          await addPhotosToSharedAlbumMutation.mutateAsync(photoIds);
+        }
+      } else {
+        // User-owned albums: direct insert via uploadFiles
+        uploadedPhotos = await uploadFiles(Array.from(files), user.id, supabase, {
+          albumIds: [album.id],
+          isPublic: album.is_public || !!album.event_id,
+          sortOrderStart: photos.length,
+        });
+      }
 
       // Preload images before refreshing the list to prevent layout shift
       if (uploadedPhotos.length > 0) {

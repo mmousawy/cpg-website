@@ -24,8 +24,9 @@ export const metadata = createMetadata({
   keywords: ['photography community', 'photographers', 'member discovery', 'community members'],
 });
 
-export default async function MembersPage() {
-  const { user } = await getServerAuth();
+export default async function MembersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const [{ user }, resolvedSearchParams] = await Promise.all([getServerAuth(), searchParams]);
+  const showSkeleton = resolvedSearchParams.skeleton !== undefined;
 
   // For unauthenticated users, show friendly login prompt
   if (!user) {
@@ -133,158 +134,225 @@ export default async function MembersPage() {
         </div>
 
         {/* Popular Interests Section */}
-        <Suspense
-          fallback={<InterestsSkeleton />}
+        <div
+          className="mb-10"
         >
-          <PopularInterestsSection />
-        </Suspense>
+          <h2
+            className="mb-3 text-xl font-semibold"
+          >
+            Popular interests
+          </h2>
+          {showSkeleton ? <InterestsSkeleton /> : (
+            <Suspense
+              fallback={<InterestsSkeleton />}
+            >
+              <PopularInterestsSection />
+            </Suspense>
+          )}
+        </div>
 
         {/* Random Interests with Members */}
-        <Suspense
-          fallback={(
-            <MemberGridSkeleton
-              title
-              count={15}
-            />
-          )}
+        <div
+          className="mb-10"
         >
-          <RandomInterestsSection />
-        </Suspense>
+          <h2
+            className="mb-4 text-xl font-semibold"
+          >
+            Explore by interests
+          </h2>
+          {showSkeleton ? <InterestCardsSkeleton /> : (
+            <Suspense
+              fallback={<InterestCardsSkeleton />}
+            >
+              <RandomInterestsSection />
+            </Suspense>
+          )}
+        </div>
 
         {/* Recently Active Members */}
-        <Suspense
-          fallback={(
-            <MemberGridSkeleton
-              title
-              subtitle
-              count={12}
-            />
-          )}
+        <div
+          className="mb-10"
         >
-          <RecentlyActiveSection />
-        </Suspense>
+          <h2
+            className="mb-1 text-lg font-semibold"
+          >
+            Recently active
+          </h2>
+          <p
+            className="mb-6 text-sm text-foreground/60"
+          >
+            Members who have shared photos or albums recently
+          </p>
+          {showSkeleton
+            ? (
+              <MemberGridSkeleton
+                count={12}
+              />
+            )
+            : (
+              <Suspense
+                fallback={(
+                  <MemberGridSkeleton
+                    count={12}
+                  />
+                )}
+              >
+                <RecentlyActiveSection />
+              </Suspense>
+            )}
+        </div>
 
         {/* Explore by Photo Style (Tags) */}
-        <Suspense
-          fallback={<TagsSkeleton />}
+        <div
+          className="mb-10"
         >
-          <PopularTagsSection />
-        </Suspense>
+          <h2
+            className="mb-1 text-lg font-semibold"
+          >
+            Explore by photo style
+          </h2>
+          <p
+            className="mb-6 text-sm text-foreground/60"
+          >
+            Discover members who frequently use these photo tags
+          </p>
+          {showSkeleton ? <InterestsSkeleton /> : (
+            <Suspense
+              fallback={<InterestsSkeleton />}
+            >
+              <PopularTagsSection />
+            </Suspense>
+          )}
+        </div>
 
         {/* New Members */}
-        <Suspense
-          fallback={(
-            <MemberGridSkeleton
-              title
-              subtitle
-              count={12}
-            />
-          )}
-        >
-          <NewMembersSection />
-        </Suspense>
+        <div>
+          <h2
+            className="mb-1 text-lg font-semibold"
+          >
+            New members
+          </h2>
+          <p
+            className="mb-6 text-sm text-foreground/60"
+          >
+            Welcome our newest community members
+          </p>
+          {showSkeleton
+            ? (
+              <MemberGridSkeleton
+                count={12}
+              />
+            )
+            : (
+              <Suspense
+                fallback={(
+                  <MemberGridSkeleton
+                    count={12}
+                  />
+                )}
+              >
+                <NewMembersSection />
+              </Suspense>
+            )}
+        </div>
       </PageContainer>
     </>
   );
 }
 
-function MemberCardSkeleton() {
+function MemberCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
       className="animate-pulse rounded-lg border border-border-color bg-background-light px-2 py-3 flex flex-col items-center gap-2"
+      style={{ animationDelay: `${index * 75}ms` }}
     >
       <div
         className="size-16 rounded-full bg-background-medium"
       />
       <div
-        className="space-y-1.5 w-full flex flex-col items-center"
+        className="w-full flex flex-col items-center"
       >
         <div
-          className="h-3.5 bg-background-medium rounded w-3/4"
+          className="h-[18px] bg-background-medium rounded w-3/4 mb-0.5"
         />
         <div
-          className="h-3 bg-background-medium rounded w-1/2"
+          className="h-4 bg-background-medium rounded w-1/2"
+        />
+        <div
+          className="h-4 bg-background-medium rounded w-2/3 mt-2"
         />
       </div>
     </div>
   );
 }
 
-function MemberGridSkeleton({ title, subtitle, count = 10 }: { title?: boolean; subtitle?: boolean; count?: number }) {
+function MemberGridSkeleton({ count = 10 }: { count?: number }) {
   return (
     <div
-      className="mb-10"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
     >
-      {title && (
-        <div
-          className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
+      {Array.from({ length: count }).map((_, i) => (
+        <MemberCardSkeleton
+          key={i}
+          index={i}
         />
-      )}
-      {subtitle && (
-        <div
-          className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
-        />
-      )}
-      <div
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-      >
-        {Array.from({ length: count }).map((_, i) => (
-          <MemberCardSkeleton
-            key={i}
-          />
-        ))}
-      </div>
+      ))}
     </div>
   );
 }
 
-const PILL_WIDTHS = [80, 100, 68, 112, 76, 96, 88, 104, 72, 92, 84, 108];
+const PILL_WIDTHS = [80, 100, 68, 112, 76, 96, 88, 104, 72, 92, 84, 108, 76, 96, 80, 112, 68, 100, 88, 72];
 
 function InterestsSkeleton() {
   return (
     <div
-      className="mb-10"
+      className="flex flex-wrap gap-2"
     >
-      <div
-        className="mb-3 h-7 w-48 animate-pulse rounded bg-background-light"
-      />
-      <div
-        className="flex flex-wrap gap-2"
-      >
-        {PILL_WIDTHS.map((w, i) => (
-          <div
-            key={i}
-            className="h-8 animate-pulse rounded-full bg-background-light"
-            style={{ width: w }}
-          />
-        ))}
-      </div>
+      {PILL_WIDTHS.map((w, i) => (
+        <div
+          key={i}
+          className="h-7.5 animate-pulse rounded-full bg-background-light border border-border-color"
+          style={{ width: w, animationDelay: `${i * 50}ms` }}
+        />
+      ))}
     </div>
   );
 }
 
-function TagsSkeleton() {
+function InterestCardsSkeleton() {
   return (
     <div
-      className="mb-10"
+      className="grid gap-3 xs:grid-cols-2 md:grid-cols-3"
     >
-      <div
-        className="mb-1 h-6 w-40 animate-pulse rounded bg-background-light"
-      />
-      <div
-        className="mb-6 h-4 w-64 animate-pulse rounded bg-background-light"
-      />
-      <div
-        className="flex flex-wrap gap-2"
-      >
-        {PILL_WIDTHS.slice(0, 10).map((w, i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="animate-pulse rounded-lg border border-border-color bg-background-light px-4 py-3"
+          style={{ animationDelay: `${i * 100}ms` }}
+        >
           <div
-            key={i}
-            className="h-8 animate-pulse rounded-full bg-background-light"
-            style={{ width: w }}
-          />
-        ))}
-      </div>
+            className="flex items-center gap-3 mb-3 h-6"
+          >
+            <div
+              className="h-5 rounded bg-background-medium"
+              style={{ width: PILL_WIDTHS[i % PILL_WIDTHS.length] }}
+            />
+            <div
+              className="h-4 w-16 rounded bg-background-medium"
+            />
+          </div>
+          <div
+            className="flex -space-x-2"
+          >
+            {Array.from({ length: 4 }).map((_, j) => (
+              <div
+                key={j}
+                className="size-12 rounded-full bg-background-medium ring-2 ring-background-light"
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -296,18 +364,9 @@ async function PopularInterestsSection() {
   if (popularInterests.length === 0) return null;
 
   return (
-    <div
-      className="mb-10"
-    >
-      <h2
-        className="mb-3 text-xl font-semibold"
-      >
-        Popular interests
-      </h2>
-      <InterestCloud
-        interests={popularInterests}
-      />
-    </div>
+    <InterestCloud
+      interests={popularInterests}
+    />
   );
 }
 
@@ -318,79 +377,70 @@ async function RandomInterestsSection() {
 
   return (
     <div
-      className="mb-10"
+      className="grid gap-3 xs:grid-cols-2 md:grid-cols-3"
     >
-      <h2
-        className="mb-4 text-xl font-semibold"
-      >
-        Explore by interests
-      </h2>
-      <div
-        className="grid gap-3 xs:grid-cols-2 md:grid-cols-3"
-      >
-        {randomInterests.map(({ interest, members }) => (
-          <Link
-            key={interest.id}
-            href={`/members/interest/${encodeURIComponent(interest.name)}`}
-            className="group rounded-lg border border-border-color bg-background-light px-4 py-3 transition-colors hover:border-primary hover:bg-background"
+      {randomInterests.map(({ interest, members }) => (
+        <Link
+          key={interest.id}
+          href={`/members/interest/${encodeURIComponent(interest.name)}`}
+          className="group rounded-lg border border-border-color bg-background-light px-4 py-3 transition-colors hover:border-primary hover:bg-background"
+        >
+          <div
+            className="flex items-center gap-3 mb-3"
           >
             <div
-              className="flex items-center gap-3 mb-3"
+              className="min-w-0 flex-1"
             >
+              <span
+                className="font-medium text-sm group-hover:text-primary transition-colors"
+              >
+                {interest.name}
+              </span>
+              <span
+                className="ml-2 text-xs text-foreground/40"
+              >
+                {interest.count || 0}
+                {' '}
+                {(interest.count || 0) === 1 ? 'member' : 'members'}
+              </span>
+            </div>
+            <svg
+              className="size-4 shrink-0 text-foreground/30 group-hover:text-primary transition-colors"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+          <div
+            className="flex -space-x-2 items-center"
+          >
+            {members.slice(0, 4).map((member) => (
+              <Avatar
+                key={member.id}
+                avatarUrl={member.avatar_url}
+                fullName={member.full_name}
+                size="md"
+                className="ring-2 ring-background-light"
+              />
+            ))}
+            {members.length > 4 && (
               <div
-                className="min-w-0 flex-1"
+                className="z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-background-medium border-2 border-background text-sm font-semibold text-foreground/70"
               >
-                <span
-                  className="font-medium text-sm group-hover:text-primary transition-colors"
-                >
-                  {interest.name}
-                </span>
-                <span
-                  className="ml-2 text-xs text-foreground/40"
-                >
-                  {interest.count || 0}
-                  {' '}
-                  {(interest.count || 0) === 1 ? 'member' : 'members'}
-                </span>
+                +
+                {members.length - 4}
               </div>
-              <svg
-                className="size-4 shrink-0 text-foreground/30 group-hover:text-primary transition-colors"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-            <div
-              className="flex -space-x-2 items-center"
-            >
-              {members.slice(0, 4).map((member) => (
-                <Avatar
-                  key={member.id}
-                  avatarUrl={member.avatar_url}
-                  fullName={member.full_name}
-                  size="md"
-                  className="ring-2 ring-background-light"
-                />
-              ))}
-              {members.length > 4 && (
-                <div
-                  className="z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-background-medium border-2 border-background text-sm font-semibold text-foreground/70"
-                >
-                  +
-                  {members.length - 4}
-                </div>
-              )}
-            </div>
-          </Link>
-        ))}
-      </div>
+            )}
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
@@ -402,33 +452,19 @@ async function RecentlyActiveSection() {
 
   return (
     <div
-      className="mb-10"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
     >
-      <h2
-        className="mb-1 text-lg font-semibold"
-      >
-        Recently active
-      </h2>
-      <p
-        className="mb-6 text-sm text-foreground/60"
-      >
-        Members who have shared photos or albums recently
-      </p>
-      <div
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-      >
-        {recentlyActive.map((member) => (
-          <MemberCard
-            key={member.id}
-            member={member}
-            badge={
-              member.recent_activity_count
-                ? `${member.recent_activity_count} ${member.recent_activity_count === 1 ? 'item' : 'items'} this month`
-                : undefined
-            }
-          />
-        ))}
-      </div>
+      {recentlyActive.map((member) => (
+        <MemberCard
+          key={member.id}
+          member={member}
+          badge={
+            member.recent_activity_count
+              ? `${member.recent_activity_count} ${member.recent_activity_count === 1 ? 'item' : 'items'} this month`
+              : undefined
+          }
+        />
+      ))}
     </div>
   );
 }
@@ -454,38 +490,24 @@ async function PopularTagsSection() {
 
   return (
     <div
-      className="mb-10"
+      className="flex flex-wrap gap-2 items-center"
     >
-      <h2
-        className="mb-1 text-lg font-semibold"
-      >
-        Explore by photo style
-      </h2>
-      <p
-        className="mb-6 text-sm text-foreground/60"
-      >
-        Discover members who frequently use these photo tags
-      </p>
-      <div
-        className="flex flex-wrap gap-2 items-center"
-      >
-        {popularTags.map((tag) => {
-          const count = tag.memberCount || 0;
-          return (
-            <Link
-              key={tag.id}
-              href={`/members/tag/${encodeURIComponent(tag.name)}`}
-              className="group"
-            >
-              <Tag
-                text={tag.name}
-                count={count}
-                size={getSize(count)}
-              />
-            </Link>
-          );
-        })}
-      </div>
+      {popularTags.map((tag) => {
+        const count = tag.memberCount || 0;
+        return (
+          <Link
+            key={tag.id}
+            href={`/members/tag/${encodeURIComponent(tag.name)}`}
+            className="group"
+          >
+            <Tag
+              text={tag.name}
+              count={count}
+              size={getSize(count)}
+            />
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -497,29 +519,15 @@ async function NewMembersSection() {
 
   return (
     <div
-      className=""
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
     >
-      <h2
-        className="mb-1 text-lg font-semibold"
-      >
-        New members
-      </h2>
-      <p
-        className="mb-6 text-sm text-foreground/60"
-      >
-        Welcome our newest community members
-      </p>
-      <div
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-      >
-        {newMembers.map((member) => (
-          <MemberCard
-            key={member.id}
-            member={member}
-            badge={member.created_at ? formatJoinedDate(member.created_at) : undefined}
-          />
-        ))}
-      </div>
+      {newMembers.map((member) => (
+        <MemberCard
+          key={member.id}
+          member={member}
+          badge={member.created_at ? formatJoinedDate(member.created_at) : undefined}
+        />
+      ))}
     </div>
   );
 }

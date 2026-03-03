@@ -31,7 +31,7 @@ export default function ViewTracker({ type, id, compact = false, className }: Vi
       <EyeIcon
         className="size-4"
       />
-      {viewCount != null && viewCount > 0 && (
+      {viewCount != null && (
         <span>
           {viewCount.toLocaleString()}
           {!compact && (
