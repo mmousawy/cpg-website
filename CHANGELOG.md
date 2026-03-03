@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.4](https://github.com/mmousawy/cpg-website/compare/v1.27.3...v1.27.4) (2026-03-03)
+
+
+### Bug Fixes
+
+* album detail functionality and improve member page layout ([00d96bc](https://github.com/mmousawy/cpg-website/commit/00d96bc4e3b45c4f1dd47ae81760252d7e60034f))
+
 ## [1.27.3](https://github.com/mmousawy/cpg-website/compare/v1.27.2...v1.27.3) (2026-03-02)
 
 
