@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.5](https://github.com/mmousawy/cpg-website/compare/v1.27.4...v1.27.5) (2026-03-07)
+
+
+### Bug Fixes
+
+* enhance routing and metadata handling for user profiles ([fc9b88b](https://github.com/mmousawy/cpg-website/commit/fc9b88bfce2831cb5913c6919bdfb53ea0048eda))
+
 ## [1.27.4](https://github.com/mmousawy/cpg-website/compare/v1.27.3...v1.27.4) (2026-03-03)
 
 
