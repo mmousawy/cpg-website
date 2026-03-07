@@ -42,7 +42,7 @@ export async function getAllAlbumPaths() {
       return !!a.slug && !!a.profile?.nickname;
     })
     .map((a) => ({
-      nickname: a.profile.nickname,
+      nickname: `@${a.profile.nickname}`,
       albumSlug: a.slug,
     }));
 }
@@ -208,7 +208,6 @@ export async function getAlbumBySlug(
 ): Promise<AlbumBySlugResult | null> {
   'use cache';
   cacheLife('max');
-  cacheTag('albums');
   cacheTag(`profile-${nickname}`);
   cacheTag(`album-${nickname}-${albumSlug}`);
 
@@ -345,7 +344,6 @@ export async function getPhotosByUrls(photoUrls: string[]) {
 export async function getUserPublicAlbums(userId: string, nickname: string, limit = 50) {
   'use cache';
   cacheLife('max');
-  cacheTag('albums');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();

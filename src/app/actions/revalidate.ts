@@ -92,14 +92,9 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   // Revalidate search (albums are searchable)
   revalidateTag('search', 'max');
 
-  // Revalidate the profile page (shows albums list)
-  // Note: Profile URLs use @ prefix format: /@nickname
-  revalidatePath(`/@${nickname}`);
-
-  // Also revalidate the specific album page path and granular tag
+  // Also revalidate the specific album page granular tag
   if (albumSlug) {
     revalidateTag(`album-${nickname}-${albumSlug}`, 'max');
-    revalidatePath(`/@${nickname}/album/${albumSlug}`);
   }
 }
 
@@ -124,9 +119,6 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   revalidateTag('gallery', 'max');
   // Revalidate search (albums are searchable)
   revalidateTag('search', 'max');
-  // Revalidate the profile page (shows albums list)
-  // Note: Profile URLs use @ prefix format: /@nickname
-  revalidatePath(`/@${nickname}`);
 }
 
 // ============================================================================
@@ -149,8 +141,6 @@ export async function revalidateGalleryData() {
 export async function revalidateTagPhotos(tagName: string) {
   revalidateTag('gallery', 'max');
   revalidateTag(`tag-${tagName}`, 'max');
-  // Also revalidate members by tag page
-  revalidateTag('profiles', 'max');
   // Revalidate search (tags are searchable)
   revalidateTag('search', 'max');
 }
@@ -174,8 +164,6 @@ export async function revalidateProfiles() {
  */
 export async function revalidateProfile(nickname: string) {
   revalidateTag(`profile-${nickname}`, 'max');
-  // Also revalidate the profiles list (homepage members)
-  revalidateTag('profiles', 'max');
   // Revalidate search (profiles are searchable)
   revalidateTag('search', 'max');
 }

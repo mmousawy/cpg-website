@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     title: albumTitle,
     description: albumDescription,
     image: albumImage,
-    canonical: `/${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}`,
+    canonical: `/@${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}`,
     type: 'article',
     keywords: ['photo album', 'photography', album.title, nickname],
   });

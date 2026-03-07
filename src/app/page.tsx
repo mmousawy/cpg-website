@@ -24,12 +24,17 @@ import { getRecentEvents } from '@/lib/data/events';
 import { getPublicPhotostream } from '@/lib/data/gallery';
 import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
 
-export const metadata = createMetadata({
-  title: 'Photography Meetups & Community - Creative Photography Group',
-  description: 'A community for analog and digital photography enthusiasts. Join us for monthly meetups, photo challenges, and skill-sharing talks in the Netherlands.',
-  canonical: '/',
-  keywords: ['photography', 'photography meetups', 'Netherlands', 'photo walks', 'photography community'],
-});
+export const metadata = {
+  ...createMetadata({
+    title: 'Photography Meetups & Community - Creative Photography Group',
+    description: 'A community for analog and digital photography enthusiasts. Join us for monthly meetups, photo challenges, and skill-sharing talks in the Netherlands.',
+    canonical: '/',
+    keywords: ['photography', 'photography meetups', 'Netherlands', 'photo walks', 'photography community'],
+  }),
+  title: {
+    absolute: 'Photography Meetups & Community - Creative Photography Group',
+  },
+};
 
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import CameraWithFlash from 'public/camera-with-flash.png';

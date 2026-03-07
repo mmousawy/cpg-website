@@ -99,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Album pages
   const albumPaths = await getAllAlbumPaths();
   const albumPages: MetadataRoute.Sitemap = albumPaths.map(({ nickname, albumSlug }) => ({
-    url: `${baseUrl}/${nickname}/album/${albumSlug}`,
+    url: `${baseUrl}/${nickname}/album/${albumSlug}`, // nickname already includes @ prefix from getAllAlbumPaths
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.7,
@@ -127,7 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .map((photo: PhotoQueryResult) => {
       const profile = Array.isArray(photo.profiles) ? photo.profiles[0] : photo.profiles;
       return {
-        url: `${baseUrl}/${profile!.nickname}/photo/${photo.short_id}`,
+        url: `${baseUrl}/@${profile!.nickname}/photo/${photo.short_id}`,
         lastModified: photo.created_at ? new Date(photo.created_at) : new Date(),
         changeFrequency: 'monthly' as const,
         priority: 0.6,

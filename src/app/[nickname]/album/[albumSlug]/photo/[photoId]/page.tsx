@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     title: photoTitle,
     description: photoDescription,
     image: photoImage,
-    canonical: `/${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}/photo/${encodeURIComponent(photoId)}`,
+    canonical: `/@${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}/photo/${encodeURIComponent(photoId)}`,
     type: 'article',
     keywords: ['photography', 'photo', result.photo.title || '', result.currentAlbum.title, nickname],
   });

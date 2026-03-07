@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     title: profileTitle,
     description: profileDescription,
     image: profileImage,
-    canonical: `/${encodeURIComponent(nickname)}`,
+    canonical: `/@${encodeURIComponent(nickname)}`,
     type: 'profile',
     keywords: ['photography', 'photographer', profile.nickname || '', profile.full_name || ''],
   });
@@ -97,7 +97,6 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
 
   // Apply cache settings
   cacheLife('max');
-  cacheTag('profiles');
   cacheTag(`profile-${nickname}`);
 
   // Fetch user's albums and photos using cached data functions
@@ -118,7 +117,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
 
   const socialLinks = (profile.social_links || []) as SocialLink[];
 
-  const profileUrl = getAbsoluteUrl(`/${encodeURIComponent(nickname)}`);
+  const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);
   const profileJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ProfilePage',

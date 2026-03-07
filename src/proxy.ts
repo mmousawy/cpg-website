@@ -23,6 +23,14 @@ const publicApiPaths = [
   '/api/test-supabase',   // Test endpoint
 ];
 
+const KNOWN_ROUTES = new Set([
+  'account', 'actions', 'admin', 'api', 'auth', 'auth-callback', 'auth-error',
+  'cancel', 'challenges', 'changelog', 'confirm', 'contact', 'email', 'events',
+  'forgot-password', 'gallery', 'help', 'login', 'members', 'onboarding',
+  'privacy', 'providers', 'reset-password', 'signup', 'terms', 'unsubscribe',
+  '_next',
+]);
+
 export default async function proxy(request: NextRequest) {
   const ipAddress = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for');
 
@@ -33,7 +41,31 @@ export default async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Skip auth check for public API routes (saves 160-250ms per request)
+  // Redirect bare nickname URLs to @-prefixed versions (e.g. /johndoe → /@johndoe)
+  const firstSegment = pathname.split('/')[1];
+  if (
+    firstSegment &&
+    !KNOWN_ROUTES.has(firstSegment) &&
+    !firstSegment.startsWith('@') &&
+    !firstSegment.startsWith('_next') &&
+    !firstSegment.includes('.')
+  ) {
+    const url = request.nextUrl.clone();
+    const rest = pathname.slice(firstSegment.length + 1);
+    url.pathname = `/@${firstSegment}${rest}`;
+    return NextResponse.redirect(url, 301);
+  }
+
+  // Routes that need auth handling (Supabase getUser)
+  const authHandledPaths = ['/account', '/admin', '/login', '/signup', '/auth-callback', '/onboarding', '/api/'];
+  const needsAuthHandling = authHandledPaths.some(path => pathname.startsWith(path));
+
+  // Skip auth check for all other routes (saves 160-250ms per request)
+  if (!needsAuthHandling) {
+    return NextResponse.next({ request });
+  }
+
+  // Skip auth check for public API routes
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
   if (isPublicApiRoute) {
     return NextResponse.next({ request });
@@ -99,27 +131,17 @@ export default async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Only run middleware on routes that need auth:
+     * Run proxy on:
      * - /account/* (protected - user dashboard)
      * - /admin/* (protected - admin pages)
      * - /login, /signup (auth pages - redirect if already logged in)
      * - /auth-callback (OAuth callback)
      * - /onboarding (needs auth check)
      * - /api/* (API routes that may need auth)
+     * - All other non-static paths (to redirect bare nicknames → /@nickname)
      *
-     * Public routes are EXCLUDED to allow full caching:
-     * - / (homepage)
-     * - /events/* (public event pages)
-     * - /gallery (public gallery)
-     * - /@* and /[nickname] (public profiles)
-     * - Static assets
+     * Excluded: static assets, Next.js internals, and known static files
      */
-    '/account/:path*',
-    '/admin/:path*',
-    '/login',
-    '/signup',
-    '/auth-callback',
-    '/onboarding',
-    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|txt|xml|json)$).*)',
   ],
 };

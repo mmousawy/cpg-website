@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     title: photoTitle,
     description: photoDescription,
     image: photoImage,
-    canonical: `/${encodeURIComponent(nickname)}/photo/${encodeURIComponent(photoId)}`,
+    canonical: `/@${encodeURIComponent(nickname)}/photo/${encodeURIComponent(photoId)}`,
     type: 'article',
     keywords: ['photography', 'photo', result.photo.title || '', nickname],
   });
@@ -92,8 +92,8 @@ async function CachedPhotoContent({
   cacheTag(`profile-${nickname}`);
   cacheTag(`photo-${result.photo.short_id}`); // Granular invalidation for this specific photo
 
-  const photoUrl = getAbsoluteUrl(`/${encodeURIComponent(nickname)}/photo/${encodeURIComponent(result.photo.short_id || '')}`);
-  const profileUrl = getAbsoluteUrl(`/${encodeURIComponent(nickname)}`);
+  const photoUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}/photo/${encodeURIComponent(result.photo.short_id || '')}`);
+  const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);
 
   const imageJsonLd = {
     '@context': 'https://schema.org',

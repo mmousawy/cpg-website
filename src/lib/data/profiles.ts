@@ -94,7 +94,6 @@ export async function getProfileInterests(userId: string, nickname: string) {
   'use cache';
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
-  cacheTag('interests');
 
   const supabase = createPublicClient();
 
@@ -126,7 +125,6 @@ export async function getProfileByNickname(nickname: string) {
   'use cache';
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
-  cacheTag('profiles');
 
   const supabase = createPublicClient();
 
@@ -162,9 +160,10 @@ export async function getUserPublicPhotos(userId: string, nickname: string, limi
   const supabase = createPublicClient();
 
   // Note: likes_count is now a column on the photos table (updated via triggers)
+  // Narrow select to avoid over-fetching exif_data, search_vector, etc.
   const { data: photos } = await supabase
     .from('photos')
-    .select('*')
+    .select('id, short_id, url, blurhash, width, height, title, likes_count, created_at, user_id')
     .eq('user_id', userId)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -321,12 +320,37 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     return null;
   }
 
-  // Get all photos in this album (for filmstrip navigation)
-  const { data: siblingPhotosData } = await supabase
-    .from('album_photos_active')
-    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash)')
-    .eq('album_id', album.id)
-    .order('sort_order', { ascending: true });
+  // Run sibling photos, albums, challenges, and owner profile queries in parallel
+  const needsOwnerProfile = photo.user_id && photo.user_id !== profile.id;
+  const [
+    { data: siblingPhotosData },
+    { data: albumPhotosData },
+    { data: challengeSubmissions },
+    ownerProfileResult,
+  ] = await Promise.all([
+    supabase
+      .from('album_photos_active')
+      .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash)')
+      .eq('album_id', album.id)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('album_photos')
+      .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(cover_image))')
+      .eq('photo_id', photo.id),
+    supabase
+      .from('challenge_submissions')
+      .select('challenge_id, challenges(id, title, slug, cover_image_url)')
+      .eq('photo_id', photo.id)
+      .eq('status', 'accepted'),
+    needsOwnerProfile && photo.user_id
+      ? supabase
+        .from('profiles')
+        .select('id, full_name, nickname, avatar_url')
+        .eq('id', photo.user_id)
+        .is('suspended_at', null)
+        .single()
+      : Promise.resolve({ data: null }),
+  ]);
 
   type SiblingPhotoData = {
     photo_url: string | null;
@@ -349,12 +373,6 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
       };
     })
     .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
-
-  // Get all albums this photo is in (including album owner profile)
-  const { data: albumPhotosData } = await supabase
-    .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(cover_image))')
-    .eq('photo_id', photo.id);
 
   type AlbumPhotoWithAlbum = {
     album_id: string;
@@ -385,13 +403,6 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     })
     .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null }>;
 
-  // Get accepted challenge submissions for this photo
-  const { data: challengeSubmissions } = await supabase
-    .from('challenge_submissions')
-    .select('challenge_id, challenges(id, title, slug, cover_image_url)')
-    .eq('photo_id', photo.id)
-    .eq('status', 'accepted');
-
   type ChallengeSubmissionWithChallenge = {
     challenge_id: string;
     challenges: {
@@ -416,30 +427,21 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .filter((c): c is { id: string; title: string; slug: string; cover_image_url: string | null } => c !== null);
 
   // Use the photo owner's profile for attribution (may differ from album owner in shared albums)
-  let photoOwnerProfile = {
-    id: profile.id,
-    full_name: profile.full_name,
-    nickname: profile.nickname!, // We already checked nickname is not null above
-    avatar_url: profile.avatar_url,
-  };
-
-  if (photo.user_id && photo.user_id !== profile.id) {
-    const { data: ownerProfile } = await supabase
-      .from('profiles')
-      .select('id, full_name, nickname, avatar_url')
-      .eq('id', photo.user_id)
-      .is('suspended_at', null)
-      .single();
-
-    if (ownerProfile?.nickname) {
-      photoOwnerProfile = {
+  const ownerProfile = ownerProfileResult && 'data' in ownerProfileResult ? ownerProfileResult.data : null;
+  const photoOwnerProfile =
+    needsOwnerProfile && ownerProfile?.nickname
+      ? {
         id: ownerProfile.id,
         full_name: ownerProfile.full_name,
         nickname: ownerProfile.nickname,
         avatar_url: ownerProfile.avatar_url,
+      }
+      : {
+        id: profile.id,
+        full_name: profile.full_name,
+        nickname: profile.nickname!,
+        avatar_url: profile.avatar_url,
       };
-    }
-  }
 
   return {
     photo: photo as Photo,
@@ -491,11 +493,18 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
     return null;
   }
 
-  // Get all albums this photo is in (including album owner profile)
-  const { data: albumPhotos } = await supabase
-    .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, cover_image))')
-    .eq('photo_id', photo.id);
+  // Get albums and challenges in parallel (both depend only on photo.id)
+  const [{ data: albumPhotos }, { data: challengeSubmissions }] = await Promise.all([
+    supabase
+      .from('album_photos')
+      .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, cover_image))')
+      .eq('photo_id', photo.id),
+    supabase
+      .from('challenge_submissions')
+      .select('challenge_id, challenges(id, title, slug, cover_image_url)')
+      .eq('photo_id', photo.id)
+      .eq('status', 'accepted'),
+  ]);
 
   type AlbumPhotoWithAlbum = {
     album_id: string;
@@ -526,13 +535,6 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
       };
     })
     .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null }>;
-
-  // Get accepted challenge submissions for this photo
-  const { data: challengeSubmissions } = await supabase
-    .from('challenge_submissions')
-    .select('challenge_id, challenges(id, title, slug, cover_image_url)')
-    .eq('photo_id', photo.id)
-    .eq('status', 'accepted');
 
   type ChallengeSubmissionWithChallenge = {
     challenge_id: string;
