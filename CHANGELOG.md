@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.6](https://github.com/mmousawy/cpg-website/compare/v1.27.5...v1.27.6) (2026-03-09)
+
+
+### Bug Fixes
+
+* add feedback feature. ([4083ce7](https://github.com/mmousawy/cpg-website/commit/4083ce74b4fae817df445c79edf4c57b8fc2ea34))
+
 ## [1.27.5](https://github.com/mmousawy/cpg-website/compare/v1.27.4...v1.27.5) (2026-03-07)
 
 
