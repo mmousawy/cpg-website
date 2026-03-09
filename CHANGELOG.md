@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.8](https://github.com/mmousawy/cpg-website/compare/v1.27.7...v1.27.8) (2026-03-09)
+
+
+### Bug Fixes
+
+* adjust metadata description html stripping ([accb52a](https://github.com/mmousawy/cpg-website/commit/accb52ad9671979caa95619729a0b47f8d821767))
+
 ## [1.27.7](https://github.com/mmousawy/cpg-website/compare/v1.27.6...v1.27.7) (2026-03-09)
 
 
