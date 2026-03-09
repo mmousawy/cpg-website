@@ -1,6 +1,6 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { EventAttendee } from '@/types/events';
-import { stripHtml } from '@/utils/stripHtml';
+import { RichDescription } from '@/components/shared/RichDescription';
 import clsx from 'clsx';
 import Link from 'next/link';
 
@@ -314,11 +314,10 @@ export default function EventCard({
         </div>
         {/* Desktop: description in content area */}
         {event.description && (
-          <p
+          <RichDescription
+            html={event.description}
             className="max-sm:hidden w-full max-w-[40ch] text-foreground/90 text-sm line-clamp-2"
-          >
-            {stripHtml(event.description)}
-          </p>
+          />
         )}
 
         {/* Attendees */}
@@ -390,11 +389,10 @@ export default function EventCard({
 
   // Mobile: description below image and date/time
   const mobileDescription = event.description ? (
-    <p
+    <RichDescription
+      html={event.description}
       className="sm:hidden mt-2 text-foreground/90 text-sm leading-snug line-clamp-3"
-    >
-      {stripHtml(event.description)}
-    </p>
+    />
   ) : null;
 
   const wrapperClasses = clsx(

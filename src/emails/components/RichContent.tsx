@@ -1,4 +1,5 @@
 import sanitizeHtml from 'sanitize-html';
+import { normalizeQuillLists } from '@/utils/normalizeQuillLists';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
@@ -94,7 +95,7 @@ export default function RichContent({ html }: RichContentProps) {
 
   const content = isPlainText(normalized)
     ? normalized.split('\n').map((line) => `<p style="${INLINE_STYLES.p}">${line ? sanitizeHtml(line, { allowedTags: [] }) : '&nbsp;'}</p>`).join('')
-    : sanitizeRichContent(normalized);
+    : sanitizeRichContent(normalizeQuillLists(normalized));
 
   return (
     <div

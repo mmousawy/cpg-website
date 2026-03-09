@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import sanitizeHtml from 'sanitize-html';
+import { normalizeQuillLists } from '@/utils/normalizeQuillLists';
 
 const ALLOWED_TAGS = ['p', 'h2', 'h3', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'blockquote', 'br', 'span', 'hr', 'img'];
 
@@ -35,7 +36,7 @@ export function RichDescription({ html, className }: RichDescriptionProps) {
 
   const normalized = html.replace(/&nbsp;/g, ' ');
   const isPlain = isPlainText(normalized);
-  const content = isPlain ? normalized : sanitizeForWeb(normalized);
+  const content = isPlain ? normalized : sanitizeForWeb(normalizeQuillLists(normalized));
   const classes = clsx('rich-description', className);
 
   if (isPlain) {

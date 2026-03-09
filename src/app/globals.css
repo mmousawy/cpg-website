@@ -460,16 +460,27 @@ select:focus-visible {
   color: var(--primary);
   text-decoration: underline;
 }
-.ql-snow .ql-editor ul,
+.ql-snow .ql-editor ul {
+  margin: 8px 0;
+  padding-left: 1.5rem;
+  font-size: inherit;
+  line-height: 1.65em;
+  list-style: disc;
+}
 .ql-snow .ql-editor ol {
   margin: 8px 0;
   padding-left: 1.5rem;
   font-size: inherit;
   line-height: 1.65em;
+  list-style: decimal;
 }
 .ql-snow .ql-editor li {
   margin: 4px 0;
   padding-left: 0;
+}
+.ql-snow .ql-editor li > ul,
+.ql-snow .ql-editor li > ol {
+  margin: 2px 0 0 0;
 }
 .ql-snow .ql-editor blockquote {
   margin: 8px 0;
@@ -547,11 +558,17 @@ select:focus-visible {
 .rich-text-editor--email .ql-snow .ql-editor a {
   color: #38785f;
 }
-.rich-text-editor--email .ql-snow .ql-editor ul,
+.rich-text-editor--email .ql-snow .ql-editor ul {
+  margin: 8px 0;
+  padding-left: 16px;
+  font-size: 14px;
+  list-style: disc;
+}
 .rich-text-editor--email .ql-snow .ql-editor ol {
   margin: 8px 0;
   padding-left: 16px;
   font-size: 14px;
+  list-style: decimal;
 }
 .rich-text-editor--email .ql-snow .ql-editor blockquote {
   margin: 8px 0;
@@ -561,10 +578,18 @@ select:focus-visible {
 
 /* RichDescription — read-only web display of sanitized HTML */
 .rich-description p {
-  margin: 0 0 1.5em 0;
   font-size: inherit;
-  line-height: 1.65em;
+  line-height: 1.5em;
+
+  + p {
+    margin-top: 1.25em;
+  }
+
+  + ul {
+    margin-top: 0.5em;
+  }
 }
+
 .rich-description p:last-child {
   margin-bottom: 0;
 }
@@ -595,16 +620,32 @@ select:focus-visible {
 .rich-description a:hover {
   text-decoration: underline;
 }
-.rich-description ul,
+.rich-description ul {
+  margin: 8px 0;
+  padding-left: 1.5rem;
+  font-size: inherit;
+  line-height: 1.5em;
+  list-style: disc;
+
+  + p {
+    margin-top: 1.25em;
+  }
+}
+
 .rich-description ol {
   margin: 8px 0;
   padding-left: 1.5rem;
   font-size: inherit;
   line-height: 1.65em;
+  list-style: decimal;
 }
 .rich-description li {
   margin: 4px 0;
   padding-left: 0;
+}
+.rich-description li > ul,
+.rich-description li > ol {
+  margin: 2px 0 0 0;
 }
 .rich-description blockquote {
   margin: 8px 0;
