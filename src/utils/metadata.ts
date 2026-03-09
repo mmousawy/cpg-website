@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { stripHtml } from '@/utils/stripHtml';
 
 /**
  * Site-wide configuration for metadata
@@ -25,11 +26,10 @@ export const defaultTwitterImage = '/twitter-image.jpg';
  * Truncate description to optimal length for SEO (155 characters)
  */
 export function truncateDescription(description: string, maxLength = 155): string {
-  if (description.length <= maxLength) {
-    return description;
-  }
+  const text = stripHtml(description || '');
+  if (text.length <= maxLength) return text;
   // Truncate at word boundary
-  const truncated = description.substring(0, maxLength - 3);
+  const truncated = text.substring(0, maxLength - 3);
   const lastSpace = truncated.lastIndexOf(' ');
   return lastSpace > 0 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
 }
