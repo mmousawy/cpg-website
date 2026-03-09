@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.7](https://github.com/mmousawy/cpg-website/compare/v1.27.6...v1.27.7) (2026-03-09)
+
+
+### Bug Fixes
+
+* replace stripHtml with RichDescription component for event descriptions and enhance HTML sanitization ([293e338](https://github.com/mmousawy/cpg-website/commit/293e33851f3742058115d1b18803d48165e0a9c9))
+
 ## [1.27.6](https://github.com/mmousawy/cpg-website/compare/v1.27.5...v1.27.6) (2026-03-09)
 
 
