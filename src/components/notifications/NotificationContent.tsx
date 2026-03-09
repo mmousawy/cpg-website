@@ -45,6 +45,7 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   shared_album_request_accepted: CheckSVG,
   shared_album_request_declined: CancelSVG,
   shared_album_invite_accepted: CheckSVG,
+  feedback_submitted: CommentSVG,
 };
 
 export const notificationMessages: Record<NotificationType, (actor: string | null, data: NotificationData | null) => string> = {
@@ -113,6 +114,7 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
       ? `${actor || 'Someone'} accepted your invite to "${title}"`
       : `${actor || 'Someone'} accepted your invite`;
   },
+  feedback_submitted: (actor) => `New feedback from ${actor || 'someone'}`,
 };
 
 type NotificationContentProps = {

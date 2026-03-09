@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import FeedbackButton from '@/components/shared/FeedbackButton';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import { socialLinks } from '@/config/socials';
@@ -99,6 +100,15 @@ export default function Footer() {
           >
             {routes.help.label}
           </Link>
+          <span
+            className="opacity-25 max-sm:hidden"
+          >
+            •
+          </span>
+          <FeedbackButton
+            variant="link"
+            className="text-sm"
+          />
           {appVersion && (
             <>
               <span

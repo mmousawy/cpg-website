@@ -118,7 +118,8 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                   className={clsx(
                     'relative flex cursor-pointer select-none items-center rounded-xs px-2 py-1.5 text-sm font-[family-name:var(--font-geist-mono)]',
                     'outline-none transition-colors',
-                    'focus:bg-primary/10 focus:text-primary',
+                    'hover:bg-foreground/5 data-[highlighted]:bg-foreground/5',
+                    'data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary',
                     'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                   )}
                 >

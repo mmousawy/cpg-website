@@ -154,12 +154,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               autoFocus={isOpen}
             />
             <button
-              className="shrink-0 rounded-full border border-border-color p-1.5 hover:bg-background transition-colors"
+              className="shrink-0 rounded-full border border-border-color p-1 hover:bg-background transition-colors"
               onClick={onClose}
               aria-label="Close search"
             >
               <CloseSVG
-                className="size-4 fill-foreground"
+                className="size-5 fill-foreground"
               />
             </button>
           </div>

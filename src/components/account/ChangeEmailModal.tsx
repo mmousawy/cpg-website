@@ -144,7 +144,7 @@ export default function ChangeEmailModal({
               className="flex-shrink-0 rounded-full border border-border-color p-1 hover:bg-background disabled:opacity-50"
             >
               <CloseSVG
-                className="fill-foreground"
+                className="size-5 fill-foreground"
               />
             </button>
           </div>

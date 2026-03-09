@@ -356,3 +356,15 @@ export async function revalidateGallery() {
 export async function revalidateReports() {
   revalidateTag('reports', 'max');
 }
+
+// ============================================================================
+// Feedback Revalidation
+// ============================================================================
+
+/**
+ * Revalidate feedback data
+ * Use when: Updating feedback status or admin notes
+ */
+export async function revalidateFeedback() {
+  revalidateTag('feedback', 'max');
+}

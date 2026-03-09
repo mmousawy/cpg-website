@@ -2624,6 +2624,33 @@ ALTER SEQUENCE "public"."events_rsvps_id_seq" OWNED BY "public"."events_rsvps"."
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."feedback" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "email" "text",
+    "subject" "text" NOT NULL,
+    "message" "text" NOT NULL,
+    "user_id" "uuid",
+    "status" "text" DEFAULT 'new'::"text" NOT NULL,
+    "admin_notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "screenshots" "text"[] DEFAULT '{}'::"text"[],
+    CONSTRAINT "feedback_status_check" CHECK (("status" = ANY (ARRAY['new'::"text", 'read'::"text", 'archived'::"text"]))),
+    CONSTRAINT "feedback_subject_check" CHECK (("subject" = ANY (ARRAY['general'::"text", 'bug'::"text", 'feature'::"text", 'events'::"text", 'challenges'::"text", 'gallery'::"text", 'account'::"text", 'other'::"text"])))
+);
+
+
+ALTER TABLE "public"."feedback" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."feedback" IS 'User-submitted feedback (bug reports, feature requests, general feedback)';
+
+
+
+COMMENT ON COLUMN "public"."feedback"."screenshots" IS 'Up to 3 screenshot URLs from Supabase storage';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."interests" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "name" "text" NOT NULL,
@@ -2969,6 +2996,11 @@ ALTER TABLE ONLY "public"."events"
 
 
 
+ALTER TABLE ONLY "public"."feedback"
+    ADD CONSTRAINT "feedback_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."photos"
     ADD CONSTRAINT "images_pkey" PRIMARY KEY ("id");
 
@@ -3283,6 +3315,18 @@ CREATE INDEX "idx_events_rsvps_user_confirmed" ON "public"."events_rsvps" USING 
 
 
 CREATE INDEX "idx_events_search" ON "public"."events" USING "gin" ("search_vector");
+
+
+
+CREATE INDEX "idx_feedback_created_at" ON "public"."feedback" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "idx_feedback_status" ON "public"."feedback" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_feedback_user_id" ON "public"."feedback" USING "btree" ("user_id");
 
 
 
@@ -3688,6 +3732,11 @@ ALTER TABLE ONLY "public"."events_rsvps"
 
 
 
+ALTER TABLE ONLY "public"."feedback"
+    ADD CONSTRAINT "feedback_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+
 ALTER TABLE ONLY "public"."photos"
     ADD CONSTRAINT "images_uploaded_by_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
 
@@ -3814,6 +3863,14 @@ CREATE POLICY "Admins can update challenges" ON "public"."challenges" FOR UPDATE
 
 
 
+CREATE POLICY "Admins can update feedback" ON "public"."feedback" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+
+
+
 CREATE POLICY "Admins can update reports" ON "public"."reports" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))) WITH CHECK ((EXISTS ( SELECT 1
@@ -3823,6 +3880,12 @@ CREATE POLICY "Admins can update reports" ON "public"."reports" FOR UPDATE TO "a
 
 
 CREATE POLICY "Admins can view all event announcements" ON "public"."event_announcements" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+
+
+
+CREATE POLICY "Admins can view all feedback" ON "public"."feedback" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
 
@@ -3895,6 +3958,10 @@ CREATE POLICY "Authenticated users can add challenge comments" ON "public"."chal
 
 
 CREATE POLICY "Authenticated users can add event comments" ON "public"."event_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can create feedback" ON "public"."feedback" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -4351,6 +4418,9 @@ ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."events_rsvps" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."feedback" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."interests" ENABLE ROW LEVEL SECURITY;
@@ -5145,6 +5215,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT ALL ON SEQUENCE "public"."events_rsvps_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."events_rsvps_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."events_rsvps_id_seq" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."feedback" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."feedback" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."feedback" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."feedback" TO "service_role";
 
 
 

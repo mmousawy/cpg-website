@@ -210,12 +210,12 @@ export default function BottomSheet({
               {title}
             </h2>}
             <button
-              className="absolute right-3 top-0 shrink-0 rounded-full border border-border-color bg-background p-1.5 hover:bg-background-medium transition-colors"
+              className="absolute right-3 top-0 shrink-0 rounded-full border border-border-color bg-background p-1 hover:bg-background-medium transition-colors"
               onClick={onClose}
               aria-label="Close"
             >
               <CloseSVG
-                className="size-4 fill-foreground"
+                className="size-5 fill-foreground"
               />
             </button>
           </div>

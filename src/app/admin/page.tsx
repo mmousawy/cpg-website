@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PageContainer from '@/components/layout/PageContainer';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
+import NotificationCommentSVG from 'public/icons/notification-comment.svg';
 import TrophySVG from 'public/icons/trophy.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 
@@ -67,6 +68,15 @@ export default function AdminDashboardPage() {
         className="h-8 w-8"
       />,
       href: '/admin/reports',
+      enabled: true,
+    },
+    {
+      title: 'Feedback',
+      description: 'Review user-submitted feedback and suggestions',
+      icon: <NotificationCommentSVG
+        className="h-8 w-8 fill-current"
+      />,
+      href: '/admin/feedback',
       enabled: true,
     },
     {

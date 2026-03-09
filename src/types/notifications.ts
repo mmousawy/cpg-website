@@ -25,9 +25,10 @@ export type NotificationType =
   | 'shared_album_request_received'
   | 'shared_album_request_accepted'
   | 'shared_album_request_declined'
-  | 'shared_album_invite_accepted';
+  | 'shared_album_invite_accepted'
+  | 'feedback_submitted';
 
-export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system' | 'report';
+export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system' | 'report' | 'feedback';
 
 // Data stored in the notification's JSON `data` field
 export type NotificationData = {

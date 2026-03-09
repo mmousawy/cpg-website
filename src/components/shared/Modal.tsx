@@ -111,7 +111,7 @@ export default function Modal() {
               onClick={closeModal}
             >
               <CloseSVG
-                className="fill-foreground"
+                className="size-5 fill-foreground"
               />
             </button>
           </div>
