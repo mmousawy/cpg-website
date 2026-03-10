@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.28.0](https://github.com/mmousawy/cpg-website/compare/v1.27.8...v1.28.0) (2026-03-10)
+
+
+### Features
+
+* Self-service account deletion, content cleanup cron, RLS hardening, onboarding & help UX ([58cadc8](https://github.com/mmousawy/cpg-website/commit/58cadc885ece88fd76f2dd4da5ca0262e10b9c64))
+
+
+### Bug Fixes
+
+* add missing sha file. ([f99c40c](https://github.com/mmousawy/cpg-website/commit/f99c40c70231d1eee9aa71d3b2a416368f47b8c1))
+
 ## [1.27.8](https://github.com/mmousawy/cpg-website/compare/v1.27.7...v1.27.8) (2026-03-09)
 
 
