@@ -116,7 +116,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   type PhotoRow = Pick<Tables<'photos'>, 'short_id' | 'user_id' | 'created_at'>;
   type ProfileRow = Pick<Tables<'profiles'>, 'nickname'>;
   type PhotoQueryResult = PhotoRow & {
-    profiles: Array<ProfileRow> | null;
+    profiles: ProfileRow | null;
   };
 
   const photoPages: MetadataRoute.Sitemap = (photos || [])

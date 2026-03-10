@@ -22,9 +22,7 @@ export const gettingStartedFAQ: FAQSection = {
           >
             You can sign up in three ways:
           </p>
-          <ul
-            className="mb-4 ml-6 list-disc"
-          >
+          <ul>
             <li>
               <strong>
                 Email and password
@@ -63,9 +61,7 @@ export const gettingStartedFAQ: FAQSection = {
           >
             During onboarding, you&apos;ll set up:
           </p>
-          <ul
-            className="mb-4 ml-6 list-disc"
-          >
+          <ul>
             <li>
               <strong>
                 Nickname
@@ -118,9 +114,7 @@ export const gettingStartedFAQ: FAQSection = {
           >
             The main sections are:
           </p>
-          <ul
-            className="mb-4 ml-6 list-disc"
-          >
+          <ul>
             <li>
               <strong>
                 Events

@@ -139,6 +139,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
           <HelpLink
             href="create-account"
             label="Help with creating an account"
+            size="sm"
           />
         </div>
 

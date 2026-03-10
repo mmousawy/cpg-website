@@ -37,9 +37,7 @@ export const accountFAQ: FAQSection = {
           >
             Email categories
           </p>
-          <ul
-            className="mb-4 list-disc space-y-2 pl-5 text-foreground/90"
-          >
+          <ul>
             <li>
               <strong>
                 Events
@@ -93,9 +91,34 @@ export const accountFAQ: FAQSection = {
       id: 'delete-account',
       title: 'Deleting your account',
       content: (
-        <p>
-          Account deletion is a permanent action. If you wish to delete your account, please contact us through the Contact page. We&apos;ll guide you through the process and remove your data in accordance with our Privacy Policy.
-        </p>
+        <>
+          <p>
+            You can delete your account from your
+            {' '}
+            <strong>
+              Account settings
+            </strong>
+            {' '}
+            page. Scroll to the &quot;Danger zone&quot; section and click &quot;Delete my account&quot;.
+          </p>
+          <p>
+            When you schedule your account for deletion:
+          </p>
+          <ul>
+            <li>
+              You will be signed out immediately and will no longer be able to log in
+            </li>
+            <li>
+              Your content will be hidden from other users right away
+            </li>
+            <li>
+              After 30 days, your profile, photos, albums, comments, and all associated data will be permanently removed from our servers
+            </li>
+          </ul>
+          <p>
+            Changed your mind? Contact us through the Contact page within 30 days and we can cancel the deletion.
+          </p>
+        </>
       ),
     },
     {

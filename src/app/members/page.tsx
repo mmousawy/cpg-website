@@ -46,6 +46,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             <HelpLink
               href="discover-members"
               label="Help with discovering members"
+              size="lg"
             />
           </div>
           <p
@@ -124,6 +125,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             <HelpLink
               href="discover-members"
               label="Help with discovering members"
+              size="lg"
             />
           </div>
           <p

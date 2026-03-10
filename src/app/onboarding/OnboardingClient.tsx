@@ -391,7 +391,9 @@ export default function OnboardingClient() {
       await refreshProfile();
 
       // Revalidate profile pages (homepage shows new members)
-      await revalidateProfile(data.nickname);
+      // Fire-and-forget: don't await server action because revalidateTag
+      // triggers an internal router refresh that conflicts with router.push
+      void revalidateProfile(data.nickname);
 
       // Redirect to account page
       router.push('/account/events');
@@ -416,23 +418,22 @@ export default function OnboardingClient() {
   // Determine which avatar to display: pending upload preview, existing profile avatar, or null if removed
   const displayAvatarUrl = removeAvatar ? null : avatarPreview || profile?.avatar_url;
   const displayName =
-    profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email;
+    profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
 
   return (
     <PageContainer
       className="items-center justify-center"
     >
       <Container
-        padding="lg"
         className="mx-auto max-w-lg"
       >
         <div
           className="mb-8 text-center"
         >
           <h1
-            className="mb-1 text-3xl font-bold"
+            className="mb-2 text-2xl sm:text-3xl font-bold"
           >
-            Welcome
+            Welcome to the group
             {displayName ? `, ${displayName.split(' ')[0]}` : ''}
             !
           </h1>
@@ -440,9 +441,9 @@ export default function OnboardingClient() {
             className="flex items-center justify-center gap-2 mb-8"
           >
             <p
-              className="text-lg opacity-70"
+              className="text-base sm:text-lg opacity-70"
             >
-              Let&apos;s set up your profile
+              Just a few steps to get you started
             </p>
             <HelpLink
               href="setup-profile"
@@ -504,7 +505,7 @@ export default function OnboardingClient() {
           />
 
           <div
-            className="rounded-lg border border-border-color bg-background-light p-4"
+            className="rounded-lg border border-border-color bg-background-light p-2 sm:p-4"
           >
             <div
               className="flex items-start gap-3"

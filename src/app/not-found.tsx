@@ -8,9 +8,12 @@ export const metadata = createNoIndexMetadata({
 
 export default function Custom404() {
   return (
-    <PageContainer>
+    <PageContainer
+      className="grow"
+      innerClassName="flex"
+    >
       <div
-        className="flex min-h-[50vh] items-center justify-center"
+        className="flex items-center justify-center grow"
       >
         <h2
           className="flex gap-3 text-2xl leading-tight opacity-70 max-sm:text-xl"

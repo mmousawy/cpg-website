@@ -145,8 +145,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error };
+
+    // Block login if account is scheduled for deletion
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('deletion_scheduled_at')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.deletion_scheduled_at) {
+        await supabase.auth.signOut();
+        return { error: new Error('This account is scheduled for deletion. If you want to cancel the deletion, please contact us through the contact form.') };
+      }
+    }
+
+    return { error: null };
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, bypassToken?: string) => {

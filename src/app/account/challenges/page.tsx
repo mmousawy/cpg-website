@@ -110,6 +110,7 @@ export default function MyChallengesPage() {
           <HelpLink
             href="submit-challenge"
             label="Help with challenge submissions"
+            size="lg"
           />
         </div>
         <p

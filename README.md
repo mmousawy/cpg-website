@@ -65,6 +65,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - Bio, website, social links (with auto-detected icons)
 - Interests (up to 10 per profile)
 - Activity stats
+- Self-service account deletion (30-day retention with admin revert)
 
 ### Authentication
 - Google OAuth
@@ -98,7 +99,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 - In-app notifications with real-time toast notifications (Supabase Realtime)
 - Activity feed page with notification management
 - Weekly notification digest emails
-- Automated cron jobs (Vercel Cron): reminders, digest, hourly events revalidation
+- Automated cron jobs (Vercel Cron): reminders, digest, hourly events revalidation, weekly content cleanup
 - Changelog page with version history
 
 ## Tech Stack
@@ -270,23 +271,32 @@ supabase/
 | `profiles` | User profiles |
 | `events` | Events/meetups |
 | `events_rsvps` | RSVPs and attendance |
+| `event_announcements` | Event email announcement tracking |
+| `event_comments` | Event-comment junction |
 | `albums` | Photo albums (with likes_count, view_count, sharing settings) |
 | `album_photos` | Album-photo junction (with added_by for attribution) |
+| `album_comments` | Album-comment junction |
+| `album_likes` | Album likes |
+| `album_tags` | Album tags |
+| `album_views` | Individual album view events for trending queries |
 | `shared_album_members` | Shared album membership |
 | `shared_album_requests` | Join requests and invites for shared albums |
 | `photos` | Photo metadata + EXIF (with likes_count, view_count) |
+| `photo_comments` | Photo-comment junction |
 | `photo_tags` | Photo tags |
 | `photo_likes` | Photo likes |
-| `album_likes` | Album likes |
-| `album_tags` | Album tags |
+| `photo_views` | Individual photo view events for trending queries |
+| `tags` | Central tags table with usage counts |
 | `challenges` | Photo challenges with prompts and deadlines |
 | `challenge_submissions` | User photo submissions (pending/accepted/rejected) |
 | `challenge_announcements` | Challenge email announcement tracking |
-| `challenge_photos` | View of accepted submissions with photo/profile data |
-| `comments` | Album/photo/event/challenge comments |
+| `challenge_color_draws` | Challenge color draw records (user/guest color assignments) |
+| `challenge_comments` | Challenge-comment junction |
+| `comments` | Comment content with threading support |
 | `notifications` | In-app notifications |
 | `email_types` | Email preference types |
 | `email_preferences` | User email opt-in/out |
+| `feedback` | User-submitted feedback (bug reports, feature requests) |
 | `interests` | Central interests table with usage counts |
 | `profile_interests` | Profile-interests junction |
 | `auth_tokens` | Email verification & password reset tokens |
@@ -346,7 +356,7 @@ Deploy to Vercel:
 2. Set environment variables (including `CRON_SECRET` for reminder emails)
 3. Configure Supabase OAuth redirect URLs for production
 4. Set up RLS and storage policies
-5. Cron jobs are automatically configured via `vercel.json` (runs daily at 8:00 AM UTC)
+5. Cron jobs are automatically configured via `vercel.json` (reminders daily 8:00 AM, events revalidation daily 5:01 PM, content cleanup Sundays 3:00 AM UTC)
 
 **Deployment Strategy:**
 - Production deployments only occur from `release/*` branches

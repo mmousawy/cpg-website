@@ -57,6 +57,7 @@ export default async function EventsPage() {
           <HelpLink
             href="join-events"
             label="How to find and join events"
+            size="lg"
           />
         </div>
         <p

@@ -56,6 +56,7 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
             <HelpLink
               href="manage-albums"
               label="Help with albums"
+              size="lg"
             />
           </div>
           <p

@@ -73,8 +73,7 @@ export default function CopyrightSettingsSection({
               <HelpLink
                 href={routes.helpLicenses.url}
                 label="Learn about licenses"
-                className="size-5!"
-                iconClassName="size-4"
+                size="sm"
               />
             </span>
             <Controller

@@ -1,0 +1,87 @@
+feat: Self-service account deletion, content cleanup cron, RLS hardening, onboarding & help UX
+
+Account Deletion:
+- Add self-service account deletion from Account → Danger zone
+- 30-day retention period before permanent removal (content hidden immediately)
+- Login blocked during deletion window, redirects to /account-deleted notice page
+- Confirmation modal with mandatory checkbox and stats summary
+- Confirmation email sent via Resend with deletion date and contact link
+- Admin members page shows "Deletion scheduled" badge with purge date
+- Admin can cancel pending deletions (PATCH with cancel-deletion action)
+- Admin delete now schedules 30-day deletion instead of immediate removal
+- Last-admin guard prevents sole admin from deleting their account
+- Terms, privacy, and help pages updated with self-service deletion language
+
+Content Cleanup Cron:
+- Add weekly cleanup cron (Sundays 3:00 AM UTC) at /api/cron/cleanup-deleted-content
+- Permanently deletes soft-deleted photos (with storage file cleanup), albums, and comments after 30-day retention
+- Purges scheduled-deletion accounts: soft-deletes owned photos, removes contributed album_photos, nullifies blocking FK references, deletes avatars, deletes auth user
+- Batched photo processing (100 per batch) to avoid timeouts
+
+Database & Security:
+- Fix photos FK: replace legacy images_uploaded_by_fkey (auth.users, NO ACTION) with photos_user_id_fkey (profiles, ON DELETE SET NULL)
+- Add deletion_scheduled_at column to profiles
+- Drop overly permissive INSERT policies on album_views and photo_views (inserts go through SECURITY DEFINER RPC)
+- Replace "Anyone can create RSVPs" WITH CHECK (true) with authenticated-only policy (user_id = auth.uid() OR admin)
+
+Onboarding UX:
+- Friendlier welcome heading ("Welcome to the group" with wave emoji)
+- Drop email fallback from greeting to avoid long addresses overflowing
+- Add (optional) labels to non-required fields (profile picture, full name, bio, interests)
+- Responsive text sizing and padding adjustments
+
+Help Page:
+- Standardize list styling globally via HelpAccordion descendant selectors
+- Remove per-file ul className overrides (was mix of ml-6, pl-5, space-y-1, space-y-2)
+- All ul/ol elements now get consistent ml-6 list-disc/decimal spacing from wrapper
+
+Files changed (45):
+
+New (5):
+- src/app/account-deleted/page.tsx
+- src/app/api/account/delete/route.ts
+- src/app/api/cron/cleanup-deleted-content/route.ts
+- src/components/account/DeleteAccountSection.tsx
+- src/emails/account-deletion.tsx
+
+Modified (40):
+- src/app/account/(manage)/albums/page.tsx
+- src/app/account/(manage)/photos/page.tsx
+- src/app/account/activity/ActivityContent.tsx
+- src/app/account/challenges/page.tsx
+- src/app/account/events/page.tsx
+- src/app/account/layout.tsx
+- src/app/account/page.tsx
+- src/app/admin/members/page.tsx
+- src/app/api/admin/members/route.ts
+- src/app/challenges/page.tsx
+- src/app/events/page.tsx
+- src/app/forgot-password/ForgotPasswordClient.tsx
+- src/app/gallery/albums/page.tsx
+- src/app/gallery/page.tsx
+- src/app/gallery/photos/page.tsx
+- src/app/login/LoginClient.tsx
+- src/app/members/page.tsx
+- src/app/onboarding/OnboardingClient.tsx
+- src/app/privacy/page.tsx
+- src/app/signup/SignupClient.tsx
+- src/app/terms/page.tsx
+- src/components/account/CopyrightSettingsSection.tsx
+- src/components/admin/MemberConfirmDialog.tsx
+- src/components/admin/MemberTable.tsx
+- src/components/manage/BulkPhotoEditForm.tsx
+- src/components/manage/SinglePhotoEditForm.tsx
+- src/components/onboarding/OnboardingEmailPreferencesSection.tsx
+- src/components/onboarding/OnboardingInterestsSection.tsx
+- src/components/onboarding/OnboardingProfileSection.tsx
+- src/components/shared/HelpAccordion.tsx
+- src/components/shared/HelpLink.tsx
+- src/content/help/account.tsx
+- src/content/help/challenges.tsx
+- src/content/help/getting-started.tsx
+- src/content/help/licenses.tsx
+- src/content/help/members.tsx
+- src/content/help/photos.tsx
+- src/database.types.ts
+- supabase/migrations/00000000000000_baseline.sql
+- vercel.json

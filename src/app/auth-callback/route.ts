@@ -68,6 +68,10 @@ export async function GET(request: NextRequest) {
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
           });
+        } else if (profile.deletion_scheduled_at) {
+          // Account is scheduled for deletion — sign out and redirect to notice page
+          await supabase.auth.signOut();
+          return NextResponse.redirect(`${origin}/account-deleted`);
         } else {
           // Update last logged in and sync OAuth avatar if user hasn't set a custom one
           const oauthAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;

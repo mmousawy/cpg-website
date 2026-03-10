@@ -73,7 +73,7 @@ export default function HelpAccordion({ id, title, children }: HelpAccordionProp
       >
         <div
           ref={contentRef}
-          className="pb-6 pl-0 text-foreground/80"
+          className="pb-6 pl-0 text-foreground/80 [&_ul]:mb-4 [&_ul]:ml-6 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ol]:mb-4 [&_ol]:ml-6 [&_ol]:list-decimal [&_ol]:space-y-1.5"
         >
           {children}
         </div>

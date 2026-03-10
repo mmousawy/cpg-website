@@ -45,6 +45,7 @@ export default async function ChallengesPage() {
           <HelpLink
             href="how-challenges-work"
             label="How photo challenges work"
+            size="lg"
           />
         </div>
         <p

@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/revalidate-events",
       "schedule": "1 17 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-deleted-content",
+      "schedule": "0 3 * * 0"
     }
   ]
 }

@@ -3,6 +3,7 @@
 import AccountStatsSection from '@/components/account/AccountStatsSection';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import CopyrightSettingsSection from '@/components/account/CopyrightSettingsSection';
+import DeleteAccountSection from '@/components/account/DeleteAccountSection';
 import PreferencesSection from '@/components/account/PreferencesSection';
 import ProfileSection from '@/components/account/ProfileSection';
 import PublicProfileSection from '@/components/account/PublicProfileSection';
@@ -23,6 +24,7 @@ const ACCOUNT_SECTIONS = [
   { id: 'preferences', title: 'Preferences' },
   { id: 'copyright', title: 'Copyright & licensing' },
   { id: 'account-info', title: 'Account info' },
+  { id: 'delete-account', title: 'Delete account' },
 ];
 
 export default function AccountPage() {
@@ -254,6 +256,15 @@ export default function AccountPage() {
               >
                 <AccountStatsSection
                   profile={profile}
+                  stats={stats}
+                />
+              </section>
+
+              <section
+                id="delete-account"
+                className="-scroll-mt-4"
+              >
+                <DeleteAccountSection
                   stats={stats}
                 />
               </section>

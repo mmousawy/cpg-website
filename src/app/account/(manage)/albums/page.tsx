@@ -328,6 +328,7 @@ export default function AlbumsPage() {
             <HelpLink
               href="manage-albums"
               label="How to manage albums"
+              size="sm"
             />
             <Button
               onClick={handleCreateNewAlbum}

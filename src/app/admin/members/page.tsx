@@ -18,6 +18,7 @@ type Member = Pick<
   | 'last_logged_in'
   | 'suspended_at'
   | 'suspended_reason'
+  | 'deletion_scheduled_at'
 >;
 
 type SortField = 'email' | 'full_name' | 'nickname' | 'created_at' | 'last_logged_in' | 'suspended_at';
@@ -35,7 +36,7 @@ export default function AdminMembersPage() {
   const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
-    type: 'suspend' | 'delete' | 'unsuspend';
+    type: 'suspend' | 'delete' | 'unsuspend' | 'cancel-deletion';
     member: Member;
   } | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
@@ -93,7 +94,7 @@ export default function AdminMembersPage() {
     setPage(1);
   };
 
-  const handleAction = async (action: 'suspend' | 'unsuspend' | 'delete', member: Member) => {
+  const handleAction = async (action: 'suspend' | 'unsuspend' | 'delete' | 'cancel-deletion', member: Member) => {
     setActionLoading(member.id);
 
     try {
@@ -104,7 +105,21 @@ export default function AdminMembersPage() {
 
         if (!response.ok) {
           const data = await response.json();
-          throw new Error(data.error || 'Failed to delete user');
+          throw new Error(data.error || 'Failed to schedule user deletion');
+        }
+      } else if (action === 'cancel-deletion') {
+        const response = await fetch('/api/admin/members', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: member.id,
+            action: 'cancel-deletion',
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to cancel deletion');
         }
       } else {
         const response = await fetch('/api/admin/members', {
@@ -195,6 +210,7 @@ export default function AdminMembersPage() {
         onSuspend={(member) => setConfirmDialog({ type: 'suspend', member })}
         onUnsuspend={(member) => setConfirmDialog({ type: 'unsuspend', member })}
         onDelete={(member) => setConfirmDialog({ type: 'delete', member })}
+        onCancelDeletion={(member) => setConfirmDialog({ type: 'cancel-deletion', member })}
         actionLoading={actionLoading}
         page={page}
         totalPages={totalPages}

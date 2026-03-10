@@ -55,6 +55,7 @@ export default async function GalleryPage() {
             <HelpLink
               href="photos"
               label="Help with photos and gallery"
+              size="lg"
             />
           </div>
           <p

@@ -107,6 +107,7 @@ export default function ForgotPasswordClient() {
           <HelpLink
             href="change-password"
             label="Help with password reset"
+            size="sm"
           />
         </div>
 

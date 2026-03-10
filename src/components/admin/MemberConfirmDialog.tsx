@@ -16,10 +16,11 @@ type Member = Pick<
   | 'last_logged_in'
   | 'suspended_at'
   | 'suspended_reason'
+  | 'deletion_scheduled_at'
 >;
 
 interface MemberConfirmDialogProps {
-  type: 'suspend' | 'delete' | 'unsuspend';
+  type: 'suspend' | 'delete' | 'unsuspend' | 'cancel-deletion';
   member: Member;
   suspendReason: string;
   onSuspendReasonChange: (reason: string) => void;
@@ -50,6 +51,7 @@ export default function MemberConfirmDialog({
           {type === 'delete' && 'Delete Member'}
           {type === 'suspend' && 'Suspend Member'}
           {type === 'unsuspend' && 'Unsuspend Member'}
+          {type === 'cancel-deletion' && 'Cancel Scheduled Deletion'}
         </h3>
 
         <p
@@ -57,12 +59,13 @@ export default function MemberConfirmDialog({
         >
           {type === 'delete' && (
             <>
-              Are you sure you want to permanently delete
+              Are you sure you want to schedule
               {' '}
               <strong>
                 {member.full_name || member.email}
               </strong>
-              ? This action cannot be undone.
+              {' '}
+              for deletion? Their account and all content will be permanently removed after 30 days.
             </>
           )}
           {type === 'suspend' && (
@@ -79,6 +82,17 @@ export default function MemberConfirmDialog({
           {type === 'unsuspend' && (
             <>
               Are you sure you want to unsuspend
+              {' '}
+              <strong>
+                {member.full_name || member.email}
+              </strong>
+              ?
+              They will regain access to their account.
+            </>
+          )}
+          {type === 'cancel-deletion' && (
+            <>
+              Are you sure you want to cancel the scheduled deletion for
               {' '}
               <strong>
                 {member.full_name || member.email}
@@ -122,9 +136,10 @@ export default function MemberConfirmDialog({
             onClick={onConfirm}
             loading={isLoading}
           >
-            {type === 'delete' && 'Delete'}
+            {type === 'delete' && 'Schedule deletion'}
             {type === 'suspend' && 'Suspend'}
             {type === 'unsuspend' && 'Unsuspend'}
+            {type === 'cancel-deletion' && 'Cancel deletion'}
           </Button>
         </div>
       </div>

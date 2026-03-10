@@ -1180,7 +1180,15 @@ export type Database = {
           view_count?: number
           width?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'photos_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
       profile_interests: {
         Row: {
@@ -1219,6 +1227,7 @@ export type Database = {
           copyright_name: string | null
           created_at: string | null
           default_license: Database['public']['Enums']['license_type']
+          deletion_scheduled_at: string | null
           email: string | null
           embed_copyright_exif: boolean
           exif_copyright_text: string | null
@@ -1247,6 +1256,7 @@ export type Database = {
           copyright_name?: string | null
           created_at?: string | null
           default_license?: Database['public']['Enums']['license_type']
+          deletion_scheduled_at?: string | null
           email?: string | null
           embed_copyright_exif?: boolean
           exif_copyright_text?: string | null
@@ -1275,6 +1285,7 @@ export type Database = {
           copyright_name?: string | null
           created_at?: string | null
           default_license?: Database['public']['Enums']['license_type']
+          deletion_scheduled_at?: string | null
           email?: string | null
           embed_copyright_exif?: boolean
           exif_copyright_text?: string | null
@@ -1826,4 +1837,3 @@ export const Constants = {
     },
   },
 } as const;
-

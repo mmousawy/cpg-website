@@ -33,14 +33,22 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
-  // Decode URL parameters and remove @ prefix from nickname if present
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
-  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
+
+  // Only @-prefixed paths are profile routes
+  if (!rawNickname.startsWith('@')) {
+    return createMetadata({
+      title: 'Page not found',
+      description: 'The page you are looking for could not be found',
+    });
+  }
+
+  const nickname = rawNickname.slice(1);
 
   if (!nickname) {
     return createMetadata({
-      title: 'Profile Not Found',
-      description: 'The requested profile could not be found',
+      title: 'Page not found',
+      description: 'The page you are looking for could not be found',
     });
   }
 
@@ -49,8 +57,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 
   if (!profile) {
     return createMetadata({
-      title: 'Profile Not Found',
-      description: 'The requested profile could not be found',
+      title: 'Page not found',
+      description: 'The page you are looking for could not be found',
     });
   }
 
@@ -71,7 +79,13 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
-  const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
+
+  // Only @-prefixed paths are profile routes
+  if (!rawNickname.startsWith('@')) {
+    notFound();
+  }
+
+  const nickname = rawNickname.slice(1);
 
   if (!nickname) {
     notFound();

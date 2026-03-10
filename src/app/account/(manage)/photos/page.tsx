@@ -272,6 +272,7 @@ export default function PhotosPage() {
             <HelpLink
               href="upload-photos"
               label="How to upload photos"
+              size="sm"
             />
             <Select
               value={photoFilter}

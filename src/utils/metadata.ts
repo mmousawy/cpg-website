@@ -135,11 +135,19 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
 
 /**
  * Create metadata for pages that should not be indexed (auth, admin, etc.)
+ * Uses absolute title to ensure the suffix is always present,
+ * even during client-side navigation where title templates may not apply.
  */
 export function createNoIndexMetadata(options: Omit<CreateMetadataOptions, 'noindex'>): Metadata {
-  return createMetadata({
+  const metadata = createMetadata({
     ...options,
     noindex: true,
     nofollow: true,
   });
+
+  if (options.title) {
+    metadata.title = { absolute: `${options.title} - ${siteConfig.name}` };
+  }
+
+  return metadata;
 }

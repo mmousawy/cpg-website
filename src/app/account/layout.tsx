@@ -23,6 +23,9 @@ export default async function AccountLayout({
     redirect('/login?redirectTo=/account');
   }
 
+  // Note: deletion_scheduled_at check is handled in the proxy (middleware)
+  // which signs the user out and redirects to /account-deleted
+
   // Redirect to onboarding if no nickname set
   if (profile && !profile.nickname) {
     redirect('/onboarding');

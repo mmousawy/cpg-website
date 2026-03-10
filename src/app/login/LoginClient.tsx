@@ -105,6 +105,7 @@ function LoginForm() {
           <HelpLink
             href="change-password"
             label="Help with account access"
+            size="sm"
           />
         </div>
 

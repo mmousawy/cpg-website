@@ -24,6 +24,11 @@ export default function OnboardingInterestsSection({
         className="text-sm font-medium"
       >
         Interests
+        <span
+          className="ml-1.5 text-xs font-normal text-foreground/50"
+        >
+          (optional)
+        </span>
       </label>
       <InterestInput
         id="interests"

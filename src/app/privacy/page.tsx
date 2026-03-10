@@ -29,7 +29,7 @@ export default function PrivacyPage() {
             <p
               className="text-sm text-foreground/70"
             >
-              Last updated: February 24, 2026
+              Last updated: March 9, 2026
             </p>
           </div>
 
@@ -187,7 +187,7 @@ export default function PrivacyPage() {
                   Delete your data:
                 </strong>
                 {' '}
-                Delete your photos yourself, or request full account deletion by contacting us
+                Delete your photos yourself, or schedule full account deletion from your account settings. Account deletion takes effect after a 30-day retention period, during which you can contact us to cancel.
               </li>
               <li>
                 <strong>
@@ -245,7 +245,7 @@ export default function PrivacyPage() {
               These services may process data outside the EU/EEA (e.g. in the United States) under appropriate safeguards for international data transfers, including Standard Contractual Clauses (SCCs) approved by the European Commission. We do not share your data with other third parties except as necessary to provide the service.
             </p>
             <p>
-              We retain your data for as long as your account is active. When you delete content or your account, we remove the data from our active systems. Some data may remain in backups for a limited period for disaster recovery purposes, but it will not be accessible through the service.
+              We retain your data for as long as your account is active. When you delete content, it is immediately hidden from all users and marked for permanent deletion. Deleted content, including all associated files, is permanently purged from our servers within 30 days. When your account is deleted, the same process applies to all remaining content. Some data may also remain in backups for a limited period for disaster recovery purposes, but it will not be accessible through the service.
             </p>
           </section>
 

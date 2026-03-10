@@ -22,7 +22,7 @@ export default function OnboardingEmailPreferencesSection({
 }: OnboardingEmailPreferencesSectionProps) {
   return (
     <div
-      className="rounded-lg border border-border-color bg-background-light p-4"
+      className="rounded-lg sm:border border-border-color sm:bg-background-light sm:p-4"
     >
       <label
         className="text-sm font-medium mb-1 block"

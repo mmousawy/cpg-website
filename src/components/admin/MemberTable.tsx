@@ -20,6 +20,7 @@ type Member = Pick<
   | 'last_logged_in'
   | 'suspended_at'
   | 'suspended_reason'
+  | 'deletion_scheduled_at'
 >;
 
 type SortField = 'email' | 'full_name' | 'nickname' | 'created_at' | 'last_logged_in' | 'suspended_at';
@@ -33,6 +34,7 @@ interface MemberTableProps {
   onSuspend: (member: Member) => void;
   onUnsuspend: (member: Member) => void;
   onDelete: (member: Member) => void;
+  onCancelDeletion: (member: Member) => void;
   actionLoading: string | null;
   page: number;
   totalPages: number;
@@ -106,6 +108,7 @@ export default function MemberTable({
   onSuspend,
   onUnsuspend,
   onDelete,
+  onCancelDeletion,
   actionLoading,
   page,
   totalPages,
@@ -220,7 +223,7 @@ export default function MemberTable({
               {members.map((member) => (
                 <tr
                   key={member.id}
-                  className={clsx('hover:bg-background/50', member.suspended_at && 'bg-red-500/5')}
+                  className={clsx('hover:bg-background/50', member.deletion_scheduled_at ? 'bg-amber-500/5' : member.suspended_at && 'bg-red-500/5')}
                 >
                   {/* Avatar + Name */}
                   <td
@@ -305,7 +308,21 @@ export default function MemberTable({
                   <td
                     className="whitespace-nowrap px-4 py-3"
                   >
-                    {member.suspended_at ? (
+                    {member.deletion_scheduled_at ? (
+                      <div>
+                        <span
+                          className="inline-flex items-center rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-medium text-amber-600"
+                        >
+                          Deletion scheduled
+                        </span>
+                        <p
+                          className="mt-1 text-xs text-foreground/50"
+                          title={`Scheduled on ${new Date(member.deletion_scheduled_at).toLocaleDateString()}`}
+                        >
+                          {new Date(new Date(member.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                    ) : member.suspended_at ? (
                       <div>
                         <span
                           className="inline-flex items-center rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-medium text-red-500"
@@ -337,32 +354,44 @@ export default function MemberTable({
                     <div
                       className="flex items-center justify-end gap-2"
                     >
-                      {member.suspended_at ? (
+                      {member.deletion_scheduled_at ? (
                         <button
-                          onClick={() => onUnsuspend(member)}
+                          onClick={() => onCancelDeletion(member)}
                           disabled={actionLoading === member.id}
-                          className="rounded-lg bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-500 hover:bg-green-500/20 disabled:opacity-50"
+                          className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-500/20 disabled:opacity-50"
                         >
-                          Unsuspend
+                          Cancel deletion
                         </button>
                       ) : (
-                        <button
-                          onClick={() => onSuspend(member)}
-                          disabled={actionLoading === member.id || member.is_admin === true}
-                          className="rounded-lg bg-yellow-500/10 px-3 py-1.5 text-xs font-medium text-yellow-600 hover:bg-yellow-500/20 disabled:opacity-50"
-                          title={member.is_admin ? 'Cannot suspend admins' : undefined}
-                        >
-                          Suspend
-                        </button>
+                        <>
+                          {member.suspended_at ? (
+                            <button
+                              onClick={() => onUnsuspend(member)}
+                              disabled={actionLoading === member.id}
+                              className="rounded-lg bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-500 hover:bg-green-500/20 disabled:opacity-50"
+                            >
+                              Unsuspend
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => onSuspend(member)}
+                              disabled={actionLoading === member.id || member.is_admin === true}
+                              className="rounded-lg bg-yellow-500/10 px-3 py-1.5 text-xs font-medium text-yellow-600 hover:bg-yellow-500/20 disabled:opacity-50"
+                              title={member.is_admin ? 'Cannot suspend admins' : undefined}
+                            >
+                              Suspend
+                            </button>
+                          )}
+                          <button
+                            onClick={() => onDelete(member)}
+                            disabled={actionLoading === member.id || member.is_admin === true}
+                            className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-500/20 disabled:opacity-50"
+                            title={member.is_admin ? 'Cannot delete admins' : undefined}
+                          >
+                            Delete
+                          </button>
+                        </>
                       )}
-                      <button
-                        onClick={() => onDelete(member)}
-                        disabled={actionLoading === member.id || member.is_admin === true}
-                        className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-500/20 disabled:opacity-50"
-                        title={member.is_admin ? 'Cannot delete admins' : undefined}
-                      >
-                        Delete
-                      </button>
                     </div>
                   </td>
                 </tr>

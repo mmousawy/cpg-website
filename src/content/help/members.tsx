@@ -14,9 +14,7 @@ export const membersFAQ: FAQSection = {
           >
             The Members page helps you find and connect with other photographers in the community. You can explore members by:
           </p>
-          <ul
-            className="ml-6 list-disc"
-          >
+          <ul>
             <li>
               <strong>
                 Interests

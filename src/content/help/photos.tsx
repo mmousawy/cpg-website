@@ -16,9 +16,7 @@ export const photosFAQ: FAQSection = {
           >
             Go to Account → Manage photos. You can:
           </p>
-          <ul
-            className="mb-4 ml-6 list-disc"
-          >
+          <ul>
             <li>
               Drag and drop photos onto the upload area
             </li>
@@ -42,9 +40,7 @@ export const photosFAQ: FAQSection = {
           >
             Albums let you group related photos. To create one:
           </p>
-          <ul
-            className="mb-4 ml-6 list-disc"
-          >
+          <ul>
             <li>
               Go to Manage photos (via your avatar menu) and switch to the Albums tab
             </li>
@@ -88,9 +84,7 @@ export const photosFAQ: FAQSection = {
             {' '}
             setting controls access:
           </p>
-          <ul
-            className="mb-4 ml-6 list-disc"
-          >
+          <ul>
             <li>
               <strong>
                 Anyone

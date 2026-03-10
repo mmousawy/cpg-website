@@ -29,7 +29,7 @@ export default function TermsPage() {
             <p
               className="text-sm text-foreground/70"
             >
-              Last updated: January 21, 2026
+              Last updated: March 9, 2026
             </p>
           </div>
 
@@ -101,23 +101,46 @@ export default function TermsPage() {
               Deleting your content
             </h2>
             <p>
-              You can delete your photos and content at any time. When you delete content from Creative Photography Group:
+              You can delete your photos, albums, and comments at any time. Deletion is a two-phase process:
             </p>
+            <h3
+              className="mt-4 mb-2 text-lg font-medium"
+            >
+              Phase 1: Immediate removal
+            </h3>
             <ul
               className="mb-4 ml-6 list-disc"
             >
               <li>
-                The license you granted us terminates immediately
+                Your content is immediately hidden and no longer visible to you or other users
               </li>
               <li>
-                Your content is removed from our servers and storage
+                The license you granted us for that content terminates immediately
               </li>
               <li>
-                Your content is no longer visible to other users
+                Deleted content cannot be found through search, galleries, or direct links
+              </li>
+            </ul>
+            <h3
+              className="mt-4 mb-2 text-lg font-medium"
+            >
+              Phase 2: Permanent deletion
+            </h3>
+            <ul
+              className="mb-4 ml-6 list-disc"
+            >
+              <li>
+                Deleted content is permanently purged from our servers and storage within 30 days
+              </li>
+              <li>
+                This includes database records and any stored files such as photos and generated thumbnails
+              </li>
+              <li>
+                Once permanently deleted, content cannot be recovered
               </li>
             </ul>
             <p>
-              Note: If you have shared content with others (for example, photos in a shared album), those copies may remain visible until they are also deleted.
+              Note: If you have shared content with others (for example, photos in a shared album), those copies will also be removed when your content is permanently deleted. You can schedule your account for deletion from your account settings — the same two-phase process applies, with your content being permanently purged after 30 days. If you change your mind, contact us through the contact form within 30 days to cancel the deletion.
             </p>
           </section>
 

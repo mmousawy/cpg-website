@@ -42,6 +42,7 @@ export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Redirect bare nickname URLs to @-prefixed versions (e.g. /johndoe → /@johndoe)
+  // Only redirect if the nickname actually exists in the database
   const firstSegment = pathname.split('/')[1];
   if (
     firstSegment &&
@@ -50,15 +51,38 @@ export default async function proxy(request: NextRequest) {
     !firstSegment.startsWith('_next') &&
     !firstSegment.includes('.')
   ) {
-    const url = request.nextUrl.clone();
-    const rest = pathname.slice(firstSegment.length + 1);
-    url.pathname = `/@${firstSegment}${rest}`;
-    return NextResponse.redirect(url, 301);
+    // Check if this is an actual profile nickname before redirecting
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?nickname=eq.${encodeURIComponent(firstSegment)}&select=nickname&limit=1`,
+        {
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+          },
+        },
+      );
+
+      if (res.ok) {
+        const profiles = await res.json();
+        if (profiles.length > 0) {
+          const url = request.nextUrl.clone();
+          const rest = pathname.slice(firstSegment.length + 1);
+          url.pathname = `/@${firstSegment}${rest}`;
+          return NextResponse.redirect(url, 301);
+        }
+      }
+    } catch {
+      // If the check fails, fall through and let Next.js handle the route
+    }
   }
+
+  // Match exact path or subpaths (e.g. '/account' matches '/account' and '/account/events' but not '/account-deleted')
+  const matchesRoute = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
   // Routes that need auth handling (Supabase getUser)
   const authHandledPaths = ['/account', '/admin', '/login', '/signup', '/auth-callback', '/onboarding', '/api/'];
-  const needsAuthHandling = authHandledPaths.some(path => pathname.startsWith(path));
+  const needsAuthHandling = authHandledPaths.some(path => matchesRoute(path));
 
   // Skip auth check for all other routes (saves 160-250ms per request)
   if (!needsAuthHandling) {
@@ -100,11 +124,34 @@ export default async function proxy(request: NextRequest) {
   // Do not remove this - it ensures auth cookies are properly set
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Block users whose account is scheduled for deletion
+  // Sign them out and redirect to the deletion notice page
+  if (user && !matchesRoute('/account-deleted')) {
+    const profileRes = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=deletion_scheduled_at&limit=1`,
+      {
+        headers: {
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        },
+      },
+    );
+
+    if (profileRes.ok) {
+      const profiles = await profileRes.json();
+      if (profiles.length > 0 && profiles[0].deletion_scheduled_at) {
+        await supabase.auth.signOut();
+        const url = request.nextUrl.clone();
+        url.pathname = '/account-deleted';
+        url.search = '';
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
   // Protected routes - redirect to login if not authenticated
   const protectedPaths = ['/account', '/admin'];
-  const isProtectedPath = protectedPaths.some(path =>
-    pathname.startsWith(path),
-  );
+  const isProtectedPath = protectedPaths.some(path => matchesRoute(path));
 
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone();
@@ -115,9 +162,7 @@ export default async function proxy(request: NextRequest) {
 
   // Auth routes - redirect to dashboard if already authenticated
   const authPaths = ['/login', '/signup'];
-  const isAuthPath = authPaths.some(path =>
-    pathname.startsWith(path),
-  );
+  const isAuthPath = authPaths.some(path => matchesRoute(path));
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();

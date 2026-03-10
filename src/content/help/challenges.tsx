@@ -58,9 +58,7 @@ export const challengesFAQ: FAQSection = {
           >
             Status flow
           </p>
-          <ul
-            className="mb-4 list-disc space-y-1 pl-5 text-foreground/90"
-          >
+          <ul>
             <li>
               <strong>
                 Pending
@@ -99,9 +97,7 @@ export const challengesFAQ: FAQSection = {
           >
             Privacy
           </p>
-          <ul
-            className="list-disc space-y-1 pl-5 text-foreground/90"
-          >
+          <ul>
             <li>
               Photos must be public to be submitted.
             </li>

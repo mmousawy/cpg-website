@@ -1,8 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
 import type { Tables } from '@/database.types';
 import { revalidateAll } from '@/app/actions/revalidate';
+import { AccountDeletionEmail } from '@/emails/account-deletion';
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 type Profile = Pick<Tables<'profiles'>,
   | 'id'
@@ -15,6 +20,7 @@ type Profile = Pick<Tables<'profiles'>,
   | 'last_logged_in'
   | 'suspended_at'
   | 'suspended_reason'
+  | 'deletion_scheduled_at'
 >
 
 // GET - List all members
@@ -51,7 +57,7 @@ export async function GET(request: NextRequest) {
     // Build query
     let query = supabase
       .from('profiles')
-      .select('id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason', { count: 'exact' });
+      .select('id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at', { count: 'exact' });
 
     // Apply search filter
     if (search) {
@@ -164,6 +170,23 @@ export async function PATCH(request: NextRequest) {
       await revalidateAll();
 
       return NextResponse.json({ success: true, message: 'User unsuspended' });
+    } else if (action === 'cancel-deletion') {
+      // Cancel scheduled deletion
+      const { error: updateError } = await adminSupabase
+        .from('profiles')
+        .update({
+          deletion_scheduled_at: null,
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error canceling deletion:', updateError);
+        return NextResponse.json({ error: 'Failed to cancel deletion' }, { status: 500 });
+      }
+
+      await revalidateAll();
+
+      return NextResponse.json({ success: true, message: 'Account deletion canceled' });
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -173,7 +196,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE - Delete member
+// DELETE - Schedule member for deletion (30-day retention)
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -207,32 +230,72 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
     }
 
-    // Check if user is an admin (prevent deleting other admins)
-    const { data: targetProfile } = await supabase
+    // Check target profile
+    const { data: targetProfile } = await adminSupabase
       .from('profiles')
-      .select('is_admin')
+      .select('is_admin, email, full_name, deletion_scheduled_at')
       .eq('id', userId)
       .single();
 
-    if (targetProfile?.is_admin) {
+    if (!targetProfile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Prevent deleting other admins
+    if (targetProfile.is_admin) {
       return NextResponse.json({ error: 'Cannot delete an admin user' }, { status: 400 });
     }
 
-    // Delete user from auth (this will cascade to profile via trigger or RLS)
-    const { error: deleteError } = await adminSupabase.auth.admin.deleteUser(userId);
-
-    if (deleteError) {
-      console.error('Error deleting user:', deleteError);
-      return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
+    // Check if already scheduled
+    if (targetProfile.deletion_scheduled_at) {
+      return NextResponse.json({ error: 'Account is already scheduled for deletion' }, { status: 400 });
     }
 
-    // Also delete the profile (in case cascade doesn't work)
-    await adminSupabase.from('profiles').delete().eq('id', userId);
+    // Schedule the account for deletion
+    const now = new Date().toISOString();
+    const { error: updateError } = await adminSupabase
+      .from('profiles')
+      .update({ deletion_scheduled_at: now })
+      .eq('id', userId);
 
-    // Revalidate all caches since deleted user affects many pages
+    if (updateError) {
+      console.error('Error scheduling deletion:', updateError);
+      return NextResponse.json({ error: 'Failed to schedule deletion' }, { status: 500 });
+    }
+
+    // Send confirmation email to the user
+    const deletionDate = new Date();
+    deletionDate.setDate(deletionDate.getDate() + 30);
+    const email = targetProfile.email;
+
+    if (email) {
+      try {
+        const html = await render(
+          AccountDeletionEmail({
+            fullName: targetProfile.full_name || email,
+            deletionDate: deletionDate.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+          }),
+        );
+
+        await resend.emails.send({
+          from: 'Creative Photography Group <noreply@creativephotography.group>',
+          to: email,
+          subject: 'Your account is scheduled for deletion',
+          html,
+        });
+      } catch (emailError) {
+        console.error('Failed to send account deletion email:', emailError);
+      }
+    }
+
+    // Revalidate all caches
     await revalidateAll();
 
-    return NextResponse.json({ success: true, message: 'User deleted' });
+    return NextResponse.json({ success: true, message: 'Account scheduled for deletion' });
   } catch (error) {
     console.error('Error in members DELETE:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -120,6 +120,7 @@ export default function ActivityContent() {
             <HelpLink
               href="notifications"
               label="Help with notifications"
+              size="lg"
             />
           </div>
           <p
@@ -160,6 +161,7 @@ export default function ActivityContent() {
             <HelpLink
               href="notifications"
               label="Help with notifications"
+              size="lg"
             />
           </div>
           <div

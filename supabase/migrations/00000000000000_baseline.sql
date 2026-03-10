@@ -298,13 +298,13 @@ BEGIN
 
   -- Insert photos that don't already exist in the album, preserving input order
   -- Note: width/height removed - use photos table via view/join
-  FOR v_photo IN 
+  FOR v_photo IN
     SELECT p.id, p.url
     FROM unnest(p_photo_ids) WITH ORDINALITY AS input_photo(id, input_order)
     JOIN photos p ON p.id = input_photo.id
     WHERE p.user_id = v_user_id
       AND NOT EXISTS (
-        SELECT 1 FROM album_photos ap 
+        SELECT 1 FROM album_photos ap
         WHERE ap.album_id = p_album_id AND ap.photo_id = p.id
       )
     ORDER BY input_photo.input_order
@@ -313,12 +313,12 @@ BEGIN
     -- width/height are no longer written - they're redundant
     INSERT INTO album_photos (album_id, photo_id, photo_url, sort_order)
     VALUES (p_album_id, v_photo.id, v_photo.url, v_current_sort);
-    
+
     -- Set first photo as manual cover if album doesn't have a cover yet
     IF v_inserted_count = 0 AND NOT v_has_cover THEN
       v_first_photo_url := v_photo.url;
     END IF;
-    
+
     v_current_sort := v_current_sort + 1;
     v_inserted_count := v_inserted_count + 1;
   END LOOP;
@@ -521,14 +521,14 @@ BEGIN
 
   -- Soft delete the actual comments
   IF v_comment_ids IS NOT NULL AND array_length(v_comment_ids, 1) > 0 THEN
-    UPDATE comments 
-    SET deleted_at = NOW() 
+    UPDATE comments
+    SET deleted_at = NOW()
     WHERE id = ANY(v_comment_ids) AND deleted_at IS NULL;
   END IF;
 
   -- Soft delete the album
-  UPDATE albums 
-  SET deleted_at = NOW() 
+  UPDATE albums
+  SET deleted_at = NOW()
   WHERE id = p_album_id;
 
   RETURN TRUE;
@@ -606,7 +606,7 @@ CREATE OR REPLACE FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb
     AS $$
 BEGIN
   UPDATE public.photos
-  SET 
+  SET
     title = COALESCE(update_item->>'title', public.photos.title),
     description = COALESCE(update_item->>'description', public.photos.description),
     is_public = COALESCE((update_item->>'is_public')::boolean, public.photos.is_public),
@@ -933,33 +933,33 @@ CREATE OR REPLACE FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") RETU
 BEGIN
   RETURN jsonb_build_object(
     'eventsAttended', (
-      SELECT COUNT(*)::int FROM events_rsvps 
-      WHERE user_id = p_user_id 
-        AND attended_at IS NOT NULL 
-        AND confirmed_at IS NOT NULL 
+      SELECT COUNT(*)::int FROM events_rsvps
+      WHERE user_id = p_user_id
+        AND attended_at IS NOT NULL
+        AND confirmed_at IS NOT NULL
         AND canceled_at IS NULL
     ),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments 
+      SELECT COUNT(*)::int FROM comments
       WHERE user_id = p_user_id AND deleted_at IS NULL
     ),
     'likesReceived', (
       COALESCE((
-        SELECT SUM(likes_count)::int FROM albums 
+        SELECT SUM(likes_count)::int FROM albums
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0) +
       COALESCE((
-        SELECT SUM(likes_count)::int FROM photos 
+        SELECT SUM(likes_count)::int FROM photos
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0)
     ),
     'viewsReceived', (
       COALESCE((
-        SELECT SUM(view_count)::int FROM albums 
+        SELECT SUM(view_count)::int FROM albums
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0) +
       COALESCE((
-        SELECT SUM(view_count)::int FROM photos 
+        SELECT SUM(view_count)::int FROM photos
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0)
     ),
@@ -992,9 +992,9 @@ CREATE OR REPLACE FUNCTION "public"."get_user_album_photos_count"("user_uuid" "u
   SELECT COUNT(*)::INTEGER
   FROM public.album_photos_active ap
   WHERE ap.album_id IN (
-    SELECT id 
-    FROM public.albums 
-    WHERE user_id = user_uuid 
+    SELECT id
+    FROM public.albums
+    WHERE user_id = user_uuid
     AND deleted_at IS NULL
   );
 $$;
@@ -1014,9 +1014,9 @@ DECLARE
 BEGIN
   -- Get user's album IDs once (reused multiple times)
   SELECT COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_album_ids
-  FROM albums 
+  FROM albums
   WHERE user_id = p_user_id AND deleted_at IS NULL;
-  
+
   -- Get user's photo IDs from those albums
   IF array_length(v_album_ids, 1) > 0 THEN
     SELECT COALESCE(array_agg(DISTINCT ap.photo_id), ARRAY[]::uuid[]) INTO v_photo_ids
@@ -1032,13 +1032,13 @@ BEGIN
     'albums', COALESCE(array_length(v_album_ids, 1), 0),
     'photos', COALESCE(array_length(v_photo_ids, 1), 0),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments 
+      SELECT COUNT(*)::int FROM comments
       WHERE user_id = p_user_id AND deleted_at IS NULL
     ),
     'commentsReceived', (
       SELECT COUNT(*)::int FROM comments c
-      WHERE c.deleted_at IS NULL 
-        AND c.user_id != p_user_id 
+      WHERE c.deleted_at IS NULL
+        AND c.user_id != p_user_id
         AND (
           c.id IN (SELECT comment_id FROM album_comments WHERE album_id = ANY(v_album_ids))
           OR c.id IN (SELECT comment_id FROM photo_comments WHERE photo_id = ANY(v_photo_ids))
@@ -1061,18 +1061,18 @@ BEGIN
       COALESCE((SELECT SUM(p.view_count)::int FROM photos p WHERE p.id = ANY(v_photo_ids) AND p.deleted_at IS NULL), 0)
     ),
     'rsvpsConfirmed', (
-      SELECT COUNT(*)::int FROM events_rsvps 
+      SELECT COUNT(*)::int FROM events_rsvps
       WHERE user_id = p_user_id AND confirmed_at IS NOT NULL AND canceled_at IS NULL
     ),
     'rsvpsCanceled', (
-      SELECT COUNT(*)::int FROM events_rsvps 
+      SELECT COUNT(*)::int FROM events_rsvps
       WHERE user_id = p_user_id AND canceled_at IS NOT NULL
     ),
     'eventsAttended', (
-      SELECT COUNT(*)::int FROM events_rsvps 
-      WHERE user_id = p_user_id 
-        AND attended_at IS NOT NULL 
-        AND confirmed_at IS NOT NULL 
+      SELECT COUNT(*)::int FROM events_rsvps
+      WHERE user_id = p_user_id
+        AND attended_at IS NOT NULL
+        AND confirmed_at IS NOT NULL
         AND canceled_at IS NULL
     ),
     'challengesParticipated', (
@@ -1092,7 +1092,7 @@ BEGIN
       SELECT last_logged_in FROM profiles WHERE id = p_user_id
     )
   ) INTO v_result;
-  
+
   RETURN v_result;
 END;
 $$;
@@ -1495,7 +1495,7 @@ BEGIN
             RAISE EXCEPTION 'Cannot make photo private: it is part of an accepted challenge submission. Withdraw from the challenge first.';
         END IF;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$;
@@ -1843,10 +1843,10 @@ BEGIN
   SET sort_order = COALESCE(sort_order, 0) + 1
   WHERE user_id = NEW.user_id
     AND id != NEW.id;
-  
+
   -- Set the new photo's sort_order to 0 (front of list)
   NEW.sort_order := 0;
-  
+
   RETURN NEW;
 END;
 $$;
@@ -1976,7 +1976,7 @@ BEGIN
   END IF;
 
   target_album_id := OLD.album_id;
-  
+
   -- Get the URL of the deleted photo from photos table
   SELECT p.url INTO deleted_photo_url
   FROM public.photos p
@@ -2390,6 +2390,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "embed_copyright_exif" boolean DEFAULT false NOT NULL,
     "watermark_text" "text",
     "exif_copyright_text" "text",
+    "deletion_scheduled_at" timestamp with time zone,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_nickname_format" CHECK ((("nickname" IS NULL) OR ("nickname" ~ '^[a-z0-9-]+$'::"text"))),
@@ -3737,11 +3738,6 @@ ALTER TABLE ONLY "public"."feedback"
 
 
 
-ALTER TABLE ONLY "public"."photos"
-    ADD CONSTRAINT "images_uploaded_by_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
-
-
-
 ALTER TABLE ONLY "public"."notifications"
     ADD CONSTRAINT "notifications_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
 
@@ -3779,6 +3775,11 @@ ALTER TABLE ONLY "public"."photo_tags"
 
 ALTER TABLE ONLY "public"."photo_views"
     ADD CONSTRAINT "photo_views_photo_id_fkey" FOREIGN KEY ("photo_id") REFERENCES "public"."photos"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."photos"
+    ADD CONSTRAINT "photos_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
 
 
 
@@ -3925,18 +3926,6 @@ CREATE POLICY "Anon can view active challenges" ON "public"."challenges" FOR SEL
 
 
 
-CREATE POLICY "Anyone can create RSVPs" ON "public"."events_rsvps" FOR INSERT WITH CHECK (true);
-
-
-
-CREATE POLICY "Anyone can track album views" ON "public"."album_views" FOR INSERT WITH CHECK (true);
-
-
-
-CREATE POLICY "Anyone can track photo views" ON "public"."photo_views" FOR INSERT WITH CHECK (true);
-
-
-
 CREATE POLICY "Anyone can view challenge color draws" ON "public"."challenge_color_draws" FOR SELECT USING (true);
 
 
@@ -3958,6 +3947,12 @@ CREATE POLICY "Authenticated users can add challenge comments" ON "public"."chal
 
 
 CREATE POLICY "Authenticated users can add event comments" ON "public"."event_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can create RSVPs" ON "public"."events_rsvps" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
 
 
 
@@ -5346,34 +5341,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INS
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO "service_role";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

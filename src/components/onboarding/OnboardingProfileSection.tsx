@@ -49,13 +49,18 @@ export default function OnboardingProfileSection({
           className="text-sm font-medium"
         >
           Profile picture
+          <span
+            className="ml-1.5 text-xs font-normal text-foreground/50"
+          >
+            (optional)
+          </span>
         </label>
         <div
           className="flex items-center gap-4"
         >
           <div
             className={clsx(
-              'rounded-full border-2 transition-colors flex-shrink-0',
+              'rounded-full border-2 transition-colors shrink-0',
               avatarFile ? 'border-primary' : 'border-border-color',
             )}
           >
@@ -154,6 +159,11 @@ export default function OnboardingProfileSection({
           className="text-sm font-medium"
         >
           Full name
+          <span
+            className="ml-1.5 text-xs font-normal text-foreground/50"
+          >
+            (optional)
+          </span>
         </label>
         <Input
           id="fullName"
@@ -172,6 +182,11 @@ export default function OnboardingProfileSection({
           className="text-sm font-medium"
         >
           Bio
+          <span
+            className="ml-1.5 text-xs font-normal text-foreground/50"
+          >
+            (optional)
+          </span>
         </label>
         <Textarea
           id="bio"

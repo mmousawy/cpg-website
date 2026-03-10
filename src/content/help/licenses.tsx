@@ -154,9 +154,7 @@ export const licensesHelpSections: FAQSection[] = [
             >
               You can choose from two styles in Account → Copyright & licensing:
             </p>
-            <ul
-              className="mb-4 ml-6 list-disc"
-            >
+            <ul>
               <li>
                 <strong>
                   Corner text

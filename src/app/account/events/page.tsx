@@ -109,6 +109,7 @@ export default function MyEventsPage() {
           <HelpLink
             href="rsvp"
             label="Help with events and RSVP"
+            size="lg"
           />
         </div>
         <p
