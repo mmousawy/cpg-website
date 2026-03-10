@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.1](https://github.com/mmousawy/cpg-website/compare/v1.28.0...v1.28.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* adjust visibility of content of deleted accounts. ([0195b3f](https://github.com/mmousawy/cpg-website/commit/0195b3f5c658c051643a06d659e772a73ef3a659))
+
 ## [1.28.0](https://github.com/mmousawy/cpg-website/compare/v1.27.8...v1.28.0) (2026-03-10)
 
 
