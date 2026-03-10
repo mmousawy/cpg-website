@@ -46,7 +46,7 @@ export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popu
   // Fetch profiles for these users
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, full_name, avatar_url, suspended_at')
+    .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
     .in('id', userIds);
 
   // Create a map for quick lookup
@@ -60,7 +60,7 @@ export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popu
     .filter((p) => {
       if (!p.user_id) return false;
       const profile = profileMap.get(p.user_id);
-      return profile && !profile.suspended_at && profile.nickname;
+      return profile && !profile.suspended_at && !profile.deletion_scheduled_at && profile.nickname;
     })
     .map((p) => {
       const profile = profileMap.get(p.user_id!);
@@ -140,7 +140,7 @@ export async function getRecentlyLikedPhotos(limit = 10) {
   // Fetch profiles for these users
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, full_name, avatar_url, suspended_at')
+    .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
     .in('id', userIds);
 
   // Create a map for quick lookup
@@ -164,7 +164,7 @@ export async function getRecentlyLikedPhotos(limit = 10) {
     .filter((p) => {
       if (!p.user_id) return false;
       const profile = profileMap.get(p.user_id);
-      return profile && !profile.suspended_at && profile.nickname;
+      return profile && !profile.suspended_at && !profile.deletion_scheduled_at && profile.nickname;
     })
     .map((p) => {
       const profile = profileMap.get(p.user_id!);
@@ -349,7 +349,7 @@ export async function getPhotosByTag(tagName: string, limit = 100) {
   // Fetch profiles for these users
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, full_name, avatar_url, suspended_at')
+    .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
     .in('id', userIds);
 
   // Create a map for quick lookup
@@ -363,7 +363,7 @@ export async function getPhotosByTag(tagName: string, limit = 100) {
     .filter((p) => {
       if (!p.user_id) return false;
       const profile = profileMap.get(p.user_id);
-      return profile && !profile.suspended_at && profile.nickname;
+      return profile && !profile.suspended_at && !profile.deletion_scheduled_at && profile.nickname;
     })
     .map((p) => {
       const profile = profileMap.get(p.user_id!);
@@ -473,7 +473,7 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
   // Fetch profiles for these users
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, full_name, avatar_url, suspended_at')
+    .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
     .in('id', userIds);
 
   // Create a map for quick lookup
@@ -486,7 +486,7 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
     .filter((p) => {
       if (!p.user_id) return false;
       const profile = profileMap.get(p.user_id);
-      return profile && !profile.suspended_at && profile.nickname;
+      return profile && !profile.suspended_at && !profile.deletion_scheduled_at && profile.nickname;
     })
     .map((p) => {
       const profile = profileMap.get(p.user_id!);

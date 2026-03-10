@@ -47,21 +47,28 @@ export async function getPhotoLikes(photoId: string): Promise<{
       photo_id,
       user_id,
       created_at,
-      profile:profiles!photo_likes_user_id_fkey!inner(nickname, avatar_url, full_name)
+      profile:profiles!photo_likes_user_id_fkey!inner(nickname, avatar_url, full_name, suspended_at, deletion_scheduled_at)
     `)
     .eq('photo_id', photoId)
     .order('created_at', { ascending: false });
 
+  // Filter out likes from suspended or deleted users
+  type LikeProfile = { nickname: string | null; avatar_url: string | null; full_name: string | null; suspended_at: string | null; deletion_scheduled_at: string | null };
+  const activeLikes = (likes || []).filter((like) => {
+    const p = like.profile as LikeProfile;
+    return !p?.suspended_at && !p?.deletion_scheduled_at;
+  });
+
   // Note: userHasLiked is determined client-side in LikeButton component
   // We can't check auth.uid() in cached functions with public client
   return {
-    likes: (likes || []).map((like) => ({
+    likes: activeLikes.map((like) => ({
       photo_id: like.photo_id,
       user_id: like.user_id,
       created_at: like.created_at || '',
       profile: like.profile as PhotoLike['profile'],
     })),
-    count: likes?.length ?? 0,
+    count: activeLikes.length,
     userHasLiked: false, // Will be determined client-side
   };
 }
@@ -109,21 +116,28 @@ export async function getAlbumLikes(albumId: string): Promise<{
       album_id,
       user_id,
       created_at,
-      profile:profiles!album_likes_user_id_fkey!inner(nickname, avatar_url, full_name)
+      profile:profiles!album_likes_user_id_fkey!inner(nickname, avatar_url, full_name, suspended_at, deletion_scheduled_at)
     `)
     .eq('album_id', albumId)
     .order('created_at', { ascending: false });
 
+  // Filter out likes from suspended or deleted users
+  type LikeProfile = { nickname: string | null; avatar_url: string | null; full_name: string | null; suspended_at: string | null; deletion_scheduled_at: string | null };
+  const activeLikes = (likes || []).filter((like) => {
+    const p = like.profile as LikeProfile;
+    return !p?.suspended_at && !p?.deletion_scheduled_at;
+  });
+
   // Note: userHasLiked is determined client-side in LikeButton component
   // We can't check auth.uid() in cached functions with public client
   return {
-    likes: (likes || []).map((like) => ({
+    likes: activeLikes.map((like) => ({
       album_id: like.album_id,
       user_id: like.user_id,
       created_at: like.created_at || '',
       profile: like.profile as AlbumLike['profile'],
     })),
-    count: likes?.length ?? 0,
+    count: activeLikes.length,
     userHasLiked: false, // Will be determined client-side
   };
 }

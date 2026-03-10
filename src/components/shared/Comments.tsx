@@ -491,7 +491,7 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
             created_at,
             updated_at,
             parent_comment_id,
-            profile:profiles(full_name, nickname, avatar_url)
+            profile:profiles(full_name, nickname, avatar_url, suspended_at, deletion_scheduled_at)
           )
         `)
         .eq(entityColumn, entityId)
@@ -510,7 +510,7 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
           updated_at: string;
           parent_comment_id: string | null;
         };
-        type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url'>;
+        type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at' | 'deletion_scheduled_at'>;
         type CommentQueryResult = {
           comment_id: string;
           comments: (CommentRow & {
@@ -518,10 +518,10 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
           }) | null;
         };
 
-        // Flatten the nested structure and include parent_comment_id
+        // Flatten the nested structure, filter out comments from suspended/deleted users
         const allComments = (data as CommentQueryResult[])
           .map((ac) => ac.comments)
-          .filter((c): c is NonNullable<typeof c> => c !== null)
+          .filter((c): c is NonNullable<typeof c> => c !== null && (!c.profile?.suspended_at) && (!c.profile?.deletion_scheduled_at))
           .map((c) => ({
             id: c.id,
             user_id: c.user_id,

@@ -4,6 +4,7 @@ import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
+import { revalidateAll } from '@/app/actions/revalidate';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -61,6 +62,9 @@ export async function POST() {
       console.error('Error scheduling account deletion:', updateError);
       return NextResponse.json({ error: 'Failed to schedule account deletion' }, { status: 500 });
     }
+
+    // Revalidate entire website so deleted user's content is hidden immediately
+    await revalidateAll();
 
     // Calculate the permanent deletion date (30 days from now)
     const deletionDate = new Date();

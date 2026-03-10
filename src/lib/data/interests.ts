@@ -74,6 +74,7 @@ export async function getMembersByInterest(interest: string) {
     .in('id', profileIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });
 

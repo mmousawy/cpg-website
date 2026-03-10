@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
   // Fetch profiles for these users
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, full_name, avatar_url, suspended_at')
+    .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
     .in('id', userIds);
 
   // Create a map for quick lookup
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     .filter((p) => {
       if (!p.user_id) return false;
       const profile = profileMap.get(p.user_id);
-      return profile && !profile.suspended_at && profile.nickname;
+      return profile && !profile.suspended_at && !profile.deletion_scheduled_at && profile.nickname;
     })
     .map((p) => {
       const profile = profileMap.get(p.user_id!);

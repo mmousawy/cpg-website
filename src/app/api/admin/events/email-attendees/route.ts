@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     .select('id, email, full_name')
     .eq('is_admin', true)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .not('email', 'is', null);
 
   if (adminsError) {

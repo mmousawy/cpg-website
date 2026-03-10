@@ -187,12 +187,19 @@ export async function getChallengeColorDraws(challengeId: string) {
       color,
       swapped_at,
       created_at,
-      profiles (avatar_url, full_name, nickname)
+      profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
     `)
     .eq('challenge_id', challengeId)
     .order('created_at', { ascending: true });
 
-  return (data || []) as Array<{
+  // Filter out color draws from suspended or deleted users
+  const activeDraws = (data || []).filter((draw) => {
+    if (!draw.profiles) return true; // Guest draws (no profile) are kept
+    const p = draw.profiles as { suspended_at?: string | null; deletion_scheduled_at?: string | null };
+    return !p.suspended_at && !p.deletion_scheduled_at;
+  });
+
+  return activeDraws as Array<{
     id: string;
     challenge_id: string;
     user_id: string | null;
@@ -312,6 +319,7 @@ export async function getChallengePhotoByShortId(
     .select('id, full_name, nickname, avatar_url')
     .eq('id', photo.user_id)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .single();
 
   if (!ownerProfile?.nickname) {
@@ -429,16 +437,16 @@ export async function getChallengeContributors(challengeId: string) {
   // Get profile info for contributors
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, avatar_url, full_name')
+    .select('id, nickname, avatar_url, full_name, suspended_at, deletion_scheduled_at')
     .in('id', orderedUserIds);
 
   if (!profiles || profiles.length === 0) return [];
 
-  // Build a map for lookup, then return in submission order
+  // Build a map for lookup, then return in submission order (excluding suspended/deleted)
   const profileMap = new Map(profiles.map((p) => [p.id, p]));
   return orderedUserIds
     .map((id) => profileMap.get(id))
-    .filter((p): p is NonNullable<typeof p> => p != null)
+    .filter((p): p is NonNullable<typeof p> => p != null && !p.suspended_at && !p.deletion_scheduled_at)
     .map((p) => ({
       user_id: p.id,
       nickname: p.nickname,
@@ -493,11 +501,14 @@ async function addSubmissionCounts(
   if (allUserIds.size > 0) {
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, nickname, full_name, avatar_url')
+      .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
       .in('id', Array.from(allUserIds));
 
     for (const p of profiles || []) {
-      profilesMap.set(p.id, { id: p.id, nickname: p.nickname, full_name: p.full_name, avatar_url: p.avatar_url });
+      // Only include active profiles (not suspended or pending deletion)
+      if (!p.suspended_at && !p.deletion_scheduled_at) {
+        profilesMap.set(p.id, { id: p.id, nickname: p.nickname, full_name: p.full_name, avatar_url: p.avatar_url });
+      }
     }
   }
 

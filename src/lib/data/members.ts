@@ -105,7 +105,8 @@ export async function getRecentlyActiveMembers(limit = 12) {
     .select('id, full_name, nickname, avatar_url')
     .in('id', activeUserIds)
     .not('nickname', 'is', null)
-    .is('suspended_at', null);
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null);
 
   if (!members || members.length === 0) {
     return [];
@@ -143,6 +144,7 @@ export async function getNewMembers(limit = 12) {
     .select('id, full_name, nickname, avatar_url, created_at')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -216,7 +218,8 @@ export async function getMembersByTagUsage(limit = 12) {
     .select('id, full_name, nickname, avatar_url')
     .in('id', topUserIds)
     .not('nickname', 'is', null)
-    .is('suspended_at', null);
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null);
 
   return (members || []) as Member[];
 }
@@ -289,7 +292,8 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
     .select('id, full_name, nickname, avatar_url')
     .in('id', Array.from(allProfileIds))
     .not('nickname', 'is', null)
-    .is('suspended_at', null);
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null);
 
   if (!allProfiles || allProfiles.length === 0) {
     return [];
@@ -376,6 +380,7 @@ export async function getMembersByTag(tagName: string) {
     .in('id', userIds)
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });
 

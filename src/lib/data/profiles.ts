@@ -35,7 +35,8 @@ export async function getAllProfileNicknames() {
     .from('profiles')
     .select('nickname')
     .not('nickname', 'is', null)
-    .is('suspended_at', null);
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null);
 
   const nicknames = (data || []).map((p) => p.nickname).filter((n): n is string => n !== null);
 
@@ -59,6 +60,7 @@ export async function getOrganizers(limit = 5) {
     .select('id, full_name, nickname, avatar_url, bio')
     .eq('is_admin', true)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .limit(limit);
 
   return (data || []) as Organizer[];
@@ -80,6 +82,7 @@ export async function getRecentMembers(limit = 12) {
     .select('id, full_name, nickname, avatar_url')
     .not('nickname', 'is', null)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -133,6 +136,7 @@ export async function getProfileByNickname(nickname: string) {
     .select('id, full_name, nickname, avatar_url, bio, website, social_links, created_at')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .single();
 
   if (error || !profile) {
@@ -267,6 +271,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .select('id, full_name, nickname, avatar_url')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .single();
 
   if (!profile || !profile.nickname) {
@@ -348,6 +353,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
         .select('id, full_name, nickname, avatar_url')
         .eq('id', photo.user_id)
         .is('suspended_at', null)
+        .is('deletion_scheduled_at', null)
         .single()
       : Promise.resolve({ data: null }),
   ]);
@@ -472,6 +478,7 @@ export async function getPhotoByShortId(nickname: string, photoShortId: string) 
     .select('id, full_name, nickname, avatar_url')
     .eq('nickname', nickname)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .single();
 
   if (!profile || !profile.nickname) {

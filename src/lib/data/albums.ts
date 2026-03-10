@@ -70,7 +70,7 @@ export async function getRecentAlbums(limit = 6) {
       is_public,
       created_at,
       likes_count,
-      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at),
+      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at, deletion_scheduled_at),
       photos:album_photos_active!inner(
         id,
         photo_url,
@@ -85,7 +85,7 @@ export async function getRecentAlbums(limit = 6) {
 
   // Filter out albums with no photos and albums from suspended users
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count'>;
-  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at' | 'deletion_scheduled_at'>;
   // album_photos_active is a view with nullable fields
   type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'> & {
     photo: Pick<Tables<'photos'>, 'blurhash'> | null;
@@ -98,7 +98,7 @@ export async function getRecentAlbums(limit = 6) {
 
   const albumsWithPhotos = (albums || [])
     .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
-      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at;
+      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at && !album.profile.deletion_scheduled_at;
     })
     .map((album) => ({
       ...album,
@@ -135,7 +135,7 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
       created_at,
       likes_count,
       view_count,
-      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at),
+      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at, deletion_scheduled_at),
       photos:album_photos_active!inner(
         id,
         photo_url,
@@ -150,7 +150,7 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
 
   // Filter out albums with no photos and albums from suspended users
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
-  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at' | 'deletion_scheduled_at'>;
   type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'> & {
     photo: Pick<Tables<'photos'>, 'blurhash'> | null;
   };
@@ -162,7 +162,7 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
 
   const albumsWithPhotos = (albums || [])
     .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
-      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at;
+      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at && !album.profile.deletion_scheduled_at;
     })
     .map((album) => ({
       ...album,
@@ -296,12 +296,15 @@ export async function getProfilesByUserIds(
   const supabase = createPublicClient();
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, full_name, avatar_url')
+    .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
     .in('id', uniqueIds);
 
   const map = new Map<string, Pick<Tables<'profiles'>, 'nickname' | 'full_name' | 'avatar_url'>>();
   for (const p of profiles ?? []) {
-    map.set(p.id, { nickname: p.nickname, full_name: p.full_name, avatar_url: p.avatar_url });
+    // Only include active profiles (not suspended or pending deletion)
+    if (!p.suspended_at && !p.deletion_scheduled_at) {
+      map.set(p.id, { nickname: p.nickname, full_name: p.full_name, avatar_url: p.avatar_url });
+    }
   }
   return map;
 }
@@ -431,7 +434,7 @@ export async function getEventAlbum(eventId: number) {
         height,
         sort_order,
         added_by,
-        contributor:profiles!album_photos_added_by_fkey(nickname, full_name, avatar_url),
+        contributor:profiles!album_photos_added_by_fkey(nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at),
         photo:photos!album_photos_photo_id_fkey(id, short_id, url, width, height, title, blurhash, user_id, deleted_at)
       )
     `)
@@ -441,8 +444,14 @@ export async function getEventAlbum(eventId: number) {
 
   if (error || !album) return null;
 
-  // Filter out photos whose underlying photo record is deleted
-  const activePhotos = (album.photos || []).filter((p) => !p.photo?.deleted_at);
+  // Filter out photos whose underlying photo record is deleted or whose contributor is suspended/deleted
+  type ContributorProfile = { nickname: string | null; full_name: string | null; avatar_url: string | null; suspended_at: string | null; deletion_scheduled_at: string | null } | null;
+  const activePhotos = (album.photos || []).filter((p) => {
+    if (p.photo?.deleted_at) return false;
+    const contributor = p.contributor as ContributorProfile;
+    if (contributor?.suspended_at || contributor?.deletion_scheduled_at) return false;
+    return true;
+  });
 
   return {
     ...album,
@@ -561,6 +570,7 @@ export async function getEventPhotoByShortId(
     .select('id, full_name, nickname, avatar_url')
     .eq('id', photo.user_id)
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .single();
 
   if (!ownerProfile?.nickname) {
@@ -705,7 +715,7 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
       created_at,
       likes_count,
       view_count,
-      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at),
+      profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url, suspended_at, deletion_scheduled_at),
       photos:album_photos_active!inner(
         id,
         photo_url,
@@ -731,7 +741,7 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
 
   // Filter out albums with no photos and albums from suspended users
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
-  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at'>;
+  type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at' | 'deletion_scheduled_at'>;
   type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'> & {
     photo: Pick<Tables<'photos'>, 'blurhash'> | null;
   };
@@ -743,7 +753,7 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
 
   const albumsWithPhotos = (albums || [])
     .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
-      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at;
+      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at && !album.profile.deletion_scheduled_at;
     })
     .map((album) => ({
       ...album,

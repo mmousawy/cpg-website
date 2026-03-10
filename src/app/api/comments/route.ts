@@ -282,6 +282,7 @@ export async function POST(request: NextRequest) {
         .select('id, email, full_name, nickname')
         .eq('is_admin', true)
         .is('suspended_at', null)
+        .is('deletion_scheduled_at', null)
         .neq('id', user.id);
 
       if (admins && admins.length > 0) {
@@ -498,6 +499,7 @@ export async function POST(request: NextRequest) {
         .select('id, email, full_name, nickname')
         .eq('is_admin', true)
         .is('suspended_at', null)
+        .is('deletion_scheduled_at', null)
         .neq('id', user.id);
 
       if (admins && admins.length > 0) {

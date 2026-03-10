@@ -173,15 +173,17 @@ async function fetchChallengeContributors(challengeId: string) {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, avatar_url, full_name')
+    .select('id, nickname, avatar_url, full_name, suspended_at, deletion_scheduled_at')
     .in('id', uniqueUserIds);
 
-  return (profiles || []).map((p) => ({
-    user_id: p.id,
-    nickname: p.nickname,
-    avatar_url: p.avatar_url,
-    full_name: p.full_name,
-  }));
+  return (profiles || [])
+    .filter((p) => !p.suspended_at && !p.deletion_scheduled_at)
+    .map((p) => ({
+      user_id: p.id,
+      nickname: p.nickname,
+      avatar_url: p.avatar_url,
+      full_name: p.full_name,
+    }));
 }
 
 /**

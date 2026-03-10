@@ -49,6 +49,7 @@ export default function AnnounceEventModal({
           .from('profiles')
           .select('id, email, full_name, nickname, created_at')
           .is('suspended_at', null)
+          .is('deletion_scheduled_at', null)
           .not('email', 'is', null)
           .order('created_at', { ascending: true }); // Oldest first
 

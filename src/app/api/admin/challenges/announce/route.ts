@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
     .from('profiles')
     .select('id, email, full_name')
     .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
     .not('email', 'is', null);
 
   if (profilesError) {

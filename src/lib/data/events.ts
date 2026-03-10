@@ -142,14 +142,18 @@ export async function getEventAttendeesForEvent(eventId: number) {
 
   const { data: attendees } = await supabase
     .from('events_rsvps')
-    .select('id, user_id, email, confirmed_at, profiles (avatar_url, full_name, nickname)')
+    .select('id, user_id, email, confirmed_at, profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)')
     .eq('event_id', eventId)
     .not('confirmed_at', 'is', null)
     .is('canceled_at', null)
     .order('confirmed_at', { ascending: true })
     .limit(100);
 
-  return attendees || [];
+  // Filter out attendees whose profiles are suspended or pending deletion
+  return (attendees || []).filter((a) => {
+    const p = a.profiles as { suspended_at?: string | null; deletion_scheduled_at?: string | null } | null;
+    return !p?.suspended_at && !p?.deletion_scheduled_at;
+  });
 }
 
 /**
@@ -175,7 +179,7 @@ export async function getEventAttendees(eventIds: number[]) {
       user_id,
       email,
       confirmed_at,
-      profiles (avatar_url, full_name, nickname)
+      profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
     `)
     .in('event_id', eventIds)
     .not('confirmed_at', 'is', null)
@@ -183,8 +187,14 @@ export async function getEventAttendees(eventIds: number[]) {
     .order('confirmed_at', { ascending: true })
     .limit(500);
 
+  // Filter out attendees whose profiles are suspended or pending deletion
+  const activeAttendees = (allAttendees || []).filter((a) => {
+    const p = a.profiles as { suspended_at?: string | null; deletion_scheduled_at?: string | null } | null;
+    return !p?.suspended_at && !p?.deletion_scheduled_at;
+  });
+
   // Group attendees by event
-  const attendeesByEvent = (allAttendees || []).reduce((acc, attendee) => {
+  const attendeesByEvent = activeAttendees.reduce((acc, attendee) => {
     const eventId = attendee.event_id;
     if (eventId === null) return acc;
     if (!acc[eventId]) acc[eventId] = [];

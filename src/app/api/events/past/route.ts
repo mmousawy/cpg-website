@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       user_id,
       email,
       confirmed_at,
-      profiles (avatar_url, full_name, nickname)
+      profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
     `)
     .in('event_id', eventIds)
     .not('confirmed_at', 'is', null)
@@ -55,8 +55,14 @@ export async function GET(request: NextRequest) {
     .order('confirmed_at', { ascending: true })
     .limit(500);
 
+  // Filter out attendees whose profiles are suspended or pending deletion
+  const activeAttendees = (attendees || []).filter((a) => {
+    const p = a.profiles as { suspended_at?: string | null; deletion_scheduled_at?: string | null } | null;
+    return !p?.suspended_at && !p?.deletion_scheduled_at;
+  });
+
   // Group attendees by event
-  const attendeesByEvent = (attendees || []).reduce((acc, attendee) => {
+  const attendeesByEvent = activeAttendees.reduce((acc, attendee) => {
     const eventId = attendee.event_id;
     if (eventId === null) return acc;
     if (!acc[eventId]) acc[eventId] = [];

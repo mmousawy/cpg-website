@@ -42,15 +42,20 @@ async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
   const userIds = [...new Set(activePhotos.map((ap) => ap.photo!.user_id).filter((id): id is string => id != null))];
 
   // Fetch profiles for all photo owners in one query
-  type OwnerProfile = { id: string; nickname: string | null; avatar_url: string | null; full_name: string | null };
+  type OwnerProfile = { id: string; nickname: string | null; avatar_url: string | null; full_name: string | null; suspended_at: string | null; deletion_scheduled_at: string | null };
   let profileMap = new Map<string, OwnerProfile>();
   if (userIds.length > 0) {
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url, full_name')
+      .select('id, nickname, avatar_url, full_name, suspended_at, deletion_scheduled_at')
       .in('id', userIds);
     if (profiles) {
-      profileMap = new Map(profiles.map((p) => [p.id, p]));
+      for (const p of profiles) {
+        // Only include active profiles (not suspended or pending deletion)
+        if (!p.suspended_at && !p.deletion_scheduled_at) {
+          profileMap.set(p.id, p);
+        }
+      }
     }
   }
 
