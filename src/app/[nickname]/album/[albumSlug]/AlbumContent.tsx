@@ -235,11 +235,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 <p
                   className="text-xs text-foreground/60"
                 >
-                  {new Date(album.created_at || '').toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {(() => { const d = new Date(album.created_at || ''); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'long', day: 'numeric' }); })()}
                 </p>
               </div>
               <ViewTracker

@@ -3,9 +3,9 @@ import Link from 'next/link';
 import QuestionMarkCircleSVG from 'public/icons/question-mark-circle.svg';
 
 const sizeMap = {
-  sm: { wrapper: 'size-5', icon: 'size-4' },
-  md: { wrapper: 'size-5', icon: 'size-4.5' },
-  lg: { wrapper: 'size-7', icon: 'size-6' },
+  sm: { wrapper: 'size-5 ml-1', icon: 'size-4' },
+  md: { wrapper: 'size-5 ml-1', icon: 'size-4.5' },
+  lg: { wrapper: 'ml-0.5 mt-1', icon: 'size-5.5' },
 };
 
 type HelpLinkProps = {

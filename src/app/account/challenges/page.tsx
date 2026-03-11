@@ -34,7 +34,7 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
   if (diff <= 0) return 'Ended on ' + deadline.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
+    year: deadline.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
   });
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -472,11 +472,7 @@ function SubmissionCard({
             >
               Submitted
               {' '}
-              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
+              {(() => { const d = new Date(submission.submitted_at); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
             </span>
             <span
               className="sm:hidden"

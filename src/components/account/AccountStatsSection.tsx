@@ -33,11 +33,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                 className="text-foreground/70"
               >
                 {profile?.created_at
-                  ? new Date(profile.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })
+                  ? (() => { const d = new Date(profile.created_at); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'long', day: 'numeric' }); })()
                   : 'N/A'}
               </p>
             </div>
@@ -51,11 +47,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                 className="text-foreground/70"
               >
                 {stats.lastLoggedIn
-                  ? new Date(stats.lastLoggedIn).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })
+                  ? (() => { const d = new Date(stats.lastLoggedIn); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'short', day: 'numeric' }); })()
                   : 'Never'}
               </p>
             </div>

@@ -23,6 +23,10 @@ export const routes = {
     label: 'Events',
     url: '/events',
   },
+  scene: {
+    label: 'Scene',
+    url: '/scene',
+  },
   challenges: {
     label: 'Challenges',
     url: '/challenges',

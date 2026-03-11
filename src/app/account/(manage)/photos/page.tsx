@@ -283,6 +283,7 @@ export default function PhotosPage() {
                 { value: 'private', label: 'Private' },
               ]}
               fullWidth={false}
+              mono
               className="min-w-[80px] md:min-w-[100px]"
             />
             <Button

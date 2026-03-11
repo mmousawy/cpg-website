@@ -1,12 +1,16 @@
 'use client';
 
-import { createContext, useRef, useState } from 'react';
+import { createContext, useCallback, useRef, useState } from 'react';
 
 export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
+
+export type BeforeCloseCheck = () => boolean | Promise<boolean>;
 
 export const ModalContext = createContext({} as {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  requestClose: () => Promise<void>;
+  setBeforeCloseCheck: (fn: BeforeCloseCheck | null) => void;
   title: string;
   setTitle: (title: string) => void;
   content: React.ReactNode;
@@ -15,6 +19,8 @@ export const ModalContext = createContext({} as {
   setFooter: (footer: React.ReactNode) => void;
   size: ModalSize;
   setSize: (size: ModalSize) => void;
+  flushContentTop: boolean;
+  setFlushContentTop: (flush: boolean) => void;
 });
 
 export default function ModalProvider({ children }: { children: React.ReactNode }) {
@@ -25,30 +31,46 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   </>);
   const [footer, setFooter] = useState<React.ReactNode>(null);
   const [size, setSize] = useState<ModalSize>('default');
+  const [flushContentTop, setFlushContentTop] = useState(false);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const beforeCloseCheckRef = useRef<BeforeCloseCheck | null>(null);
 
-  // Reset size and footer when modal closes, but delay until after animation
-  const handleSetIsOpen = (open: boolean) => {
+  const setBeforeCloseCheck = useCallback((fn: BeforeCloseCheck | null) => {
+    beforeCloseCheckRef.current = fn;
+  }, []);
+
+  const handleSetIsOpen = useCallback((open: boolean) => {
+    if (!open) beforeCloseCheckRef.current = null;
     setIsOpen(open);
     if (open) {
-      // Cancel any pending reset when reopening
       if (resetTimeoutRef.current) {
         clearTimeout(resetTimeoutRef.current);
         resetTimeoutRef.current = null;
       }
     } else {
-      // Wait for close animation (300ms) before resetting
       resetTimeoutRef.current = setTimeout(() => {
         setSize('default');
         setFooter(null);
+        setFlushContentTop(false);
         resetTimeoutRef.current = null;
       }, 350);
     }
-  };
+  }, []);
+
+  const requestClose = useCallback(async () => {
+    const check = beforeCloseCheckRef.current;
+    if (check) {
+      const ok = await Promise.resolve(check());
+      if (!ok) return;
+    }
+    handleSetIsOpen(false);
+  }, [handleSetIsOpen]);
 
   const defaultValues = {
     isOpen,
     setIsOpen: handleSetIsOpen,
+    requestClose,
+    setBeforeCloseCheck,
     title,
     setTitle,
     content,
@@ -57,6 +79,8 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
     setFooter,
     size,
     setSize,
+    flushContentTop,
+    setFlushContentTop,
   };
 
   return (

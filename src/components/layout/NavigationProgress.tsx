@@ -86,6 +86,7 @@ export default function NavigationProgress() {
   const navigationStartTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -97,7 +98,23 @@ export default function NavigationProgress() {
       clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
     }
+    if (safetyTimeoutRef.current) {
+      clearTimeout(safetyTimeoutRef.current);
+      safetyTimeoutRef.current = null;
+    }
   }, []);
+
+  // Complete the progress animation
+  const completeProgress = useCallback(() => {
+    cleanup();
+    navigationStartTimeRef.current = null;
+    setProgress(100);
+
+    hideTimeoutRef.current = setTimeout(() => {
+      setIsNavigating(false);
+      setProgress(0);
+    }, 200);
+  }, [cleanup]);
 
   // Start the progress animation
   const startProgress = useCallback(() => {
@@ -105,6 +122,13 @@ export default function NavigationProgress() {
     navigationStartTimeRef.current = Date.now();
     setIsNavigating(true);
     setProgress(0);
+
+    // Safety: auto-cancel if no pathname change occurs (e.g. preventDefault on link)
+    safetyTimeoutRef.current = setTimeout(() => {
+      if (navigationStartTimeRef.current) {
+        completeProgress();
+      }
+    }, 8000);
 
     const animate = () => {
       if (!navigationStartTimeRef.current) return;
@@ -130,19 +154,7 @@ export default function NavigationProgress() {
     };
 
     animationFrameRef.current = requestAnimationFrame(animate);
-  }, [cleanup]);
-
-  // Complete the progress animation
-  const completeProgress = useCallback(() => {
-    cleanup();
-    navigationStartTimeRef.current = null;
-    setProgress(100);
-
-    hideTimeoutRef.current = setTimeout(() => {
-      setIsNavigating(false);
-      setProgress(0);
-    }, 200);
-  }, [cleanup]);
+  }, [cleanup, completeProgress]);
 
   // Listen for click events on links to detect navigation start
   useEffect(() => {
@@ -155,6 +167,10 @@ export default function NavigationProgress() {
 
       if (link?.href) {
         try {
+          // Skip href="#" and empty href (dummy placeholders with no real navigation)
+          const hrefAttr = link.getAttribute('href') ?? '';
+          if (hrefAttr === '#' || hrefAttr === '') return;
+
           const url = new URL(link.href);
 
           // Only handle internal navigation to different pages
@@ -175,11 +191,11 @@ export default function NavigationProgress() {
       }
     };
 
-    // Use capture phase to detect clicks early, but check defaultPrevented
-    document.addEventListener('click', handleLinkClick, true);
+    // Use bubble phase so defaultPrevented is set by handlers that prevent navigation
+    document.addEventListener('click', handleLinkClick);
 
     return () => {
-      document.removeEventListener('click', handleLinkClick, true);
+      document.removeEventListener('click', handleLinkClick);
     };
   }, [startProgress]);
 

@@ -41,6 +41,7 @@ interface CommentsProps {
   photoId?: string
   eventId?: string
   challengeId?: string
+  sceneEventId?: string
 }
 
 // ─── Types for CommentItem props ───────────────────────────────────────────────
@@ -331,7 +332,7 @@ const CommentItem = memo(function CommentItem({
         );
         return shouldIndent ? (
           <div
-            className="ml-1.5 mt-2 space-y-2 border-l-1 border-border-color pl-2"
+            className="ml-1.5 mt-2 space-y-2 border-l border-border-color pl-2"
           >
             {children}
           </div>
@@ -375,15 +376,29 @@ const CommentItem = memo(function CommentItem({
 
 // ─── Main Comments component ───────────────────────────────────────────────────
 
-export default function Comments({ albumId, photoId, eventId, challengeId }: CommentsProps) {
+export default function Comments({
+  albumId,
+  photoId,
+  eventId,
+  challengeId,
+  sceneEventId,
+}: CommentsProps) {
   const { user, isAdmin } = useAuth();
   const confirm = useConfirm();
   const supabase = useSupabase();
   const showAuthPrompt = useAuthPrompt();
 
   // Determine which entity we're commenting on (needed before useState)
-  const entityType = albumId ? 'album' : eventId ? 'event' : challengeId ? 'challenge' : 'photo';
-  const entityId = albumId || eventId || challengeId || photoId;
+  const entityType = albumId
+    ? 'album'
+    : eventId
+      ? 'event'
+      : challengeId
+        ? 'challenge'
+        : sceneEventId
+          ? 'scene_event'
+          : 'photo';
+  const entityId = albumId || eventId || challengeId || sceneEventId || photoId;
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState(() => {
@@ -470,14 +485,26 @@ export default function Comments({ albumId, photoId, eventId, challengeId }: Com
     }
     try {
       // Query through appropriate junction table
-      const junctionTable = entityType === 'album' ? 'album_comments'
-        : entityType === 'event' ? 'event_comments'
-        : entityType === 'challenge' ? 'challenge_comments'
-        : 'photo_comments';
-      const entityColumn = entityType === 'album' ? 'album_id'
-        : entityType === 'event' ? 'event_id'
-        : entityType === 'challenge' ? 'challenge_id'
-        : 'photo_id';
+      const junctionTable =
+        entityType === 'album'
+          ? 'album_comments'
+          : entityType === 'event'
+            ? 'event_comments'
+            : entityType === 'challenge'
+              ? 'challenge_comments'
+              : entityType === 'scene_event'
+                ? 'scene_event_comments'
+                : 'photo_comments';
+      const entityColumn =
+        entityType === 'album'
+          ? 'album_id'
+          : entityType === 'event'
+            ? 'event_id'
+            : entityType === 'challenge'
+              ? 'challenge_id'
+              : entityType === 'scene_event'
+                ? 'scene_event_id'
+                : 'photo_id';
 
 
       const { data, error } = await (supabase as any)

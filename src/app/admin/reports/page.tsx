@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,6 +22,7 @@ import {
   useReportsForReview,
   useResolveReport,
 } from '@/hooks/useReports';
+import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import type { ReportForReview, ReportStatus } from '@/types/reports';
 import { supabase } from '@/utils/supabase/client';
 
@@ -204,6 +205,74 @@ function PhotoReportPreview({ photoId }: { photoId: string }) {
   );
 }
 
+// Component to fetch and display scene event preview with link and delete button
+function SceneEventReportPreview({
+  eventId,
+  onDelete,
+  isDeleting,
+}: {
+  eventId: string;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
+  const { data: event, isLoading } = useQuery({
+    queryKey: ['scene-event-report', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('scene_events')
+        .select('id, slug, title')
+        .eq('id', eventId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      if (error || !data) return null;
+      return data;
+    },
+  });
+
+  if (isLoading || !event) {
+    return (
+      <span
+        className="text-sm text-foreground/60"
+      >
+        {isLoading ? 'Loading...' : 'Event deleted or not found'}
+      </span>
+    );
+  }
+
+  return (
+    <div
+      className="space-y-2"
+    >
+      <div
+        className="flex items-center gap-2"
+      >
+        <p
+          className="text-xs text-foreground/60 mb-1"
+        >
+          {event.title}
+        </p>
+        <Link
+          href={`/scene/${event.slug}`}
+          className="text-sm font-medium hover:text-primary flex items-center gap-1"
+        >
+          View event
+          <LinkSVG
+            className="size-3"
+          />
+        </Link>
+      </div>
+      <Button
+        variant="danger"
+        size="sm"
+        onClick={onDelete}
+        disabled={isDeleting}
+      >
+        Delete event
+      </Button>
+    </div>
+  );
+}
+
 // Component to fetch and display album preview with link
 function AlbumReportPreview({ albumId }: { albumId: string }) {
   const { data: albumData } = useQuery({
@@ -348,8 +417,10 @@ export default function ReportsPage() {
 
   const { data: reports, isLoading } = useReportsForReview(activeTab);
   const { data: counts } = useReportCounts();
+  const queryClient = useQueryClient();
   const resolveMutation = useResolveReport();
   const bulkResolveMutation = useBulkResolveReports();
+  const deleteSceneEventMutation = useDeleteSceneEvent();
 
   const isResolving = resolveMutation.isPending || bulkResolveMutation.isPending;
 
@@ -525,8 +596,15 @@ export default function ReportsPage() {
       return { type: 'Profile', thumbnail: null };
     } else if (report.entity_type === 'comment') {
       return { type: 'Comment', thumbnail: null };
+    } else if (report.entity_type === 'scene_event') {
+      return { type: 'Scene event', thumbnail: null };
     }
     return { type: 'Unknown', thumbnail: null };
+  };
+
+  const handleDeleteSceneEvent = async (eventId: string) => {
+    await deleteSceneEventMutation.mutateAsync(eventId);
+    queryClient.invalidateQueries({ queryKey: ['scene-event-report', eventId] });
   };
 
   return (
@@ -781,6 +859,12 @@ export default function ReportsPage() {
                           ) : report.entity_type === 'profile' ? (
                             <ProfileReportLink
                               profileId={report.entity_id}
+                            />
+                          ) : report.entity_type === 'scene_event' ? (
+                            <SceneEventReportPreview
+                              eventId={report.entity_id}
+                              onDelete={() => handleDeleteSceneEvent(report.entity_id)}
+                              isDeleting={deleteSceneEventMutation.isPending}
                             />
                           ) : report.entity_type === 'comment' ? (
                             <div

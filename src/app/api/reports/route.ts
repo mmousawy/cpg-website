@@ -25,7 +25,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate entity type
-    const validEntityTypes: ReportEntityType[] = ['photo', 'album', 'profile', 'comment'];
+    const validEntityTypes: ReportEntityType[] = [
+      'photo',
+      'album',
+      'profile',
+      'comment',
+      'scene_event',
+    ];
     if (!validEntityTypes.includes(entityType)) {
       return NextResponse.json(
         { error: 'Invalid entity type' },

@@ -44,6 +44,10 @@ interface StackedAvatarsPopoverProps {
   maxVisibleAvatars?: number;
   /** Max visible avatars on mobile (default: 4) */
   maxVisibleAvatarsMobile?: number;
+  /** Popover placement: 'top' = above trigger, 'bottom' = below trigger */
+  popoverSide?: 'top' | 'bottom';
+  /** Render person rows as divs instead of links (use when inside an <a> to avoid nested anchors) */
+  disableLinks?: boolean;
 }
 
 /**
@@ -64,6 +68,8 @@ export default function StackedAvatarsPopover({
   showCountOnMobile = false,
   maxVisibleAvatars = DEFAULT_MAX_VISIBLE_AVATARS,
   maxVisibleAvatarsMobile = DEFAULT_MAX_VISIBLE_AVATARS_MOBILE,
+  popoverSide = 'bottom',
+  disableLinks = false,
 }: StackedAvatarsPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -215,6 +221,7 @@ export default function StackedAvatarsPopover({
       open={isOpen}
       onOpenChange={setIsOpen}
       align="left"
+      side={popoverSide}
       disabled={!hasPeople}
       trigger={
         <button
@@ -278,20 +285,29 @@ export default function StackedAvatarsPopover({
           <div
             className="space-y-1"
           >
-            {people.map((person) => (
-              person.nickname ? (
-                <Link
+            {people.map((person) => {
+              const Wrapper = person.nickname && !disableLinks ? Link : 'div';
+              const wrapperProps = person.nickname && !disableLinks
+                ? {
+                    href: `/@${person.nickname}`,
+                    className: 'group flex items-center gap-2 p-1.5 rounded hover:bg-background transition-colors',
+                    onClick: () => setIsOpen(false),
+                  }
+                : {
+                    className: 'flex items-center gap-2 p-1.5',
+                  };
+
+              return (
+                <Wrapper
                   key={person.id}
-                  href={`/@${person.nickname}`}
-                  className="group flex items-center gap-2 p-1.5 rounded hover:bg-background transition-colors"
-                  onClick={() => setIsOpen(false)}
+                  {...(wrapperProps as any)}
                 >
                   <Avatar
                     avatarUrl={person.avatarUrl}
                     fullName={person.fullName}
                     nickname={person.nickname}
                     size="xs"
-                    hoverEffect
+                    hoverEffect={!!person.nickname && !disableLinks}
                   />
                   <div
                     className="flex-1 min-w-0"
@@ -301,37 +317,18 @@ export default function StackedAvatarsPopover({
                     >
                       {person.fullName || 'Anonymous'}
                     </p>
-                    <p
-                      className="text-xs text-foreground/60 truncate"
-                    >
-                      @
-                      {person.nickname}
-                    </p>
+                    {person.nickname && (
+                      <p
+                        className="text-xs text-foreground/60 truncate"
+                      >
+                        @
+                        {person.nickname}
+                      </p>
+                    )}
                   </div>
-                </Link>
-              ) : (
-                <div
-                  key={person.id}
-                  className="flex items-center gap-2 p-1.5"
-                >
-                  <Avatar
-                    avatarUrl={person.avatarUrl}
-                    fullName={person.fullName}
-                    nickname={person.nickname}
-                    size="xs"
-                  />
-                  <div
-                    className="flex-1 min-w-0"
-                  >
-                    <p
-                      className="text-xs font-medium truncate"
-                    >
-                      {person.fullName || 'Anonymous'}
-                    </p>
-                  </div>
-                </div>
-              )
-            ))}
+                </Wrapper>
+              );
+            })}
           </div>
         )}
       </div>

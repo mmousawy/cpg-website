@@ -230,6 +230,7 @@ export async function revalidateAll() {
   revalidateTag('challenges', 'max');
   revalidateTag('challenge-photos', 'max');
   revalidateTag('search', 'max');
+  revalidateTag('scene', 'max');
   revalidateTag('home', 'max');
   revalidateTag('changelog', 'max');
   // Also revalidate the layout for any non-cached data
@@ -355,6 +356,28 @@ export async function revalidateGallery() {
  */
 export async function revalidateReports() {
   revalidateTag('reports', 'max');
+}
+
+// ============================================================================
+// Scene Revalidation
+// ============================================================================
+
+/**
+ * Revalidate all scene-related cached data
+ * Use when: Creating, updating, or soft-deleting scene events
+ */
+export async function revalidateScene() {
+  revalidateTag('scene', 'max');
+  revalidateTag('search', 'max');
+}
+
+/**
+ * Revalidate a specific scene event by slug
+ * Use when: Only a specific scene event detail page needs refreshing
+ */
+export async function revalidateSceneEvent(slug: string) {
+  revalidateTag(`scene-${slug}`, 'max');
+  revalidateTag('scene', 'max');
 }
 
 // ============================================================================

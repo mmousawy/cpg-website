@@ -36,8 +36,9 @@ export default function ContentHeader({
   leftContent,
   children,
 }: ContentHeaderProps) {
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-US', {
+    year: dateObj.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
     month: 'long',
     day: 'numeric',
   });

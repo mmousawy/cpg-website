@@ -10,6 +10,7 @@ export type NotificationType =
   | 'comment_album'
   | 'comment_event'
   | 'comment_challenge'
+  | 'comment_scene_event'
   | 'comment_reply'
   | 'follow'
   | 'event_reminder'
@@ -28,7 +29,16 @@ export type NotificationType =
   | 'shared_album_invite_accepted'
   | 'feedback_submitted';
 
-export type NotificationEntityType = 'photo' | 'album' | 'event' | 'profile' | 'challenge' | 'system' | 'report' | 'feedback';
+export type NotificationEntityType =
+  | 'photo'
+  | 'album'
+  | 'event'
+  | 'profile'
+  | 'challenge'
+  | 'scene_event'
+  | 'system'
+  | 'report'
+  | 'feedback';
 
 // Data stored in the notification's JSON `data` field
 export type NotificationData = {

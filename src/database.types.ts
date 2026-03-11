@@ -1375,6 +1375,161 @@ export type Database = {
           },
         ]
       }
+      scene_event_comments: {
+        Row: {
+          comment_id: string
+          scene_event_id: string
+        }
+        Insert: {
+          comment_id: string
+          scene_event_id: string
+        }
+        Update: {
+          comment_id?: string
+          scene_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scene_event_comments_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'scene_event_comments_scene_event_id_fkey'
+            columns: ['scene_event_id']
+            isOneToOne: false
+            referencedRelation: 'scene_events'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      scene_event_interests: {
+        Row: {
+          created_at: string
+          scene_event_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          scene_event_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          scene_event_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scene_event_interests_scene_event_id_fkey'
+            columns: ['scene_event_id']
+            isOneToOne: false
+            referencedRelation: 'scene_events'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'scene_event_interests_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      scene_events: {
+        Row: {
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          end_date: string | null
+          end_time: string | null
+          id: string
+          image_blurhash: string | null
+          image_height: number | null
+          image_width: number | null
+          interest_count: number
+          location_address: string | null
+          location_city: string
+          location_name: string
+          organizer: string | null
+          price_info: string | null
+          search_vector: unknown
+          slug: string
+          start_date: string
+          start_time: string | null
+          submitted_by: string
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          category: string
+          cover_image_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          image_blurhash?: string | null
+          image_height?: number | null
+          image_width?: number | null
+          interest_count?: number
+          location_address?: string | null
+          location_city: string
+          location_name: string
+          organizer?: string | null
+          price_info?: string | null
+          search_vector?: unknown
+          slug: string
+          start_date: string
+          start_time?: string | null
+          submitted_by: string
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          image_blurhash?: string | null
+          image_height?: number | null
+          image_width?: number | null
+          interest_count?: number
+          location_address?: string | null
+          location_city?: string
+          location_name?: string
+          organizer?: string | null
+          price_info?: string | null
+          search_vector?: unknown
+          slug?: string
+          start_date?: string
+          start_time?: string | null
+          submitted_by?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'scene_events_submitted_by_fkey'
+            columns: ['submitted_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       shared_album_members: {
         Row: {
           album_id: string
@@ -1600,6 +1755,14 @@ export type Database = {
       add_photos_to_shared_album: {
         Args: { p_album_id: string; p_photo_ids: string[] }
         Returns: number
+      }
+      add_scene_event_comment: {
+        Args: {
+          p_comment_text: string
+          p_parent_comment_id?: string
+          p_scene_event_id: string
+        }
+        Returns: string
       }
       add_shared_album_owner: {
         Args: { p_album_id: string }

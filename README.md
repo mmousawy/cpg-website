@@ -18,6 +18,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 
 ### Events
 - Event listings (upcoming/past)
+- Scene events: community-curated photography events (exhibitions, photowalks, talks, workshops, festivals, meetups) at /scene
 - RSVP system with email confirmation
 - Automated email reminders:
   - RSVP reminders (5 days before) for non-attendees
@@ -76,6 +77,7 @@ Community platform for photography enthusiasts built with Next.js and Supabase. 
 
 ### Admin
 - Event CRUD with attendance tracking
+- Scene events moderation at /admin/scene
 - Photo challenge management (create, edit, announce)
 - Submission review queue with bulk actions
 - Album moderation (suspend/unsuspend)
@@ -229,6 +231,7 @@ src/
 │   ├── challenges/         # Photo challenges
 │   ├── changelog/          # Version history pages
 │   ├── events/             # Event pages
+│   ├── scene/              # Scene events (community-curated photography events)
 │   ├── gallery/            # Public gallery and tag pages
 │   ├── members/            # Member discovery pages
 │   └── ...
@@ -300,7 +303,10 @@ supabase/
 | `interests` | Central interests table with usage counts |
 | `profile_interests` | Profile-interests junction |
 | `auth_tokens` | Email verification & password reset tokens |
-| `reports` | User-submitted content reports (photos, albums, profiles, comments) |
+| `reports` | User-submitted content reports (photos, albums, profiles, comments, scene events) |
+| `scene_events` | Community-curated photography events (exhibitions, photowalks, talks, etc.) |
+| `scene_event_comments` | Links comments to scene events |
+| `scene_event_interests` | Users who marked interest in scene events |
 
 ### Storage Buckets
 

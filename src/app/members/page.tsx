@@ -118,7 +118,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             className="flex items-center gap-2 mb-2"
           >
             <h1
-              className="text-3xl font-bold"
+              className="text-2xl sm:text-3xl font-bold"
             >
               Discover our community
             </h1>
@@ -129,7 +129,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             />
           </div>
           <p
-            className="text-lg opacity-70"
+            className="text-base sm:text-lg opacity-70"
           >
             Explore members by interests, recent activity, and photo styles
           </p>

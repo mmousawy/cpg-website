@@ -139,8 +139,8 @@ export default function AdminEventFormPage() {
   const { hasChanges, changeCount } = useFormChanges(
     currentFormValues,
     savedFormValues,
-    {},
-    !!coverImageFile, // Track if a new cover image file is selected
+    { richTextFields: ['description'] },
+    !!coverImageFile,
   );
 
   useEffect(() => {

@@ -108,8 +108,10 @@ function formatDate(dateStr: string | null): string {
   const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
   const day = date.getDate();
   const month = date.toLocaleDateString('en-US', { month: 'long' });
-  const year = date.getFullYear();
-  return `${weekday} ${day} ${month} ${year}`;
+  const isCurrentYear = date.getFullYear() === new Date().getFullYear();
+  return isCurrentYear
+    ? `${weekday} ${day} ${month}`
+    : `${weekday} ${day} ${month} ${date.getFullYear()}`;
 }
 
 export default async function ChallengePage({

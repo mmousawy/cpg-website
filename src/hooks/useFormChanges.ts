@@ -26,9 +26,30 @@ function isEqual(a: unknown, b: unknown): boolean {
   return false;
 }
 
+/**
+ * Normalize rich text for comparison. Treats empty/whitespace-only HTML (e.g. Quill's "<p><br></p>")
+ * as equal to "" so we don't report false "unsaved changes" when the editor normalizes on mount.
+ */
+function normalizeRichTextForCompare(val: unknown): string {
+  if (val == null) return '';
+  const s = String(val).trim();
+  if (!s) return '';
+  const stripped = s.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+  if (!stripped) return '';
+  return s.trim();
+}
+
+function isRichTextEqual(a: unknown, b: unknown): boolean {
+  return normalizeRichTextForCompare(a) === normalizeRichTextForCompare(b);
+}
+
 interface UseFormChangesOptions {
   /** Whether to show a browser warning when leaving with unsaved changes (default: true) */
-  warnOnLeave?: boolean
+  warnOnLeave?: boolean;
+  /** Keys whose values are rich text (Quill/HTML) - use normalized comparison to avoid false changes */
+  richTextFields?: string[];
+  /** When true, sync false to context (e.g. after successful submit) and don't overwrite with hasChanges */
+  skipSync?: boolean;
 }
 
 /**
@@ -52,25 +73,30 @@ export function useFormChanges<T extends Record<string, unknown>>(
   options: UseFormChangesOptions = {},
   ...extraChanges: boolean[]
 ): { hasChanges: boolean; changeCount: number } {
-  const { warnOnLeave = true } = options;
+  const { warnOnLeave = true, richTextFields = [], skipSync = false } = options;
 
-  // Memoize extraChanges array to avoid dependency issues
+  const richTextFieldsKey = richTextFields.join(',');
+  const richTextSet = useMemo(
+    () => new Set(richTextFields),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- richTextFieldsKey captures richTextFields
+    [richTextFieldsKey],
+  );
+
   const extraChangesKey = extraChanges.join(',');
 
   const result = useMemo(() => {
-    // If no saved values yet, no changes
     if (savedValues === null) {
       return { hasChanges: false, changeCount: 0 };
     }
 
-    // Count changed fields by comparing each key
     let changeCount = 0;
     const allKeys = new Set([...Object.keys(currentValues), ...Object.keys(savedValues)]);
 
     for (const key of allKeys) {
-      if (!isEqual(currentValues[key], savedValues[key])) {
-        changeCount++;
-      }
+      const eq = richTextSet.has(key)
+        ? isRichTextEqual(currentValues[key], savedValues[key])
+        : isEqual(currentValues[key], savedValues[key]);
+      if (!eq) changeCount++;
     }
 
     // Add extra change flags
@@ -78,30 +104,27 @@ export function useFormChanges<T extends Record<string, unknown>>(
     changeCount += extraChangeCount;
 
     return { hasChanges: changeCount > 0, changeCount };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- extraChangesKey captures extraChanges
-  }, [currentValues, savedValues, extraChangesKey]);
+  }, [currentValues, savedValues, extraChangesKey, richTextSet]);
 
   // Sync with global UnsavedChangesContext for internal navigation warnings
   // We import dynamically to avoid circular dependencies
   useEffect(() => {
     let setHasUnsavedChanges: ((value: boolean) => void) | undefined;
 
-    // Try to get the context setter from the window (set by UnsavedChangesProvider)
     if (typeof window !== 'undefined' && window.__unsavedChangesContext) {
       setHasUnsavedChanges = window.__unsavedChangesContext.setHasUnsavedChanges;
     }
 
     if (setHasUnsavedChanges) {
-      setHasUnsavedChanges(result.hasChanges);
+      setHasUnsavedChanges(skipSync ? false : result.hasChanges);
     }
 
-    // Cleanup: reset on unmount
     return () => {
       if (setHasUnsavedChanges) {
         setHasUnsavedChanges(false);
       }
     };
-  }, [result.hasChanges]);
+  }, [result.hasChanges, skipSync]);
 
   return result;
 }

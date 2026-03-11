@@ -140,7 +140,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
           <CalendarSVG
             className="shrink-0 fill-foreground "
           />
-          {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+          {(() => { const d = new Date(event.date!); return d.toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
         </span>
         <span
           className='flex gap-2'

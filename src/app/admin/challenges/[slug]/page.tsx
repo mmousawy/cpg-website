@@ -151,7 +151,12 @@ export default function AdminChallengeFormPage() {
     coverImage,
   };
 
-  const { hasChanges, changeCount } = useFormChanges(currentFormValues, savedFormValues, {}, !!coverImageFile);
+  const { hasChanges, changeCount } = useFormChanges(
+    currentFormValues,
+    savedFormValues,
+    { richTextFields: ['prompt'] },
+    !!coverImageFile,
+  );
 
   const handleAnnounce = () => {
     if (!existingChallenge || !modalContext) return;

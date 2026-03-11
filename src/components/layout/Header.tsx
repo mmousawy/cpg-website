@@ -98,7 +98,7 @@ export default function Header() {
       >
         {/* Left: Logo + Desktop Nav */}
         <div
-          className="flex items-center gap-6"
+          className="flex items-center gap-5"
         >
           <Link
             href="/"
@@ -111,12 +111,17 @@ export default function Header() {
           </Link>
 
           <nav
-            className="hidden items-center gap-5 sm:flex"
+            className="hidden items-center gap-4 sm:flex"
           >
             <NavLink
               href={routes.events.url}
             >
               {routes.events.label}
+            </NavLink>
+            <NavLink
+              href={routes.scene.url}
+            >
+              {routes.scene.label}
             </NavLink>
             <NavLink
               href={routes.challenges.url}

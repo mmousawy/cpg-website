@@ -35,7 +35,7 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
           />
         </svg>
       ),
-      value: new Date(stats.memberSince).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
+      value: (() => { const d = new Date(stats.memberSince); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'short' }); })(),
       label: 'Member since',
     });
   }

@@ -6,7 +6,11 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { CommentNotificationEmail } from '@/emails/comment-notification';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
-import { revalidateAlbum, revalidateGalleryData } from '@/app/actions/revalidate';
+import {
+  revalidateAlbum,
+  revalidateGalleryData,
+  revalidateSceneEvent,
+} from '@/app/actions/revalidate';
 import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -97,9 +101,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (entityType !== 'album' && entityType !== 'photo' && entityType !== 'event' && entityType !== 'challenge') {
+  if (
+    entityType !== 'album' &&
+    entityType !== 'photo' &&
+    entityType !== 'event' &&
+    entityType !== 'challenge' &&
+    entityType !== 'scene_event'
+  ) {
     return NextResponse.json(
-      { message: "Invalid entity type. Must be 'album', 'photo', 'event', or 'challenge'" },
+      {
+        message:
+          "Invalid entity type. Must be 'album', 'photo', 'event', 'challenge', or 'scene_event'",
+      },
       { status: 400 },
     );
   }
@@ -128,6 +141,14 @@ export async function POST(request: NextRequest) {
     // Challenges use a separate RPC
     const { data, error } = await supabase.rpc('add_challenge_comment', {
       p_challenge_id: entityId,
+      p_comment_text: commentText.trim(),
+      p_parent_comment_id: parentCommentId || null,
+    });
+    commentId = data ?? null;
+    commentError = error;
+  } else if (entityType === 'scene_event') {
+    const { data, error } = await supabase.rpc('add_scene_event_comment', {
+      p_scene_event_id: entityId,
       p_comment_text: commentText.trim(),
       p_parent_comment_id: parentCommentId || null,
     });
@@ -695,6 +716,243 @@ export async function POST(request: NextRequest) {
       await revalidateGalleryData();
 
       // Return early for challenges since we've handled all notifications
+      return NextResponse.json({ success: true, commentId }, { status: 200 });
+    }
+  } else if (entityType === 'scene_event') {
+    // Scene events: notify submitter + interested users for top-level comments, parent author for replies
+    const { data: sceneEvent } = await supabase
+      .from('scene_events')
+      .select('id, title, slug, cover_image_url, submitted_by')
+      .eq('id', entityId)
+      .is('deleted_at', null)
+      .single();
+
+    if (sceneEvent) {
+      entityTitle = sceneEvent.title || 'Event';
+      entityThumbnail = sceneEvent.cover_image_url;
+      entityLink = `/scene/${sceneEvent.slug}#comments`;
+
+      const submitterId = sceneEvent.submitted_by;
+      const notifiedUserIds = new Set<string>([user.id]);
+
+      // Notify submitter (if not commenting on own event, and not a reply)
+      if (
+        !parentCommentId &&
+        submitterId &&
+        submitterId !== user.id
+      ) {
+        notifiedUserIds.add(submitterId);
+        const { data: submitterProfile } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, nickname')
+          .eq('id', submitterId)
+          .single();
+
+        await createNotification({
+          userId: submitterId,
+          actorId: user.id,
+          type: 'comment_scene_event',
+          entityType: 'scene_event',
+          entityId: entityId,
+          data: {
+            title: entityTitle,
+            thumbnail: entityThumbnail,
+            link: entityLink,
+            actorName: commenterName,
+            actorNickname: commenterNickname,
+            actorAvatar: commenterAvatarUrl,
+          },
+        });
+
+        // Email to submitter if not opted out
+        if (submitterProfile?.email) {
+          const { data: notificationsEmailType } = await supabase
+            .from('email_types')
+            .select('id')
+            .eq('type_key', 'notifications')
+            .single();
+
+          let shouldSendEmail = true;
+          if (notificationsEmailType) {
+            const { data: pref } = await supabase
+              .from('email_preferences')
+              .select('opted_out')
+              .eq('user_id', submitterId)
+              .eq('email_type_id', notificationsEmailType.id)
+              .single();
+            if (pref?.opted_out === true) shouldSendEmail = false;
+          }
+
+          if (shouldSendEmail) {
+            let optOutLink: string | undefined;
+            try {
+              const encrypted = encrypt(
+                JSON.stringify({ userId: submitterId, emailType: 'notifications' }),
+              );
+              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+            } catch (e) {
+              console.error('Error generating opt-out link:', e);
+            }
+            const ownerName =
+              submitterProfile.full_name ||
+              submitterProfile.email.split('@')[0] ||
+              'Friend';
+            try {
+              const emailResult = await resend.emails.send({
+                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+                to: submitterProfile.email,
+                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+                subject: `${commenterName} commented on the event "${entityTitle}"`,
+                html: await render(
+                  CommentNotificationEmail({
+                    ownerName,
+                    commenterName,
+                    commenterNickname,
+                    commenterAvatarUrl,
+                    commenterProfileLink,
+                    commentText: commentText.trim(),
+                    entityType: 'event',
+                    entityTitle,
+                    entityThumbnail,
+                    entityLink,
+                    optOutLink,
+                  }),
+                ),
+              });
+              if (emailResult.error) {
+                console.error(
+                  `Error sending scene event comment notification to ${submitterProfile.email}:`,
+                  emailResult.error,
+                );
+              }
+            } catch (err) {
+              console.error('Error sending scene event comment notification:', err);
+            }
+          }
+        }
+      }
+
+      // Notify interested users (top-level comments only, skip already-notified)
+      if (!parentCommentId) {
+        const { data: interestedUsers } = await supabase
+          .from('scene_event_interests')
+          .select('user_id')
+          .eq('scene_event_id', entityId);
+
+        if (interestedUsers) {
+          for (const { user_id: interestedUserId } of interestedUsers) {
+            if (notifiedUserIds.has(interestedUserId)) continue;
+            notifiedUserIds.add(interestedUserId);
+
+            await createNotification({
+              userId: interestedUserId,
+              actorId: user.id,
+              type: 'comment_scene_event',
+              entityType: 'scene_event',
+              entityId: entityId,
+              data: {
+                title: entityTitle,
+                thumbnail: entityThumbnail,
+                link: entityLink,
+                actorName: commenterName,
+                actorNickname: commenterNickname,
+                actorAvatar: commenterAvatarUrl,
+              },
+            });
+          }
+        }
+      }
+
+      // If replying, notify parent comment author
+      if (
+        parentCommentId &&
+        parentCommentAuthorId &&
+        parentCommentAuthorId !== user.id &&
+        parentCommentAuthorProfile
+      ) {
+        await createNotification({
+          userId: parentCommentAuthorId,
+          actorId: user.id,
+          type: 'comment_reply',
+          entityType: 'scene_event',
+          entityId: entityId,
+          data: {
+            title: entityTitle,
+            thumbnail: entityThumbnail,
+            link: entityLink,
+            actorName: commenterName,
+            actorNickname: commenterNickname,
+            actorAvatar: commenterAvatarUrl,
+          },
+        });
+
+        if (parentCommentAuthorProfile.email) {
+          const { data: notificationsEmailType } = await supabase
+            .from('email_types')
+            .select('id')
+            .eq('type_key', 'notifications')
+            .single();
+
+          let shouldSendEmail = true;
+          if (notificationsEmailType) {
+            const { data: pref } = await supabase
+              .from('email_preferences')
+              .select('opted_out')
+              .eq('user_id', parentCommentAuthorId)
+              .eq('email_type_id', notificationsEmailType.id)
+              .single();
+            if (pref?.opted_out === true) shouldSendEmail = false;
+          }
+
+          if (shouldSendEmail) {
+            let optOutLink: string | undefined;
+            try {
+              const encrypted = encrypt(
+                JSON.stringify({
+                  userId: parentCommentAuthorId,
+                  emailType: 'notifications',
+                }),
+              );
+              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+            } catch (e) {
+              console.error('Error generating opt-out link:', e);
+            }
+            const parentAuthorName =
+              parentCommentAuthorProfile.full_name ||
+              parentCommentAuthorProfile.email.split('@')[0] ||
+              'Friend';
+            try {
+              await resend.emails.send({
+                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+                to: parentCommentAuthorProfile.email,
+                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+                subject: `${commenterName} replied to your comment on the event "${entityTitle}"`,
+                html: await render(
+                  CommentNotificationEmail({
+                    ownerName: parentAuthorName,
+                    commenterName,
+                    commenterNickname,
+                    commenterAvatarUrl,
+                    commenterProfileLink,
+                    commentText: commentText.trim(),
+                    entityType: 'event',
+                    entityTitle,
+                    entityThumbnail,
+                    entityLink,
+                    optOutLink,
+                    isReply: true,
+                  }),
+                ),
+              });
+            } catch (err) {
+              console.error('Error sending scene event reply notification:', err);
+            }
+          }
+        }
+      }
+
+      await revalidateSceneEvent(sceneEvent.slug);
+
       return NextResponse.json({ success: true, commentId }, { status: 200 });
     }
   }

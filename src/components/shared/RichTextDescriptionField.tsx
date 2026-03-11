@@ -12,6 +12,9 @@ export interface RichTextDescriptionFieldProps {
   disabled?: boolean;
   error?: boolean;
   required?: boolean;
+  /** When true, no headings, blockquote, or images (stripped toolbar). */
+  minimalToolbar?: boolean;
+  className?: string;
 }
 
 /**
@@ -27,6 +30,8 @@ export function RichTextDescriptionField({
   disabled = false,
   error = false,
   required = false,
+  minimalToolbar = false,
+  className,
 }: RichTextDescriptionFieldProps) {
   const uploadImage = useEmailImageUpload();
 
@@ -50,10 +55,12 @@ export function RichTextDescriptionField({
         id={id}
         value={value}
         onChange={onChange}
-        onImageUpload={uploadImage}
+        onImageUpload={minimalToolbar ? undefined : uploadImage}
         placeholder={placeholder}
         disabled={disabled}
         error={error}
+        minimalToolbar={minimalToolbar}
+        className={className}
       />
     </div>
   );

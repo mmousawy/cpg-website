@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
 
 type PopoverAlign = 'left' | 'right' | 'center';
+type PopoverSide = 'top' | 'bottom';
 
 interface PopoverProps {
   /** The trigger element (rendered inside summary) */
@@ -14,6 +15,8 @@ interface PopoverProps {
   disabled?: boolean;
   /** Horizontal alignment of popover relative to trigger */
   align?: PopoverAlign;
+  /** Vertical placement: 'top' = above trigger, 'bottom' = below trigger */
+  side?: PopoverSide;
   /** Additional class for the popover container */
   className?: string;
   /** Width of the popover */
@@ -41,6 +44,7 @@ export default function Popover({
   children,
   disabled,
   align = 'left',
+  side = 'bottom',
   className,
   width = 'w-64',
   open,
@@ -91,6 +95,9 @@ export default function Popover({
     center: 'left-1/2 -translate-x-1/2',
   };
 
+  const sideClasses =
+    side === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
+
   return (
     <details
       ref={detailsRef}
@@ -107,7 +114,8 @@ export default function Popover({
       </summary>
       <div
         className={clsx(
-          'absolute top-full z-35 mt-2',
+          'absolute z-35',
+          sideClasses,
           width,
           alignmentClasses[align],
           'overflow-hidden rounded-md',

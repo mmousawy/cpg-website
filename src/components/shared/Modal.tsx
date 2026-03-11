@@ -9,12 +9,16 @@ import CloseSVG from 'public/icons/close.svg';
 import { ModalContext } from '@/app/providers/ModalProvider';
 
 export default function Modal() {
-  const { isOpen, setIsOpen, title, content, footer, size } = useContext(ModalContext);
+  const { isOpen, setIsOpen, requestClose, title, content, footer, size, flushContentTop } = useContext(ModalContext);
   const modalRef = useRef<HTMLDialogElement>(null);
   const [isTrapped, setIsTrapped] = useState(false);
 
   const closeModal = () => {
-    setIsOpen(false);
+    if (typeof requestClose === 'function') {
+      void requestClose();
+    } else if (typeof setIsOpen === 'function') {
+      setIsOpen(false);
+    }
   };
 
   // Size-specific classes for the modal container
@@ -48,19 +52,23 @@ export default function Modal() {
   useEffect(() => {
     const modal = modalRef.current;
 
-    const closeModal = () => {
-      setIsOpen(false);
+    const handleClose = () => {
+      if (typeof requestClose === 'function') {
+        void requestClose();
+      } else if (typeof setIsOpen === 'function') {
+        setIsOpen(false);
+      }
     };
 
     if (modal && !modal.dataset.isMounted) {
       modal.dataset.isMounted = 'true';
-      modal.addEventListener('close', closeModal);
+      modal.addEventListener('close', handleClose);
     }
 
     // Cleanup the event listener
     return () => {
       if (modal) {
-        modal.removeEventListener('close', closeModal);
+        modal.removeEventListener('close', handleClose);
       }
     };
   });
@@ -81,7 +89,7 @@ export default function Modal() {
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
-          onDeactivate: () => setIsOpen(false),
+          onDeactivate: closeModal,
           fallbackFocus: () => modalRef.current || document.body,
         }}
       >
@@ -117,7 +125,7 @@ export default function Modal() {
           </div>
           {/* Scrollable content */}
           <div
-            className="flex-1 min-h-0 overflow-y-auto p-4"
+            className={clsx('flex-1 min-h-0 overflow-y-auto p-4', flushContentTop && 'pt-0')}
           >
             {content}
           </div>

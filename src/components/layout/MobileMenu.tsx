@@ -112,6 +112,26 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             {routes.events.label}
           </Link>
           <Link
+            href={routes.scene.url}
+            onClick={onClose}
+            className={navLinkClass(routes.scene.url)}
+          >
+            <svg
+              className="mr-3 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0h.5a2.5 2.5 0 002.5-2.5V3.935M12 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {routes.scene.label}
+          </Link>
+          <Link
             href={routes.challenges.url}
             onClick={onClose}
             className={navLinkClass(routes.challenges.url)}

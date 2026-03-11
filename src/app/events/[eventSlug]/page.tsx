@@ -179,7 +179,7 @@ async function CachedEventContent({
       weekday: 'long',
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
+      year: eventDate.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
     })
     : 'Date TBD';
 

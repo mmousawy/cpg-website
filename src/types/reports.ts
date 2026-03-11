@@ -4,7 +4,12 @@ import type { Tables } from '@/database.types';
 export type Report = Tables<'reports'>;
 
 // Entity types that can be reported
-export type ReportEntityType = 'photo' | 'album' | 'profile' | 'comment';
+export type ReportEntityType =
+  | 'photo'
+  | 'album'
+  | 'profile'
+  | 'comment'
+  | 'scene_event';
 
 // Report status
 export type ReportStatus = 'pending' | 'resolved' | 'dismissed';

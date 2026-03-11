@@ -29,6 +29,7 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   comment_album: CommentSVG,
   comment_event: CommentSVG,
   comment_challenge: CommentSVG,
+  comment_scene_event: CommentSVG,
   comment_reply: CommentSVG,
   follow: HeartSVG,
   event_reminder: CalendarSVG,
@@ -55,6 +56,8 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
   comment_album: (actor) => `${actor || 'Someone'} commented on your album`,
   comment_event: (actor) => `${actor || 'Someone'} commented on the event`,
   comment_challenge: (actor) => `${actor || 'Someone'} commented on the challenge`,
+  comment_scene_event: (actor) =>
+    `${actor || 'Someone'} commented on a Scene event`,
   comment_reply: (actor) => `${actor || 'Someone'} replied to your comment`,
   follow: (actor) => `${actor || 'Someone'} started following you`,
   event_reminder: () => 'Event reminder',

@@ -19,6 +19,8 @@ export interface SelectProps {
   disabled?: boolean;
   /** Full width select */
   fullWidth?: boolean;
+  /** Use monospace font */
+  mono?: boolean;
   /** Additional className */
   className?: string;
 }
@@ -47,6 +49,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
       error = false,
       disabled = false,
       fullWidth = true,
+      mono = false,
       className,
     },
     ref,
@@ -61,7 +64,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
           ref={ref}
           className={clsx(
             // Base styles - matching Input component
-            'inline-flex items-center justify-between rounded border bg-background px-3 py-1.5 text-sm font-[family-name:var(--font-geist-mono)]',
+            'inline-flex items-center justify-between rounded border bg-background-medium px-3 py-[7px] text-sm',
             'transition-colors focus-visible:border-primary focus-visible:outline-none',
             // Width
             fullWidth && 'w-full',
@@ -69,6 +72,8 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
             error ? 'border-red-500' : 'border-border-color-strong',
             // Disabled state
             disabled && 'bg-background/50 text-foreground/50 cursor-not-allowed',
+            // Monospace font
+            mono && 'font-mono',
             // Hover state
             !disabled && 'hover:bg-background-light',
             // Additional classes
@@ -102,8 +107,8 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content
             className={clsx(
-              'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border-color',
-              'bg-background-light shadow-lg',
+              'z-50 min-w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border-color',
+              'bg-background-light shadow-lg font-sans',
             )}
             position="popper"
             sideOffset={4}
@@ -116,11 +121,11 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                   key={option.value}
                   value={option.value}
                   className={clsx(
-                    'relative flex cursor-pointer select-none items-center rounded-xs px-2 py-1.5 text-sm font-[family-name:var(--font-geist-mono)]',
+                    'relative flex cursor-pointer select-none items-center rounded-xs px-2 py-1.5 text-sm',
                     'outline-none transition-colors',
-                    'hover:bg-foreground/5 data-[highlighted]:bg-foreground/5',
+                    'hover:bg-foreground/5 data-highlighted:bg-foreground/5',
                     'data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary',
-                    'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+                    'data-disabled:pointer-events-none data-disabled:opacity-50',
                   )}
                 >
                   <SelectPrimitive.ItemText>

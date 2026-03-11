@@ -196,12 +196,7 @@ export default function AdminEventAttendancePage() {
                 <CalendarSVG
                   className="h-4 w-4 fill-foreground/70"
                 />
-                {event.date ? new Date(event.date).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                }) : 'Date TBD'}
+                {event.date ? (() => { const d = new Date(event.date); return d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })() : 'Date TBD'}
               </span>
               <span
                 className="flex items-center gap-1"

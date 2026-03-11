@@ -53,12 +53,19 @@ const ReactQuill = dynamic(
   { ssr: false },
 );
 
-const TOOLBAR_OPTIONS = [
+const TOOLBAR_FULL = [
   ['bold', 'italic', 'underline'],
   [{ header: [2, 3, false] }],
   ['link', 'image'],
   [{ list: 'ordered' }, { list: 'bullet' }],
   ['blockquote'],
+  ['clean'],
+];
+
+const TOOLBAR_MINIMAL = [
+  ['bold', 'italic', 'underline'],
+  ['link'],
+  [{ list: 'ordered' }, { list: 'bullet' }],
   ['clean'],
 ];
 
@@ -101,6 +108,8 @@ export interface RichTextEditorProps {
   className?: string;
   /** 'email' = compact preview matching email output (newsletters, attendee messages). 'web' = full-width form style (challenges, events). */
   variant?: 'email' | 'web';
+  /** When true, strips headings, blockquote, and images from toolbar. */
+  minimalToolbar?: boolean;
 }
 
 function isEmptyContent(html: string): boolean {
@@ -204,6 +213,14 @@ function ImageSizeToolbar({
   );
 }
 
+const FORMATS_FULL = [
+  'bold', 'italic', 'underline', 'header', 'link', 'image', 'list', 'blockquote',
+];
+
+const FORMATS_MINIMAL = [
+  'bold', 'italic', 'underline', 'link', 'list',
+];
+
 export function RichTextEditor({
   id,
   value,
@@ -214,6 +231,7 @@ export function RichTextEditor({
   error = false,
   className,
   variant = 'web',
+  minimalToolbar = false,
 }: RichTextEditorProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<ReactQuillType>(null);
@@ -240,13 +258,19 @@ export function RichTextEditor({
       imgEl.style.opacity = '0.5';
 
       try {
+        const uploadFn = onImageUploadRef.current;
+        if (!uploadFn) {
+          imgEl.remove();
+          imgEl.style.opacity = '';
+          uploadingRef.current.delete(src);
+          if (quill.root) onChangeRef.current(quill.root.innerHTML);
+          return;
+        }
+
         const res = await fetch(src);
         const blob = await res.blob();
         const ext = blob.type.split('/')[1]?.replace('+xml', '') || 'png';
         const file = new File([blob], `pasted-image.${ext}`, { type: blob.type });
-
-        const uploadFn = onImageUploadRef.current;
-        if (!uploadFn) return;
         const url = await uploadFn(file);
 
         if (url && imgEl.parentNode) {
@@ -333,14 +357,15 @@ export function RichTextEditor({
     }
   }, []);
 
+  const toolbarOptions = minimalToolbar ? TOOLBAR_MINIMAL : TOOLBAR_FULL;
   const modules = useMemo(() => ({
     toolbar: {
-      container: TOOLBAR_OPTIONS,
-      handlers: {
-        image: imageHandler,
-      },
+      container: toolbarOptions,
+      ...(onImageUpload && !minimalToolbar ? {
+        handlers: { image: imageHandler },
+      } : {}),
     },
-  }), [imageHandler]);
+  }), [toolbarOptions, imageHandler, onImageUpload, minimalToolbar]);
 
   return (
     <div
@@ -374,18 +399,9 @@ export function RichTextEditor({
             placeholder={placeholder}
             readOnly={disabled}
             modules={modules}
-            formats={[
-              'bold',
-              'italic',
-              'underline',
-              'header',
-              'link',
-              'image',
-              'list',
-              'blockquote',
-            ]}
+            formats={minimalToolbar ? FORMATS_MINIMAL : FORMATS_FULL}
           />
-          {selectedImage && (
+          {selectedImage && !minimalToolbar && (
             <ImageSizeToolbar
               target={selectedImage}
               wrapperRef={wrapperRef}
@@ -414,7 +430,7 @@ export function RichTextEditor({
       >
         {sourceView ? '✎' : '</>'}
       </button>
-      {onImageUpload && (
+      {onImageUpload && !minimalToolbar && (
         <input
           ref={fileInputRef}
           type="file"

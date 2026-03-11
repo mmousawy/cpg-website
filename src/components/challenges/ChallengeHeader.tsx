@@ -44,11 +44,12 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '';
   const date = new Date(dateStr);
+  const isCurrentYear = date.getFullYear() === new Date().getFullYear();
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
-    year: 'numeric',
+    year: isCurrentYear ? undefined : 'numeric',
   });
 }
 

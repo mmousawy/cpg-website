@@ -1,0 +1,120 @@
+feat: Scene events – community-curated photography events, date UX, UI polish
+
+Scene Events:
+- New /scene page with upcoming/past scene events (exhibitions, photowalks, talks, workshops, festivals, meetups)
+- Scene event detail pages with date/time, location, organizer, price, description, related events
+- Members can add events; interest tracking; comments with threading
+- Admin moderation at /admin/scene; scene events reportable (entity_type: scene_event)
+- Database: scene_events, scene_event_comments, scene_event_interests tables
+- RPC add_scene_event_comment; interest_count trigger; search_vector on scene_events
+- API routes for scene CRUD, revalidation actions (revalidateScene, revalidateSceneEvent)
+
+Date Formatting:
+- Omit year when date is in current year across 19+ components (album cards, challenges, photos, events, members, etc.)
+- Server components: pass currentYear after connection() to avoid prerender/new Date() warning on scene detail page
+
+Modal & Navigation:
+- ModalProvider: requestClose with beforeCloseCheck guard (unsaved changes confirmation before close), flushContentTop option
+- Modal: close actions route through requestClose for guard support
+- NavigationProgress: 8s safety timeout auto-cancels stale progress bars; skip href="#" links; use bubble phase (respects defaultPrevented)
+- Header/MobileMenu: Scene link added to desktop and mobile navigation
+
+Rich Text & Forms:
+- RichTextEditor: minimalToolbar prop (bold/italic/underline/link/lists only, no headings/images/blockquote)
+- RichTextDescriptionField: minimalToolbar and className props forwarded
+- useFormChanges: richTextFields option for HTML-aware comparison (empty Quill markup like "<p><br></p>" equals ""), skipSync option
+- Admin challenges/events forms: use richTextFields for prompt/description
+
+UI Polish:
+- Rich text editor: focus highlights border (no 2px outline), transition on border-color
+- Select: canonical Tailwind classes (min-w-(--var), data-highlighted, data-disabled); mono prop for privacy dropdown; 36px height
+- Comments: border-l-1 → border-l; reply indent styling
+- HelpLink: less prominent on large headings, vertical alignment
+- SceneEventCard: date/location icon aligned to first row (items-start + mt); location on own row; date/location text darker; image borders
+- Members page: skeleton improvements, staggered pulse delays, responsive title, ?skeleton query param
+- Popover: side prop for top/bottom placement
+- StackedAvatarsPopover: popoverSide and disableLinks props (avoids nested anchors when used inside links)
+- ReportModal: uses ReportEntityType from types (includes scene_event)
+
+Other:
+- Comments API extended for scene_event entity; add_scene_event_comment RPC
+- Reports entity_type check includes 'scene_event'
+- New routes: scene, scene event detail; admin scene page link
+- Help content: scene.tsx
+- formatPrice util; generateBlurhashServer; OG metadata; NotificationContent scene_event type
+
+Files changed (70):
+
+New (24):
+- public/icons/hero-calendar.svg
+- public/icons/hero-clock.svg
+- public/icons/hero-communities.svg
+- public/icons/hero-currency.svg
+- public/icons/hero-globe.svg
+- public/icons/hero-map-pin.svg
+- public/icons/star-filled.svg
+- public/icons/star-outline.svg
+- src/app/admin/scene/ (page + scene events)
+- src/app/api/scene/ (route handlers)
+- src/app/scene/ (page, [slug]/page)
+- src/components/scene/ (SceneEventCard, SceneCoverImage, AddSceneEvent*, etc.)
+- src/content/help/scene.tsx
+- src/hooks/useSceneEvents.ts
+- src/lib/data/scene.ts
+- src/lib/og.ts
+- src/types/scene.ts
+- src/utils/formatPrice.ts
+- src/utils/generateBlurhashServer.ts
+
+Modified (46):
+- README.md
+- src/app/[nickname]/album/[albumSlug]/AlbumContent.tsx
+- src/app/account/(manage)/photos/page.tsx
+- src/app/account/challenges/page.tsx
+- src/app/actions/revalidate.ts
+- src/app/admin/challenges/[slug]/page.tsx
+- src/app/admin/events/[eventId]/page.tsx
+- src/app/admin/events/attendance/[eventId]/page.tsx
+- src/app/admin/page.tsx
+- src/app/admin/reports/page.tsx
+- src/app/api/comments/route.ts
+- src/app/api/reports/route.ts
+- src/app/cancel/[uuid]/CancelBlock.tsx
+- src/app/challenges/[slug]/page.tsx
+- src/app/confirm/[uuid]/ConfirmBlock.tsx
+- src/app/events/[eventSlug]/page.tsx
+- src/app/globals.css
+- src/app/members/page.tsx
+- src/app/providers/ModalProvider.tsx
+- src/components/account/AccountStatsSection.tsx
+- src/components/admin/MemberTable.tsx
+- src/components/album/AlbumMiniCard.tsx
+- src/components/auth/SignupForm.tsx
+- src/components/challenges/ChallengeHeader.tsx
+- src/components/events/EventCard.tsx
+- src/components/events/EventsList.tsx
+- src/components/layout/Header.tsx
+- src/components/layout/MobileMenu.tsx
+- src/components/layout/NavigationProgress.tsx
+- src/components/manage/AlbumListItem.tsx
+- src/components/manage/PhotoListItem.tsx
+- src/components/notifications/NotificationContent.tsx
+- src/components/photo/PhotoPageContent.tsx
+- src/components/shared/Comments.tsx
+- src/components/shared/ContentHeader.tsx
+- src/components/shared/HelpLink.tsx
+- src/components/shared/Modal.tsx
+- src/components/shared/Popover.tsx
+- src/components/shared/ProfileStatsBadges.tsx
+- src/components/shared/ReportModal.tsx
+- src/components/shared/RichTextDescriptionField.tsx
+- src/components/shared/RichTextEditor.tsx
+- src/components/shared/Select.tsx
+- src/components/shared/StackedAvatarsPopover.tsx
+- src/config/routes.ts
+- src/content/help/index.ts
+- src/database.types.ts
+- src/hooks/useFormChanges.ts
+- src/types/notifications.ts
+- src/types/reports.ts
+- supabase/migrations/00000000000000_baseline.sql

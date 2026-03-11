@@ -18,8 +18,9 @@ export function getAlbumDisplayName(album: AlbumWithPhotos): string {
 function formatDate(dateString: string | null | undefined): string | null {
   if (!dateString) return null;
   const date = new Date(dateString);
+  const isCurrentYear = date.getFullYear() === new Date().getFullYear();
   return date.toLocaleDateString(undefined, {
-    year: 'numeric',
+    year: isCurrentYear ? undefined : 'numeric',
     month: 'short',
     day: 'numeric',
   });

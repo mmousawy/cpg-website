@@ -298,13 +298,13 @@ BEGIN
 
   -- Insert photos that don't already exist in the album, preserving input order
   -- Note: width/height removed - use photos table via view/join
-  FOR v_photo IN
+  FOR v_photo IN 
     SELECT p.id, p.url
     FROM unnest(p_photo_ids) WITH ORDINALITY AS input_photo(id, input_order)
     JOIN photos p ON p.id = input_photo.id
     WHERE p.user_id = v_user_id
       AND NOT EXISTS (
-        SELECT 1 FROM album_photos ap
+        SELECT 1 FROM album_photos ap 
         WHERE ap.album_id = p_album_id AND ap.photo_id = p.id
       )
     ORDER BY input_photo.input_order
@@ -313,12 +313,12 @@ BEGIN
     -- width/height are no longer written - they're redundant
     INSERT INTO album_photos (album_id, photo_id, photo_url, sort_order)
     VALUES (p_album_id, v_photo.id, v_photo.url, v_current_sort);
-
+    
     -- Set first photo as manual cover if album doesn't have a cover yet
     IF v_inserted_count = 0 AND NOT v_has_cover THEN
       v_first_photo_url := v_photo.url;
     END IF;
-
+    
     v_current_sort := v_current_sort + 1;
     v_inserted_count := v_inserted_count + 1;
   END LOOP;
@@ -435,6 +435,54 @@ COMMENT ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "
 
 
 
+CREATE OR REPLACE FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_comment_id UUID;
+  v_user_id UUID;
+  v_actual_parent_id UUID;
+BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM "public"."scene_events" WHERE id = p_scene_event_id AND deleted_at IS NULL) THEN
+    RAISE EXCEPTION 'Scene event not found';
+  END IF;
+
+  IF p_parent_comment_id IS NOT NULL THEN
+    SELECT COALESCE(parent_comment_id, id) INTO v_actual_parent_id
+    FROM "public"."comments"
+    WHERE id = p_parent_comment_id
+      AND deleted_at IS NULL;
+
+    IF v_actual_parent_id IS NULL THEN
+      RAISE EXCEPTION 'Parent comment not found or deleted';
+    END IF;
+  END IF;
+
+  INSERT INTO "public"."comments" (user_id, comment_text, parent_comment_id)
+  VALUES (v_user_id, p_comment_text, v_actual_parent_id)
+  RETURNING id INTO v_comment_id;
+
+  INSERT INTO "public"."scene_event_comments" (scene_event_id, comment_id)
+  VALUES (p_scene_event_id, v_comment_id);
+
+  RETURN v_comment_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") OWNER TO "supabase_admin";
+
+
+COMMENT ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") IS 'Creates a comment and links it to a scene event. Supports replies via optional p_parent_comment_id parameter.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."add_shared_album_owner"("p_album_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -521,14 +569,14 @@ BEGIN
 
   -- Soft delete the actual comments
   IF v_comment_ids IS NOT NULL AND array_length(v_comment_ids, 1) > 0 THEN
-    UPDATE comments
-    SET deleted_at = NOW()
+    UPDATE comments 
+    SET deleted_at = NOW() 
     WHERE id = ANY(v_comment_ids) AND deleted_at IS NULL;
   END IF;
 
   -- Soft delete the album
-  UPDATE albums
-  SET deleted_at = NOW()
+  UPDATE albums 
+  SET deleted_at = NOW() 
   WHERE id = p_album_id;
 
   RETURN TRUE;
@@ -606,7 +654,7 @@ CREATE OR REPLACE FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb
     AS $$
 BEGIN
   UPDATE public.photos
-  SET
+  SET 
     title = COALESCE(update_item->>'title', public.photos.title),
     description = COALESCE(update_item->>'description', public.photos.description),
     is_public = COALESCE((update_item->>'is_public')::boolean, public.photos.is_public),
@@ -933,33 +981,33 @@ CREATE OR REPLACE FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") RETU
 BEGIN
   RETURN jsonb_build_object(
     'eventsAttended', (
-      SELECT COUNT(*)::int FROM events_rsvps
-      WHERE user_id = p_user_id
-        AND attended_at IS NOT NULL
-        AND confirmed_at IS NOT NULL
+      SELECT COUNT(*)::int FROM events_rsvps 
+      WHERE user_id = p_user_id 
+        AND attended_at IS NOT NULL 
+        AND confirmed_at IS NOT NULL 
         AND canceled_at IS NULL
     ),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments
+      SELECT COUNT(*)::int FROM comments 
       WHERE user_id = p_user_id AND deleted_at IS NULL
     ),
     'likesReceived', (
       COALESCE((
-        SELECT SUM(likes_count)::int FROM albums
+        SELECT SUM(likes_count)::int FROM albums 
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0) +
       COALESCE((
-        SELECT SUM(likes_count)::int FROM photos
+        SELECT SUM(likes_count)::int FROM photos 
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0)
     ),
     'viewsReceived', (
       COALESCE((
-        SELECT SUM(view_count)::int FROM albums
+        SELECT SUM(view_count)::int FROM albums 
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0) +
       COALESCE((
-        SELECT SUM(view_count)::int FROM photos
+        SELECT SUM(view_count)::int FROM photos 
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0)
     ),
@@ -992,9 +1040,9 @@ CREATE OR REPLACE FUNCTION "public"."get_user_album_photos_count"("user_uuid" "u
   SELECT COUNT(*)::INTEGER
   FROM public.album_photos_active ap
   WHERE ap.album_id IN (
-    SELECT id
-    FROM public.albums
-    WHERE user_id = user_uuid
+    SELECT id 
+    FROM public.albums 
+    WHERE user_id = user_uuid 
     AND deleted_at IS NULL
   );
 $$;
@@ -1014,9 +1062,9 @@ DECLARE
 BEGIN
   -- Get user's album IDs once (reused multiple times)
   SELECT COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_album_ids
-  FROM albums
+  FROM albums 
   WHERE user_id = p_user_id AND deleted_at IS NULL;
-
+  
   -- Get user's photo IDs from those albums
   IF array_length(v_album_ids, 1) > 0 THEN
     SELECT COALESCE(array_agg(DISTINCT ap.photo_id), ARRAY[]::uuid[]) INTO v_photo_ids
@@ -1032,13 +1080,13 @@ BEGIN
     'albums', COALESCE(array_length(v_album_ids, 1), 0),
     'photos', COALESCE(array_length(v_photo_ids, 1), 0),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments
+      SELECT COUNT(*)::int FROM comments 
       WHERE user_id = p_user_id AND deleted_at IS NULL
     ),
     'commentsReceived', (
       SELECT COUNT(*)::int FROM comments c
-      WHERE c.deleted_at IS NULL
-        AND c.user_id != p_user_id
+      WHERE c.deleted_at IS NULL 
+        AND c.user_id != p_user_id 
         AND (
           c.id IN (SELECT comment_id FROM album_comments WHERE album_id = ANY(v_album_ids))
           OR c.id IN (SELECT comment_id FROM photo_comments WHERE photo_id = ANY(v_photo_ids))
@@ -1061,18 +1109,18 @@ BEGIN
       COALESCE((SELECT SUM(p.view_count)::int FROM photos p WHERE p.id = ANY(v_photo_ids) AND p.deleted_at IS NULL), 0)
     ),
     'rsvpsConfirmed', (
-      SELECT COUNT(*)::int FROM events_rsvps
+      SELECT COUNT(*)::int FROM events_rsvps 
       WHERE user_id = p_user_id AND confirmed_at IS NOT NULL AND canceled_at IS NULL
     ),
     'rsvpsCanceled', (
-      SELECT COUNT(*)::int FROM events_rsvps
+      SELECT COUNT(*)::int FROM events_rsvps 
       WHERE user_id = p_user_id AND canceled_at IS NOT NULL
     ),
     'eventsAttended', (
-      SELECT COUNT(*)::int FROM events_rsvps
-      WHERE user_id = p_user_id
-        AND attended_at IS NOT NULL
-        AND confirmed_at IS NOT NULL
+      SELECT COUNT(*)::int FROM events_rsvps 
+      WHERE user_id = p_user_id 
+        AND attended_at IS NOT NULL 
+        AND confirmed_at IS NOT NULL 
         AND canceled_at IS NULL
     ),
     'challengesParticipated', (
@@ -1092,7 +1140,7 @@ BEGIN
       SELECT last_logged_in FROM profiles WHERE id = p_user_id
     )
   ) INTO v_result;
-
+  
   RETURN v_result;
 END;
 $$;
@@ -1495,7 +1543,7 @@ BEGIN
             RAISE EXCEPTION 'Cannot make photo private: it is part of an accepted challenge submission. Withdraw from the challenge first.';
         END IF;
     END IF;
-
+    
     RETURN NEW;
 END;
 $$;
@@ -1843,10 +1891,10 @@ BEGIN
   SET sort_order = COALESCE(sort_order, 0) + 1
   WHERE user_id = NEW.user_id
     AND id != NEW.id;
-
+  
   -- Set the new photo's sort_order to 0 (front of list)
   NEW.sort_order := 0;
-
+  
   RETURN NEW;
 END;
 $$;
@@ -1976,7 +2024,7 @@ BEGIN
   END IF;
 
   target_album_id := OLD.album_id;
-
+  
   -- Get the URL of the deleted photo from photos table
   SELECT p.url INTO deleted_photo_url
   FROM public.photos p
@@ -2093,6 +2141,26 @@ $$;
 
 
 ALTER FUNCTION "public"."update_photo_likes_count"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_scene_event_interest_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE scene_events SET interest_count = interest_count + 1 WHERE id = NEW.scene_event_id;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE scene_events SET interest_count = GREATEST(0, interest_count - 1) WHERE id = OLD.scene_event_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_scene_event_interest_count"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_tag_count"() RETURNS "trigger"
@@ -2429,13 +2497,13 @@ CREATE OR REPLACE VIEW "public"."challenge_photos" WITH ("security_invoker"='on'
    FROM (("public"."challenge_submissions" "cs"
      JOIN "public"."photos" "p" ON (("p"."id" = "cs"."photo_id")))
      JOIN "public"."profiles" "pr" ON (("pr"."id" = "cs"."user_id")))
-  WHERE (("cs"."status" = 'accepted'::"text") AND ("p"."deleted_at" IS NULL));
+  WHERE (("cs"."status" = 'accepted'::"text") AND ("p"."deleted_at" IS NULL) AND ("pr"."suspended_at" IS NULL) AND ("pr"."deletion_scheduled_at" IS NULL));
 
 
 ALTER VIEW "public"."challenge_photos" OWNER TO "supabase_admin";
 
 
-COMMENT ON VIEW "public"."challenge_photos" IS 'Accepted challenge photos with profile data for attribution';
+COMMENT ON VIEW "public"."challenge_photos" IS 'Accepted challenge photos with profile data for attribution (excludes suspended/deleted users)';
 
 
 
@@ -2750,7 +2818,7 @@ CREATE TABLE IF NOT EXISTS "public"."reports" (
     "admin_notes" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    CONSTRAINT "reports_entity_type_check" CHECK (("entity_type" = ANY (ARRAY['photo'::"text", 'album'::"text", 'profile'::"text", 'comment'::"text"]))),
+    CONSTRAINT "reports_entity_type_check" CHECK (("entity_type" = ANY (ARRAY['photo'::"text", 'album'::"text", 'profile'::"text", 'comment'::"text", 'scene_event'::"text"]))),
     CONSTRAINT "reports_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'resolved'::"text", 'dismissed'::"text"])))
 );
 
@@ -2759,6 +2827,70 @@ ALTER TABLE "public"."reports" OWNER TO "supabase_admin";
 
 
 COMMENT ON TABLE "public"."reports" IS 'User-submitted reports for content moderation';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."scene_event_comments" (
+    "scene_event_id" "uuid" NOT NULL,
+    "comment_id" "uuid" NOT NULL
+);
+
+
+ALTER TABLE "public"."scene_event_comments" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."scene_event_comments" IS 'Links comments to scene events.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."scene_event_interests" (
+    "scene_event_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."scene_event_interests" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."scene_event_interests" IS 'Users who marked interest in a scene event.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."scene_events" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "slug" "text" NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "category" "text" NOT NULL,
+    "start_date" "date" NOT NULL,
+    "end_date" "date",
+    "start_time" time without time zone,
+    "location_name" "text" NOT NULL,
+    "location_city" "text" NOT NULL,
+    "location_address" "text",
+    "url" "text",
+    "cover_image_url" "text",
+    "image_blurhash" "text",
+    "image_width" integer,
+    "image_height" integer,
+    "organizer" "text",
+    "price_info" "text",
+    "submitted_by" "uuid" NOT NULL,
+    "deleted_at" timestamp with time zone,
+    "search_vector" "tsvector" GENERATED ALWAYS AS ((((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("title", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("description", ''::"text")), 'B'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("location_name", ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("location_city", ''::"text")), 'A'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("organizer", ''::"text")), 'B'::"char"))) STORED,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "interest_count" integer DEFAULT 0 NOT NULL,
+    "end_time" time without time zone,
+    CONSTRAINT "scene_events_category_check" CHECK (("category" = ANY (ARRAY['exhibition'::"text", 'photowalk'::"text", 'talk'::"text", 'workshop'::"text", 'festival'::"text", 'meetup'::"text", 'other'::"text"])))
+);
+
+
+ALTER TABLE "public"."scene_events" OWNER TO "supabase_admin";
+
+
+COMMENT ON TABLE "public"."scene_events" IS 'Community-curated photography events. Members add events directly; moderation via reports.';
 
 
 
@@ -3079,6 +3211,26 @@ ALTER TABLE ONLY "public"."profiles"
 
 ALTER TABLE ONLY "public"."reports"
     ADD CONSTRAINT "reports_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."scene_event_comments"
+    ADD CONSTRAINT "scene_event_comments_pkey" PRIMARY KEY ("scene_event_id", "comment_id");
+
+
+
+ALTER TABLE ONLY "public"."scene_event_interests"
+    ADD CONSTRAINT "scene_event_interests_pkey" PRIMARY KEY ("scene_event_id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."scene_events"
+    ADD CONSTRAINT "scene_events_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."scene_events"
+    ADD CONSTRAINT "scene_events_slug_key" UNIQUE ("slug");
 
 
 
@@ -3471,6 +3623,26 @@ CREATE INDEX "idx_reports_status" ON "public"."reports" USING "btree" ("status")
 
 
 
+CREATE INDEX "idx_scene_event_interests_scene_event_id" ON "public"."scene_event_interests" USING "btree" ("scene_event_id");
+
+
+
+CREATE INDEX "idx_scene_event_interests_user_id" ON "public"."scene_event_interests" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_scene_events_search" ON "public"."scene_events" USING "gin" ("search_vector");
+
+
+
+CREATE INDEX "idx_scene_events_start_date" ON "public"."scene_events" USING "btree" ("start_date") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_scene_events_submitted_by" ON "public"."scene_events" USING "btree" ("submitted_by");
+
+
+
 CREATE INDEX "idx_shared_album_members_album" ON "public"."shared_album_members" USING "btree" ("album_id");
 
 
@@ -3555,11 +3727,19 @@ CREATE OR REPLACE TRIGGER "trigger_update_photo_likes_count" AFTER INSERT OR DEL
 
 
 
+CREATE OR REPLACE TRIGGER "trigger_update_scene_event_interest_count" AFTER INSERT OR DELETE ON "public"."scene_event_interests" FOR EACH ROW EXECUTE FUNCTION "public"."update_scene_event_interest_count"();
+
+
+
 CREATE OR REPLACE TRIGGER "update_albums_updated_at" BEFORE UPDATE ON "public"."albums" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
 CREATE OR REPLACE TRIGGER "update_comments_updated_at" BEFORE UPDATE ON "public"."comments" FOR EACH ROW EXECUTE FUNCTION "public"."update_comments_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_scene_events_updated_at" BEFORE UPDATE ON "public"."scene_events" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -3803,6 +3983,31 @@ ALTER TABLE ONLY "public"."reports"
 
 
 
+ALTER TABLE ONLY "public"."scene_event_comments"
+    ADD CONSTRAINT "scene_event_comments_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "public"."comments"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."scene_event_comments"
+    ADD CONSTRAINT "scene_event_comments_scene_event_id_fkey" FOREIGN KEY ("scene_event_id") REFERENCES "public"."scene_events"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."scene_event_interests"
+    ADD CONSTRAINT "scene_event_interests_scene_event_id_fkey" FOREIGN KEY ("scene_event_id") REFERENCES "public"."scene_events"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."scene_event_interests"
+    ADD CONSTRAINT "scene_event_interests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."scene_events"
+    ADD CONSTRAINT "scene_events_submitted_by_fkey" FOREIGN KEY ("submitted_by") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."shared_album_members"
     ADD CONSTRAINT "shared_album_members_album_id_fkey" FOREIGN KEY ("album_id") REFERENCES "public"."albums"("id") ON DELETE CASCADE;
 
@@ -3947,6 +4152,18 @@ CREATE POLICY "Authenticated users can add challenge comments" ON "public"."chal
 
 
 CREATE POLICY "Authenticated users can add event comments" ON "public"."event_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can add own interest" ON "public"."scene_event_interests" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "Authenticated users can add scene event comments" ON "public"."scene_event_comments" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+
+
+
+CREATE POLICY "Authenticated users can add scene events" ON "public"."scene_events" FOR INSERT TO "authenticated" WITH CHECK (("submitted_by" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
@@ -4124,6 +4341,14 @@ CREATE POLICY "Read own requests or owner-managed requests" ON "public"."shared_
 
 
 
+CREATE POLICY "Scene event comments are viewable by everyone" ON "public"."scene_event_comments" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Scene event interests are publicly readable" ON "public"."scene_event_interests" FOR SELECT USING (true);
+
+
+
 CREATE POLICY "Select RSVPs policy" ON "public"."events_rsvps" FOR SELECT USING (((("confirmed_at" IS NOT NULL) AND ("canceled_at" IS NULL)) OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
@@ -4266,6 +4491,10 @@ CREATE POLICY "Users can read own notifications" ON "public"."notifications" FOR
 
 
 
+CREATE POLICY "Users can remove own interest" ON "public"."scene_event_interests" FOR DELETE TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
 CREATE POLICY "Users can submit to active challenges" ON "public"."challenge_submissions" FOR INSERT TO "authenticated" WITH CHECK (((( SELECT "auth"."uid"() AS "uid") = "user_id") AND (EXISTS ( SELECT 1
    FROM "public"."challenges"
   WHERE (("challenges"."id" = "challenge_submissions"."challenge_id") AND ("challenges"."is_active" = true) AND (("challenges"."ends_at" IS NULL) OR ("challenges"."ends_at" > "now"())))))));
@@ -4330,6 +4559,14 @@ CREATE POLICY "Users or admins can delete event comments" ON "public"."event_com
 
 
 
+CREATE POLICY "Users or admins can delete scene event comments" ON "public"."scene_event_comments" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
+   FROM "public"."comments"
+  WHERE (("comments"."id" = "scene_event_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+
+
+
 CREATE POLICY "View album comment links" ON "public"."album_comments" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
   WHERE (("albums"."id" = "album_comments"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR (EXISTS ( SELECT 1
@@ -4376,7 +4613,31 @@ ALTER TABLE "public"."album_views" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."albums" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "anon_select_live_scene_events" ON "public"."scene_events" FOR SELECT TO "anon" USING (("deleted_at" IS NULL));
+
+
+
 ALTER TABLE "public"."auth_tokens" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "authenticated_delete_scene_events" ON "public"."scene_events" FOR DELETE TO "authenticated" USING ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+
+
+
+CREATE POLICY "authenticated_select_scene_events" ON "public"."scene_events" FOR SELECT TO "authenticated" USING ((("deleted_at" IS NULL) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+
+
+
+CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR UPDATE TO "authenticated" USING (((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("deleted_at" IS NULL)) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))) WITH CHECK ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+
 
 
 ALTER TABLE "public"."challenge_announcements" ENABLE ROW LEVEL SECURITY;
@@ -4446,6 +4707,15 @@ ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."reports" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."scene_event_comments" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."scene_event_interests" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."scene_events" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."shared_album_members" ENABLE ROW LEVEL SECURITY;
@@ -4716,6 +4986,13 @@ GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid",
 GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "service_role";
 
 
 
@@ -5005,6 +5282,13 @@ GRANT ALL ON FUNCTION "public"."update_photo_likes_count"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."update_scene_event_interest_count"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."update_scene_event_interest_count"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_scene_event_interest_count"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_scene_event_interest_count"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "authenticated";
@@ -5276,6 +5560,27 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_comments" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_comments" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_comments" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_comments" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_interests" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_interests" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_interests" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_event_interests" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."scene_events" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."shared_album_members" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."shared_album_members" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."shared_album_members" TO "authenticated";
@@ -5341,3 +5646,34 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INS
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,6 +1,6 @@
+import { RichDescription } from '@/components/shared/RichDescription';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { EventAttendee } from '@/types/events';
-import { RichDescription } from '@/components/shared/RichDescription';
 import clsx from 'clsx';
 import Link from 'next/link';
 
@@ -149,11 +149,13 @@ export function formatEventDate(
   options: { includeYear?: boolean } = {},
 ): string {
   const { includeYear = false } = options;
-  return new Date(date).toLocaleDateString('en-US', {
+  const d = new Date(date);
+  const showYear = includeYear && d.getFullYear() !== new Date().getFullYear();
+  return d.toLocaleDateString('en-US', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-    ...(includeYear && { year: 'numeric' }),
+    ...(showYear && { year: 'numeric' }),
   });
 }
 

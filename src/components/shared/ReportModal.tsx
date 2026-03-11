@@ -9,6 +9,7 @@ import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
 import { useAuth } from '@/context/AuthContext';
 import type { Photo } from '@/types/photos';
+import type { ReportEntityType } from '@/types/reports';
 import { supabase } from '@/utils/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { BotIdClient } from 'botid/client';
@@ -25,7 +26,7 @@ export const REPORT_REASONS = [
 ] as const;
 
 type ReportModalProps = {
-  entityType: 'photo' | 'album' | 'profile' | 'comment';
+  entityType: ReportEntityType;
   entityId: string;
   entityLabel?: string; // e.g., "this photo", "user @nickname"
   onSuccess?: () => void;

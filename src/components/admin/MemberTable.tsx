@@ -92,8 +92,10 @@ function SortIcon({ field, sortBy, sortOrder }: { field: SortField; sortBy: Sort
 
 function formatDate(dateString: string | null) {
   if (!dateString) return '—';
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
+  const date = new Date(dateString);
+  const isCurrentYear = date.getFullYear() === new Date().getFullYear();
+  return date.toLocaleDateString('en-US', {
+    year: isCurrentYear ? undefined : 'numeric',
     month: 'short',
     day: 'numeric',
   });
@@ -319,7 +321,7 @@ export default function MemberTable({
                           className="mt-1 text-xs text-foreground/50"
                           title={`Scheduled on ${new Date(member.deletion_scheduled_at).toLocaleDateString()}`}
                         >
-                          {new Date(new Date(member.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {(() => { const d = new Date(new Date(member.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
                         </p>
                       </div>
                     ) : member.suspended_at ? (
