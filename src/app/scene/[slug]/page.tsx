@@ -1,9 +1,10 @@
-import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import SceneActionsPopover from '@/components/scene/SceneActionsPopover';
+import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import SceneCoverImage from '@/components/scene/SceneCoverImage';
 import ArrowLink from '@/components/shared/ArrowLink';
 import AuthorRow from '@/components/shared/AuthorRow';
@@ -15,7 +16,11 @@ import {
   getSceneEventInterests,
   type SceneEventWithSubmitter,
 } from '@/lib/data/scene';
-import { SCENE_EVENT_CATEGORIES } from '@/types/scene';
+import {
+  getSceneCategoryStyle,
+  SCENE_EVENT_CATEGORIES,
+  type SceneEventCategory,
+} from '@/types/scene';
 import { formatPrice } from '@/utils/formatPrice';
 import { createMetadata } from '@/utils/metadata';
 
@@ -26,6 +31,8 @@ import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 import HeroCurrencySVG from 'public/icons/hero-currency.svg';
 import HeroGlobeSVG from 'public/icons/hero-globe.svg';
 import HeroMapPinSVG from 'public/icons/hero-map-pin.svg';
+
+import ClockSolidMiniSVG from 'public/icons/clock-solid-mini.svg';
 
 import SceneEventCard from '@/components/scene/SceneEventCard';
 import SceneEventComments from '@/components/scene/SceneEventComments';
@@ -82,28 +89,17 @@ function ordinal(n: number): string {
   return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
 }
 
-/** Returns a single human-readable date/time string. */
-function formatDateTimeRange(
+/** Returns a human-readable date range string (no time). */
+function formatDateRange(
   startDate: string,
   endDate: string | null,
-  startTime: string | null | undefined,
-  endTime: string | null | undefined,
   currentYear: number,
 ): string {
   const startD = new Date(startDate);
-  const startTimeStr = formatTime(startTime);
-  const endTimeStr = formatTime(endTime);
-  const hasEndTime = !!endTimeStr && endTimeStr !== startTimeStr;
   const hasEndDate = endDate && endDate !== startDate;
 
-  const timeStr = startTimeStr
-    ? hasEndTime
-      ? ` · ${startTimeStr} – ${endTimeStr}`
-      : ` · ${startTimeStr}`
-    : '';
-
   if (!hasEndDate) {
-    return `${formatDate(startDate, currentYear)}${timeStr}`;
+    return formatDate(startDate, currentYear);
   }
 
   const endD = new Date(endDate);
@@ -119,14 +115,27 @@ function formatDateTimeRange(
   const yearSuffix = (y: number) => y === currentYear ? '' : `, ${y}`;
 
   if (sameMonth) {
-    return `${weekday(startD)} ${monthName(startD)} ${startD.getDate()} – ${weekday(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}${timeStr}`;
+    return `${weekday(startD)} ${monthName(startD)} ${startD.getDate()} – ${weekday(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}`;
   }
 
   if (sameYear) {
-    return `${weekday(startD)} ${monthName(startD)} ${ordinal(startD.getDate())} – ${weekday(endD)} ${monthName(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}${timeStr}`;
+    return `${weekday(startD)} ${monthName(startD)} ${ordinal(startD.getDate())} – ${weekday(endD)} ${monthName(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}`;
   }
 
-  return `${weekday(startD)} ${monthName(startD)} ${ordinal(startD.getDate())}, ${startD.getFullYear()} – ${weekday(endD)} ${monthName(endD)} ${ordinal(endD.getDate())}, ${endD.getFullYear()}${timeStr}`;
+  return `${weekday(startD)} ${monthName(startD)} ${ordinal(startD.getDate())}, ${startD.getFullYear()} – ${weekday(endD)} ${monthName(endD)} ${ordinal(endD.getDate())}, ${endD.getFullYear()}`;
+}
+
+/** Returns a human-readable time range string, or null if no time. */
+function formatTimeRange(
+  startTime: string | null | undefined,
+  endTime: string | null | undefined,
+): string | null {
+  const startTimeStr = formatTime(startTime);
+  const endTimeStr = formatTime(endTime);
+  const hasEndTime = !!endTimeStr && endTimeStr !== startTimeStr;
+
+  if (!startTimeStr) return null;
+  return hasEndTime ? `${startTimeStr} – ${endTimeStr}` : startTimeStr;
 }
 
 function getCategoryLabel(category: string): string {
@@ -160,12 +169,10 @@ export default async function SceneEventDetailPage({
     : {};
 
   const currentYear = new Date().getFullYear();
-  const dateTimeStr = formatDateTimeRange(
-    event.start_date,
-    event.end_date,
+  const dateStr = formatDateRange(event.start_date, event.end_date, currentYear);
+  const timeStr = formatTimeRange(
     event.start_time,
     (event as { end_time?: string | null }).end_time,
-    currentYear,
   );
   const categoryLabel = getCategoryLabel(event.category);
   const submitter = (event as SceneEventWithSubmitter).submitter;
@@ -189,8 +196,17 @@ export default async function SceneEventDetailPage({
             className="flex items-center justify-between mb-2"
           >
             <span
-              className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
+              className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
+              style={getSceneCategoryStyle(event.category as SceneEventCategory)}
             >
+              <span
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+              >
+                <SceneCategoryIcon
+                  category={event.category}
+                  className="size-5 fill-current"
+                />
+              </span>
               {categoryLabel}
             </span>
             <SceneActionsPopover
@@ -213,7 +229,8 @@ export default async function SceneEventDetailPage({
               <SceneCoverImage
                 url={event.cover_image_url}
                 title={event.title}
-                blurhash={event.image_blurhash}
+                imageWidth={event.image_width}
+                imageHeight={event.image_height}
               />
             )}
 
@@ -222,13 +239,23 @@ export default async function SceneEventDetailPage({
               className="mb-8 space-y-3"
             >
               <div
-                className="flex items-center gap-2 text-[15px] font-semibold"
+                className="flex items-start gap-2 text-[15px] font-semibold"
               >
                 <HeroCalendarSVG
-                  className="size-5 shrink-0 fill-foreground"
+                  className="size-5 shrink-0 fill-foreground mt-0.5"
                 />
-                {dateTimeStr}
+                {dateStr}
               </div>
+              {timeStr && (
+                <div
+                  className="flex items-start gap-2 text-[15px] font-semibold"
+                >
+                  <ClockSolidMiniSVG
+                    className="size-5 shrink-0 fill-foreground mt-0.5"
+                  />
+                  {timeStr}
+                </div>
+              )}
               <div
                 className="flex items-start gap-2 text-[15px] font-semibold"
               >
@@ -248,19 +275,19 @@ export default async function SceneEventDetailPage({
                 </div>
               </div>
               <div
-                className="flex items-center gap-2 text-[15px] font-semibold"
+                className="flex items-start gap-2 text-[15px] font-semibold"
               >
                 <HeroCurrencySVG
-                  className="size-5 shrink-0 fill-foreground"
+                  className="size-5 shrink-0 fill-foreground mt-0.5"
                 />
                 {formatPrice(event.price_info) ?? 'Free'}
               </div>
               {event.url && (
                 <div
-                  className="flex items-center gap-2 text-[15px] font-semibold"
+                  className="flex items-start gap-2 text-[15px] font-semibold"
                 >
                   <HeroGlobeSVG
-                    className="size-5 shrink-0 fill-foreground"
+                    className="size-5 shrink-0 fill-foreground mt-0.5"
                   />
                   <a
                     href={event.url}

@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const isAuthenticated = !!session;
+    const { data: { user } } = await supabase.auth.getUser();
+    const isAuthenticated = !!user;
 
     if (!isAuthenticated) {
       // Anonymous feedback - validate BotID
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Authenticated feedback
-    const userId = session!.user.id;
+    const userId = user.id;
 
     if (name.trim().length > 100) {
       return NextResponse.json(

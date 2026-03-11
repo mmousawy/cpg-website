@@ -369,6 +369,7 @@ export async function revalidateReports() {
 export async function revalidateScene() {
   revalidateTag('scene', 'max');
   revalidateTag('search', 'max');
+  revalidatePath('/scene');
 }
 
 /**

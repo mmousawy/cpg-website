@@ -15,7 +15,7 @@ import {
 const PAST_EVENTS_PER_PAGE = 5;
 
 export const metadata = createMetadata({
-  title: 'Scene',
+  title: 'Explore the scene',
   description:
     'A community-curated guide to photography events — exhibitions, photowalks, workshops, talks, and more. Added by members, for members.',
   canonical: '/scene',
@@ -53,7 +53,7 @@ export default async function ScenePage() {
         className="mb-8"
       >
         <div
-          className="flex flex-wrap items-center justify-between gap-4 mb-2"
+          className="flex flex-wrap items-center justify-between gap-2 mb-2"
         >
           <div
             className="flex items-center gap-2"
@@ -61,7 +61,7 @@ export default async function ScenePage() {
             <h1
               className="text-2xl sm:text-3xl font-bold"
             >
-              Scene
+              Explore the scene
             </h1>
             <HelpLink
               href="what-is-scene"

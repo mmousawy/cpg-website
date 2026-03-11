@@ -37,17 +37,18 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (!session?.user) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'You must be logged in to add an event' },
         { status: 401 },
       );
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
     // Rate limit: max 5 per day (admins bypass)
     const { data: profile } = await supabase

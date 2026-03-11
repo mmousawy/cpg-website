@@ -37,7 +37,7 @@ export default function AddSceneEventButton() {
       onClick={handleClick}
       variant="primary"
       icon={<PlusSVG
-        className="h-5 w-5 -ml-0.5"
+        className="size-5 -ml-1"
       />}
     >
       Add an event

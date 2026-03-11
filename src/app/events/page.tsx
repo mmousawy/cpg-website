@@ -68,7 +68,7 @@ export default async function EventsPage() {
       </div>
 
       <div
-        className="space-y-10"
+        className="space-y-6 sm:space-y-10"
       >
         {/* Upcoming Events */}
         <section>

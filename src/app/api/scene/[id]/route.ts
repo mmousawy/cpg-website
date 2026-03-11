@@ -21,10 +21,11 @@ export async function PATCH(
 
     const supabase = await createClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (!session?.user) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'You must be logged in to edit an event' },
         { status: 401 },
@@ -52,10 +53,10 @@ export async function PATCH(
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_admin')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
-    const isOwner = session.user.id === event.submitted_by;
+    const isOwner = user.id === event.submitted_by;
     const isAdmin = !!profile?.is_admin;
 
     if (!isOwner && !isAdmin) {

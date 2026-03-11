@@ -1,10 +1,11 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
-import type { SceneEvent } from '@/types/scene';
-import { SCENE_EVENT_CATEGORIES } from '@/types/scene';
+import type { SceneEvent, SceneEventCategory } from '@/types/scene';
+import { SCENE_EVENT_CATEGORIES, getSceneCategoryStyle } from '@/types/scene';
 import { formatPrice } from '@/utils/formatPrice';
 import clsx from 'clsx';
 import Link from 'next/link';
 
+import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import BlurImage from '@/components/shared/BlurImage';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 
@@ -28,37 +29,22 @@ function formatDate(dateStr: string): string {
     : `${weekday} ${month} ${d.getDate()} ${d.getFullYear()}`;
 }
 
-function formatTime(time: string | null | undefined): string {
-  if (!time) return '';
-  return time.toString().substring(0, 5);
-}
-
 function ordinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;
   return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
 }
 
-function formatDateTimeRange(
+/** Returns date range only (no time) for event cards. */
+function formatDateRange(
   startDate: string,
   endDate: string | null,
-  startTime: string | null | undefined,
-  endTime: string | null | undefined,
 ): string {
   const startD = new Date(startDate);
-  const startTimeStr = formatTime(startTime);
-  const endTimeStr = formatTime(endTime);
-  const hasEndTime = !!endTimeStr && endTimeStr !== startTimeStr;
   const hasEndDate = endDate && endDate !== startDate;
 
-  const timeStr = startTimeStr
-    ? hasEndTime
-      ? ` · ${startTimeStr} – ${endTimeStr}`
-      : ` · ${startTimeStr}`
-    : '';
-
   if (!hasEndDate) {
-    return `${formatDate(startDate)}${timeStr}`;
+    return formatDate(startDate);
   }
 
   const endD = new Date(endDate);
@@ -75,14 +61,14 @@ function formatDateTimeRange(
   const yearSuffix = (y: number) => y === currentYear ? '' : `, ${y}`;
 
   if (sameMonth) {
-    return `${weekday(startD)} ${monthName(startD, true)} ${startD.getDate()} – ${weekday(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}${timeStr}`;
+    return `${weekday(startD)} ${monthName(startD, true)} ${startD.getDate()} – ${weekday(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}`;
   }
 
   if (sameYear) {
-    return `${weekday(startD)} ${monthName(startD, true)} ${ordinal(startD.getDate())} – ${weekday(endD)} ${monthName(endD, true)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}${timeStr}`;
+    return `${weekday(startD)} ${monthName(startD, true)} ${ordinal(startD.getDate())} – ${weekday(endD)} ${monthName(endD, true)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}`;
   }
 
-  return `${weekday(startD)} ${monthName(startD, true)} ${ordinal(startD.getDate())}, ${startD.getFullYear()} – ${weekday(endD)} ${monthName(endD, true)} ${ordinal(endD.getDate())}, ${endD.getFullYear()}${timeStr}`;
+  return `${weekday(startD)} ${monthName(startD, true)} ${ordinal(startD.getDate())}, ${startD.getFullYear()} – ${weekday(endD)} ${monthName(endD, true)} ${ordinal(endD.getDate())}, ${endD.getFullYear()}`;
 }
 
 function formatLocation(locationName: string | null, locationCity: string): string {
@@ -115,12 +101,7 @@ export default function SceneEventCard({
   className,
 }: SceneEventCardProps) {
   const imageSrc = event.cover_image_url;
-  const dateTimeStr = formatDateTimeRange(
-    event.start_date,
-    event.end_date,
-    event.start_time,
-    (event as { end_time?: string | null }).end_time,
-  );
+  const dateStr = formatDateRange(event.start_date, event.end_date);
   const categoryLabel = getCategoryLabel(event.category);
   const locationStr = formatLocation(event.location_name, event.location_city);
   const interestedPeople = transformInterestedToAvatarPeople(interested);
@@ -136,25 +117,28 @@ export default function SceneEventCard({
       <div
         className="sm:flex sm:items-start sm:gap-4"
       >
-        {/* Mobile: floating thumbnail on right */}
-        {imageSrc && (
-          <div
-            className="sm:hidden float-right ml-2 mb-1"
-          >
+        {/* Mobile: floating thumbnail on right, 72px tall, width scales to aspect ratio */}
+        {imageSrc && (() => {
+          const w = event.image_width ?? 400;
+          const h = event.image_height ?? 300;
+          const displayWidth = Math.round((w / h) * 72);
+          return (
             <div
-              className="relative h-14 w-18 overflow-hidden rounded-md bg-background-medium border border-border-color"
+              className="sm:hidden float-right ml-2 mb-1 relative overflow-hidden rounded-lg bg-background-medium border border-border-color"
+              style={{ width: Math.min(displayWidth, 72), height: 72 }}
             >
               <BlurImage
                 src={imageSrc}
                 alt={event.title}
-                sizes="72px"
                 fill
-                className="object-cover"
+                sizes={`${Math.min(displayWidth, 64)}px`}
+                className="object-contain"
                 blurhash={event.image_blurhash}
+                noBlur={/\.png(\?|$)/i.test(imageSrc)}
               />
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Content */}
         <div
@@ -164,8 +148,17 @@ export default function SceneEventCard({
             className="flex flex-wrap items-center gap-1.5 mb-1.5"
           >
             <span
-              className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+              className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
+              style={getSceneCategoryStyle(event.category as SceneEventCategory)}
             >
+              <span
+                className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-3.5"
+              >
+                <SceneCategoryIcon
+                  category={event.category}
+                  className="size-3.5 fill-current"
+                />
+              </span>
               {categoryLabel}
             </span>
             <span
@@ -194,7 +187,7 @@ export default function SceneEventCard({
               <CalendarSVG
                 className="size-3.5 fill-foreground/70 shrink-0 mt-[3px]"
               />
-              {dateTimeStr}
+              {dateStr}
             </span>
             <span
               className="flex items-start gap-1"
@@ -226,25 +219,28 @@ export default function SceneEventCard({
           )}
         </div>
 
-        {/* Desktop: thumbnail on right */}
-        {imageSrc && (
-          <div
-            className="hidden sm:block shrink-0"
-          >
+        {/* Desktop: thumbnail on right, 96px tall, width scales to aspect ratio */}
+        {imageSrc && (() => {
+          const w = event.image_width ?? 400;
+          const h = event.image_height ?? 300;
+          const displayWidth = Math.round((w / h) * 96);
+          return (
             <div
-              className="relative aspect-video w-44 overflow-hidden rounded-lg bg-background-medium border border-border-color"
+              className="hidden bg-white sm:block shrink-0 relative overflow-hidden rounded-lg bg-background-medium border border-border-color"
+              style={{ width: displayWidth, height: 96 }}
             >
               <BlurImage
                 src={imageSrc}
                 alt={event.title}
-                sizes="224px"
                 fill
-                className="object-cover"
+                sizes={`${displayWidth}px`}
+                className="object-contain"
                 blurhash={event.image_blurhash}
+                noBlur={/\.png(\?|$)/i.test(imageSrc)}
               />
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </Link>
   );

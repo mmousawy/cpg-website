@@ -17,13 +17,23 @@ import { confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import type { SceneEvent, SceneEventCategory, SceneEventFormData } from '@/types/scene';
 import { SCENE_EVENT_CATEGORIES } from '@/types/scene';
 
+import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import { RichTextDescriptionField } from '@/components/shared/RichTextDescriptionField';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
 
 const STEPS = ['Event info', 'Date & location'] as const;
 type Step = 0 | 1;
 
-const CATEGORY_OPTIONS = SCENE_EVENT_CATEGORIES.map(({ value, label }) => ({ value, label }));
+const CATEGORY_OPTIONS = SCENE_EVENT_CATEGORIES.map(({ value, label }) => ({
+  value,
+  label,
+  icon: (
+    <SceneCategoryIcon
+      category={value}
+      className="size-5 fill-current"
+    />
+  ),
+}));
 
 function eventToFormData(event: SceneEvent): Partial<SceneEventFormData> {
   return {

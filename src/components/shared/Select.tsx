@@ -4,13 +4,20 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import clsx from 'clsx';
 import { forwardRef } from 'react';
 
+export interface SelectOption {
+  value: string;
+  label: string;
+  /** Optional leading element (e.g. icon) */
+  icon?: React.ReactNode;
+}
+
 export interface SelectProps {
   /** Current selected value */
   value: string;
   /** Callback when value changes */
   onValueChange: (value: string) => void;
   /** Select options */
-  options: Array<{ value: string; label: string }>;
+  options: Array<SelectOption>;
   /** Placeholder text */
   placeholder?: string;
   /** Error state - adds error border styling */
@@ -64,7 +71,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
           ref={ref}
           className={clsx(
             // Base styles - matching Input component
-            'inline-flex items-center justify-between rounded border bg-background-medium px-3 py-[7px] text-sm',
+            'inline-flex items-center justify-between gap-2 rounded border bg-background-medium px-3 py-[7px] text-sm',
             'transition-colors focus-visible:border-primary focus-visible:outline-none',
             // Width
             fullWidth && 'w-full',
@@ -80,9 +87,23 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
             className,
           )}
         >
-          <SelectPrimitive.Value
-            placeholder={placeholder}
-          />
+          <span
+            className="flex min-w-0 flex-1 items-center gap-2"
+          >
+            {(() => {
+              const selected = options.find((o) => o.value === value);
+              return selected?.icon ? (
+                <span
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                >
+                  {selected.icon}
+                </span>
+              ) : null;
+            })()}
+            <SelectPrimitive.Value
+              placeholder={placeholder}
+            />
+          </span>
           <SelectPrimitive.Icon
             className="ml-2 text-foreground/80"
           >
@@ -121,13 +142,20 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                   key={option.value}
                   value={option.value}
                   className={clsx(
-                    'relative flex cursor-pointer select-none items-center rounded-xs px-2 py-1.5 text-sm',
+                    'relative flex cursor-pointer select-none items-center gap-2 rounded-xs px-2 py-1.5 text-sm',
                     'outline-none transition-colors',
                     'hover:bg-foreground/5 data-highlighted:bg-foreground/5',
                     'data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary',
                     'data-disabled:pointer-events-none data-disabled:opacity-50',
                   )}
                 >
+                  {option.icon && (
+                    <span
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                    >
+                      {option.icon}
+                    </span>
+                  )}
                   <SelectPrimitive.ItemText>
                     {option.label}
                   </SelectPrimitive.ItemText>

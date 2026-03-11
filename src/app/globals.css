@@ -17,6 +17,15 @@
   --border-color-strong: #cdd0d4;
   --error-red: #f75074;
   --challenge-badge: #2c96d3;
+  /* Scene category colors (light mode) */
+  --category-all: #475569;
+  --category-exhibition: #b45309;
+  --category-photowalk: #0e7490;
+  --category-talk: #6d28d9;
+  --category-workshop: #059669;
+  --category-festival: #c026d3;
+  --category-meetup: #2563eb;
+  --category-other: #64748b;
 }
 
 /* System dark mode preference (works without JS) */
@@ -35,6 +44,14 @@
     --border-color-strong: #595b5f;
     --error-red: #f5686a;
     --challenge-badge: #2c96d3;
+    --category-all: #94a3b8;
+    --category-exhibition: #f59e0b;
+    --category-photowalk: #22d3ee;
+    --category-talk: #a78bfa;
+    --category-workshop: #34d399;
+    --category-festival: #e879f9;
+    --category-meetup: #60a5fa;
+    --category-other: #94a3b8;
   }
 }
 
@@ -53,6 +70,14 @@
   --border-color-strong: #cdd0d4;
   --error-red: #f75074;
   --challenge-badge: #2c96d3;
+  --category-all: #475569;
+  --category-exhibition: #b45309;
+  --category-photowalk: #0e7490;
+  --category-talk: #6d28d9;
+  --category-workshop: #059669;
+  --category-festival: #c026d3;
+  --category-meetup: #2563eb;
+  --category-other: #64748b;
 }
 
 /* Explicit dark mode (set by next-themes via JS) */
@@ -70,6 +95,14 @@
   --border-color-strong: #595b5f;
   --error-red: #f5686a;
   --challenge-badge: #2c96d3;
+  --category-all: #94a3b8;
+  --category-exhibition: #f59e0b;
+  --category-photowalk: #22d3ee;
+  --category-talk: #a78bfa;
+  --category-workshop: #34d399;
+  --category-festival: #e879f9;
+  --category-meetup: #60a5fa;
+  --category-other: #94a3b8;
 }
 
 :root.midnight {
@@ -85,6 +118,14 @@
   --border-color-strong: #4c4f57;
   --error-red: #f5686a;
   --challenge-badge: #2c96d3;
+  --category-all: #94a3b8;
+  --category-exhibition: #f59e0b;
+  --category-photowalk: #22d3ee;
+  --category-talk: #a78bfa;
+  --category-workshop: #34d399;
+  --category-festival: #e879f9;
+  --category-meetup: #60a5fa;
+  --category-other: #94a3b8;
 }
 
 html {

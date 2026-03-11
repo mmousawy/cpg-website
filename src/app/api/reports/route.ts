@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
 
     // Check if user is authenticated
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const isAuthenticated = !!session;
+    const { data: { user } } = await supabase.auth.getUser();
+    const isAuthenticated = !!user;
 
     if (!isAuthenticated) {
       // Anonymous report - validate BotID and required fields
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Authenticated report
-    const userId = session.user.id;
+    const userId = user.id;
 
     // Check for duplicate pending reports from same user
     const { data: existingReport } = await supabase

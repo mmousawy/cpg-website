@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
+import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import Button from '@/components/shared/Button';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import { useSupabase } from '@/hooks/useSupabase';
 import {
+  getSceneCategoryStyle,
   SCENE_EVENT_CATEGORIES,
   type SceneEvent,
+  type SceneEventCategory,
 } from '@/types/scene';
 import { formatPrice } from '@/utils/formatPrice';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -304,8 +307,17 @@ function AdminSceneEventCard({
                 className="flex flex-wrap gap-2 mb-1"
               >
                 <span
-                  className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                  className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
+                  style={getSceneCategoryStyle(event.category as SceneEventCategory)}
                 >
+                  <span
+                    className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-3.5"
+                  >
+                    <SceneCategoryIcon
+                      category={event.category}
+                      className="size-3.5 fill-current"
+                    />
+                  </span>
                   {categoryLabel}
                 </span>
                 {formatPrice(event.price_info) && (

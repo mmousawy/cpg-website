@@ -3,7 +3,44 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
+
+const EMPTY_STATE_EMOTES = [
+  '(っ °Д °;)',
+  'っ⊙﹏⊙∥',
+  '(´。＿。｀)',
+  '(；′⌒`)',
+  '(≧﹏ ≦)',
+  '(。﹏。*)',
+  'ಥ_ಥ',
+] as const;
+
+function hashString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+function RandomEmptyEmote() {
+  const id = useId();
+  const emote = useMemo(
+    () =>
+      EMPTY_STATE_EMOTES[
+        hashString(id) % EMPTY_STATE_EMOTES.length
+      ] as (typeof EMPTY_STATE_EMOTES)[number],
+    [id],
+  );
+  return (
+    <p
+      className="text-2xl mb-2"
+    >
+      {emote}
+    </p>
+  );
+}
 
 import PastSceneEventsPaginated from './PastSceneEventsPaginated';
 import SceneCategoryFilter from './SceneCategoryFilter';
@@ -67,6 +104,7 @@ export default function ScenePageContent({
 
   const hasUpcoming =
     thisWeek.length > 0 || thisMonth.length > 0 || later.length > 0;
+  const upcomingCount = thisWeek.length + thisMonth.length + later.length;
   const hasAnyEvents = hasUpcoming || initialPastEvents.length > 0 || pastTotalCount > 0;
 
   return (
@@ -81,10 +119,11 @@ export default function ScenePageContent({
         <div
           className="text-center py-16 rounded-xl border-2 border-dashed border-border-color bg-background/50"
         >
+          <RandomEmptyEmote />
           <p
             className="text-lg font-medium text-foreground/90 mb-2"
           >
-            Scene is empty
+            This category is empty
           </p>
           <p
             className="text-foreground/70 max-w-md mx-auto"
@@ -101,6 +140,15 @@ export default function ScenePageContent({
             className="text-lg font-semibold mb-4 opacity-70"
           >
             Upcoming
+            {upcomingCount > 0 && (
+              <span
+                className="ml-2 text-base font-medium text-foreground/50"
+              >
+                (
+                {upcomingCount}
+                )
+              </span>
+            )}
           </h2>
           {!hasUpcoming ? (
             <div
@@ -122,6 +170,14 @@ export default function ScenePageContent({
                     className="text-sm font-medium text-foreground/60 mb-3"
                   >
                     This week
+                    {' '}
+                    <span
+                      className="text-foreground/40"
+                    >
+                      (
+                      {thisWeek.length}
+                      )
+                    </span>
                   </h3>
                   <div
                     className="grid gap-4 sm:gap-6"
@@ -142,6 +198,14 @@ export default function ScenePageContent({
                     className="text-sm font-medium text-foreground/60 mb-3"
                   >
                     This month
+                    {' '}
+                    <span
+                      className="text-foreground/40"
+                    >
+                      (
+                      {thisMonth.length}
+                      )
+                    </span>
                   </h3>
                   <div
                     className="grid gap-4 sm:gap-6"
@@ -162,6 +226,14 @@ export default function ScenePageContent({
                     className="text-sm font-medium text-foreground/60 mb-3"
                   >
                     Later
+                    {' '}
+                    <span
+                      className="text-foreground/40"
+                    >
+                      (
+                      {later.length}
+                      )
+                    </span>
                   </h3>
                   <div
                     className="grid gap-4 sm:gap-6"
