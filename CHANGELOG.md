@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.29.0](https://github.com/mmousawy/cpg-website/compare/v1.28.1...v1.29.0) (2026-03-11)
+
+
+### Features
+
+* Scene events – community-curated photography events, date UX, UI polish ([aa50ddb](https://github.com/mmousawy/cpg-website/commit/aa50ddb2fec2e0fa19f0b3615025b148c73107d4))
+
+
+### Bug Fixes
+
+* build error. ([63fc146](https://github.com/mmousawy/cpg-website/commit/63fc146dd1572381be5fad1934af88cd9dfc6293))
+
 ## [1.28.1](https://github.com/mmousawy/cpg-website/compare/v1.28.0...v1.28.1) (2026-03-10)
 
 
