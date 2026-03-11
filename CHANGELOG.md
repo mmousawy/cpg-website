@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/mmousawy/cpg-website/compare/v1.29.0...v1.29.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* Update scene page. ([60e7387](https://github.com/mmousawy/cpg-website/commit/60e738797dd799fa9872993ac3fc68bfa8c94091))
+
 ## [1.29.0](https://github.com/mmousawy/cpg-website/compare/v1.28.1...v1.29.0) (2026-03-11)
 
 
