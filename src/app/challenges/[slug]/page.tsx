@@ -102,14 +102,13 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
 /**
  * Format date for display (e.g., "Monday 15 January 2026")
  */
-function formatDate(dateStr: string | null): string {
+function formatDate(dateStr: string | null, currentYear: number): string {
   if (!dateStr) return '';
   const date = new Date(dateStr);
   const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
   const day = date.getDate();
   const month = date.toLocaleDateString('en-US', { month: 'long' });
-  const isCurrentYear = date.getFullYear() === new Date().getFullYear();
-  return isCurrentYear
+  return date.getFullYear() === currentYear
     ? `${weekday} ${day} ${month}`
     : `${weekday} ${day} ${month} ${date.getFullYear()}`;
 }
@@ -145,6 +144,8 @@ export default async function ChallengePage({
   if (!challenge) {
     notFound();
   }
+
+  const currentYear = new Date(serverNow).getFullYear();
 
   // Check if challenge is accepting submissions
   const isEnded =
@@ -375,7 +376,7 @@ export default async function ChallengePage({
                     />
                     Ended on
                     {' '}
-                    {formatDate(challenge.ends_at)}
+                    {formatDate(challenge.ends_at, currentYear)}
                   </span>
                 ) : deadline ? (
                   <span
@@ -386,7 +387,7 @@ export default async function ChallengePage({
                     />
                     Ends on:
                     {' '}
-                    {formatDate(challenge.ends_at)}
+                    {formatDate(challenge.ends_at, currentYear)}
                   </span>
                 ) : (
                   <span
