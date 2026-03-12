@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.2](https://github.com/mmousawy/cpg-website/compare/v1.29.1...v1.29.2) (2026-03-12)
+
+
+### Bug Fixes
+
+* Adjust styling and add scraper scripts for scene events. ([349d239](https://github.com/mmousawy/cpg-website/commit/349d239dbe8a60fc305ce2ad242390155427f6cc))
+* Update scene events. ([516216b](https://github.com/mmousawy/cpg-website/commit/516216b62d2b73446f85e4a8a93d02128b6c65ca))
+
 ## [1.29.1](https://github.com/mmousawy/cpg-website/compare/v1.29.0...v1.29.1) (2026-03-11)
 
 
