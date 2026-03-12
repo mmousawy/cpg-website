@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       'id, slug, title, description, category, start_date, end_date, start_time, end_time, location_name, location_city, location_address, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, submitted_by, interest_count, created_at',
     )
     .is('deleted_at', null)
-    .lt('start_date', now)
+    .or(`end_date.lt.${now},and(end_date.is.null,start_date.lt.${now})`)
     .order('start_date', { ascending: false })
     .range(offset, offset + limit - 1);
 

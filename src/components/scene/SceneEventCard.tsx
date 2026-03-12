@@ -3,6 +3,7 @@ import type { SceneEvent, SceneEventCategory } from '@/types/scene';
 import { SCENE_EVENT_CATEGORIES, getSceneCategoryStyle } from '@/types/scene';
 import { formatPrice } from '@/utils/formatPrice';
 import clsx from 'clsx';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
@@ -11,6 +12,7 @@ import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/St
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
+import TicketCardSVG from 'public/icons/ticket-card.svg';
 
 type SceneEventCardProps = {
   event: SceneEvent;
@@ -106,43 +108,51 @@ export default function SceneEventCard({
   const locationStr = formatLocation(event.location_name, event.location_city);
   const interestedPeople = transformInterestedToAvatarPeople(interested);
 
+  const isCpgEvent = event.id.startsWith('cpg-');
+  const href = isCpgEvent
+    ? `/events/${event.slug}`
+    : `/scene/${event.slug}`;
+
   return (
     <Link
-      href={`/scene/${event.slug}`}
+      href={href}
       className={clsx(
         'block rounded-xl border border-border-color bg-background-light p-3 sm:p-5 transition-colors hover:border-primary group',
         className,
       )}
     >
       <div
-        className="sm:flex sm:items-start sm:gap-4"
+        className="flex items-start gap-4"
       >
-        {/* Mobile: floating thumbnail on right, 72px tall, width scales to aspect ratio */}
-        {imageSrc && (() => {
-          const w = event.image_width ?? 400;
-          const h = event.image_height ?? 300;
-          const displayWidth = Math.round((w / h) * 72);
-          return (
-            <div
-              className="sm:hidden float-right ml-2 mb-1 relative overflow-hidden rounded-lg bg-background-medium border border-border-color"
-              style={{ width: Math.min(displayWidth, 72), height: 72 }}
-            >
-              <BlurImage
-                src={imageSrc}
-                alt={event.title}
-                fill
-                sizes={`${Math.min(displayWidth, 64)}px`}
-                className="object-contain"
-                blurhash={event.image_blurhash}
-                noBlur={/\.png(\?|$)/i.test(imageSrc)}
-              />
-            </div>
-          );
-        })()}
-
-        {/* Content */}
+        {/* Image column (left) - 72x72 mobile, 110px desktop; placeholder when no image */}
         <div
-          className="sm:flex-1 sm:min-w-0"
+          className="shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center bg-white"
+        >
+          {imageSrc ? (
+            <BlurImage
+              src={imageSrc}
+              alt={event.title}
+              fill
+              sizes="(max-width: 640px) 72px, 110px"
+              className="object-contain"
+              blurhash={event.image_blurhash}
+              noBlur={/\.png(\?|$)/i.test(imageSrc)}
+            />
+          ) : (
+            <Image
+              src="/cpg-placeholder.png"
+              alt=""
+              fill
+              sizes="(max-width: 640px) 72px, 110px"
+              className="object-contain"
+              aria-hidden
+            />
+          )}
+        </div>
+
+        {/* Content column */}
+        <div
+          className="flex-1 min-w-0"
         >
           <div
             className="flex flex-wrap items-center gap-1.5 mb-1.5"
@@ -152,11 +162,11 @@ export default function SceneEventCard({
               style={getSceneCategoryStyle(event.category as SceneEventCategory)}
             >
               <span
-                className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-3.5"
+                className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-4"
               >
                 <SceneCategoryIcon
                   category={event.category}
-                  className="size-3.5 fill-current"
+                  className="size-4 fill-current"
                 />
               </span>
               {categoryLabel}
@@ -168,9 +178,12 @@ export default function SceneEventCard({
               ·
             </span>
             <span
-              className="text-xs font-medium text-foreground/80"
+              className="flex items-center gap-1 text-xs font-medium text-foreground/80"
             >
-              {formatPrice(event.price_info) ?? 'Free'}
+              <TicketCardSVG
+                className="size-4 shrink-0 fill-foreground/70"
+              />
+              {formatPrice(event.price_info) ?? 'See event'}
             </span>
           </div>
           <h3
@@ -185,7 +198,7 @@ export default function SceneEventCard({
               className="flex items-start gap-1"
             >
               <CalendarSVG
-                className="size-3.5 fill-foreground/70 shrink-0 mt-[3px]"
+                className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
               />
               {dateStr}
             </span>
@@ -193,7 +206,7 @@ export default function SceneEventCard({
               className="flex items-start gap-1"
             >
               <LocationSVG
-                className="size-3.5 fill-foreground/70 shrink-0 mt-[3px]"
+                className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
               />
               <span
                 className="line-clamp-1"
@@ -218,29 +231,6 @@ export default function SceneEventCard({
             </div>
           )}
         </div>
-
-        {/* Desktop: thumbnail on right, 96px tall, width scales to aspect ratio */}
-        {imageSrc && (() => {
-          const w = event.image_width ?? 400;
-          const h = event.image_height ?? 300;
-          const displayWidth = Math.round((w / h) * 96);
-          return (
-            <div
-              className="hidden bg-white sm:block shrink-0 relative overflow-hidden rounded-lg bg-background-medium border border-border-color"
-              style={{ width: displayWidth, height: 96 }}
-            >
-              <BlurImage
-                src={imageSrc}
-                alt={event.title}
-                fill
-                sizes={`${displayWidth}px`}
-                className="object-contain"
-                blurhash={event.image_blurhash}
-                noBlur={/\.png(\?|$)/i.test(imageSrc)}
-              />
-            </div>
-          );
-        })()}
       </div>
     </Link>
   );

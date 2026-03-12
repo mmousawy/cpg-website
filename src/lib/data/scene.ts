@@ -46,7 +46,8 @@ export async function getUpcomingSceneEvents() {
 }
 
 /**
- * Get past scene events with pagination
+ * Get past scene events with pagination (end_date < today; events that have ended)
+ * Ongoing events (started but not ended) are excluded - they belong in the Ongoing tab.
  * Tagged with 'scene' for granular cache invalidation
  */
 export async function getPastSceneEvents(limit = 5) {
@@ -65,7 +66,9 @@ export async function getPastSceneEvents(limit = 5) {
       { count: 'exact' },
     )
     .is('deleted_at', null)
-    .lt('start_date', nowDate)
+    .or(
+      `end_date.lt.${nowDate},and(end_date.is.null,start_date.lt.${nowDate})`,
+    )
     .order('start_date', { ascending: false })
     .limit(limit);
 

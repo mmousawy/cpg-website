@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
     revalidateTag('challenges', 'max');
     revalidateTag('challenge-photos', 'max');
     revalidateTag('search', 'max');
+    revalidateTag('scene', 'max');
     revalidateTag('home', 'max');
     revalidateTag('changelog', 'max');
 
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       success: true,
       revalidated: [
         'events', 'event-attendees', 'albums', 'gallery', 'profiles',
-        'interests', 'challenges', 'challenge-photos', 'search', 'home', 'changelog',
+        'interests', 'challenges', 'challenge-photos', 'search', 'scene', 'home', 'changelog',
       ],
       timestamp: new Date().toISOString(),
     });

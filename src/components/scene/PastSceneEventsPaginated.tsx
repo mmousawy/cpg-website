@@ -12,6 +12,8 @@ type PastSceneEventsPaginatedProps = {
   initialInterestedByEvent?: Record<string, SceneEventInterested[]>;
   totalCount: number;
   perPage: number;
+  /** CPG past events (prepended); exclude from offset for Load more */
+  cpgPastCount?: number;
 };
 
 export default function PastSceneEventsPaginated({
@@ -19,6 +21,7 @@ export default function PastSceneEventsPaginated({
   initialInterestedByEvent = {},
   totalCount,
   perPage,
+  cpgPastCount = 0,
 }: PastSceneEventsPaginatedProps) {
   const [events, setEvents] = useState<SceneEvent[]>(initialEvents);
   const [interestedByEvent, setInterestedByEvent] = useState<
@@ -26,14 +29,15 @@ export default function PastSceneEventsPaginated({
   >(initialInterestedByEvent);
   const [isPending, startTransition] = useTransition();
 
-  const hasMore = events.length < totalCount;
-  const remainingCount = totalCount - events.length;
+  const dbEventsShown = events.length - cpgPastCount;
+  const hasMore = dbEventsShown < totalCount;
+  const remainingCount = totalCount - dbEventsShown;
 
   const loadMore = useCallback(() => {
     startTransition(async () => {
       try {
         const res = await fetch(
-          `/api/scene/past?offset=${events.length}&limit=${perPage}`,
+          `/api/scene/past?offset=${dbEventsShown}&limit=${perPage}`,
         );
 
         if (!res.ok) {
@@ -50,7 +54,7 @@ export default function PastSceneEventsPaginated({
         console.error('Error loading more scene events:', error);
       }
     });
-  }, [events.length, perPage]);
+  }, [dbEventsShown, perPage]);
 
   return (
     <>

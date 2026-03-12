@@ -34,7 +34,7 @@ function CategoryPill(props: {
       onClick={onClick}
       style={activeStyle}
       className={`
-        inline-flex items-center gap-2 rounded-full pr-2 pl-1 py-1 text-sm font-medium font-[family-name:var(--font-geist-mono)] transition-colors
+        inline-flex items-center gap-1.5 rounded-full pr-2.5 pl-1 py-1 text-sm font-medium font-(family-name:--font-geist-mono) transition-colors
         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
         ${isActive
           ? 'border'

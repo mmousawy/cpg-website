@@ -191,11 +191,13 @@ export default function NavigationProgress() {
       }
     };
 
-    // Use bubble phase so defaultPrevented is set by handlers that prevent navigation
-    document.addEventListener('click', handleLinkClick);
+    // Use capture phase so we run BEFORE Next.js Link's handler. Link calls preventDefault()
+    // for client-side navigation, so in bubble phase defaultPrevented is already true and
+    // we'd never trigger. In capture we see the click first and can start the progress bar.
+    document.addEventListener('click', handleLinkClick, { capture: true });
 
     return () => {
-      document.removeEventListener('click', handleLinkClick);
+      document.removeEventListener('click', handleLinkClick, { capture: true });
     };
   }, [startProgress]);
 
@@ -217,9 +219,11 @@ export default function NavigationProgress() {
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname;
-      // Use microtask to avoid synchronous setState warning
-      queueMicrotask(() => {
-        completeProgress();
+      // Wait one frame so we paint the progress bar before completing (handles very fast prefetched navigations)
+      requestAnimationFrame(() => {
+        queueMicrotask(() => {
+          completeProgress();
+        });
       });
     }
   }, [pathname, completeProgress]);

@@ -3,7 +3,7 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useSearchParams } from 'next/navigation';
-import { useId, useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
 
 const EMPTY_STATE_EMOTES = [
   '(っ °Д °;)',
@@ -35,7 +35,7 @@ function RandomEmptyEmote() {
   );
   return (
     <p
-      className="text-2xl mb-2"
+      className="font-sans text-2xl mb-2"
     >
       {emote}
     </p>
@@ -51,40 +51,82 @@ type ScenePageContentProps = {
   initialPastEvents: SceneEvent[];
   pastTotalCount: number;
   pastPerPage: number;
+  /** CPG past events (not from DB) — needed for correct pagination offset */
+  cpgPastCount?: number;
   interestedByEvent?: Record<string, SceneEventInterested[]>;
 };
 
+type TabId = 'thisWeek' | 'nextWeek' | 'thisMonth' | 'ongoing' | 'later' | 'past';
+
+const UPCOMING_TABS: { id: TabId; label: string }[] = [
+  { id: 'thisWeek', label: 'This week' },
+  { id: 'nextWeek', label: 'Next week' },
+  { id: 'thisMonth', label: 'This month' },
+  { id: 'ongoing', label: 'Ongoing' },
+  { id: 'later', label: 'Later' },
+];
+
+const PAST_TAB = { id: 'past' as const, label: 'Past' };
+
+/** Week = Monday–Sunday. This week = current Mon–Sun, Next week = next Mon–Sun, This month = today–end of month. */
 function groupUpcomingByPeriod(
   events: SceneEvent[],
   category: string | null,
-): { thisWeek: SceneEvent[]; thisMonth: SceneEvent[]; later: SceneEvent[] } {
+): { thisWeek: SceneEvent[]; nextWeek: SceneEvent[]; thisMonth: SceneEvent[]; ongoing: SceneEvent[]; later: SceneEvent[] } {
   const filtered =
     category && category !== 'all'
       ? events.filter((e) => e.category === category)
       : events;
 
   const now = new Date();
-  const endOfWeek = new Date(now);
-  endOfWeek.setDate(endOfWeek.getDate() + 7);
-  const endOfMonth = new Date(now);
-  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // This week: Monday – Sunday
+  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const thisMonday = new Date(now);
+  thisMonday.setDate(now.getDate() + mondayOffset);
+  const thisSunday = new Date(thisMonday);
+  thisSunday.setDate(thisMonday.getDate() + 6);
+  const thisWeekStart = thisMonday.toISOString().slice(0, 10);
+  const thisWeekEnd = thisSunday.toISOString().slice(0, 10);
+
+  // Next week: next Monday – next Sunday
+  const nextMonday = new Date(thisMonday);
+  nextMonday.setDate(thisMonday.getDate() + 7);
+  const nextSunday = new Date(nextMonday);
+  nextSunday.setDate(nextMonday.getDate() + 6);
+  const nextWeekStart = nextMonday.toISOString().slice(0, 10);
+  const nextWeekEnd = nextSunday.toISOString().slice(0, 10);
+
+  // This month: today – end of month
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const endOfMonthStr = endOfMonth.toISOString().slice(0, 10);
 
   const thisWeek: SceneEvent[] = [];
+  const nextWeek: SceneEvent[] = [];
   const thisMonth: SceneEvent[] = [];
+  const ongoing: SceneEvent[] = [];
   const later: SceneEvent[] = [];
 
   for (const e of filtered) {
-    const start = new Date(e.start_date);
-    if (start <= endOfWeek) {
+    const start = e.start_date;
+    if (start < todayStr && e.end_date != null && e.end_date >= todayStr) {
+      ongoing.push(e);
+    } else if (start >= thisWeekStart && start <= thisWeekEnd) {
       thisWeek.push(e);
-    } else if (start <= endOfMonth) {
+      if (start >= todayStr && start <= endOfMonthStr) thisMonth.push(e);
+    } else if (start >= nextWeekStart && start <= nextWeekEnd) {
+      nextWeek.push(e);
+      if (start >= todayStr && start <= endOfMonthStr) thisMonth.push(e);
+    } else if (start >= todayStr && start <= endOfMonthStr) {
       thisMonth.push(e);
     } else {
       later.push(e);
     }
   }
 
-  return { thisWeek, thisMonth, later };
+  return { thisWeek, nextWeek, thisMonth, ongoing, later };
 }
 
 export default function ScenePageContent({
@@ -92,20 +134,59 @@ export default function ScenePageContent({
   initialPastEvents,
   pastTotalCount,
   pastPerPage,
+  cpgPastCount = 0,
   interestedByEvent = {},
 }: ScenePageContentProps) {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
 
-  const { thisWeek, thisMonth, later } = useMemo(
+  const { thisWeek, nextWeek, thisMonth, ongoing, later } = useMemo(
     () => groupUpcomingByPeriod(upcomingEvents, category),
     [upcomingEvents, category],
   );
 
+  const counts = useMemo(
+    () => ({
+      thisWeek: thisWeek.length,
+      nextWeek: nextWeek.length,
+      thisMonth: thisMonth.length,
+      ongoing: ongoing.length,
+      later: later.length,
+      past: pastTotalCount + cpgPastCount,
+    }),
+    [thisWeek.length, nextWeek.length, thisMonth.length, ongoing.length, later.length, pastTotalCount, cpgPastCount],
+  );
+
+  const availableTabs = useMemo(() => {
+    const upcoming = UPCOMING_TABS.filter((t) => counts[t.id] > 0);
+    const past = pastTotalCount > 0 || cpgPastCount > 0 ? [PAST_TAB] : [];
+    return [...upcoming, ...past];
+  }, [counts, pastTotalCount, cpgPastCount]);
+
+  const defaultTab = availableTabs.length > 0 ? availableTabs[0].id : null;
+  const [selectedTab, setSelectedTab] = useState<TabId | null>(defaultTab);
+
+  const activeTab = selectedTab && availableTabs.some((t) => t.id === selectedTab)
+    ? selectedTab
+    : defaultTab;
+
   const hasUpcoming =
-    thisWeek.length > 0 || thisMonth.length > 0 || later.length > 0;
-  const upcomingCount = thisWeek.length + thisMonth.length + later.length;
-  const hasAnyEvents = hasUpcoming || initialPastEvents.length > 0 || pastTotalCount > 0;
+    thisWeek.length > 0 || nextWeek.length > 0 || ongoing.length > 0 || thisMonth.length > 0 || later.length > 0;
+  const hasPast = pastTotalCount > 0 || cpgPastCount > 0;
+  const hasAnyEvents = hasUpcoming || hasPast;
+
+  const activeEvents =
+    activeTab === 'thisWeek'
+      ? thisWeek
+      : activeTab === 'nextWeek'
+        ? nextWeek
+        : activeTab === 'thisMonth'
+          ? thisMonth
+          : activeTab === 'ongoing'
+            ? ongoing
+            : activeTab === 'later'
+              ? later
+              : [];
 
   return (
     <div
@@ -117,6 +198,7 @@ export default function ScenePageContent({
       {/* Empty state */}
       {!hasAnyEvents && (
         <div
+          key={category ?? 'all'}
           className="text-center py-16 rounded-xl border-2 border-dashed border-border-color bg-background/50"
         >
           <RandomEmptyEmote />
@@ -133,140 +215,69 @@ export default function ScenePageContent({
         </div>
       )}
 
-      {/* Upcoming */}
+      {/* Tabs + content */}
       {hasAnyEvents && (
         <section>
-          <h2
-            className="text-lg font-semibold mb-4 opacity-70"
+          <div
+            className="flex gap-1 mb-4 border-b border-border-color pb-2 overflow-x-auto scrollbar-none"
           >
-            Upcoming
-            {upcomingCount > 0 && (
-              <span
-                className="ml-2 text-base font-medium text-foreground/50"
+            {availableTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedTab(tab.id)}
+                className={`shrink-0 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-primary border-2 bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary-alt'
+                    : 'border-transparent border-2 text-foreground/70 hover:text-foreground hover:bg-foreground/5 dark:text-foreground/90 dark:hover:text-foreground dark:hover:bg-foreground/10'
+                }`}
               >
-                (
-                {upcomingCount}
-                )
-              </span>
-            )}
-          </h2>
-          {!hasUpcoming ? (
-            <div
-              className="text-center py-8 rounded-xl border border-dashed border-border-color"
-            >
-              <p
-                className="text-foreground/80"
-              >
-                No upcoming events in this category. Check back soon or add one!
-              </p>
-            </div>
-          ) : (
-            <div
-              className="space-y-8"
-            >
-              {thisWeek.length > 0 && (
-                <div>
-                  <h3
-                    className="text-sm font-medium text-foreground/60 mb-3"
-                  >
-                    This week
-                    {' '}
-                    <span
-                      className="text-foreground/40"
-                    >
-                      (
-                      {thisWeek.length}
-                      )
-                    </span>
-                  </h3>
-                  <div
-                    className="grid gap-4 sm:gap-6"
-                  >
-                    {thisWeek.map((event) => (
-                      <SceneEventCard
-                        key={event.id}
-                        event={event}
-                        interested={interestedByEvent[event.id] ?? []}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {thisMonth.length > 0 && (
-                <div>
-                  <h3
-                    className="text-sm font-medium text-foreground/60 mb-3"
-                  >
-                    This month
-                    {' '}
-                    <span
-                      className="text-foreground/40"
-                    >
-                      (
-                      {thisMonth.length}
-                      )
-                    </span>
-                  </h3>
-                  <div
-                    className="grid gap-4 sm:gap-6"
-                  >
-                    {thisMonth.map((event) => (
-                      <SceneEventCard
-                        key={event.id}
-                        event={event}
-                        interested={interestedByEvent[event.id] ?? []}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {later.length > 0 && (
-                <div>
-                  <h3
-                    className="text-sm font-medium text-foreground/60 mb-3"
-                  >
-                    Later
-                    {' '}
-                    <span
-                      className="text-foreground/40"
-                    >
-                      (
-                      {later.length}
-                      )
-                    </span>
-                  </h3>
-                  <div
-                    className="grid gap-4 sm:gap-6"
-                  >
-                    {later.map((event) => (
-                      <SceneEventCard
-                        key={event.id}
-                        event={event}
-                        interested={interestedByEvent[event.id] ?? []}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      )}
+                {tab.label}
+                {' '}
+                <span
+                  className="text-foreground/50 dark:text-foreground/70"
+                >
+                  {'('}
+                  {counts[tab.id]}
+                  {')'}
+                </span>
+              </button>
+            ))}
+          </div>
 
-      {/* Past */}
-      {hasAnyEvents && pastTotalCount > 0 && (
-        <section>
-          <h2
-            className="text-lg font-semibold mb-4 opacity-70"
-          >
-            Past events
-          </h2>
-          <PastSceneEventsPaginated
-            initialEvents={initialPastEvents}
-            initialInterestedByEvent={interestedByEvent}
-            totalCount={pastTotalCount}
-            perPage={pastPerPage}
-          />
+          {activeTab === 'past' ? (
+            <PastSceneEventsPaginated
+              initialEvents={initialPastEvents}
+              initialInterestedByEvent={interestedByEvent}
+              totalCount={pastTotalCount}
+              perPage={pastPerPage}
+              cpgPastCount={cpgPastCount}
+            />
+          ) : activeTab ? (
+            activeEvents.length > 0 ? (
+              <div
+                className="grid gap-4 sm:gap-6"
+              >
+                {activeEvents.map((event) => (
+                  <SceneEventCard
+                    key={event.id}
+                    event={event}
+                    interested={interestedByEvent[event.id] ?? []}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div
+                className="text-center py-8 rounded-xl border border-dashed border-border-color"
+              >
+                <p
+                  className="text-foreground/80"
+                >
+                  No events in this tab. Check back soon or add one!
+                </p>
+              </div>
+            )
+          ) : null}
         </section>
       )}
     </div>

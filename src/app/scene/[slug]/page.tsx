@@ -28,9 +28,9 @@ import { RichDescription } from '@/components/shared/RichDescription';
 
 import HeroCalendarSVG from 'public/icons/hero-calendar.svg';
 import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
-import HeroCurrencySVG from 'public/icons/hero-currency.svg';
-import HeroGlobeSVG from 'public/icons/hero-globe.svg';
 import HeroMapPinSVG from 'public/icons/hero-map-pin.svg';
+import LinkSVG from 'public/icons/link.svg';
+import TicketSVG from 'public/icons/ticket.svg';
 
 import ClockSolidMiniSVG from 'public/icons/clock-solid-mini.svg';
 
@@ -185,7 +185,7 @@ export default async function SceneEventDetailPage({
           direction="left"
           className="mb-4"
         >
-          Back to Scene
+          Back to all events
         </ArrowLink>
 
         {/* Header: badge, title, actions */}
@@ -251,7 +251,7 @@ export default async function SceneEventDetailPage({
                   className="flex items-start gap-2 text-[15px] font-semibold"
                 >
                   <ClockSolidMiniSVG
-                    className="size-5 shrink-0 fill-foreground mt-0.5"
+                    className="size-5 shrink-0 fill-foreground mt-0.4"
                   />
                   {timeStr}
                 </div>
@@ -277,16 +277,16 @@ export default async function SceneEventDetailPage({
               <div
                 className="flex items-start gap-2 text-[15px] font-semibold"
               >
-                <HeroCurrencySVG
+                <TicketSVG
                   className="size-5 shrink-0 fill-foreground mt-0.5"
                 />
-                {formatPrice(event.price_info) ?? 'Free'}
+                {formatPrice(event.price_info) ?? 'See event'}
               </div>
               {event.url && (
                 <div
                   className="flex items-start gap-2 text-[15px] font-semibold"
                 >
-                  <HeroGlobeSVG
+                  <LinkSVG
                     className="size-5 shrink-0 fill-foreground mt-0.5"
                   />
                   <a
@@ -321,7 +321,7 @@ export default async function SceneEventDetailPage({
             {/* Organizer */}
             {event.organizer && (
               <p
-                className="flex items-center gap-2 text-foreground/60 mb-8"
+                className="flex items-center gap-2 text-foreground/60"
               >
                 <HeroCommunitiesSVG
                   className="size-5 shrink-0 fill-foreground/50"
@@ -338,7 +338,9 @@ export default async function SceneEventDetailPage({
 
             {/* Submitted by */}
             {submitter?.nickname && (
-              <div>
+              <div
+                className="mt-8"
+              >
                 <h2
                   className="text-lg font-semibold mb-3"
                 >

@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+
+import BlurImage from '@/components/shared/BlurImage';
 import { useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
@@ -21,6 +23,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
+import TicketCardSVG from 'public/icons/ticket-card.svg';
 import TimeSVG from 'public/icons/time.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
@@ -285,21 +288,30 @@ function AdminSceneEventCard({
           <div
             className="flex items-start gap-3 sm:gap-4"
           >
-            {imageSrc && (
-              <div
-                className="relative h-16 w-24 sm:h-20 sm:w-32 shrink-0 overflow-hidden rounded-lg bg-background-medium"
-              >
-                <Image
+            <div
+              className="shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center bg-white"
+            >
+              {imageSrc ? (
+                <BlurImage
                   src={imageSrc}
                   alt={event.title ?? 'Event cover'}
-                  sizes="256px"
-                  loading="eager"
-                  quality={85}
                   fill
-                  className="object-cover"
+                  sizes="(max-width: 640px) 72px, 110px"
+                  className="object-contain"
+                  blurhash={event.image_blurhash}
+                  noBlur={/\.png(\?|$)/i.test(imageSrc)}
                 />
-              </div>
-            )}
+              ) : (
+                <Image
+                  src="/cpg-placeholder.png"
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 72px, 110px"
+                  className="object-contain p-2"
+                  aria-hidden
+                />
+              )}
+            </div>
             <div
               className="flex-1 min-w-0"
             >
@@ -311,19 +323,22 @@ function AdminSceneEventCard({
                   style={getSceneCategoryStyle(event.category as SceneEventCategory)}
                 >
                   <span
-                    className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-3.5"
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-4"
                   >
                     <SceneCategoryIcon
                       category={event.category}
-                      className="size-3.5 fill-current"
+                      className="size-4 fill-current"
                     />
                   </span>
                   {categoryLabel}
                 </span>
                 {formatPrice(event.price_info) && (
                   <span
-                    className="text-xs text-foreground/60"
+                    className="flex items-center gap-1 text-xs text-foreground/60"
                   >
+                    <TicketCardSVG
+                      className="size-3.5 shrink-0 fill-foreground/60"
+                    />
                     {formatPrice(event.price_info)}
                   </span>
                 )}

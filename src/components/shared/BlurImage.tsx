@@ -327,7 +327,7 @@ export default function BlurImage({
         />
       ) : (
         <div
-          className={`w-full bg-neutral-200 dark:bg-neutral-800 ${isLoaded ? 'invisible' : ''}`}
+          className={`w-full bg-white ${isLoaded ? 'invisible' : ''}`}
           style={{
             aspectRatio: imgWidth && imgHeight ? `${imgWidth} / ${imgHeight}` : undefined,
           }}
