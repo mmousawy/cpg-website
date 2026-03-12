@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.3](https://github.com/mmousawy/cpg-website/compare/v1.29.2...v1.29.3) (2026-03-12)
+
+
+### Bug Fixes
+
+* Adjust scene events styling. ([fca5755](https://github.com/mmousawy/cpg-website/commit/fca575562b097a35324582460ede9f0a6bb5b458))
+
 ## [1.29.2](https://github.com/mmousawy/cpg-website/compare/v1.29.1...v1.29.2) (2026-03-12)
 
 
