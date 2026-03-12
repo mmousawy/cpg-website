@@ -76,7 +76,7 @@ export default function RelatedEventsSlider({
 
   return (
     <section
-      className="mt-8"
+      className="mt-8 sm:-mx-16 sm:px-16"
     >
       <h2
         className="text-lg font-semibold mb-4 opacity-70"
@@ -110,7 +110,7 @@ export default function RelatedEventsSlider({
         </div>
 
         <div
-          className="w-screen relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-0 sm:translate-x-0 sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          className="w-screen relative left-1/2 -translate-x-1/2 sm:w-[calc(100%+8rem)] sm:-left-16 sm:translate-x-0 sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
           <Swiper
             modules={[Navigation, A11y]}
@@ -129,8 +129,8 @@ export default function RelatedEventsSlider({
               640: {
                 slidesPerView: 2,
                 spaceBetween: 16,
-                slidesOffsetBefore: 0,
-                slidesOffsetAfter: 0,
+                slidesOffsetBefore: 64,
+                slidesOffsetAfter: 64,
               },
             }}
             grabCursor

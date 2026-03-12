@@ -669,14 +669,15 @@ export default function Comments({
     setIsRefetching(false);
   }, [entityId, entityType, supabase]);
 
-  // Fetch comments on mount and when albumId changes
+  // Fetch comments on mount and when albumId changes (only when user is authenticated)
   useEffect(() => {
+    if (!user) return;
     // Schedule fetch via microtask to satisfy React Compiler
     const timerId = setTimeout(() => {
       fetchComments(true); // initial load
     }, 0);
     return () => clearTimeout(timerId);
-  }, [fetchComments]);
+  }, [user, fetchComments]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -833,6 +834,32 @@ export default function Comments({
     showAuthPrompt(opts);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- showAuthPrompt is stable from the hook
   }, []);
+
+  if (!user) {
+    return (
+      <div
+        id="comments"
+        className="space-y-2"
+      >
+        <h3
+          className="text-lg font-semibold"
+        >
+          Comments
+        </h3>
+        <p
+          className="text-sm text-foreground/70"
+        >
+          Sign in to see comments.
+        </p>
+        <Button
+          size="sm"
+          onClick={() => showAuthPrompt({ feature: 'view comments' })}
+        >
+          Sign in
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div

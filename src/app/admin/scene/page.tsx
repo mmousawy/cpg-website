@@ -289,7 +289,7 @@ function AdminSceneEventCard({
             className="flex items-start gap-3 sm:gap-4"
           >
             <div
-              className="shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center bg-white"
+              className={`shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center${imageSrc ? '' : ' bg-white'}`}
             >
               {imageSrc ? (
                 <BlurImage

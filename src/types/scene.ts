@@ -43,6 +43,7 @@ export function getSceneCategoryStyle(
     borderColor: `var(${varName})`,
     backgroundColor: `color-mix(in srgb, var(${varName}) 12%, transparent)`,
     color: `var(${varName})`,
+    textShadow: 'var(--category-text-shadow, none)',
   } as const;
 }
 

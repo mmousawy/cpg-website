@@ -94,7 +94,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className="h-full"
+      className="h-full overflow-x-hidden"
     >
       <head>
         <meta
@@ -103,7 +103,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} h-full bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-hidden bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
       >
         <JsonLd
           data={[

@@ -3,7 +3,7 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useSearchParams } from 'next/navigation';
-import { useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 const EMPTY_STATE_EMOTES = [
   '(っ °Д °;)',
@@ -42,12 +42,37 @@ function RandomEmptyEmote() {
   );
 }
 
-import Button from '@/components/shared/Button';
+
 import PastSceneEventsPaginated from './PastSceneEventsPaginated';
 import SceneCategoryFilter from './SceneCategoryFilter';
 import SceneEventCard from './SceneEventCard';
 
 const ITEMS_PER_PAGE = 20;
+
+function UpcomingScrollSentinel({ onVisible }: { onVisible: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const savedOnVisible = useCallback(() => { onVisible(); }, [onVisible]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) savedOnVisible();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [savedOnVisible]);
+
+  return (
+    <div
+      ref={ref}
+      className="h-1"
+    />
+  );
+}
 
 type ScenePageContentProps = {
   upcomingEvents: SceneEvent[];
@@ -287,18 +312,9 @@ export default function ScenePageContent({
                   ))}
                 </div>
                 {activeEvents.length > visibleCount && (
-                  <div
-                    className="flex justify-center pt-4"
-                  >
-                    <Button
-                      onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-                      variant="secondary"
-                      size="md"
-                      className="bg-foreground/5 dark:bg-border-color/70"
-                    >
-                      {`Show more (${activeEvents.length - visibleCount} remaining)`}
-                    </Button>
-                  </div>
+                  <UpcomingScrollSentinel
+                    onVisible={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+                  />
                 )}
               </>
             ) : (

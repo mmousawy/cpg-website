@@ -17,6 +17,7 @@
   --border-color-strong: #cdd0d4;
   --error-red: #f75074;
   --challenge-badge: #2c96d3;
+  --category-text-shadow: none;
   /* Scene category colors (light mode) */
   --category-all: #475569;
   --category-exhibition: #b45309;
@@ -44,6 +45,7 @@
     --border-color-strong: #595b5f;
     --error-red: #f5686a;
     --challenge-badge: #2c96d3;
+    --category-text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
     --category-all: #94a3b8;
     --category-exhibition: #f59e0b;
     --category-photowalk: #22d3ee;
@@ -70,6 +72,7 @@
   --border-color-strong: #cdd0d4;
   --error-red: #f75074;
   --challenge-badge: #2c96d3;
+  --category-text-shadow: none;
   --category-all: #475569;
   --category-exhibition: #b45309;
   --category-photowalk: #0e7490;
@@ -95,6 +98,7 @@
   --border-color-strong: #595b5f;
   --error-red: #f5686a;
   --challenge-badge: #2c96d3;
+  --category-text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   --category-all: #94a3b8;
   --category-exhibition: #f59e0b;
   --category-photowalk: #22d3ee;
@@ -118,6 +122,7 @@
   --border-color-strong: #4c4f57;
   --error-red: #f5686a;
   --challenge-badge: #2c96d3;
+  --category-text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
   --category-all: #94a3b8;
   --category-exhibition: #f59e0b;
   --category-photowalk: #22d3ee;

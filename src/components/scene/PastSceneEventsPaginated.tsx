@@ -2,9 +2,8 @@
 
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
-import Button from '@/components/shared/Button';
 import SceneEventCard from './SceneEventCard';
 
 type PastSceneEventsPaginatedProps = {
@@ -29,10 +28,11 @@ export default function PastSceneEventsPaginated({
   >(initialInterestedByEvent);
   const [isPending, startTransition] = useTransition();
 
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   const dbEventsShown = events.length - cpgPastCount;
   const [exhausted, setExhausted] = useState(false);
   const hasMore = !exhausted && dbEventsShown < totalCount;
-  const remainingCount = totalCount - dbEventsShown;
 
   const loadMore = useCallback(() => {
     startTransition(async () => {
@@ -62,6 +62,22 @@ export default function PastSceneEventsPaginated({
     });
   }, [dbEventsShown, perPage]);
 
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isPending) {
+          loadMore();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isPending, loadMore]);
+
   return (
     <>
       <div
@@ -88,19 +104,16 @@ export default function PastSceneEventsPaginated({
       )}
       {hasMore && events.length > 0 && (
         <div
-          className="flex justify-center pt-4"
+          ref={sentinelRef}
+          className="flex justify-center pt-4 pb-2"
         >
-          <Button
-            onClick={loadMore}
-            variant="secondary"
-            size="md"
-            loading={isPending}
-            className="bg-foreground/5 dark:bg-border-color/70"
-          >
-            {isPending
-              ? 'Loading...'
-              : `Load more (${remainingCount} remaining)`}
-          </Button>
+          {isPending && (
+            <p
+              className="text-sm text-foreground/50 animate-pulse"
+            >
+              Loading more...
+            </p>
+          )}
         </div>
       )}
     </>

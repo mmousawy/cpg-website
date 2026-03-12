@@ -231,21 +231,34 @@ export function consolidateMultiDayEvents(events: ScrapedEvent[]): ScrapedEvent[
   return Array.from(byKey.values()).flatMap((list) => {
     if (list.length === 1) return [list[0]];
 
-    const uniqueUrls = new Set(list.map((e) => e.url));
-    if (uniqueUrls.size === list.length) return list;
-
     const sorted = [...list].sort(
       (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
     );
-    const first = sorted[0];
-    const last = sorted[sorted.length - 1];
-    return [{
-      ...first,
-      start_date: first.start_date,
-      end_date: last.start_date !== first.start_date ? last.start_date : first.end_date ?? null,
-      start_time: first.start_time,
-      end_time: first.end_time,
-    }];
+
+    // Group consecutive dates (gap <= 1 day) into spans
+    const groups: ScrapedEvent[][] = [[sorted[0]]];
+    for (let i = 1; i < sorted.length; i++) {
+      const prevDate = new Date(sorted[i - 1].start_date);
+      const currDate = new Date(sorted[i].start_date);
+      const diffDays = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays <= 1) {
+        groups[groups.length - 1].push(sorted[i]);
+      } else {
+        groups.push([sorted[i]]);
+      }
+    }
+
+    return groups.map((group) => {
+      const first = group[0];
+      const last = group[group.length - 1];
+      return {
+        ...first,
+        start_date: first.start_date,
+        end_date: group.length > 1 ? last.start_date : first.end_date ?? null,
+        start_time: first.start_time,
+        end_time: first.end_time,
+      };
+    });
   });
 }
 

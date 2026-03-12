@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 
@@ -7,6 +8,7 @@ import SceneActionsPopover from '@/components/scene/SceneActionsPopover';
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import SceneCoverImage from '@/components/scene/SceneCoverImage';
 import ArrowLink from '@/components/shared/ArrowLink';
+import BlurImage from '@/components/shared/BlurImage';
 import AuthorRow from '@/components/shared/AuthorRow';
 import { routes } from '@/config/routes';
 import {
@@ -179,7 +181,70 @@ export default async function SceneEventDetailPage({
 
   return (
     <>
-      <PageContainer>
+      {/* Hero Section with Cover Image */}
+      {event.cover_image_url && (
+        <div
+          className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden"
+        >
+          <BlurImage
+            src={event.cover_image_url}
+            alt={event.title}
+            fill
+            className="object-cover"
+            sizes="100vw"
+            preload
+            blurhash={event.image_blurhash}
+            noBlur={/\.png(\?|$)/i.test(event.cover_image_url)}
+          />
+
+          <div
+            className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
+          />
+
+          <div
+            className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"
+          />
+
+          {/* Title overlay */}
+          <div
+            className="absolute inset-x-0 bottom-0 px-2 pb-0 sm:px-8 sm:pb-4"
+          >
+            <div
+              className="mx-auto max-w-screen-md"
+            >
+              <div
+                className="mb-2 flex flex-wrap items-center gap-2"
+              >
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium backdrop-blur-sm"
+                  style={getSceneCategoryStyle(event.category as SceneEventCategory)}
+                >
+                  <span
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                  >
+                    <SceneCategoryIcon
+                      category={event.category}
+                      className="size-5 fill-current"
+                    />
+                  </span>
+                  {categoryLabel}
+                </span>
+              </div>
+              <h1
+                className="text-3xl font-bold sm:text-4xl md:text-5xl"
+              >
+                {event.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PageContainer
+        className={clsx(
+          event.cover_image_url ? 'pt-4! sm:pt-6!' : '',
+        )}
+      >
         <ArrowLink
           href={routes.scene.url}
           direction="left"
@@ -188,39 +253,41 @@ export default async function SceneEventDetailPage({
           Back to all events
         </ArrowLink>
 
-        {/* Header: badge, title, actions */}
-        <div
-          className="mb-6"
-        >
+        {/* Header (no cover image fallback) */}
+        {!event.cover_image_url && (
           <div
-            className="flex items-center justify-between mb-2"
+            className="mb-4 sm:mb-5"
           >
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
-              style={getSceneCategoryStyle(event.category as SceneEventCategory)}
+            <div
+              className="flex items-center justify-between mb-3"
             >
               <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
+                style={getSceneCategoryStyle(event.category as SceneEventCategory)}
               >
-                <SceneCategoryIcon
-                  category={event.category}
-                  className="size-5 fill-current"
-                />
+                <span
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                >
+                  <SceneCategoryIcon
+                    category={event.category}
+                    className="size-5 fill-current"
+                  />
+                </span>
+                {categoryLabel}
               </span>
-              {categoryLabel}
-            </span>
-            <SceneActionsPopover
-              event={event}
-            />
+              <SceneActionsPopover
+                event={event}
+              />
+            </div>
+            <h1
+              className="text-2xl font-bold sm:text-3xl"
+            >
+              {event.title}
+            </h1>
           </div>
-          <h1
-            className="text-2xl font-bold sm:text-3xl"
-          >
-            {event.title}
-          </h1>
-        </div>
+        )}
 
-        {/* Main card: event details, cover image, description, organizer, etc. */}
+        {/* Main card: event details, description, organizer, etc. */}
         <Container>
           <div
             className="overflow-hidden"

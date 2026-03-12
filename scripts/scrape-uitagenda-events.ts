@@ -106,39 +106,58 @@ function itemToScrapedEvents(item: UitagendaItem): ScrapedEvent[] {
   const locationAddress = item.location?.address?.trim() || null;
 
   const dateEntries = item.dates ?? [];
-  const uniqueDates = new Set(
-    dateEntries.map((d) => d.url ? parseDateFromUrl(d.url) : null).filter(Boolean),
-  );
-  const hasMultipleDates = uniqueDates.size > 1;
+  const parsedEntries = dateEntries
+    .map((entry) => ({ entry, date: entry.url ? parseDateFromUrl(entry.url) : null }))
+    .filter((e): e is { entry: UitagendaDateEntry; date: string } => e.date != null);
 
-  if (hasMultipleDates) {
-    const events: ScrapedEvent[] = [];
-    for (const entry of dateEntries) {
-      const dateStr = entry.url ? parseDateFromUrl(entry.url) : null;
-      if (!dateStr) continue;
-      const { start_time, end_time } = parseTimeRange(entry.timeBeautified);
-      const entryUrl = entry.url
-        ? (entry.url.startsWith('http') ? entry.url : `${BASE_URL}${entry.url}`)
-        : (url.startsWith('http') ? url : `${BASE_URL}${url}`);
+  if (parsedEntries.length > 1) {
+    const sorted = [...parsedEntries].sort((a, b) => a.date.localeCompare(b.date));
 
-      events.push({
-        title,
-        description,
-        category,
-        start_date: dateStr,
-        end_date: null,
-        start_time,
-        end_time,
-        location_name: locationTitle,
-        location_city: locationCity,
-        location_address: locationAddress,
-        url: entryUrl,
-        image_url: imageUrl,
-        organizer: null,
-        price_info,
-      });
+    // Group consecutive dates (no gap > 1 day) into spans
+    const groups: typeof sorted[] = [];
+    let current = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1].date);
+      const curr = new Date(sorted[i].date);
+      const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays <= 1) {
+        current.push(sorted[i]);
+      } else {
+        groups.push(current);
+        current = [sorted[i]];
+      }
     }
-    return events;
+    groups.push(current);
+
+    if (groups.length > 1) {
+      const events: ScrapedEvent[] = [];
+      for (const group of groups) {
+        const first = group[0];
+        const last = group[group.length - 1];
+        const { start_time, end_time } = parseTimeRange(first.entry.timeBeautified);
+        const entryUrl = first.entry.url
+          ? (first.entry.url.startsWith('http') ? first.entry.url : `${BASE_URL}${first.entry.url}`)
+          : (url.startsWith('http') ? url : `${BASE_URL}${url}`);
+
+        events.push({
+          title,
+          description,
+          category,
+          start_date: first.date,
+          end_date: group.length > 1 ? last.date : null,
+          start_time,
+          end_time,
+          location_name: locationTitle,
+          location_city: locationCity,
+          location_address: locationAddress,
+          url: entryUrl,
+          image_url: imageUrl,
+          organizer: null,
+          price_info,
+        });
+      }
+      return events;
+    }
   }
 
   let start_date = '';

@@ -126,7 +126,7 @@ export default function SceneEventCard({
       >
         {/* Image column (left) - 72x72 mobile, 110px desktop; placeholder when no image */}
         <div
-          className="shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center bg-white"
+          className={`shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center${imageSrc ? '' : ' bg-white'}`}
         >
           {imageSrc ? (
             <BlurImage
