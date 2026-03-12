@@ -59,12 +59,6 @@ export function getCpgUpcomingSceneEvents(nowDate: string): SceneEvent[] {
     if (e.start_date >= nowDate) return true;
     return e.end_date != null && e.end_date >= nowDate;
   });
-  console.log('[CPG Scene] getCpgUpcomingSceneEvents:', {
-    nowDate,
-    totalCpgEvents: CPG_SCENE_EVENTS.length,
-    upcomingCount: result.length,
-    events: CPG_SCENE_EVENTS.map((e) => ({ id: e.id, title: e.title, start_date: e.start_date })),
-  });
   return result;
 }
 
@@ -73,10 +67,6 @@ export function getCpgPastSceneEvents(nowDate: string): SceneEvent[] {
   const result = CPG_SCENE_EVENTS.filter((e) => {
     const end = e.end_date ?? e.start_date;
     return end < nowDate;
-  });
-  console.log('[CPG Scene] getCpgPastSceneEvents:', {
-    nowDate,
-    pastCount: result.length,
   });
   return result;
 }

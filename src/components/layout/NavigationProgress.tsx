@@ -156,24 +156,39 @@ export default function NavigationProgress() {
     animationFrameRef.current = requestAnimationFrame(animate);
   }, [cleanup, completeProgress]);
 
-  // Listen for click events on links to detect navigation start
+  // Listen for click events on links to detect navigation start.
+  // Track pointer position to distinguish real clicks from drag/swipe gestures.
   useEffect(() => {
+    let pointerStart: { x: number; y: number } | null = null;
+    const DRAG_THRESHOLD = 10;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      pointerStart = { x: e.clientX, y: e.clientY };
+    };
+
     const handleLinkClick = (e: MouseEvent) => {
-      // Don't intercept if event was already handled
       if (e.defaultPrevented) return;
+
+      if (pointerStart) {
+        const dx = Math.abs(e.clientX - pointerStart.x);
+        const dy = Math.abs(e.clientY - pointerStart.y);
+        if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+          pointerStart = null;
+          return;
+        }
+      }
+      pointerStart = null;
 
       const target = e.target as HTMLElement;
       const link = target.closest('a');
 
       if (link?.href) {
         try {
-          // Skip href="#" and empty href (dummy placeholders with no real navigation)
           const hrefAttr = link.getAttribute('href') ?? '';
           if (hrefAttr === '#' || hrefAttr === '') return;
 
           const url = new URL(link.href);
 
-          // Only handle internal navigation to different pages
           if (
             url.origin === window.location.origin &&
             url.pathname !== window.location.pathname &&
@@ -191,12 +206,12 @@ export default function NavigationProgress() {
       }
     };
 
-    // Use capture phase so we run BEFORE Next.js Link's handler. Link calls preventDefault()
-    // for client-side navigation, so in bubble phase defaultPrevented is already true and
-    // we'd never trigger. In capture we see the click first and can start the progress bar.
+    // Use capture phase so we run BEFORE Next.js Link's handler
+    document.addEventListener('pointerdown', handlePointerDown, { capture: true });
     document.addEventListener('click', handleLinkClick, { capture: true });
 
     return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, { capture: true });
       document.removeEventListener('click', handleLinkClick, { capture: true });
     };
   }, [startProgress]);

@@ -43,6 +43,7 @@ export default function SceneActionsMenu({
     modalContext.setTitle('Edit event');
     modalContext.setContent(
       <EditSceneEventModal
+        key={event.id}
         event={event}
       />,
     );

@@ -20,7 +20,7 @@ import {
 } from '@/lib/data/scene';
 import { getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 
-const PAST_EVENTS_PER_PAGE = 5;
+const PAST_EVENTS_PER_PAGE = 20;
 
 export const metadata = createMetadata({
   title: 'Explore the scene',
@@ -62,17 +62,6 @@ export default async function ScenePage() {
   const initialPast = mergePastWithCpg(pastData.events, allCpgPast);
 
   const cpgPastCount = allCpgPast.length;
-
-  console.log('[Scene Page] CPG merge:', {
-    nowDate,
-    dbUpcoming: upcomingData.events.length,
-    cpgDbUpcoming: cpgDbUpcoming.length,
-    cpgStaticUpcoming: cpgStaticUpcoming.length,
-    mergedUpcoming: upcomingEvents.length,
-    mergedPast: initialPast.length,
-    cpgIdsInUpcoming: upcomingEvents.filter((e) => e.id.startsWith('cpg-')).map((e) => e.id),
-    cpgIdsInPast: initialPast.filter((e) => e.id.startsWith('cpg-')).map((e) => e.id),
-  });
 
   const pastTotalCount = pastData.totalCount; // DB only; CPG past are prepended, not paginated
 

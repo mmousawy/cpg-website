@@ -3,7 +3,7 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useSearchParams } from 'next/navigation';
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 
 const EMPTY_STATE_EMOTES = [
   '(っ °Д °;)',
@@ -42,9 +42,12 @@ function RandomEmptyEmote() {
   );
 }
 
+import Button from '@/components/shared/Button';
 import PastSceneEventsPaginated from './PastSceneEventsPaginated';
 import SceneCategoryFilter from './SceneCategoryFilter';
 import SceneEventCard from './SceneEventCard';
+
+const ITEMS_PER_PAGE = 20;
 
 type ScenePageContentProps = {
   upcomingEvents: SceneEvent[];
@@ -165,10 +168,25 @@ export default function ScenePageContent({
 
   const defaultTab = availableTabs.length > 0 ? availableTabs[0].id : null;
   const [selectedTab, setSelectedTab] = useState<TabId | null>(defaultTab);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [lastCategory, setLastCategory] = useState(category);
 
-  const activeTab = selectedTab && availableTabs.some((t) => t.id === selectedTab)
-    ? selectedTab
+  let activeSelectedTab = selectedTab;
+  if (category !== lastCategory) {
+    setLastCategory(category);
+    setSelectedTab(null);
+    setVisibleCount(ITEMS_PER_PAGE);
+    activeSelectedTab = null;
+  }
+
+  const activeTab = activeSelectedTab && availableTabs.some((t) => t.id === activeSelectedTab)
+    ? activeSelectedTab
     : defaultTab;
+
+  const handleTabChange = (tabId: TabId) => {
+    setSelectedTab(tabId);
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
 
   const hasUpcoming =
     thisWeek.length > 0 || nextWeek.length > 0 || ongoing.length > 0 || thisMonth.length > 0 || later.length > 0;
@@ -225,21 +243,22 @@ export default function ScenePageContent({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setSelectedTab(tab.id)}
-                className={`shrink-0 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+                onClick={() => handleTabChange(tab.id)}
+                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                   activeTab === tab.id
-                    ? 'border-primary border-2 bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary-alt'
+                    ? 'border-primary border-2 bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary-alt'
                     : 'border-transparent border-2 text-foreground/70 hover:text-foreground hover:bg-foreground/5 dark:text-foreground/90 dark:hover:text-foreground dark:hover:bg-foreground/10'
                 }`}
               >
                 {tab.label}
-                {' '}
                 <span
-                  className="text-foreground/50 dark:text-foreground/70"
+                  className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold leading-none ${
+                    activeTab === tab.id
+                      ? 'bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary-alt'
+                      : 'bg-foreground/10 text-foreground/60 dark:bg-foreground/15 dark:text-foreground/70'
+                  }`}
                 >
-                  {'('}
                   {counts[tab.id]}
-                  {')'}
                 </span>
               </button>
             ))}
@@ -255,17 +274,33 @@ export default function ScenePageContent({
             />
           ) : activeTab ? (
             activeEvents.length > 0 ? (
-              <div
-                className="grid gap-4 sm:gap-6"
-              >
-                {activeEvents.map((event) => (
-                  <SceneEventCard
-                    key={event.id}
-                    event={event}
-                    interested={interestedByEvent[event.id] ?? []}
-                  />
-                ))}
-              </div>
+              <>
+                <div
+                  className="grid gap-4 sm:gap-6"
+                >
+                  {activeEvents.slice(0, visibleCount).map((event) => (
+                    <SceneEventCard
+                      key={event.id}
+                      event={event}
+                      interested={interestedByEvent[event.id] ?? []}
+                    />
+                  ))}
+                </div>
+                {activeEvents.length > visibleCount && (
+                  <div
+                    className="flex justify-center pt-4"
+                  >
+                    <Button
+                      onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+                      variant="secondary"
+                      size="md"
+                      className="bg-foreground/5 dark:bg-border-color/70"
+                    >
+                      {`Show more (${activeEvents.length - visibleCount} remaining)`}
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div
                 className="text-center py-8 rounded-xl border border-dashed border-border-color"

@@ -30,7 +30,8 @@ export default function PastSceneEventsPaginated({
   const [isPending, startTransition] = useTransition();
 
   const dbEventsShown = events.length - cpgPastCount;
-  const hasMore = dbEventsShown < totalCount;
+  const [exhausted, setExhausted] = useState(false);
+  const hasMore = !exhausted && dbEventsShown < totalCount;
   const remainingCount = totalCount - dbEventsShown;
 
   const loadMore = useCallback(() => {
@@ -45,7 +46,12 @@ export default function PastSceneEventsPaginated({
         }
 
         const data = await res.json();
-        setEvents((prev) => [...prev, ...data.events]);
+        const newEvents = data.events as SceneEvent[];
+        if (newEvents.length === 0) {
+          setExhausted(true);
+          return;
+        }
+        setEvents((prev) => [...prev, ...newEvents]);
         setInterestedByEvent((prev) => ({
           ...prev,
           ...data.interestedByEvent,

@@ -34,7 +34,7 @@ import TicketSVG from 'public/icons/ticket.svg';
 
 import ClockSolidMiniSVG from 'public/icons/clock-solid-mini.svg';
 
-import SceneEventCard from '@/components/scene/SceneEventCard';
+import RelatedEventsSlider from '@/components/scene/RelatedEventsSlider';
 import SceneEventComments from '@/components/scene/SceneEventComments';
 import SceneEventStickyBar from '@/components/scene/SceneEventStickyBar';
 
@@ -269,8 +269,9 @@ export default async function SceneEventDetailPage({
                   <p
                     className="text-foreground/70 font-normal"
                   >
-                    {event.location_city}
-                    {event.location_address && ` · ${event.location_address}`}
+                    {event.location_address
+                      ? `${event.location_address} · ${event.location_city}`
+                      : event.location_city}
                   </p>
                 </div>
               </div>
@@ -358,30 +359,12 @@ export default async function SceneEventDetailPage({
           </div>
         </Container>
 
-        {/* Related events - outside card */}
         {related.length > 0 && (
-          <section
-            className="mt-8"
-          >
-            <h2
-              className="text-lg font-semibold mb-4 opacity-70"
-            >
-              More events in
-              {' '}
-              {event.location_city}
-            </h2>
-            <div
-              className="grid gap-4 sm:gap-6"
-            >
-              {related.map((rel) => (
-                <SceneEventCard
-                  key={rel.id}
-                  event={rel as Parameters<typeof SceneEventCard>[0]['event']}
-                  interested={relatedInterests[rel.id] || []}
-                />
-              ))}
-            </div>
-          </section>
+          <RelatedEventsSlider
+            events={related as Parameters<typeof RelatedEventsSlider>[0]['events']}
+            interestedByEvent={relatedInterests}
+            cityName={event.location_city}
+          />
         )}
       </PageContainer>
 

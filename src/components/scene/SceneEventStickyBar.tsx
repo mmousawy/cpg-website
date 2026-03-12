@@ -97,7 +97,7 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
             />
           ) : (
             <StarOutlineIcon
-              className="size-4 shrink-0 -ml-[0.4rem] text-foreground transition-colors group-hover:text-primary"
+              className="size-4 shrink-0 sm:-ml-[0.2rem] text-foreground transition-colors group-hover:text-primary"
             />
           )}
           {!interested && (
@@ -144,7 +144,16 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
           />}
           className="rounded-full shrink-0"
         >
-          Visit website
+          <span
+            className="hidden sm:inline"
+          >
+            Visit website
+          </span>
+          <span
+            className="inline sm:hidden"
+          >
+            Visit
+          </span>
         </Button>
       )}
     </StickyActionBar>

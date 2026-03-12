@@ -228,20 +228,24 @@ export function consolidateMultiDayEvents(events: ScrapedEvent[]): ScrapedEvent[
     byKey.set(key, list);
   }
 
-  return Array.from(byKey.values()).map((list) => {
-    if (list.length === 1) return list[0];
+  return Array.from(byKey.values()).flatMap((list) => {
+    if (list.length === 1) return [list[0]];
+
+    const uniqueUrls = new Set(list.map((e) => e.url));
+    if (uniqueUrls.size === list.length) return list;
+
     const sorted = [...list].sort(
       (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
     );
     const first = sorted[0];
     const last = sorted[sorted.length - 1];
-    return {
+    return [{
       ...first,
       start_date: first.start_date,
       end_date: last.start_date !== first.start_date ? last.start_date : first.end_date ?? null,
       start_time: first.start_time,
       end_time: first.end_time,
-    };
+    }];
   });
 }
 
@@ -311,6 +315,11 @@ export async function findDuplicate(
   if (candidates) {
     for (const c of candidates) {
       const normC = normalizeTitleForFuzzy(c.title ?? '');
+      const exactTitle = normTitle === normC;
+      if (exactTitle) {
+        if (c.start_date === event.start_date) return c.slug;
+        continue;
+      }
       if (normTitle.includes(normC) || normC.includes(normTitle)) return c.slug;
       if (wordOverlap(normTitle, normC) > 0.8) return c.slug;
     }
@@ -520,12 +529,15 @@ export async function insertEvent(
       }
       const { data: existing, error: fetchErr } = await supabase
         .from('scene_events')
-        .select('id')
+        .select('id, submitted_by')
         .eq('slug', dup)
         .is('deleted_at', null)
         .maybeSingle();
       if (fetchErr || !existing?.id) {
         return { status: 'skipped', slug: dup, reason: `duplicate of ${dup}` };
+      }
+      if (existing.submitted_by !== options.userId) {
+        return { status: 'skipped', slug: dup, reason: 'owned by another user' };
       }
       const updatePayload: Record<string, unknown> = {
         title: event.title.trim(),

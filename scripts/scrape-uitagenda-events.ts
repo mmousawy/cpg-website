@@ -11,6 +11,7 @@
 import {
   createScraperSupabase,
   delay,
+  filterThisWeek,
   mapCategory,
   parseArgs,
   processEvents,
@@ -20,13 +21,28 @@ import {
 const BASE_URL = 'https://www.uitagendarotterdam.nl';
 const API_URL = `${BASE_URL}/umbraco/surface/ajax/search`;
 
+interface UitagendaDateEntry {
+  dateBeautified?: string;
+  timeBeautified?: string;
+  soldout?: boolean;
+  url?: string;
+  location?: string;
+  locationUrl?: string;
+  ticketUrl?: string;
+  productionTitle?: string;
+  productionText?: string;
+  productionUrl?: string;
+  productionImage?: string;
+}
+
 interface UitagendaItem {
   id: number;
   title: string;
   textShort?: string;
   date?: string;
   dateEnd?: string;
-  dates?: Array<{ timeBeautified?: string; ticketUrl?: string }>;
+  dates?: UitagendaDateEntry[];
+  singleDayEvent?: boolean;
   location?: {
     title?: string;
     city?: string;
@@ -63,13 +79,67 @@ function parseTimeRange(timeBeautified: string | undefined): {
   };
 }
 
-function itemToScrapedEvent(item: UitagendaItem): ScrapedEvent | null {
+function parseDateFromUrl(dateUrl: string): string | null {
+  // e.g. "/agenda/fotokids-.../08-04-2026-1430/" -> "2026-04-08"
+  const m = dateUrl.match(/(\d{2})-(\d{2})-(\d{4})-\d+\/?$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return null;
+}
+
+function itemToScrapedEvents(item: UitagendaItem): ScrapedEvent[] {
   const title = item.title?.trim();
   const locationTitle = item.location?.title?.trim();
   const locationCity = item.location?.city?.trim();
   const url = item.url?.trim();
 
-  if (!title || !locationTitle || !locationCity || !url) return null;
+  if (!title || !locationTitle || !locationCity || !url) return [];
+
+  const genreTitle = item.genres?.[0]?.title;
+  const category = mapCategory(genreTitle ?? 'other');
+  const imageUrl = item.image
+    ? (item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`)
+    : null;
+  let price_info: string | null = null;
+  const hasGratis = item.genres?.some((g) => g.title?.toLowerCase() === 'gratis');
+  if (hasGratis) price_info = 'Gratis';
+  const description = item.textShort?.trim() || null;
+  const locationAddress = item.location?.address?.trim() || null;
+
+  const dateEntries = item.dates ?? [];
+  const uniqueDates = new Set(
+    dateEntries.map((d) => d.url ? parseDateFromUrl(d.url) : null).filter(Boolean),
+  );
+  const hasMultipleDates = uniqueDates.size > 1;
+
+  if (hasMultipleDates) {
+    const events: ScrapedEvent[] = [];
+    for (const entry of dateEntries) {
+      const dateStr = entry.url ? parseDateFromUrl(entry.url) : null;
+      if (!dateStr) continue;
+      const { start_time, end_time } = parseTimeRange(entry.timeBeautified);
+      const entryUrl = entry.url
+        ? (entry.url.startsWith('http') ? entry.url : `${BASE_URL}${entry.url}`)
+        : (url.startsWith('http') ? url : `${BASE_URL}${url}`);
+
+      events.push({
+        title,
+        description,
+        category,
+        start_date: dateStr,
+        end_date: null,
+        start_time,
+        end_time,
+        location_name: locationTitle,
+        location_city: locationCity,
+        location_address: locationAddress,
+        url: entryUrl,
+        image_url: imageUrl,
+        organizer: null,
+        price_info,
+      });
+    }
+    return events;
+  }
 
   let start_date = '';
   let end_date: string | null = null;
@@ -85,28 +155,15 @@ function itemToScrapedEvent(item: UitagendaItem): ScrapedEvent | null {
       end_date = item.dateEnd.slice(0, 10);
     }
   } else {
-    return null;
+    return [];
   }
 
-  const { start_time, end_time } = parseTimeRange(item.dates?.[0]?.timeBeautified);
-
-  const genreTitle = item.genres?.[0]?.title;
-  const category = mapCategory(genreTitle ?? 'other');
-
+  const { start_time, end_time } = parseTimeRange(dateEntries[0]?.timeBeautified);
   const eventUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
-  const imageUrl = item.image
-    ? (item.image.startsWith('http') ? item.image : `${BASE_URL}${item.image}`)
-    : null;
 
-  // Price: Uitagenda doesn't expose prices in the API. Use "Gratis" only when explicitly marked.
-  let price_info: string | null = null;
-  const hasGratis = item.genres?.some((g) => g.title?.toLowerCase() === 'gratis');
-  if (hasGratis) price_info = 'Gratis';
-  // When we don't know, leave null - UI will show "See event" instead of incorrectly "Free"
-
-  return {
+  return [{
     title,
-    description: item.textShort?.trim() || null,
+    description,
     category,
     start_date,
     end_date,
@@ -114,12 +171,12 @@ function itemToScrapedEvent(item: UitagendaItem): ScrapedEvent | null {
     end_time,
     location_name: locationTitle,
     location_city: locationCity,
-    location_address: item.location?.address?.trim() || null,
+    location_address: locationAddress,
     url: eventUrl,
     image_url: imageUrl,
-    organizer: locationTitle,
+    organizer: null,
     price_info,
-  };
+  }];
 }
 
 async function fetchPage(
@@ -166,8 +223,8 @@ async function fetchAllEvents(
         if (item.id && seenIds.has(item.id)) continue;
         if (item.id) seenIds.add(item.id);
 
-        const event = itemToScrapedEvent(item);
-        if (event) events.push(event);
+        const expanded = itemToScrapedEvents(item);
+        events.push(...expanded);
       }
 
       if (items.length === 0) break;
@@ -176,6 +233,83 @@ async function fetchAllEvents(
   }
 
   return events;
+}
+
+function extractPriceFromDetailPage(html: string): string | null {
+  const ldMatch = html.match(
+    /<script\s+type="application\/ld\+json">\s*(\{[\s\S]*?\})\s*<\/script>/,
+  );
+  if (!ldMatch) return null;
+
+  try {
+    const cleaned = ldMatch[1]
+      .replace(/,\s*}/g, '}')
+      .replace(/availability:\s*https?:\/\/[^\s,}]+/g, '"availability": ""');
+    const ld = JSON.parse(cleaned);
+    if (ld?.offers?.price != null) {
+      const price = Number(ld.offers.price);
+      const currency = ld.offers.priceCurrency ?? 'EUR';
+      if (price === 0) return 'Gratis';
+      return `€${price.toFixed(2).replace('.', ',')}${currency !== 'EUR' ? ` ${currency}` : ''}`;
+    }
+  } catch {
+    // malformed JSON-LD
+  }
+  return null;
+}
+
+function getProductionUrl(eventUrl: string): string {
+  // Individual date URLs look like /agenda/event-slug/08-04-2026-1430/
+  // Production URL is /agenda/event-slug/
+  const m = eventUrl.match(/(\/agenda\/[^/]+\/)\d{2}-\d{2}-\d{4}-\d+\/?$/);
+  return m ? `${BASE_URL}${m[1]}` : eventUrl;
+}
+
+async function enrichPrices(
+  events: ScrapedEvent[],
+  delayMs: number,
+): Promise<ScrapedEvent[]> {
+  const enriched = events.map((ev) => ({ ...ev }));
+  const priceCache = new Map<string, string | null>();
+  let fetchCount = 0;
+
+  for (let i = 0; i < enriched.length; i++) {
+    const ev = enriched[i]!;
+    if (ev.price_info) continue;
+    if (!ev.url?.startsWith('http')) continue;
+
+    const productionUrl = getProductionUrl(ev.url);
+
+    if (priceCache.has(productionUrl)) {
+      const cached = priceCache.get(productionUrl)!;
+      if (cached) enriched[i]!.price_info = cached;
+      continue;
+    }
+
+    fetchCount++;
+    if (fetchCount === 1 || fetchCount % 10 === 0) {
+      process.stdout.write(`\r[Uitagenda] Fetching price from detail page ${fetchCount}...`);
+    }
+
+    try {
+      if (fetchCount > 1) await delay(delayMs);
+      const res = await fetch(productionUrl);
+      if (res.ok) {
+        const html = await res.text();
+        const price = extractPriceFromDetailPage(html);
+        priceCache.set(productionUrl, price);
+        if (price) enriched[i]!.price_info = price;
+      } else {
+        priceCache.set(productionUrl, null);
+      }
+    } catch {
+      priceCache.set(productionUrl, null);
+    }
+  }
+
+  if (fetchCount > 0) process.stdout.write('\n');
+  console.log(`[Uitagenda] Fetched ${fetchCount} unique detail pages for prices`);
+  return enriched;
 }
 
 async function main() {
@@ -196,9 +330,17 @@ async function main() {
   console.log(`\n[Uitagenda] Fetching events for queries: ${queries.join(', ')}\n`);
 
   const supabase = createScraperSupabase();
-  const events = await fetchAllEvents(queries, options.delayMs);
+  let events = await fetchAllEvents(queries, options.delayMs);
 
-  console.log(`[Uitagenda] Fetched ${events.length} events\n`);
+  console.log(`[Uitagenda] Fetched ${events.length} events`);
+
+  if (options.thisWeek) {
+    events = filterThisWeek(events);
+    console.log(`[Uitagenda] Filtered to ${events.length} events starting this week`);
+  }
+
+  console.log('[Uitagenda] Enriching prices from detail pages...\n');
+  events = await enrichPrices(events, options.delayMs);
 
   await processEvents(supabase, events, options);
 }
