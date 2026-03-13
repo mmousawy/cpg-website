@@ -126,8 +126,9 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
   );
 }
 
-// Fetch data OUTSIDE cache to handle 404 properly
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
+  'use cache';
+
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
 
@@ -135,35 +136,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     notFound();
   }
 
-  // Fetch event outside cache to handle 404
+  cacheLife('max');
+  cacheTag('events');
+  cacheTag('event-attendees');
+  cacheTag(`event-${eventSlug}`);
+
   const eventData = await getEventBySlug(eventSlug);
   const { event, serverNow } = eventData;
 
   if (!event) {
     notFound();
   }
-
-  // Pass to cached content component
-  return <CachedEventContent
-    event={event}
-    serverNow={serverNow}
-  />;
-}
-
-// Separate cached component for the content
-async function CachedEventContent({
-  event,
-  serverNow,
-}: {
-  event: NonNullable<Awaited<ReturnType<typeof getEventBySlug>>['event']>;
-  serverNow: number;
-}) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag('events');
-  cacheTag('event-attendees');
-  cacheTag(`event-${event.slug}`);
 
   // Fetch hosts, attendees, event album
   const [hosts, attendees, eventAlbum] = await Promise.all([

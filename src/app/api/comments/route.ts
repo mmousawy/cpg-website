@@ -7,7 +7,7 @@ import { CommentNotificationEmail } from '@/emails/comment-notification';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import {
-  revalidateAlbum,
+  revalidateAlbumBySlug,
   revalidateGalleryData,
   revalidateSceneEvent,
 } from '@/app/actions/revalidate';
@@ -971,7 +971,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (album?.slug) {
-      await revalidateAlbum(ownerProfile.nickname, album.slug);
+      await revalidateAlbumBySlug(ownerProfile.nickname, album.slug);
     }
   }
 

@@ -3,6 +3,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
@@ -118,6 +119,8 @@ export default async function ChallengePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  'use cache';
+
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
 
@@ -125,25 +128,22 @@ export default async function ChallengePage({
     notFound();
   }
 
-  // Fetch challenge data
-  const [challengeData, photos, contributors, colorDraws] = await Promise.all([
-    getChallengeBySlug(slug),
-    getChallengeBySlug(slug).then((d) =>
-      d.challenge ? getChallengePhotos(d.challenge.id) : [],
-    ),
-    getChallengeBySlug(slug).then((d) =>
-      d.challenge ? getChallengeContributors(d.challenge.id) : [],
-    ),
-    getChallengeBySlug(slug).then((d) =>
-      d.challenge?.has_color_draw ? getChallengeColorDraws(d.challenge.id) : [],
-    ),
-  ]);
+  cacheLife('max');
+  cacheTag('challenges');
+  cacheTag(`challenge-${slug}`);
+  cacheTag('challenge-photos');
 
-  const { challenge, serverNow } = challengeData;
+  const { challenge, serverNow } = await getChallengeBySlug(slug);
 
   if (!challenge) {
     notFound();
   }
+
+  const [photos, contributors, colorDraws] = await Promise.all([
+    getChallengePhotos(challenge.id),
+    getChallengeContributors(challenge.id),
+    challenge.has_color_draw ? getChallengeColorDraws(challenge.id) : Promise.resolve([]),
+  ]);
 
   const currentYear = new Date(serverNow).getFullYear();
 

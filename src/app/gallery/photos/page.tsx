@@ -1,9 +1,10 @@
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
-import JsonLd from '@/components/shared/JsonLd';
 import PageContainer from '@/components/layout/PageContainer';
-import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
+import HelpLink from '@/components/shared/HelpLink';
+import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
 // Cached data functions
 import { getPublicPhotostream } from '@/lib/data/gallery';
@@ -22,6 +23,19 @@ type PageProps = {
 export default async function PhotosPage({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
+
+  return (
+    <CachedPhotosContent
+      initialSort={initialSort}
+    />
+  );
+}
+
+async function CachedPhotosContent({ initialSort }: { initialSort: 'popular' | 'recent' }) {
+  'use cache';
+
+  cacheLife('max');
+  cacheTag('gallery');
 
   // Fetch one extra to check if there are more
   const allPhotos = await getPublicPhotostream(21, initialSort);

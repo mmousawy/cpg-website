@@ -4,6 +4,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
 // Cached data functions
 import { getPublicAlbums } from '@/lib/data/albums';
@@ -22,6 +23,19 @@ type PageProps = {
 export default async function AlbumsPage({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
+
+  return (
+    <CachedAlbumsContent
+      initialSort={initialSort}
+    />
+  );
+}
+
+async function CachedAlbumsContent({ initialSort }: { initialSort: 'popular' | 'recent' }) {
+  'use cache';
+
+  cacheLife('max');
+  cacheTag('albums');
 
   // Fetch one extra to check if there are more
   const allAlbums = await getPublicAlbums(21, initialSort);

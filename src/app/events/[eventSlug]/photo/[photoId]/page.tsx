@@ -50,8 +50,9 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
 }
 
-// Fetch data OUTSIDE cache to handle 404 properly
 export default async function EventPhotoPage({ params }: { params: Params }) {
+  'use cache';
+
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
   const photoId = resolvedParams?.photoId || '';
@@ -60,31 +61,17 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
+  cacheLife('max');
+  cacheTag('events');
+  cacheTag(`photo-${photoId}`);
+
   const result = await getEventPhotoByShortId(eventSlug, photoId);
 
   if (!result) {
     notFound();
   }
 
-  return (
-    <CachedEventPhotoContent
-      result={result}
-    />
-  );
-}
-
-// Separate cached component for the content
-async function CachedEventPhotoContent({
-  result,
-}: {
-  result: NonNullable<Awaited<ReturnType<typeof getEventPhotoByShortId>>>;
-}) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag('events');
   cacheTag(`event-album-${result.currentEvent.id}`);
-  cacheTag(`photo-${result.photo.short_id}`);
 
   return (
     <PhotoPageContent

@@ -87,8 +87,6 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   revalidateTag('albums', 'max');
   // Revalidate the specific user's profile data
   revalidateTag(`profile-${nickname}`, 'max');
-  // Revalidate gallery (photostream shows all public photos)
-  revalidateTag('gallery', 'max');
   // Revalidate search (albums are searchable)
   revalidateTag('search', 'max');
 
@@ -115,8 +113,6 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   // With tag-based caching, we just need to invalidate the tags
   revalidateTag('albums', 'max');
   revalidateTag(`profile-${nickname}`, 'max');
-  // Revalidate gallery (photostream shows all public photos)
-  revalidateTag('gallery', 'max');
   // Revalidate search (albums are searchable)
   revalidateTag('search', 'max');
 }

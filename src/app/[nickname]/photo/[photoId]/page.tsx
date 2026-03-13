@@ -52,8 +52,9 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
 }
 
-// Fetch data OUTSIDE cache to handle 404 properly
 export default async function PhotoPage({ params }: { params: Params }) {
+  'use cache';
+
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
@@ -63,34 +64,15 @@ export default async function PhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  // Fetch data outside cache to handle 404
+  cacheLife('max');
+  cacheTag(`profile-${nickname}`);
+  cacheTag(`photo-${photoId}`);
+
   const result = await getPhotoByShortId(nickname, photoId);
 
   if (!result) {
     notFound();
   }
-
-  return (
-    <CachedPhotoContent
-      result={result}
-      nickname={nickname}
-    />
-  );
-}
-
-// Separate cached component for the content
-async function CachedPhotoContent({
-  result,
-  nickname,
-}: {
-  result: NonNullable<Awaited<ReturnType<typeof getPhotoByShortId>>>;
-  nickname: string;
-}) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag(`profile-${nickname}`);
-  cacheTag(`photo-${result.photo.short_id}`); // Granular invalidation for this specific photo
 
   const photoUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}/photo/${encodeURIComponent(result.photo.short_id || '')}`);
   const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);

@@ -1,4 +1,4 @@
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbumBySlug } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -118,7 +118,7 @@ export function useReorderAlbumPhotos(
             if (found?.slug) { albumSlug = found.slug; break; }
           }
           if (albumSlug) {
-            await revalidateAlbum(nickname, albumSlug);
+            await revalidateAlbumBySlug(nickname, albumSlug);
           }
         }
       }
@@ -569,9 +569,9 @@ export function useSetAlbumCover(
       // Invalidate main photos cache so cover badges update on photos page
       queryClient.invalidateQueries({ queryKey: ['photos', userId] });
 
-      // Revalidate album page
+      // Revalidate album page (set cover only affects album page, not listings)
       if (nickname && albumSlug) {
-        await revalidateAlbum(nickname, albumSlug);
+        await revalidateAlbumBySlug(nickname, albumSlug);
       }
 
       return { albumId, photoUrl };

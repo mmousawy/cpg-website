@@ -1,7 +1,7 @@
 import type { SharedAlbumMember, SharedAlbumRequest } from '@/types/albums';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { revalidateAlbum, revalidateAlbumBySlug } from '@/app/actions/revalidate';
+import { revalidateAlbumBySlug } from '@/app/actions/revalidate';
 
 type JoinResult = { status: 'joined' | 'requested' | 'already_member' | 'already_requested' };
 type InviteResult = { created: number; skipped_existing_member: number; skipped_pending: number };
@@ -134,7 +134,6 @@ export function useJoinSharedAlbum(
       }
       if (ownerNickname) {
         revalidateAlbumBySlug(ownerNickname, albumSlug);
-        revalidateAlbum(ownerNickname, albumSlug);
       }
       if (
         result?.status === 'requested'
@@ -176,7 +175,6 @@ export function useLeaveSharedAlbum(
       }
       if (ownerNickname) {
         revalidateAlbumBySlug(ownerNickname, albumSlug);
-        revalidateAlbum(ownerNickname, albumSlug);
       }
     },
   });
@@ -259,7 +257,6 @@ export function useResolveAlbumRequest(
       }
       if (ownerNickname) {
         revalidateAlbumBySlug(ownerNickname, albumSlug);
-        revalidateAlbum(ownerNickname, albumSlug);
       }
       if (
         albumId
@@ -315,7 +312,6 @@ export function useRemoveAlbumMember(
       }
       if (ownerNickname) {
         revalidateAlbumBySlug(ownerNickname, albumSlug);
-        revalidateAlbum(ownerNickname, albumSlug);
       }
     },
   });

@@ -49,8 +49,9 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
 }
 
-// Fetch data OUTSIDE cache to handle 404 properly
 export default async function ChallengePhotoPage({ params }: { params: Params }) {
+  'use cache';
+
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || '';
   const photoId = resolvedParams?.photoId || '';
@@ -59,31 +60,16 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
     notFound();
   }
 
+  cacheLife('max');
+  cacheTag('challenge-photos');
+  cacheTag(`challenge-photos-${slug}`);
+  cacheTag(`photo-${photoId}`);
+
   const result = await getChallengePhotoByShortId(slug, photoId);
 
   if (!result) {
     notFound();
   }
-
-  return (
-    <CachedChallengePhotoContent
-      result={result}
-    />
-  );
-}
-
-// Separate cached component for the content
-async function CachedChallengePhotoContent({
-  result,
-}: {
-  result: NonNullable<Awaited<ReturnType<typeof getChallengePhotoByShortId>>>;
-}) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag('challenge-photos');
-  cacheTag(`challenge-photos-${result.currentChallenge.slug}`);
-  cacheTag(`photo-${result.photo.short_id}`);
 
   return (
     <PhotoPageContent

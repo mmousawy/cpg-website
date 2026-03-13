@@ -3,6 +3,7 @@ import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import PopularTagsSection from '@/components/shared/PopularTagsSection';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
@@ -36,12 +37,18 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function TagPage({ params }: { params: Params }) {
+  'use cache';
+
   const resolvedParams = await params;
   const tagName = decodeURIComponent(resolvedParams?.tag || '');
 
   if (!tagName) {
     notFound();
   }
+
+  cacheLife('max');
+  cacheTag('gallery');
+  cacheTag(`tag-${tagName}`);
 
   const photos = await getPhotosByTag(tagName, 100);
 

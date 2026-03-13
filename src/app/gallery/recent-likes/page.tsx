@@ -2,6 +2,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
 // Cached data functions
 import { getRecentlyLikedPhotos } from '@/lib/data/gallery';
@@ -14,6 +15,11 @@ export const metadata = createMetadata({
 });
 
 export default async function RecentlyLikedPage() {
+  'use cache';
+
+  cacheLife('max');
+  cacheTag('gallery');
+
   // Fetch one extra to check if there are more
   const allPhotos = await getRecentlyLikedPhotos(21);
   const photos = allPhotos.slice(0, 20);
