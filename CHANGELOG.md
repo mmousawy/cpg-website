@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.4](https://github.com/mmousawy/cpg-website/compare/v1.29.3...v1.29.4) (2026-03-13)
+
+
+### Bug Fixes
+
+* Reduce ISR cache operations and CPU usage. ([25635ab](https://github.com/mmousawy/cpg-website/commit/25635ab26996615e47ffa1195373395eb5239cb8))
+
 ## [1.29.3](https://github.com/mmousawy/cpg-website/compare/v1.29.2...v1.29.3) (2026-03-12)
 
 
