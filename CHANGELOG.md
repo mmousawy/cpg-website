@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.6](https://github.com/mmousawy/cpg-website/compare/v1.29.5...v1.29.6) (2026-03-14)
+
+
+### Bug Fixes
+
+* past event tab. ([285240e](https://github.com/mmousawy/cpg-website/commit/285240eea804715c3e7cdd8384afcea00c11ef08))
+
 ## [1.29.5](https://github.com/mmousawy/cpg-website/compare/v1.29.4...v1.29.5) (2026-03-14)
 
 
