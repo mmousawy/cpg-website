@@ -22,19 +22,21 @@ export async function GET(request: NextRequest) {
   const supabase = createPublicClient();
   const now = new Date().toISOString().split('T')[0];
 
-  let query = supabase
+  const baseQuery = supabase
     .from('scene_events')
     .select(
       'id, slug, title, description, category, start_date, end_date, start_time, end_time, location_name, location_city, location_address, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, submitted_by, interest_count, created_at',
+      { count: 'exact' },
     )
     .is('deleted_at', null)
     .or(`end_date.lt.${now},and(end_date.is.null,start_date.lt.${now})`);
 
-  if (category && category !== 'all') {
-    query = query.eq('category', category);
-  }
+  const query =
+    category && category !== 'all'
+      ? baseQuery.eq('category', category)
+      : baseQuery;
 
-  const { data: events, error } = await query
+  const { data: events, error, count } = await query
     .order('start_date', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -56,5 +58,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     events: eventList,
     interestedByEvent,
+    totalCount: count ?? undefined,
   });
 }

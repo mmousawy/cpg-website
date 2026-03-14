@@ -11,8 +11,6 @@ type PastSceneEventsPaginatedProps = {
   initialInterestedByEvent?: Record<string, SceneEventInterested[]>;
   totalCount: number;
   perPage: number;
-  /** CPG past events (prepended); exclude from offset for Load more */
-  cpgPastCount?: number;
   /** Active category filter */
   category?: string | null;
 };
@@ -22,7 +20,6 @@ export default function PastSceneEventsPaginated({
   initialInterestedByEvent = {},
   totalCount,
   perPage,
-  cpgPastCount = 0,
   category = null,
 }: PastSceneEventsPaginatedProps) {
   const filteredInitial = useMemo(

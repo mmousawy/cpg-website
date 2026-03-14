@@ -167,11 +167,60 @@ export default function ScenePageContent({
 }: ScenePageContentProps) {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
+  const [pastCountByCategory, setPastCountByCategory] = useState<
+    Record<string, number>
+  >({});
+
+  // Immediate fallback: count from first batch (sync, no API delay)
+  const filteredInitialPastCount = useMemo(
+    () =>
+      category && category !== 'all'
+        ? initialPastEvents.filter((e) => e.category === category).length
+        : 0,
+    [initialPastEvents, category],
+  );
+
+  // Fetch category-specific past count when category is active (for tab badge)
+  useEffect(() => {
+    if (!category || category === 'all') return;
+    if (pastCountByCategory[category] !== undefined) return; // Cached
+    let cancelled = false;
+    const params = new URLSearchParams({
+      offset: '0',
+      limit: '1',
+      category,
+    });
+    fetch(`/api/scene/past?${params}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed'))))
+      .then((data: { totalCount?: number }) => {
+        if (cancelled) return;
+        const dbCount = data.totalCount ?? 0;
+        const cpgInCategory = initialPastEvents.filter(
+          (e) => e.id.startsWith('cpg-') && e.category === category,
+        ).length;
+        setPastCountByCategory((prev) => ({
+          ...prev,
+          [category]: dbCount + cpgInCategory,
+        }));
+      })
+      .catch(() => {
+        if (!cancelled)
+          setPastCountByCategory((prev) => ({ ...prev, [category]: 0 }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [category, initialPastEvents, pastCountByCategory]);
 
   const { thisWeek, nextWeek, thisMonth, ongoing, later } = useMemo(
     () => groupUpcomingByPeriod(upcomingEvents, category),
     [upcomingEvents, category],
   );
+
+  const pastCount =
+    category && category !== 'all'
+      ? (pastCountByCategory[category] ?? filteredInitialPastCount)
+      : pastTotalCount + cpgPastCount;
 
   const counts = useMemo(
     () => ({
@@ -180,16 +229,23 @@ export default function ScenePageContent({
       thisMonth: thisMonth.length,
       ongoing: ongoing.length,
       later: later.length,
-      past: pastTotalCount + cpgPastCount,
+      past: pastCount,
     }),
-    [thisWeek.length, nextWeek.length, thisMonth.length, ongoing.length, later.length, pastTotalCount, cpgPastCount],
+    [
+      thisWeek.length,
+      nextWeek.length,
+      thisMonth.length,
+      ongoing.length,
+      later.length,
+      pastCount,
+    ],
   );
 
   const availableTabs = useMemo(() => {
     const upcoming = UPCOMING_TABS.filter((t) => counts[t.id] > 0);
-    const past = pastTotalCount > 0 || cpgPastCount > 0 ? [PAST_TAB] : [];
+    const past = pastCount > 0 ? [PAST_TAB] : [];
     return [...upcoming, ...past];
-  }, [counts, pastTotalCount, cpgPastCount]);
+  }, [counts, pastCount]);
 
   const defaultTab = availableTabs.length > 0 ? availableTabs[0].id : null;
   const [selectedTab, setSelectedTab] = useState<TabId | null>(defaultTab);
@@ -215,7 +271,7 @@ export default function ScenePageContent({
 
   const hasUpcoming =
     thisWeek.length > 0 || nextWeek.length > 0 || ongoing.length > 0 || thisMonth.length > 0 || later.length > 0;
-  const hasPast = pastTotalCount > 0 || cpgPastCount > 0;
+  const hasPast = pastCount > 0;
   const hasAnyEvents = hasUpcoming || hasPast;
 
   const activeEvents =
@@ -295,7 +351,6 @@ export default function ScenePageContent({
               initialInterestedByEvent={interestedByEvent}
               totalCount={pastTotalCount}
               perPage={pastPerPage}
-              cpgPastCount={cpgPastCount}
               category={category}
             />
           ) : activeTab ? (
