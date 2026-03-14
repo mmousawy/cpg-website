@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.5](https://github.com/mmousawy/cpg-website/compare/v1.29.4...v1.29.5) (2026-03-14)
+
+
+### Bug Fixes
+
+* adjust past scene events. ([a20fdcc](https://github.com/mmousawy/cpg-website/commit/a20fdcc8036c336c1240a62e88b501e8790123cd))
+
 ## [1.29.4](https://github.com/mmousawy/cpg-website/compare/v1.29.3...v1.29.4) (2026-03-13)
 
 
