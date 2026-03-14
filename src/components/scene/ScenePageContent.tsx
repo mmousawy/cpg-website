@@ -296,6 +296,7 @@ export default function ScenePageContent({
               totalCount={pastTotalCount}
               perPage={pastPerPage}
               cpgPastCount={cpgPastCount}
+              category={category}
             />
           ) : activeTab ? (
             activeEvents.length > 0 ? (

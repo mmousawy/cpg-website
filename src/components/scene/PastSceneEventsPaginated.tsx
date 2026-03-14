@@ -2,7 +2,7 @@
 
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
 import SceneEventCard from './SceneEventCard';
 
@@ -13,6 +13,8 @@ type PastSceneEventsPaginatedProps = {
   perPage: number;
   /** CPG past events (prepended); exclude from offset for Load more */
   cpgPastCount?: number;
+  /** Active category filter */
+  category?: string | null;
 };
 
 export default function PastSceneEventsPaginated({
@@ -21,25 +23,48 @@ export default function PastSceneEventsPaginated({
   totalCount,
   perPage,
   cpgPastCount = 0,
+  category = null,
 }: PastSceneEventsPaginatedProps) {
-  const [events, setEvents] = useState<SceneEvent[]>(initialEvents);
+  const filteredInitial = useMemo(
+    () =>
+      category && category !== 'all'
+        ? initialEvents.filter((e) => e.category === category)
+        : initialEvents,
+    [initialEvents, category],
+  );
+
+  const [allEvents, setAllEvents] = useState<SceneEvent[]>(filteredInitial);
   const [interestedByEvent, setInterestedByEvent] = useState<
     Record<string, SceneEventInterested[]>
   >(initialInterestedByEvent);
   const [isPending, startTransition] = useTransition();
-
+  const [exhausted, setExhausted] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const dbEventsShown = events.length - cpgPastCount;
-  const [exhausted, setExhausted] = useState(false);
-  const hasMore = !exhausted && dbEventsShown < totalCount;
+  useEffect(() => {
+    setAllEvents(filteredInitial);
+    setExhausted(false);
+  }, [category, filteredInitial]);
+
+  const cpgInAllEvents = allEvents.filter((e) => e.id.startsWith('cpg-')).length;
+  const dbEventsLoaded = allEvents.length - cpgInAllEvents;
+  const hasMore =
+    !exhausted &&
+    (!category || category === 'all'
+      ? dbEventsLoaded < totalCount
+      : true);
 
   const loadMore = useCallback(() => {
     startTransition(async () => {
       try {
-        const res = await fetch(
-          `/api/scene/past?offset=${dbEventsShown}&limit=${perPage}`,
-        );
+        const params = new URLSearchParams({
+          offset: String(dbEventsLoaded),
+          limit: String(perPage),
+        });
+        if (category && category !== 'all') {
+          params.set('category', category);
+        }
+        const res = await fetch(`/api/scene/past?${params}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch more events');
@@ -51,7 +76,7 @@ export default function PastSceneEventsPaginated({
           setExhausted(true);
           return;
         }
-        setEvents((prev) => [...prev, ...newEvents]);
+        setAllEvents((prev) => [...prev, ...newEvents]);
         setInterestedByEvent((prev) => ({
           ...prev,
           ...data.interestedByEvent,
@@ -60,7 +85,7 @@ export default function PastSceneEventsPaginated({
         console.error('Error loading more scene events:', error);
       }
     });
-  }, [dbEventsShown, perPage]);
+  }, [dbEventsLoaded, perPage, category]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -83,7 +108,7 @@ export default function PastSceneEventsPaginated({
       <div
         className="grid gap-4 sm:gap-6"
       >
-        {events.map((event) => (
+        {allEvents.map((event) => (
           <SceneEventCard
             key={event.id}
             event={event}
@@ -91,7 +116,7 @@ export default function PastSceneEventsPaginated({
           />
         ))}
       </div>
-      {events.length === 0 && (
+      {allEvents.length === 0 && (
         <div
           className="text-center py-8 rounded-xl border border-dashed border-border-color"
         >
@@ -102,7 +127,7 @@ export default function PastSceneEventsPaginated({
           </p>
         </div>
       )}
-      {hasMore && events.length > 0 && (
+      {hasMore && allEvents.length > 0 && (
         <div
           ref={sentinelRef}
           className="flex justify-center pt-4 pb-2"

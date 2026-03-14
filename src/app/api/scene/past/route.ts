@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const limit = parseInt(searchParams.get('limit') || '10', 10);
+  const category = searchParams.get('category') || null;
 
   if (offset < 0 || limit < 1 || limit > 50) {
     return NextResponse.json(
@@ -21,13 +22,19 @@ export async function GET(request: NextRequest) {
   const supabase = createPublicClient();
   const now = new Date().toISOString().split('T')[0];
 
-  const { data: events, error } = await supabase
+  let query = supabase
     .from('scene_events')
     .select(
       'id, slug, title, description, category, start_date, end_date, start_time, end_time, location_name, location_city, location_address, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, submitted_by, interest_count, created_at',
     )
     .is('deleted_at', null)
-    .or(`end_date.lt.${now},and(end_date.is.null,start_date.lt.${now})`)
+    .or(`end_date.lt.${now},and(end_date.is.null,start_date.lt.${now})`);
+
+  if (category && category !== 'all') {
+    query = query.eq('category', category);
+  }
+
+  const { data: events, error } = await query
     .order('start_date', { ascending: false })
     .range(offset, offset + limit - 1);
 
