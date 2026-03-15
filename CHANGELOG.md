@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.7](https://github.com/mmousawy/cpg-website/compare/v1.29.6...v1.29.7) (2026-03-15)
+
+
+### Bug Fixes
+
+* adjust styling. ([1b32e69](https://github.com/mmousawy/cpg-website/commit/1b32e6940d8ed9e1358d21dba649f3e9e971a80e))
+
 ## [1.29.6](https://github.com/mmousawy/cpg-website/compare/v1.29.5...v1.29.6) (2026-03-14)
 
 
