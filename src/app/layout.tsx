@@ -131,7 +131,11 @@ export default function RootLayout({
         >
           <NavigationProgress />
         </Suspense>
-        <SmoothScrollProvider />
+        <Suspense
+          fallback={null}
+        >
+          <SmoothScrollProvider />
+        </Suspense>
         <VersionLogger />
         <SupabaseProvider>
           <QueryProvider>
@@ -153,7 +157,11 @@ export default function RootLayout({
                   <ConfirmModal />
                 </ConfirmProvider>
               </ThemeProvider>
-              <NotificationToastManager />
+              <Suspense
+                fallback={null}
+              >
+                <NotificationToastManager />
+              </Suspense>
             </AuthProvider>
           </QueryProvider>
         </SupabaseProvider>

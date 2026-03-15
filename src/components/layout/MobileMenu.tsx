@@ -10,7 +10,6 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import CategoryLocationSVG from 'public/icons/category-location.svg';
-import HomeSVG from 'public/icons/home.svg';
 import { createPortal } from 'react-dom';
 
 interface MobileMenuProps {
@@ -62,16 +61,6 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
         <div
           className="p-2"
         >
-          <Link
-            href={routes.home.url}
-            onClick={onClose}
-            className={navLinkClass(routes.home.url)}
-          >
-            <HomeSVG
-              className="size-4 mr-3"
-            />
-            {routes.home.label}
-          </Link>
           <Link
             href={routes.gallery.url}
             onClick={onClose}
