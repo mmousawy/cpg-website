@@ -420,7 +420,7 @@ export default function AddSceneEventModal() {
                   type="text"
                   value={formData.price_info ?? ''}
                   onChange={handleChange}
-                  placeholder="Free"
+                  placeholder="e.g. Free, €10, etc."
                 />
               </div>
             </div>

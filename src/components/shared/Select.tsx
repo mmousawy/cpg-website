@@ -94,7 +94,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
               const selected = options.find((o) => o.value === value);
               return selected?.icon ? (
                 <span
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-5"
                 >
                   {selected.icon}
                 </span>
@@ -151,7 +151,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                 >
                   {option.icon && (
                     <span
-                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-5"
                     >
                       {option.icon}
                     </span>

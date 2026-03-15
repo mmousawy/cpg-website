@@ -1,7 +1,7 @@
 'use client';
 
-import { ModalContext } from '@/app/providers/ModalProvider';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { ModalContext } from '@/app/providers/ModalProvider';
 import { useRouter } from 'next/navigation';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -13,9 +13,9 @@ import { routes } from '@/config/routes';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useUpdateSceneEvent } from '@/hooks/useSceneEvents';
-import { confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import type { SceneEvent, SceneEventCategory, SceneEventFormData } from '@/types/scene';
 import { SCENE_EVENT_CATEGORIES } from '@/types/scene';
+import { confirmUnsavedChanges } from '@/utils/confirmHelpers';
 
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import { RichTextDescriptionField } from '@/components/shared/RichTextDescriptionField';
@@ -385,7 +385,7 @@ export default function EditSceneEventModal({ event }: EditSceneEventModalProps)
                   type="text"
                   value={formData.price_info ?? ''}
                   onChange={handleChange}
-                  placeholder="Free"
+                  placeholder="e.g. Free, €10, etc."
                 />
               </div>
               <div

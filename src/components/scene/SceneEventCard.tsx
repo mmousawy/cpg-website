@@ -134,7 +134,7 @@ export default function SceneEventCard({
               alt={event.title}
               fill
               sizes="(max-width: 640px) 72px, 110px"
-              className="object-contain"
+              className={`object-contain${/\.png(\?|$)/i.test(imageSrc) ? ' bg-white' : ''}`}
               blurhash={event.image_blurhash}
               noBlur={/\.png(\?|$)/i.test(imageSrc)}
             />
@@ -144,7 +144,7 @@ export default function SceneEventCard({
               alt=""
               fill
               sizes="(max-width: 640px) 72px, 110px"
-              className="object-contain"
+              className="object-contain bg-white"
               aria-hidden
             />
           )}
@@ -162,7 +162,7 @@ export default function SceneEventCard({
               style={getSceneCategoryStyle(event.category as SceneEventCategory)}
             >
               <span
-                className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-4"
+                className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-4"
               >
                 <SceneCategoryIcon
                   category={event.category}

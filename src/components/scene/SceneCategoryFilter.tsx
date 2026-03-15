@@ -38,12 +38,12 @@ function CategoryPill(props: {
         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
         ${isActive
           ? 'border'
-          : 'border border-transparent bg-neutral-200 dark:bg-[#252628] text-foreground hover:bg-neutral-300 dark:hover:bg-[#2e3032]'}
+          : 'border border-transparent bg-neutral-300/70 dark:bg-[#252628] text-foreground hover:bg-neutral-300 dark:hover:bg-[#2e3032]'}
       `}
     >
       {icon && (
         <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white dark:bg-black/20"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40"
         >
           <span
             className="[&_svg]:size-5"

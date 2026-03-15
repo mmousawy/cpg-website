@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/components/shared/Button';
+import SceneActionsPopover from '@/components/scene/SceneActionsPopover';
 import StackedAvatarsPopover, {
   type AvatarPerson,
 } from '@/components/shared/StackedAvatarsPopover';
@@ -131,31 +132,40 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
         )}
       </div>
 
-      {/* Right: visit website */}
-      {event.url && (
-        <Button
-          href={event.url}
-          variant="primary"
-          size="md"
-          target="_blank"
-          rel="noopener noreferrer"
-          iconRight={<ArrowRightSVG
-            className="size-4 fill-current"
-          />}
-          className="rounded-full shrink-0"
-        >
-          <span
-            className="hidden sm:inline"
+      {/* Right: actions menu + visit website */}
+      <div
+        className="flex items-center gap-2 shrink-0"
+      >
+        <SceneActionsPopover
+          event={event}
+        />
+        {event.url && (
+          <Button
+            href={event.url}
+            variant="primary"
+            size="md"
+            target="_blank"
+            rel="noopener noreferrer"
+            iconRight={
+              <ArrowRightSVG
+                className="size-4 fill-current"
+              />
+            }
+            className="rounded-full shrink-0"
           >
-            Visit website
-          </span>
-          <span
-            className="inline sm:hidden"
-          >
-            Visit
-          </span>
-        </Button>
-      )}
+            <span
+              className="hidden sm:inline"
+            >
+              Visit website
+            </span>
+            <span
+              className="inline sm:hidden"
+            >
+              Visit
+            </span>
+          </Button>
+        )}
+      </div>
     </StickyActionBar>
   );
 }

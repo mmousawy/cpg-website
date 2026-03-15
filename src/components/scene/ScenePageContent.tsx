@@ -2,7 +2,7 @@
 
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 const EMPTY_STATE_EMOTES = [
@@ -165,8 +165,11 @@ export default function ScenePageContent({
   cpgPastCount = 0,
   interestedByEvent = {},
 }: ScenePageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
+  const periodParam = searchParams.get('period') as TabId | null;
   const [pastCountByCategory, setPastCountByCategory] = useState<
     Record<string, number>
   >({});
@@ -260,19 +263,40 @@ export default function ScenePageContent({
     activeSelectedTab = null;
   }
 
-  const activeTab = activeSelectedTab && availableTabs.some((t) => t.id === activeSelectedTab)
-    ? activeSelectedTab
-    : defaultTab;
-
-  const handleTabChange = (tabId: TabId) => {
-    setSelectedTab(tabId);
-    setVisibleCount(ITEMS_PER_PAGE);
-  };
-
   const hasUpcoming =
     thisWeek.length > 0 || nextWeek.length > 0 || ongoing.length > 0 || thisMonth.length > 0 || later.length > 0;
   const hasPast = pastCount > 0;
   const hasAnyEvents = hasUpcoming || hasPast;
+
+  // Sync URL when period param is invalid after category change
+  useEffect(() => {
+    if (availableTabs.length === 0 || !defaultTab) return;
+    const isValid = periodParam && availableTabs.some((t) => t.id === periodParam);
+    if (periodParam && !isValid) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('period', defaultTab);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [category, periodParam, availableTabs, defaultTab, pathname, router, searchParams]);
+
+  const tabFromUrl =
+    periodParam &&
+    availableTabs.some((t) => t.id === periodParam)
+      ? periodParam
+      : null;
+  const activeTab =
+    tabFromUrl ??
+    (activeSelectedTab && availableTabs.some((t) => t.id === activeSelectedTab)
+      ? activeSelectedTab
+      : defaultTab);
+
+  const handleTabChange = (tabId: TabId) => {
+    setSelectedTab(tabId);
+    setVisibleCount(ITEMS_PER_PAGE);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('period', tabId);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const activeEvents =
     activeTab === 'thisWeek'

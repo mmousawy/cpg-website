@@ -8,8 +8,8 @@ import SceneActionsPopover from '@/components/scene/SceneActionsPopover';
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import SceneCoverImage from '@/components/scene/SceneCoverImage';
 import ArrowLink from '@/components/shared/ArrowLink';
-import BlurImage from '@/components/shared/BlurImage';
 import AuthorRow from '@/components/shared/AuthorRow';
+import BlurImage from '@/components/shared/BlurImage';
 import { routes } from '@/config/routes';
 import {
   getAllSceneEventSlugs,
@@ -210,22 +210,25 @@ export default async function SceneEventDetailPage({
             className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"
           />
 
-          {/* Title overlay */}
+          {/* Back link + title overlay */}
           <div
-            className="absolute inset-x-0 bottom-0 px-2 pb-0 sm:px-8 sm:pb-4"
+            className="absolute inset-0 flex flex-col justify-between px-2 sm:px-8"
           >
             <div
-              className="mx-auto max-w-screen-md"
+              className="flex-1"
+            />
+            <div
+              className="mx-auto w-full max-w-screen-md pb-0 sm:pb-4"
             >
               <div
-                className="mb-2 flex flex-wrap items-center gap-2"
+                className="mb-2 flex flex-wrap items-center justify-between gap-2"
               >
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium backdrop-blur-sm"
                   style={getSceneCategoryStyle(event.category as SceneEventCategory)}
                 >
                   <span
-                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-5"
                   >
                     <SceneCategoryIcon
                       category={event.category}
@@ -234,6 +237,9 @@ export default async function SceneEventDetailPage({
                   </span>
                   {categoryLabel}
                 </span>
+                <SceneActionsPopover
+                  event={event}
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl"
@@ -247,7 +253,7 @@ export default async function SceneEventDetailPage({
 
       <PageContainer
         className={clsx(
-          event.cover_image_url ? 'pt-4! sm:pt-6!' : '',
+          event.cover_image_url ? 'pt-2! sm:pt-3!' : '',
         )}
       >
         <ArrowLink
@@ -271,7 +277,7 @@ export default async function SceneEventDetailPage({
                 style={getSceneCategoryStyle(event.category as SceneEventCategory)}
               >
                 <span
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/20 [&_svg]:size-5"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-5"
                 >
                   <SceneCategoryIcon
                     category={event.category}

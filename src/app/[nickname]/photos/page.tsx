@@ -1,42 +1,26 @@
-import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import ArrowLink from '@/components/shared/ArrowLink';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
-import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileActionsPopover from '@/components/shared/ProfileActionsPopover';
-import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
-import { cacheLife, cacheTag } from 'next/cache';
-import { notFound } from 'next/navigation';
-
-// Cached data functions
-import JsonLd from '@/components/shared/JsonLd';
-import { getUserPublicAlbums } from '@/lib/data/albums';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import {
-  getAllProfileNicknames,
   getProfileByNickname,
-  getProfileStats,
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
-import { createMetadata, getAbsoluteUrl } from '@/utils/metadata';
+import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
+import { notFound } from 'next/navigation';
 
 type SocialLink = { label: string; url: string };
-
-// Pre-render all public profiles at build time for optimal caching
-export async function generateStaticParams() {
-  const nicknames = await getAllProfileNicknames();
-  return nicknames.map((nickname) => ({ nickname }));
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
-  // Only @-prefixed paths are profile routes
   if (!rawNickname.startsWith('@')) {
     return createMetadata({
       title: 'Page not found',
@@ -45,7 +29,6 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   }
 
   const nickname = rawNickname.slice(1);
-
   if (!nickname) {
     return createMetadata({
       title: 'Page not found',
@@ -53,9 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     });
   }
 
-  // Use cached function for metadata (same cache as page)
   const profile = await getProfileByNickname(nickname);
-
   if (!profile) {
     return createMetadata({
       title: 'Page not found',
@@ -64,99 +45,89 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   }
 
   const profileTitle = profile.full_name || `@${profile.nickname}`;
-  const profileDescription = profile.bio || `View the profile and photo albums of @${profile.nickname}`;
-  const profileImage = profile.avatar_url || null;
 
   return createMetadata({
-    title: profileTitle,
-    description: profileDescription,
-    image: profileImage,
-    canonical: `/@${encodeURIComponent(nickname)}`,
-    type: 'profile',
-    keywords: ['photography', 'photographer', profile.nickname || '', profile.full_name || ''],
+    title: `Photos by ${profileTitle}`,
+    description: `Browse all photos by ${profileTitle}`,
+    canonical: `/@${encodeURIComponent(nickname)}/photos`,
+    keywords: ['photos', 'photography', profile.nickname || '', profile.full_name || ''],
   });
 }
 
-export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
+export default async function UserPhotosPage({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
-  // Only @-prefixed paths are profile routes
   if (!rawNickname.startsWith('@')) {
     notFound();
   }
 
   const nickname = rawNickname.slice(1);
-
   if (!nickname) {
     notFound();
   }
 
-  // Fetch profile first (outside cache) to handle 404 properly
   const profile = await getProfileByNickname(nickname);
-
   if (!profile) {
     notFound();
   }
 
-  // Now render the cached content
-  return <ProfileContent
-    profile={profile}
-    nickname={nickname}
-  />;
+  return (
+    <CachedPhotosContent
+      profile={profile}
+      nickname={nickname}
+    />
+  );
 }
 
-// Separate cached component for the profile content
-async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>; nickname: string }) {
+async function CachedPhotosContent({
+  profile,
+  nickname,
+}: {
+  profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>;
+  nickname: string;
+}) {
   'use cache';
 
-  // Apply cache settings
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
 
-  // Fetch user's albums and photos using cached data functions
-  const [albums, publicPhotos, totalPhotos] = await Promise.all([
-    getUserPublicAlbums(profile.id, nickname, 50),
-    getUserPublicPhotos(profile.id, nickname, 20),
+  const perPage = 20;
+  const [allPhotos, totalPhotos] = await Promise.all([
+    getUserPublicPhotos(profile.id, nickname, perPage + 1),
     getUserPublicPhotoCount(profile.id, nickname),
   ]);
 
-  // Fetch stats using cached data function
-  const publicStats = await getProfileStats(
-    profile.id,
-    nickname,
-    albums.length,
-    totalPhotos,
-    profile.created_at || null,
-  );
+  const initialPhotos = allPhotos.slice(0, perPage);
+  const hasMore = allPhotos.length > perPage;
+
+  const photosWithProfile: StreamPhoto[] = initialPhotos.map((photo) => ({
+    ...photo,
+    profile: {
+      nickname: profile.nickname || nickname,
+      full_name: profile.full_name,
+      avatar_url: profile.avatar_url,
+    },
+  })) as StreamPhoto[];
 
   const socialLinks = (profile.social_links || []) as SocialLink[];
-
-  const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);
-  const profileJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ProfilePage',
-    mainEntity: {
-      '@type': 'Person',
-      name: profile.full_name || `@${profile.nickname}`,
-      url: profileUrl,
-      ...(profile.bio && { description: profile.bio }),
-      ...(profile.avatar_url && { image: profile.avatar_url }),
-      ...(socialLinks.length > 0 && { sameAs: socialLinks.map((l) => l.url) }),
-    },
-  };
+  const profileNickname = profile.nickname || nickname;
 
   return (
     <>
-      <JsonLd
-        data={profileJsonLd}
-      />
       <PageContainer>
+        <ArrowLink
+          href={`/@${encodeURIComponent(profileNickname)}`}
+          direction="left"
+          className="mb-6"
+        >
+          Back to profile
+        </ArrowLink>
+
         {/* Profile Header */}
         <div
           className="mb-8 sm:mb-10"
         >
-          {/* Avatar and Name */}
           <div
             className="mb-3 sm:mb-6 flex items-start gap-3 sm:gap-4 relative"
           >
@@ -190,8 +161,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                   {profile.nickname}
                 </p>
               )}
-
-              {/* Links - Desktop only (inline with name) */}
+              {/* Links - Desktop only */}
               {(profile.website || socialLinks.length > 0) && (
                 <div
                   className="hidden sm:flex flex-wrap items-center gap-2 sm:mt-2"
@@ -235,7 +205,6 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
               )}
             </div>
 
-            {/* More actions menu - top right */}
             {profile.nickname && (
               <ProfileActionsPopover
                 profileId={profile.id}
@@ -244,7 +213,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
             )}
           </div>
 
-          {/* Links - Mobile only (full width below avatar) */}
+          {/* Links - Mobile only */}
           {(profile.website || socialLinks.length > 0) && (
             <div
               className="flex sm:hidden flex-wrap items-center gap-2 mb-4"
@@ -286,111 +255,38 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
               ))}
             </div>
           )}
-
-          {/* Bio */}
-          {profile.bio && (
-            <div
-              className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]"
-            >
-              {profile.bio}
-            </div>
-          )}
-
-          {/* Interests */}
-          {profile.interests && profile.interests.length > 0 && (
-            <div
-              className="mb-4"
-            >
-              <InterestCloud
-                interests={profile.interests}
-              />
-            </div>
-          )}
         </div>
-
-        {/* Stats Badges */}
-        <ProfileStatsBadges
-          stats={publicStats}
-        />
       </PageContainer>
 
-      {/* Photostream - Wide container */}
-      {publicPhotos.length > 0 && (
-        <WidePageContainer
-          className="pt-0!"
+      <WidePageContainer
+        className="pt-0!"
+      >
+        <div
+          className="mb-6"
         >
-          <JustifiedPhotoGrid
-            photos={publicPhotos.map((photo) => ({
-              ...photo,
-              profile: {
-                nickname: profile.nickname || nickname,
-                full_name: profile.full_name,
-                avatar_url: profile.avatar_url,
-              },
-            })) as StreamPhoto[]}
-            profileNickname={profile.nickname || nickname}
-            showAttribution
-            header={
-              <div
-                className="mb-6"
-              >
-                <h2
-                  className="text-xl font-semibold"
-                >
-                  Photostream
-                </h2>
-                <p
-                  className="mt-1 text-sm text-foreground/60"
-                >
-                  Latest photos by @
-                  {profile.nickname}
-                </p>
-              </div>
-            }
-          />
-          {totalPhotos > publicPhotos.length && (
-            <div
-              className="mt-6 flex justify-center"
-            >
-              <ArrowLink
-                href={`/@${encodeURIComponent(profile.nickname || nickname)}/photos`}
-              >
-                View all
-                {' '}
-                {totalPhotos}
-                {' '}
-                photos
-              </ArrowLink>
-            </div>
-          )}
-        </WidePageContainer>
-      )}
-
-      {/* Albums - Wide container */}
-      {albums.length > 0 && (
-        <WidePageContainer
-          className={publicPhotos.length > 0 ? 'pt-0!' : ''}
-        >
-          <div
-            className="mb-6"
+          <h2
+            className="text-xl font-semibold"
           >
-            <h2
-              className="text-xl font-semibold"
-            >
-              Albums
-            </h2>
-            <p
-              className="mt-1 text-sm text-foreground/60"
-            >
-              Photo collections by @
-              {profile.nickname}
-            </p>
-          </div>
-          <AlbumGrid
-            albums={albums}
-          />
-        </WidePageContainer>
-      )}
+            All photos by
+            {' '}
+            {profile.full_name || `@${profile.nickname}`}
+          </h2>
+          <p
+            className="mt-1 text-sm text-foreground/60"
+          >
+            {totalPhotos}
+            {' '}
+            {totalPhotos === 1 ? 'photo' : 'photos'}
+          </p>
+        </div>
+        <PhotosPaginated
+          initialPhotos={photosWithProfile}
+          perPage={perPage}
+          initialHasMore={hasMore}
+          apiEndpoint={`/api/photos/user?nickname=${encodeURIComponent(profileNickname)}`}
+          showSortToggle={false}
+        />
+      </WidePageContainer>
     </>
   );
 }

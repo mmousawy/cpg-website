@@ -78,9 +78,11 @@ export default function PhotosPaginated({
   }, [pathname, initialSort, initialPhotos, initialHasMore, perPage]);
 
   // Track batches of photos - each batch has its own stable layout
-  const [batches, setBatches] = useState<PhotoBatch[]>(() => getInitialState().batches);
+  // Always initialise with server-safe values to avoid hydration mismatches;
+  // sessionStorage restoration happens in the useEffect below.
+  const [batches, setBatches] = useState<PhotoBatch[]>([{ id: 'initial', photos: initialPhotos }]);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
-  const [hasMore, setHasMore] = useState(() => getInitialState().hasMore);
+  const [hasMore, setHasMore] = useState(initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage);
   const [isPending, startTransition] = useTransition();
   const [isSorting, setIsSorting] = useState(false);
 
@@ -115,11 +117,13 @@ export default function PhotosPaginated({
   // Calculate total photo count for offset
   const totalPhotoCount = batches.reduce((sum, batch) => sum + batch.photos.length, 0);
 
+  const sep = apiEndpoint.includes('?') ? '&' : '?';
+
   const loadMore = () => {
     startTransition(async () => {
       try {
         const sortParam = showSortToggle ? `&sort=${sortBy}` : '';
-        const res = await fetch(`${apiEndpoint}?offset=${totalPhotoCount}&limit=${perPage}${sortParam}`);
+        const res = await fetch(`${apiEndpoint}${sep}offset=${totalPhotoCount}&limit=${perPage}${sortParam}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch more photos');
@@ -167,7 +171,7 @@ export default function PhotosPaginated({
     setIsSorting(true);
     startTransition(async () => {
       try {
-        const res = await fetch(`${apiEndpoint}?offset=0&limit=${perPage}&sort=${newSort}`);
+        const res = await fetch(`${apiEndpoint}${sep}offset=0&limit=${perPage}&sort=${newSort}`);
 
         if (!res.ok) {
           throw new Error('Failed to fetch photos');
