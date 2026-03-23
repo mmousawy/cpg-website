@@ -46,11 +46,25 @@ jobs:
           git checkout -b release/$MAJOR_MINOR
           git push origin release/$MAJOR_MINOR
 
+      - name: Setup Node
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Vercel CLI
+        if: ${{ steps.release.outputs.release_created }}
+        id: vercel-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: vercel-cli-${{ runner.os }}
+
       - name: Install Vercel CLI
         if: ${{ steps.release.outputs.release_created }}
         run: npm install -g vercel
 
-      - name: Promote preview deployment to production
+      - name: Promote latest deployment to production
         if: ${{ steps.release.outputs.release_created }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -58,18 +72,18 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           COMMIT_SHA=$(git rev-parse HEAD)
-          echo "Looking for preview deployment for commit $COMMIT_SHA..."
+          echo "Looking for Vercel deployment for commit $COMMIT_SHA..."
 
-          DEPLOYMENT_URL=$(vercel list --token="$VERCEL_TOKEN" --meta gitCommitSha="$COMMIT_SHA" 2>/dev/null \
-            | grep -v "Production" \
-            | awk 'NR==2 {print $2}')
+          DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&sha=$COMMIT_SHA&limit=1&state=READY" \
+            | jq -r '.deployments[0].url // empty')
 
-          if [ -z "$DEPLOYMENT_URL" ]; then
-            echo "No preview deployment found for commit $COMMIT_SHA"
+          if [ -n "$DEPLOYMENT_URL" ]; then
+            echo "Found deployment: $DEPLOYMENT_URL"
+            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
+            echo "Successfully promoted to production!"
+          else
+            echo "No ready deployment found for commit $COMMIT_SHA"
             echo "Falling back to full production deploy..."
             vercel deploy --prod --token="$VERCEL_TOKEN"
-          else
-            echo "Found preview deployment: $DEPLOYMENT_URL"
-            vercel promote "$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
-            echo "Successfully promoted $DEPLOYMENT_URL to production"
           fi
