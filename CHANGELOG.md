@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.8](https://github.com/mmousawy/cpg-website/compare/v1.29.7...v1.29.8) (2026-03-23)
+
+
+### Bug Fixes
+
+* adjust CD flow. ([99dc70b](https://github.com/mmousawy/cpg-website/commit/99dc70b3e5aca4c76162c96bf4ce215ef8174568))
+* various issues and styling fixes. ([922363d](https://github.com/mmousawy/cpg-website/commit/922363d9a6c756c8b27515517a7de1be2b6c1ac8))
+
 ## [1.29.7](https://github.com/mmousawy/cpg-website/compare/v1.29.6...v1.29.7) (2026-03-15)
 
 
