@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.10](https://github.com/mmousawy/cpg-website/compare/v1.29.9...v1.29.10) (2026-03-23)
+
+
+### Bug Fixes
+
+* adjust CD workflow. ([34cb138](https://github.com/mmousawy/cpg-website/commit/34cb13885303f35c4eb5a2b28c0a857e464bc1f6))
+
 ## [1.29.9](https://github.com/mmousawy/cpg-website/compare/v1.29.8...v1.29.9) (2026-03-23)
 
 
