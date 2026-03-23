@@ -38,6 +38,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
+  applicationName: siteConfig.name,
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
@@ -111,6 +112,7 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'WebSite',
               name: siteConfig.name,
+              alternateName: ['Creative Photography Group', 'CPG'],
               url: siteConfig.url,
               description: siteConfig.description,
               publisher: {

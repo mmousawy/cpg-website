@@ -186,7 +186,9 @@ export type SceneEventInterested = {
 };
 
 /**
- * Get interested users for a list of scene events (batch)
+ * Get interested users for a small batch of scene events.
+ * Callers should pass at most ~50 IDs to avoid URI-too-large errors.
+ * The scene overview page fetches interests lazily via /api/scene/interests.
  */
 export async function getSceneEventInterests(
   sceneEventIds: string[],

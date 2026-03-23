@@ -111,7 +111,7 @@ export default function Header() {
           </Link>
 
           <nav
-            className="hidden items-center gap-4 sm:flex"
+            className="hidden items-center gap-5 sm:flex"
           >
             <NavLink
               href={routes.events.url}

@@ -6,9 +6,10 @@ import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import SceneCardInterestRow from '@/components/scene/SceneCardInterestRow';
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import BlurImage from '@/components/shared/BlurImage';
-import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
+import type { AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -107,131 +108,128 @@ export default function SceneEventCard({
   const categoryLabel = getCategoryLabel(event.category);
   const locationStr = formatLocation(event.location_name, event.location_city);
   const interestedPeople = transformInterestedToAvatarPeople(interested);
-
   const isCpgEvent = event.id.startsWith('cpg-');
+  const interestCount = event.interest_count ?? 0;
+  const showInterestRow = interested.length > 0;
   const href = isCpgEvent
     ? `/events/${event.slug}`
     : `/scene/${event.slug}`;
 
   return (
-    <Link
-      href={href}
+    <div
       className={clsx(
-        'block rounded-xl border border-border-color bg-background-light p-3 sm:p-5 transition-colors hover:border-primary group',
+        'rounded-xl border border-border-color bg-background-light transition-colors hover:border-primary group',
         className,
       )}
     >
-      <div
-        className="flex items-start gap-4"
+      <Link
+        href={href}
+        className="block p-3 sm:p-5 transition-colors"
       >
-        {/* Image column (left) - 72x72 mobile, 110px desktop; placeholder when no image */}
         <div
-          className={`shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center${imageSrc ? '' : ' bg-white'}`}
-        >
-          {imageSrc ? (
-            <BlurImage
-              src={imageSrc}
-              alt={event.title}
-              fill
-              sizes="(max-width: 640px) 72px, 110px"
-              className={`object-contain${/\.png(\?|$)/i.test(imageSrc) ? ' bg-white' : ''}`}
-              blurhash={event.image_blurhash}
-              noBlur={/\.png(\?|$)/i.test(imageSrc)}
-            />
-          ) : (
-            <Image
-              src="/cpg-placeholder.png"
-              alt=""
-              fill
-              sizes="(max-width: 640px) 72px, 110px"
-              className="object-contain bg-white"
-              aria-hidden
-            />
-          )}
-        </div>
-
-        {/* Content column */}
-        <div
-          className="flex-1 min-w-0"
+          className="flex items-start gap-4"
         >
           <div
-            className="flex flex-wrap items-center gap-1.5 mb-1.5"
+            className={`shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center${imageSrc ? '' : ' bg-white'}`}
           >
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
-              style={getSceneCategoryStyle(event.category as SceneEventCategory)}
-            >
-              <span
-                className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-4"
-              >
-                <SceneCategoryIcon
-                  category={event.category}
-                  className="size-4 fill-current"
-                />
-              </span>
-              {categoryLabel}
-            </span>
-            <span
-              className="text-foreground/40"
-              aria-hidden
-            >
-              ·
-            </span>
-            <span
-              className="flex items-center gap-1 text-xs font-medium text-foreground/80"
-            >
-              <TicketCardSVG
-                className="size-4 shrink-0 fill-foreground/70"
+            {imageSrc ? (
+              <BlurImage
+                src={imageSrc}
+                alt={event.title}
+                fill
+                sizes="(max-width: 640px) 72px, 110px"
+                className={`object-contain${/\.png(\?|$)/i.test(imageSrc) ? ' bg-white' : ''}`}
+                blurhash={event.image_blurhash}
+                noBlur={/\.png(\?|$)/i.test(imageSrc)}
               />
-              {formatPrice(event.price_info) ?? 'See event'}
-            </span>
+            ) : (
+              <Image
+                src="/cpg-placeholder.png"
+                alt=""
+                fill
+                sizes="(max-width: 640px) 72px, 110px"
+                className="object-contain bg-white"
+                aria-hidden
+              />
+            )}
           </div>
-          <h3
-            className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2 mb-1.5"
-          >
-            {event.title}
-          </h3>
           <div
-            className="space-y-1 text-sm text-foreground/90"
+            className="flex-1 min-w-0"
           >
-            <span
-              className="flex items-start gap-1"
-            >
-              <CalendarSVG
-                className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
-              />
-              {dateStr}
-            </span>
-            <span
-              className="flex items-start gap-1"
-            >
-              <LocationSVG
-                className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
-              />
-              <span
-                className="line-clamp-1"
-              >
-                {locationStr}
-              </span>
-            </span>
-          </div>
-          {interested.length > 0 && (
             <div
-              className="mt-2"
+              className="flex flex-wrap items-center gap-1.5 mb-1.5"
             >
-              <StackedAvatarsPopover
-                people={interestedPeople}
-                singularLabel="interested"
-                pluralLabel="interested"
-                emptyMessage="No one interested yet"
-                showInlineCount={true}
-                avatarSize="xxs"
-                disableLinks
-              />
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border pl-1 pr-2.5 py-1 text-xs font-medium"
+                style={getSceneCategoryStyle(event.category as SceneEventCategory)}
+              >
+                <span
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/80 dark:bg-black/40 [&_svg]:size-4"
+                >
+                  <SceneCategoryIcon
+                    category={event.category}
+                    className="size-4 fill-current"
+                  />
+                </span>
+                {categoryLabel}
+              </span>
+              <span
+                className="text-foreground/40"
+                aria-hidden
+              >
+                ·
+              </span>
+              <span
+                className="flex items-center gap-1 text-xs font-medium text-foreground/80"
+              >
+                <TicketCardSVG
+                  className="size-4 shrink-0 fill-foreground/70"
+                />
+                {formatPrice(event.price_info) ?? 'See event'}
+              </span>
             </div>
-          )}
+            <h3
+              className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2 mb-1.5"
+            >
+              {event.title}
+            </h3>
+            <div
+              className="space-y-1 text-sm text-foreground/90"
+            >
+              <span
+                className="flex items-start gap-1"
+              >
+                <CalendarSVG
+                  className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
+                />
+                {dateStr}
+              </span>
+              <span
+                className="flex items-start gap-1"
+              >
+                <LocationSVG
+                  className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
+                />
+                <span
+                  className="line-clamp-1"
+                >
+                  {locationStr}
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      {showInterestRow && (
+        <div
+          className="border-t border-border-color px-3 py-2.5 sm:px-5 sm:py-4"
+        >
+          <SceneCardInterestRow
+            people={interestedPeople}
+            interestCount={interestCount}
+          />
+        </div>
+      )}
+    </div>
   );
 }

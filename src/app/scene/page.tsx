@@ -65,11 +65,14 @@ export default async function ScenePage() {
 
   const pastTotalCount = pastData.totalCount; // DB only; CPG past are prepended, not paginated
 
-  const displayedEventIds = [
-    ...upcomingEvents.map((e) => e.id),
-    ...initialPast.map((e) => e.id),
-  ].filter((id) => !id.startsWith('cpg-')); // Only DB events have interests
-  const interestedByEvent = await getSceneEventInterests(displayedEventIds);
+  const INITIAL_VISIBLE = 20;
+  const initialVisibleIds = upcomingEvents
+    .slice(0, INITIAL_VISIBLE)
+    .map((e) => e.id)
+    .filter((id) => !id.startsWith('cpg-'));
+  const initialInterests = initialVisibleIds.length > 0
+    ? await getSceneEventInterests(initialVisibleIds)
+    : {};
 
   return (
     <PageContainer>
@@ -109,7 +112,7 @@ export default async function ScenePage() {
         pastTotalCount={pastTotalCount}
         pastPerPage={PAST_EVENTS_PER_PAGE}
         cpgPastCount={cpgPastCount}
-        interestedByEvent={interestedByEvent}
+        interestedByEvent={initialInterests}
       />
     </PageContainer>
   );

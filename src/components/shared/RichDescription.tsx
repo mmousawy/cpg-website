@@ -51,6 +51,7 @@ export function RichDescription({ html, className }: RichDescriptionProps) {
 
   return <div
     className={classes}
+    suppressHydrationWarning
     dangerouslySetInnerHTML={{ __html: content }}
   />;
 }

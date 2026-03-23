@@ -10,7 +10,7 @@ import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
 import { useSupabase } from '@/hooks/useSupabase';
 import CalendarSVG from 'public/icons/calendar2.svg';
-import EditSVG from 'public/icons/edit.svg';
+import EyeSVG from 'public/icons/eye.svg';
 import LocationSVG from 'public/icons/location.svg';
 import PlusSVG from 'public/icons/plus.svg';
 import SadSVG from 'public/icons/sad.svg';
@@ -161,15 +161,14 @@ function AdminEventCard({ event }: { event: Event }) {
   const imageSrc = event.cover_image;
 
   return (
-    <div
+    <Link
+      href={`/admin/events/${event.slug || event.id}`}
       className="block rounded-xl border border-border-color bg-background-light p-3 sm:p-4 transition-colors hover:border-primary"
     >
       <div
         className="flex items-start gap-3 sm:gap-4"
       >
-        {/* Clickable content area */}
-        <Link
-          href={`/events/${event.slug || event.id}`}
+        <div
           className="flex-1 min-w-0"
         >
           <div
@@ -241,23 +240,24 @@ function AdminEventCard({ event }: { event: Event }) {
               </div>
             </div>
           </div>
-        </Link>
+        </div>
 
-        {/* Edit button - separate from clickable area */}
+        {/* View button - links to public event page */}
         <div
           className="shrink-0 flex items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
         >
           <Link
-            href={`/admin/events/${event.slug || event.id}`}
+            href={`/events/${event.slug || event.id}`}
             className="rounded-full border border-border-color-strong bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:text-primary flex items-center gap-1.5"
           >
-            <EditSVG
-              className="size-4 fill-current"
+            <EyeSVG
+              className="size-4 fill-none stroke-current"
             />
-            Edit
+            View
           </Link>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

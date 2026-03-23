@@ -263,6 +263,17 @@ export default function ScenePageContent({
     activeSelectedTab = null;
   }
 
+  // Lazy interest fetching: merge server-provided data with client-fetched data
+  const [fetchedInterests, setFetchedInterests] = useState<
+    Record<string, SceneEventInterested[]>
+  >({});
+  const fetchedIdsRef = useRef<Set<string>>(new Set(Object.keys(interestedByEvent)));
+
+  const mergedInterests = useMemo(
+    () => ({ ...interestedByEvent, ...fetchedInterests }),
+    [interestedByEvent, fetchedInterests],
+  );
+
   const hasUpcoming =
     thisWeek.length > 0 || nextWeek.length > 0 || ongoing.length > 0 || thisMonth.length > 0 || later.length > 0;
   const hasPast = pastCount > 0;
@@ -310,6 +321,48 @@ export default function ScenePageContent({
             : activeTab === 'later'
               ? later
               : [];
+
+  // Collect all currently visible event IDs that need interest data
+  const visibleUpcoming = activeEvents.slice(0, visibleCount);
+  const visibleEventIds = activeTab === 'past'
+    ? initialPastEvents.map((e) => e.id).filter((id) => !id.startsWith('cpg-'))
+    : visibleUpcoming.map((e) => e.id).filter((id) => !id.startsWith('cpg-'));
+
+  // Lazily fetch interests for visible events
+  useEffect(() => {
+    const unfetchedIds = visibleEventIds.filter(
+      (id) => !fetchedIdsRef.current.has(id) && !interestedByEvent[id],
+    );
+
+    if (unfetchedIds.length === 0) return;
+
+    unfetchedIds.forEach((id) => fetchedIdsRef.current.add(id));
+
+    let cancelled = false;
+
+    const chunks: string[][] = [];
+    for (let i = 0; i < unfetchedIds.length; i += 50) {
+      chunks.push(unfetchedIds.slice(i, i + 50));
+    }
+
+    Promise.all(
+      chunks.map((chunk) =>
+        fetch(`/api/scene/interests?ids=${chunk.join(',')}`)
+          .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed')))),
+      ),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        const merged: Record<string, SceneEventInterested[]> = {};
+        for (const data of results) {
+          Object.assign(merged, data.interestedByEvent);
+        }
+        setFetchedInterests((prev) => ({ ...prev, ...merged }));
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [visibleEventIds, interestedByEvent]);
 
   return (
     <div
@@ -372,7 +425,7 @@ export default function ScenePageContent({
           {activeTab === 'past' ? (
             <PastSceneEventsPaginated
               initialEvents={initialPastEvents}
-              initialInterestedByEvent={interestedByEvent}
+              initialInterestedByEvent={mergedInterests}
               totalCount={pastTotalCount}
               perPage={pastPerPage}
               category={category}
@@ -387,7 +440,7 @@ export default function ScenePageContent({
                     <SceneEventCard
                       key={event.id}
                       event={event}
-                      interested={interestedByEvent[event.id] ?? []}
+                      interested={mergedInterests[event.id] ?? []}
                     />
                   ))}
                 </div>

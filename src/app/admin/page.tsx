@@ -7,7 +7,7 @@ import PageContainer from '@/components/layout/PageContainer';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import NotificationCommentSVG from 'public/icons/notification-comment.svg';
-import TrophySVG from 'public/icons/trophy.svg';
+import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 
 type AdminCard = {
@@ -34,7 +34,7 @@ export default function AdminDashboardPage() {
     {
       title: 'Photo challenges',
       description: 'Create challenges and review submissions',
-      icon: <TrophySVG
+      icon: <AwardStarMiniSVG
         className="h-8 w-8 fill-current"
       />,
       href: '/admin/challenges',

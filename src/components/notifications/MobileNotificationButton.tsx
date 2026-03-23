@@ -184,7 +184,7 @@ export default function MobileNotificationButton() {
               fullWidth
               onClick={() => setIsOpen(false)}
             >
-              View all notifications
+              View all activity
             </Button>
           </div>
         </div>

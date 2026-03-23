@@ -115,10 +115,10 @@ export default function NotificationButton() {
       </summary>
 
       <div
-        className="absolute right-0 top-full z-50 mt-2 w-80 max-h-[32rem] overflow-hidden rounded-xl border border-border-color-strong bg-background-light shadow-lg"
+        className="absolute right-0 top-full z-50 mt-2 w-80 max-h-128 overflow-hidden rounded-xl border border-border-color-strong bg-background-light shadow-lg"
       >
         <div
-          className="flex flex-col max-h-[32rem]"
+          className="flex flex-col max-h-128"
         >
           {/* Header */}
           <div
@@ -239,7 +239,7 @@ export default function NotificationButton() {
                   }
                 }}
               >
-                View all notifications
+                View all activity
               </Link>
             </div>
           )}
