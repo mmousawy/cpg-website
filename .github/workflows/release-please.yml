@@ -31,6 +31,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
+      - name: Save main branch commit SHA
+        if: ${{ steps.release.outputs.release_created }}
+        id: main-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Configure git
         if: ${{ steps.release.outputs.release_created }}
         run: |
@@ -57,12 +62,21 @@ jobs:
         id: vercel-cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: vercel-cli-${{ runner.os }}
+          path: ${{ github.workspace }}/.vercel-cli
+          key: vercel-cli-${{ runner.os }}-${{ hashFiles('.github/workflows/release-please.yml') }}
 
       - name: Install Vercel CLI
         if: ${{ steps.release.outputs.release_created }}
-        run: npm install -g vercel
+        run: |
+          if [ -x "${{ github.workspace }}/.vercel-cli/node_modules/.bin/vercel" ]; then
+            echo "Vercel CLI restored from cache"
+          else
+            mkdir -p "${{ github.workspace }}/.vercel-cli"
+            cd "${{ github.workspace }}/.vercel-cli"
+            npm init -y > /dev/null 2>&1
+            npm install vercel
+          fi
+          echo "${{ github.workspace }}/.vercel-cli/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Promote latest deployment to production
         if: ${{ steps.release.outputs.release_created }}
@@ -71,7 +85,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          COMMIT_SHA=$(git rev-parse HEAD)
+          COMMIT_SHA="${{ steps.main-sha.outputs.sha }}"
           echo "Looking for Vercel deployment for commit $COMMIT_SHA..."
 
           DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
