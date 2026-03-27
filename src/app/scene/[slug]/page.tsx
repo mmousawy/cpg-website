@@ -167,7 +167,7 @@ export default async function SceneEventDetailPage({
     event.id,
     event.location_city,
     event.category,
-    4,
+    10,
   );
 
   const relatedIds = related.map((r) => r.id);

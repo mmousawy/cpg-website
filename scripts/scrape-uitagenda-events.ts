@@ -12,6 +12,7 @@ import {
   createScraperSupabase,
   delay,
   filterThisWeek,
+  findDuplicate,
   mapCategory,
   parseArgs,
   processEvents,
@@ -356,6 +357,17 @@ async function main() {
   if (options.thisWeek) {
     events = filterThisWeek(events);
     console.log(`[Uitagenda] Filtered to ${events.length} events starting this week`);
+  }
+
+  if (!options.updateExisting) {
+    const beforeCount = events.length;
+    const newEvents: ScrapedEvent[] = [];
+    for (const event of events) {
+      const dup = await findDuplicate(supabase, event);
+      if (!dup) newEvents.push(event);
+    }
+    events = newEvents;
+    console.log(`[Uitagenda] Filtered out ${beforeCount - events.length} duplicates, ${events.length} new events remaining`);
   }
 
   console.log('[Uitagenda] Enriching prices from detail pages...\n');

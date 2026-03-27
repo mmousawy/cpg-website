@@ -20,6 +20,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "analyze": "cross-env ANALYZE=true next build --webpack",
+    "scrape:all": "npx tsx scripts/scrape-uitagenda-events.ts && npx tsx scripts/scrape-tpc-events.ts && npx tsx scripts/scrape-cameranu-events.ts",
     "prepare": "husky"
   },
   "dependencies": {

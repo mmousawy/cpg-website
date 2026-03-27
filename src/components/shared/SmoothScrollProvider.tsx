@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
+import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
+
 /**
  * Intercepts anchor link clicks and scrolls to targets with smooth behavior.
  * Works for same-page hashes (#section) and same-path hashes (/help#section).
@@ -21,7 +23,7 @@ export default function SmoothScrollProvider() {
       if (target) {
         // Small delay so layout is ready
         requestAnimationFrame(() => {
-          target.scrollIntoView({ behavior: 'smooth' });
+          scrollToIdWithStickyHeaderOffset(id);
         });
       }
     }
@@ -47,7 +49,7 @@ export default function SmoothScrollProvider() {
 
         if (isSamePage) {
           e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth' });
+          scrollToIdWithStickyHeaderOffset(id);
           window.history.replaceState(null, '', hash);
         }
       } catch {

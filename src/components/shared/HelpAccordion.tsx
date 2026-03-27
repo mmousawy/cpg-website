@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
+
 type HelpAccordionProps = {
   id: string;
   title: string;
@@ -34,6 +36,22 @@ export default function HelpAccordion({ id, title, children }: HelpAccordionProp
     ro.observe(el);
     return () => ro.disconnect();
   }, [children]);
+
+  // Re-scroll after opening so layout matches sticky header offset (help deep links).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isOpen) return;
+    if (window.location.hash !== `#${id}`) return;
+    let cancelled = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) scrollToIdWithStickyHeaderOffset(id);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, id]);
 
   return (
     <div

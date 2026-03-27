@@ -60,7 +60,6 @@ export default function HelpPage() {
               <section
                 key={section.id}
                 id={section.id}
-                className="-scroll-mt-4"
               >
                 <Container
                   variant="default"

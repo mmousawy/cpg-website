@@ -62,7 +62,6 @@ export default function LicensesHelpPage() {
               <section
                 key={section.id}
                 id={section.id}
-                className="-scroll-mt-4"
               >
                 <Container
                   variant="default"

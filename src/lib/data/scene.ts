@@ -131,7 +131,7 @@ export async function getRelatedSceneEvents(
   excludeId: string,
   city: string,
   category: string,
-  limit = 4,
+  limit = 10,
 ) {
   'use cache';
   cacheLife('max');

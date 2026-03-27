@@ -9,9 +9,11 @@ import type { SectionNavItem } from '@/components/shared/SectionSidebar';
 interface SectionMobileNavProps {
   sections: SectionNavItem[];
   ariaLabel?: string;
+  /** Set false when rendered inside a parent that already handles sticky positioning */
+  sticky?: boolean;
 }
 
-export default function SectionMobileNav({ sections, ariaLabel = 'Page sections' }: SectionMobileNavProps) {
+export default function SectionMobileNav({ sections, ariaLabel = 'Page sections', sticky = true }: SectionMobileNavProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const { activeSectionId, pinSection } = useSectionScroll();
@@ -45,7 +47,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
   return (
     <div
       ref={panelRef}
-      className="md:hidden sticky bottom-0 z-30 flex flex-col border-t border-border-color-strong bg-background-light shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] pb-[env(safe-area-inset-bottom)]"
+      className={`md:hidden ${sticky ? 'sticky bottom-0' : ''} z-30 flex flex-col border-t border-border-color-strong bg-background-light shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] pb-[env(safe-area-inset-bottom)]`}
     >
       {/* Collapsed trigger */}
       <button

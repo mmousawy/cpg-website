@@ -76,7 +76,7 @@ export default function RelatedEventsSlider({
 
   return (
     <section
-      className="mt-8 sm:-mx-16 sm:px-16"
+      className="mt-8 min-w-0 sm:-mx-16 sm:px-16"
     >
       <h2
         className="text-lg font-semibold mb-4 opacity-70"
@@ -109,8 +109,9 @@ export default function RelatedEventsSlider({
           />
         </div>
 
+        {/* Full-bleed: cancel PageContainer outer px-2; avoid w-screen/100vw (document width vs scrollbar). */}
         <div
-          className="w-screen relative left-1/2 -translate-x-1/2 sm:w-[calc(100%+8rem)] sm:-left-16 sm:translate-x-0 sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          className="relative -mx-2 w-[calc(100%+1rem)] sm:mx-0 sm:w-[calc(100%+8rem)] sm:-left-16 sm:translate-x-0 sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
           <Swiper
             modules={[Navigation, A11y]}

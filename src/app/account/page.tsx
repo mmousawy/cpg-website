@@ -280,6 +280,7 @@ export default function AccountPage() {
         <SectionMobileNav
           sections={ACCOUNT_SECTIONS}
           ariaLabel="Account sections"
+          sticky={false}
         />
         {changeCount > 0 && (
           <StickyActionBar
