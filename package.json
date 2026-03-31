@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.29.13",
+  "version": "1.29.14",
   "private": true,
   "type": "module",
   "scripts": {
