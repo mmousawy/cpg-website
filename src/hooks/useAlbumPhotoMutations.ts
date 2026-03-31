@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateAlbumBySlug } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbumBySlug, revalidateGalleryData, revalidateHome } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -230,6 +230,12 @@ export function useUpdateAlbumPhoto(
       // Revalidate album page
       if (nickname && albumSlug) {
         await revalidateAlbum(nickname, albumSlug);
+      }
+
+      // Revalidate gallery and home when visibility changed (affects public listings)
+      const previousPhoto = previousPhotos?.find((p) => p.id === photoId);
+      if (previousPhoto && previousPhoto.is_public !== data.is_public) {
+        await Promise.all([revalidateGalleryData(), revalidateHome()]);
       }
 
       return { photoId, data, previousPhotos };
@@ -490,6 +496,16 @@ export function useBulkUpdateAlbumPhotos(
       // Revalidate album page
       if (nickname && albumSlug) {
         await revalidateAlbum(nickname, albumSlug);
+      }
+
+      // Revalidate gallery and home when visibility changed (affects public listings)
+      if (data.is_public !== null) {
+        const anyVisibilityChanged = previousPhotos?.some(
+          (p) => photoIds.includes(p.id) && p.is_public !== data.is_public,
+        );
+        if (anyVisibilityChanged) {
+          await Promise.all([revalidateGalleryData(), revalidateHome()]);
+        }
       }
 
       return { photoIds, data, previousPhotos };

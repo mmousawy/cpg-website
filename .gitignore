@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scraper local duplicate cache (machine-specific)
+/scripts/.scraper-cache.json

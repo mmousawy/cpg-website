@@ -25,10 +25,11 @@ export interface LayoutOptions {
   maxPhotosPerRow?: number; // Maximum photos per row (default: 8)
   targetRowHeight?: number; // Target row height in pixels (default: 240)
   maxRowHeight?: number; // Maximum row height in pixels (default: 350)
+  gap?: number; // Gap between photos in pixels (default: 4)
 }
 
 const DEFAULT_TARGET_ROW_HEIGHT = 240;
-const GAP = 4; // Gap between photos (gap-1 = 4px)
+const DEFAULT_GAP = 4; // Gap between photos (gap-1 = 4px)
 
 type PhotoData = { id: string; url: string; aspectRatio: number };
 
@@ -50,10 +51,11 @@ function getRowSignature(photos: PhotoData[]): string {
 function getRowHeight(
   aspectRatios: number[],
   containerWidth: number,
+  gap: number,
 ): number {
   if (aspectRatios.length === 0) return DEFAULT_TARGET_ROW_HEIGHT;
   const totalAspectRatio = aspectRatios.reduce((sum, ar) => sum + ar, 0);
-  const totalGapWidth = (aspectRatios.length - 1) * GAP;
+  const totalGapWidth = (aspectRatios.length - 1) * gap;
   return (containerWidth - totalGapWidth) / totalAspectRatio;
 }
 
@@ -65,23 +67,23 @@ function buildRow(
   photos: PhotoData[],
   containerWidth: number,
   maxHeight: number,
+  gap: number,
 ): PhotoRow {
   const aspectRatios = photos.map((p) => p.aspectRatio);
-  const naturalHeight = getRowHeight(aspectRatios, containerWidth);
+  const naturalHeight = getRowHeight(aspectRatios, containerWidth, gap);
   const cappedHeight = Math.min(naturalHeight, maxHeight);
 
   if (naturalHeight > maxHeight) {
-    // Height-capped: photos won't fill container width
-    const totalGaps = (photos.length - 1) * GAP;
+    const totalGaps = (photos.length - 1) * gap;
     const actualWidth = photos.reduce((sum, p) => sum + cappedHeight * p.aspectRatio, 0) + totalGaps;
-    const row = createRow(photos, cappedHeight, actualWidth);
+    const row = createRow(photos, cappedHeight, actualWidth, gap);
     if (actualWidth < containerWidth) {
       row.width = actualWidth;
     }
     return row;
   }
 
-  return createRow(photos, cappedHeight, containerWidth);
+  return createRow(photos, cappedHeight, containerWidth, gap);
 }
 
 /**
@@ -98,6 +100,7 @@ export function calculateJustifiedLayout(
     maxPhotosPerRow = 8,
     targetRowHeight = DEFAULT_TARGET_ROW_HEIGHT,
     maxRowHeight = 350,
+    gap = DEFAULT_GAP,
   } = options;
 
   if (photos.length === 0 || containerWidth <= 0) return [];
@@ -118,7 +121,7 @@ export function calculateJustifiedLayout(
     const maxWidth = maxHeight * photo.aspectRatio;
     const effectiveWidth = Math.min(containerWidth, maxWidth);
     const rowHeight = effectiveWidth / photo.aspectRatio;
-    const row = createRow(photoData, rowHeight, effectiveWidth);
+    const row = createRow(photoData, rowHeight, effectiveWidth, gap);
     if (effectiveWidth < containerWidth) {
       row.width = effectiveWidth;
     }
@@ -127,7 +130,7 @@ export function calculateJustifiedLayout(
 
   // Special case: fewer photos than minimum per row (but more than 1)
   if (n < minPhotosPerRow) {
-    return [buildRow(photoData, containerWidth, maxRowHeight)];
+    return [buildRow(photoData, containerWidth, maxRowHeight, gap)];
   }
 
   // Calculate ideal photos per row for balancing
@@ -150,7 +153,7 @@ export function calculateJustifiedLayout(
     for (let j = minJ; j <= maxJ; j++) {
       const rowPhotos = photoData.slice(j, i);
       const rowAspectRatios = rowPhotos.map((p) => p.aspectRatio);
-      const rowHeight = getRowHeight(rowAspectRatios, containerWidth);
+      const rowHeight = getRowHeight(rowAspectRatios, containerWidth, gap);
       const rowSignature = getRowSignature(rowPhotos);
 
       // Height penalty for extreme heights
@@ -218,7 +221,7 @@ export function calculateJustifiedLayout(
   // Build rows from breaks
   let start = 0;
   return rowBreaks.map((end) => {
-    const row = buildRow(photoData.slice(start, end), containerWidth, maxRowHeight);
+    const row = buildRow(photoData.slice(start, end), containerWidth, maxRowHeight, gap);
     start = end;
     return row;
   });
@@ -228,8 +231,9 @@ function createRow(
   photos: PhotoData[],
   rowHeight: number,
   containerWidth: number,
+  gap: number,
 ): PhotoRow {
-  const totalGaps = (photos.length - 1) * GAP;
+  const totalGaps = (photos.length - 1) * gap;
   const availableWidth = containerWidth - totalGaps;
   const totalAspectRatio = photos.reduce((sum, p) => sum + p.aspectRatio, 0);
 

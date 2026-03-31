@@ -86,6 +86,8 @@ const nextConfig: NextConfig = {
 };
 ```
 
+> Optional on Vercel: you can use **`'use cache: remote'`** instead of **`'use cache'`** to store entries in Vercel Runtime Cache (shared across instances). That is separate from ISR and may be metered on your plan; this repo uses in-memory **`'use cache'`** only.
+
 ## Implementation
 
 ### 1. Cached Data Layer (`src/lib/data/`)

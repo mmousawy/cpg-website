@@ -398,7 +398,7 @@ function SubmissionCard({
 
       const lightbox = new PhotoSwipeLightbox({
         gallery: `#submission-${submission.id}`,
-        children: 'a',
+        children: 'a.pswp-trigger',
         pswpModule: () => import('photoswipe'),
         showHideAnimationType: 'zoom',
       });
@@ -444,7 +444,7 @@ function SubmissionCard({
               data-pswp-height={photo.height || 800}
               target="_blank"
               rel="noreferrer"
-              className="block size-full"
+              className="block size-full pswp-trigger"
               onClick={(e) => e.preventDefault()}
             >
               <Image

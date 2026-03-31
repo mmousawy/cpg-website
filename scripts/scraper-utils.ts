@@ -2,11 +2,16 @@
  * Shared utilities for scene event scraper scripts.
  * All scrapers fetch + map data, then delegate to these functions for
  * duplicate detection, image upload, insertion, and summary.
+ *
+ * CLI (via parseArgs): --no-cache skips local duplicate cache reads (still saves cache at end).
  */
 
 import { createClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
 import { config } from 'dotenv';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 
@@ -48,6 +53,8 @@ export interface ScraperOptions {
   updateExisting?: boolean;
   /** When true, only process events starting within the next 7 days */
   thisWeek?: boolean;
+  /** When true, do not read local duplicate cache for fast skips (still merges new keys into cache at end) */
+  noCache?: boolean;
 }
 
 export interface InsertResult {
@@ -79,13 +86,14 @@ export function parseArgs(defaults: { delayMs?: number } = {}): ScraperOptions {
   const dryRun = args.includes('--dry-run');
   const updateExisting = args.includes('--update');
   const thisWeek = args.includes('--this-week');
+  const noCache = args.includes('--no-cache');
   const delayIdx = args.indexOf('--delay');
   const delayMs =
     delayIdx >= 0 && args[delayIdx + 1]
       ? parseInt(args[delayIdx + 1], 10)
       : defaults.delayMs ?? 1000;
 
-  return { dryRun, userId: userId.trim(), delayMs, updateExisting, thisWeek };
+  return { dryRun, userId: userId.trim(), delayMs, updateExisting, thisWeek, noCache };
 }
 
 export function createScraperSupabase(): SupabaseClient {
@@ -172,6 +180,111 @@ export function generateSlugWithCollision(
     return tryInsert();
   };
   return tryInsert();
+}
+
+// ---------------------------------------------------------------------------
+// Local duplicate cache (scripts/.scraper-cache.json)
+// ---------------------------------------------------------------------------
+
+const SCRAPER_SCRIPTS_DIR = dirname(fileURLToPath(import.meta.url));
+const DUPLICATE_CACHE_PATH = join(SCRAPER_SCRIPTS_DIR, '.scraper-cache.json');
+
+interface DuplicateCacheFileShape {
+  known_urls: string[];
+  known_title_dates: string[];
+}
+
+export interface DuplicateCacheSets {
+  knownUrls: Set<string>;
+  knownTitleDates: Set<string>;
+}
+
+function titleDateCacheKey(event: ScrapedEvent): string {
+  return `${slugify(event.title.trim())}|${event.start_date}`;
+}
+
+export function loadDuplicateCache(): DuplicateCacheSets {
+  if (!existsSync(DUPLICATE_CACHE_PATH)) {
+    return { knownUrls: new Set(), knownTitleDates: new Set() };
+  }
+  try {
+    const raw = readFileSync(DUPLICATE_CACHE_PATH, 'utf8');
+    const parsed = JSON.parse(raw) as DuplicateCacheFileShape;
+    const known_urls = Array.isArray(parsed.known_urls) ? parsed.known_urls : [];
+    const known_title_dates = Array.isArray(parsed.known_title_dates) ? parsed.known_title_dates : [];
+    return {
+      knownUrls: new Set(known_urls.map((u) => u.trim()).filter(Boolean)),
+      knownTitleDates: new Set(known_title_dates.map((k) => k.trim()).filter(Boolean)),
+    };
+  } catch {
+    console.warn('[scraper] Could not read duplicate cache; starting fresh');
+    return { knownUrls: new Set(), knownTitleDates: new Set() };
+  }
+}
+
+export function saveDuplicateCache(knownUrls: Set<string>, knownTitleDates: Set<string>): void {
+  const payload: DuplicateCacheFileShape = {
+    known_urls: [...knownUrls].sort(),
+    known_title_dates: [...knownTitleDates].sort(),
+  };
+  writeFileSync(DUPLICATE_CACHE_PATH, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+}
+
+export function isKnownDuplicate(cache: DuplicateCacheSets, event: ScrapedEvent): boolean {
+  const url = event.url.trim();
+  if (url && cache.knownUrls.has(url)) return true;
+  return cache.knownTitleDates.has(titleDateCacheKey(event));
+}
+
+/** Record keys for an event so future runs can skip DB duplicate checks. */
+export function addEventToDuplicateCache(cache: DuplicateCacheSets, event: ScrapedEvent): void {
+  const url = event.url.trim();
+  if (url) cache.knownUrls.add(url);
+  cache.knownTitleDates.add(titleDateCacheKey(event));
+}
+
+/**
+ * Merge all non-deleted scene_events into the duplicate cache (URL + title|start_date).
+ * One batched read replaces hundreds of per-event findDuplicate queries on full scrapes.
+ */
+export async function mergeDuplicateCacheFromDatabase(
+  supabase: SupabaseClient,
+  cache: DuplicateCacheSets,
+): Promise<number> {
+  const pageSize = 1000;
+  let from = 0;
+  let total = 0;
+
+  for (;;) {
+    const { data, error } = await supabase
+      .from('scene_events')
+      .select('url, title, start_date')
+      .is('deleted_at', null)
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.warn('[scraper] Could not load scene_events for duplicate cache:', error.message);
+      return total;
+    }
+
+    const rows = data ?? [];
+    for (const row of rows) {
+      const url = typeof row.url === 'string' ? row.url.trim() : '';
+      if (url) cache.knownUrls.add(url);
+      const title = typeof row.title === 'string' ? row.title.trim() : '';
+      const startDate =
+        typeof row.start_date === 'string' ? row.start_date.trim().slice(0, 10) : '';
+      if (title && startDate) {
+        cache.knownTitleDates.add(`${slugify(title)}|${startDate}`);
+      }
+    }
+
+    total += rows.length;
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return total;
 }
 
 export function mapCategory(raw: string | null | undefined): SceneEventCategory {
@@ -677,49 +790,92 @@ export async function processEvents(
   }
   console.log();
 
+  const duplicateCache = loadDuplicateCache();
+  if (options.noCache) {
+    console.log('[scraper] --no-cache: duplicate checks always hit the database (cache file still updated at end)\n');
+  } else {
+    const fromFileUrls = duplicateCache.knownUrls.size;
+    const fromFileKeys = duplicateCache.knownTitleDates.size;
+    const fromDb = await mergeDuplicateCacheFromDatabase(supabase, duplicateCache);
+    console.log(
+      `[scraper] Duplicate cache: ${fromDb} rows from scene_events + file (${fromFileUrls} urls, ${fromFileKeys} keys) -> ${duplicateCache.knownUrls.size} urls, ${duplicateCache.knownTitleDates.size} title+date keys (${DUPLICATE_CACHE_PATH})\n`,
+    );
+  }
+
   const results: InsertResult[] = [];
+
+  function shouldPersistEventInCache(result: InsertResult): boolean {
+    if (result.status === 'failed') return false;
+    if (result.status === 'skipped' && result.reason === 'cached duplicate') return false;
+    if (result.status === 'inserted' && options.dryRun) return false;
+    return result.status === 'inserted' || result.status === 'updated' || result.status === 'skipped';
+  }
+
   for (let i = 0; i < consolidated.length; i++) {
     const e = consolidated[i];
     console.log(`[${i + 1}/${consolidated.length}] ${e.title} (${e.start_date})`);
-    const result = await insertEvent(supabase, e, options);
-    results.push(result);
 
-    if (result.status === 'inserted') {
-      console.log(`  -> inserted ${result.slug ?? result.id ?? ''}`);
-    } else if (result.status === 'updated') {
-      console.log(`  -> updated ${result.slug ?? result.id ?? ''}`);
-    } else if (result.status === 'skipped') {
-      console.log(`  -> skipped (${result.reason})`);
+    if (!options.noCache && isKnownDuplicate(duplicateCache, e)) {
+      results.push({ status: 'skipped', reason: 'cached duplicate' });
+      console.log('  -> skipped (cached duplicate)');
     } else {
-      console.log(`  -> failed: ${result.reason}`);
+      const result = await insertEvent(supabase, e, options);
+      results.push(result);
+
+      if (shouldPersistEventInCache(result)) {
+        addEventToDuplicateCache(duplicateCache, e);
+      }
+
+      if (result.status === 'inserted') {
+        console.log(`  -> inserted ${result.slug ?? result.id ?? ''}`);
+      } else if (result.status === 'updated') {
+        console.log(`  -> updated ${result.slug ?? result.id ?? ''}`);
+      } else if (result.status === 'skipped') {
+        console.log(`  -> skipped (${result.reason})`);
+      } else {
+        console.log(`  -> failed: ${result.reason}`);
+      }
     }
 
     if (i < consolidated.length - 1) {
-      await delay(options.delayMs);
+      const last = results[results.length - 1];
+      if (last?.reason !== 'cached duplicate') {
+        await delay(options.delayMs);
+      }
     }
   }
+
+  saveDuplicateCache(duplicateCache.knownUrls, duplicateCache.knownTitleDates);
+  console.log(`[scraper] Duplicate cache saved (${duplicateCache.knownUrls.size} urls, ${duplicateCache.knownTitleDates.size} title+date keys)\n`);
 
   printSummary(results, options, runStartTimestamp);
 
   const inserted = results.filter((r) => r.status === 'inserted');
   const updated = results.filter((r) => r.status === 'updated');
   if ((inserted.length > 0 || updated.length > 0) && !options.dryRun) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // Prefer SCRAPER_REVALIDATE_URL so local scraper runs can ping production (NEXT_PUBLIC_SITE_URL is often localhost).
+    const baseUrl = (
+      process.env.SCRAPER_REVALIDATE_URL?.trim()
+      || process.env.NEXT_PUBLIC_SITE_URL?.trim()
+      || 'http://localhost:3000'
+    );
     const secret = process.env.REVALIDATION_SECRET;
     if (secret) {
       try {
         const url = `${baseUrl.replace(/\/$/, '')}/api/revalidate-all?secret=${encodeURIComponent(secret)}`;
         const res = await fetch(url);
         if (res.ok) {
-          console.log('[scraper] Scene cache revalidated');
+          console.log(`[scraper] Cache revalidated (${new URL(url).origin})`);
         } else {
-          console.warn('[scraper] Revalidation failed:', res.status);
+          console.warn('[scraper] Revalidation failed:', res.status, new URL(url).origin);
         }
       } catch (err) {
         console.warn('[scraper] Revalidation request failed:', err instanceof Error ? err.message : err);
       }
     } else {
-      console.log('[scraper] Tip: Set REVALIDATION_SECRET and run GET /api/revalidate-all?secret=... to refresh the scene cache');
+      console.log(
+        '[scraper] Tip: Set REVALIDATION_SECRET (+ SCRAPER_REVALIDATE_URL for prod when scraping locally) to refresh the site cache after inserts',
+      );
     }
   }
 
@@ -736,10 +892,17 @@ export function printSummary(
   const skipped = results.filter((r) => r.status === 'skipped');
   const failed = results.filter((r) => r.status === 'failed');
 
+  const cachedLocalSkips = skipped.filter((r) => r.reason === 'cached duplicate').length;
+
   console.log('\n--- Summary ---');
   console.log(`Inserted: ${inserted.length}`);
   if (updated.length > 0) console.log(`Updated: ${updated.length}`);
   console.log(`Skipped (duplicate): ${skipped.length}`);
+  if (cachedLocalSkips > 0) {
+    console.log(
+      `  (${cachedLocalSkips} via local cache, ${skipped.length - cachedLocalSkips} after database check)`,
+    );
+  }
   console.log(`Failed: ${failed.length}`);
   console.log(`Run timestamp: ${runStartTimestamp}`);
 

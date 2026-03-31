@@ -5,6 +5,7 @@
  * Options:
  *   --dry-run    Preview without inserting
  *   --delay N    Delay between requests in ms (default: 1000)
+ *   --no-cache   Always hit DB for duplicate checks (cache file still updated at end)
  *   --months N   Number of months to fetch ahead including current (default: 3)
  */
 

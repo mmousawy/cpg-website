@@ -82,7 +82,7 @@ import {
 
 ## Cached Data Functions
 
-All functions use `cacheLife('max')` - cached indefinitely until tags are invalidated.
+All functions use `cacheLife('max')` — cached indefinitely until tags are invalidated.
 
 ```typescript
 // Events

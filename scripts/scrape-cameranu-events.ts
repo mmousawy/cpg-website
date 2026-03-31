@@ -5,6 +5,7 @@
  * Options:
  *   --dry-run          Preview without inserting
  *   --delay N          Delay between requests in ms (default: 1000)
+ *   --no-cache         Always hit DB for duplicate checks (cache file still updated at end)
  *   --no-detail-images Skip fetching event detail pages for hero/masonry images (use overview thumbnails only)
  */
 
@@ -87,7 +88,8 @@ function extractImageFromDetailPage(html: string): string | null {
 }
 
 function toAbsoluteImageUrl(src: string): string {
-  const s = src.trim();
+  let s = src.trim();
+  s = s.replace(/\/event-thumbnail$/, '');
   if (s.startsWith('http://') || s.startsWith('https://')) return s;
   if (s.startsWith('//')) return `https:${s}`;
   if (s.startsWith('/')) return `${BASE_URL}${s}`;
@@ -164,9 +166,11 @@ function parseEventsFromHtml(html: string): ScrapedEvent[] {
       const eventUrl = ev.url
         ? (ev.url.startsWith('http') ? ev.url : `${BASE_URL}/${ev.url.replace(/^\//, '')}`)
         : baseUrl;
-      const imageUrl = thumbnailUrl ?? (ev.image
-        ? (ev.image.startsWith('http') ? ev.image : `${BASE_URL}${ev.image}`)
-        : null);
+      const imageUrl = thumbnailUrl
+        ? toAbsoluteImageUrl(thumbnailUrl)
+        : (ev.image
+          ? (ev.image.startsWith('http') ? ev.image : `${BASE_URL}${ev.image}`)
+          : null);
 
       let price_info: string | null = null;
       if (ev.isAccessibleForFree) {

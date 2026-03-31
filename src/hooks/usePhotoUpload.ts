@@ -258,8 +258,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           // Revalidate cache for members page (recently active)
           // Note: This is called per photo, but revalidation is idempotent
           if (photoData.is_public) {
-            const { revalidateGalleryData, revalidateProfile } = await import('@/app/actions/revalidate');
-            // Get user's nickname for profile revalidation
+            const { revalidateGalleryData, revalidateHome, revalidateProfile } = await import('@/app/actions/revalidate');
             const { data: userProfile } = await supabase
               .from('profiles')
               .select('nickname')
@@ -268,6 +267,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 
             await Promise.all([
               revalidateGalleryData(),
+              revalidateHome(),
               ...(userProfile?.nickname ? [revalidateProfile(userProfile.nickname)] : []),
             ]);
           }

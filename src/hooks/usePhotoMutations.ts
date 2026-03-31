@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateProfile } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateGalleryData, revalidateHome, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { supabase } from '@/utils/supabase/client';
@@ -98,6 +98,14 @@ export function useDeletePhotos(
         if (data.affectedAlbums.length > 0) {
           await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
         }
+      }
+
+      // Revalidate gallery and home if any deleted photos were public
+      const hadPublicPhotos = data.previousPhotos?.some(
+        (p) => data.photoIds.includes(p.id) && p.is_public,
+      );
+      if (hadPublicPhotos) {
+        await Promise.all([revalidateGalleryData(), revalidateHome()]);
       }
     },
   });
@@ -199,6 +207,12 @@ export function useUpdatePhoto(
         if (data.affectedAlbums.length > 0) {
           await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
         }
+      }
+
+      // Revalidate gallery and home when visibility changed (affects public listings)
+      const previousPhoto = data.previousPhotos?.find((p) => p.id === data.photoId);
+      if (previousPhoto && previousPhoto.is_public !== data.data.is_public) {
+        await Promise.all([revalidateGalleryData(), revalidateHome()]);
       }
     },
   });
@@ -387,6 +401,16 @@ export function useBulkUpdatePhotos(
         await revalidateProfile(nickname);
         if (data.affectedAlbums.length > 0) {
           await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
+        }
+      }
+
+      // Revalidate gallery and home when visibility changed (affects public listings)
+      if (data.data.is_public !== null) {
+        const anyVisibilityChanged = data.previousPhotos?.some(
+          (p) => data.photoIds.includes(p.id) && p.is_public !== data.data.is_public,
+        );
+        if (anyVisibilityChanged) {
+          await Promise.all([revalidateGalleryData(), revalidateHome()]);
         }
       }
     },

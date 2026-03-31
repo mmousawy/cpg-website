@@ -88,6 +88,7 @@ export default function JustifiedPhotoGrid({
     maxPhotosPerRow: 5,
     targetRowHeight: 280,
     maxRowHeight,
+    gap: 8,
   });
 
   if (photos.length === 0) {
@@ -126,6 +127,7 @@ export default function JustifiedPhotoGrid({
           showAttribution={showAttribution}
           maxDisplayWidth={900}
           header={header}
+          gapClass="gap-1 mb-1"
         />
       </div>
 
@@ -144,6 +146,7 @@ export default function JustifiedPhotoGrid({
           showAttribution={showAttribution}
           maxDisplayWidth={1350}
           header={header}
+          gapClass="gap-1 mb-1"
         />
       </div>
 
@@ -162,6 +165,7 @@ export default function JustifiedPhotoGrid({
           showAttribution={showAttribution}
           maxDisplayWidth={1800}
           header={header}
+          gapClass="gap-2 mb-2"
         />
       </div>
     </div>
@@ -179,6 +183,7 @@ function PhotoRows({
   showAttribution,
   maxDisplayWidth,
   header,
+  gapClass = 'gap-1 mb-1',
 }: {
   rows: PhotoRow[];
   photoMap: Map<string, Photo | StreamPhoto>;
@@ -190,6 +195,7 @@ function PhotoRows({
   showAttribution: boolean;
   maxDisplayWidth: number;
   header?: React.ReactNode;
+  gapClass?: string;
 }) {
   // Check if the first row is constrained (narrower than container)
   // to align the header with the centered grid content
@@ -217,7 +223,7 @@ function PhotoRows({
         return (
           <div
             key={rowIndex}
-            className="mb-1 flex gap-1 last:mb-0"
+            className={`flex last:mb-0 ${gapClass}`}
             style={isConstrained ? { justifyContent: 'center' } : undefined}
           >
             {row.items.map((item) => {

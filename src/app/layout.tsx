@@ -14,7 +14,6 @@ import NotificationToastManager from '@/components/notifications/NotificationToa
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import JsonLd from '@/components/shared/JsonLd';
 import Modal from '@/components/shared/Modal';
-import PageLoading from '@/components/shared/PageLoading';
 import SmoothScrollProvider from '@/components/shared/SmoothScrollProvider';
 import { socialLinks } from '@/config/socials';
 import { AuthProvider } from '@/context/AuthContext';
@@ -147,7 +146,7 @@ export default function RootLayout({
                   <UnsavedChangesProvider>
                     <ModalProvider>
                       <Suspense
-                        fallback={<PageLoading />}
+                        fallback={null}
                       >
                         <Layout>
                           {children}
