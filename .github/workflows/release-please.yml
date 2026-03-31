@@ -71,16 +71,21 @@ jobs:
           COMMIT_SHA="${{ steps.main-sha.outputs.sha }}"
           echo "Looking for Vercel deployment for commit $COMMIT_SHA..."
 
-          DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&sha=$COMMIT_SHA&limit=1&state=READY" \
-            | jq -r '.deployments[0].url // empty')
+          for i in $(seq 1 30); do
+            DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&sha=$COMMIT_SHA&limit=1&state=READY" \
+              | jq -r '.deployments[0].url // empty')
 
-          if [ -n "$DEPLOYMENT_URL" ]; then
-            echo "Found deployment: $DEPLOYMENT_URL"
-            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
-            echo "Successfully promoted to production!"
-          else
-            echo "No ready deployment found for commit $COMMIT_SHA"
-            echo "Falling back to full production deploy..."
-            vercel deploy --prod --token="$VERCEL_TOKEN"
-          fi
+            if [ -n "$DEPLOYMENT_URL" ]; then
+              echo "Found ready deployment: $DEPLOYMENT_URL"
+              vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
+              echo "Successfully promoted to production!"
+              exit 0
+            fi
+
+            echo "Attempt $i/30: deployment not ready yet, waiting 20s..."
+            sleep 20
+          done
+
+          echo "No ready deployment found after 10 minutes for commit $COMMIT_SHA"
+          exit 1
