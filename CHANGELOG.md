@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.13](https://github.com/mmousawy/cpg-website/compare/v1.29.12...v1.29.13) (2026-03-31)
+
+
+### Bug Fixes
+
+* Vercel CLI install. ([75f4b5f](https://github.com/mmousawy/cpg-website/commit/75f4b5fc94284f96b1591a94e587e07fca0a4406))
+
 ## [1.29.12](https://github.com/mmousawy/cpg-website/compare/v1.29.11...v1.29.12) (2026-03-31)
 
 
