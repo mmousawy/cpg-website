@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.14](https://github.com/mmousawy/cpg-website/compare/v1.29.13...v1.29.14) (2026-03-31)
+
+
+### Bug Fixes
+
+* promote preview to prod. ([a127a25](https://github.com/mmousawy/cpg-website/commit/a127a25f12e01ec5cd8685a4f17a138b432166eb))
+
 ## [1.29.13](https://github.com/mmousawy/cpg-website/compare/v1.29.12...v1.29.13) (2026-03-31)
 
 
