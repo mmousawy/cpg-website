@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.12](https://github.com/mmousawy/cpg-website/compare/v1.29.11...v1.29.12) (2026-03-31)
+
+
+### Bug Fixes
+
+* revalidation. ([de89ca6](https://github.com/mmousawy/cpg-website/commit/de89ca6b48f865178d7f0428ef2ba7666f380742))
+
 ## [1.29.11](https://github.com/mmousawy/cpg-website/compare/v1.29.10...v1.29.11) (2026-03-27)
 
 
