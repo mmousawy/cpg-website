@@ -57,26 +57,9 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Cache Vercel CLI
-        if: ${{ steps.release.outputs.release_created }}
-        id: vercel-cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.vercel-cli
-          key: vercel-cli-${{ runner.os }}-${{ hashFiles('.github/workflows/release-please.yml') }}
-
       - name: Install Vercel CLI
         if: ${{ steps.release.outputs.release_created }}
-        run: |
-          if [ -x "${{ github.workspace }}/.vercel-cli/node_modules/.bin/vercel" ]; then
-            echo "Vercel CLI restored from cache"
-          else
-            mkdir -p "${{ github.workspace }}/.vercel-cli"
-            cd "${{ github.workspace }}/.vercel-cli"
-            npm init -y > /dev/null 2>&1
-            npm install vercel
-          fi
-          echo "${{ github.workspace }}/.vercel-cli/node_modules/.bin" >> "$GITHUB_PATH"
+        run: npm install -g vercel
 
       - name: Promote latest deployment to production
         if: ${{ steps.release.outputs.release_created }}
