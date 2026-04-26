@@ -1,9 +1,5 @@
 import { render } from '@react-email/render';
-
-// Provide sample params for build-time validation (required with cacheComponents)
-export async function generateStaticParams() {
-  return [{ template: 'signup' }];
-}
+import { connection } from 'next/server';
 
 // Email template mapping
 type EmailTemplateComponent = React.ComponentType<{ preview?: boolean; [key: string]: unknown }>;
@@ -28,6 +24,8 @@ export default async function Email({
 }: {
   params: Promise<{ template: string }>
 }) {
+  await connection();
+
   const { template } = await params;
 
   const templateLoader = templates[template];
