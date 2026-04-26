@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.29.17](https://github.com/mmousawy/cpg-website/compare/v1.29.16...v1.29.17) (2026-04-26)
+
+
+### Bug Fixes
+
+* adjust ci/cd flow. ([ba458c6](https://github.com/mmousawy/cpg-website/commit/ba458c6880613dccf605586cb9e4ddfa4a874896))
+* adjust styling and status logic. ([bc2f49e](https://github.com/mmousawy/cpg-website/commit/bc2f49e1b30bc1c34d069bad402170ba72373947))
+* make email preview dates dynamic. ([bb47a53](https://github.com/mmousawy/cpg-website/commit/bb47a5357050721b495604782a3e154fbf1c7470))
+
 ## [1.29.16](https://github.com/mmousawy/cpg-website/compare/v1.29.15...v1.29.16) (2026-04-26)
 
 
