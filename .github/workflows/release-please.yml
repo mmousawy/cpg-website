@@ -71,7 +71,7 @@ jobs:
 
           if [ -n "$DEPLOYMENT_URL" ]; then
             echo "Found deployment: $DEPLOYMENT_URL"
-            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
+            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --yes
             echo "Successfully promoted to production!"
           else
             echo "No ready preview deployment found"
