@@ -145,7 +145,7 @@ export const challengesFAQ: FAQSection = {
           When a photo is accepted into a challenge, it displays a challenge badge on the photo detail page and in
           {' '}
           <strong>
-            Manage photos
+            My photos
           </strong>
           {' '}
           (header menu). This shows which challenges your work has been featured in.

@@ -262,8 +262,7 @@ export default function ChallengeCard({
                 >
                   {photoCount}
                   {' '}
-                  submission
-                  {photoCount !== 1 ? 's' : ''}
+                  {photoCount !== 1 ? 'entries' : 'entry'}
                 </span>
                 <span
                   className="sm:hidden"

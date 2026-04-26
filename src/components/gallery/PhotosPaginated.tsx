@@ -1,10 +1,10 @@
 'use client';
 
-import { useSearchParams, usePathname } from 'next/navigation';
-import { useState, useTransition, useEffect, useCallback } from 'react';
-import Button from '../shared/Button';
-import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
+import Button from '../shared/Button';
 
 type PhotoBatch = {
   id: string;
@@ -18,6 +18,7 @@ type PhotosPaginatedProps = {
   initialSort?: 'recent' | 'popular';
   apiEndpoint?: string;
   showSortToggle?: boolean;
+  header?: React.ReactNode;
 };
 
 // Session storage key prefix
@@ -44,6 +45,7 @@ export default function PhotosPaginated({
   initialSort = 'recent',
   apiEndpoint = '/api/gallery/photos',
   showSortToggle = true,
+  header,
 }: PhotosPaginatedProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -250,7 +252,7 @@ export default function PhotosPaginated({
           className={isSorting ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}
         >
           {/* Render each batch as its own grid - each has stable layout */}
-          {batches.map((batch) => (
+          {batches.map((batch, index) => (
             <div
               key={batch.id}
               className="mb-1"
@@ -258,6 +260,7 @@ export default function PhotosPaginated({
               <JustifiedPhotoGrid
                 photos={batch.photos}
                 showAttribution
+                header={index === 0 ? header : undefined}
               />
             </div>
           ))}

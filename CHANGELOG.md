@@ -171,7 +171,7 @@
 
 ### Bug Fixes
 
-* multiple bugs with manage photos ([3b6f268](https://github.com/mmousawy/cpg-website/commit/3b6f2682eb59535559db76fb656910b53b0f51b3))
+* multiple bugs with my photos ([3b6f268](https://github.com/mmousawy/cpg-website/commit/3b6f2682eb59535559db76fb656910b53b0f51b3))
 
 ## [1.27.2](https://github.com/mmousawy/cpg-website/compare/v1.27.1...v1.27.2) (2026-03-01)
 

@@ -1,6 +1,6 @@
-import type { FAQSection } from './types';
-import Link from 'next/link';
 import { routes } from '@/config/routes';
+import Link from 'next/link';
+import type { FAQSection } from './types';
 
 export const photosFAQ: FAQSection = {
   id: 'photos',
@@ -14,7 +14,7 @@ export const photosFAQ: FAQSection = {
           <p
             className="mb-3"
           >
-            Go to Account → Manage photos. You can:
+            Go to Account → My photos. You can:
           </p>
           <ul>
             <li>
@@ -42,7 +42,7 @@ export const photosFAQ: FAQSection = {
           </p>
           <ul>
             <li>
-              Go to Manage photos (via your avatar menu) and switch to the Albums tab
+              Go to My photos (via your avatar menu) and switch to the Albums tab
             </li>
             <li>
               Click &quot;New album&quot; and give it a name and optional description
@@ -123,7 +123,7 @@ export const photosFAQ: FAQSection = {
             private
           </strong>
           {' '}
-          (only visible to you). Private photos won&apos;t appear in the gallery or on your public profile. You can change visibility anytime from the manage photos or albums pages.
+          (only visible to you). Private photos won&apos;t appear in the gallery or on your public profile. You can change visibility anytime from the my photos or albums pages.
         </p>
       ),
     },
@@ -175,7 +175,7 @@ export const photosFAQ: FAQSection = {
       title: 'Bulk editing photos and albums',
       content: (
         <p>
-          On the manage photos and manage albums pages, you can select multiple items (single or multi-select). Use the sidebar or action bar to edit, delete, or add photos to albums in bulk. This saves time when organizing large collections.
+          On the my photos and my albums pages, you can select multiple items (single or multi-select). Use the sidebar or action bar to edit, delete, or add photos to albums in bulk. This saves time when organizing large collections.
         </p>
       ),
     },

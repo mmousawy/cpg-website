@@ -407,36 +407,42 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
   cacheTag('gallery');
 
   const supabase = createPublicClient();
+  const minPhotos = 10;
 
-  // Calculate date 7 days ago
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const oneWeekAgoISO = oneWeekAgo.toISOString();
+  // Progressively widen the timeframe until we have enough unique photos
+  const timeframeDays = [7, 14, 30, 60, 90];
+  let photoViewMap = new Map<string, number>();
 
-  // First, get photo IDs with most views in the last week
-  const { data: viewCounts, error: viewError } = await supabase
-    .from('photo_views')
-    .select('photo_id')
-    .gte('viewed_at', oneWeekAgoISO);
+  for (const days of timeframeDays) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
 
-  if (viewError) {
-    console.error('Error fetching photo views:', viewError);
-    return [];
+    const { data: viewCounts, error: viewError } = await supabase
+      .from('photo_views')
+      .select('photo_id, viewed_at')
+      .gte('viewed_at', cutoff.toISOString());
+
+    if (viewError) {
+      console.error('Error fetching photo views:', viewError);
+      return [];
+    }
+
+    if (!viewCounts || viewCounts.length === 0) continue;
+
+    // Score views per photo, weighting recent views higher
+    const now = Date.now();
+    photoViewMap = new Map<string, number>();
+    for (const view of viewCounts) {
+      const ageInDays = (now - new Date(view.viewed_at).getTime()) / (1000 * 60 * 60 * 24);
+      const weight = 1 / (1 + ageInDays);
+      const score = photoViewMap.get(view.photo_id) || 0;
+      photoViewMap.set(view.photo_id, score + weight);
+    }
+
+    if (photoViewMap.size >= minPhotos) break;
   }
 
-  if (!viewCounts || viewCounts.length === 0) {
-    // No views in the last week - this is expected if migration just ran
-    return [];
-  }
-
-  // Count views per photo
-  const photoViewMap = new Map<string, number>();
-  for (const view of viewCounts) {
-    const count = photoViewMap.get(view.photo_id) || 0;
-    photoViewMap.set(view.photo_id, count + 1);
-  }
-
-  // Sort by view count and get top photo IDs
+  // Sort by recency-weighted score and get top photo IDs
   const topPhotoIds = Array.from(photoViewMap.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
@@ -459,13 +465,8 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
     return [];
   }
 
-  // Sort photos by their view count order (maintain the order from topPhotoIds)
-  const photoOrderMap = new Map(topPhotoIds.map((id, index) => [id, index]));
-  photos.sort((a, b) => {
-    const aOrder = photoOrderMap.get(a.id) ?? Infinity;
-    const bOrder = photoOrderMap.get(b.id) ?? Infinity;
-    return aOrder - bOrder;
-  });
+  // Sort photos by date (newest first)
+  photos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   // Get unique user IDs
   const userIds = [...new Set(photos.map((p) => p.user_id).filter((id): id is string => id !== null))];

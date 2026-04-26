@@ -56,7 +56,7 @@ export const routes = {
     url: '/account/events',
   },
   accountPhotos: {
-    label: 'Manage photos',
+    label: 'My photos',
     url: '/account/photos',
   },
   accountUpload: {

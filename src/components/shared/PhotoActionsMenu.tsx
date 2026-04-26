@@ -1,15 +1,15 @@
 'use client';
 
-import { useContext } from 'react';
-import { useRouter } from 'next/navigation';
-import { ModalContext } from '@/app/providers/ModalProvider';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { ModalContext } from '@/app/providers/ModalProvider';
+import ReportModal from '@/components/shared/ReportModal';
 import { useAuth } from '@/context/AuthContext';
 import { useDeletePhotos } from '@/hooks/usePhotoMutations';
-import ReportModal from '@/components/shared/ReportModal';
+import { useRouter } from 'next/navigation';
 import EditMiniSVG from 'public/icons/edit-mini.svg';
 import TrashMiniSVG from 'public/icons/trash-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
+import { useContext } from 'react';
 
 type PhotoActionsMenuProps = {
   photoId: string;
@@ -106,7 +106,7 @@ export default function PhotoActionsMenu({ photoId, photoTitle, photoUserId, sto
             className="size-4 shrink-0"
           />
           <span>
-            Manage photos
+            My photos
           </span>
         </button>
         <button

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'shared_album_invite_received': {
-        // Sent to invitee → link to manage albums list (where they can accept/decline)
+        // Sent to invitee → link to my albums list (where they can accept/decline)
         await createNotification({
           userId: body.inviteeId,
           actorId: user.id,
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'shared_album_request_declined': {
-        // Sent to requester → link to manage albums list
+        // Sent to requester → link to my albums list
         await createNotification({
           userId: body.userId,
           actorId: user.id,

@@ -31,11 +31,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
-      - name: Save main branch commit SHA
-        if: ${{ steps.release.outputs.release_created }}
-        id: main-sha
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
       - name: Configure git
         if: ${{ steps.release.outputs.release_created }}
         run: |
@@ -68,24 +63,17 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          COMMIT_SHA="${{ steps.main-sha.outputs.sha }}"
-          echo "Looking for Vercel deployment for commit $COMMIT_SHA..."
+          echo "Looking for latest ready deployment..."
 
-          for i in $(seq 1 30); do
-            DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&sha=$COMMIT_SHA&limit=1&state=READY" \
-              | jq -r '.deployments[0].url // empty')
+          DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&limit=1&state=READY&target=preview" \
+            | jq -r '.deployments[0].url // empty')
 
-            if [ -n "$DEPLOYMENT_URL" ]; then
-              echo "Found ready deployment: $DEPLOYMENT_URL"
-              vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
-              echo "Successfully promoted to production!"
-              exit 0
-            fi
-
-            echo "Attempt $i/30: deployment not ready yet, waiting 20s..."
-            sleep 20
-          done
-
-          echo "No ready deployment found after 10 minutes for commit $COMMIT_SHA"
-          exit 1
+          if [ -n "$DEPLOYMENT_URL" ]; then
+            echo "Found deployment: $DEPLOYMENT_URL"
+            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
+            echo "Successfully promoted to production!"
+          else
+            echo "No ready preview deployment found"
+            exit 1
+          fi

@@ -257,6 +257,17 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
               </Suspense>
             )}
         </div>
+
+        <div
+          className="mt-6 flex justify-center"
+        >
+          <Button
+            href="/members/all"
+            variant="secondary"
+          >
+            View all members
+          </Button>
+        </div>
       </PageContainer>
     </>
   );
@@ -291,7 +302,7 @@ function MemberCardSkeleton({ index = 0 }: { index?: number }) {
 function MemberGridSkeleton({ count = 10 }: { count?: number }) {
   return (
     <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
     >
       {Array.from({ length: count }).map((_, i) => (
         <MemberCardSkeleton
@@ -454,7 +465,7 @@ async function RecentlyActiveSection() {
 
   return (
     <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
     >
       {recentlyActive.map((member) => (
         <MemberCard
@@ -521,7 +532,7 @@ async function NewMembersSection() {
 
   return (
     <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
     >
       {newMembers.map((member) => (
         <MemberCard

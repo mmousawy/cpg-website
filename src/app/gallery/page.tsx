@@ -76,28 +76,30 @@ export default async function GalleryPage() {
           <div
             className="mb-12"
           >
-            <div
-              className="mb-6"
-            >
-              <Link
-                href={`${routes.galleryPhotos.url}?sort=popular`}
-                className="group"
-              >
-                <h2
-                  className="text-xl font-semibold group-hover:text-primary transition-colors"
-                >
-                  Most viewed this week
-                </h2>
-              </Link>
-              <p
-                className="text-foreground/60 mt-1 text-sm"
-              >
-                Popular photos from the last 7 days
-              </p>
-            </div>
             <JustifiedPhotoGrid
               photos={mostViewedPhotos}
               showAttribution
+              header={
+                <div
+                  className="mb-6"
+                >
+                  <Link
+                    href={`${routes.galleryPhotos.url}?sort=popular`}
+                    className="group"
+                  >
+                    <h2
+                      className="text-xl font-semibold group-hover:text-primary transition-colors"
+                    >
+                      Most viewed this week
+                    </h2>
+                  </Link>
+                  <p
+                    className="text-foreground/60 mt-1 text-sm"
+                  >
+                    Popular photos from the last 7 days
+                  </p>
+                </div>
+              }
             />
             <div
               className="mt-6 flex justify-center"
@@ -158,28 +160,30 @@ export default async function GalleryPage() {
           <div
             className="mb-12"
           >
-            <div
-              className="mb-6"
-            >
-              <Link
-                href={routes.galleryPhotos.url}
-                className="group"
-              >
-                <h2
-                  className="text-xl font-semibold group-hover:text-primary transition-colors"
-                >
-                  Recent photos
-                </h2>
-              </Link>
-              <p
-                className="text-foreground/60 mt-1 text-sm"
-              >
-                Latest uploads from the community
-              </p>
-            </div>
             <JustifiedPhotoGrid
               photos={photos}
               showAttribution
+              header={
+                <div
+                  className="mb-6"
+                >
+                  <Link
+                    href={routes.galleryPhotos.url}
+                    className="group"
+                  >
+                    <h2
+                      className="text-xl font-semibold group-hover:text-primary transition-colors"
+                    >
+                      Recent photos
+                    </h2>
+                  </Link>
+                  <p
+                    className="text-foreground/60 mt-1 text-sm"
+                  >
+                    Latest uploads from the community
+                  </p>
+                </div>
+              }
             />
             <div
               className="mt-6 flex justify-center"

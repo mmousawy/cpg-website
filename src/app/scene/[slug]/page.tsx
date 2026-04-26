@@ -386,7 +386,7 @@ export default async function SceneEventDetailPage({
                 className="mb-8"
               >
                 <h2
-                  className="text-lg font-semibold mb-3"
+                  className="text-lg font-semibold gap-1 mb-3"
                 >
                   About this event
                 </h2>

@@ -4,6 +4,84 @@ import { join } from 'path';
 const CHANGELOG_DIR = join(process.cwd(), 'changelog');
 const CHANGELOG_MD = join(process.cwd(), 'CHANGELOG.md');
 
+export interface ChangelogEntry {
+  version: string;
+  date: string;
+  compareUrl?: string;
+  description?: string;
+  sections: {
+    [key: string]: string[];
+  };
+}
+
+export function parseChangelog(content: string): ChangelogEntry[] {
+  const entries: ChangelogEntry[] = [];
+  const lines = content.split('\n');
+
+  let currentEntry: ChangelogEntry | null = null;
+  let currentSection: string | null = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    const versionMatch = line.match(/^## \[([^\]]+)\](?:\(([^)]+)\))?\s*\(([^)]+)\)/);
+    if (versionMatch) {
+      if (currentEntry) {
+        entries.push(currentEntry);
+      }
+      currentEntry = {
+        version: versionMatch[1],
+        date: versionMatch[3],
+        compareUrl: versionMatch[2],
+        sections: {},
+      };
+      currentSection = null;
+      continue;
+    }
+
+    if (!currentEntry) continue;
+
+    const sectionMatch = line.match(/^### (.+)$/);
+    if (sectionMatch) {
+      currentSection = sectionMatch[1];
+      if (!currentEntry.sections[currentSection]) {
+        currentEntry.sections[currentSection] = [];
+      }
+      continue;
+    }
+
+    const bulletMatch = line.match(/^\*\s+(.+)$/);
+    if (bulletMatch && currentSection) {
+      currentEntry.sections[currentSection].push(bulletMatch[1]);
+      continue;
+    }
+  }
+
+  if (currentEntry) {
+    entries.push(currentEntry);
+  }
+
+  for (const entry of entries) {
+    const allItems = Object.values(entry.sections).flat();
+    if (allItems.length > 0) {
+      let desc = allItems[0];
+      desc = desc.replace(/\s*\(\[[^\]]+\]\([^)]+\)\)$/, '');
+      desc = desc.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      entry.description = desc;
+    }
+  }
+
+  return entries;
+}
+
+export async function getChangelogContent(): Promise<string> {
+  try {
+    return await readFile(CHANGELOG_MD, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 interface VersionShas {
   version: string;
   shas: string[];

@@ -327,7 +327,7 @@ export default function AlbumsPage() {
           <>
             <HelpLink
               href="manage-albums"
-              label="How to manage albums"
+              label="How to my albums"
               size="sm"
             />
             <Button

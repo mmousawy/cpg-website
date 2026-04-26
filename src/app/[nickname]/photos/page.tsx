@@ -1,10 +1,9 @@
+import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import ArrowLink from '@/components/shared/ArrowLink';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import ProfileActionsPopover from '@/components/shared/ProfileActionsPopover';
-import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import {
   getProfileByNickname,
@@ -12,6 +11,7 @@ import {
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
 import { createMetadata } from '@/utils/metadata';
+import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
@@ -261,30 +261,32 @@ async function CachedPhotosContent({
       <WidePageContainer
         className="pt-0!"
       >
-        <div
-          className="mb-6"
-        >
-          <h2
-            className="text-xl font-semibold"
-          >
-            All photos by
-            {' '}
-            {profile.full_name || `@${profile.nickname}`}
-          </h2>
-          <p
-            className="mt-1 text-sm text-foreground/60"
-          >
-            {totalPhotos}
-            {' '}
-            {totalPhotos === 1 ? 'photo' : 'photos'}
-          </p>
-        </div>
         <PhotosPaginated
           initialPhotos={photosWithProfile}
           perPage={perPage}
           initialHasMore={hasMore}
           apiEndpoint={`/api/photos/user?nickname=${encodeURIComponent(profileNickname)}`}
           showSortToggle={false}
+          header={
+            <div
+              className="mb-6"
+            >
+              <h2
+                className="text-xl font-semibold"
+              >
+                All photos by
+                {' '}
+                {profile.full_name || `@${profile.nickname}`}
+              </h2>
+              <p
+                className="mt-1 text-sm text-foreground/60"
+              >
+                {totalPhotos}
+                {' '}
+                {totalPhotos === 1 ? 'photo' : 'photos'}
+              </p>
+            </div>
+          }
         />
       </WidePageContainer>
     </>

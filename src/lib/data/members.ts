@@ -322,6 +322,28 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
 }
 
 /**
+ * Get all members, sorted by join date (newest first)
+ * Tagged with 'profiles' for cache invalidation
+ */
+export async function getAllMembers() {
+  'use cache';
+  cacheLife('max');
+  cacheTag('profiles');
+
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, full_name, nickname, avatar_url, created_at')
+    .not('nickname', 'is', null)
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
+    .order('created_at', { ascending: false });
+
+  return (data || []) as MemberWithCreatedAt[];
+}
+
+/**
  * Get members who frequently use a specific tag
  * Tagged with 'gallery' for cache invalidation
  */

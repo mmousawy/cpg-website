@@ -116,7 +116,7 @@ export const licensesHelpSections: FAQSection[] = [
         title: 'Changing the license on a single photo',
         content: (
           <p>
-            When editing a photo (from Manage photos or an album), use the License dropdown to change the license for that photo. The change applies only to that photo.
+            When editing a photo (from My photos or an album), use the License dropdown to change the license for that photo. The change applies only to that photo.
           </p>
         ),
       },
@@ -125,7 +125,7 @@ export const licensesHelpSections: FAQSection[] = [
         title: 'Changing the license on multiple photos',
         content: (
           <p>
-            Select multiple photos on the Manage photos or album page, then use the License dropdown in the bulk edit sidebar. Choose a license to apply it to all selected photos.
+            Select multiple photos on the My photos or album page, then use the License dropdown in the bulk edit sidebar. Choose a license to apply it to all selected photos.
           </p>
         ),
       },

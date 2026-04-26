@@ -100,7 +100,7 @@ const CommentItem = memo(function CommentItem({
       id={`comment-${comment.id}`}
     >
       <div
-        className="dark:bg-foreground/5 rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color p-3 transition-colors duration-700 relative"
+        className="dark:bg-foreground/5 rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 transition-colors duration-700 relative"
       >
         <div
           className="flex items-start justify-between gap-2 mb-2"
@@ -152,7 +152,7 @@ const CommentItem = memo(function CommentItem({
           </div>
         </div>
         <p
-          className="text-xs text-foreground/50 mb-2"
+          className="text-xs text-foreground/50 mb-3"
         >
           {formatDateFn(comment.created_at)}
           {comment.replied_to_nickname && comment.replied_to_id && (
@@ -182,19 +182,19 @@ const CommentItem = memo(function CommentItem({
           )}
         </p>
         <p
-          className="text-sm text-foreground/90"
+          className="text-sm text-foreground/90 max-w-[60ch]"
         >
           {comment.comment_text}
         </p>
         {currentUser && (
           <div
-            className="absolute bottom-2 right-2"
+            className="mt-2"
           >
             <Button
               onClick={() => onReplyClick(comment.id)}
               variant="custom"
               size="sm"
-              className="px-2! py-0.5! text-xs h-auto border border-border-color bg-foreground/5 text-foreground/70"
+              className="px-2! py-0.5! text-xs h-auto border border-border-color-strong bg-foreground/5 text-foreground/70"
             >
               {isCurrentlyReplying ? 'Cancel' : 'Reply'}
             </Button>
