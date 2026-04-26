@@ -31,21 +31,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
-      - name: Configure git
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Create release branch
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          TAG="${{ steps.release.outputs.tag_name }}"
-          VERSION="${TAG#v}"
-          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1-2)
-          git checkout -b release/$MAJOR_MINOR
-          git push origin release/$MAJOR_MINOR
-
       - name: Setup Node
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v4
@@ -56,24 +41,15 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: npm install -g vercel
 
-      - name: Promote latest deployment to production
+      - name: Deploy release to production
         if: ${{ steps.release.outputs.release_created }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "Looking for latest ready deployment..."
+          echo "Linking repository to Vercel production environment..."
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-          DEPLOYMENT_URL=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&limit=1&state=READY&target=preview" \
-            | jq -r '.deployments[0].url // empty')
-
-          if [ -n "$DEPLOYMENT_URL" ]; then
-            echo "Found deployment: $DEPLOYMENT_URL"
-            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --yes
-            echo "Successfully promoted to production!"
-          else
-            echo "No ready preview deployment found"
-            exit 1
-          fi
+          echo "Deploying released commit to Vercel production..."
+          vercel deploy --prod --yes --token="$VERCEL_TOKEN"

@@ -365,9 +365,8 @@ Deploy to Vercel:
 5. Cron jobs are automatically configured via `vercel.json` (reminders daily 8:00 AM, events revalidation daily 5:01 PM, content cleanup Sundays 3:00 AM UTC)
 
 **Deployment Strategy:**
-- Production deployments only occur from `release/*` branches
-- Main branch commits and PR previews do not trigger deployments
-- Release branches are automatically created when releases are published via release-please
+- Main branch commits and PR previews do not trigger production deployments directly
+- Release Please creates releases from `main` and the release workflow deploys those released commits to Vercel production explicitly
 
 ## Roadmap
 
