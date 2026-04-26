@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.16](https://github.com/mmousawy/cpg-website/compare/v1.29.15...v1.29.16) (2026-04-26)
+
+
+### Bug Fixes
+
+* CLI step. ([88bdcc6](https://github.com/mmousawy/cpg-website/commit/88bdcc6e3184367d48ee7a3937f9e16de99a2132))
+
 ## [1.29.15](https://github.com/mmousawy/cpg-website/compare/v1.29.14...v1.29.15) (2026-04-26)
 
 
