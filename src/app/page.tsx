@@ -20,7 +20,7 @@ import { createMetadata } from '@/utils/metadata';
 // Cached data functions
 import { getRecentAlbums } from '@/lib/data/albums';
 import { getActiveChallenges } from '@/lib/data/challenges';
-import { getRecentEvents } from '@/lib/data/events';
+import { getEventAttendees, getUpcomingEvents } from '@/lib/data/events';
 import { getPublicPhotostream } from '@/lib/data/gallery';
 import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
 
@@ -65,16 +65,17 @@ export default async function Home() {
   cacheTag('home');
 
   // Fetch all data in parallel using cached data functions
-  const [albums, organizers, members, eventsData, challengesData, photos] = await Promise.all([
+  const [albums, organizers, members, upcomingEventsData, challengesData, photos] = await Promise.all([
     getRecentAlbums(3),
     getOrganizers(5),
     getRecentMembers(50),
-    getRecentEvents(6),
+    getUpcomingEvents(6),
     getActiveChallenges(),
     getPublicPhotostream(7),
   ]);
 
-  const { events, attendeesByEvent, serverNow } = eventsData;
+  const { events, serverNow } = upcomingEventsData;
+  const attendeesByEvent = await getEventAttendees(events.map((event) => event.id));
   const { challenges } = challengesData;
 
   // Select hero image server-side for better LCP discovery
@@ -164,7 +165,7 @@ export default async function Home() {
               <h3
                 className="text-lg font-semibold"
               >
-                Recent events
+                Upcoming events
               </h3>
               <ArrowLink
                 href={routes.events.url}

@@ -1,6 +1,5 @@
 import Avatar from '@/components/auth/Avatar';
 import AddToCalendar from '@/components/events/AddToCalendar';
-import { getEventStatus } from '@/components/events/EventCard';
 import EventCoverImage from '@/components/events/EventCoverImage';
 import EventSignupBar from '@/components/events/EventSignupBar';
 import UserWentBadge from '@/components/events/UserWentBadge';
@@ -26,6 +25,7 @@ import {
   getEventAttendeesForEvent,
   getEventBySlug,
 } from '@/lib/data/events';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getOrganizers } from '@/lib/data/profiles';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
@@ -36,6 +36,7 @@ import TimeSVG from 'public/icons/time.svg';
 
 import EventPhotosSection from '@/components/events/EventPhotosSection';
 import { hasEventPhotos } from '@/lib/eventAlbums';
+import { getEventStatus } from '@/lib/events/status';
 import EventComments from './EventComments';
 
 // Type for attendee with joined profile data
@@ -155,19 +156,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     getEventAlbum(event.id),
   ]);
 
-  // Format the event date
-  const eventDate = event.date ? new Date(event.date) : null;
-  const formattedDate = eventDate
-    ? eventDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: eventDate.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
-    })
+  const formattedDate = event.date
+    ? formatEventDate(event.date, { includeYear: true, style: 'long' })
     : 'Date TBD';
 
-  // Format time
-  const formattedTime = event.time ? event.time.substring(0, 5) : 'Time TBD';
+  const formattedTime = event.time ? formatEventTime(event.time) : 'Time TBD';
 
   const status = getEventStatus(event.date, event.time, serverNow);
   const isPastEvent = status === 'past';

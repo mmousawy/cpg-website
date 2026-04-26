@@ -1,15 +1,17 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
-import { formatEventDate, formatEventTime, isEventPast } from '@/components/events/EventCard';
 import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import type { Tables } from '@/database.types';
+import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
+import { isEventPast } from '@/lib/events/status';
 import Link from 'next/link';
 
 import { routes } from '@/config/routes';
@@ -87,10 +89,10 @@ export default function MyEventsPage() {
   // Sort: upcoming (soonest first), past (most recent first)
   const upcomingRSVPs = rsvps
     .filter(r => !r.canceled_at && r.events && !isEventPast(r.events.date, undefined, r.events.time))
-    .sort((a, b) => new Date(a.events.date).getTime() - new Date(b.events.date).getTime());
+    .sort((a, b) => getDateSortValue(a.events.date) - getDateSortValue(b.events.date));
   const pastRSVPs = rsvps
     .filter(r => !r.canceled_at && r.events && isEventPast(r.events.date, undefined, r.events.time))
-    .sort((a, b) => new Date(b.events.date).getTime() - new Date(a.events.date).getTime());
+    .sort((a, b) => getDateSortValue(b.events.date) - getDateSortValue(a.events.date));
   const canceledRSVPs = rsvps.filter(r => r.canceled_at);
 
   return (
@@ -264,7 +266,7 @@ function RsvpEventCard({
 
   // Check if event is within 7 days of now (for pending confirmation display)
   const isWithinSevenDays = sevenDaysAgo
-    ? new Date(event.date) > new Date(sevenDaysAgo)
+    ? dayjs(event.date).isAfter(dayjs(sevenDaysAgo))
     : false;
 
   // Determine the status badge - only show for past events (attended/not attended) or canceled

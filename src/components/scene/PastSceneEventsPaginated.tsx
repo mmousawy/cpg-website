@@ -1,5 +1,6 @@
 'use client';
 
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
@@ -37,10 +38,12 @@ export default function PastSceneEventsPaginated({
   const [isPending, startTransition] = useTransition();
   const [exhausted, setExhausted] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const bootstrappedCategoryFetchRef = useRef(false);
 
   useEffect(() => {
     setAllEvents(filteredInitial);
     setExhausted(false);
+    bootstrappedCategoryFetchRef.current = false;
   }, [category, filteredInitial]);
 
   const cpgInAllEvents = allEvents.filter((e) => e.id.startsWith('cpg-')).length;
@@ -50,6 +53,8 @@ export default function PastSceneEventsPaginated({
     (!category || category === 'all'
       ? dbEventsLoaded < totalCount
       : true);
+  const isBootstrappingCategory =
+    !!category && category !== 'all' && allEvents.length === 0 && !exhausted;
 
   const loadMore = useCallback(() => {
     startTransition(async () => {
@@ -73,7 +78,17 @@ export default function PastSceneEventsPaginated({
           setExhausted(true);
           return;
         }
-        setAllEvents((prev) => [...prev, ...newEvents]);
+        setAllEvents((prev) => {
+          const seenIds = new Set(prev.map((event) => event.id));
+          const uniqueNewEvents = newEvents.filter((event) => !seenIds.has(event.id));
+
+          if (uniqueNewEvents.length === 0) {
+            setExhausted(true);
+            return prev;
+          }
+
+          return [...prev, ...uniqueNewEvents];
+        });
         setInterestedByEvent((prev) => ({
           ...prev,
           ...data.interestedByEvent,
@@ -83,6 +98,15 @@ export default function PastSceneEventsPaginated({
       }
     });
   }, [dbEventsLoaded, perPage, category]);
+
+  useEffect(() => {
+    if (!category || category === 'all') return;
+    if (filteredInitial.length > 0 || allEvents.length > 0) return;
+    if (isPending || exhausted || bootstrappedCategoryFetchRef.current) return;
+
+    bootstrappedCategoryFetchRef.current = true;
+    loadMore();
+  }, [allEvents.length, category, exhausted, filteredInitial.length, isPending, loadMore]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -113,7 +137,7 @@ export default function PastSceneEventsPaginated({
           />
         ))}
       </div>
-      {allEvents.length === 0 && (
+      {allEvents.length === 0 && !isBootstrappingCategory && (
         <div
           className="text-center py-8 rounded-xl border border-dashed border-border-color"
         >
@@ -121,6 +145,21 @@ export default function PastSceneEventsPaginated({
             className="text-foreground/80"
           >
             No past events yet
+          </p>
+        </div>
+      )}
+      {isBootstrappingCategory && (
+        <div
+          className="flex flex-col items-center justify-center py-8 text-foreground/70"
+        >
+          <LoadingSpinner
+            size="sm"
+            className="mb-3"
+          />
+          <p
+            className="text-sm"
+          >
+            Loading past events...
           </p>
         </div>
       )}

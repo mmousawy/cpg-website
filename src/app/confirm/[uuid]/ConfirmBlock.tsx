@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 import AddToCalendar from '@/components/events/AddToCalendar';
 import Button from '@/components/shared/Button';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 
 import { Database } from '@/database.types';
 import { CPGEvent } from '@/types/events';
@@ -89,7 +90,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
                 <CalendarSVG
                   className="shrink-0 fill-foreground"
                 />
-                {(() => { const d = new Date(event.date!); return d.toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
+                {formatEventDate(event.date!, { includeYear: true })}
               </span>
               <span
                 className='flex gap-2'
@@ -97,7 +98,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
                 <TimeSVG
                   className="shrink-0 fill-foreground "
                 />
-                {event.time?.substring(0, 5)}
+                {event.time ? formatEventTime(event.time) : ''}
               </span>
             </span>
             <span

@@ -1,14 +1,16 @@
 'use client';
 
+import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { formatEventDate, formatEventTime, isEventPast } from '@/components/events/EventCard';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
 import { useSupabase } from '@/hooks/useSupabase';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
+import { isEventPast } from '@/lib/events/status';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import EyeSVG from 'public/icons/eye.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -42,10 +44,10 @@ export default function AdminEventsPage() {
   // Sort: upcoming (soonest first), then past (most recent first)
   const upcomingEvents = events
     .filter(e => !isEventPast(e.date, undefined, e.time))
-    .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime());
+    .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
   const pastEvents = events
     .filter(e => isEventPast(e.date, undefined, e.time))
-    .sort((a, b) => new Date(b.date!).getTime() - new Date(a.date!).getTime());
+    .sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
 
   return (
     <PageContainer>

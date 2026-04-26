@@ -5,6 +5,7 @@ import Image from 'next/image';
 import clsx from 'clsx';
 
 import { Database } from '@/database.types';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { CPGEvent } from '@/types/events';
 import Button from '@/components/shared/Button';
 
@@ -67,7 +68,7 @@ export default function CancelBlock({ event, rsvp }: Props) {
                 <CalendarSVG
                   className="shrink-0 fill-foreground"
                 />
-                {(() => { const d = new Date(event.date!); return d.toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
+                {formatEventDate(event.date!, { includeYear: true })}
               </span>
               <span
                 className='flex gap-2'
@@ -75,7 +76,7 @@ export default function CancelBlock({ event, rsvp }: Props) {
                 <TimeSVG
                   className="shrink-0 fill-foreground "
                 />
-                {event.time?.substring(0, 5)}
+                {event.time ? formatEventTime(event.time) : ''}
               </span>
             </span>
             <span

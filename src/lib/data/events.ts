@@ -1,4 +1,5 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { getEventQueryContext } from '@/lib/events/status';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -55,20 +56,29 @@ export async function getRecentEvents(limit = 6) {
  * Tagged with 'events' for granular cache invalidation
  * Returns events with a server timestamp for date comparisons
  */
-export async function getUpcomingEvents() {
+export async function getUpcomingEvents(limit?: number) {
   'use cache';
   cacheLife('max');
   cacheTag('events');
 
   const supabase = createPublicClient();
   const serverNow = Date.now();
-  const nowDate = new Date(serverNow).toISOString().split('T')[0];
+  const { nowDate, hasEventDayEnded } = getEventQueryContext(serverNow);
 
-  const { data } = await supabase
+  let query = supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
-    .gte('date', nowDate)
     .order('date', { ascending: true });
+
+  query = hasEventDayEnded
+    ? query.gt('date', nowDate)
+    : query.gte('date', nowDate);
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data } = await query;
 
   return {
     events: (data || []) as CPGEvent[],
@@ -88,14 +98,19 @@ export async function getPastEvents(limit = 5) {
 
   const supabase = createPublicClient();
   const serverNow = Date.now();
-  const nowDate = new Date(serverNow).toISOString().split('T')[0];
+  const { nowDate, hasEventDayEnded } = getEventQueryContext(serverNow);
 
-  const { data, count } = await supabase
+  let query = supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug', { count: 'exact' })
-    .lt('date', nowDate)
     .order('date', { ascending: false })
     .limit(limit);
+
+  query = hasEventDayEnded
+    ? query.lte('date', nowDate)
+    : query.lt('date', nowDate);
+
+  const { data, count } = await query;
 
   return {
     events: (data || []) as CPGEvent[],

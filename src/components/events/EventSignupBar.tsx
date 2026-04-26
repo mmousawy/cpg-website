@@ -4,6 +4,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import SignupForm from '@/components/auth/SignupForm';
 import Button from '@/components/shared/Button';
 import StickyActionBar from '@/components/shared/StickyActionBar';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { CPGEvent } from '@/types/events';
@@ -11,7 +12,6 @@ import { useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
-import { formatEventDate, formatEventTime } from './EventCard';
 
 type EventSignupBarProps = {
   event: CPGEvent

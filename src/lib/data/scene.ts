@@ -1,4 +1,5 @@
 import type { SceneEvent } from '@/types/scene';
+import { getAmsterdamDateString } from '@/lib/events/status';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -28,7 +29,7 @@ export async function getUpcomingSceneEvents() {
 
   const supabase = createPublicClient();
   const serverNow = Date.now();
-  const nowDate = new Date(serverNow).toISOString().split('T')[0];
+  const nowDate = getAmsterdamDateString(serverNow);
 
   const { data } = await supabase
     .from('scene_events')
@@ -57,7 +58,7 @@ export async function getPastSceneEvents(limit = 5) {
 
   const supabase = createPublicClient();
   const serverNow = Date.now();
-  const nowDate = new Date(serverNow).toISOString().split('T')[0];
+  const nowDate = getAmsterdamDateString(serverNow);
 
   const { data, count } = await supabase
     .from('scene_events')
@@ -139,7 +140,7 @@ export async function getRelatedSceneEvents(
 
   const supabase = createPublicClient();
   const serverNow = Date.now();
-  const nowDate = new Date(serverNow).toISOString().split('T')[0];
+  const nowDate = getAmsterdamDateString(serverNow);
 
   const { data } = await supabase
     .from('scene_events')

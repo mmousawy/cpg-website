@@ -7,6 +7,7 @@ import {
   Text,
 } from '@react-email/components';
 
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { CPGEvent } from '@/types/events';
 
 import RichContent from './RichContent';
@@ -18,11 +19,11 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
 
   return (
     <Section
-      className="my-[20px]"
+      className="my-5"
     >
       <Heading
         as="h2"
-        className="m-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
+        className="m-0 mb-7.5 p-0 text-[16px] font-semibold text-[#171717]"
       >
         Meetup details
       </Heading>
@@ -32,14 +33,14 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
           className="align-top"
         >
           <Text
-            className="!mt-0 text-[15px] font-semibold leading-[24px] text-[#171717]"
+            className="mt-0! text-[15px] font-semibold leading-6 text-[#171717]"
           >
             {event.title}
           </Text>
 
           <Row>
             <Text
-              className="!my-0 text-[14px] font-semibold leading-[24px] text-[#171717]"
+              className="my-0! text-[14px] font-semibold leading-6 text-[#171717]"
             >
               <Img
                 src={`${baseUrl}/icons/calendar2.png`}
@@ -47,13 +48,13 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
                 height="24"
                 className="mx-auto my-0 mr-2 inline align-top"
               />
-              {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+              {formatEventDate(event.date!, { includeYear: true })}
             </Text>
           </Row>
 
           <Row>
             <Text
-              className="!my-0 !mt-2 text-[14px] font-semibold leading-[24px] text-[#171717]"
+              className="my-0! mt-2! text-[14px] font-semibold leading-6 text-[#171717]"
             >
               <Img
                 src={`${baseUrl}/icons/time.png`}
@@ -61,13 +62,13 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
                 height="24"
                 className="mx-auto my-0 mr-2 inline align-top"
               />
-              {event.time?.substring(0, 5)}
+              {event.time ? formatEventTime(event.time) : ''}
             </Text>
           </Row>
 
           <Row>
             <Text
-              className="!mb-0 !mt-2 text-[14px] font-semibold leading-[24px] text-[#171717]"
+              className="mb-0! mt-2! text-[14px] font-semibold leading-6 text-[#171717]"
             >
               <Img
                 src={`${baseUrl}/icons/location.png`}
@@ -78,12 +79,12 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
               {eventLocationSeparated[0]}
             </Text>
             <Text
-              className="!my-0 pl-8 text-[14px] font-semibold leading-[24px] text-[#171717]"
+              className="my-0! pl-8 text-[14px] font-semibold leading-6 text-[#171717]"
             >
               {eventLocationSeparated[1]}
             </Text>
             <Text
-              className="!my-0 pl-8 text-[14px] font-semibold leading-[24px] text-[#171717]"
+              className="my-0! pl-8 text-[14px] font-semibold leading-6 text-[#171717]"
             >
               {eventLocationSeparated[2]}
             </Text>

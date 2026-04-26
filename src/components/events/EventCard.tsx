@@ -5,6 +5,8 @@ import clsx from 'clsx';
 import Link from 'next/link';
 
 import BlurImage from '@/components/shared/BlurImage';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
+import { getEventStatus, type EventStatus } from '@/lib/events/status';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -81,90 +83,6 @@ type EventCardProps = {
    */
   serverNow?: number;
 };
-
-const EVENT_END_HOUR = 17; // Events considered over at 17:00 Amsterdam time
-const EVENT_TIMEZONE = 'Europe/Amsterdam';
-
-export type EventStatus = 'past' | 'now' | 'upcoming';
-
-/**
- * Get event status (past / now / upcoming) using Europe/Amsterdam timezone.
- * "Now" = event day, between start time and 17:00. After 17:00 on event day = past.
- *
- * @param date - Event date string (YYYY-MM-DD)
- * @param time - Event start time (e.g. "14:00:00")
- * @param now - Current timestamp. REQUIRED for server components with Cache Components.
- */
-export function getEventStatus(
-  date: string | null,
-  time: string | null,
-  now?: number,
-): EventStatus {
-  if (!date) return 'upcoming';
-
-  const nowTs = now ?? Date.now();
-
-  const nowInAmsterdam = new Date(nowTs).toLocaleDateString('en-CA', { timeZone: EVENT_TIMEZONE });
-  const eventDateStr = date;
-
-  if (eventDateStr < nowInAmsterdam) return 'past';
-
-  if (eventDateStr === nowInAmsterdam) {
-    const nowHour = Number(
-      new Date(nowTs).toLocaleString('en-US', { timeZone: EVENT_TIMEZONE, hour: 'numeric', hour12: false }),
-    );
-    const nowMinute = Number(
-      new Date(nowTs).toLocaleString('en-US', { timeZone: EVENT_TIMEZONE, minute: 'numeric' }),
-    );
-    const nowMinutes = nowHour * 60 + nowMinute;
-
-    if (nowMinutes >= EVENT_END_HOUR * 60) return 'past';
-
-    if (time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      const startMinutes = hours * 60 + (minutes || 0);
-      if (nowMinutes >= startMinutes) return 'now';
-    }
-  }
-
-  return 'upcoming';
-}
-
-/**
- * Check if an event is in the past (date before today, or event day after 17:00 Amsterdam).
- * Delegates to getEventStatus() for timezone-aware logic.
- *
- * @param date - Event date string
- * @param now - Current timestamp. REQUIRED for server components with Cache Components.
- */
-export function isEventPast(date: string | null, now?: number, time?: string | null): boolean {
-  return getEventStatus(date, time ?? null, now) === 'past';
-}
-
-/**
- * Format event date for display
- */
-export function formatEventDate(
-  date: string,
-  options: { includeYear?: boolean } = {},
-): string {
-  const { includeYear = false } = options;
-  const d = new Date(date);
-  const showYear = includeYear && d.getFullYear() !== new Date().getFullYear();
-  return d.toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    ...(showYear && { year: 'numeric' }),
-  });
-}
-
-/**
- * Format event time for display (HH:MM)
- */
-export function formatEventTime(time: string): string {
-  return time.substring(0, 5);
-}
 
 function getStatusLabel(status: EventStatus): string {
   switch (status) {

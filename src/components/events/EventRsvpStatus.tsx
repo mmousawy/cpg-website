@@ -1,5 +1,6 @@
 'use client';
 
+import { isEventPast } from '@/lib/events/status';
 import clsx from 'clsx';
 import { useContext, useEffect, useState } from 'react';
 
@@ -27,14 +28,7 @@ export default function EventRsvpStatus({ className, event }: Props) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if event is in the past
-  const isPastEvent = (() => {
-    if (!event?.date) return false;
-    const eventDate = new Date(event.date);
-    eventDate.setHours(0, 0, 0, 0);
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    return eventDate < now;
-  })();
+  const isPastEvent = isEventPast(event?.date ?? null, undefined, event?.time ?? null);
 
   useEffect(() => {
     const checkRSVP = async () => {
@@ -75,7 +69,7 @@ export default function EventRsvpStatus({ className, event }: Props) {
   if (isPastEvent && !hasRSVP) {
     return (
       <span
-        className={clsx('inline-flex self-start font-[family-name:var(--font-geist-mono)] items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1.5 text-sm font-medium text-foreground/60 whitespace-nowrap', className)}
+        className={clsx('inline-flex self-start font-(family-name:--font-geist-mono) items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1.5 text-sm font-medium text-foreground/60 whitespace-nowrap', className)}
       >
         Event passed
       </span>
@@ -93,7 +87,7 @@ export default function EventRsvpStatus({ className, event }: Props) {
   if (hasRSVP) {
     return (
       <span
-        className={clsx('inline-flex font-[family-name:var(--font-geist-mono)] items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary whitespace-nowrap', className)}
+        className={clsx('inline-flex font-(family-name:--font-geist-mono) items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary whitespace-nowrap', className)}
       >
         <CheckSVG
           className="size-4 fill-current"

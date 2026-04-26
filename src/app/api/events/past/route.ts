@@ -1,4 +1,5 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { getEventQueryContext } from '@/lib/events/status';
 import { createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -16,15 +17,20 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createPublicClient();
-  const now = new Date().toISOString().split('T')[0];
+  const { nowDate, hasEventDayEnded } = getEventQueryContext();
 
-  // Fetch past events with pagination
-  const { data: events, error } = await supabase
+  // Fetch past events with pagination using the same cutoff rules as the event cards.
+  let query = supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
-    .lt('date', now)
     .order('date', { ascending: false })
     .range(offset, offset + limit - 1);
+
+  query = hasEventDayEnded
+    ? query.lte('date', nowDate)
+    : query.lt('date', nowDate);
+
+  const { data: events, error } = await query;
 
   if (error) {
     console.error('Error fetching past events:', error);

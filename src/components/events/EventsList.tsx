@@ -9,8 +9,10 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
+import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
+import { getEventStatus, isEventPast } from '@/lib/events/status';
 import { SIZE_MAP } from '../auth/Avatar';
-import EventCard, { getEventStatus, isEventPast } from './EventCard';
+import EventCard from './EventCard';
 import EventImage from './EventImage';
 
 type EventsListVariant = 'full' | 'compact';
@@ -115,8 +117,8 @@ export default function EventsList({
   if (variant === 'compact') {
     displayEvents = [...events]
       .sort((a, b) => {
-        const aDate = a.date ? new Date(a.date) : null;
-        const bDate = b.date ? new Date(b.date) : null;
+        const aDate = getDateSortValue(a.date);
+        const bDate = getDateSortValue(b.date);
         const aIsPast = isEventPast(a.date, serverNow, a.time);
         const bIsPast = isEventPast(b.date, serverNow, b.time);
 
@@ -126,11 +128,11 @@ export default function EventsList({
 
         // Both upcoming: soonest first (ascending)
         if (!aIsPast && !bIsPast) {
-          return (aDate?.getTime() || 0) - (bDate?.getTime() || 0);
+          return aDate - bDate;
         }
 
         // Both past: most recent first (descending)
-        return (bDate?.getTime() || 0) - (aDate?.getTime() || 0);
+        return bDate - aDate;
       });
   }
 
@@ -234,9 +236,11 @@ export default function EventsList({
               </Button>
             </div>
             <div
-              className='flex gap-6'
+              className='flex items-start gap-6'
             >
-              <div>
+              <div
+                className="min-w-0 flex-1"
+              >
                 <span
                   className='mb-2 flex gap-4 text-[15px] font-semibold leading-6 max-sm:mb-2'
                 >
@@ -246,7 +250,7 @@ export default function EventsList({
                     <CalendarSVG
                       className="shrink-0 fill-foreground"
                     />
-                    {(() => { const d = new Date(event.date!); return d.toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
+                    {formatEventDate(event.date!, { includeYear: true })}
                   </span>
                   <span
                     className='flex gap-2'
@@ -254,7 +258,7 @@ export default function EventsList({
                     <TimeSVG
                       className="shrink-0 fill-foreground"
                     />
-                    {event.time?.substring(0, 5)}
+                    {event.time ? formatEventTime(event.time) : ''}
                   </span>
                 </span>
                 <span
@@ -278,10 +282,14 @@ export default function EventsList({
                   className="whitespace-pre-line line-clamp-5"
                 />
               </div>
-              <EventImage
-                event={event}
-                tabIndex={-1}
-              />
+              <div
+                className="ml-auto"
+              >
+                <EventImage
+                  event={event}
+                  tabIndex={-1}
+                />
+              </div>
             </div>
             <div
               className='mt-8 flex items-end justify-between gap-4'

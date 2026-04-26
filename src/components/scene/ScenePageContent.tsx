@@ -5,6 +5,8 @@ import type { SceneEvent } from '@/types/scene';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+
 const EMPTY_STATE_EMOTES = [
   '(っ °Д °;)',
   'っ⊙﹏⊙∥',
@@ -174,6 +176,8 @@ export default function ScenePageContent({
     Record<string, number>
   >({});
 
+  const isCategoryFiltered = !!category && category !== 'all';
+
   // Immediate fallback: count from first batch (sync, no API delay)
   const filteredInitialPastCount = useMemo(
     () =>
@@ -221,9 +225,12 @@ export default function ScenePageContent({
   );
 
   const pastCount =
-    category && category !== 'all'
+    isCategoryFiltered
       ? (pastCountByCategory[category] ?? filteredInitialPastCount)
       : pastTotalCount + cpgPastCount;
+
+  const isCategoryPastCountLoading =
+    isCategoryFiltered && pastCountByCategory[category] === undefined;
 
   const counts = useMemo(
     () => ({
@@ -278,6 +285,7 @@ export default function ScenePageContent({
     thisWeek.length > 0 || nextWeek.length > 0 || ongoing.length > 0 || thisMonth.length > 0 || later.length > 0;
   const hasPast = pastCount > 0;
   const hasAnyEvents = hasUpcoming || hasPast;
+  const shouldShowCategoryLoadingState = isCategoryPastCountLoading && !hasUpcoming;
 
   // Sync URL when period param is invalid after category change
   useEffect(() => {
@@ -371,8 +379,24 @@ export default function ScenePageContent({
       {/* Category filter */}
       <SceneCategoryFilter />
 
+      {shouldShowCategoryLoadingState && (
+        <div
+          className="text-center py-16 rounded-xl border-2 border-dashed border-border-color bg-background/50"
+        >
+          <LoadingSpinner
+            size="sm"
+            className="mx-auto mb-3"
+          />
+          <p
+            className="text-foreground/70"
+          >
+            Loading events...
+          </p>
+        </div>
+      )}
+
       {/* Empty state */}
-      {!hasAnyEvents && (
+      {!shouldShowCategoryLoadingState && !hasAnyEvents && (
         <div
           key={category ?? 'all'}
           className="text-center py-16 rounded-xl border-2 border-dashed border-border-color bg-background/50"
@@ -392,7 +416,7 @@ export default function ScenePageContent({
       )}
 
       {/* Tabs + content */}
-      {hasAnyEvents && (
+      {!shouldShowCategoryLoadingState && hasAnyEvents && (
         <section>
           <div
             className="flex gap-1 mb-4 border-b border-border-color pb-2 overflow-x-auto scrollbar-none"
