@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.15](https://github.com/mmousawy/cpg-website/compare/v1.29.14...v1.29.15) (2026-04-26)
+
+
+### Bug Fixes
+
+* improve changelog, members, and gallery browsing ([a9ae66b](https://github.com/mmousawy/cpg-website/commit/a9ae66bec0c981e3e76a1b87e9900c1c42b3f5b6))
+
 ## [1.29.14](https://github.com/mmousawy/cpg-website/compare/v1.29.13...v1.29.14) (2026-03-31)
 
 
