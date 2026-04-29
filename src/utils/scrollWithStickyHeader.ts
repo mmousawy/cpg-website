@@ -14,10 +14,26 @@ export function scrollToIdWithStickyHeaderOffset(
   id: string,
   behavior: ScrollBehavior = 'smooth',
 ): boolean {
-  const el = document.getElementById(id);
-  if (!el) return false;
-  const offset = getHeaderOffset();
-  const top = el.getBoundingClientRect().top + window.scrollY - offset;
-  window.scrollTo({ top: Math.max(0, top), behavior });
-  return true;
+  if (typeof window === 'undefined') return false;
+
+  const maxRetries = 20;
+  const retryDelayMs = 50;
+
+  const scrollToTarget = (remainingRetries: number): boolean => {
+    const el = document.getElementById(id);
+    if (!el) {
+      if (remainingRetries <= 0) return false;
+      window.setTimeout(() => {
+        scrollToTarget(remainingRetries - 1);
+      }, retryDelayMs);
+      return true;
+    }
+
+    const offset = getHeaderOffset();
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior });
+    return true;
+  };
+
+  return scrollToTarget(maxRetries);
 }

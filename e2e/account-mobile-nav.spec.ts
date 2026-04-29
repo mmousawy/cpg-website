@@ -42,11 +42,10 @@ test.describe('Account mobile section nav', () => {
     const startingScrollY = await page.evaluate(() => window.scrollY);
 
     await page.getByRole('button', { name: /open sections/i }).click();
-    const targetLink = page.getByRole('navigation', { name: 'Account sections' }).getByRole('link').last();
-    const targetHref = await targetLink.getAttribute('href');
-    const targetId = targetHref?.slice(1);
-
-    expect(targetId).toBeTruthy();
+    const targetId = 'copyright';
+    const targetLink = page
+      .getByRole('navigation', { name: 'Account sections' })
+      .getByRole('link', { name: 'Copyright & licensing' });
 
     await targetLink.click();
 
