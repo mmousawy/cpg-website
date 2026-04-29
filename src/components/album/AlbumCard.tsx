@@ -99,11 +99,11 @@ export default function AlbumCard({
             <div
               className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
             >
-              <h3
+              <p
                 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
               >
                 {album.title}
-              </h3>
+              </p>
               {/* Photo count - top right, visible on hover */}
               {photoCount > 0 && (
                 <div
@@ -153,13 +153,13 @@ export default function AlbumCard({
         <div
           className="p-2.5"
         >
-          <h3
+          <p
             className="text-sm font-semibold line-clamp-1"
           >
             {album.title}
-          </h3>
+          </p>
           <div
-            className="flex items-center justify-between mt-1.5"
+            className="flex items-center justify-between mt-2"
           >
             {album.profile && (
               <div

@@ -6,6 +6,7 @@ import { FocusTrap } from 'focus-trap-react';
 import { useRouter } from 'next/navigation';
 import CloseSVG from 'public/icons/close.svg';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import SearchInput from './SearchInput';
 import SearchResults from './SearchResults';
 
@@ -35,12 +36,12 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     if (modalRef.current) {
       if (isOpen) {
         modalRef.current.show();
-        document.body.style.overflow = 'hidden';
+        lockBodyScroll();
         const timerId = setTimeout(() => setIsTrapped(true), 16);
         return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-        document.body.style.overflow = '';
+        unlockBodyScroll();
         const timerId = setTimeout(() => setIsTrapped(false), 0);
         return () => clearTimeout(timerId);
       }
@@ -139,7 +140,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             'relative m-auto',
             'max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)]',
             'flex flex-col',
-            'rounded-2xl border-[0.0625rem] border-border-color bg-background-light shadow-xl shadow-black/25',
+            'rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
             'transition-transform duration-300',
           ])}
           onClick={(e) => e.stopPropagation()}
@@ -170,7 +171,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           >
             {query.length < 2 ? (
               <div
-                className="flex flex-col items-center justify-center min-h-[90px] text-center"
+                className="flex flex-col items-center justify-center min-h-22.5 text-center"
               >
                 <p
                   className="text-foreground/60"

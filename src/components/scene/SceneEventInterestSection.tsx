@@ -80,7 +80,7 @@ export default function SceneEventInterestSection({
         className={clsx(
           'group relative z-10',
           'inline-flex items-center justify-center gap-2',
-          'size-9 rounded-full px-3 sm:size-auto sm:h-9 sm:min-w-[140px] sm:rounded-full',
+          'size-9 rounded-full px-3 sm:size-auto sm:h-9 sm:min-w-35 sm:rounded-full',
           'text-sm font-medium text-foreground',
           'transition-colors overflow-visible',
           'border border-border-color-strong',

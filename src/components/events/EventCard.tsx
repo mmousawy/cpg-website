@@ -189,13 +189,13 @@ export default function EventCard({
         className="sm:flex-1 sm:min-w-0"
       >
         <h4
-          className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2 mb-1.5"
+          className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2 mb-2.5"
         >
           {event.title}
         </h4>
 
         <div
-          className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-1 text-sm text-foreground/70"
+          className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-2 text-sm text-foreground/70"
         >
           {event.date && (
             <span
@@ -243,7 +243,7 @@ export default function EventCard({
         {/* Attendees */}
         {attendees.length > 0 && (
           <div
-            className="mt-3 max-sm:hidden"
+            className="mt-4 max-sm:hidden"
           >
             <StackedAvatarsPopover
               people={attendeePeople}
@@ -259,7 +259,7 @@ export default function EventCard({
       {/* Desktop: Badge and Thumbnail on right */}
       {imageSrc && (
         <div
-          className="hidden sm:flex flex-col items-end gap-2 shrink-0"
+          className="hidden sm:flex flex-col items-end gap-3 shrink-0"
         >
           {showBadge && (
             <EventStatusBadge
@@ -317,11 +317,8 @@ export default function EventCard({
 
   const wrapperClasses = clsx(
     'block transition-colors group',
-    // Mobile: borderless, no background. Desktop: card styling
-    'sm:rounded-lg sm:border sm:border-border-color sm:bg-background',
-    'max-sm:[&:not(:first-child)]:pt-6 max-sm:[&:not(:last-child)]:pb-6',
-    'sm:p-4',
-    asLink && 'sm:hover:border-primary cursor-pointer',
+    'rounded-lg border border-border-color bg-background-light p-4',
+    asLink && 'hover:border-primary cursor-pointer',
     className,
   );
 

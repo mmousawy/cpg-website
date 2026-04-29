@@ -223,11 +223,11 @@ export default function ChallengeCard({
       <div
         className="absolute inset-x-0 bottom-0 p-3"
       >
-        <h3
-          className="text-lg font-bold text-white drop-shadow-md line-clamp-2 decoration-2 underline-offset-2"
+        <p
+          className="font-bold text-white drop-shadow-md line-clamp-2 decoration-2 underline-offset-2"
         >
           {challenge.title}
-        </h3>
+        </p>
       </div>
     </>
   );

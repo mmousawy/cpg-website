@@ -33,6 +33,7 @@ export default function SmoothScrollProvider() {
     const handleClick = (e: MouseEvent) => {
       const link = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href*="#"]');
       if (!link?.href) return;
+      if (link.dataset.smoothScroll === 'self-managed') return;
 
       try {
         const url = new URL(link.href);

@@ -12,7 +12,7 @@
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000?logo=vercel&logoColor=white)
 
-Community platform for photography enthusiasts built with Next.js and Supabase. Features event management, photo galleries, and user profiles.
+Community platform for photographers built with Next.js and Supabase. Features event management, photo galleries, and user profiles.
 
 ## Features
 

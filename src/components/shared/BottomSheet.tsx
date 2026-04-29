@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 
 import CloseSVG from 'public/icons/close.svg';
 
@@ -66,11 +67,11 @@ export default function BottomSheet({
   // Handle body scroll lock
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockBodyScroll();
       const timerId = setTimeout(() => setIsTrapped(true), 16);
       return () => clearTimeout(timerId);
     } else {
-      document.body.style.overflow = '';
+      unlockBodyScroll();
       const timerId = setTimeout(() => setIsTrapped(false), 0);
       return () => clearTimeout(timerId);
     }

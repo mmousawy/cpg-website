@@ -49,7 +49,7 @@ export default async function ChallengesPage() {
           />
         </div>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/70"
+          className="text-base sm:text-xl mt-2 text-foreground/70"
         >
           Join our themed challenges and showcase your photography skills
         </p>
@@ -61,7 +61,7 @@ export default async function ChallengesPage() {
         {/* Active Challenges */}
         <section>
           <h2
-            className="text-lg font-semibold mb-4 opacity-70"
+            className="text-xl font-semibold mb-4 opacity-70"
           >
             Active challenges
           </h2>
@@ -76,7 +76,7 @@ export default async function ChallengesPage() {
         {pastChallenges.length > 0 && (
           <section>
             <h2
-              className="text-lg font-semibold mb-4 opacity-70"
+              className="text-xl font-semibold mb-4 opacity-70"
             >
               Past challenges
             </h2>

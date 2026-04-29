@@ -16,6 +16,9 @@ export default {
       '2xl': '1536px',
     },
     extend: {
+      fontFamily: {
+        geist: ['var(--font-geist-sans)', 'sans-serif'],
+      },
       colors: {
         primary: 'var(--primary)',
         'primary-light': 'var(--primary-light)',

@@ -394,11 +394,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 <div
                   className="flex items-center gap-1 mb-3"
                 >
-                  <h2
+                  <p
                     className="text-lg font-semibold"
                   >
                     About this event
-                  </h2>
+                  </p>
                   <HelpLink
                     href="join-events"
                     label="Help with events"

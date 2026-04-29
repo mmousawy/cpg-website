@@ -88,7 +88,7 @@ export const accountFAQ: FAQSection = {
       ),
     },
     {
-      id: 'delete-account',
+      id: 'danger-zone',
       title: 'Deleting your account',
       content: (
         <>

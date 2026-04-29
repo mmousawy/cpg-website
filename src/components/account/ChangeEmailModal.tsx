@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import CloseSVG from 'public/icons/close.svg';
 
 interface ChangeEmailModalProps {
@@ -43,12 +44,12 @@ export default function ChangeEmailModal({
     if (modalRef.current) {
       if (isOpen) {
         modalRef.current.show();
-        document.body.style.overflow = 'hidden';
+        lockBodyScroll();
         const timerId = setTimeout(() => setIsTrapped(true), 16);
         return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-        document.body.style.overflow = 'auto';
+        unlockBodyScroll();
         const timerId = setTimeout(() => setIsTrapped(false), 0);
         return () => clearTimeout(timerId);
       }
@@ -104,7 +105,7 @@ export default function ChangeEmailModal({
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-[60] overflow-auto',
+        'fixed inset-0 z-60 overflow-auto',
         'flex size-full max-h-none max-w-none p-4',
         'bg-black/40 backdrop-blur-sm',
         'transition-[visibility,opacity] duration-300',
@@ -130,7 +131,7 @@ export default function ChangeEmailModal({
         >
           {/* Header */}
           <div
-            className="flex-shrink-0 flex items-start justify-between gap-4 p-4 pb-0"
+            className="shrink-0 flex items-start justify-between gap-4 p-4 pb-0"
           >
             <h2
               className="text-2xl font-bold max-sm:text-xl"
@@ -141,7 +142,7 @@ export default function ChangeEmailModal({
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-shrink-0 rounded-full border border-border-color p-1 hover:bg-background disabled:opacity-50"
+              className="shrink-0 rounded-full border border-border-color p-1 hover:bg-background disabled:opacity-50"
             >
               <CloseSVG
                 className="size-5 fill-foreground"

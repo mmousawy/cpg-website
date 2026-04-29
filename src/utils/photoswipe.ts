@@ -14,7 +14,6 @@ let stylesLoaded = false;
 export async function initPhotoSwipe() {
   // Load styles only once
   if (!stylesLoaded) {
-    // @ts-expect-error - CSS imports don't have type declarations
     await import('photoswipe/style.css');
     stylesLoaded = true;
   }

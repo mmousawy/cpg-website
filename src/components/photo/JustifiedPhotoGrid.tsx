@@ -146,7 +146,7 @@ export default function JustifiedPhotoGrid({
           showAttribution={showAttribution}
           maxDisplayWidth={1350}
           header={header}
-          gapClass="gap-1 mb-1"
+          gapClass="gap-2 mb-2"
         />
       </div>
 

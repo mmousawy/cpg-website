@@ -85,7 +85,7 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
           className={clsx(
             'group flex items-center justify-center gap-2 shrink-0',
             'size-9 rounded-full',
-            !interested && 'sm:size-auto sm:h-9 sm:min-w-[140px] sm:px-3',
+            !interested && 'sm:size-auto sm:h-9 sm:min-w-35 sm:px-3',
             'border border-border-color-strong',
             'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
             'bg-background-light hover:bg-background-medium',
@@ -136,9 +136,6 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
       <div
         className="flex items-center gap-2 shrink-0"
       >
-        <SceneActionsPopover
-          event={event}
-        />
         {event.url && (
           <Button
             href={event.url}

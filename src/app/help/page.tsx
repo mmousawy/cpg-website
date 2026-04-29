@@ -25,7 +25,7 @@ export default function HelpPage() {
     >
       <PageContainer>
         <div
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
           <div
             className="flex items-center gap-2 mb-2"
@@ -87,7 +87,9 @@ export default function HelpPage() {
               </section>
             ))}
 
-            <p>
+            <p
+              className='mt-6 mb-6'
+            >
               Still have questions?
               {' '}
               <Link

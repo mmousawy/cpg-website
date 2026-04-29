@@ -24,7 +24,7 @@ const ACCOUNT_SECTIONS = [
   { id: 'preferences', title: 'Preferences' },
   { id: 'copyright', title: 'Copyright & licensing' },
   { id: 'account-info', title: 'Account info' },
-  { id: 'delete-account', title: 'Delete account' },
+  { id: 'danger-zone', title: 'Danger zone' },
 ];
 
 export default function AccountPage() {
@@ -261,7 +261,7 @@ export default function AccountPage() {
               </section>
 
               <section
-                id="delete-account"
+                id="danger-zone"
                 className="-scroll-mt-4"
               >
                 <DeleteAccountSection

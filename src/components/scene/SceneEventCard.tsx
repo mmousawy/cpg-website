@@ -130,7 +130,7 @@ export default function SceneEventCard({
           className="flex items-start gap-4"
         >
           <div
-            className={`shrink-0 relative overflow-hidden rounded-lg border border-border-color size-[72px] sm:size-[110px] flex items-center justify-center${imageSrc ? '' : ' bg-white'}`}
+            className={`shrink-0 relative overflow-hidden rounded-lg border border-border-color size-18 sm:size-27.5 flex items-center justify-center${imageSrc ? '' : ' bg-white'}`}
           >
             {imageSrc ? (
               <BlurImage
@@ -188,11 +188,11 @@ export default function SceneEventCard({
                 {formatPrice(event.price_info) ?? 'See event'}
               </span>
             </div>
-            <h3
+            <p
               className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-2 mb-1.5"
             >
               {event.title}
-            </h3>
+            </p>
             <div
               className="space-y-1 text-sm text-foreground/90"
             >
@@ -200,7 +200,7 @@ export default function SceneEventCard({
                 className="flex items-start gap-1"
               >
                 <CalendarSVG
-                  className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
+                  className="size-4 fill-foreground/70 shrink-0 mt-0.75"
                 />
                 {dateStr}
               </span>
@@ -208,7 +208,7 @@ export default function SceneEventCard({
                 className="flex items-start gap-1"
               >
                 <LocationSVG
-                  className="size-4 fill-foreground/70 shrink-0 mt-[3px]"
+                  className="size-4 fill-foreground/70 shrink-0 mt-0.75"
                 />
                 <span
                   className="line-clamp-1"

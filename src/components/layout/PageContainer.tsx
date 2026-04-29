@@ -2,8 +2,8 @@ import clsx from 'clsx';
 import { ReactNode } from 'react';
 
 // Shared padding used across all pages
-export const pagePadding = 'px-2 py-6 md:p-12';
-export const pagePaddingAlt = 'px-2 pb-5 pt-4 md:p-10 md:pt-8';
+export const pagePadding = 'px-3 py-6 md:p-12';
+export const pagePaddingAlt = 'px-3 pb-5 pt-4 md:p-10 md:pt-8';
 export const pagePaddingFullWidth = 'py-6 md:p-12';
 
 type PageContainerVariant = 'default' | 'alt' | 'full-width';

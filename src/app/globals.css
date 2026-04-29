@@ -141,6 +141,17 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+:where(h1, h2, h3) {
+  font-family: var(--font-cheria-heading), var(--font-geist-sans), sans-serif;
+  font-synthesis: none;
+}
+
+@layer utilities {
+  .font-geist {
+    font-family: var(--font-geist-sans), sans-serif;
+  }
+}
+
 /* Container gradient variant - only active in dark/midnight themes */
 .container-gradient {
   border: 0.0625rem solid var(--border-color);

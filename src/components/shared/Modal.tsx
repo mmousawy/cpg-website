@@ -7,6 +7,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import CloseSVG from 'public/icons/close.svg';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 
 export default function Modal() {
   const { isOpen, setIsOpen, requestClose, title, content, footer, size, flushContentTop } = useContext(ModalContext);
@@ -34,13 +35,13 @@ export default function Modal() {
     if (modalRef.current) {
       if (isOpen) {
         modalRef.current.show();
-        document.body.style.overflow = 'hidden';
+        lockBodyScroll();
         // Focus trap the dialog element after a brief delay
         const timerId = setTimeout(() => setIsTrapped(true), 16);
         return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-        document.body.style.overflow = '';
+        unlockBodyScroll();
         // Untrap the dialog element (via microtask to satisfy React Compiler)
         const timerId = setTimeout(() => setIsTrapped(false), 0);
         return () => clearTimeout(timerId);
@@ -101,7 +102,7 @@ export default function Modal() {
             'relative m-auto',
             'max-h-[calc(100vh-3rem)] max-sm:max-h-[calc(100vh-2rem)]',
             'flex flex-col',
-            'rounded-2xl border-[0.0625rem] border-border-color bg-background-light shadow-xl shadow-black/25',
+            'rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
             'transition-transform duration-300',
           ])}
         >
@@ -135,7 +136,7 @@ export default function Modal() {
               className="relative shrink-0 border-t border-border-color-strong p-4"
             >
               <div
-                className="absolute -top-[17px] left-0 right-0 bg-linear-to-b from-transparent to-background-light h-4 w-full pointer-events-none"
+                className="absolute -top-4.25 left-0 right-0 bg-linear-to-b from-transparent to-background-light h-4 w-full pointer-events-none"
               ></div>
               {footer}
             </div>

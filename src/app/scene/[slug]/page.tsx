@@ -256,14 +256,6 @@ export default async function SceneEventDetailPage({
           event.cover_image_url ? 'pt-2! sm:pt-3!' : '',
         )}
       >
-        <ArrowLink
-          href={routes.scene.url}
-          direction="left"
-          className="mb-4"
-        >
-          Back to all events
-        </ArrowLink>
-
         {/* Header (no cover image fallback) */}
         {!event.cover_image_url && (
           <div
@@ -382,14 +374,12 @@ export default async function SceneEventDetailPage({
 
             {/* Description */}
             {event.description && (
-              <div
-                className="mb-8"
-              >
-                <h2
+              <div>
+                <p
                   className="text-lg font-semibold gap-1 mb-3"
                 >
                   About this event
-                </h2>
+                </p>
                 <RichDescription
                   html={event.description}
                   className="text-foreground/90 leading-snug max-w-[50ch]"
@@ -400,7 +390,7 @@ export default async function SceneEventDetailPage({
             {/* Organizer */}
             {event.organizer && (
               <p
-                className="flex items-center gap-2 text-foreground/60"
+                className="flex items-center gap-2 text-foreground/60 mt-8"
               >
                 <HeroCommunitiesSVG
                   className="size-5 shrink-0 fill-foreground/50"
@@ -436,6 +426,14 @@ export default async function SceneEventDetailPage({
             )}
           </div>
         </Container>
+
+        <ArrowLink
+          href={routes.scene.url}
+          direction="left"
+          className="mt-4"
+        >
+          Back to all events
+        </ArrowLink>
 
         {related.length > 0 && (
           <RelatedEventsSlider

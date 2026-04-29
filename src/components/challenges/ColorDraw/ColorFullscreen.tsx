@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
 import CloseSVG from 'public/icons/close.svg';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import { getColorLabel, getColorSwatchStyle, isLightColor } from '@/lib/colorDraw';
 
 function useIsMounted() {
@@ -31,10 +32,10 @@ export default function ColorFullscreen({ color, isOpen, onClose }: ColorFullscr
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockBodyScroll();
       window.addEventListener('keydown', handleEscape);
       return () => {
-        document.body.style.overflow = '';
+        unlockBodyScroll();
         window.removeEventListener('keydown', handleEscape);
       };
     }
@@ -51,7 +52,7 @@ export default function ColorFullscreen({ color, isOpen, onClose }: ColorFullscr
   const fullViewportStyle = { minHeight: '100dvh' };
   const overlay = (
     <div
-      className="fixed inset-0 z-[100] flex min-h-screen items-center justify-center"
+      className="fixed inset-0 z-100 flex min-h-screen items-center justify-center"
       style={fullViewportStyle}
       role="dialog"
       aria-modal="true"

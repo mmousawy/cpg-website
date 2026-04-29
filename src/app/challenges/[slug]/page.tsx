@@ -358,12 +358,9 @@ export default async function ChallengePage({
                     <>
                       {photoCount}
                       {' '}
-                      photo
-                      {photoCount !== 1 ? 's' : ''}
-                      {' '}
-                      submitted
+                      {photoCount !== 1 ? 'entries' : 'entry'}
                     </>
-                  ) : 'No submissions yet'}
+                  ) : 'No entries yet'}
                 </span>
 
                 {/* Deadline */}
@@ -401,10 +398,10 @@ export default async function ChallengePage({
                 )}
               </div>
               <div
-                className="flex items-center gap-2 mb-3"
+                className="flex items-center mb-3"
               >
                 <h2
-                  className="text-lg font-semibold"
+                  className="text-lg font-semibold font-(family-name:--font-geist-sans)!"
                 >
                   About this challenge
                 </h2>

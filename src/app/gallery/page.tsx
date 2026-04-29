@@ -88,7 +88,7 @@ export default async function GalleryPage() {
                     className="group"
                   >
                     <h2
-                      className="text-xl font-semibold group-hover:text-primary transition-colors"
+                      className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
                     >
                       Most viewed this week
                     </h2>
@@ -127,7 +127,7 @@ export default async function GalleryPage() {
                 className="group"
               >
                 <h2
-                  className="text-xl font-semibold group-hover:text-primary transition-colors"
+                  className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
                 >
                   Trending albums
                 </h2>
@@ -172,7 +172,7 @@ export default async function GalleryPage() {
                     className="group"
                   >
                     <h2
-                      className="text-xl font-semibold group-hover:text-primary transition-colors"
+                      className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
                     >
                       Recent photos
                     </h2>
@@ -208,7 +208,7 @@ export default async function GalleryPage() {
               className="group"
             >
               <h2
-                className="text-xl font-semibold group-hover:text-primary transition-colors"
+                className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
               >
                 Recent albums
               </h2>

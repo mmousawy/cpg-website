@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import { Suspense } from 'react';
 
 import ConfirmProvider from '@/app/providers/ConfirmProvider';
@@ -32,6 +33,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap',
+});
+
+const cheriaHeading = localFont({
+  src: '../../public/cheria-bold.woff2',
+  variable: '--font-cheria-heading',
+  weight: '700',
   display: 'swap',
 });
 
@@ -103,7 +111,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-clip bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cheriaHeading.variable} h-full overflow-x-clip bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
       >
         <JsonLd
           data={[

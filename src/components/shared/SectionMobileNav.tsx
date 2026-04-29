@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSectionScroll } from '@/context/SectionScrollContext';
 import type { SectionNavItem } from '@/components/shared/SectionSidebar';
+import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
 
 interface SectionMobileNavProps {
   sections: SectionNavItem[];
@@ -20,6 +21,17 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
   const activeSection = sections.find((s) => s.id === activeSectionId);
 
   const close = useCallback(() => setIsExpanded(false), []);
+
+  const handleSectionClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    pinSection(id);
+    close();
+
+    const didScroll = scrollToIdWithStickyHeaderOffset(id);
+    if (!didScroll) return;
+
+    event.preventDefault();
+    window.history.replaceState(null, '', `#${id}`);
+  }, [close, pinSection]);
 
   // Close when clicking outside
   useEffect(() => {
@@ -88,7 +100,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
       >
         <nav
           aria-label={ariaLabel}
-          className="border-t border-border-color overflow-y-auto overscroll-contain max-h-[260px]"
+          className="border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
         >
           <ul
             className="py-2"
@@ -101,10 +113,8 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
                 >
                   <Link
                     href={`#${section.id}`}
-                    onClick={() => {
-                      pinSection(section.id);
-                      close();
-                    }}
+                    data-smooth-scroll="self-managed"
+                    onClick={(event) => handleSectionClick(event, section.id)}
                     className={`block px-4 py-2.5 text-sm ${
                       isActive
                         ? 'bg-primary/10 text-primary font-semibold'

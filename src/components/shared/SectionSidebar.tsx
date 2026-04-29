@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import Container from '@/components/layout/Container';
 import { useSectionScroll } from '@/context/SectionScrollContext';
+import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
 
 export type SectionNavItem = { id: string; title: string };
 
@@ -14,6 +15,16 @@ interface SectionSidebarProps {
 
 export default function SectionSidebar({ sections, ariaLabel = 'Page sections' }: SectionSidebarProps) {
   const { activeSectionId, pinSection } = useSectionScroll();
+
+  const handleSectionClick = (event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    pinSection(id);
+
+    const didScroll = scrollToIdWithStickyHeaderOffset(id);
+    if (!didScroll) return;
+
+    event.preventDefault();
+    window.history.replaceState(null, '', `#${id}`);
+  };
 
   return (
     <aside
@@ -41,7 +52,8 @@ export default function SectionSidebar({ sections, ariaLabel = 'Page sections' }
                   >
                     <Link
                       href={`#${section.id}`}
-                      onClick={() => pinSection(section.id)}
+                      data-smooth-scroll="self-managed"
+                      onClick={(event) => handleSectionClick(event, section.id)}
                       className={`block rounded-md px-2 py-1.5 font-medium ${
                         isActive
                           ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]'

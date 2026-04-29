@@ -5,6 +5,7 @@ import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfirmState } from '@/app/providers/ConfirmProvider';
+import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 import TrashSVG from 'public/icons/trash.svg';
 import Button from './Button';
 
@@ -17,12 +18,12 @@ export default function ConfirmModal() {
     if (modalRef.current) {
       if (isOpen) {
         modalRef.current.show();
-        document.body.style.overflow = 'hidden';
+        lockBodyScroll();
         const timerId = setTimeout(() => setIsTrapped(true), 16);
         return () => clearTimeout(timerId);
       } else {
         modalRef.current.close();
-        document.body.style.overflow = 'auto';
+        unlockBodyScroll();
         const timerId = setTimeout(() => setIsTrapped(false), 0);
         return () => clearTimeout(timerId);
       }
@@ -44,7 +45,7 @@ export default function ConfirmModal() {
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-[60] overflow-auto',
+        'fixed inset-0 z-60 overflow-auto',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-4',
         'bg-black/40 backdrop-blur-sm',
         'transition-[visibility,opacity] duration-300',
@@ -64,7 +65,7 @@ export default function ConfirmModal() {
             isOpen ? 'scale-100' : 'scale-95',
             'w-full max-w-md',
             'relative m-auto',
-            'rounded-2xl border-[0.0625rem] border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
+            'rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
             'transition-transform duration-300',
           ])}
         >

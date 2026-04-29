@@ -176,7 +176,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-1 text-lg font-semibold"
+            className="mb-1 text-xl font-semibold"
           >
             Recently active
           </h2>
@@ -209,7 +209,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-1 text-lg font-semibold"
+            className="mb-1 text-xl font-semibold"
           >
             Explore by photo style
           </h2>
@@ -230,7 +230,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         {/* New Members */}
         <div>
           <h2
-            className="mb-1 text-lg font-semibold"
+            className="mb-1 text-xl font-semibold"
           >
             New members
           </h2>
@@ -286,7 +286,7 @@ function MemberCardSkeleton({ index = 0 }: { index?: number }) {
         className="w-full flex flex-col items-center"
       >
         <div
-          className="h-[18px] bg-background-medium rounded w-3/4 mb-0.5"
+          className="h-4.5 bg-background-medium rounded w-3/4 mb-0.5"
         />
         <div
           className="h-4 bg-background-medium rounded w-1/2"

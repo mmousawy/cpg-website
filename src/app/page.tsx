@@ -27,7 +27,7 @@ import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
 export const metadata = {
   ...createMetadata({
     title: 'Photography Meetups & Community - Creative Photography Group',
-    description: 'A community for analog and digital photography enthusiasts. Join us for monthly meetups, photo challenges, and skill-sharing talks in the Netherlands.',
+    description: 'A community for analog and digital photographers. Join us for monthly meetups, photo challenges, and skill-sharing talks in the Netherlands.',
     canonical: '/',
     keywords: ['photography', 'photography meetups', 'Netherlands', 'photo walks', 'photography community'],
   }),
@@ -115,9 +115,9 @@ export default async function Home() {
             className="mx-auto max-w-screen-md text-center"
           >
             <h1
-              className="text-5xl font-bold md:text-6xl mb-4"
+              className="mb-4 text-5xl md:text-7xl"
             >
-              Shoot, Share & Explore
+              Creative Photography Group
               {' '}
               <Image
                 src={CameraWithFlash}
@@ -128,11 +128,11 @@ export default async function Home() {
                 className="inline-block ml-2 align-top h-12 w-auto md:h-15"
               />
             </h1>
-            <p
-              className="text-lg sm:text-xl opacity-80 max-w-2xl mx-auto"
+            <h2
+              className="mx-auto max-w-2xl font-(family-name:--font-geist-sans)! text-lg opacity-80 sm:text-xl"
             >
-              A community for analog and digital photography enthusiasts
-            </p>
+              A community for analog and digital photographers
+            </h2>
           </div>
         </div>
       </div>
@@ -141,126 +141,125 @@ export default async function Home() {
       <PageContainer
         innerClassName='space-y-6 md:space-y-8'
       >
-        <Container
-          variant="gradient"
-        >
-          <h2
-            className="text-2xl font-bold mb-2"
-          >
-            Explore what we&apos;re up to
-          </h2>
-          <p
-            className="text-foreground/70 leading-relaxed mb-8"
-          >
-            Join our meetups and discover photos from the community.
-          </p>
 
-          {/* Events */}
+        <h3
+          className="text-2xl font-bold mb-2"
+        >
+          Explore what we&apos;re up to
+        </h3>
+        <p
+          className="text-foreground/70 leading-relaxed mb-8"
+        >
+          Join our meetups and discover photos from the community.
+        </p>
+
+        {/* Events */}
+        <div
+          className="mb-12"
+        >
           <div
-            className="mb-10"
+            className="mb-4 flex items-center justify-between"
+          >
+            <h2
+              className="text-xl font-semibold opacity-80"
+            >
+              Upcoming events
+            </h2>
+            <ArrowLink
+              href={routes.events.url}
+            >
+              View all events
+            </ArrowLink>
+          </div>
+          <EventsList
+            events={events}
+            attendeesByEvent={attendeesByEvent}
+            variant="compact"
+            max={3}
+            disableAttendeesPopover
+            avatarSize="xs"
+            serverNow={serverNow}
+          />
+        </div>
+
+        {/* Challenges */}
+        {challenges.length > 0 && (
+          <div
+            className="mb-12"
           >
             <div
               className="mb-4 flex items-center justify-between"
             >
               <h3
-                className="text-lg font-semibold"
+                className="text-xl font-semibold opacity-80"
               >
-                Upcoming events
+                Photo challenges
               </h3>
               <ArrowLink
-                href={routes.events.url}
+                href={routes.challenges.url}
               >
-                View all events
+                View all challenges
               </ArrowLink>
             </div>
-            <EventsList
-              events={events}
-              attendeesByEvent={attendeesByEvent}
-              variant="compact"
-              max={3}
-              disableAttendeesPopover
-              avatarSize="xs"
+            <ChallengesList
+              challenges={challenges.slice(0, 3)}
               serverNow={serverNow}
             />
           </div>
+        )}
 
-          {/* Challenges */}
-          {challenges.length > 0 && (
+        {/* Albums */}
+        {albums.length > 0 && (
+          <div
+            className="mb-12"
+          >
             <div
-              className="mb-10"
+              className="mb-4 flex items-center justify-between"
             >
-              <div
-                className="mb-4 flex items-center justify-between"
+              <h3
+                className="text-xl font-semibold opacity-80"
               >
-                <h3
-                  className="text-lg font-semibold"
-                >
-                  Photo challenges
-                </h3>
-                <ArrowLink
-                  href={routes.challenges.url}
-                >
-                  View all challenges
-                </ArrowLink>
-              </div>
-              <ChallengesList
-                challenges={challenges.slice(0, 3)}
-                serverNow={serverNow}
-              />
+                Recent albums
+              </h3>
+              <ArrowLink
+                href={routes.gallery.url}
+              >
+                View all albums
+              </ArrowLink>
             </div>
-          )}
+            <AlbumGrid
+              albums={albums}
+              className="grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
+            />
+          </div>
+        )}
 
-          {/* Albums */}
-          {albums.length > 0 && (
+        {/* Recent Photos */}
+        {photos.length > 0 && (
+          <div
+            className="mb-12"
+          >
             <div
-              className="mb-10"
+              className="mb-4 flex items-center justify-between"
             >
-              <div
-                className="mb-4 flex items-center justify-between"
+              <h3
+                className="text-xl font-semibold opacity-80"
               >
-                <h3
-                  className="text-lg font-semibold"
-                >
-                  Recent albums
-                </h3>
-                <ArrowLink
-                  href={routes.gallery.url}
-                >
-                  View all albums
-                </ArrowLink>
-              </div>
-              <AlbumGrid
-                albums={albums}
-                className="grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
-              />
-            </div>
-          )}
-
-          {/* Recent Photos */}
-          {photos.length > 0 && (
-            <div>
-              <div
-                className="mb-4 flex items-center justify-between"
+                Recent photos
+              </h3>
+              <ArrowLink
+                href="/gallery/photos"
               >
-                <h3
-                  className="text-lg font-semibold"
-                >
-                  Recent photos
-                </h3>
-                <ArrowLink
-                  href="/gallery/photos"
-                >
-                  View all photos
-                </ArrowLink>
-              </div>
-              <JustifiedPhotoGrid
-                photos={photos}
-                showAttribution
-                maxRowHeight={280}
-              />
+                View all photos
+              </ArrowLink>
             </div>
-          )}
-        </Container>
+            <JustifiedPhotoGrid
+              photos={photos}
+              showAttribution
+              maxRowHeight={280}
+            />
+          </div>
+        )}
 
         {/* About Section */}
         <Container>
@@ -351,7 +350,7 @@ export default async function Home() {
             Meet the community
           </h2>
           <p
-            className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6"
+            className="max-w-[50ch] text-foreground/90 leading-relaxed mb-8"
           >
             Meet the team of dedicated organizers who keep the community thriving, and passionate photographers who are eager to share their work and learn from others!
           </p>

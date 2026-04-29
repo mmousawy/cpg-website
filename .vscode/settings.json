@@ -19,5 +19,12 @@
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  },
+  "cSpell.words": [
+    "cheria",
+    "grecaptcha",
+    "pswp",
+    "rsvps",
+    "sonner"
+  ]
 }

@@ -7,7 +7,7 @@ import type { Swiper as SwiperType } from 'swiper';
 import { A11y, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
-import 'swiper/css';
+import 'swiper/swiper.css';
 
 import SceneEventCard from './SceneEventCard';
 
@@ -76,7 +76,7 @@ export default function RelatedEventsSlider({
 
   return (
     <section
-      className="mt-8 min-w-0 sm:-mx-16 sm:px-16"
+      className="mt-8 min-w-0 sm:-mx-16 sm:px-16 sm:mt-12"
     >
       <h2
         className="text-lg font-semibold mb-4 opacity-70"

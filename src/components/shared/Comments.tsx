@@ -842,12 +842,12 @@ export default function Comments({
         className="space-y-2"
       >
         <h3
-          className="text-lg font-semibold"
+          className="text-lg m:text-xl font-semibold"
         >
           Comments
         </h3>
         <p
-          className="text-sm text-foreground/70"
+          className="text-sm text-foreground/70 mb-4"
         >
           Sign in to see comments.
         </p>
