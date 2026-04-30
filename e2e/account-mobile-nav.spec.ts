@@ -38,6 +38,9 @@ test.describe('Account mobile section nav', () => {
 
     await page.goto('/account');
     await expect(page.getByRole('heading', { name: 'Account settings' })).toBeVisible();
+    // Wait for the account form content to finish loading (isLoading = false)
+    // so all section elements are in the DOM before we interact with the nav.
+    await page.locator('#copyright').waitFor({ state: 'attached', timeout: 15000 });
 
     const startingScrollY = await page.evaluate(() => window.scrollY);
 

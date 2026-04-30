@@ -16,7 +16,7 @@ export function scrollToIdWithStickyHeaderOffset(
 ): boolean {
   if (typeof window === 'undefined') return false;
 
-  const maxRetries = 20;
+  const maxRetries = 120;
   const retryDelayMs = 50;
 
   const scrollToTarget = (remainingRetries: number): boolean => {
