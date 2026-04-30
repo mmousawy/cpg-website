@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.19](https://github.com/mmousawy/cpg-website/compare/v1.29.18...v1.29.19) (2026-04-30)
+
+
+### Bug Fixes
+
+* Adjust CI flow. ([99d4b1f](https://github.com/mmousawy/cpg-website/commit/99d4b1f99762940dae7dcbda74b08c59f6d069ef))
+
 ## [1.29.18](https://github.com/mmousawy/cpg-website/compare/v1.29.17...v1.29.18) (2026-04-30)
 
 
