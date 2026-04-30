@@ -1,4 +1,5 @@
 {
+  "ignoreCommand": "[ \"$VERCEL_ENV\" = \"production\" ]",
   "crons": [
     {
       "path": "/api/cron/event-reminders",

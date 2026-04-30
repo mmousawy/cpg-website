@@ -41,15 +41,35 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: npm install -g vercel
 
-      - name: Deploy release to production
+      - name: Promote preview to production
         if: ${{ steps.release.outputs.release_created }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "Linking repository to Vercel production environment..."
-          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          # For a merge commit, HEAD^2 is the PR branch head — the exact SHA
+          # that Vercel built the preview for and E2E tests ran against.
+          if git cat-file -e HEAD^2 2>/dev/null; then
+            PR_HEAD_SHA=$(git rev-parse HEAD^2)
+            echo "Merge commit detected, PR head SHA: $PR_HEAD_SHA"
+          else
+            PR_HEAD_SHA="${{ github.sha }}"
+            echo "No merge parent found (squash merge?), using current SHA: $PR_HEAD_SHA"
+          fi
 
-          echo "Deploying released commit to Vercel production..."
-          vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+          # Look up the preview deployment Vercel built for this SHA
+          echo "Looking up Vercel preview deployment for SHA: $PR_HEAD_SHA"
+          DEPLOYMENT_URL=$(curl -s \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&meta-gitCommitSha=$PR_HEAD_SHA" | \
+            jq -r '.deployments[] | select(.target != "production") | .url' | head -1)
+
+          if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_URL" != "null" ]; then
+            echo "Promoting tested preview to production: https://$DEPLOYMENT_URL"
+            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
+          else
+            echo "No preview deployment found for SHA $PR_HEAD_SHA, falling back to fresh deploy..."
+            vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+          fi
