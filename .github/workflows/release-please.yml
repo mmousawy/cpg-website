@@ -64,12 +64,24 @@ jobs:
             -H "Authorization: Bearer $VERCEL_TOKEN" \
             "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&meta-githubCommitSha=$PR_HEAD_SHA")
           echo "API response: $API_RESPONSE"
-          DEPLOYMENT_URL=$(echo "$API_RESPONSE" | \
-            jq -r '.deployments[] | select(.target != "production") | .url' | head -1)
+          DEPLOYMENT_UID=$(echo "$API_RESPONSE" | \
+            jq -r '.deployments[] | select(.target != "production") | .uid' | head -1)
 
-          if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_URL" != "null" ]; then
-            echo "Promoting tested preview to production: https://$DEPLOYMENT_URL"
-            vercel promote "https://$DEPLOYMENT_URL" --token="$VERCEL_TOKEN" --yes
+          if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
+            echo "Promoting tested preview to production (UID: $DEPLOYMENT_UID)..."
+            PROMOTE_RESPONSE=$(curl -s -X POST \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              "https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/promote/$DEPLOYMENT_UID")
+            echo "Promote response: $PROMOTE_RESPONSE"
+            # Fail if the response contains an error
+            if echo "$PROMOTE_RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+              echo "Promote failed, falling back to fresh deploy..."
+              vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+              vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+            else
+              echo "Successfully promoted to production."
+            fi
           else
             echo "No preview deployment found for SHA $PR_HEAD_SHA, falling back to fresh deploy..."
             vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
