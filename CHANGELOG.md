@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.29.18](https://github.com/mmousawy/cpg-website/compare/v1.29.17...v1.29.18) (2026-04-30)
+
+
+### Bug Fixes
+
+* adjust scroll logic. ([ee4c2b2](https://github.com/mmousawy/cpg-website/commit/ee4c2b2d3baa8696ff969d140345d8dfa3148267))
+* adjust styling. ([be25924](https://github.com/mmousawy/cpg-website/commit/be25924ad2985c22f4ab69a3afa32ee1c1d07c9a))
+* Adjust styling. ([92500ff](https://github.com/mmousawy/cpg-website/commit/92500ff5c3e7056ad313ebebf9ad35b84eb04f6b))
+
 ## [1.29.17](https://github.com/mmousawy/cpg-website/compare/v1.29.16...v1.29.17) (2026-04-26)
 
 
