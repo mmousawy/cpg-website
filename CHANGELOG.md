@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.20](https://github.com/mmousawy/cpg-website/compare/v1.29.19...v1.29.20) (2026-04-30)
+
+
+### Bug Fixes
+
+* Update Vercel deployment API call to use correct parameter and log response ([0dfafcf](https://github.com/mmousawy/cpg-website/commit/0dfafcf0b8107cb8c986226e3e00744fb255ab2a))
+
 ## [1.29.19](https://github.com/mmousawy/cpg-website/compare/v1.29.18...v1.29.19) (2026-04-30)
 
 
