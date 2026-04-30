@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.21](https://github.com/mmousawy/cpg-website/compare/v1.29.20...v1.29.21) (2026-04-30)
+
+
+### Bug Fixes
+
+* Update Vercel promotion logic to use deployment UID and handle errors ([4a00ce2](https://github.com/mmousawy/cpg-website/commit/4a00ce2b361eaffbea21d3ca6b928496d4a947cd))
+
 ## [1.29.20](https://github.com/mmousawy/cpg-website/compare/v1.29.19...v1.29.20) (2026-04-30)
 
 
