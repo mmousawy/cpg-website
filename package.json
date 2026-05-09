@@ -93,8 +93,5 @@
     "*.{ts,tsx}": [
       "eslint --fix --max-warnings=999999"
     ]
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "supabase", "unrs-resolver"]
   }
 }
