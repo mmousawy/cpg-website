@@ -57,28 +57,45 @@ export async function createTestUser(baseUrl: string, bypassToken?: string): Pro
     headers['x-vercel-protection-bypass'] = bypassToken;
   }
 
-  const response = await fetch(`${baseUrl}/api/test/setup`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ email, password, nickname, fullName: 'Test User' }),
-  });
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const response = await fetch(`${baseUrl}/api/test/setup`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email, password, nickname, fullName: 'Test User' }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to create test user: ${error.error || response.statusText}`);
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.includes('application/json')) {
+      const text = await response.text();
+      const msg = `Attempt ${attempt}/${maxAttempts}: Expected JSON from /api/test/setup but got "${contentType}" (HTTP ${response.status}). Server may not be ready yet.`;
+      console.warn(msg, '\nResponse preview:', text.slice(0, 200));
+      if (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, attempt * 2000));
+        continue;
+      }
+      throw new Error(msg);
+    }
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Failed to create test user: ${error.error || response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Track for cleanup
+    trackTestEmail(email);
+
+    return {
+      email,
+      password: data.password || password,
+      nickname: data.nickname || nickname,
+      userId: data.userId,
+    };
   }
 
-  const data = await response.json();
-
-  // Track for cleanup
-  trackTestEmail(email);
-
-  return {
-    email,
-    password: data.password || password,
-    nickname: data.nickname || nickname,
-    userId: data.userId,
-  };
+  throw new Error('createTestUser: exhausted all retries');
 }
 
 /**
