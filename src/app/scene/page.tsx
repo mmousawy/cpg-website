@@ -87,7 +87,7 @@ export default async function ScenePage() {
             className="flex items-center gap-2"
           >
             <h1
-              className="text-2xl sm:text-3xl font-bold"
+              className="text-2xl sm:text-3xl font-bold font-heading"
             >
               Explore the scene
             </h1>

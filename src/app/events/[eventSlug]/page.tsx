@@ -266,7 +266,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 )}
               </div>
               <h1
-                className="text-3xl font-bold sm:text-4xl md:text-5xl"
+                className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
               >
                 {event.title}
               </h1>
@@ -310,7 +310,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 )}
               </div>
               <h1
-                className="text-3xl font-bold sm:text-4xl"
+                className="text-3xl font-bold sm:text-4xl font-heading"
               >
                 {event.title}
               </h1>
@@ -394,11 +394,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 <div
                   className="flex items-center gap-1 mb-3"
                 >
-                  <p
-                    className="text-lg font-semibold"
+                  <h2
+                    className="text-lg font-semibold font-heading"
                   >
                     About this event
-                  </p>
+                  </h2>
                   <HelpLink
                     href="join-events"
                     label="Help with events"
@@ -418,7 +418,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
               className="mb-8"
             >
               <h2
-                className="mb-3 text-lg font-semibold"
+                className="mb-3 text-lg font-semibold font-heading"
               >
                 Hosts
               </h2>
@@ -472,7 +472,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           {/* Attendees Section */}
           <div>
             <h2
-              className="mb-3 text-lg font-semibold"
+              className="mb-3 text-lg font-semibold font-heading"
             >
               Attendees
             </h2>

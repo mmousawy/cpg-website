@@ -149,7 +149,7 @@ async function CachedPhotosContent({
               className="flex-1 min-w-0"
             >
               <h1
-                className="sm:text-3xl text-xl font-bold line-clamp-2 pr-8"
+                className="sm:text-3xl text-xl font-bold line-clamp-2 pr-8 font-heading"
               >
                 {profile.full_name || `@${profile.nickname}`}
               </h1>
@@ -272,7 +272,7 @@ async function CachedPhotosContent({
               className="mb-6"
             >
               <h2
-                className="text-xl font-semibold"
+                className="text-xl font-semibold font-heading"
               >
                 All photos by
                 {' '}

@@ -113,7 +113,7 @@ export default function ActivityContent() {
             className="flex items-center gap-2 mb-2"
           >
             <h1
-              className="text-3xl font-bold"
+              className="text-3xl font-bold font-heading"
             >
               Activity
             </h1>
@@ -154,7 +154,7 @@ export default function ActivityContent() {
             className="flex items-center gap-2"
           >
             <h1
-              className="text-3xl font-bold"
+              className="text-3xl font-bold font-heading"
             >
               Activity
             </h1>
@@ -208,7 +208,7 @@ export default function ActivityContent() {
             />
           </div>
           <h2
-            className="mb-2 text-xl font-semibold"
+            className="mb-2 text-xl font-semibold font-heading"
           >
             No activity yet
           </h2>
@@ -234,7 +234,7 @@ export default function ActivityContent() {
           {groups.today.length > 0 && (
             <section>
               <h2
-                className="mb-3 text-lg font-semibold"
+                className="mb-3 text-lg font-semibold font-heading"
               >
                 Today
               </h2>
@@ -258,7 +258,7 @@ export default function ActivityContent() {
           {groups.yesterday.length > 0 && (
             <section>
               <h2
-                className="mb-3 text-lg font-semibold"
+                className="mb-3 text-lg font-semibold font-heading"
               >
                 Yesterday
               </h2>
@@ -282,7 +282,7 @@ export default function ActivityContent() {
           {groups.thisWeek.length > 0 && (
             <section>
               <h2
-                className="mb-3 text-lg font-semibold"
+                className="mb-3 text-lg font-semibold font-heading"
               >
                 This week
               </h2>
@@ -306,7 +306,7 @@ export default function ActivityContent() {
           {groups.earlier.length > 0 && (
             <section>
               <h2
-                className="mb-3 text-lg font-semibold"
+                className="mb-3 text-lg font-semibold font-heading"
               >
                 Earlier
               </h2>

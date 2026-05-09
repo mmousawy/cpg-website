@@ -66,7 +66,7 @@ async function CachedDetailsContent({ currentPage }: { currentPage: number }) {
               Back to overview
             </Link>
             <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl"
+              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
             >
               Detailed Changes
             </h1>
@@ -112,7 +112,7 @@ async function CachedDetailsContent({ currentPage }: { currentPage: number }) {
                       className="flex flex-wrap items-baseline gap-3"
                     >
                       <h2
-                        className="text-xl font-semibold sm:text-2xl"
+                        className="text-xl font-semibold sm:text-2xl font-heading"
                       >
                         {entry.version}
                       </h2>
@@ -158,7 +158,7 @@ async function CachedDetailsContent({ currentPage }: { currentPage: number }) {
                           key={sectionName}
                         >
                           <h3
-                            className="mb-3 text-lg font-medium sm:text-xl"
+                            className="mb-3 text-lg font-medium sm:text-xl font-heading"
                           >
                             {sectionName}
                           </h3>

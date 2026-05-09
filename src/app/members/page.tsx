@@ -39,7 +39,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             className="flex items-center gap-2 mb-2"
           >
             <h1
-              className="text-2xl sm:text-3xl font-bold"
+              className="text-2xl sm:text-3xl font-bold font-heading"
             >
               Discover our community
             </h1>
@@ -77,7 +77,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             </svg>
           </div>
           <h2
-            className="mb-2 text-xl font-semibold"
+            className="mb-2 text-xl font-semibold font-heading"
           >
             Join our community
           </h2>
@@ -118,7 +118,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             className="flex items-center gap-2 mb-2"
           >
             <h1
-              className="text-2xl sm:text-3xl font-bold"
+              className="text-2xl sm:text-3xl font-bold font-heading"
             >
               Discover our community
             </h1>
@@ -140,7 +140,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-3 text-xl font-semibold"
+            className="mb-3 text-xl font-semibold font-heading"
           >
             Popular interests
           </h2>
@@ -158,7 +158,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-4 text-xl font-semibold"
+            className="mb-4 text-xl font-semibold font-heading"
           >
             Explore by interests
           </h2>
@@ -176,7 +176,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-1 text-xl font-semibold"
+            className="mb-1 text-xl font-semibold font-heading"
           >
             Recently active
           </h2>
@@ -209,7 +209,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-1 text-xl font-semibold"
+            className="mb-1 text-xl font-semibold font-heading"
           >
             Explore by photo style
           </h2>
@@ -230,7 +230,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         {/* New Members */}
         <div>
           <h2
-            className="mb-1 text-xl font-semibold"
+            className="mb-1 text-xl font-semibold font-heading"
           >
             New members
           </h2>

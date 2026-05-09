@@ -63,7 +63,7 @@ async function CachedAlbumsContent({ initialSort }: { initialSort: 'popular' | '
             className="flex items-center gap-2 mb-2"
           >
             <h1
-              className="text-3xl font-bold"
+              className="text-3xl font-bold font-heading"
             >
               Photo albums
             </h1>

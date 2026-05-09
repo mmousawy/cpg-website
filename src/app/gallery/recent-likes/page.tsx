@@ -32,7 +32,7 @@ export default async function RecentlyLikedPage() {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="mb-2 text-3xl font-bold font-heading"
           >
             Recently liked photos
           </h1>

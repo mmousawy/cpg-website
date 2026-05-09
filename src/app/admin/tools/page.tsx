@@ -8,7 +8,7 @@ export default function AdminToolsPage() {
   return (
     <PageContainer>
       <h1
-        className="text-2xl sm:text-3xl font-bold"
+        className="text-2xl sm:text-3xl font-bold font-heading"
       >
         Admin tools
       </h1>

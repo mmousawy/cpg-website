@@ -22,7 +22,7 @@ export default function PrivacyPage() {
             className="prose prose-slate dark:prose-invert max-w-none"
           >
             <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl"
+              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
             >
               Privacy Policy
             </h1>
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Introduction
             </h2>
@@ -46,12 +46,12 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Information we collect
             </h2>
             <h3
-              className="mb-3 text-lg font-medium sm:text-xl"
+              className="mb-3 text-lg font-medium sm:text-xl font-heading"
             >
               Account information
             </h3>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
             <h3
-              className="mb-3 text-lg font-medium sm:text-xl"
+              className="mb-3 text-lg font-medium sm:text-xl font-heading"
             >
               Photos and content
             </h3>
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
             <h3
-              className="mb-3 text-lg font-medium sm:text-xl"
+              className="mb-3 text-lg font-medium sm:text-xl font-heading"
             >
               Usage data
             </h3>
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               How we use your information and legal basis
             </h2>
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Your rights
             </h2>
@@ -234,7 +234,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Data storage, retention, and third parties
             </h2>
@@ -251,7 +251,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Cookies and tracking
             </h2>
@@ -259,7 +259,7 @@ export default function PrivacyPage() {
               We use cookies and similar technologies only where necessary. We do not use tracking cookies or share data with third parties for advertising purposes.
             </p>
             <h3
-              className="mt-4 mb-3 text-lg font-medium sm:text-xl"
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
             >
               Functional cookies (authentication)
             </h3>
@@ -299,7 +299,7 @@ export default function PrivacyPage() {
               </li>
             </ul>
             <h3
-              className="mt-4 mb-3 text-lg font-medium sm:text-xl"
+              className="mt-4 mb-3 text-lg font-medium sm:text-xl font-heading"
             >
               Web analytics (no cookies)
             </h3>
@@ -313,7 +313,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Children&apos;s privacy
             </h2>
@@ -324,7 +324,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Data controller and contact
             </h2>
@@ -335,7 +335,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Changes to this policy
             </h2>

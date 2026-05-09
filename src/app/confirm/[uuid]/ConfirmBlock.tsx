@@ -72,7 +72,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
           className='mb-6 flex justify-between'
         >
           <h3
-            className="text-2xl font-bold"
+            className="text-2xl font-bold font-heading"
           >
             {event.title}
           </h3>

@@ -64,7 +64,7 @@ export default async function InterestMembersPage({ params }: { params: Params }
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="mb-2 text-3xl font-bold font-heading"
           >
             Members interested in &ldquo;
             {interest.name}
@@ -87,7 +87,7 @@ export default async function InterestMembersPage({ params }: { params: Params }
             className="mb-8 sm:mb-10"
           >
             <h2
-              className="mb-3 text-xl font-semibold"
+              className="mb-3 text-xl font-semibold font-heading"
             >
               Browse by interest
             </h2>

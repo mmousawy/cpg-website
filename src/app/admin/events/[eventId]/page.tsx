@@ -560,7 +560,7 @@ export default function AdminEventFormPage() {
           className="mb-8"
         >
           <h1
-            className="text-2xl sm:text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold font-heading"
           >
             {isNewEvent ? 'Create new event' : 'Edit event'}
           </h1>
@@ -628,7 +628,7 @@ export default function AdminEventFormPage() {
             {!isNewEvent && event && (
               <Container>
                 <h2
-                  className="mb-6 text-xl font-semibold"
+                  className="mb-6 text-xl font-semibold font-heading"
                 >
                   Notifications
                 </h2>
@@ -702,7 +702,7 @@ export default function AdminEventFormPage() {
                 className="border-red-500/30 bg-red-500/5"
               >
                 <h3
-                  className="mb-2 font-semibold text-red-600"
+                  className="mb-2 font-semibold text-red-600 font-heading"
                 >
                   Danger zone
                 </h3>

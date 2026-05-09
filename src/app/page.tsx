@@ -115,7 +115,7 @@ export default async function Home() {
             className="mx-auto max-w-screen-md text-center"
           >
             <h1
-              className="mb-4 text-5xl md:text-7xl"
+              className="mb-4 text-5xl md:text-7xl font-heading"
             >
               Creative Photography Group
               {' '}
@@ -143,7 +143,7 @@ export default async function Home() {
       >
 
         <h3
-          className="text-2xl font-bold mb-2"
+          className="text-2xl font-bold mb-2 font-heading"
         >
           Explore what we&apos;re up to
         </h3>
@@ -161,7 +161,7 @@ export default async function Home() {
             className="mb-4 flex items-center justify-between"
           >
             <h2
-              className="text-xl font-semibold opacity-80"
+              className="text-xl font-semibold opacity-80 font-heading"
             >
               Upcoming events
             </h2>
@@ -191,7 +191,7 @@ export default async function Home() {
               className="mb-4 flex items-center justify-between"
             >
               <h3
-                className="text-xl font-semibold opacity-80"
+                className="text-xl font-semibold opacity-80 font-heading"
               >
                 Photo challenges
               </h3>
@@ -217,7 +217,7 @@ export default async function Home() {
               className="mb-4 flex items-center justify-between"
             >
               <h3
-                className="text-xl font-semibold opacity-80"
+                className="text-xl font-semibold opacity-80 font-heading"
               >
                 Recent albums
               </h3>
@@ -243,7 +243,7 @@ export default async function Home() {
               className="mb-4 flex items-center justify-between"
             >
               <h3
-                className="text-xl font-semibold opacity-80"
+                className="text-xl font-semibold opacity-80 font-heading"
               >
                 Recent photos
               </h3>
@@ -264,7 +264,7 @@ export default async function Home() {
         {/* About Section */}
         <Container>
           <h2
-            className="text-2xl font-bold mb-4"
+            className="text-2xl font-bold mb-4 font-heading"
           >
             What&apos;s Creative Photography Group?
           </h2>
@@ -285,7 +285,7 @@ export default async function Home() {
 
           <div>
             <h3
-              className="text-lg font-semibold mb-4"
+              className="text-lg font-semibold mb-4 font-heading"
             >
               Connect with us
             </h3>
@@ -334,7 +334,7 @@ export default async function Home() {
             className='pb-6 sm:pb-14'
           >
             <h2
-              className="text-2xl text-center font-bold mb-6 px-2 sm:px-4"
+              className="text-2xl text-center font-bold mb-6 px-2 sm:px-4 font-heading"
             >
               What keeps us clicking
             </h2>
@@ -345,7 +345,7 @@ export default async function Home() {
         {/* Meet the Community Section */}
         <Container>
           <h2
-            className="text-2xl font-bold mb-4"
+            className="text-2xl font-bold mb-4 font-heading"
           >
             Meet the community
           </h2>
@@ -361,7 +361,7 @@ export default async function Home() {
               className="mb-8"
             >
               <h3
-                className="text-lg font-semibold mb-4"
+                className="text-lg font-semibold mb-4 font-heading"
               >
                 Organizers
               </h3>
@@ -415,7 +415,7 @@ export default async function Home() {
           {members && members.length > 0 && (
             <div>
               <h3
-                className="text-lg font-semibold mb-4"
+                className="text-lg font-semibold mb-4 font-heading"
               >
                 Members
               </h3>

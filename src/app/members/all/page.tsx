@@ -25,7 +25,7 @@ export default async function AllMembersPage() {
           className="mb-8"
         >
           <h1
-            className="text-2xl sm:text-3xl font-bold mb-2"
+            className="text-2xl sm:text-3xl font-bold mb-2 font-heading"
           >
             All members
           </h1>
@@ -40,7 +40,7 @@ export default async function AllMembersPage() {
           className="rounded-xl border border-border-color bg-background-light p-8 text-center"
         >
           <h2
-            className="mb-2 text-xl font-semibold"
+            className="mb-2 text-xl font-semibold font-heading"
           >
             Join our community
           </h2>
@@ -85,7 +85,7 @@ export default async function AllMembersPage() {
         className="mb-8"
       >
         <h1
-          className="text-2xl sm:text-3xl font-bold mb-2"
+          className="text-2xl sm:text-3xl font-bold mb-2 font-heading"
         >
           All members
         </h1>

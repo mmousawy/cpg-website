@@ -516,11 +516,11 @@ export default function SharedAlbumEditForm({
         <div
           className="space-y-4"
         >
-          <h3
+          <p
             className="text-sm font-medium"
           >
             Shared album configuration
-          </h3>
+          </p>
           {!isNewAlbum && album && (
             <Button
               type="button"

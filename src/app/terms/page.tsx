@@ -22,7 +22,7 @@ export default function TermsPage() {
             className="prose prose-slate dark:prose-invert max-w-none"
           >
             <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl"
+              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
             >
               Terms of Service
             </h1>
@@ -35,7 +35,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Welcome
             </h2>
@@ -46,7 +46,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Your content and copyright
             </h2>
@@ -96,7 +96,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Deleting your content
             </h2>
@@ -104,7 +104,7 @@ export default function TermsPage() {
               You can delete your photos, albums, and comments at any time. Deletion is a two-phase process:
             </p>
             <h3
-              className="mt-4 mb-2 text-lg font-medium"
+              className="mt-4 mb-2 text-lg font-medium font-heading"
             >
               Phase 1: Immediate removal
             </h3>
@@ -122,7 +122,7 @@ export default function TermsPage() {
               </li>
             </ul>
             <h3
-              className="mt-4 mb-2 text-lg font-medium"
+              className="mt-4 mb-2 text-lg font-medium font-heading"
             >
               Phase 2: Permanent deletion
             </h3>
@@ -146,7 +146,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Acceptable use
             </h2>
@@ -179,7 +179,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Account responsibility
             </h2>
@@ -190,7 +190,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Service availability
             </h2>
@@ -201,7 +201,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Changes to terms
             </h2>
@@ -212,7 +212,7 @@ export default function TermsPage() {
 
           <section>
             <h2
-              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl"
+              className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
             >
               Contact
             </h2>

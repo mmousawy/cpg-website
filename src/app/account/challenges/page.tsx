@@ -103,7 +103,7 @@ export default function MyChallengesPage() {
           className="flex items-center gap-2 mb-2"
         >
           <h1
-            className="text-3xl font-bold"
+            className="text-3xl font-bold font-heading"
           >
             My challenge submissions
           </h1>
@@ -127,7 +127,7 @@ export default function MyChallengesPage() {
         {acceptedSubmissions.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold opacity-70"
+              className="mb-4 text-lg font-semibold opacity-70 font-heading"
             >
               Accepted
             </h2>
@@ -148,7 +148,7 @@ export default function MyChallengesPage() {
         {/* Pending Submissions */}
         <section>
           <h2
-            className="mb-4 text-lg font-semibold opacity-70"
+            className="mb-4 text-lg font-semibold opacity-70 font-heading"
           >
             Pending review
           </h2>
@@ -221,7 +221,7 @@ export default function MyChallengesPage() {
         {rejectedSubmissions.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold opacity-70"
+              className="mb-4 text-lg font-semibold opacity-70 font-heading"
             >
               Rejected
             </h2>

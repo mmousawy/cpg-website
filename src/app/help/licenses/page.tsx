@@ -35,7 +35,7 @@ export default function LicensesHelpPage() {
             Help
           </ArrowLink>
           <h1
-            className="text-2xl sm:text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold font-heading"
           >
             Copyright & licensing
           </h1>
@@ -68,7 +68,7 @@ export default function LicensesHelpPage() {
                   className="pb-1! md:pb-2!"
                 >
                   <h2
-                    className="mb-4 text-xl font-semibold sm:text-2xl"
+                    className="mb-4 text-xl font-semibold sm:text-2xl font-heading"
                   >
                     {section.title}
                   </h2>

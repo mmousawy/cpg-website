@@ -38,7 +38,7 @@ export default async function ChallengesPage() {
           className="flex items-center gap-2 mb-2"
         >
           <h1
-            className="text-2xl sm:text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold font-heading"
           >
             Photography challenges
           </h1>
@@ -61,7 +61,7 @@ export default async function ChallengesPage() {
         {/* Active Challenges */}
         <section>
           <h2
-            className="text-xl font-semibold mb-4 opacity-70"
+            className="text-xl font-semibold mb-4 opacity-70 font-heading"
           >
             Active challenges
           </h2>
@@ -76,7 +76,7 @@ export default async function ChallengesPage() {
         {pastChallenges.length > 0 && (
           <section>
             <h2
-              className="text-xl font-semibold mb-4 opacity-70"
+              className="text-xl font-semibold mb-4 opacity-70 font-heading"
             >
               Past challenges
             </h2>

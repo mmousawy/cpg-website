@@ -129,7 +129,7 @@ export default function AccountPage() {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-2xl font-bold sm:text-3xl"
+            className="mb-2 text-2xl font-bold sm:text-3xl font-heading"
           >
             Account settings
           </h1>

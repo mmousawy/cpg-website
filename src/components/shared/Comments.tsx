@@ -867,7 +867,7 @@ export default function Comments({
       className="space-y-2"
     >
       <h3
-        className="text-lg font-semibold"
+        className="text-lg font-semibold font-heading"
       >
         {comments.length > 0 ? (() => {
           const countReplies = (comment: Comment): number => {

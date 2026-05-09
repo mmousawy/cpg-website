@@ -186,7 +186,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             >
               {album.title && (
                 <h1
-                  className="text-2xl md:text-xl font-bold mb-3"
+                  className="text-2xl md:text-xl font-bold mb-3 font-heading"
                 >
                   {album.title}
                 </h1>

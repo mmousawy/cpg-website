@@ -484,7 +484,7 @@ export default function AlbumDetailClient() {
       >
         <div>
           <h3
-            className="text-lg font-semibold"
+            className="text-lg font-semibold font-heading"
           >
             {album.title}
           </h3>

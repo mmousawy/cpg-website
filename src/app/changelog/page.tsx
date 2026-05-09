@@ -35,7 +35,7 @@ export default async function ChangelogPage() {
             className="prose prose-slate dark:prose-invert max-w-none"
           >
             <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl"
+              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
             >
               Changelog
             </h1>

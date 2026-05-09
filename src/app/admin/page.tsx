@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
         className="mb-8"
       >
         <h1
-          className="text-2xl sm:text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold font-heading"
         >
           Admin dashboard
         </h1>
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
                 {card.icon}
               </div>
               <h3
-                className="mb-2 text-lg font-semibold"
+                className="mb-2 text-lg font-semibold font-heading"
               >
                 {card.title}
               </h3>

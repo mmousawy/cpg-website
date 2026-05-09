@@ -140,7 +140,7 @@ export default function AdminScenePage() {
         className="mb-8"
       >
         <h1
-          className="text-2xl sm:text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold font-heading"
         >
           Scene events
         </h1>

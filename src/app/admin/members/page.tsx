@@ -159,7 +159,7 @@ export default function AdminMembersPage() {
       >
         <div>
           <h1
-            className="text-2xl sm:text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold font-heading"
           >
             Manage members
           </h1>

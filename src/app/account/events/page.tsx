@@ -104,7 +104,7 @@ export default function MyEventsPage() {
           className="flex items-center gap-2 mb-2"
         >
           <h1
-            className="text-3xl font-bold"
+            className="text-3xl font-bold font-heading"
           >
             My events
           </h1>
@@ -148,7 +148,7 @@ export default function MyEventsPage() {
         {/* Upcoming Events */}
         <section>
           <h2
-            className="mb-4 text-lg font-semibold opacity-70"
+            className="mb-4 text-lg font-semibold opacity-70 font-heading"
           >
             Your upcoming events
           </h2>
@@ -204,7 +204,7 @@ export default function MyEventsPage() {
         {pastRSVPs.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold opacity-70"
+              className="mb-4 text-lg font-semibold opacity-70 font-heading"
             >
               Past events
             </h2>
@@ -227,7 +227,7 @@ export default function MyEventsPage() {
         {canceledRSVPs.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold opacity-70"
+              className="mb-4 text-lg font-semibold opacity-70 font-heading"
             >
               Canceled RSVPs
             </h2>

@@ -490,14 +490,14 @@ export default function SingleAlbumEditForm({
         <div
           className="space-y-4"
         >
-          <h3
+          <p
             className="text-sm font-medium flex items-center gap-1.5"
           >
             <SharedAlbumSVG
               className="size-5"
             />
             Album sharing
-          </h3>
+          </p>
           <Toggle
             id="isSharingEnabled"
             leftLabel="Off"

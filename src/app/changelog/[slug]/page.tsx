@@ -181,7 +181,7 @@ export default async function ChangelogDetailPage({ params }: ChangelogDetailPag
             </div>
             {summary && (
               <h1
-                className="text-2xl font-semibold leading-snug text-foreground sm:text-2xl mt-4 sm:mt-6"
+                className="text-2xl font-semibold leading-snug text-foreground sm:text-2xl mt-4 sm:mt-6 font-heading"
               >
                 {summary}
               </h1>

@@ -89,11 +89,11 @@ function AlbumCard({
       <div
         className="p-3"
       >
-        <h3
+        <p
           className="text-sm font-semibold line-clamp-1"
         >
           {album.title}
-        </h3>
+        </p>
         <p
           className="text-xs text-foreground/50 mt-1"
         >

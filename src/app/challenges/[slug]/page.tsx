@@ -265,7 +265,7 @@ export default async function ChallengePage({
                 )}
               </div>
               <h1
-                className="text-3xl font-bold sm:text-4xl md:text-5xl"
+                className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
               >
                 {challenge.title}
               </h1>
@@ -322,7 +322,7 @@ export default async function ChallengePage({
                 )}
               </div>
               <h1
-                className="text-3xl font-bold sm:text-4xl"
+                className="text-3xl font-bold sm:text-4xl font-heading"
               >
                 {challenge.title}
               </h1>
@@ -512,7 +512,7 @@ function ChallengeEmptyState({ isEnded }: { isEnded: boolean }) {
         />
       </div>
       <h3
-        className="text-xl font-semibold mb-2"
+        className="text-xl font-semibold mb-2 font-heading"
       >
         {isEnded ? 'No submissions' : 'No photos yet!'}
       </h3>

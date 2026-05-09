@@ -56,7 +56,7 @@ export default function AdminEventsPage() {
       >
         <div>
           <h1
-            className="text-2xl sm:text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold font-heading"
           >
             Manage events
           </h1>
@@ -116,7 +116,7 @@ export default function AdminEventsPage() {
           {upcomingEvents.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-70"
+                className="mb-4 text-lg font-semibold opacity-70 font-heading"
               >
                 Upcoming events
               </h2>
@@ -137,7 +137,7 @@ export default function AdminEventsPage() {
           {pastEvents.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-70"
+                className="mb-4 text-lg font-semibold opacity-70 font-heading"
               >
                 Past events
               </h2>

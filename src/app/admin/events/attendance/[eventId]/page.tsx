@@ -145,7 +145,7 @@ export default function AdminEventAttendancePage() {
       <PageContainer>
         <Container>
           <h1
-            className="mb-4 text-3xl font-bold"
+            className="mb-4 text-3xl font-bold font-heading"
           >
             Event not found
           </h1>
@@ -169,7 +169,7 @@ export default function AdminEventAttendancePage() {
         className="mb-6"
       >
         <h1
-          className="text-2xl sm:text-3xl font-bold"
+          className="text-2xl sm:text-3xl font-bold font-heading"
         >
           Event attendance
         </h1>
@@ -183,7 +183,7 @@ export default function AdminEventAttendancePage() {
             className="rounded-2xl border border-border-color bg-background-light p-4"
           >
             <h2
-              className="mb-3 text-xl font-semibold"
+              className="mb-3 text-xl font-semibold font-heading"
             >
               {event.title}
             </h2>
@@ -248,7 +248,7 @@ export default function AdminEventAttendancePage() {
 
       <div>
         <h2
-          className="mb-4 text-lg font-semibold opacity-70"
+          className="mb-4 text-lg font-semibold opacity-70 font-heading"
         >
           RSVPs
         </h2>

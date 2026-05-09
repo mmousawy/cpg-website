@@ -18,6 +18,7 @@ export default {
     extend: {
       fontFamily: {
         geist: ['var(--font-geist-sans)', 'sans-serif'],
+        heading: ['var(--font-cheria-heading)', 'sans-serif'],
       },
       colors: {
         primary: 'var(--primary)',

@@ -361,7 +361,7 @@ export default function AlbumsPage() {
               >
                 <div>
                   <h3
-                    className="text-lg font-semibold"
+                    className="text-lg font-semibold font-heading"
                   >
                     {selectedSharedAlbum.title}
                   </h3>
@@ -643,7 +643,7 @@ function AlbumSection({
         onClick={isEmpty ? undefined : onToggle}
         className={`flex w-full items-center justify-between gap-2 px-4 sm:px-6 py-4 sticky top-0 z-20 transition-colors duration-200 ${!isCollapsed && !isEmpty ? 'bg-background-light shadow-[0_1px_0_0_var(--border-color-strong)] hover:bg-background-light' : 'bg-background hover:bg-background-medium'} ${isEmpty ? 'cursor-default' : 'cursor-pointer'}`}
       >
-        <h3
+        <p
           className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-foreground/80"
         >
           {title}
@@ -661,7 +661,7 @@ function AlbumSection({
               className="inline-block size-3 animate-spin rounded-full border-[1.5px] border-foreground/30 border-t-transparent"
             />
           )}
-        </h3>
+        </p>
         {!isEmpty && (
           <ChevronDownSVG
             className={`size-4 text-foreground/70 transition-transform duration-300 ${isCollapsed ? '-rotate-90' : ''}`}
@@ -803,11 +803,11 @@ function SharedWithMeCard({
       <div
         className="p-3"
       >
-        <h3
+        <p
           className="text-sm font-semibold line-clamp-1"
         >
           {album.title}
-        </h3>
+        </p>
         <div
           className="flex items-center justify-between mt-1.5"
         >
@@ -939,11 +939,11 @@ function PendingInviteCard({
       <div
         className="p-3"
       >
-        <h3
+        <p
           className="text-sm font-semibold line-clamp-1"
         >
           {album.title}
-        </h3>
+        </p>
         <div
           className="flex items-center gap-1.5 text-xs text-foreground/70 mt-1.5"
         >
@@ -1024,7 +1024,7 @@ function PendingInviteSidebar({
       >
         <div>
           <h3
-            className="text-lg font-semibold"
+            className="text-lg font-semibold font-heading"
           >
             {album.title}
           </h3>

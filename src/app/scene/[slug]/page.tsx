@@ -242,7 +242,7 @@ export default async function SceneEventDetailPage({
                 />
               </div>
               <h1
-                className="text-3xl font-bold sm:text-4xl md:text-5xl"
+                className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
               >
                 {event.title}
               </h1>
@@ -283,7 +283,7 @@ export default async function SceneEventDetailPage({
               />
             </div>
             <h1
-              className="text-2xl font-bold sm:text-3xl"
+              className="text-2xl font-bold sm:text-3xl font-heading"
             >
               {event.title}
             </h1>
@@ -375,11 +375,11 @@ export default async function SceneEventDetailPage({
             {/* Description */}
             {event.description && (
               <div>
-                <p
-                  className="text-lg font-semibold gap-1 mb-3"
+                <h2
+                  className="text-lg font-semibold font-heading gap-1 mb-3"
                 >
                   About this event
-                </p>
+                </h2>
                 <RichDescription
                   html={event.description}
                   className="text-foreground/90 leading-snug max-w-[50ch]"
@@ -411,7 +411,7 @@ export default async function SceneEventDetailPage({
                 className="mt-8"
               >
                 <h2
-                  className="text-lg font-semibold mb-3"
+                  className="text-lg font-semibold mb-3 font-heading"
                 >
                   Added by
                 </h2>

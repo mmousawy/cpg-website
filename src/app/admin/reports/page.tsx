@@ -617,7 +617,7 @@ export default function ReportsPage() {
           className="mb-8"
         >
           <h1
-            className="text-2xl sm:text-3xl font-bold"
+            className="text-2xl sm:text-3xl font-bold font-heading"
           >
             Content reports
           </h1>

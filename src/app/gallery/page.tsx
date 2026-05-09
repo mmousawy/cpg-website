@@ -48,7 +48,7 @@ export default async function GalleryPage() {
             className="flex items-center gap-2 mb-2"
           >
             <h1
-              className="text-2xl sm:text-3xl font-bold"
+              className="text-2xl sm:text-3xl font-bold font-heading"
             >
               Photography gallery
             </h1>
@@ -88,7 +88,7 @@ export default async function GalleryPage() {
                     className="group"
                   >
                     <h2
-                      className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
+                      className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80 font-heading"
                     >
                       Most viewed this week
                     </h2>
@@ -127,7 +127,7 @@ export default async function GalleryPage() {
                 className="group"
               >
                 <h2
-                  className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
+                  className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80 font-heading"
                 >
                   Trending albums
                 </h2>
@@ -172,7 +172,7 @@ export default async function GalleryPage() {
                     className="group"
                   >
                     <h2
-                      className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
+                      className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80 font-heading"
                     >
                       Recent photos
                     </h2>
@@ -208,7 +208,7 @@ export default async function GalleryPage() {
               className="group"
             >
               <h2
-                className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80"
+                className="text-xl font-semibold group-hover:text-primary transition-colors opacity-80 font-heading"
               >
                 Recent albums
               </h2>

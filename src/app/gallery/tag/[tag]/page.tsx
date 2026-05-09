@@ -59,7 +59,7 @@ export default async function TagPage({ params }: { params: Params }) {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="mb-2 text-3xl font-bold font-heading"
           >
             Photos tagged &ldquo;
             {tagName}

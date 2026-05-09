@@ -76,7 +76,7 @@ export default async function TagMembersPage({ params }: { params: Params }) {
           className="mb-8"
         >
           <h1
-            className="mb-2 text-3xl font-bold"
+            className="mb-2 text-3xl font-bold font-heading"
           >
             Members using &ldquo;
             {tagName}
@@ -99,7 +99,7 @@ export default async function TagMembersPage({ params }: { params: Params }) {
             className="mb-8 sm:mb-10"
           >
             <h2
-              className="mb-1 text-lg font-semibold"
+              className="mb-1 text-lg font-semibold font-heading"
             >
               Explore by photo style
             </h2>
