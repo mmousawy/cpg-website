@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.29.22](https://github.com/mmousawy/cpg-website/compare/v1.29.21...v1.29.22) (2026-05-09)
+
+
+### Bug Fixes
+
+* Add built dependencies configuration for pnpm ([a863eb0](https://github.com/mmousawy/cpg-website/commit/a863eb0474681a504d9f1164e58cc3e9dd587d52))
+* Adjust heading font. ([fc2e603](https://github.com/mmousawy/cpg-website/commit/fc2e603f77223cb2a3059e9875a0e932d4712b3e))
+* Enhance test user creation with retry logic and improved error handling ([7bb6bee](https://github.com/mmousawy/cpg-website/commit/7bb6bee28f2d9ea8b245b41805555b8e03b5b097))
+* Move built dependencies configuration from pnpm-workspace.yaml to package.json ([bb6af13](https://github.com/mmousawy/cpg-website/commit/bb6af1355b573a8b52cb244b8fcd9870b18db981))
+* Move built dependencies configuration to pnpm-workspace.yaml ([f20399e](https://github.com/mmousawy/cpg-website/commit/f20399e357008e317e41033397a9948abd46daf7))
+* Update CI workflow to use pnpm and Node.js 20 ([dd218b3](https://github.com/mmousawy/cpg-website/commit/dd218b34b9d11986e31a8bf0140f377b03203793))
+* Update Node.js version in CI workflow to 22 ([1c32a85](https://github.com/mmousawy/cpg-website/commit/1c32a85cefb87f0ec66da431444234e200a799ef))
+* Update Playwright installation command and enhance Vercel preview URL for E2E tests ([4dc2182](https://github.com/mmousawy/cpg-website/commit/4dc2182aef82ef60e28106717880ba53fa188cb0))
+* Update pnpm version to 10.28.1 and downgrade Node.js version to 20 in CI workflow ([1fb5ceb](https://github.com/mmousawy/cpg-website/commit/1fb5ceb87d334486a95ae5b2efeae5dda936520f))
+
 ## [1.29.21](https://github.com/mmousawy/cpg-website/compare/v1.29.20...v1.29.21) (2026-04-30)
 
 
