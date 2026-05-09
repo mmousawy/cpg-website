@@ -80,7 +80,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       # Install Playwright browsers
-      - run: pnpx playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium
       # Get Vercel preview URL from PR comments
       - name: Get Vercel preview URL
         id: vercel
@@ -145,7 +145,7 @@ jobs:
       - name: E2E tests
         run: pnpm run test:e2e
         env:
-          BASE_URL: ${{ steps.vercel.outputs.url }}
+          BASE_URL: ${{ steps.vercel.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
       # Upload test results if tests fail
       - name: Upload Playwright report
