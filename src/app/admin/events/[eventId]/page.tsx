@@ -104,9 +104,19 @@ export default function AdminEventFormPage() {
   };
 
   const handleSlugChange = (newSlug: string) => {
-    const sanitized = generateSlug(newSlug);
+    // Allow trailing dash while typing; only strip disallowed characters
+    const sanitized = newSlug
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-/, '');
     setSlug(sanitized);
     setIsSlugManuallyEdited(true);
+  };
+
+  const handleSlugBlur = () => {
+    // Final cleanup: remove trailing dash
+    setSlug((s) => s.replace(/-+$/, ''));
   };
 
   const handleCoverImageChange = (file: File | null) => {
@@ -605,6 +615,7 @@ export default function AdminEventFormPage() {
               onTitleChange={handleTitleChange}
               onTitleBlur={handleTitleBlur}
               onSlugChange={handleSlugChange}
+              onSlugBlur={handleSlugBlur}
               coverImageFile={coverImageFile}
               coverImagePreview={coverImagePreview}
               coverImage={coverImage}
@@ -628,7 +639,7 @@ export default function AdminEventFormPage() {
             {!isNewEvent && event && (
               <Container>
                 <h2
-                  className="mb-6 text-xl font-semibold font-heading"
+                  className="mb-6 text-xl font-semibold"
                 >
                   Notifications
                 </h2>
@@ -702,7 +713,7 @@ export default function AdminEventFormPage() {
                 className="border-red-500/30 bg-red-500/5"
               >
                 <h3
-                  className="mb-2 font-semibold text-red-600 font-heading"
+                  className="mb-2 font-semibold text-red-600"
                 >
                   Danger zone
                 </h3>

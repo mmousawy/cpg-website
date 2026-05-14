@@ -34,6 +34,7 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
+import EventAdminActionsDropdown from '@/components/events/EventAdminActionsDropdown';
 import EventPhotosSection from '@/components/events/EventPhotosSection';
 import { hasEventPhotos } from '@/lib/eventAlbums';
 import { getEventStatus } from '@/lib/events/status';
@@ -244,26 +245,33 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
               className="mx-auto max-w-screen-md"
             >
               <div
-                className="mb-2 flex flex-wrap items-center gap-2"
+                className="mb-2 flex flex-wrap items-center justify-between gap-2"
               >
-                {(status === 'past' || status === 'now' || status === 'upcoming') && (
-                  <span
-                    className={clsx(
-                      'inline-block rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm',
-                      status === 'past' && 'bg-white/20 text-foreground',
-                      status === 'now' && 'bg-green-600/90 text-white',
-                      status === 'upcoming' && 'bg-primary/60 text-white',
-                    )}
-                  >
-                    {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
-                  </span>
-                )}
-                {status === 'past' && (
-                  <UserWentBadge
-                    eventId={event.id}
-                    variant="overlay"
-                  />
-                )}
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  {(status === 'past' || status === 'now' || status === 'upcoming') && (
+                    <span
+                      className={clsx(
+                        'inline-block rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm',
+                        status === 'past' && 'bg-white/20 text-foreground',
+                        status === 'now' && 'bg-green-600/90 text-white',
+                        status === 'upcoming' && 'bg-primary/60 text-white',
+                      )}
+                    >
+                      {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
+                    </span>
+                  )}
+                  {status === 'past' && (
+                    <UserWentBadge
+                      eventId={event.id}
+                      variant="overlay"
+                    />
+                  )}
+                </div>
+                <EventAdminActionsDropdown
+                  eventSlug={event.slug || ''}
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
@@ -288,26 +296,33 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
               className="mb-6"
             >
               <div
-                className="mb-2 flex flex-wrap items-center gap-2"
+                className="mb-2 flex flex-wrap items-center justify-between gap-2"
               >
-                {(status === 'past' || status === 'now' || status === 'upcoming') && (
-                  <span
-                    className={clsx(
-                      'inline-block rounded-full px-3 py-1 text-xs font-medium',
-                      status === 'past' && 'bg-foreground/10 text-foreground/70',
-                      status === 'now' && 'bg-green-600 text-white',
-                      status === 'upcoming' && 'bg-primary text-white',
-                    )}
-                  >
-                    {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
-                  </span>
-                )}
-                {status === 'past' && (
-                  <UserWentBadge
-                    eventId={event.id}
-                    variant="default"
-                  />
-                )}
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  {(status === 'past' || status === 'now' || status === 'upcoming') && (
+                    <span
+                      className={clsx(
+                        'inline-block rounded-full px-3 py-1 text-xs font-medium',
+                        status === 'past' && 'bg-foreground/10 text-foreground/70',
+                        status === 'now' && 'bg-green-600 text-white',
+                        status === 'upcoming' && 'bg-primary text-white',
+                      )}
+                    >
+                      {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
+                    </span>
+                  )}
+                  {status === 'past' && (
+                    <UserWentBadge
+                      eventId={event.id}
+                      variant="default"
+                    />
+                  )}
+                </div>
+                <EventAdminActionsDropdown
+                  eventSlug={event.slug || ''}
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl font-heading"

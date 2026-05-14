@@ -21,6 +21,7 @@ interface EventFormProps {
   onTitleChange: (title: string) => void;
   onTitleBlur: () => void;
   onSlugChange: (slug: string) => void;
+  onSlugBlur?: () => void;
   coverImageFile: File | null;
   coverImagePreview: string | null;
   coverImage: string;
@@ -36,6 +37,7 @@ export default function EventForm({
   onTitleChange,
   onTitleBlur,
   onSlugChange,
+  onSlugBlur,
   coverImageFile,
   coverImagePreview,
   coverImage,
@@ -92,6 +94,7 @@ export default function EventForm({
               type="text"
               value={formData.slug}
               onChange={(e) => onSlugChange(e.target.value)}
+              onBlur={onSlugBlur}
               required
               pattern="[a-z0-9-]+"
               mono

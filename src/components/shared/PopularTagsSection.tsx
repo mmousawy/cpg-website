@@ -22,7 +22,7 @@ export default async function PopularTagsSection({ activeTag }: PopularTagsSecti
       className=""
     >
       <h2
-        className="mb-3 text-xl font-semibold opacity-80"
+        className="mb-3 text-xl font-semibold opacity-80 font-heading"
       >
         Browse by tag
       </h2>

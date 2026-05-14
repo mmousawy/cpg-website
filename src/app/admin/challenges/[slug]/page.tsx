@@ -364,7 +364,7 @@ export default function AdminChallengeFormPage() {
           >
             <Container>
               <h2
-                className="mb-6 text-xl font-semibold font-heading"
+                className="mb-6 text-xl font-semibold"
               >
                 Challenge details
               </h2>
@@ -651,7 +651,7 @@ export default function AdminChallengeFormPage() {
           {!isNewChallenge && existingChallenge && (
             <Container>
               <h2
-                className="mb-6 text-xl font-semibold font-heading"
+                className="mb-6 text-xl font-semibold"
               >
                 Notifications
               </h2>
@@ -704,7 +704,7 @@ export default function AdminChallengeFormPage() {
               className="border-red-500/30 bg-red-500/5"
             >
               <h3
-                className="mb-2 font-semibold text-red-600 font-heading"
+                className="mb-2 font-semibold text-red-600"
               >
                 Danger zone
               </h3>
