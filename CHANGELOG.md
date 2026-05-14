@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.23](https://github.com/mmousawy/cpg-website/compare/v1.29.22...v1.29.23) (2026-05-14)
+
+
+### Bug Fixes
+
+* Enhance event and challenge admin pages with improved slug handling and admin actions dropdown ([0a93dcf](https://github.com/mmousawy/cpg-website/commit/0a93dcf491ba9fc70c71a2d82ee569b5b73e0629))
+* update event photos title styling ([b292b68](https://github.com/mmousawy/cpg-website/commit/b292b6880e8a48cfe92143dac3d5976283525861))
+
 ## [1.29.22](https://github.com/mmousawy/cpg-website/compare/v1.29.21...v1.29.22) (2026-05-09)
 
 
