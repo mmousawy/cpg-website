@@ -2,7 +2,6 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
-import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
 import InterestCloud from '@/components/shared/InterestCloud';
@@ -348,12 +347,6 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                     {profile.nickname}
                   </p>
                 </div>
-                <ArrowLink
-                  href={`/@${encodeURIComponent(profile.nickname || nickname)}/photos`}
-                  className="shrink-0 mt-1"
-                >
-                  All photos
-                </ArrowLink>
               </div>
             }
           />
@@ -397,12 +390,6 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
                 {profile.nickname}
               </p>
             </div>
-            <ArrowLink
-              href={`/@${encodeURIComponent(profile.nickname || nickname)}/albums`}
-              className="shrink-0 mt-1"
-            >
-              All albums
-            </ArrowLink>
           </div>
           <AlbumGrid
             albums={albums}

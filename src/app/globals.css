@@ -144,13 +144,14 @@ body {
 /* Container gradient variant - only active in dark/midnight themes */
 .container-gradient {
   border: 0.0625rem solid var(--border-color);
-  background: var(--background-light);
+  background: url('/noise-dark.svg') 0 0 / 350px 350px repeat var(--background-light);
 }
 
 :root.dark .container-gradient,
 :root.midnight .container-gradient {
   border: 1px solid transparent;
   background:
+    url('/noise.svg') 0 0 / 350px 350px repeat padding-box,
     linear-gradient(var(--background-light), var(--background)) padding-box,
     linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
 }
@@ -160,6 +161,7 @@ body {
   :root:not(.light) .container-gradient {
     border: 1px solid transparent;
     background:
+      url('/noise.svg') 0 0 / 350px 350px repeat padding-box,
       linear-gradient(var(--background-light), var(--background)) padding-box,
       linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
   }
@@ -169,17 +171,20 @@ body {
 .badge-gradient {
   border: 0.0625rem solid var(--border-color);
   /* Default: subtle gradient for light mode */
-  background: linear-gradient(
-    to bottom,
-    var(--background-light) 0%,
-    var(--background-medium) 100%
-  );
+  background:
+    url('/noise-dark.svg') 0 0 / 350px 350px repeat,
+    linear-gradient(
+      to bottom,
+      var(--background-light) 0%,
+      var(--background-medium) 100%
+    );
 }
 
 /* Light mode: subtle gradient from background-light to background-medium */
 :root.light .badge-gradient {
   border: 1px solid transparent;
   background:
+    url('/noise-dark.svg') 0 0 / 350px 350px repeat padding-box,
     linear-gradient(var(--background-light), var(--background)) padding-box,
     linear-gradient(var(--border-color), var(--border-color)) border-box;
 }
@@ -189,6 +194,7 @@ body {
 :root.midnight .badge-gradient {
   border: 1px solid transparent;
   background:
+    url('/noise.svg') 0 0 / 350px 350px repeat padding-box,
     linear-gradient(var(--background-light), var(--background)) padding-box,
     linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
 }
@@ -198,6 +204,7 @@ body {
   :root:not(.light) .badge-gradient {
     border: 1px solid transparent;
     background:
+      url('/noise.svg') 0 0 / 350px 350px repeat padding-box,
       linear-gradient(var(--background-light), var(--background)) padding-box,
       linear-gradient(var(--border-color-strong), var(--background-light)) border-box;
   }
@@ -207,11 +214,13 @@ body {
 @media (prefers-color-scheme: light) {
   :root:not(.dark):not(.midnight) .badge-gradient {
     border: 0.0625rem solid var(--border-color);
-    background: linear-gradient(
-      to bottom,
-      var(--background-light) 0%,
-      var(--background-medium) 100%
-    );
+    background:
+      url('/noise-dark.svg') 0 0 / 350px 350px repeat,
+      linear-gradient(
+        to bottom,
+        var(--background-light) 0%,
+        var(--background-medium) 100%
+      );
   }
 }
 
@@ -837,4 +846,18 @@ select:focus-visible {
 }
 .rich-text-editor:has(.ql-container.ql-snow:focus-within) .ql-toolbar.ql-snow {
   border-color: var(--primary);
+}
+
+/* Noise texture overlay for background-light surfaces */
+.bg-background-light {
+  background-image: url('/noise.svg');
+  background-repeat: repeat;
+  background-size: 350px 350px;
+}
+
+
+:root.light {
+  .bg-background-light {
+    background-image: url('/noise-dark.svg');
+  }
 }

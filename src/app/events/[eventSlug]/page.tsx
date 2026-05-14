@@ -410,7 +410,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                   className="flex items-center gap-1 mb-3"
                 >
                   <h2
-                    className="text-lg font-semibold font-heading"
+                    className="text-lg font-semibold"
                   >
                     About this event
                   </h2>
@@ -433,7 +433,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
               className="mb-8"
             >
               <h2
-                className="mb-3 text-lg font-semibold font-heading"
+                className="mb-3 text-lg font-semibold"
               >
                 Hosts
               </h2>
@@ -487,7 +487,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           {/* Attendees Section */}
           <div>
             <h2
-              className="mb-3 text-lg font-semibold font-heading"
+              className="mb-3 text-lg font-semibold"
             >
               Attendees
             </h2>

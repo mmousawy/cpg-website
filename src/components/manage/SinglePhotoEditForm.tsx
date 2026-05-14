@@ -488,11 +488,14 @@ export default function SinglePhotoEditForm({
                   In albums:
                 </h3>
                 <div
-                  className="grid grid-cols-2 gap-2"
+                  className="grid grid-cols-1 gap-2"
                 >
                   {photoAlbums.map((album) => {
                     const isOtherOwner = album.profile_nickname && album.profile_nickname !== currentProfile?.nickname;
                     const albumOwner = album.profile_nickname || currentProfile?.nickname;
+                    const publicUrl = album.event_slug
+                      ? `/events/${album.event_slug}`
+                      : albumOwner ? `/@${albumOwner}/album/${album.slug}` : undefined;
                     return (
                       <AlbumMiniCard
                         key={album.id}
@@ -500,7 +503,7 @@ export default function SinglePhotoEditForm({
                         slug={album.slug}
                         coverImageUrl={album.cover_image_url}
                         href={`/account/albums/${album.slug}`}
-                        publicUrl={albumOwner ? `/@${albumOwner}/album/${album.slug}` : undefined}
+                        publicUrl={publicUrl}
                         photoCount={album.photo_count}
                         ownerNickname={isOtherOwner ? album.profile_nickname : undefined}
                       />

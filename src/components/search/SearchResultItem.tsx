@@ -7,6 +7,7 @@ import Avatar from '@/components/auth/Avatar';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import FolderSVG from 'public/icons/folder.svg';
 import type { SearchResult } from '@/types/search';
+import { useEffect, useRef } from 'react';
 
 interface SearchResultItemProps {
   result: SearchResult;
@@ -15,6 +16,14 @@ interface SearchResultItemProps {
 }
 
 export default function SearchResultItem({ result, onSelect, isSelected = false }: SearchResultItemProps) {
+  const itemRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (isSelected && itemRef.current) {
+      itemRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [isSelected]);
+
   const handleClick = () => {
     onSelect?.();
   };
@@ -23,6 +32,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
   if (result.entity_type === 'members') {
     return (
       <Link
+        ref={itemRef}
         href={result.url || '#'}
         onClick={handleClick}
         className={clsx(
@@ -62,6 +72,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
   if (result.entity_type === 'albums') {
     return (
       <Link
+        ref={itemRef}
         href={result.url || '#'}
         onClick={handleClick}
         className={clsx(
@@ -112,6 +123,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
   if (result.entity_type === 'photos') {
     return (
       <Link
+        ref={itemRef}
         href={result.url || '#'}
         onClick={handleClick}
         className={clsx(
@@ -168,6 +180,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
   if (result.entity_type === 'events') {
     return (
       <Link
+        ref={itemRef}
         href={result.url || '#'}
         onClick={handleClick}
         className={clsx(
@@ -222,6 +235,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
   if (result.entity_type === 'tags') {
     return (
       <Link
+        ref={itemRef}
         href={result.url || '#'}
         onClick={handleClick}
         className={clsx(

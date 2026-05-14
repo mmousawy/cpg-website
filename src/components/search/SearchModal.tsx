@@ -167,7 +167,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
           {/* Results */}
           <div
-            className="flex-1 min-h-0 overflow-y-auto p-4"
+            className="flex-1 min-h-0 overflow-y-auto p-4 bg-background"
           >
             {query.length < 2 ? (
               <div
