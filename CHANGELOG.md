@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.0](https://github.com/mmousawy/cpg-website/compare/v1.29.23...v1.30.0) (2026-05-14)
+
+
+### Features
+
+* adjust font and styling ([90b01ad](https://github.com/mmousawy/cpg-website/commit/90b01ade163a9d0163558b5b8fedc4824b147117))
+
 ## [1.29.23](https://github.com/mmousawy/cpg-website/compare/v1.29.22...v1.29.23) (2026-05-14)
 
 
