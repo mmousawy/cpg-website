@@ -45,7 +45,7 @@ function transformToStreamPhotos(photos: EventAlbum['photos']): StreamPhoto[] {
 export function EventPhotosHeading({ photoCount }: { photoCount: number }) {
   return (
     <h2
-      className="text-lg font-semibold"
+      className="text-lg font-semibold font-heading"
     >
       Event photos
       {photoCount > 0 && (
