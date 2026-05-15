@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.2](https://github.com/mmousawy/cpg-website/compare/v1.30.1...v1.30.2) (2026-05-15)
+
+
+### Bug Fixes
+
+* update styling and layout across multiple components for consistency ([cb5b7a9](https://github.com/mmousawy/cpg-website/commit/cb5b7a9cb6d202c599cf6dbca991054f946de2f3))
+
 ## [1.30.1](https://github.com/mmousawy/cpg-website/compare/v1.30.0...v1.30.1) (2026-05-15)
 
 
