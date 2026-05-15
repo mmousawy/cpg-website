@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.1](https://github.com/mmousawy/cpg-website/compare/v1.30.0...v1.30.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* add is_draft field to events and update related logic ([d861115](https://github.com/mmousawy/cpg-website/commit/d8611157ee1c932c79ab0c9c9d23c116385d9753))
+* update Node.js version to 24 and set environment variable for CI workflows ([57e07e1](https://github.com/mmousawy/cpg-website/commit/57e07e17ac70f0fbdbc547ae6383bb273a382f0c))
+
 ## [1.30.0](https://github.com/mmousawy/cpg-website/compare/v1.29.23...v1.30.0) (2026-05-14)
 
 
