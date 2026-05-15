@@ -212,7 +212,7 @@ export default async function SceneEventDetailPage({
 
           {/* Back link + title overlay */}
           <div
-            className="absolute inset-0 flex flex-col justify-between px-2 sm:px-8"
+            className="absolute inset-0 flex flex-col justify-between px-3 sm:px-8"
           >
             <div
               className="flex-1"
@@ -390,7 +390,7 @@ export default async function SceneEventDetailPage({
             {/* Organizer */}
             {event.organizer && (
               <p
-                className="flex items-center gap-2 text-foreground/60 mt-8"
+                className="flex items-center gap-2 text-foreground/70 mt-6 sm:mt-8"
               >
                 <HeroCommunitiesSVG
                   className="size-5 shrink-0 fill-foreground/50"

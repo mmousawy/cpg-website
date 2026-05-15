@@ -68,7 +68,7 @@ export default function LicensesHelpPage() {
                   className="pb-1! md:pb-2!"
                 >
                   <h2
-                    className="mb-4 text-xl font-semibold sm:text-2xl font-heading"
+                    className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"
                   >
                     {section.title}
                   </h2>

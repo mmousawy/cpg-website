@@ -1062,31 +1062,28 @@ DECLARE
 BEGIN
   -- Get user's album IDs once (reused multiple times)
   SELECT COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_album_ids
-  FROM albums 
+  FROM albums
   WHERE user_id = p_user_id AND deleted_at IS NULL;
-  
-  -- Get user's photo IDs from those albums
-  IF array_length(v_album_ids, 1) > 0 THEN
-    SELECT COALESCE(array_agg(DISTINCT ap.photo_id), ARRAY[]::uuid[]) INTO v_photo_ids
-    FROM album_photos ap
-    JOIN photos p ON p.id = ap.photo_id
-    WHERE ap.album_id = ANY(v_album_ids) AND p.deleted_at IS NULL;
-  ELSE
-    v_photo_ids := ARRAY[]::uuid[];
-  END IF;
+
+  -- Get user's public and private, non-event photo IDs directly (matches getUserPublicPhotoCount)
+  SELECT COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_photo_ids
+  FROM photos
+  WHERE user_id = p_user_id
+    AND deleted_at IS NULL
+    AND storage_path NOT LIKE 'events/%';
 
   -- Build result JSON with all stats
   SELECT jsonb_build_object(
     'albums', COALESCE(array_length(v_album_ids, 1), 0),
     'photos', COALESCE(array_length(v_photo_ids, 1), 0),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments 
+      SELECT COUNT(*)::int FROM comments
       WHERE user_id = p_user_id AND deleted_at IS NULL
     ),
     'commentsReceived', (
       SELECT COUNT(*)::int FROM comments c
-      WHERE c.deleted_at IS NULL 
-        AND c.user_id != p_user_id 
+      WHERE c.deleted_at IS NULL
+        AND c.user_id != p_user_id
         AND (
           c.id IN (SELECT comment_id FROM album_comments WHERE album_id = ANY(v_album_ids))
           OR c.id IN (SELECT comment_id FROM photo_comments WHERE photo_id = ANY(v_photo_ids))
@@ -1105,22 +1102,29 @@ BEGIN
        WHERE pl.user_id = p_user_id AND p.deleted_at IS NULL)
     ),
     'viewsReceived', (
-      COALESCE((SELECT SUM(view_count)::int FROM albums WHERE user_id = p_user_id AND deleted_at IS NULL), 0) +
-      COALESCE((SELECT SUM(p.view_count)::int FROM photos p WHERE p.id = ANY(v_photo_ids) AND p.deleted_at IS NULL), 0)
+      COALESCE((SELECT SUM(view_count)::int FROM albums WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL), 0) +
+      COALESCE((SELECT SUM(view_count)::int FROM photos WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL), 0)
     ),
     'rsvpsConfirmed', (
-      SELECT COUNT(*)::int FROM events_rsvps 
+      SELECT COUNT(DISTINCT event_id)::int FROM events_rsvps
       WHERE user_id = p_user_id AND confirmed_at IS NOT NULL AND canceled_at IS NULL
     ),
     'rsvpsCanceled', (
-      SELECT COUNT(*)::int FROM events_rsvps 
-      WHERE user_id = p_user_id AND canceled_at IS NOT NULL
+      SELECT COUNT(DISTINCT event_id)::int FROM events_rsvps r
+      WHERE r.user_id = p_user_id AND r.canceled_at IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM events_rsvps r2
+          WHERE r2.user_id = p_user_id
+            AND r2.event_id = r.event_id
+            AND r2.confirmed_at IS NOT NULL
+            AND r2.canceled_at IS NULL
+        )
     ),
     'eventsAttended', (
-      SELECT COUNT(*)::int FROM events_rsvps 
-      WHERE user_id = p_user_id 
-        AND attended_at IS NOT NULL 
-        AND confirmed_at IS NOT NULL 
+      SELECT COUNT(*)::int FROM events_rsvps
+      WHERE user_id = p_user_id
+        AND attended_at IS NOT NULL
+        AND confirmed_at IS NOT NULL
         AND canceled_at IS NULL
     ),
     'challengesParticipated', (
@@ -1140,7 +1144,7 @@ BEGIN
       SELECT last_logged_in FROM profiles WHERE id = p_user_id
     )
   ) INTO v_result;
-  
+
   RETURN v_result;
 END;
 $$;

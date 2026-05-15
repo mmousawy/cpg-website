@@ -424,7 +424,7 @@ function SubmissionCard({
 
       {/* Content */}
       <div
-        className="flex flex-col gap-2 p-4"
+        className="flex flex-col gap-2 p-3"
       >
         {/* Challenge title */}
         {challenge && (

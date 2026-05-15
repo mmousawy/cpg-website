@@ -39,7 +39,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
           'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
           isSelected
             ? 'border-primary bg-background'
-            : 'border-border-color bg-background-light hover:border-primary hover:bg-background',
+            : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
         )}
       >
         <Avatar
@@ -130,7 +130,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
           'group flex items-center gap-3 rounded-lg border p-2 transition-colors',
           isSelected
             ? 'border-primary bg-background'
-            : 'border-border-color bg-background-light hover:border-primary hover:bg-background',
+            : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
         )}
       >
         <div
@@ -187,7 +187,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
           'group flex items-center gap-3 rounded-lg border p-2 transition-colors',
           isSelected
             ? 'border-primary bg-background'
-            : 'border-border-color bg-background-light hover:border-primary hover:bg-background',
+            : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
         )}
       >
         <div
@@ -242,7 +242,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
           'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
           isSelected
             ? 'border-primary bg-background'
-            : 'border-border-color bg-background-light hover:border-primary hover:bg-background',
+            : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
         )}
       >
         <div
@@ -295,7 +295,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
         'group flex items-center gap-3 rounded-lg border p-3 transition-colors',
         isSelected
           ? 'border-primary bg-background'
-          : 'border-border-color bg-background-light hover:border-primary hover:bg-background',
+          : 'border-border-color-strong bg-background-light hover:border-primary hover:bg-background',
       )}
     >
       <div

@@ -41,7 +41,7 @@ export default function CopyrightSettingsSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70"
+        className="mb-4 text-lg font-semibold opacity-70 font-heading"
       >
         Copyright & licensing
       </h2>
@@ -50,7 +50,7 @@ export default function CopyrightSettingsSection({
           className="space-y-6"
         >
           <p
-            className="text-foreground/70 -mt-2 text-xs"
+            className="text-foreground/70 text-xs"
           >
             Set defaults for new photo uploads. You can change the license per photo when editing.
             {' '}

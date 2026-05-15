@@ -51,10 +51,10 @@ export default function SearchResults({
   if (isLoading) {
     return (
       <div
-        className="flex items-center gap-3 rounded-lg border border-border-color p-3 min-h-[90px]"
+        className="flex items-center gap-3 rounded-lg border border-border-color-strong p-3 min-h-[90px] bg-background-light"
       >
         <div
-          className="flex items-center justify-center size-16 shrink-0 animate-pulse rounded bg-background-medium"
+          className="flex items-center justify-center size-16 shrink-0 animate-pulse rounded bg-background"
         >
           <LoadingSpinner
             size="md"
@@ -64,10 +64,10 @@ export default function SearchResults({
           className="flex-1 space-y-2"
         >
           <div
-            className="h-4 w-3/4 animate-pulse rounded bg-background-medium"
+            className="h-4 w-3/4 animate-pulse rounded bg-background"
           />
           <div
-            className="h-3 w-1/2 animate-pulse rounded bg-background-medium"
+            className="h-3 w-1/2 animate-pulse rounded bg-background"
           />
         </div>
       </div>

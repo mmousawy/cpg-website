@@ -155,7 +155,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               autoFocus={isOpen}
             />
             <button
-              className="shrink-0 rounded-full border border-border-color p-1 hover:bg-background transition-colors"
+              className="shrink-0 rounded-full border border-border-color-strong p-1 hover:bg-background transition-colors"
               onClick={onClose}
               aria-label="Close search"
             >
@@ -167,7 +167,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
           {/* Results */}
           <div
-            className="flex-1 min-h-0 overflow-y-auto p-4 bg-background"
+            className="flex-1 min-h-0 overflow-y-auto p-4 bg-black/10"
           >
             {query.length < 2 ? (
               <div

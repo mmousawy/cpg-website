@@ -131,7 +131,7 @@ async function CachedAlbumsContent({
               className="flex-1 min-w-0"
             >
               <h1
-                className="sm:text-3xl text-xl font-bold line-clamp-2 pr-8 font-heading"
+                className="sm:text-3xl leading-tight text-2xl font-bold line-clamp-2 pr-8 font-heading"
               >
                 {profile.full_name || `@${profile.nickname}`}
               </h1>

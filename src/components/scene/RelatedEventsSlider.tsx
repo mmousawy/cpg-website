@@ -111,7 +111,7 @@ export default function RelatedEventsSlider({
 
         {/* Full-bleed: cancel PageContainer outer px-2; avoid w-screen/100vw (document width vs scrollbar). */}
         <div
-          className="relative -mx-2 w-[calc(100%+1rem)] sm:mx-0 sm:w-[calc(100%+8rem)] sm:-left-16 sm:translate-x-0 sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          className="relative -mx-3 w-[calc(100%+1.5rem)] sm:mx-0 sm:w-[calc(100%+8rem)] sm:-left-16 sm:translate-x-0 sm:mask-[linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
           <Swiper
             modules={[Navigation, A11y]}
@@ -124,8 +124,8 @@ export default function RelatedEventsSlider({
             onReachEnd={updateNavState}
             spaceBetween={12}
             slidesPerView={1}
-            slidesOffsetBefore={8}
-            slidesOffsetAfter={8}
+            slidesOffsetBefore={12}
+            slidesOffsetAfter={12}
             breakpoints={{
               640: {
                 slidesPerView: 2,

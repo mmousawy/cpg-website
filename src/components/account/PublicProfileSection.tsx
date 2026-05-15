@@ -49,7 +49,7 @@ export default function PublicProfileSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70"
+        className="mb-4 text-lg font-semibold opacity-70 font-heading"
       >
         Your public profile
       </h2>
@@ -116,7 +116,7 @@ export default function PublicProfileSection({
               </span>
             </div>
             <p
-              className="text-foreground/50 mb-2 text-xs"
+              className="text-foreground/70 mb-2 text-xs"
             >
               Add up to 3 links to your social profiles
             </p>
@@ -127,7 +127,7 @@ export default function PublicProfileSection({
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border-border-color bg-background-light flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:p-0"
+                  className="border-border-color bg-white dark:bg-white/5 flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:border-0 sm:bg-transparent sm:dark:bg-transparent sm:p-0"
                 >
                   <Controller
                     name={`socialLinks.${index}.label`}
@@ -138,7 +138,7 @@ export default function PublicProfileSection({
                         onChange={labelField.onChange}
                         suggestions={SOCIAL_LABEL_SUGGESTIONS}
                         placeholder="Label (e.g. Instagram)"
-                        containerClassName="w-1/3"
+                        containerClassName="w-full sm:w-1/3"
                         className="w-full"
                       />
                     )}

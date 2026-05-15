@@ -12,8 +12,6 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +35,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
 
       - name: Install Vercel CLI
         if: ${{ steps.release.outputs.release_created }}
@@ -71,7 +69,7 @@ jobs:
 
           if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
             echo "Promoting tested preview to production (UID: $DEPLOYMENT_UID)..."
-            if vercel promote "$DEPLOYMENT_UID" --yes --token="$VERCEL_TOKEN"; then
+            if vercel promote "$DEPLOYMENT_UID" --scope="$VERCEL_ORG_ID" --yes --token="$VERCEL_TOKEN"; then
               echo "Successfully promoted to production."
             else
               echo "Promote failed, falling back to fresh deploy..."

@@ -12,7 +12,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70"
+        className="mb-4 text-lg font-semibold opacity-70 font-heading"
       >
         Account info
       </h2>
@@ -47,7 +47,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                 className="text-foreground/70"
               >
                 {stats.lastLoggedIn
-                  ? (() => { const d = new Date(stats.lastLoggedIn); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'short', day: 'numeric' }); })()
+                  ? (() => { const d = new Date(stats.lastLoggedIn); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'long', day: 'numeric' }); })()
                   : 'Never'}
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
             <p
               className="text-foreground mb-3 text-sm font-medium"
             >
-              Events
+              Attendance
             </p>
             <div
               className="grid grid-cols-2 gap-4 text-sm"

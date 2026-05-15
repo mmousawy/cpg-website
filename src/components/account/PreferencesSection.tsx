@@ -28,7 +28,7 @@ export default function PreferencesSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70"
+        className="mb-4 text-lg font-semibold opacity-70 font-heading"
       >
         Preferences
       </h2>
@@ -335,7 +335,7 @@ export default function PreferencesSection({
               Email preferences
             </label>
             <p
-              className="text-foreground/70 -mt-2 text-xs"
+              className="text-foreground/70 text-xs"
             >
               Choose which types of emails you&apos;d like to receive. You can change these
               settings anytime.

@@ -276,6 +276,7 @@ export default function AccountPage() {
       {/* Mobile: section nav + action bar stacked so both are visible */}
       <div
         className="md:hidden sticky bottom-0 z-30 flex flex-col"
+        hidden={isLoading || undefined}
       >
         <SectionMobileNav
           sections={ACCOUNT_SECTIONS}

@@ -47,7 +47,7 @@ export default function DeleteAccountSection({ stats }: DeleteAccountSectionProp
     <>
       <div>
         <h2
-          className="mb-4 text-lg font-semibold text-red-600"
+          className="mb-4 text-lg font-semibold text-red-600 font-heading opacity-80"
         >
           Danger zone
         </h2>
@@ -79,7 +79,7 @@ export default function DeleteAccountSection({ stats }: DeleteAccountSectionProp
             className="w-full max-w-md rounded-lg border border-border-color bg-background-light p-6 shadow-xl"
           >
             <h3
-              className="mb-4 text-lg font-semibold text-red-600"
+              className="mb-4 text-lg font-semibold text-red-600 font-heading opacity-80"
             >
               Delete your account
             </h3>

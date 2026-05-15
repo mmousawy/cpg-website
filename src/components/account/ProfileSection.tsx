@@ -54,14 +54,14 @@ export default function ProfileSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70"
+        className="mb-4 text-lg font-semibold font-heading opacity-70"
       >
         Basic info
       </h2>
       <Container>
         {/* Profile Picture */}
         <div
-          className="border-border-color mb-6 flex items-center gap-6 border-b pb-6"
+          className="border-border-color mb-6 flex items-center gap-4 sm:gap-6 border-b pb-4 sm:pb-6"
         >
           <div
             className={clsx(

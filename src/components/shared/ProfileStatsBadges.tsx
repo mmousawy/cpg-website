@@ -264,7 +264,7 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
       </h2>
       {/* Mobile: break out of container for edge-to-edge scroll, Desktop: grid */}
       <div
-        className="-mx-2 flex gap-2 overflow-x-auto px-2 pb-3 md:mx-0 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:px-0 md:pb-0"
+        className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-3 md:mx-0 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:px-0 md:pb-0"
       >
         {badges.map((badge, index) => (
           <div

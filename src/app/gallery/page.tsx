@@ -250,13 +250,9 @@ export default async function GalleryPage() {
           )}
         </div>
 
-        <div
-          className="mt-12"
-        >
-          <SignUpCTA
-            variant="inline"
-          />
-        </div>
+        <SignUpCTA
+          variant="inline"
+        />
       </WidePageContainer>
     </>
   );
