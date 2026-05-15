@@ -58,7 +58,7 @@ export default function DeleteAccountSection({ stats }: DeleteAccountSectionProp
             <p
               className="text-sm text-foreground/70"
             >
-              Permanently delete your account and all associated content. This action schedules your account for deletion — your content will be permanently removed within 30 days.
+              Permanently delete your account and all associated content. This action schedules your account for deletion - your content will be permanently removed within 30 days.
             </p>
             <Button
               variant="danger"

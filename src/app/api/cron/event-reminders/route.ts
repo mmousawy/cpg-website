@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     // ===== RSVP REMINDERS (5 days before) =====
     const { data: rsvpReminderEvents, error: rsvpEventsError } = await supabase
       .from('events')
-      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at')
+      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at, is_draft')
       .eq('date', fiveDaysDateStr)
       .is('rsvp_reminder_sent_at', null);
 
@@ -279,7 +279,7 @@ export async function GET(request: NextRequest) {
     // ===== ATTENDEE REMINDERS (1 day before) =====
     const { data: attendeeReminderEvents, error: attendeeEventsError } = await supabase
       .from('events')
-      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at')
+      .select('id, title, slug, date, time, location, description, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, attendee_reminder_sent_at, rsvp_reminder_sent_at, is_draft')
       .eq('date', oneDayDateStr)
       .is('attendee_reminder_sent_at', null);
 

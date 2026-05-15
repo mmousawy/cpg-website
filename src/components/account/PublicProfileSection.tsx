@@ -55,7 +55,7 @@ export default function PublicProfileSection({
       </h2>
       <Container>
         <p
-          className="text-foreground/60 mb-4 text-sm"
+          className="text-foreground/70 mb-4 text-sm"
         >
           This information will be visible on your public profile page.
         </p>

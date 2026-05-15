@@ -26,5 +26,8 @@
     "pswp",
     "rsvps",
     "sonner"
-  ]
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "pnpm": true
+  }
 }

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
+import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { signOutAction } from '@/app/actions/auth';
 import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -21,6 +22,7 @@ export default function UserMenu() {
   const mounted = useMounted();
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
+  const confirm = useConfirm();
 
   // Helper to check if a route is active
   // exact=true means only match the exact path (for parent routes that have sub-routes)
@@ -287,6 +289,18 @@ export default function UserMenu() {
                 onSubmit={async (e) => {
                   // Progressive enhancement: use client-side signOut when JS is enabled
                   e.preventDefault();
+
+                  const confirmSignOut = await confirm({
+                    title: 'Sign out?',
+                    message: 'Are you sure you want to sign out?',
+                    confirmLabel: 'Sign out',
+                    cancelLabel: 'Stay signed in',
+                    variant: 'danger',
+                  });
+                  if (!confirmSignOut) {
+                    return;
+                  }
+
                   if (detailsRef.current) detailsRef.current.open = false;
                   try {
                     await signOut();

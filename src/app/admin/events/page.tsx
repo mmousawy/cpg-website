@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
@@ -18,7 +19,7 @@ import PlusSVG from 'public/icons/plus.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 
-type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image'>
+type Event = Pick<Tables<'events'>, 'id' | 'slug' | 'title' | 'date' | 'time' | 'location' | 'description' | 'cover_image' | 'is_draft'>
 
 export default function AdminEventsPage() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
@@ -31,7 +32,7 @@ export default function AdminEventsPage() {
     const loadEvents = async () => {
       const { data } = await supabase
         .from('events')
-        .select('id, slug, title, date, time, location, description, cover_image')
+        .select('id, slug, title, date, time, location, description, cover_image, is_draft')
         .order('date', { ascending: false });
 
       setEvents(data || []);
@@ -161,11 +162,15 @@ export default function AdminEventsPage() {
 
 function AdminEventCard({ event }: { event: Event }) {
   const imageSrc = event.cover_image;
+  const router = useRouter();
 
   return (
-    <Link
-      href={`/admin/events/${event.slug || event.id}`}
-      className="block rounded-xl border border-border-color bg-background-light p-3 sm:p-4 transition-colors hover:border-primary"
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(`/admin/events/${event.slug || event.id}`)}
+      onKeyDown={(e) => e.key === 'Enter' && router.push(`/admin/events/${event.slug || event.id}`)}
+      className="block cursor-pointer rounded-xl border border-border-color bg-background-light p-3 sm:p-4 transition-colors hover:border-primary"
     >
       <div
         className="flex items-start gap-3 sm:gap-4"
@@ -202,6 +207,13 @@ function AdminEventCard({ event }: { event: Event }) {
               >
                 {event.title}
               </h4>
+              {event.is_draft && (
+                <span
+                  className="mb-2 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700"
+                >
+                  Draft
+                </span>
+              )}
               <div
                 className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/70"
               >
@@ -260,6 +272,6 @@ function AdminEventCard({ event }: { event: Event }) {
           </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

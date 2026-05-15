@@ -51,33 +51,61 @@ export default function AlbumMiniCard({
   ownerNickname,
 }: AlbumMiniCardProps) {
   return (
-    <Link
-      href={href}
+    <div
       className={clsx(
-        'group relative inline-flex items-center gap-2.5 w-fit min-w-32 max-w-54 border pr-2.5',
+        'group relative inline-flex w-fit min-w-32 max-w-54 border',
         'text-sm transition-colors',
         'border-border-color-strong hover:border-primary hover:text-primary',
         highlighted ? 'bg-background-light' : 'bg-background-medium',
         className,
       )}
     >
-      <div
-        className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
+      <Link
+        href={href}
+        className="inline-flex items-center gap-2.5 pr-2.5"
       >
-        {coverImageUrl ? (
-          <BlurImage
-            src={getSquareThumbnailUrl(coverImageUrl, 64, 85) || coverImageUrl}
-            alt={title}
-            fill
-            sizes="76px"
-            className="object-cover"
-          />
-        ) : (
-          <FolderSVG
-            className="size-6 text-foreground/30"
-          />
-        )}
-      </div>
+        <div
+          className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
+        >
+          {coverImageUrl ? (
+            <BlurImage
+              src={getSquareThumbnailUrl(coverImageUrl, 64, 85) || coverImageUrl}
+              alt={title}
+              fill
+              sizes="76px"
+              className="object-cover"
+            />
+          ) : (
+            <FolderSVG
+              className="size-6 text-foreground/30"
+            />
+          )}
+        </div>
+        <div
+          className="min-w-0 flex-1 flex-col gap-0.5"
+        >
+          <span
+            className="text-sm font-medium line-clamp-2 leading-none pr-6"
+          >
+            {title}
+          </span>
+          {ownerNickname && (
+            <span
+              className="text-xs text-foreground/50"
+            >
+              @
+              {ownerNickname}
+            </span>
+          )}
+          {createdAt && formatDate(createdAt) && (
+            <span
+              className="text-xs text-foreground/60"
+            >
+              {formatDate(createdAt)}
+            </span>
+          )}
+        </div>
+      </Link>
       {publicUrl && (
         <Link
           href={publicUrl}
@@ -86,37 +114,12 @@ export default function AlbumMiniCard({
           className="absolute top-0.5 right-0.5 p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
           title="Open album page"
           aria-label="Open album page"
-          onClick={(e) => e.stopPropagation()}
         >
           <LinkSVG
             className="size-3"
           />
         </Link>
       )}
-      <div
-        className="min-w-0 flex-1 flex-col gap-0.5"
-      >
-        <span
-          className="text-sm font-medium line-clamp-2 leading-none pr-6"
-        >
-          {title}
-        </span>
-        {ownerNickname && (
-          <span
-            className="text-xs text-foreground/50"
-          >
-            @
-            {ownerNickname}
-          </span>
-        )}
-        {createdAt && formatDate(createdAt) && (
-          <span
-            className="text-xs text-foreground/60"
-          >
-            {formatDate(createdAt)}
-          </span>
-        )}
-      </div>
-    </Link>
+    </div>
   );
 }

@@ -140,7 +140,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-3 text-xl font-semibold font-heading"
+            className="mb-3 text-xl font-semibold font-heading opacity-80"
           >
             Popular interests
           </h2>
@@ -158,7 +158,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-4 text-xl font-semibold font-heading"
+            className="mb-4 text-xl font-semibold font-heading opacity-80"
           >
             Explore by interests
           </h2>
@@ -176,7 +176,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-1 text-xl font-semibold font-heading"
+            className="mb-1 text-xl font-semibold font-heading opacity-80"
           >
             Recently active
           </h2>
@@ -209,7 +209,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           className="mb-10"
         >
           <h2
-            className="mb-1 text-xl font-semibold font-heading"
+            className="mb-1 text-xl font-semibold font-heading opacity-80"
           >
             Explore by photo style
           </h2>
@@ -230,7 +230,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         {/* New Members */}
         <div>
           <h2
-            className="mb-1 text-xl font-semibold font-heading"
+            className="mb-1 text-xl font-semibold font-heading opacity-80"
           >
             New members
           </h2>

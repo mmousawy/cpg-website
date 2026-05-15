@@ -2635,7 +2635,8 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
     "slug" "text" NOT NULL,
     "rsvp_reminder_sent_at" timestamp with time zone,
     "attendee_reminder_sent_at" timestamp with time zone,
-    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("title", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("description", ''::"text")), 'B'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("location", ''::"text")), 'B'::"char"))) STORED
+    "search_vector" "tsvector" GENERATED ALWAYS AS ((("setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("title", ''::"text")), 'A'::"char") || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("description", ''::"text")), 'B'::"char")) || "setweight"("to_tsvector"('"english"'::"regconfig", COALESCE("location", ''::"text")), 'B'::"char"))) STORED,
+    "is_draft" boolean DEFAULT false NOT NULL
 );
 
 

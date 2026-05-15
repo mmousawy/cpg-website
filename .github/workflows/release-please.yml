@@ -69,18 +69,12 @@ jobs:
 
           if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
             echo "Promoting tested preview to production (UID: $DEPLOYMENT_UID)..."
-            PROMOTE_RESPONSE=$(curl -s -X POST \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              "https://api.vercel.com/v10/projects/$VERCEL_PROJECT_ID/promote/$DEPLOYMENT_UID?teamId=$VERCEL_ORG_ID")
-            echo "Promote response: $PROMOTE_RESPONSE"
-            # Fail if the response contains an error
-            if echo "$PROMOTE_RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+            if vercel promote "$DEPLOYMENT_UID" --yes --token="$VERCEL_TOKEN"; then
+              echo "Successfully promoted to production."
+            else
               echo "Promote failed, falling back to fresh deploy..."
               vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
               vercel deploy --prod --yes --token="$VERCEL_TOKEN"
-            else
-              echo "Successfully promoted to production."
             fi
           else
             echo "No preview deployment found for SHA $PR_HEAD_SHA, falling back to fresh deploy..."

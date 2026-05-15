@@ -285,7 +285,7 @@ export default async function Home() {
 
           <div>
             <h3
-              className="text-lg font-semibold mb-4 font-heading"
+              className="text-lg font-semibold mb-4"
             >
               Connect with us
             </h3>
@@ -361,7 +361,7 @@ export default async function Home() {
               className="mb-8"
             >
               <h3
-                className="text-lg font-semibold mb-4 font-heading"
+                className="text-lg font-semibold mb-4"
               >
                 Organizers
               </h3>
@@ -415,7 +415,7 @@ export default async function Home() {
           {members && members.length > 0 && (
             <div>
               <h3
-                className="text-lg font-semibold mb-4 font-heading"
+                className="text-lg font-semibold mb-4"
               >
                 Members
               </h3>

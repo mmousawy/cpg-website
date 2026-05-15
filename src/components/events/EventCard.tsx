@@ -236,7 +236,7 @@ export default function EventCard({
         {event.description && (
           <RichDescription
             html={event.description}
-            className="max-sm:hidden w-full max-w-[40ch] text-foreground/90 text-sm line-clamp-2"
+            className="max-sm:hidden w-full max-w-[50ch] text-foreground/90 text-sm line-clamp-3"
             disableLinks
           />
         )}

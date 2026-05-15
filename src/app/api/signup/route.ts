@@ -35,7 +35,12 @@ export async function POST(request: NextRequest) {
   const userName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Guest';
 
   // Get the event and check if it exists
-  const { data: event } = await supabase.from('events').select().eq('id', event_id).single();
+  const { data: event } = await supabase
+    .from('events')
+    .select()
+    .eq('id', event_id)
+    .eq('is_draft', false)
+    .single();
 
   if (!event) {
     return NextResponse.json({ message: 'Event not found' }, { status: 404 });

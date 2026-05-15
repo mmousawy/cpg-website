@@ -755,6 +755,7 @@ export type Database = {
           image_blurhash: string | null
           image_height: number | null
           image_width: number | null
+          is_draft: boolean
           location: string | null
           max_attendees: number | null
           rsvp_count: number | null
@@ -774,6 +775,7 @@ export type Database = {
           image_blurhash?: string | null
           image_height?: number | null
           image_width?: number | null
+          is_draft?: boolean
           location?: string | null
           max_attendees?: number | null
           rsvp_count?: number | null
@@ -793,6 +795,7 @@ export type Database = {
           image_blurhash?: string | null
           image_height?: number | null
           image_width?: number | null
+          is_draft?: boolean
           location?: string | null
           max_attendees?: number | null
           rsvp_count?: number | null

@@ -14,6 +14,7 @@ export async function getAllEventSlugs() {
   const { data } = await supabase
     .from('events')
     .select('slug')
+    .eq('is_draft', false)
     .not('slug', 'is', null);
 
   return (data || []).map((e) => e.slug).filter((s): s is string => s !== null);
@@ -33,6 +34,7 @@ export async function getRecentEvents(limit = 6) {
   const { data } = await supabase
     .from('events')
     .select('id, title, date, location, time, cover_image, image_blurhash, image_height, image_width, slug, description')
+    .eq('is_draft', false)
     .order('date', { ascending: false })
     .limit(limit);
 
@@ -68,6 +70,7 @@ export async function getUpcomingEvents(limit?: number) {
   let query = supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
+    .eq('is_draft', false)
     .order('date', { ascending: true });
 
   query = hasEventDayEnded
@@ -103,6 +106,7 @@ export async function getPastEvents(limit = 5) {
   let query = supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug', { count: 'exact' })
+    .eq('is_draft', false)
     .order('date', { ascending: false })
     .limit(limit);
 
@@ -135,6 +139,7 @@ export async function getEventBySlug(slug: string) {
   const { data: event } = await supabase
     .from('events')
     .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
+    .eq('is_draft', false)
     .eq('slug', slug)
     .single();
 

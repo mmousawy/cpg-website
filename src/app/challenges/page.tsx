@@ -61,7 +61,7 @@ export default async function ChallengesPage() {
         {/* Active Challenges */}
         <section>
           <h2
-            className="text-xl font-semibold mb-4 opacity-70 font-heading"
+            className="text-xl font-semibold mb-4 font-heading opacity-80"
           >
             Active challenges
           </h2>
@@ -76,7 +76,7 @@ export default async function ChallengesPage() {
         {pastChallenges.length > 0 && (
           <section>
             <h2
-              className="text-xl font-semibold mb-4 opacity-70 font-heading"
+              className="text-xl font-semibold mb-4 font-heading opacity-80"
             >
               Past challenges
             </h2>

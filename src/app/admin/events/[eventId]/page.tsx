@@ -29,7 +29,7 @@ import TrashSVG from 'public/icons/trash.svg';
 
 type Event = Pick<
   Tables<'events'>,
-  'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug'
+  'id' | 'title' | 'description' | 'date' | 'time' | 'location' | 'cover_image' | 'slug' | 'is_draft'
 >;
 
 type RSVPWithProfile = Pick<
@@ -72,6 +72,7 @@ export default function AdminEventFormPage() {
   const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [isDraft, setIsDraft] = useState(false);
   const [savedFormValues, setSavedFormValues] = useState<{
     title: string;
     slug: string;
@@ -190,6 +191,7 @@ export default function AdminEventFormPage() {
           setLocation(data.location || '');
           setCoverImage(data.cover_image || '');
           setCoverImagePreview(data.cover_image || null);
+          setIsDraft(!!data.is_draft);
 
           // Set saved form values for change tracking
           setSavedFormValues({
@@ -332,9 +334,7 @@ export default function AdminEventFormPage() {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const performSave = async (asDraft: boolean) => {
     if (!title.trim() || !date || !slug.trim()) {
       setError('Title, slug, and date are required');
       return;
@@ -471,6 +471,7 @@ export default function AdminEventFormPage() {
             image_blurhash: imageBlurhash,
             image_width: imageWidth,
             image_height: imageHeight,
+            is_draft: asDraft,
           })
           .select()
           .single();
@@ -493,6 +494,8 @@ export default function AdminEventFormPage() {
           coverImage: coverImageUrl,
         });
 
+        setIsDraft(asDraft);
+
         // Revalidate event pages
         await revalidateEvent(finalSlug);
 
@@ -510,6 +513,7 @@ export default function AdminEventFormPage() {
           time: time || null,
           location: location.trim() || null,
           cover_image: coverImageUrl,
+          is_draft: asDraft,
         };
 
         // Only update image metadata if a new cover was uploaded
@@ -535,6 +539,7 @@ export default function AdminEventFormPage() {
         setCoverImage(coverImageUrl);
         setCoverImagePreview(coverImageUrl);
         setCoverImageFile(null);
+        setIsDraft(asDraft);
 
         // Update saved form values after successful save
         setSavedFormValues({
@@ -563,17 +568,37 @@ export default function AdminEventFormPage() {
     }
   };
 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performSave(false);
+  };
+
+  const handleSaveAsDraft = async () => {
+    await performSave(true);
+  };
+
   return (
     <>
       <PageContainer>
         <div
           className="mb-8"
         >
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
+          <div
+            className="flex flex-wrap items-center gap-3"
           >
-            {isNewEvent ? 'Create new event' : 'Edit event'}
-          </h1>
+            <h1
+              className="text-2xl sm:text-3xl font-bold font-heading"
+            >
+              {isNewEvent ? 'Create new event' : 'Edit event'}
+            </h1>
+            {isDraft && (
+              <span
+                className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700"
+              >
+                Draft
+              </span>
+            )}
+          </div>
           <p
             className="text-base sm:text-lg mt-2 text-foreground/70"
           >
@@ -785,11 +810,12 @@ export default function AdminEventFormPage() {
             className="flex gap-2"
           >
             <Button
-              href="/admin/events"
+              onClick={handleSaveAsDraft}
               variant="secondary"
               size="sm"
+              disabled={isSaving}
             >
-              Cancel
+              Save as draft
             </Button>
             <Button
               type="submit"

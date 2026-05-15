@@ -158,7 +158,7 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
         >
           {/* Avatar and Name */}
           <div
-            className="mb-3 sm:mb-6 flex items-start gap-3 sm:gap-4 relative"
+            className="mb-3 sm:mb-6 flex items-center gap-3 sm:gap-4 relative"
           >
             <div
               className="relative shrink-0 rounded-full outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none"

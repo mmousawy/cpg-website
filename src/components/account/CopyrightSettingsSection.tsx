@@ -50,7 +50,7 @@ export default function CopyrightSettingsSection({
           className="space-y-6"
         >
           <p
-            className="text-foreground/50 -mt-2 text-xs"
+            className="text-foreground/70 -mt-2 text-xs"
           >
             Set defaults for new photo uploads. You can change the license per photo when editing.
             {' '}
@@ -96,7 +96,7 @@ export default function CopyrightSettingsSection({
               control={control}
               render={({ field }) => (
                 <p
-                  className="text-foreground/50 text-xs"
+                  className="text-foreground/70 text-xs"
                 >
                   {LICENSE_TYPES[field.value].description}
                 </p>
@@ -128,7 +128,7 @@ export default function CopyrightSettingsSection({
               )}
             />
             <p
-              className="text-foreground/50 text-xs"
+              className="text-foreground/70 text-xs"
             >
               Used in copyright notices and watermarks (e.g. &quot;© 2026 Your Name&quot;)
             </p>
@@ -158,7 +158,7 @@ export default function CopyrightSettingsSection({
               )}
             />
             <p
-              className="text-foreground/50 text-xs"
+              className="text-foreground/70 text-xs"
             >
               Add a text overlay to your photos on new uploads
             </p>
@@ -191,7 +191,7 @@ export default function CopyrightSettingsSection({
                         )}
                       />
                       <p
-                        className="text-foreground/50 text-xs"
+                        className="text-foreground/70 text-xs"
                       >
                         Leave empty to use &quot;©
                         {' '}
@@ -227,7 +227,7 @@ export default function CopyrightSettingsSection({
                         control={control}
                         render={({ field }) => (
                           <p
-                            className="text-foreground/50 text-xs"
+                            className="text-foreground/70 text-xs"
                           >
                             {WATERMARK_STYLES.find((s) => s.value === field.value)?.description}
                           </p>
@@ -266,7 +266,7 @@ export default function CopyrightSettingsSection({
               )}
             />
             <p
-              className="text-foreground/50 text-xs"
+              className="text-foreground/70 text-xs"
             >
               Add your copyright notice to the photo&apos;s metadata (only if not already present)
             </p>
@@ -296,7 +296,7 @@ export default function CopyrightSettingsSection({
                       )}
                     />
                     <p
-                      className="text-foreground/50 text-xs"
+                      className="text-foreground/70 text-xs"
                     >
                       Leave empty to auto-generate from your name and the photo&apos;s license
                     </p>

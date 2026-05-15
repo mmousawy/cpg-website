@@ -130,7 +130,7 @@ export default function PreferencesSection({
               )}
             />
             <p
-              className="text-foreground/50 text-xs"
+              className="text-foreground/70 text-xs"
             >
               {themeMounted && resolvedTheme
                 ? `Currently using ${resolvedTheme} mode based on your system`
@@ -335,7 +335,7 @@ export default function PreferencesSection({
               Email preferences
             </label>
             <p
-              className="text-foreground/50 -mt-2 text-xs"
+              className="text-foreground/70 -mt-2 text-xs"
             >
               Choose which types of emails you&apos;d like to receive. You can change these
               settings anytime.
@@ -382,7 +382,7 @@ export default function PreferencesSection({
                             </label>
                             {type.description && (
                               <p
-                                className="text-foreground/50 mt-1 text-xs"
+                                className="text-foreground/70 mt-1 text-xs"
                               >
                                 {type.description}
                               </p>

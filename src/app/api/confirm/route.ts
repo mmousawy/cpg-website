@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
   const { data: event } = await supabase.from('events')
     .select()
     .eq('id', rsvp?.event_id || -1)
+    .eq('is_draft', false)
     .single();
 
   if (!rsvp || !event) {

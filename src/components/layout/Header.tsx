@@ -26,7 +26,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
       href={href}
       className={clsx(
         'relative py-1 font-medium transition-colors hover:text-primary rounded text-[15px]',
-        isActive ? 'text-primary' : 'text-foreground',
+        isActive ? 'text-primary dark:text-primary-alt' : 'text-foreground',
       )}
     >
       {children}

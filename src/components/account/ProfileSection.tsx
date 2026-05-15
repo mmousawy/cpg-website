@@ -213,7 +213,7 @@ export default function ProfileSection({
                 {(() => {
                   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
                   const url = `${baseUrl}/@${nickname || 'your-nickname'}`;
-                  return url.replace(/^https?:\/\//, '');
+                  return url;
                 })()}
               </span>
             </p>
