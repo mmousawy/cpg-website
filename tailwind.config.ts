@@ -27,6 +27,7 @@ export default {
         background: 'var(--background)',
         'background-medium': 'var(--background-medium)',
         'background-light': 'var(--background-light)',
+        'background-special': 'var(--background-special)',
         foreground: 'var(--foreground)',
         'border-color': 'var(--border-color)',
         'border-color-strong': 'var(--border-color-strong)',

@@ -74,7 +74,9 @@ export default function SignUpCTA({ variant = 'inline' }: SignUpCTAProps) {
   }
 
   return (
-    <Container>
+    <Container
+      className='bg-background-special mt-10'
+    >
       <div
         className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >

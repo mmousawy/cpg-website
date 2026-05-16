@@ -4,10 +4,14 @@
   "include-component-in-tag": false,
   "include-v-in-tag": true,
   "changelog-path": "CHANGELOG.md",
+  "release-search-depth": 100,
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "draft": false,
   "prerelease": false,
+  "packages": {
+    ".": {}
+  },
   "changelog-sections": [
     { "type": "feat", "section": "✨ Features" },
     { "type": "fix", "section": "🐛 Bug Fixes" },

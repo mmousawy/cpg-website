@@ -10,6 +10,7 @@
   --background: #f0f1f3;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
+  --background-special: #bba5fa;
   --foreground: #171717;
   --text-muted: #6e7277;
   --text-muted-light: #8f98a3;
@@ -38,6 +39,7 @@
     --background: #171718;
     --background-medium: #1d1f20;
     --background-light: #2e2f31;
+    --background-special: #412988;
     --foreground: #ededed;
     --text-muted: #a3a3a3;
     --text-muted-light: #737373;

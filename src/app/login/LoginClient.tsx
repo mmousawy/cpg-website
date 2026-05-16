@@ -95,7 +95,7 @@ function LoginForm() {
           Welcome back
         </h1>
         <div
-          className="flex items-center justify-center gap-2 mb-6"
+          className="flex items-center justify-center mb-8"
         >
           <p
             className="text-center text-sm text-foreground/70"

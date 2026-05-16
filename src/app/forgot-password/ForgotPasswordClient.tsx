@@ -97,7 +97,7 @@ export default function ForgotPasswordClient() {
           Forgot password?
         </h1>
         <div
-          className="flex items-center justify-center gap-2 mb-8"
+          className="flex items-center justify-center mb-8"
         >
           <p
             className="text-center text-sm text-foreground/70"

@@ -438,7 +438,7 @@ export default function OnboardingClient() {
             !
           </h1>
           <div
-            className="flex items-center justify-center gap-2 mb-8"
+            className="flex items-center justify-center mb-8"
           >
             <p
               className="text-base sm:text-lg opacity-70"
