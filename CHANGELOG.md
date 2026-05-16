@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.3](https://github.com/mmousawy/cpg-website/compare/v1.30.2...v1.30.3) (2026-05-15)
+
+
+### Bug Fixes
+
+* update release workflow and Vercel configuration for improved deployment ([4f87277](https://github.com/mmousawy/cpg-website/commit/4f872778f092cdb4d9b98d6eef39af81a4fb3b91))
+
 ## [1.30.2](https://github.com/mmousawy/cpg-website/compare/v1.30.1...v1.30.2) (2026-05-15)
 
 
