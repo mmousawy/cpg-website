@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.4](https://github.com/mmousawy/cpg-website/compare/v1.30.3...v1.30.4) (2026-05-17)
+
+
+### 🐛 Bug Fixes
+
+* integrate SignUpCTA component into challenges and gallery pages; enhance styling and conditional rendering in Comments and SignUpCTA components ([c5e8b06](https://github.com/mmousawy/cpg-website/commit/c5e8b06884e90abf76ab75f994172152a96b3da3))
+* update checkout action version and enhance release configuration for better deployment ([3907bfd](https://github.com/mmousawy/cpg-website/commit/3907bfddd0413ccb21faede392ed0a7e8cf0b149))
+
 ## [1.30.3](https://github.com/mmousawy/cpg-website/compare/v1.30.2...v1.30.3) (2026-05-15)
 
 
