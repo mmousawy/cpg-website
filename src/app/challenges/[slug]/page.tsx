@@ -33,6 +33,7 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import PhotoStackSVG from 'public/icons/photo-stack.svg';
 import ClockSVG from 'public/icons/time.svg';
+import SignUpCTA, { SignUpCTASection } from '@/components/shared/SignUpCTA';
 
 // Pre-render all challenges at build time
 export async function generateStaticParams() {
@@ -482,6 +483,8 @@ export default async function ChallengePage({
           />
         </WidePageContainer>
       )}
+
+      <SignUpCTASection />
 
       {/* Comments Section */}
       <PageContainer

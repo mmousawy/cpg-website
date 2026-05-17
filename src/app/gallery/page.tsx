@@ -252,6 +252,7 @@ export default async function GalleryPage() {
 
         <SignUpCTA
           variant="inline"
+          className="mt-10 max-w-screen-md mx-auto"
         />
       </WidePageContainer>
     </>

@@ -6,6 +6,7 @@ import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
+import clsx from 'clsx';
 
 const BANNER_BACKGROUND =
   'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero1.jpg';
@@ -14,9 +15,10 @@ type SignUpCTAVariant = 'banner' | 'inline';
 
 type SignUpCTAProps = {
   variant?: SignUpCTAVariant;
+  className?: string;
 };
 
-export default function SignUpCTA({ variant = 'inline' }: SignUpCTAProps) {
+export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading || user) {
@@ -46,7 +48,7 @@ export default function SignUpCTA({ variant = 'inline' }: SignUpCTAProps) {
             className="w-full max-w-screen-md mx-auto space-y-4"
           >
             <h2
-              className="text-2xl font-bold text-white sm:text-3xl md:text-4xl"
+              className="text-2xl font-bold text-white sm:text-3xl md:text-4xl font-heading"
             >
               Photography is better together
             </h2>
@@ -75,7 +77,7 @@ export default function SignUpCTA({ variant = 'inline' }: SignUpCTAProps) {
 
   return (
     <Container
-      className='bg-background-special mt-10'
+      className={clsx('bg-background-special', className)}
     >
       <div
         className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"

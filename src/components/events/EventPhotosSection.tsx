@@ -126,12 +126,15 @@ export default function EventPhotosSection({
   album,
   variant = 'full',
 }: EventPhotosSectionProps) {
+  const { user } = useAuth();
   const ownerNickname = album?.profile?.nickname ?? null;
   const albumSlug = album?.slug ?? '';
 
   if (!album) return null;
 
   const gridPhotos = transformToStreamPhotos(album.photos);
+
+  if (!user && gridPhotos.length === 0) return null;
 
   if (variant === 'gridOnly') {
     return (

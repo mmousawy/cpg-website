@@ -100,7 +100,7 @@ const CommentItem = memo(function CommentItem({
       id={`comment-${comment.id}`}
     >
       <div
-        className="dark:bg-foreground/5 rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 transition-colors duration-700 relative"
+        className="dark:bg-[#303033] bg-[#fff] rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 transition-colors duration-700 relative"
       >
         <div
           className="flex items-start justify-between gap-2 mb-2"
