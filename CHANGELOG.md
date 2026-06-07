@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.6](https://github.com/mmousawy/cpg-website/compare/v1.30.5...v1.30.6) (2026-06-07)
+
+
+### 🐛 Bug Fixes
+
+* multiple issues and update packages ([3872596](https://github.com/mmousawy/cpg-website/commit/3872596c67488353326d26ca3cf3a5a185c3dfa4))
+
 ## [1.30.5](https://github.com/mmousawy/cpg-website/compare/v1.30.4...v1.30.5) (2026-06-07)
 
 
