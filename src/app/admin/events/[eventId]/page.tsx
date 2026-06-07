@@ -764,7 +764,7 @@ export default function AdminEventFormPage() {
       </PageContainer>
 
       {/* Sticky Save Bar */}
-      {(hasChanges || isNewEvent || error || success) && (
+      {(hasChanges || isNewEvent || isDraft || error || success) && (
         <StickyActionBar
           constrainWidth
         >

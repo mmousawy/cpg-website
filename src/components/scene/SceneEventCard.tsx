@@ -75,10 +75,21 @@ function formatDateRange(
 }
 
 function formatLocation(locationName: string | null, locationCity: string): string {
-  if (locationName?.trim()) {
-    return `${locationName.trim()}, ${locationCity}`;
+  const name = locationName?.trim();
+  const city = locationCity.trim();
+
+  if (name) {
+    const normalizedName = name.toLocaleLowerCase();
+    const normalizedCity = city.toLocaleLowerCase();
+
+    if (!city || normalizedName.includes(normalizedCity)) {
+      return name;
+    }
+
+    return `${name}, ${city}`;
   }
-  return locationCity;
+
+  return city;
 }
 
 function getCategoryLabel(category: string): string {

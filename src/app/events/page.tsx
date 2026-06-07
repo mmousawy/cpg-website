@@ -73,7 +73,7 @@ export default async function EventsPage() {
         {/* Upcoming Events */}
         <section>
           <h2
-            className="text-xl font-semibold mb-4 opacity-70 font-heading"
+            className="text-xl font-semibold mb-4 opacity-80 font-heading"
           >
             Upcoming
           </h2>
@@ -92,7 +92,7 @@ export default async function EventsPage() {
         {/* Past Events - Paginated */}
         <section>
           <h2
-            className="text-xl font-semibold mb-4 opacity-70 font-heading"
+            className="text-xl font-semibold mb-4 opacity-80 font-heading"
           >
             Past events
           </h2>
