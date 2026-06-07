@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.5](https://github.com/mmousawy/cpg-website/compare/v1.30.4...v1.30.5) (2026-06-07)
+
+
+### 🐛 Bug Fixes
+
+* update event form to include draft state; enhance styling for event headings and location formatting ([645c829](https://github.com/mmousawy/cpg-website/commit/645c82915ad08d862249a103e1125ef388ce4ff3))
+
 ## [1.30.4](https://github.com/mmousawy/cpg-website/compare/v1.30.3...v1.30.4) (2026-05-17)
 
 
