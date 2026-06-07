@@ -171,10 +171,9 @@ async function fetchAlbumSectionCounts(userId: string): Promise<AlbumSectionCoun
     supabase
       .from('shared_album_members')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'accepted'),
+      .eq('user_id', userId),
     supabase
-      .from('shared_album_members')
+      .from('shared_album_requests')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'pending')

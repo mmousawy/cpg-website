@@ -1,6 +1,7 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent, SceneEventCategory } from '@/types/scene';
 import { SCENE_EVENT_CATEGORIES, getSceneCategoryStyle } from '@/types/scene';
+import { formatLocation } from '@/utils/formatLocation';
 import { formatPrice } from '@/utils/formatPrice';
 import clsx from 'clsx';
 import Image from 'next/image';
@@ -74,24 +75,6 @@ function formatDateRange(
   return `${weekday(startD)} ${monthName(startD, true)} ${ordinal(startD.getDate())}, ${startD.getFullYear()} – ${weekday(endD)} ${monthName(endD, true)} ${ordinal(endD.getDate())}, ${endD.getFullYear()}`;
 }
 
-function formatLocation(locationName: string | null, locationCity: string): string {
-  const name = locationName?.trim();
-  const city = locationCity.trim();
-
-  if (name) {
-    const normalizedName = name.toLocaleLowerCase();
-    const normalizedCity = city.toLocaleLowerCase();
-
-    if (!city || normalizedName.includes(normalizedCity)) {
-      return name;
-    }
-
-    return `${name}, ${city}`;
-  }
-
-  return city;
-}
-
 function getCategoryLabel(category: string): string {
   return (
     SCENE_EVENT_CATEGORIES.find((c) => c.value === category)?.label ?? category
@@ -117,9 +100,13 @@ export default function SceneEventCard({
   const imageSrc = event.cover_image_url;
   const dateStr = formatDateRange(event.start_date, event.end_date);
   const categoryLabel = getCategoryLabel(event.category);
-  const locationStr = formatLocation(event.location_name, event.location_city);
-  const interestedPeople = transformInterestedToAvatarPeople(interested);
   const isCpgEvent = event.id.startsWith('cpg-');
+  const locationStr = formatLocation(
+    event.location_name,
+    event.location_city,
+    isCpgEvent,
+  );
+  const interestedPeople = transformInterestedToAvatarPeople(interested);
   const interestCount = event.interest_count ?? 0;
   const showInterestRow = interested.length > 0;
   const href = isCpgEvent

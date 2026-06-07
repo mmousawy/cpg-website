@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
+import type { TablesUpdate } from '@/database.types';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -30,17 +31,13 @@ export async function POST(request: NextRequest) {
   }
 
   const now = new Date().toISOString();
-  let updateData: Record<string, string | null>;
-
-  if (action === 'no_show') {
-    updateData = unmark
-      ? { no_show_at: null }
-      : { no_show_at: now, attended_at: null };
-  } else {
-    updateData = unmark
-      ? { attended_at: null }
-      : { attended_at: now, no_show_at: null };
-  }
+  const updateData = (action === 'no_show'
+    ? (unmark
+        ? { no_show_at: null }
+        : { no_show_at: now, attended_at: null })
+    : (unmark
+        ? { attended_at: null }
+        : { attended_at: now, no_show_at: null })) satisfies TablesUpdate<'events_rsvps'>;
 
   const { error } = await supabase
     .from('events_rsvps')

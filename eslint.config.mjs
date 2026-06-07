@@ -3,6 +3,11 @@ import nextConfig from 'eslint-config-next';
 const eslintConfig = [
   ...nextConfig,
   {
+    settings: {
+      react: {
+        version: '19.0',
+      },
+    },
     rules: {
       // General formatting
       'semi': ['error', 'always'],

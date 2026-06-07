@@ -308,7 +308,7 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
     const members = profileIds
       .slice(0, membersPerInterest)
       .map((id) => profileMap.get(id))
-      .filter((p): p is Member => p !== undefined);
+      .filter((p): p is NonNullable<typeof p> => p !== undefined) as Member[];
 
     if (members.length > 0) {
       results.push({

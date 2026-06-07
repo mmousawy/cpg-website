@@ -15,7 +15,7 @@ import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import type { Tables } from '@/database.types';
+import type { Tables, TablesUpdate } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -505,7 +505,7 @@ export default function AdminEventFormPage() {
         }, 1500);
       } else {
         // Update existing event
-        const updateData: Record<string, unknown> = {
+        const updateData = {
           title: title.trim(),
           slug: finalSlug,
           description: description.trim() || null,
@@ -514,14 +514,14 @@ export default function AdminEventFormPage() {
           location: location.trim() || null,
           cover_image: coverImageUrl,
           is_draft: asDraft,
-        };
-
-        // Only update image metadata if a new cover was uploaded
-        if (coverImageFile && imageBlurhash) {
-          updateData.image_blurhash = imageBlurhash;
-          updateData.image_width = imageWidth;
-          updateData.image_height = imageHeight;
-        }
+          ...(coverImageFile && imageBlurhash
+            ? {
+              image_blurhash: imageBlurhash,
+              image_width: imageWidth,
+              image_height: imageHeight,
+            }
+            : {}),
+        } satisfies TablesUpdate<'events'>;
 
         const { error: updateError } = await supabase
           .from('events')
@@ -764,71 +764,69 @@ export default function AdminEventFormPage() {
       </PageContainer>
 
       {/* Sticky Save Bar */}
-      {(hasChanges || isNewEvent || isDraft || error || success) && (
-        <StickyActionBar
-          constrainWidth
+      <StickyActionBar
+        constrainWidth
+      >
+        <div
+          className="flex items-center gap-3 text-sm"
         >
-          <div
-            className="flex items-center gap-3 text-sm"
-          >
-            {error && (
-              <ErrorMessage
-                variant="compact"
-                className="py-1.5 text-sm"
-              >
-                {error}
-              </ErrorMessage>
-            )}
-            {success && (
-              <SuccessMessage
-                variant="compact"
-                className="py-1.5 text-sm"
-              >
-                {isNewEvent ? 'Event created!' : 'Changes saved!'}
-              </SuccessMessage>
-            )}
-            {!error && !success && hasChanges && (
-              <span
-                className="text-foreground/70"
-              >
-                {changeCount}
-                {' '}
-                unsaved
-                {' '}
-                {changeCount === 1 ? 'change' : 'changes'}
-              </span>
-            )}
-            {!error && !success && isNewEvent && !hasChanges && (
-              <span
-                className="text-foreground/70"
-              >
-                New event
-              </span>
-            )}
-          </div>
-          <div
-            className="flex gap-2"
-          >
-            <Button
-              onClick={handleSaveAsDraft}
-              variant="secondary"
-              size="sm"
-              disabled={isSaving}
+          {error && (
+            <ErrorMessage
+              variant="compact"
+              className="py-1.5 text-sm"
             >
-              Save as draft
-            </Button>
-            <Button
-              type="submit"
-              form="event-form"
-              disabled={isSaving || (!hasChanges && !isNewEvent)}
-              loading={isSaving}
-              size="sm"
+              {error}
+            </ErrorMessage>
+          )}
+          {success && (
+            <SuccessMessage
+              variant="compact"
+              className="py-1.5 text-sm"
             >
-              {isNewEvent ? 'Create event' : 'Save changes'}
-            </Button>
-          </div>
-        </StickyActionBar>
-      )}
+              {isNewEvent ? 'Event created!' : 'Changes saved!'}
+            </SuccessMessage>
+          )}
+          {!error && !success && hasChanges && (
+            <span
+              className="text-foreground/70"
+            >
+              {changeCount}
+              {' '}
+              unsaved
+              {' '}
+              {changeCount === 1 ? 'change' : 'changes'}
+            </span>
+          )}
+          {!error && !success && isNewEvent && !hasChanges && (
+            <span
+              className="text-foreground/70"
+            >
+              New event
+            </span>
+          )}
+        </div>
+        <div
+          className="flex gap-2"
+        >
+          <Button
+            onClick={handleSaveAsDraft}
+            variant="secondary"
+            size="sm"
+            disabled={isSaving}
+          >
+            {!isNewEvent && !isDraft ? 'Unpublish event' : 'Save as draft'}
+          </Button>
+          <Button
+            type="submit"
+            form="event-form"
+            disabled={isSaving || (!hasChanges && !isNewEvent && !isDraft)}
+            loading={isSaving}
+            size="sm"
+          >
+            {isNewEvent ? 'Create event' : isDraft ? 'Publish event' : 'Save changes'}
+          </Button>
+        </div>
+      </StickyActionBar>
     </>
   );
 }

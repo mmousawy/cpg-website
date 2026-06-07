@@ -116,11 +116,19 @@ export async function POST(request: NextRequest) {
 
   // Check email preferences and send emails
   // Get admin email preferences for admin notifications (use admin client)
-  const { data: emailPreferences } = await adminSupabase
-    .from('email_preferences')
-    .select('user_id')
+  const { data: adminNotificationType } = await adminSupabase
+    .from('email_types')
+    .select('id')
     .eq('type_key', 'admin_notifications')
-    .eq('enabled', false);
+    .single();
+
+  const { data: emailPreferences } = adminNotificationType
+    ? await adminSupabase
+      .from('email_preferences')
+      .select('user_id')
+      .eq('email_type_id', adminNotificationType.id)
+      .eq('opted_out', true)
+    : { data: [] as Array<{ user_id: string }> };
 
   const optedOutUserIds = new Set((emailPreferences || []).map((p) => p.user_id));
 

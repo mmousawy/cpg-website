@@ -1,6 +1,7 @@
 import { revalidateAlbum, revalidateAlbums } from '@/app/actions/revalidate';
 import type { AlbumFormData, BulkAlbumFormData } from '@/components/manage';
 import type { SharedAlbumFormData } from '@/components/manage/SharedAlbumEditForm';
+import type { TablesUpdate } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -93,7 +94,7 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
 
       const isShared = isSharedAlbumFormData(data);
 
-      const updatePayload: Record<string, unknown> = {
+      const updatePayload = {
         title: data.title.trim(),
         slug: data.slug.trim(),
         description: data.description?.trim() || null,
@@ -101,7 +102,7 @@ export function useUpdateAlbum(userId: string | undefined, nickname: string | nu
         is_shared: isShared,
         join_policy: isShared ? data.joinPolicy : null,
         max_photos_per_user: isShared ? (data.maxPhotosPerUser ?? null) : null,
-      };
+      } satisfies TablesUpdate<'albums'>;
 
       // Optimistically update all album sub-caches
       for (const filter of ['personal', 'shared', 'event'] as const) {
