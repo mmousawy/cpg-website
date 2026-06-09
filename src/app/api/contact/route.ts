@@ -1,4 +1,3 @@
-import { checkBotId } from 'botid/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
@@ -11,18 +10,6 @@ const CONTACT_EMAIL = 'murtada.al.mousawy@gmail.com';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check for bots using BotID
-    // In development, checkBotId() automatically returns { isBot: false }
-    const { isBot } = await checkBotId();
-
-    if (isBot) {
-      console.log('Bot detected, rejecting contact form submission');
-      return NextResponse.json(
-        { message: 'We couldn\'t verify your request. If you\'re having trouble signing up, please email murtada.al.mousawy@gmail.com for assistance.' },
-        { status: 403 },
-      );
-    }
-
     const body = await request.json();
     const { name, email, subject, message } = body;
 

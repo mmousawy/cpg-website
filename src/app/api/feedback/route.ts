@@ -1,4 +1,3 @@
-import { checkBotId } from 'botid/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -73,17 +72,6 @@ export async function POST(request: NextRequest) {
     const isAuthenticated = !!user;
 
     if (!isAuthenticated) {
-      // Anonymous feedback - validate BotID
-      const { isBot } = await checkBotId();
-
-      if (isBot) {
-        console.log('Bot detected, rejecting feedback submission');
-        return NextResponse.json(
-          { error: "We couldn't verify your request. Please try again." },
-          { status: 403 },
-        );
-      }
-
       if (name.trim().length > 100) {
         return NextResponse.json(
           { error: 'Name is too long (max 100 characters)' },

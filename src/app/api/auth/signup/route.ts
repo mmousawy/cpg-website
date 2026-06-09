@@ -1,4 +1,3 @@
-import { checkBotId } from 'botid/server';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
@@ -25,10 +24,6 @@ export async function POST(request: NextRequest) {
     const { email, password, bypassToken } = await request.json();
 
     const supabase = createAdminClient();
-    let shouldSkipBotCheck = false;
-
-    // Check if this is a test email (skip bot check for E2E tests)
-    const isTestEmail = email?.endsWith('@test.example.com') || email?.endsWith('@test.local');
 
     // Validate bypass token if provided (short ID stored directly in token_hash)
     if (bypassToken) {
@@ -54,22 +49,7 @@ export async function POST(request: NextRequest) {
         .update({ used_at: new Date().toISOString() })
         .eq('id', token.id);
 
-      shouldSkipBotCheck = true;
-      console.log('Bypass token validated, skipping BotID check');
-    }
-
-    // Check for bots using BotID (skip for test emails and valid bypass tokens)
-    // In development, checkBotId() automatically returns { isBot: false }
-    if (!isTestEmail && !shouldSkipBotCheck) {
-      const { isBot } = await checkBotId();
-
-      if (isBot) {
-        console.error('Bot detected for email: ', email, ', rejecting signup attempt');
-        return NextResponse.json(
-          { message: 'We couldn\'t verify your request. If you\'re having trouble signing up, please email murtada.al.mousawy@gmail.com for assistance.' },
-          { status: 403 },
-        );
-      }
+      console.log('Bypass token validated, skipping bot check');
     }
 
     // Validate required fields

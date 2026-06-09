@@ -1,6 +1,5 @@
 'use client';
 
-import { BotIdClient } from 'botid/client';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -346,17 +345,8 @@ function SignupClientContent() {
   const bypassToken = searchParams.get('bypass');
 
   return (
-    <>
-      {!bypassToken && (
-        <BotIdClient
-          protect={[
-            { path: '/api/auth/signup', method: 'POST' },
-          ]}
-        />
-      )}
-      <SignupForm
-        bypassToken={bypassToken}
-      />
-    </>
+    <SignupForm
+      bypassToken={bypassToken}
+    />
   );
 }

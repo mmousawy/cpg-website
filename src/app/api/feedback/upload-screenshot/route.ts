@@ -1,4 +1,3 @@
-import { checkBotId } from 'botid/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -13,15 +12,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      const { isBot } = await checkBotId();
-      if (isBot) {
-        return NextResponse.json(
-          { error: "We couldn't verify your request. Please try again." },
-          { status: 403 },
-        );
-      }
-    }
+
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

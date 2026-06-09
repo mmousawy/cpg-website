@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BotIdClient } from 'botid/client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -247,19 +246,5 @@ function ContactForm() {
 }
 
 export default function ContactClient() {
-  // BotIdClient only works when deployed on Vercel
-  const isVercel = process.env.NEXT_PUBLIC_VERCEL === '1';
-
-  return (
-    <>
-      {isVercel && (
-        <BotIdClient
-          protect={[
-            { path: '/api/contact', method: 'POST' },
-          ]}
-        />
-      )}
-      <ContactForm />
-    </>
-  );
+  return <ContactForm />;
 }

@@ -10,7 +10,6 @@ import Textarea from '@/components/shared/Textarea';
 import { useAuth } from '@/context/AuthContext';
 import { FEEDBACK_SUBJECTS } from '@/types/feedback';
 import { validateImage } from '@/utils/imageValidation';
-import { BotIdClient } from 'botid/client';
 import Image from 'next/image';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -196,18 +195,8 @@ export default function FeedbackModal({ onSuccess }: FeedbackModalProps) {
     modalContext.setFooter(footerContent);
   }, [modalContext, footerContent]);
 
-  const isVercel = process.env.NEXT_PUBLIC_VERCEL === '1';
-
   return (
     <>
-      {!isAuthenticated && isVercel && (
-        <BotIdClient
-          protect={[
-            { path: '/api/feedback', method: 'POST' },
-            { path: '/api/feedback/upload-screenshot', method: 'POST' },
-          ]}
-        />
-      )}
       <div
         className="space-y-4"
       >

@@ -1,4 +1,3 @@
-import { checkBotId } from 'botid/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -45,17 +44,6 @@ export async function POST(request: NextRequest) {
     const isAuthenticated = !!user;
 
     if (!isAuthenticated) {
-      // Anonymous report - validate BotID and required fields
-      const { isBot } = await checkBotId();
-
-      if (isBot) {
-        console.log('Bot detected, rejecting report submission');
-        return NextResponse.json(
-          { error: 'We couldn\'t verify your request. Please try again.' },
-          { status: 403 },
-        );
-      }
-
       // Validate anonymous fields
       if (!reporterName || !reporterEmail) {
         return NextResponse.json(

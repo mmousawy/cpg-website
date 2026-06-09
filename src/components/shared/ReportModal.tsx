@@ -12,7 +12,6 @@ import type { Photo } from '@/types/photos';
 import type { ReportEntityType } from '@/types/reports';
 import { supabase } from '@/utils/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { BotIdClient } from 'botid/client';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 export const REPORT_REASONS = [
@@ -259,18 +258,8 @@ export default function ReportModal({
     modalContext.setFooter(footerContent);
   }, [modalContext, footerContent]);
 
-  // BotIdClient only works when deployed on Vercel
-  const isVercel = process.env.NEXT_PUBLIC_VERCEL === '1';
-
   return (
     <>
-      {!isAuthenticated && isVercel && (
-        <BotIdClient
-          protect={[
-            { path: '/api/reports', method: 'POST' },
-          ]}
-        />
-      )}
       <div
         className="space-y-4"
       >

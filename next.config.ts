@@ -1,5 +1,4 @@
 import bundleAnalyzer from '@next/bundle-analyzer';
-import { withBotId } from 'botid/next/config';
 import { readFileSync } from 'fs';
 import type { NextConfig } from 'next';
 
@@ -84,4 +83,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBotId(withBundleAnalyzer(nextConfig));
+export default withBundleAnalyzer(nextConfig);
