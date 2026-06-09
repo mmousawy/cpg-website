@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.30.7](https://github.com/mmousawy/cpg-website/compare/v1.30.6...v1.30.7) (2026-06-09)
+
+
+### 🐛 Bug Fixes
+
+* optimize user retrieval by querying profiles instead of listing all users ([c6f3bf6](https://github.com/mmousawy/cpg-website/commit/c6f3bf66fedfe816fb25a631666c3824a575d7a7))
+* remove BotID integration from various components and API routes ([57215bd](https://github.com/mmousawy/cpg-website/commit/57215bd0222370d7fe474cb563b32f839b144902))
+
 ## [1.30.6](https://github.com/mmousawy/cpg-website/compare/v1.30.5...v1.30.6) (2026-06-07)
 
 
