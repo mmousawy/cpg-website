@@ -68,10 +68,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email already exists
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const emailExists = existingUsers?.users?.some(
-      (u) => u.email?.toLowerCase() === email.toLowerCase(),
-    );
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .maybeSingle();
+    const emailExists = !!existingProfile;
 
     if (emailExists) {
       return NextResponse.json(

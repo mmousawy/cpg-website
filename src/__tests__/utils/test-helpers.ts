@@ -27,9 +27,20 @@ type TestUser = {
  */
 export async function getTestUserByEmail(email: string): Promise<TestUser | undefined> {
   const adminSupabase = createTestSupabaseClient();
-  const { data: users } = await adminSupabase.auth.admin.listUsers();
-  const user = users?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+  // Query profiles by email (fast indexed lookup) to get the user ID
+  const { data: profile } = await adminSupabase
+    .from('profiles')
+    .select('id')
+    .eq('email', email.toLowerCase())
+    .maybeSingle();
+
+  if (!profile) return undefined;
+
+  // Fetch the full auth user by ID
+  const { data: { user } } = await adminSupabase.auth.admin.getUserById(profile.id);
   if (!user) return undefined;
+
   return {
     email: user.email || '',
     ...user,
