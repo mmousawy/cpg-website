@@ -8,6 +8,7 @@ type BodyStyleSnapshot = {
   right: string;
   width: string;
   paddingRight: string;
+  height: string;
 };
 
 type LockState = {
@@ -42,6 +43,7 @@ export function lockBodyScroll() {
     right: body.style.right,
     width: body.style.width,
     paddingRight: body.style.paddingRight,
+    height: body.style.height,
   };
 
   const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
@@ -51,6 +53,7 @@ export function lockBodyScroll() {
   body.style.left = '0';
   body.style.right = '0';
   body.style.width = '100%';
+  body.style.height = 'auto';
   if (scrollbarWidth > 0) {
     body.style.paddingRight = `${scrollbarWidth}px`;
   }
@@ -73,6 +76,7 @@ export function unlockBodyScroll() {
     body.style.right = snapshot.right;
     body.style.width = snapshot.width;
     body.style.paddingRight = snapshot.paddingRight;
+    body.style.height = snapshot.height;
   } else {
     body.style.overflow = '';
     body.style.position = '';
@@ -81,6 +85,7 @@ export function unlockBodyScroll() {
     body.style.right = '';
     body.style.width = '';
     body.style.paddingRight = '';
+    body.style.height = '';
   }
 
   window.scrollTo(0, lockState.scrollY);

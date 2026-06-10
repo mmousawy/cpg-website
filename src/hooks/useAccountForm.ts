@@ -124,7 +124,6 @@ export function useAccountForm() {
   const [emailPreferences, setEmailPreferences] = useState<EmailPreference[]>([]);
 
   // Email change state
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailChangedFromUrl, setEmailChangedFromUrl] = useState(false);
 
   // Avatar state - saved value and pending changes
@@ -805,8 +804,6 @@ export function useAccountForm() {
     emailTypes,
     emailPreferences,
     stats,
-    isEmailModalOpen,
-    setIsEmailModalOpen,
     emailChangedFromUrl,
 
     // Avatar

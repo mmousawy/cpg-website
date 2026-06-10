@@ -1,6 +1,8 @@
 'use client';
 
 import AccountStatsSection from '@/components/account/AccountStatsSection';
+import { ModalContext } from '@/app/providers/ModalProvider';
+import { useContext } from 'react';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import CopyrightSettingsSection from '@/components/account/CopyrightSettingsSection';
 import DeleteAccountSection from '@/components/account/DeleteAccountSection';
@@ -48,8 +50,6 @@ export default function AccountPage() {
     themeMounted,
     emailTypes,
     stats,
-    isEmailModalOpen,
-    setIsEmailModalOpen,
     emailChangedFromUrl,
 
     // Avatar
@@ -75,6 +75,21 @@ export default function AccountPage() {
   } = useAccountForm();
 
   const fullName = watch('fullName');
+  const modalContext = useContext(ModalContext);
+
+  const openEmailModal = () => {
+    modalContext.setSize('default');
+    modalContext.setTitle('Change email address');
+    modalContext.setFooter(null);
+    modalContext.setContent(
+      <ChangeEmailModal
+        key={Date.now()}
+        currentEmail={profile?.email || user?.email || ''}
+        onSuccess={() => {}}
+      />,
+    );
+    modalContext.setIsOpen(true);
+  };
 
   const actionBarContent = (
     <>
@@ -205,7 +220,7 @@ export default function AccountPage() {
                     handleAvatarUpload={handleAvatarUpload}
                     handleRemoveAvatar={handleRemoveAvatar}
                     handleCancelAvatarChange={handleCancelAvatarChange}
-                    onOpenEmailModal={() => setIsEmailModalOpen(true)}
+                    onOpenEmailModal={openEmailModal}
                     fullName={fullName || user?.email || ''}
                     savedAvatarUrl={savedAvatarUrl}
                     pendingAvatarFile={pendingAvatarFile}
@@ -303,14 +318,6 @@ export default function AccountPage() {
         </StickyActionBar>
       )}
 
-      <ChangeEmailModal
-        isOpen={isEmailModalOpen}
-        onClose={() => setIsEmailModalOpen(false)}
-        currentEmail={profile?.email || user?.email || ''}
-        onSuccess={() => {
-          // Optionally refresh profile after email change initiated
-        }}
-      />
     </SectionScrollProvider>
   );
 }
