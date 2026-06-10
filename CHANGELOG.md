@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.8](https://github.com/mmousawy/cpg-website/compare/v1.30.7...v1.30.8) (2026-06-10)
+
+
+### 🐛 Bug Fixes
+
+* account deletion flow and enhance profile stats icons ([d633854](https://github.com/mmousawy/cpg-website/commit/d633854b2d5d8a9f2054ca415b284f2312ad8778))
+
 ## [1.30.7](https://github.com/mmousawy/cpg-website/compare/v1.30.6...v1.30.7) (2026-06-09)
 
 
