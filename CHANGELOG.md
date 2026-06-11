@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/mmousawy/cpg-website/compare/v1.30.8...v1.31.0) (2026-06-11)
+
+
+### ✨ Features
+
+* Enhance event management and search functionality ([3fd35e4](https://github.com/mmousawy/cpg-website/commit/3fd35e4d70b3ee0c2c89513cc4fde098cd714c1a))
+
 ## [1.30.8](https://github.com/mmousawy/cpg-website/compare/v1.30.7...v1.30.8) (2026-06-10)
 
 
