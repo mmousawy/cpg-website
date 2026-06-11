@@ -13,7 +13,7 @@ import type { SearchResult, SearchEntityType } from '@/types/search';
  */
 export async function searchEntities(
   query: string,
-  types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags'],
+  types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'],
   limit = 20,
 ): Promise<SearchResult[]> {
   'use cache';

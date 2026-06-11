@@ -1811,6 +1811,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           image_url: string
+          image_blurhash: string
           rank: number
           subtitle: string
           title: string

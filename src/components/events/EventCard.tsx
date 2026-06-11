@@ -36,6 +36,27 @@ function transformAttendeesToAvatarPeople(attendees: EventAttendee[]): AvatarPer
   });
 }
 
+function formatLocationDisplay(location: string): string {
+  const lines = location
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return location.trim();
+  }
+
+  const venue = lines[0];
+  const lastLine = lines[lines.length - 1] || '';
+  const city = lastLine.replace(/^\d{4}\s?[A-Za-z]{2}\s+/i, '').trim();
+
+  if (!city || venue.toLocaleLowerCase().includes(city.toLocaleLowerCase())) {
+    return venue;
+  }
+
+  return `${venue}, ${city}`;
+}
+
 type EventCardVariant = 'compact' | 'detailed';
 
 type EventCardProps = {
@@ -227,7 +248,7 @@ export default function EventCard({
               <span
                 className="line-clamp-1"
               >
-                {event.location.split('\n')[0]}
+                {formatLocationDisplay(event.location)}
               </span>
             </span>
           )}
@@ -269,7 +290,7 @@ export default function EventCard({
             />
           )}
           <div
-            className="relative aspect-video w-44 overflow-hidden rounded-md bg-background-light"
+            className="relative aspect-video w-56 overflow-hidden rounded-md bg-background-light"
           >
             <BlurImage
               src={imageSrc}

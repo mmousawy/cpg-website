@@ -52,6 +52,13 @@ CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 
 
 
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA "public";
+
+
+
+
+
+
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
 
 
@@ -1157,7 +1164,7 @@ COMMENT ON FUNCTION "public"."get_user_stats"("p_user_id" "uuid") IS 'Returns al
 
 
 
-CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer DEFAULT 20, "search_types" "text"[] DEFAULT ARRAY['albums'::"text", 'photos'::"text", 'members'::"text", 'events'::"text", 'tags'::"text"]) RETURNS TABLE("entity_type" "text", "entity_id" "text", "title" "text", "subtitle" "text", "image_url" "text", "url" "text", "rank" real)
+CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer DEFAULT 20, "search_types" "text"[] DEFAULT ARRAY['albums'::"text", 'photos'::"text", 'members'::"text", 'events'::"text", 'tags'::"text", 'scene-events'::"text", 'challenges'::"text"]) RETURNS TABLE("entity_type" "text", "entity_id" "text", "title" "text", "subtitle" "text", "image_url" "text", "image_blurhash" "text", "url" "text", "rank" real)
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
@@ -1170,12 +1177,14 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
     ) AS query
   ),
   all_results AS (
+    -- Members (no blurhash needed for avatars)
     SELECT
       'members'::text AS entity_type,
       p.id::text AS entity_id,
       COALESCE(p.full_name, p.nickname, 'Unknown') AS title,
       CASE WHEN p.nickname IS NOT NULL THEN '@' || p.nickname ELSE '' END AS subtitle,
       p.avatar_url AS image_url,
+      NULL::text AS image_blurhash,
       CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname ELSE NULL END AS url,
       ts_rank(p.search_vector, sq.query) AS rank
     FROM profiles p
@@ -1187,16 +1196,16 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
+    -- Albums (simplified - show photo count from aggregated data)
     SELECT
       'albums'::text AS entity_type,
       a.id::text AS entity_id,
       a.title AS title,
-      COALESCE(
-        (SELECT COUNT(*)::text || ' photo' || CASE WHEN COUNT(*) != 1 THEN 's' ELSE '' END
-         FROM album_photos_active ap WHERE ap.album_id = a.id),
-        '0 photos'
-      ) AS subtitle,
+      -- Use simple description instead of counting photos each time
+      COALESCE(a.description, 'Album') AS subtitle,
       a.cover_image_url AS image_url,
+      -- Blurhash only if cover is from a photo (skip expensive lookup)
+      NULL::text AS image_blurhash,
       CASE
         WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/album/' || a.slug
         WHEN a.event_id IS NOT NULL THEN '/events/' || (SELECT slug FROM events WHERE id = a.event_id) || '#photos'
@@ -1215,12 +1224,14 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
+    -- Photos (include blurhash)
     SELECT
       'photos'::text AS entity_type,
       ph.id::text AS entity_id,
       COALESCE(ph.title, 'Untitled Photo') AS title,
       COALESCE(ph.description, '') AS subtitle,
       ph.url AS image_url,
+      ph.blurhash AS image_blurhash,
       CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/photo/' || ph.short_id ELSE NULL END AS url,
       ts_rank(ph.search_vector, sq.query) AS rank
     FROM photos ph
@@ -1234,12 +1245,14 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
+    -- Events (no blurhash for event covers)
     SELECT
       'events'::text AS entity_type,
       e.id::text AS entity_id,
       COALESCE(e.title, 'Untitled Event') AS title,
       COALESCE(e.location, '') AS subtitle,
       e.cover_image AS image_url,
+      NULL::text AS image_blurhash,
       '/events/' || e.slug AS url,
       ts_rank(e.search_vector, sq.query) AS rank
     FROM events e
@@ -1249,6 +1262,51 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
+    -- Scene Events (community photography events)
+    SELECT
+      'scene-events'::text AS entity_type,
+      se.id::text AS entity_id,
+      se.title AS title,
+      COALESCE(se.category || ' • ' || se.location_city, se.location_city) AS subtitle,
+      se.cover_image_url AS image_url,
+      se.image_blurhash AS image_blurhash,
+      '/scene/' || se.slug AS url,
+      ts_rank(se.search_vector, sq.query) AS rank
+    FROM scene_events se
+    CROSS JOIN search_tsquery sq
+    WHERE 'scene-events' = ANY(search_types)
+      AND se.deleted_at IS NULL
+      AND se.search_vector @@ sq.query
+
+    UNION ALL
+
+    -- Challenges (return raw prompt - HTML stripping done in frontend)
+    SELECT
+      'challenges'::text AS entity_type,
+      c.id::text AS entity_id,
+      c.title AS title,
+      -- Return raw prompt (first 200 chars) - frontend will strip HTML
+      LEFT(c.prompt, 200) AS subtitle,
+      c.cover_image_url AS image_url,
+      c.image_blurhash AS image_blurhash,
+      '/challenges/' || c.slug AS url,
+      CASE
+        WHEN c.title ILIKE search_query || '%' THEN 1.0::real
+        WHEN c.title ILIKE '%' || search_query || '%' THEN 0.8::real
+        WHEN c.prompt ILIKE '%' || search_query || '%' THEN 0.5::real
+        ELSE 0.1::real
+      END AS rank
+    FROM challenges c
+    WHERE 'challenges' = ANY(search_types)
+      AND c.is_active = true
+      AND (
+        c.title ILIKE '%' || search_query || '%'
+        OR c.prompt ILIKE '%' || search_query || '%'
+      )
+
+    UNION ALL
+
+    -- Tags (no images)
     SELECT
       'tags'::text AS entity_type,
       at.tag AS entity_id,
@@ -1265,6 +1323,7 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
           AND (a.is_suspended = false OR a.is_suspended IS NULL)
       ) AS subtitle,
       NULL::text AS image_url,
+      NULL::text AS image_blurhash,
       '/gallery/tag/' || at.tag AS url,
       CASE
         WHEN at.tag ILIKE search_query || '%' THEN 1.0::real
@@ -1282,6 +1341,7 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
     title,
     subtitle,
     image_url,
+    image_blurhash,
     url,
     rank
   FROM all_results
@@ -1294,7 +1354,7 @@ $$;
 ALTER FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) OWNER TO "supabase_admin";
 
 
-COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search across albums, photos, members, events, and tags. Returns ranked results with entity metadata. Respects RLS policies.';
+COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search across albums, photos, members, events, scene events, challenges, and tags. Returns ranked results with entity metadata including blurhash for blur placeholders. Respects RLS policies.';
 
 
 
@@ -3360,6 +3420,14 @@ CREATE INDEX "idx_album_tags_tag" ON "public"."album_tags" USING "btree" ("tag")
 
 
 
+CREATE INDEX "idx_album_tags_tag_trgm" ON "public"."album_tags" USING "gin" ("tag" "public"."gin_trgm_ops");
+
+
+
+COMMENT ON INDEX "public"."idx_album_tags_tag_trgm" IS 'Trigram index for fast ILIKE pattern matching on tags';
+
+
+
 CREATE INDEX "idx_album_views_album_viewed_at" ON "public"."album_views" USING "btree" ("album_id", "viewed_at" DESC);
 
 
@@ -3432,7 +3500,27 @@ CREATE INDEX "idx_challenges_active" ON "public"."challenges" USING "btree" ("is
 
 
 
+COMMENT ON INDEX "public"."idx_challenges_active" IS 'Filter index for active challenges';
+
+
+
+CREATE INDEX "idx_challenges_prompt_trgm" ON "public"."challenges" USING "gin" ("prompt" "public"."gin_trgm_ops");
+
+
+
+COMMENT ON INDEX "public"."idx_challenges_prompt_trgm" IS 'Trigram index for fast ILIKE pattern matching on challenge prompts';
+
+
+
 CREATE INDEX "idx_challenges_slug" ON "public"."challenges" USING "btree" ("slug");
+
+
+
+CREATE INDEX "idx_challenges_title_trgm" ON "public"."challenges" USING "gin" ("title" "public"."gin_trgm_ops");
+
+
+
+COMMENT ON INDEX "public"."idx_challenges_title_trgm" IS 'Trigram index for fast ILIKE pattern matching on challenge titles';
 
 
 
@@ -4755,6 +4843,20 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "service_role";
+
+
+
 
 
 
@@ -5113,10 +5215,101 @@ GRANT ALL ON FUNCTION "public"."get_user_stats"("p_user_id" "uuid") TO "service_
 
 
 
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) TO "postgres";
 GRANT ALL ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "service_role";
 
 
 
@@ -5218,10 +5411,87 @@ GRANT ALL ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "
 
 
 
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "postgres";
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "anon";
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "anon";
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "anon";
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "service_role";
 
 
 
@@ -5304,6 +5574,41 @@ GRANT ALL ON FUNCTION "public"."update_tag_count"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "service_role";
 
 
 

@@ -103,6 +103,7 @@ export default async function ScenePage() {
           className="text-base sm:text-lg mt-2 text-foreground/70"
         >
           A community-curated guide to photography events.
+          <br />
           Added by members, for members.
         </p>
       </div>

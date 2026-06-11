@@ -24,12 +24,14 @@ const groupResultsByType = (results: SearchResult[]): Record<string, SearchResul
   return grouped;
 };
 
-const typeOrder: SearchResult['entity_type'][] = ['members', 'albums', 'photos', 'events', 'tags'];
+const typeOrder: SearchResult['entity_type'][] = ['members', 'events', 'scene-events', 'challenges', 'albums', 'photos', 'tags'];
 const typeLabels: Record<SearchResult['entity_type'], string> = {
   members: 'Members',
+  events: 'Events',
+  'scene-events': 'Scene Events',
+  challenges: 'Challenges',
   albums: 'Albums',
   photos: 'Photos',
-  events: 'Events',
   tags: 'Tags',
 };
 

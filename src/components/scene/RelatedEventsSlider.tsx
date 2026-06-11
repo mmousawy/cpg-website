@@ -79,7 +79,7 @@ export default function RelatedEventsSlider({
       className="mt-8 min-w-0 sm:-mx-16 sm:px-16 sm:mt-12"
     >
       <h2
-        className="text-lg font-semibold mb-4 opacity-70"
+        className="text-lg font-semibold mb-4 opacity-80 font-heading"
       >
         More events in
         {' '}

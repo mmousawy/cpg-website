@@ -1,4 +1,4 @@
-export type SearchEntityType = 'albums' | 'photos' | 'members' | 'events' | 'tags';
+export type SearchEntityType = 'albums' | 'photos' | 'members' | 'events' | 'tags' | 'scene-events' | 'challenges';
 
 export type SearchResult = {
   entity_type: SearchEntityType;
@@ -6,6 +6,7 @@ export type SearchResult = {
   title: string;
   subtitle: string;
   image_url: string | null;
+  image_blurhash: string | null;
   url: string | null;
   rank: number;
 };

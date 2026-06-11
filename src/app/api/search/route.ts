@@ -9,10 +9,10 @@ export async function GET(request: NextRequest) {
   const limitParam = searchParams.get('limit');
 
   // Parse types filter
-  let types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags'];
+  let types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'];
   if (typesParam) {
     const requestedTypes = typesParam.split(',').map((t) => t.trim().toLowerCase()) as SearchEntityType[];
-    const validTypes: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags'];
+    const validTypes: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'];
     types = requestedTypes.filter((t) => validTypes.includes(t));
     if (types.length === 0) {
       types = validTypes; // Default to all if invalid types provided
@@ -34,11 +34,19 @@ export async function GET(request: NextRequest) {
   try {
     const results = await searchEntities(query.trim(), types, limit);
 
-    return NextResponse.json({
-      results,
-      query: query.trim(),
-      total: results.length,
-    });
+    // Add cache headers for client-side caching (5 minutes)
+    return NextResponse.json(
+      {
+        results,
+        query: query.trim(),
+        total: results.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        },
+      },
+    );
   } catch (error) {
     console.error('Search API error:', error);
     return NextResponse.json(

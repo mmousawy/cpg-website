@@ -764,69 +764,71 @@ export default function AdminEventFormPage() {
       </PageContainer>
 
       {/* Sticky Save Bar */}
-      <StickyActionBar
-        constrainWidth
-      >
-        <div
-          className="flex items-center gap-3 text-sm"
+      {!isLoading && (
+        <StickyActionBar
+          constrainWidth
         >
-          {error && (
-            <ErrorMessage
-              variant="compact"
-              className="py-1.5 text-sm"
-            >
-              {error}
-            </ErrorMessage>
-          )}
-          {success && (
-            <SuccessMessage
-              variant="compact"
-              className="py-1.5 text-sm"
-            >
-              {isNewEvent ? 'Event created!' : 'Changes saved!'}
-            </SuccessMessage>
-          )}
-          {!error && !success && hasChanges && (
-            <span
-              className="text-foreground/70"
-            >
-              {changeCount}
-              {' '}
-              unsaved
-              {' '}
-              {changeCount === 1 ? 'change' : 'changes'}
-            </span>
-          )}
-          {!error && !success && isNewEvent && !hasChanges && (
-            <span
-              className="text-foreground/70"
-            >
-              New event
-            </span>
-          )}
-        </div>
-        <div
-          className="flex gap-2"
-        >
-          <Button
-            onClick={handleSaveAsDraft}
-            variant="secondary"
-            size="sm"
-            disabled={isSaving}
+          <div
+            className="flex items-center gap-3 text-sm"
           >
-            {!isNewEvent && !isDraft ? 'Unpublish event' : 'Save as draft'}
-          </Button>
-          <Button
-            type="submit"
-            form="event-form"
-            disabled={isSaving || (!hasChanges && !isNewEvent && !isDraft)}
-            loading={isSaving}
-            size="sm"
+            {error && (
+              <ErrorMessage
+                variant="compact"
+                className="py-1.5 text-sm"
+              >
+                {error}
+              </ErrorMessage>
+            )}
+            {success && (
+              <SuccessMessage
+                variant="compact"
+                className="py-1.5 text-sm"
+              >
+                {isNewEvent ? 'Event created!' : 'Changes saved!'}
+              </SuccessMessage>
+            )}
+            {!error && !success && hasChanges && (
+              <span
+                className="text-foreground/70"
+              >
+                {changeCount}
+                {' '}
+                unsaved
+                {' '}
+                {changeCount === 1 ? 'change' : 'changes'}
+              </span>
+            )}
+            {!error && !success && isNewEvent && !hasChanges && (
+              <span
+                className="text-foreground/70"
+              >
+                New event
+              </span>
+            )}
+          </div>
+          <div
+            className="flex gap-2"
           >
-            {isNewEvent ? 'Create event' : isDraft ? 'Publish event' : 'Save changes'}
-          </Button>
-        </div>
-      </StickyActionBar>
+            <Button
+              onClick={handleSaveAsDraft}
+              variant="secondary"
+              size="sm"
+              disabled={isSaving}
+            >
+              {!isNewEvent && !isDraft ? 'Unpublish event' : 'Save as draft'}
+            </Button>
+            <Button
+              type="submit"
+              form="event-form"
+              disabled={isSaving || (!hasChanges && !isNewEvent && !isDraft)}
+              loading={isSaving}
+              size="sm"
+            >
+              {isNewEvent ? 'Create event' : isDraft ? 'Publish event' : 'Save changes'}
+            </Button>
+          </div>
+        </StickyActionBar>
+      )}
     </>
   );
 }
