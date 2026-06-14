@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.1](https://github.com/mmousawy/cpg-website/compare/v1.31.0...v1.31.1) (2026-06-14)
+
+
+### 🐛 Bug Fixes
+
+* refactor RSVP management in admin events ([4b364c1](https://github.com/mmousawy/cpg-website/commit/4b364c1018d261fc412cdccaa2ef8815793578cd))
+
 ## [1.31.0](https://github.com/mmousawy/cpg-website/compare/v1.30.8...v1.31.0) (2026-06-11)
 
 
