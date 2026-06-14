@@ -45,7 +45,7 @@ function transformToStreamPhotos(photos: EventAlbum['photos']): StreamPhoto[] {
 export function EventPhotosHeading({ photoCount }: { photoCount: number }) {
   return (
     <h2
-      className="text-lg font-semibold font-heading"
+      className="text-xl font-semibold font-heading"
     >
       Event photos
       {photoCount > 0 && (
@@ -148,6 +148,7 @@ export default function EventPhotosSection({
 
   return (
     <div
+      id="photos"
       className="mb-4"
     >
       {gridPhotos.length > 0 ? (

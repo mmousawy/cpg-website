@@ -16,6 +16,8 @@ interface AutocompleteInputProps {
   onSubmit?: (value: string) => void;
   /** Skip internal filtering — parent provides a pre-filtered list. */
   disableFilter?: boolean;
+  /** Render suggestions in normal flow so parent containers can grow in height. */
+  inlineSuggestions?: boolean;
   id?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -32,6 +34,7 @@ export default function AutocompleteInput({
   onSelect,
   onSubmit,
   disableFilter = false,
+  inlineSuggestions = false,
   id,
   placeholder,
   disabled = false,
@@ -130,7 +133,10 @@ export default function AutocompleteInput({
       {showSuggestions && filtered.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-30 mt-1 w-full rounded-md border border-border-color bg-background shadow-lg"
+          className={clsx(
+            'mt-1 w-full rounded-md border border-border-color bg-background shadow-lg',
+            inlineSuggestions ? 'relative' : 'absolute z-30',
+          )}
         >
           <ul
             className="max-h-48 overflow-y-auto p-1"

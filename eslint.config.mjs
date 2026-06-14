@@ -5,7 +5,7 @@ const eslintConfig = [
   {
     settings: {
       react: {
-        version: '19.0',
+        version: '19.2.7',
       },
     },
     rules: {
@@ -26,8 +26,9 @@ const eslintConfig = [
       'react/jsx-indent-props': ['error', 2],
       // Indent JSX children
       'react/jsx-indent': ['error', 2, { 'checkAttributes': true, 'indentLogicalExpressions': true }],
-      // Put children/content on their own line
-      'react/jsx-one-expression-per-line': ['error', { 'allow': 'none' }],
+      // Disabled: currently crashes with ESLint 10 due to plugin API incompatibility.
+      // Re-enable after eslint-plugin-react releases a compatible fix.
+      'react/jsx-one-expression-per-line': 'off',
     },
   },
 ];

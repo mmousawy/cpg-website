@@ -28,7 +28,7 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
   if (variant === 'banner') {
     return (
       <div
-        className="relative overflow-hidden bg-background-light mb-6 sm:mb-12 mt-12"
+        className="relative overflow-hidden bg-background-light mt-6 md:mt-0 mb-12"
       >
         <BlurImage
           src={BANNER_BACKGROUND}
@@ -39,13 +39,16 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
           quality={85}
         />
         <div
-          className="absolute inset-0 bg-black/30 backdrop-blur-xs"
+          className="absolute inset-0 bg-[#bba5fa] mix-blend-overlay"
+        />
+        <div
+          className="backdrop-blur-[3px] bg-black/40 absolute inset-0"
         />
         <div
           className="relative z-10 inset-0 flex items-center px-4 pt-10 pb-11 md:px-8 sm:py-14"
         >
           <div
-            className="w-full max-w-screen-md mx-auto space-y-4"
+            className="w-full max-w-screen-md mx-auto space-y-4 text-shadow-xs"
           >
             <h2
               className="text-2xl font-bold text-white sm:text-3xl md:text-4xl font-heading"

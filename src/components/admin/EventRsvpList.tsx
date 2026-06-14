@@ -5,6 +5,8 @@ import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
 import CloseSVG from 'public/icons/close.svg';
+import PlusSVG from 'public/icons/plus.svg';
+import TrashSVG from 'public/icons/trash-mini.svg';
 import WarningSVG from 'public/icons/warning-micro.svg';
 
 import type { Tables } from '@/database.types';
@@ -21,6 +23,11 @@ interface EventRsvpListProps {
   markingId: number | null;
   onMarkAttended: (rsvpId: number, unmark?: boolean) => Promise<void>;
   onMarkNoShow: (rsvpId: number, unmark?: boolean) => Promise<void>;
+  /** Called when the Remove button is clicked for a specific RSVP row. */
+  onRemove?: (rsvpId: number) => Promise<void>;
+  /** Called when the Add Member button is clicked. */
+  onAdd?: () => void;
+  removingId?: number | null;
 }
 
 export default function EventRsvpList({
@@ -28,6 +35,9 @@ export default function EventRsvpList({
   markingId,
   onMarkAttended,
   onMarkNoShow,
+  onRemove,
+  onAdd,
+  removingId = null,
 }: EventRsvpListProps) {
   const confirmedRsvps = rsvps.filter((r) => r.confirmed_at && !r.canceled_at);
   const attendedCount = rsvps.filter((r) => r.attended_at).length;
@@ -35,11 +45,27 @@ export default function EventRsvpList({
 
   return (
     <Container>
-      <h2
-        className="mb-6 text-xl font-semibold"
+      <div
+        className="mb-6 flex items-center justify-between"
       >
-        Event Attendance
-      </h2>
+        <h2
+          className="text-xl font-semibold"
+        >
+          Event attendance
+        </h2>
+        {onAdd && (
+          <Button
+            type="button"
+            size="sm"
+            onClick={onAdd}
+            icon={<PlusSVG
+              className="size-4"
+            />}
+          >
+            Add member
+          </Button>
+        )}
+      </div>
       <div
         className="mb-6 rounded-lg border border-border-color bg-background p-4"
       >
@@ -86,6 +112,7 @@ export default function EventRsvpList({
             const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
             const nickname = profile?.nickname;
             const isMarking = markingId === rsvp.id;
+            const isRemoving = removingId === rsvp.id;
             return (
               <div
                 key={rsvp.id}
@@ -122,7 +149,7 @@ export default function EventRsvpList({
                   {rsvp.attended_at ? (
                     <Button
                       onClick={() => onMarkAttended(rsvp.id, true)}
-                      disabled={isMarking}
+                      disabled={isMarking || isRemoving}
                       variant="danger"
                       type="button"
                       size="sm"
@@ -139,7 +166,7 @@ export default function EventRsvpList({
                   ) : rsvp.no_show_at ? (
                     <Button
                       onClick={() => onMarkNoShow(rsvp.id, true)}
-                      disabled={isMarking}
+                      disabled={isMarking || isRemoving}
                       variant="secondary"
                       type="button"
                       size="sm"
@@ -157,7 +184,7 @@ export default function EventRsvpList({
                     <>
                       <Button
                         onClick={() => onMarkNoShow(rsvp.id)}
-                        disabled={isMarking}
+                        disabled={isMarking || isRemoving}
                         variant="danger"
                         type="button"
                         size="sm"
@@ -173,7 +200,7 @@ export default function EventRsvpList({
                       </Button>
                       <Button
                         onClick={() => onMarkAttended(rsvp.id)}
-                        disabled={isMarking}
+                        disabled={isMarking || isRemoving}
                         type="button"
                         size="sm"
                         icon={<CheckCircleSVG
@@ -187,6 +214,25 @@ export default function EventRsvpList({
                         </span>
                       </Button>
                     </>
+                  )}
+                  {onRemove && (
+                    <Button
+                      onClick={() => onRemove(rsvp.id)}
+                      disabled={isRemoving || isMarking}
+                      variant="danger"
+                      type="button"
+                      size="sm"
+                      title="Remove from RSVP list"
+                      icon={<TrashSVG
+                        className="size-4"
+                      />}
+                    >
+                      <span
+                        className="hidden sm:inline"
+                      >
+                        {isRemoving ? 'Removing…' : 'Remove'}
+                      </span>
+                    </Button>
                   )}
                 </div>
               </div>

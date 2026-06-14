@@ -2,8 +2,10 @@
 
 import clsx from 'clsx';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
+import { ModalContext } from '@/app/providers/ModalProvider';
+import AddRsvpModal from '@/components/admin/AddRsvpModal';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
@@ -14,6 +16,8 @@ import SadSVG from 'public/icons/sad.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import CheckSVG from 'public/icons/check.svg';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
+import PlusSVG from 'public/icons/plus.svg';
+import TrashSVG from 'public/icons/trash-mini.svg';
 import WarningSVG from 'public/icons/warning-micro.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
@@ -37,10 +41,13 @@ export default function AdminEventAttendancePage() {
   const supabase = useSupabase();
 
   type Event = Pick<Tables<'events'>, 'id' | 'title' | 'date' | 'time' | 'location'>;
+  const modalContext = useContext(ModalContext);
+
   const [event, setEvent] = useState<Event | null>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [markingId, setMarkingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
   const loadData = async () => {
     // Load event
@@ -123,6 +130,37 @@ export default function AdminEventAttendancePage() {
 
     setMarkingId(null);
   };
+
+  const handleRemoveRsvp = async (rsvpId: number) => {
+    setRemovingId(rsvpId);
+
+    const result = await fetch('/api/admin/manage-rsvp', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rsvp_id: rsvpId }),
+    });
+
+    if (result.ok) {
+      await loadData();
+    }
+
+    setRemovingId(null);
+  };
+
+  const handleAddRsvp = useCallback(() => {
+    if (!event || !modalContext) return;
+
+    modalContext.setTitle('Add member to RSVP list');
+    modalContext.setContent(
+      <AddRsvpModal
+        eventId={event.id}
+        onAdded={loadData}
+        onClose={() => modalContext.setIsOpen(false)}
+      />,
+    );
+    modalContext.setSize('medium');
+    modalContext.setIsOpen(true);
+  }, [event, modalContext, loadData]);
 
   if (isLoading) {
     return (
@@ -247,11 +285,25 @@ export default function AdminEventAttendancePage() {
       </div>
 
       <div>
-        <h2
-          className="mb-4 text-lg font-semibold opacity-70 font-heading"
+        <div
+          className="mb-4 flex items-center justify-between"
         >
-          RSVPs
-        </h2>
+          <h2
+            className="text-lg font-semibold opacity-70 font-heading"
+          >
+            RSVPs
+          </h2>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleAddRsvp}
+            icon={<PlusSVG
+              className="size-4"
+            />}
+          >
+            Add member
+          </Button>
+        </div>
         <Container>
           <div
             className="space-y-2"
@@ -324,7 +376,7 @@ export default function AdminEventAttendancePage() {
                       <>
                         <Button
                           onClick={() => handleMarkNoShow(rsvp.id)}
-                          disabled={markingId === rsvp.id}
+                          disabled={markingId === rsvp.id || removingId === rsvp.id}
                           size="sm"
                           variant="danger"
                         >
@@ -335,7 +387,7 @@ export default function AdminEventAttendancePage() {
                         </Button>
                         <Button
                           onClick={() => handleMarkAttended(rsvp.id)}
-                          disabled={markingId === rsvp.id}
+                          disabled={markingId === rsvp.id || removingId === rsvp.id}
                           size="sm"
                           className="rounded-full border-green-500/30 text-green-600 hover:border-green-500 hover:bg-green-500/10"
                         >
@@ -346,6 +398,22 @@ export default function AdminEventAttendancePage() {
                         </Button>
                       </>
                     )}
+                    <Button
+                      onClick={() => handleRemoveRsvp(rsvp.id)}
+                      disabled={removingId === rsvp.id || markingId === rsvp.id}
+                      size="sm"
+                      variant="danger"
+                      title="Remove from RSVP list"
+                      icon={<TrashSVG
+                        className="size-4"
+                      />}
+                    >
+                      <span
+                        className="hidden sm:inline"
+                      >
+                        {removingId === rsvp.id ? 'Removing…' : 'Remove'}
+                      </span>
+                    </Button>
                   </div>
                 </div>
               ))

@@ -1,7 +1,6 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -51,8 +50,6 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function EventPhotoPage({ params }: { params: Params }) {
-  'use cache';
-
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
   const photoId = resolvedParams?.photoId || '';
@@ -61,17 +58,11 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  cacheLife('max');
-  cacheTag('events');
-  cacheTag(`photo-${photoId}`);
-
   const result = await getEventPhotoByShortId(eventSlug, photoId);
 
   if (!result) {
     notFound();
   }
-
-  cacheTag(`event-album-${result.currentEvent.id}`);
 
   return (
     <PhotoPageContent

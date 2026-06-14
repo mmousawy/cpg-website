@@ -498,18 +498,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           </div>
         </Container>
 
-        {/* Event Photos - separate section, narrow column when empty */}
-        {eventAlbum && (
+        {/* Empty state for Event Photos - separate section */}
+        {!hasEventPhotos(eventAlbum) &&  (
           <div
             className="mt-8"
           >
-            {!hasEventPhotos(eventAlbum) && (
-              <EventPhotosSection
-                eventId={event.id}
-                eventSlug={event.slug || ''}
-                album={eventAlbum}
-              />
-            )}
+            <EventPhotosSection
+              eventId={event.id}
+              eventSlug={event.slug || ''}
+              album={eventAlbum}
+            />
           </div>
         )}
       </PageContainer>
@@ -517,7 +515,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       {/* Event Photos - full width grid (right after heading, before SignUpCTA) */}
       {hasEventPhotos(eventAlbum) && eventAlbum && (
         <WidePageContainer
-          className="pt-0! md:pb-12!"
+          className="md:pb-12!"
         >
           <EventPhotosSection
             eventId={event.id}

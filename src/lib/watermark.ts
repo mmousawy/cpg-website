@@ -79,14 +79,16 @@ export async function applyWatermark(
     .keepMetadata()
     .composite([{ input: svgBuffer, top: 0, left: 0 }]);
 
-  if (format === 'jpeg' || format === 'jpg') {
+  if (format === 'jpeg') {
     pipeline = pipeline.jpeg({ quality: 95, chromaSubsampling: '4:4:4' });
+  } else if (format === 'jxl') {
+    pipeline = pipeline.jxl({ quality: 95 });
   } else if (format === 'png') {
     pipeline = pipeline.png();
   } else if (format === 'webp') {
     pipeline = pipeline.webp({ quality: 95 });
-  } else if (format === 'avif') {
-    pipeline = pipeline.avif({ quality: 90 });
+  } else if (format === 'heif') {
+    pipeline = pipeline.heif({ quality: 95 });
   }
 
   return pipeline.toBuffer();

@@ -2,7 +2,6 @@ import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -53,8 +52,6 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function PhotoPage({ params }: { params: Params }) {
-  'use cache';
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
@@ -63,10 +60,6 @@ export default async function PhotoPage({ params }: { params: Params }) {
   if (!nickname || !photoId) {
     notFound();
   }
-
-  cacheLife('max');
-  cacheTag(`profile-${nickname}`);
-  cacheTag(`photo-${photoId}`);
 
   const result = await getPhotoByShortId(nickname, photoId);
 

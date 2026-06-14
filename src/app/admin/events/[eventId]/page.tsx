@@ -6,6 +6,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import AnnounceEventModal from '@/components/admin/AnnounceEventModal';
+import AddRsvpModal from '@/components/admin/AddRsvpModal';
 import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
 import EventForm from '@/components/admin/EventForm';
 import EventRsvpList from '@/components/admin/EventRsvpList';
@@ -61,6 +62,7 @@ export default function AdminEventFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [rsvps, setRsvps] = useState<RSVPWithProfile[]>([]);
   const [markingId, setMarkingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<number | null>(null);
   const modalContext = useContext(ModalContext);
 
   // Form state
@@ -274,6 +276,48 @@ export default function AdminEventFormPage() {
     }
 
     setMarkingId(null);
+  };
+
+  const handleRemoveRsvp = async (rsvpId: number) => {
+    setRemovingId(rsvpId);
+
+    const result = await fetch('/api/admin/manage-rsvp', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rsvp_id: rsvpId }),
+    });
+
+    if (result.ok) {
+      setRsvps((prevRsvps) => prevRsvps.filter((rsvp) => rsvp.id !== rsvpId));
+    }
+
+    setRemovingId(null);
+  };
+
+  const handleAddRsvp = () => {
+    if (!event || !modalContext) return;
+
+    modalContext.setTitle('Add member to RSVP list');
+    modalContext.setContent(
+      <AddRsvpModal
+        eventId={event.id}
+        onAdded={async () => {
+          // Re-fetch RSVPs from Supabase after adding
+          const { data } = await supabase
+            .from('events_rsvps')
+            .select(
+              'id, uuid, name, email, confirmed_at, canceled_at, attended_at, no_show_at, created_at, profiles!events_rsvps_user_id_profiles_fkey(nickname)',
+            )
+            .eq('event_id', event.id)
+            .order('created_at', { ascending: false });
+
+          setRsvps((data as typeof rsvps) ?? []);
+        }}
+        onClose={() => modalContext.setIsOpen(false)}
+      />,
+    );
+    modalContext.setSize('default');
+    modalContext.setIsOpen(true);
   };
 
   const handleAnnounceEvent = () => {
@@ -655,8 +699,11 @@ export default function AdminEventFormPage() {
               <EventRsvpList
                 rsvps={rsvps}
                 markingId={markingId}
+                removingId={removingId}
                 onMarkAttended={handleMarkAttended}
                 onMarkNoShow={handleMarkNoShow}
+                onRemove={handleRemoveRsvp}
+                onAdd={handleAddRsvp}
               />
           )}
 

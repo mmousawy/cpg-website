@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import CameraSVG from 'public/icons/camera.svg';
+import FileUploadSVG from 'public/icons/file-upload.svg';
 import { useCallback, useState } from 'react';
 
 interface DropZoneProps {
@@ -106,15 +106,15 @@ export default function DropZone({
       {/* Drag overlay */}
       {showOverlay && isDragging && (
         <div
-          className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-primary/5 backdrop-blur-[2px]"
+          className="pointer-events-none absolute inset-0 z-50 border-2 border-dashed border-primary flex items-center justify-center bg-background/20 backdrop-blur-xs"
         >
           <div
-            className="flex flex-col items-center rounded-xl border-2 border-dashed border-primary bg-background/95 px-10 py-8 text-center shadow-xl"
+            className="flex flex-col items-center rounded-xl border border-border-color-strong opacity-90 bg-background-light px-10 py-8 text-center shadow-[0_5px_6px_0_rgba(0,0,0,0.5)]"
           >
             <div
-              className="mb-3 flex size-12 items-center justify-center rounded-xl border border-primary/30 bg-primary/10"
+              className="mb-3 flex size-12 items-center justify-center rounded-xl border-2 border-primary/30 bg-primary/10"
             >
-              <CameraSVG
+              <FileUploadSVG
                 className="size-6 fill-primary"
               />
             </div>
@@ -122,11 +122,6 @@ export default function DropZone({
               className="text-base font-medium text-primary"
             >
               {overlayMessage}
-            </p>
-            <p
-              className="mt-1 text-sm text-foreground/60"
-            >
-              Release to upload
             </p>
           </div>
         </div>

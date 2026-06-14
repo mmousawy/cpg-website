@@ -1,7 +1,6 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -50,8 +49,6 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function ChallengePhotoPage({ params }: { params: Params }) {
-  'use cache';
-
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || '';
   const photoId = resolvedParams?.photoId || '';
@@ -59,11 +56,6 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
   if (!slug || !photoId) {
     notFound();
   }
-
-  cacheLife('max');
-  cacheTag('challenge-photos');
-  cacheTag(`challenge-photos-${slug}`);
-  cacheTag(`photo-${photoId}`);
 
   const result = await getChallengePhotoByShortId(slug, photoId);
 
