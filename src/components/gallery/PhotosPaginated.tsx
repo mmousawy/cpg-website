@@ -255,7 +255,7 @@ export default function PhotosPaginated({
           {batches.map((batch, index) => (
             <div
               key={batch.id}
-              className="mb-1"
+              className="mb-1 sm:mb-2"
             >
               <JustifiedPhotoGrid
                 photos={batch.photos}

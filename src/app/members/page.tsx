@@ -402,7 +402,7 @@ async function RandomInterestsSection() {
             className="flex items-center gap-3 mb-3"
           >
             <div
-              className="min-w-0 flex-1"
+              className="flex items-center min-w-0 flex-1"
             >
               <span
                 className="font-medium text-sm group-hover:text-primary transition-colors"
