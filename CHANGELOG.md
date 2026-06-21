@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.2](https://github.com/mmousawy/cpg-website/compare/v1.31.1...v1.31.2) (2026-06-21)
+
+
+### 🐛 Bug Fixes
+
+* minor styling fixes. ([00c78db](https://github.com/mmousawy/cpg-website/commit/00c78db4237eb97073a4e1d802dc4b3822268839))
+
 ## [1.31.1](https://github.com/mmousawy/cpg-website/compare/v1.31.0...v1.31.1) (2026-06-14)
 
 
