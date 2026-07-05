@@ -198,6 +198,7 @@ export default async function SceneEventDetailPage({
             className="object-cover"
             sizes="100vw"
             preload
+            loading="eager"
             blurhash={event.image_blurhash}
             noBlur={/\.png(\?|$)/i.test(event.cover_image_url)}
           />

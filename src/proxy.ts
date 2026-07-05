@@ -86,18 +86,16 @@ export default async function proxy(request: NextRequest) {
 
   // Skip auth check for all other routes (saves 160-250ms per request)
   if (!needsAuthHandling) {
-    return NextResponse.next({ request });
+    return NextResponse.next();
   }
 
   // Skip auth check for public API routes
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
   if (isPublicApiRoute) {
-    return NextResponse.next({ request });
+    return NextResponse.next();
   }
 
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  let supabaseResponse = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -109,9 +107,7 @@ export default async function proxy(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = NextResponse.next();
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );

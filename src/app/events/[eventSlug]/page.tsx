@@ -224,6 +224,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             className="object-cover"
             sizes="100vw"
             preload
+            loading="eager"
             blurhash={event.image_blurhash}
           />
 

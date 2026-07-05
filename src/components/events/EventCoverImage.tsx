@@ -71,6 +71,7 @@ export default function EventCoverImage({
       data-pswp-height={dimensions.height}
       target="_blank"
       rel="noreferrer"
+      className="relative block h-full w-full"
     >
       <BlurImage
         src={url}

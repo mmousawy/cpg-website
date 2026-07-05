@@ -207,6 +207,7 @@ export default async function ChallengePage({
             className="object-cover"
             sizes="100vw"
             preload
+            loading="eager"
             blurhash={challenge.image_blurhash}
           />
 

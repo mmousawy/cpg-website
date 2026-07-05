@@ -88,6 +88,11 @@ export default function PhotoPageContent({
 }: PhotoPageContentProps) {
   const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
   const nickname = profile.nickname;
+  const photoCreatedLabel = new Date(photo.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
   // For album navigation URLs, use the album owner's nickname (album lives under their profile)
   const albumNickname = albumOwnerNickname || nickname;
 
@@ -287,7 +292,7 @@ export default function PhotoPageContent({
                 <p
                   className="text-xs text-foreground/60"
                 >
-                  {(() => { const d = new Date(photo.created_at); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'long', day: 'numeric' }); })()}
+                  {photoCreatedLabel}
                 </p>
               </div>
               <ViewTracker

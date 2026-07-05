@@ -77,7 +77,7 @@ export const WelcomeTemplate = ({
               <li
                 className="mb-2"
               >
-                Browse upcoming
+                Browse upcoming{' '}
                 <Link
                   href={`${baseUrl}/events`}
                   className="text-[#38785f] no-underline font-medium"
@@ -88,7 +88,7 @@ export const WelcomeTemplate = ({
               <li
                 className="mb-2"
               >
-                Explore
+                Explore{' '}
                 <Link
                   href={`${baseUrl}/galleries`}
                   className="text-[#38785f] no-underline font-medium"
@@ -101,7 +101,7 @@ export const WelcomeTemplate = ({
               <li
                 className="mb-2"
               >
-                Set up your
+                Set up your{' '}
                 <Link
                   href={`${baseUrl}/account`}
                   className="text-[#38785f] no-underline font-medium"
@@ -114,7 +114,7 @@ export const WelcomeTemplate = ({
               <li
                 className="mb-2"
               >
-                Join our
+                Join our{' '}
                 <Link
                   href="https://discord.gg/cWQK8udb6p"
                   className="text-[#38785f] no-underline font-medium"
@@ -140,7 +140,7 @@ export const WelcomeTemplate = ({
             <Text
               className="text-[14px] leading-[24px] text-[#171717]"
             >
-              We&apos;re excited to have you join us. See you at the next meetup!
+              We&apos;re excited to have you join us!
             </Text>
 
             <Footer

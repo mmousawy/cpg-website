@@ -6,10 +6,9 @@ import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
 import Tag from '@/components/shared/Tag';
 import { createMetadata } from '@/utils/metadata';
-import { getServerAuth } from '@/utils/supabase/getServerAuth';
+import { createClient } from '@/utils/supabase/server';
 import { formatJoinedDate } from '@/utils/utils';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
 // Cached data functions
 import { routes } from '@/config/routes';
@@ -24,9 +23,65 @@ export const metadata = createMetadata({
   keywords: ['photography community', 'photographers', 'member discovery', 'community members'],
 });
 
+async function getMembersPageData() {
+  const [popularInterestsResult, randomInterestsResult, recentlyActiveResult, popularTagsResult, newMembersResult] = await Promise.allSettled([
+    getPopularInterests(20),
+    getRandomInterestsWithMembers(6, 10),
+    getRecentlyActiveMembers(12),
+    getPopularTagsWithMemberCounts(20),
+    getNewMembers(12),
+  ]);
+
+  const popularInterests = popularInterestsResult.status === 'fulfilled' ? popularInterestsResult.value : [];
+  const randomInterests = randomInterestsResult.status === 'fulfilled' ? randomInterestsResult.value : [];
+  const recentlyActive = recentlyActiveResult.status === 'fulfilled' ? recentlyActiveResult.value : [];
+  const popularTags = popularTagsResult.status === 'fulfilled' ? popularTagsResult.value : [];
+  const newMembers = newMembersResult.status === 'fulfilled' ? newMembersResult.value : [];
+
+  if (
+    popularInterestsResult.status === 'rejected'
+    || randomInterestsResult.status === 'rejected'
+    || recentlyActiveResult.status === 'rejected'
+    || popularTagsResult.status === 'rejected'
+    || newMembersResult.status === 'rejected'
+  ) {
+    console.error('Members page: one or more section queries failed', {
+      popularInterestsError: popularInterestsResult.status === 'rejected' ? popularInterestsResult.reason : null,
+      randomInterestsError: randomInterestsResult.status === 'rejected' ? randomInterestsResult.reason : null,
+      recentlyActiveError: recentlyActiveResult.status === 'rejected' ? recentlyActiveResult.reason : null,
+      popularTagsError: popularTagsResult.status === 'rejected' ? popularTagsResult.reason : null,
+      newMembersError: newMembersResult.status === 'rejected' ? newMembersResult.reason : null,
+    });
+  }
+
+  return {
+    popularInterests,
+    randomInterests,
+    recentlyActive,
+    popularTags,
+    newMembers,
+  };
+}
+
+async function getMembersPageUser() {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return null;
+    }
+
+    return user;
+  } catch {
+    return null;
+  }
+}
+
 export default async function MembersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const [{ user }, resolvedSearchParams] = await Promise.all([getServerAuth(), searchParams]);
+  const [user, resolvedSearchParams] = await Promise.all([getMembersPageUser(), searchParams]);
   const showSkeleton = resolvedSearchParams.skeleton !== undefined;
+  const membersData = user && !showSkeleton ? await getMembersPageData() : null;
 
   // For unauthenticated users, show friendly login prompt
   if (!user) {
@@ -144,13 +199,11 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           >
             Popular interests
           </h2>
-          {showSkeleton ? <InterestsSkeleton /> : (
-            <Suspense
-              fallback={<InterestsSkeleton />}
-            >
-              <PopularInterestsSection />
-            </Suspense>
-          )}
+          {showSkeleton
+            ? <InterestsSkeleton />
+            : <PopularInterestsSection
+                popularInterests={membersData?.popularInterests || []}
+            />}
         </div>
 
         {/* Random Interests with Members */}
@@ -162,13 +215,11 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           >
             Explore by interests
           </h2>
-          {showSkeleton ? <InterestCardsSkeleton /> : (
-            <Suspense
-              fallback={<InterestCardsSkeleton />}
-            >
-              <RandomInterestsSection />
-            </Suspense>
-          )}
+          {showSkeleton
+            ? <InterestCardsSkeleton />
+            : <RandomInterestsSection
+                randomInterests={membersData?.randomInterests || []}
+            />}
         </div>
 
         {/* Recently Active Members */}
@@ -192,15 +243,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
               />
             )
             : (
-              <Suspense
-                fallback={(
-                  <MemberGridSkeleton
-                    count={12}
-                  />
-                )}
-              >
-                <RecentlyActiveSection />
-              </Suspense>
+              <RecentlyActiveSection
+                recentlyActive={membersData?.recentlyActive || []}
+              />
             )}
         </div>
 
@@ -218,13 +263,11 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           >
             Discover members who frequently use these photo tags
           </p>
-          {showSkeleton ? <InterestsSkeleton /> : (
-            <Suspense
-              fallback={<InterestsSkeleton />}
-            >
-              <PopularTagsSection />
-            </Suspense>
-          )}
+          {showSkeleton
+            ? <InterestsSkeleton />
+            : <PopularTagsSection
+                popularTags={membersData?.popularTags || []}
+            />}
         </div>
 
         {/* New Members */}
@@ -246,15 +289,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
               />
             )
             : (
-              <Suspense
-                fallback={(
-                  <MemberGridSkeleton
-                    count={12}
-                  />
-                )}
-              >
-                <NewMembersSection />
-              </Suspense>
+              <NewMembersSection
+                newMembers={membersData?.newMembers || []}
+              />
             )}
         </div>
 
@@ -370,10 +407,7 @@ function InterestCardsSkeleton() {
   );
 }
 
-// Separate components for each section to enable Suspense boundaries
-async function PopularInterestsSection() {
-  const popularInterests = await getPopularInterests(20);
-
+function PopularInterestsSection({ popularInterests }: { popularInterests: Awaited<ReturnType<typeof getPopularInterests>> }) {
   if (popularInterests.length === 0) return null;
 
   return (
@@ -383,9 +417,7 @@ async function PopularInterestsSection() {
   );
 }
 
-async function RandomInterestsSection() {
-  const randomInterests = await getRandomInterestsWithMembers(6, 10);
-
+function RandomInterestsSection({ randomInterests }: { randomInterests: Awaited<ReturnType<typeof getRandomInterestsWithMembers>> }) {
   if (randomInterests.length === 0) return null;
 
   return (
@@ -458,9 +490,7 @@ async function RandomInterestsSection() {
   );
 }
 
-async function RecentlyActiveSection() {
-  const recentlyActive = await getRecentlyActiveMembers(12);
-
+function RecentlyActiveSection({ recentlyActive }: { recentlyActive: Awaited<ReturnType<typeof getRecentlyActiveMembers>> }) {
   if (recentlyActive.length === 0) return null;
 
   return (
@@ -482,9 +512,7 @@ async function RecentlyActiveSection() {
   );
 }
 
-async function PopularTagsSection() {
-  const popularTags = await getPopularTagsWithMemberCounts(20);
-
+function PopularTagsSection({ popularTags }: { popularTags: Awaited<ReturnType<typeof getPopularTagsWithMemberCounts>> }) {
   if (popularTags.length === 0) return null;
 
   // Calculate size based on memberCount relative to max (same logic as TagCloud)
@@ -525,9 +553,7 @@ async function PopularTagsSection() {
   );
 }
 
-async function NewMembersSection() {
-  const newMembers = await getNewMembers(12);
-
+function NewMembersSection({ newMembers }: { newMembers: Awaited<ReturnType<typeof getNewMembers>> }) {
   if (newMembers.length === 0) return null;
 
   return (

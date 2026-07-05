@@ -67,6 +67,7 @@ export default function SceneCoverImage({
       data-pswp-height={h}
       target="_blank"
       rel="noreferrer"
+      className="relative block h-full w-full"
     >
       <BlurImage
         src={url}
