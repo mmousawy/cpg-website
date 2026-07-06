@@ -57,7 +57,7 @@ interface SinglePhotoEditFormProps {
   onAddToAlbum?: (photoIds?: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
   onSetAsCover?: (photoUrl: string, albumId: string) => Promise<void>;
-  currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
+  currentAlbum?: { id: string; slug: string; cover_image_url: string | null; eventSlug?: string | null } | null;
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   isDirtyRef?: React.MutableRefObject<boolean>;
@@ -282,6 +282,9 @@ export default function SinglePhotoEditForm({
           photoPageUrl={(() => {
             const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
             if (!nickname) return undefined;
+            if (currentAlbum?.eventSlug) {
+              return `/events/${currentAlbum.eventSlug}#photos`;
+            }
             return currentAlbum
               ? `/@${nickname}/album/${currentAlbum.slug}/photo/${photo.short_id}`
               : `/@${nickname}/photo/${photo.short_id}`;
@@ -494,7 +497,7 @@ export default function SinglePhotoEditForm({
                     const isOtherOwner = album.profile_nickname && album.profile_nickname !== currentProfile?.nickname;
                     const albumOwner = album.profile_nickname || currentProfile?.nickname;
                     const publicUrl = album.event_slug
-                      ? `/events/${album.event_slug}`
+                      ? `/events/${album.event_slug}#photos`
                       : albumOwner ? `/@${albumOwner}/album/${album.slug}` : undefined;
                     return (
                       <AlbumMiniCard

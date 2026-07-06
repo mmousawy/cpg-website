@@ -1,7 +1,8 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
-import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: Params }) {
 
   const photoTitle = `${result.photo.title || 'Photo'} by @${nickname}`;
   const photoDescription = result.photo.description || `Photo by @${nickname}`;
-  const photoImage = result.photo.url || null;
+  const photoImage = getSocialImageUrl(result.photo.url);
 
   return createMetadata({
     title: photoTitle,
@@ -97,6 +98,7 @@ export default async function PhotoPage({ params }: { params: Params }) {
 
   return (
     <>
+      <ScrollToTopOnRouteChange />
       <JsonLd
         data={[imageJsonLd, breadcrumbJsonLd]}
       />

@@ -476,7 +476,7 @@ export default function PhotoListItem({
       >
         {/* Primary name (title or fallback) */}
         <p
-          className="line-clamp-1 text-sm font-medium leading-tight pr-12"
+          className="text-ellipsis overflow-hidden text-sm font-medium leading-tight mr-12"
           title={displayName}
         >
           {displayName}

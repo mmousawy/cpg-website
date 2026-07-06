@@ -370,7 +370,9 @@ export default function SharedAlbumEditForm({
           <AlbumListItem
             album={album}
             variant="detailed"
-            publicUrl={nickname ? `/@${nickname}/album/${album.slug}` : undefined}
+            publicUrl={album.event_slug
+              ? `/events/${album.event_slug}#photos`
+              : nickname ? `/@${nickname}/album/${album.slug}` : undefined}
           />
         </div>
       )}

@@ -8,6 +8,8 @@ import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { CPGEvent } from '@/types/events';
+import { isProfileComplete } from '@/utils/profileCompletion';
+import { usePathname, useRouter } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
@@ -19,7 +21,9 @@ type EventSignupBarProps = {
 
 export default function EventSignupBar({ event }: EventSignupBarProps) {
   const modalContext = useContext(ModalContext);
-  const { user } = useAuth();
+  const { user, profile, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [hasRSVP, setHasRSVP] = useState(false);
   const [rsvpUuid, setRsvpUuid] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,8 +31,17 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
   const supabase = useSupabase();
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+
+    if (!isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
+      router.push(`/onboarding?redirectTo=${encodeURIComponent(pathname)}`);
+    }
+  }, [authLoading, user, profile, pathname, router]);
+
+  useEffect(() => {
     const checkRSVP = async () => {
-      if (!user || !event) {
+      if (!user || !event || authLoading || !isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
         setIsLoading(false);
         return;
       }
@@ -47,7 +60,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
     };
 
     checkRSVP();
-  }, [user, event, supabase]);
+  }, [user, profile, event, supabase, authLoading]);
 
   const openModal = () => {
     modalContext.setTitle(`${event.title}`);

@@ -57,7 +57,7 @@ interface BulkPhotoEditFormProps {
   onAddToAlbum?: (photoIds?: string[]) => void;
   onRemoveFromAlbum?: (photoIds: string[]) => void;
   /** Current album context - used to build correct photo page URLs */
-  currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
+  currentAlbum?: { id: string; slug: string; cover_image_url: string | null; eventSlug?: string | null } | null;
   isLoading?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   isDirtyRef?: React.MutableRefObject<boolean>;
@@ -357,6 +357,9 @@ export default function BulkPhotoEditForm({
             photoPageUrl={(() => {
               const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
               if (!nickname) return undefined;
+              if (currentAlbum?.eventSlug) {
+                return `/events/${currentAlbum.eventSlug}#photos`;
+              }
               return currentAlbum
                 ? `/@${nickname}/album/${currentAlbum.slug}/photo/${photo.short_id}`
                 : `/@${nickname}/photo/${photo.short_id}`;

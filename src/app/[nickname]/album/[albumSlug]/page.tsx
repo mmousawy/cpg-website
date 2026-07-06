@@ -1,5 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
 
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   const photos = albumWithPhotos.photos || [];
   const sortedPhotos = [...photos].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   const firstPhoto = sortedPhotos.length > 0 ? sortedPhotos[0] : null;
-  const albumImage = firstPhoto?.photo_url || null;
+  const albumImage = getSocialImageUrl(firstPhoto?.photo_url);
 
   return createMetadata({
     title: albumTitle,

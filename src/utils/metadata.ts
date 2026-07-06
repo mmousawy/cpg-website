@@ -23,6 +23,44 @@ export const defaultOgImage = '/opengraph-image.jpg';
 export const defaultTwitterImage = '/twitter-image.jpg';
 
 /**
+ * Build a social preview image URL with OG-friendly dimensions.
+ *
+ * For Supabase-hosted images this returns a transformed URL that is cropped
+ * to 1200x630 so social platforms (Discord, X, etc.) do not stretch/crop an
+ * arbitrary source image unexpectedly.
+ */
+export function getSocialImageUrl(
+  imageUrl: string | null | undefined,
+  options: { width?: number; height?: number; quality?: number } = {},
+): string | null {
+  if (!imageUrl) return null;
+
+  const { width = 1200, height = 630, quality = 85 } = options;
+
+  try {
+    const parsed = new URL(imageUrl);
+    const isSupabaseStorageObjectUrl = parsed.pathname.includes('/storage/v1/object/public/');
+
+    if (!isSupabaseStorageObjectUrl) {
+      return imageUrl;
+    }
+
+    parsed.pathname = parsed.pathname.replace(
+      '/storage/v1/object/public/',
+      '/storage/v1/render/image/public/',
+    );
+    parsed.searchParams.set('width', String(width));
+    parsed.searchParams.set('height', String(height));
+    parsed.searchParams.set('resize', 'cover');
+    parsed.searchParams.set('quality', String(quality));
+
+    return parsed.toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
+/**
  * Truncate description to optimal length for SEO (155 characters)
  */
 export function truncateDescription(description: string, maxLength = 155): string {

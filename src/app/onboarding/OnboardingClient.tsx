@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { validateImage } from '@/utils/imageValidation';
+import { isProfileComplete } from '@/utils/profileCompletion';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -33,7 +34,10 @@ const onboardingSchema = z.object({
     .refine((val) => !val.startsWith('-') && !val.endsWith('-'), {
       message: 'Nickname cannot start or end with a hyphen',
     }),
-  fullName: z.string().optional(),
+  fullName: z
+    .string()
+    .trim()
+    .min(2, 'Please enter your full name'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   bio: z.string().optional(),
   interests: z.array(z.string()),
@@ -158,8 +162,8 @@ export default function OnboardingClient() {
       return;
     }
 
-    // Redirect if already has nickname (unless in test mode)
-    if (profile?.nickname && !isTestMode) {
+    // Redirect only when profile is fully complete (unless in test mode)
+    if (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isTestMode) {
       router.push('/account/events');
       return;
     }
@@ -411,7 +415,7 @@ export default function OnboardingClient() {
   }
 
   // Show loading if redirecting (handled in useEffect)
-  if ((!user && !isTestMode) || (profile?.nickname && !isTestMode)) {
+  if ((!user && !isTestMode) || (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isTestMode)) {
     return <PageLoading />;
   }
 
@@ -431,10 +435,10 @@ export default function OnboardingClient() {
           className="mb-8 text-center"
         >
           <h1
-            className="mb-2 text-2xl sm:text-3xl font-bold"
+            className="mb-2 text-2xl sm:text-3xl font-bold font-heading"
           >
             Welcome to the group
-            {displayName ? `, ${displayName.split(' ')[0]}` : ''}
+            {displayName ? ` ${displayName.split(' ')[0]}` : ''}
             !
           </h1>
           <div

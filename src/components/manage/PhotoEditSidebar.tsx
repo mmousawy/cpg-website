@@ -23,7 +23,7 @@ interface PhotoEditSidebarProps {
   /** Handler for setting photo as album cover. If provided with currentAlbum, shows the button. */
   onSetAsCover?: (photoUrl: string, albumId: string) => Promise<void>;
   /** Current album context - used to show "Set as cover" option */
-  currentAlbum?: { id: string; slug: string; cover_image_url: string | null } | null;
+  currentAlbum?: { id: string; slug: string; cover_image_url: string | null; eventSlug?: string | null } | null;
   isLoading?: boolean;
   /** Called when dirty state changes - parent can use this to warn before deselecting */
   onDirtyChange?: (isDirty: boolean) => void;

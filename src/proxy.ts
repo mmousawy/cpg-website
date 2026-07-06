@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
+import { isProfileComplete } from '@/utils/profileCompletion';
 
 const blacklist = process.env.BLACKLIST_IPS?.split(',') || [];
 
@@ -80,15 +81,6 @@ export default async function proxy(request: NextRequest) {
   // Match exact path or subpaths (e.g. '/account' matches '/account' and '/account/events' but not '/account-deleted')
   const matchesRoute = (path: string) => pathname === path || pathname.startsWith(path + '/');
 
-  // Routes that need auth handling (Supabase getUser)
-  const authHandledPaths = ['/account', '/admin', '/login', '/signup', '/auth-callback', '/onboarding', '/api/'];
-  const needsAuthHandling = authHandledPaths.some(path => matchesRoute(path));
-
-  // Skip auth check for all other routes (saves 160-250ms per request)
-  if (!needsAuthHandling) {
-    return NextResponse.next();
-  }
-
   // Skip auth check for public API routes
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
   if (isPublicApiRoute) {
@@ -120,29 +112,47 @@ export default async function proxy(request: NextRequest) {
   // Do not remove this - it ensures auth cookies are properly set
   const { data: { user } } = await supabase.auth.getUser();
 
+  let profile: {
+    deletion_scheduled_at: string | null;
+    email: string | null;
+    full_name: string | null;
+    nickname: string | null;
+    terms_accepted_at: string | null;
+  } | null = null;
+
+  if (user) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('deletion_scheduled_at, email, full_name, nickname, terms_accepted_at')
+      .eq('id', user.id)
+      .single();
+    profile = data;
+  }
+
   // Block users whose account is scheduled for deletion
   // Sign them out and redirect to the deletion notice page
-  if (user && !matchesRoute('/account-deleted')) {
-    const profileRes = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=deletion_scheduled_at&limit=1`,
-      {
-        headers: {
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-        },
-      },
-    );
+  if (user && profile?.deletion_scheduled_at && !matchesRoute('/account-deleted')) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = '/account-deleted';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
 
-    if (profileRes.ok) {
-      const profiles = await profileRes.json();
-      if (profiles.length > 0 && profiles[0].deletion_scheduled_at) {
-        await supabase.auth.signOut();
-        const url = request.nextUrl.clone();
-        url.pathname = '/account-deleted';
-        url.search = '';
-        return NextResponse.redirect(url);
-      }
-    }
+  // Once logged in, force profile completion before browsing any page.
+  // Exempt onboarding/auth-callback/api/account-deleted routes to avoid redirect loops.
+  if (
+    user
+    && !matchesRoute('/onboarding')
+    && !matchesRoute('/auth-callback')
+    && !matchesRoute('/api')
+    && !matchesRoute('/account-deleted')
+    && !isProfileComplete(profile, { fallbackEmail: user.email ?? null })
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/onboarding';
+    url.searchParams.set('redirectTo', pathname);
+    return NextResponse.redirect(url);
   }
 
   // Protected routes - redirect to login if not authenticated

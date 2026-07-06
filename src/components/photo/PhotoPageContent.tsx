@@ -242,7 +242,7 @@ export default function PhotoPageContent({
                       slug={currentAlbum.slug}
                       coverImageUrl={currentAlbum.cover_image_url}
                       href={currentAlbum.event_slug
-                        ? `/events/${currentAlbum.event_slug}`
+                        ? `/events/${currentAlbum.event_slug}#photos`
                         : `/@${currentAlbum.profile_nickname || albumNickname}/album/${currentAlbum.slug}`}
                       photoCount={currentAlbum.photo_count}
                       highlighted
@@ -256,7 +256,7 @@ export default function PhotoPageContent({
                         title={eventAlbum.title}
                         slug={eventAlbum.slug}
                         coverImageUrl={eventAlbum.cover_image_url}
-                        href={`/events/${eventAlbum.event_slug!}`}
+                        href={`/events/${eventAlbum.event_slug!}#photos`}
                         photoCount={eventAlbum.photo_count}
                         highlighted
                       />
@@ -269,7 +269,7 @@ export default function PhotoPageContent({
                       slug={album.slug}
                       coverImageUrl={album.cover_image_url}
                       href={album.event_slug
-                        ? `/events/${album.event_slug}`
+                        ? `/events/${album.event_slug}#photos`
                         : `/@${album.profile_nickname || nickname}/album/${album.slug}`}
                       photoCount={album.photo_count}
                       ownerNickname={album.profile_nickname && album.profile_nickname !== nickname ? album.profile_nickname : undefined}

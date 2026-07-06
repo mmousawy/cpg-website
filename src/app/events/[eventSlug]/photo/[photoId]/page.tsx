@@ -1,6 +1,7 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   const eventTitle = result.currentEvent.title || 'Event';
   const photoTitle = `${result.photo.title || 'Photo'} - ${eventTitle}`;
   const photoDescription = result.photo.description || `Photo from event "${eventTitle}"`;
-  const photoImage = result.photo.url || null;
+  const photoImage = getSocialImageUrl(result.photo.url);
 
   return createMetadata({
     title: photoTitle,
@@ -65,13 +66,16 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
   }
 
   return (
-    <PhotoPageContent
-      photo={result.photo}
-      profile={result.profile}
-      albums={result.albums}
-      challenges={result.challenges}
-      currentEvent={result.currentEvent}
-      siblingPhotos={result.siblingPhotos}
-    />
+    <>
+      <ScrollToTopOnRouteChange />
+      <PhotoPageContent
+        photo={result.photo}
+        profile={result.profile}
+        albums={result.albums}
+        challenges={result.challenges}
+        currentEvent={result.currentEvent}
+        siblingPhotos={result.siblingPhotos}
+      />
+    </>
   );
 }

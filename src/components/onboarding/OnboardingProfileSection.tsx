@@ -159,10 +159,11 @@ export default function OnboardingProfileSection({
           className="text-sm font-medium"
         >
           Full name
+          {' '}
           <span
-            className="ml-1.5 text-xs font-normal text-foreground/50"
+            className="text-red-500"
           >
-            (optional)
+            *
           </span>
         </label>
         <Input
@@ -171,6 +172,11 @@ export default function OnboardingProfileSection({
           {...register('fullName')}
           placeholder="Your full name"
         />
+        {errors.fullName && <p
+          className="text-sm text-red-500"
+        >
+          {errors.fullName.message}
+        </p>}
       </div>
 
       {/* Bio Field */}

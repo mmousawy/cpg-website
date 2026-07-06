@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { ConfirmEmail } from '../../../emails/confirm';
 import { render } from '@react-email/render';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
+import { isProfileComplete } from '@/utils/profileCompletion';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -28,9 +29,13 @@ export async function POST(request: NextRequest) {
   // Get user profile for name
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name')
+    .select('email, full_name, nickname, terms_accepted_at')
     .eq('id', user.id)
     .single();
+
+  if (!isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
+    return NextResponse.json({ message: 'Please complete your profile before RSVPing.' }, { status: 403 });
+  }
 
   const userName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Guest';
 

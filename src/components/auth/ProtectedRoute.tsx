@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import PageLoading from '@/components/shared/PageLoading';
 import PageContainer from '@/components/layout/PageContainer';
+import { isProfileComplete } from '@/utils/profileCompletion';
 
 type ProtectedRouteProps = {
   children: React.ReactNode
@@ -54,9 +55,9 @@ export default function ProtectedRoute({
       return; // Still loading profile
     }
 
-    // Check if user needs to complete onboarding (no nickname set)
+    // Check if user needs to complete onboarding
     // Skip this check if we're already on the onboarding page or if skipOnboardingCheck is true
-    if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
+    if (!skipOnboardingCheck && !isProfileComplete(profile, { fallbackEmail: user.email ?? null }) && pathname !== '/onboarding') {
       router.push('/onboarding');
       return;
     }
@@ -77,7 +78,7 @@ export default function ProtectedRoute({
   }
 
   // Show loading while redirecting to onboarding
-  if (!skipOnboardingCheck && profile && !profile.nickname && pathname !== '/onboarding') {
+  if (!skipOnboardingCheck && !isProfileComplete(profile, { fallbackEmail: user.email ?? null }) && pathname !== '/onboarding') {
     return <PageLoading />;
   }
 

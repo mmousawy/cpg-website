@@ -22,7 +22,7 @@ import {
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
-import { createMetadata, getAbsoluteUrl } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 
 type SocialLink = { label: string; url: string };
 
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 
   const profileTitle = profile.full_name || `@${profile.nickname}`;
   const profileDescription = profile.bio || `View the profile and photo albums of @${profile.nickname}`;
-  const profileImage = profile.avatar_url || null;
+  const profileImage = getSocialImageUrl(profile.avatar_url);
 
   return createMetadata({
     title: profileTitle,

@@ -2,7 +2,7 @@ import { createClient } from './server';
 import type { User } from '@supabase/supabase-js';
 import type { Tables } from '@/database.types';
 
-export type ServerProfile = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'> & {
+export type ServerProfile = Pick<Tables<'profiles'>, 'id' | 'email' | 'full_name' | 'nickname' | 'avatar_url' | 'terms_accepted_at'> & {
   is_admin: boolean  // is_admin can be null in DB but we default to false
 }
 
@@ -28,7 +28,7 @@ export async function getServerAuth(): Promise<ServerAuth> {
     // Fetch profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, full_name, nickname, avatar_url, is_admin')
+      .select('id, email, full_name, nickname, avatar_url, terms_accepted_at, is_admin')
       .eq('id', user.id)
       .single();
 

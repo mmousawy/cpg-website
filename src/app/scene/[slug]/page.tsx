@@ -24,7 +24,7 @@ import {
   type SceneEventCategory,
 } from '@/types/scene';
 import { formatPrice } from '@/utils/formatPrice';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
 
 import { RichDescription } from '@/components/shared/RichDescription';
 
@@ -65,7 +65,7 @@ export async function generateMetadata({
     description:
       event.description ||
       `${event.title} - ${event.location_name}, ${event.location_city}`,
-    image: event.cover_image_url,
+    image: getSocialImageUrl(event.cover_image_url),
     canonical: `/scene/${slug}`,
     type: 'article',
   });

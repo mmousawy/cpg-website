@@ -278,7 +278,9 @@ export default function BulkAlbumEditForm({
             key={album.id}
             album={album}
             variant="detailed"
-            publicUrl={profile?.nickname ? `/@${profile.nickname}/album/${album.slug}` : undefined}
+            publicUrl={album.event_slug
+              ? `/events/${album.event_slug}#photos`
+              : profile?.nickname ? `/@${profile.nickname}/album/${album.slug}` : undefined}
           />
         ))}
       </div>

@@ -33,10 +33,10 @@ export default function Footer({
   return (
     <>
       <Hr
-        className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
+        className="mx-0 my-5 w-full border border-solid border-[#e5e7ea]"
       />
       <Text
-        className="!mb-0 text-[12px] leading-[24px] text-[#666666]"
+        className="mb-0! text-[12px] leading-6 text-[#666666]"
       >
         {fullName ? (
           <>
@@ -62,7 +62,7 @@ export default function Footer({
       </Text>
       {optOutLink && (
         <Text
-          className="!mt-2 !mb-0 text-[12px] leading-[24px] text-[#666666]"
+          className="mt-2! mb-0! text-[12px] leading-6 text-[#666666]"
         >
           <Link
             href={optOutLink}

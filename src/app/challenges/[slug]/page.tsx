@@ -15,7 +15,7 @@ import {
   getChallengeContributors,
   getChallengePhotos,
 } from '@/lib/data/challenges';
-import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
 import ChallengeCoverImage from '@/components/challenges/ChallengeCoverImage';
@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return createMetadata({
     title: challenge.title,
     description: stripHtml(challenge.prompt),
-    image: challenge.cover_image_url,
+    image: getSocialImageUrl(challenge.cover_image_url),
     canonical: `/challenges/${slug}`,
     type: 'article',
     keywords: ['photo challenge', 'photography', challenge.title],

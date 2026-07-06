@@ -31,6 +31,8 @@ export type AlbumPhotoExtended = Tables<'album_photos'> & {
 export type AlbumWithPhotos = Album & {
   photos: AlbumPhoto[];
   tags?: AlbumTag[];
+  /** Slug of linked event when this is an event album */
+  event_slug?: string | null;
   profile?: {
     full_name: string | null;
     avatar_url: string | null;

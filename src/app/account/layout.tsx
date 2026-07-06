@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
 import { createNoIndexMetadata } from '@/utils/metadata';
+import { isProfileComplete } from '@/utils/profileCompletion';
 
 export const metadata = createNoIndexMetadata({
   title: 'Account',
@@ -26,8 +27,8 @@ export default async function AccountLayout({
   // Note: deletion_scheduled_at check is handled in the proxy (middleware)
   // which signs the user out and redirects to /account-deleted
 
-  // Redirect to onboarding if no nickname set
-  if (profile && !profile.nickname) {
+  // Redirect to onboarding until required profile fields are completed
+  if (!isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
     redirect('/onboarding');
   }
 

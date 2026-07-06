@@ -27,7 +27,7 @@ import {
 } from '@/lib/data/events';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getOrganizers } from '@/lib/data/profiles';
-import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
+import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -73,7 +73,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   }
 
   // Use event cover image if available, otherwise fall back to default
-  const eventImage = event.cover_image || null;
+  const eventImage = getSocialImageUrl(event.cover_image);
 
   return createMetadata({
     title: event.title || 'Event',

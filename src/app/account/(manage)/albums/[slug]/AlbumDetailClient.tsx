@@ -597,7 +597,12 @@ export default function AlbumDetailClient() {
               onDelete={handleDeletePhoto}
               onRemoveFromAlbum={isSharedWithMe ? handleRemoveFromSharedAlbum : handleRemoveFromAlbum}
               onSetAsCover={!isSharedWithMe ? handleSetAsCover : undefined}
-              currentAlbum={!isSharedWithMe && album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
+              currentAlbum={!isSharedWithMe && album ? {
+                id: album.id,
+                slug: album.slug,
+                cover_image_url: album.cover_image_url,
+                eventSlug: album.event_slug,
+              } : null}
               isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handlePhotoDirtyChange}
               readOnly={hasNonOwnedSelected}
@@ -770,7 +775,12 @@ export default function AlbumDetailClient() {
               onDelete={handleDeletePhoto}
               onRemoveFromAlbum={handleRemoveFromAlbum}
               onSetAsCover={handleSetAsCover}
-              currentAlbum={album ? { id: album.id, slug: album.slug, cover_image_url: album.cover_image_url } : null}
+              currentAlbum={album ? {
+                id: album.id,
+                slug: album.slug,
+                cover_image_url: album.cover_image_url,
+                eventSlug: album.event_slug,
+              } : null}
               isLoading={photosLoading}
               onDirtyChange={handlePhotoDirtyChange}
               hideTitle
