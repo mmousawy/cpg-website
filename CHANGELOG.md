@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.32.0](https://github.com/mmousawy/cpg-website/compare/v1.31.2...v1.32.0) (2026-07-05)
+
+
+### ✨ Features
+
+* add eager loading for images in challenge, event, and scene pages ([085e949](https://github.com/mmousawy/cpg-website/commit/085e94973af1def21f2d9a58b05d853ae852e4cc))
+* create API route to mark notifications as seen by link ([085e949](https://github.com/mmousawy/cpg-website/commit/085e94973af1def21f2d9a58b05d853ae852e4cc))
+* implement auto-mark notifications as seen on navigation ([085e949](https://github.com/mmousawy/cpg-website/commit/085e94973af1def21f2d9a58b05d853ae852e4cc))
+
+
+### 🐛 Bug Fixes
+
+* improve photo page content to display formatted creation date ([085e949](https://github.com/mmousawy/cpg-website/commit/085e94973af1def21f2d9a58b05d853ae852e4cc))
+* update cover image components to include relative positioning ([085e949](https://github.com/mmousawy/cpg-website/commit/085e94973af1def21f2d9a58b05d853ae852e4cc))
+
+
+### ♻️ Refactoring
+
+* enhance members page data fetching with error handling and user authentication ([085e949](https://github.com/mmousawy/cpg-website/commit/085e94973af1def21f2d9a58b05d853ae852e4cc))
+
 ## [1.31.2](https://github.com/mmousawy/cpg-website/compare/v1.31.1...v1.31.2) (2026-06-21)
 
 
