@@ -52,12 +52,23 @@ export async function createTestUser(baseUrl: string, bypassToken?: string): Pro
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
 
+  const baseUrlToken = (() => {
+    try {
+      const parsed = new URL(baseUrl);
+      return parsed.searchParams.get('x-vercel-protection-bypass') || undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+
+  const effectiveBypassToken = bypassToken || process.env.VERCEL_BYPASS_TOKEN || baseUrlToken;
+
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (bypassToken) {
-    headers['x-vercel-protection-bypass'] = bypassToken;
+  if (effectiveBypassToken) {
+    headers['x-vercel-protection-bypass'] = effectiveBypassToken;
   }
 
-  const maxAttempts = 5;
+  const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = await fetch(`${baseUrl}/api/test/setup`, {
       method: 'POST',
@@ -68,10 +79,14 @@ export async function createTestUser(baseUrl: string, bypassToken?: string): Pro
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.includes('application/json')) {
       const text = await response.text();
-      const msg = `Attempt ${attempt}/${maxAttempts}: Expected JSON from /api/test/setup but got "${contentType}" (HTTP ${response.status}). Server may not be ready yet.`;
+      const looksLikeProtectionPage = /vercel|authentication required|deployment protection|password/i.test(text);
+      const reasonHint = looksLikeProtectionPage
+        ? 'Likely Vercel deployment protection. Ensure VERCEL_BYPASS_TOKEN is set in CI.'
+        : 'Server may not be ready yet.';
+      const msg = `Attempt ${attempt}/${maxAttempts}: Expected JSON from /api/test/setup but got "${contentType}" (HTTP ${response.status}). ${reasonHint}`;
       console.warn(msg, '\nResponse preview:', text.slice(0, 200));
       if (attempt < maxAttempts) {
-        await new Promise(r => setTimeout(r, attempt * 2000));
+        await new Promise(r => setTimeout(r, Math.min(10000, attempt * 1500)));
         continue;
       }
       throw new Error(msg);
@@ -117,6 +132,6 @@ export async function loginTestUser(page: Page, email: string, password: string)
   );
   await submitButton.click();
 
-  // Wait for redirect to account page or home
-  await page.waitForURL(/\/(account|$)/, { timeout: 15000 });
+  // Wait for redirect to the authenticated area, including onboarding if the profile is incomplete.
+  await page.waitForURL(/\/(account|onboarding|$)/, { timeout: 15000 });
 }

@@ -48,17 +48,39 @@ export async function POST(request: Request) {
       },
     });
 
+    const testNickname = nickname || `test-${Date.now()}`;
+    const testFullName = fullName || 'Test User';
+
     // Check if user already exists
     const { data: existingUsers } = await adminClient.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(u => u.email === email);
 
     if (existingUser) {
-      // User exists, just return success (allows retrying tests)
+      // Ensure existing users are fully onboarded according to current completeness rules
+      const { error: existingProfileError } = await adminClient.from('profiles').upsert({
+        id: existingUser.id,
+        email: email.toLowerCase(),
+        nickname: testNickname,
+        full_name: testFullName,
+        terms_accepted_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      });
+
+      if (existingProfileError) {
+        return NextResponse.json(
+          { error: `Failed to update existing profile: ${existingProfileError.message}` },
+          { status: 500 },
+        );
+      }
+
       return NextResponse.json({
         success: true,
         userId: existingUser.id,
         email,
-        message: 'User already exists',
+        nickname: testNickname,
+        password: password || 'TestPassword123!',
+        message: 'User already exists and profile was updated',
       });
     }
 
@@ -76,15 +98,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create/update profile with nickname and full_name (completes onboarding)
-    const testNickname = nickname || `test-${Date.now()}`;
-    const testFullName = fullName || 'Test User';
+    // Create/update profile with all required completeness fields
 
     const { error: profileError } = await adminClient.from('profiles').upsert({
       id: userData.user.id,
       email: email.toLowerCase(),
       nickname: testNickname,
       full_name: testFullName,
+      terms_accepted_at: new Date().toISOString(),
     }, {
       onConflict: 'id',
     });
