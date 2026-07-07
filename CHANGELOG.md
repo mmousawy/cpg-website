@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.32.1](https://github.com/mmousawy/cpg-website/compare/v1.32.0...v1.32.1) (2026-07-07)
+
+
+### 🐛 Bug Fixes
+
+* add missing packages entry in pnpm workspace configuration ([6dbc2d8](https://github.com/mmousawy/cpg-website/commit/6dbc2d8d04c7d48cfc3fbaf6ca0b762e6d4ec0a2))
+* enhance profile completion checks and improve navigation ([bb249e7](https://github.com/mmousawy/cpg-website/commit/bb249e7d873484c84811b6586f1c2cdf0bf73eaf))
+* enhance test user creation and profile update logic in API ([20037f0](https://github.com/mmousawy/cpg-website/commit/20037f023293e7dda11db2c974546e3f83faee20))
+* update package manager ([f9d4f30](https://github.com/mmousawy/cpg-website/commit/f9d4f306e53272ea47769e81e6890210470fa5d5))
+* update pnpm action version to 11.10.0 in CI workflow ([b849ad8](https://github.com/mmousawy/cpg-website/commit/b849ad8f83c7a6995bd6e27a1eb9cdb3abd49411))
+
 ## [1.32.0](https://github.com/mmousawy/cpg-website/compare/v1.31.2...v1.32.0) (2026-07-05)
 
 
