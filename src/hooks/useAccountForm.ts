@@ -16,6 +16,7 @@ import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { validateImage } from '@/utils/imageValidation';
 import { generateBlurhash } from '@/utils/generateBlurhash';
+import { deleteSupabaseStorageObject } from '@/utils/supabaseStorage';
 import {
   getEmailTypes,
   getUserEmailPreferences,
@@ -766,6 +767,9 @@ export function useAccountForm() {
     setSuccess(false);
 
     try {
+      const previousAvatarUrl = savedAvatarUrl;
+      const previousBannerUrl = savedBannerUrl;
+
       // Handle avatar changes first
       let newAvatarUrl: string | null = savedAvatarUrl;
       let newBannerUrl: string | null = savedBannerUrl;
@@ -949,6 +953,14 @@ export function useAccountForm() {
       if (saveError) {
         setSubmitError(saveError.message);
       } else {
+        if (previousAvatarUrl && previousAvatarUrl !== newAvatarUrl) {
+          await deleteSupabaseStorageObject(supabase, 'user-avatars', previousAvatarUrl);
+        }
+
+        if (previousBannerUrl && previousBannerUrl !== newBannerUrl) {
+          await deleteSupabaseStorageObject(supabase, 'user-banners', previousBannerUrl);
+        }
+
         // Apply theme change
         if (data.theme !== theme) {
           setTheme(data.theme);

@@ -36,7 +36,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { useAddPhotosToSharedAlbum } from '@/hooks/useSharedAlbumSubmissions';
 import { useSupabase } from '@/hooks/useSupabase';
-import type { PhotoWithAlbums } from '@/types/photos';
+import type { PhotoOwnerProfile, PhotoWithAlbums } from '@/types/photos';
 import { confirmRemoveFromAlbum, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
 import { useQueryClient } from '@tanstack/react-query';
@@ -89,7 +89,8 @@ export default function AlbumDetailClient() {
     isLoading: albumLoading,
     error: albumError,
   } = isSharedWithMe ? sharedAlbumQuery : ownAlbumQuery;
-  const { data: photos = [], isLoading: photosLoading } = useAlbumPhotos(album?.id);
+  const { data: photosData, isLoading: photosLoading } = useAlbumPhotos(album?.id);
+  const photos: PhotoWithAlbums[] = photosData ?? [];
   const { data: sharedMembers = [] } = useSharedAlbumMembers(
     isSharedWithMe && album?.id ? album.id : undefined,
   );
@@ -424,10 +425,10 @@ export default function AlbumDetailClient() {
   const hasNonOwnedSelected = selectedPhotos.some((p) => p.user_id !== user?.id);
 
   // Build a map of photo ID → owner profile for photos not owned by the current user
-  const notOwnedProfiles = new Map(
+  const notOwnedProfiles = new Map<string, PhotoOwnerProfile | null>(
     photos
       .filter((p) => p.user_id !== user?.id)
-      .map((p) => [p.id, (p as PhotoWithAlbums).owner_profile ?? null]),
+      .map((p) => [p.id, p.owner_profile ?? null]),
   );
 
   // Mobile handlers
