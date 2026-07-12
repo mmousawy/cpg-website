@@ -9,7 +9,7 @@ export const accountFAQ: FAQSection = {
       title: 'Updating your profile',
       content: (
         <p>
-          Go to Account (click your avatar in the Header → Settings) to update your full name, bio, avatar, and interests. Click the avatar area to change your profile picture. Your nickname is set during onboarding and may require contacting support to change.
+          Go to Account (click your avatar in the Header → Settings) to update your full name, bio, avatar, and interests. A preview at the top shows how your profile looks; use the Banner image and Profile picture sections below it to upload or change your images. Your nickname is set during onboarding and may require contacting support to change.
         </p>
       ),
     },

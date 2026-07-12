@@ -1,6 +1,9 @@
 'use client';
 
 import { revalidateProfile } from '@/app/actions/revalidate';
+import { ModalContext } from '@/app/providers/ModalProvider';
+import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
+import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
@@ -16,11 +19,13 @@ import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
+import { generateBlurhash } from '@/utils/generateBlurhash';
 import { validateImage } from '@/utils/imageValidation';
+import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createElement, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -54,7 +59,8 @@ export default function OnboardingClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useSupabase();
-  const isTestMode = searchParams.get('test') === 'true';
+  const modalContext = useContext(ModalContext);
+  const isPreviewMode = isOnboardingPreviewMode(searchParams);
 
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -65,10 +71,22 @@ export default function OnboardingClient() {
 
   // Avatar upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  const [pendingAvatarRemove, setPendingAvatarRemove] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [removeAvatar, setRemoveAvatar] = useState(false);
+
+  // Banner upload state
+  const [pendingBannerFile, setPendingBannerFile] = useState<File | null>(null);
+  const [pendingBannerPreview, setPendingBannerPreview] = useState<string | null>(null);
+  const [pendingBannerBlurhash, setPendingBannerBlurhash] = useState<string | null>(null);
+  const [pendingBannerRemove, setPendingBannerRemove] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+
+  const savedAvatarUrl = profile?.avatar_url ?? null;
+  const savedBannerUrl = profile?.banner_url ?? null;
+  const savedBannerBlurhash = profile?.banner_blurhash ?? null;
 
   // Check if user is OAuth user (not email/password)
   const isOAuthUser = useMemo(() => {
@@ -143,31 +161,34 @@ export default function OnboardingClient() {
     loadEmailTypes();
   }, [setValue]);
 
-  // Cleanup preview URL on unmount
+  // Cleanup preview URLs on unmount
   useEffect(() => {
     return () => {
-      if (avatarPreview) {
-        URL.revokeObjectURL(avatarPreview);
+      if (pendingAvatarPreview) {
+        URL.revokeObjectURL(pendingAvatarPreview);
+      }
+      if (pendingBannerPreview) {
+        URL.revokeObjectURL(pendingBannerPreview);
       }
     };
-  }, [avatarPreview]);
+  }, [pendingAvatarPreview, pendingBannerPreview]);
 
   // Handle redirects in useEffect to avoid setState during render
   useEffect(() => {
     if (isLoading) return;
 
-    // Redirect if not logged in (unless in test mode)
-    if (!user && !isTestMode) {
+    // Redirect if not logged in (unless in preview mode)
+    if (!user && !isPreviewMode) {
       router.push('/login');
       return;
     }
 
-    // Redirect only when profile is fully complete (unless in test mode)
-    if (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isTestMode) {
+    // Redirect only when profile is fully complete (unless in preview mode)
+    if (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode) {
       router.push('/account/events');
       return;
     }
-  }, [user, profile, isLoading, isTestMode, router]);
+  }, [user, profile, isLoading, isPreviewMode, router]);
 
   const watchedNickname = watch('nickname');
   const nicknameCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -220,47 +241,163 @@ export default function OnboardingClient() {
 
     setAvatarError(null);
 
-    // Revoke previous preview URL if exists
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview);
-    }
+    const sourcePreviewUrl = URL.createObjectURL(file);
+    let sourcePreviewCleaned = false;
+    const cleanupSourcePreview = () => {
+      if (sourcePreviewCleaned) return;
+      URL.revokeObjectURL(sourcePreviewUrl);
+      sourcePreviewCleaned = true;
+    };
 
-    // Store file and create preview
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-    setRemoveAvatar(false);
+    modalContext.setSize('default');
+    modalContext.setTitle('Crop avatar');
+    modalContext.setContent(createElement(ProfileAvatarCropper, {
+      imageSrc: sourcePreviewUrl,
+      onDismiss: cleanupSourcePreview,
+      onCancel: () => {
+        cleanupSourcePreview();
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+      onApply: (croppedFile, croppedPreviewUrl) => {
+        cleanupSourcePreview();
 
-    // Clear the file input
+        if (pendingAvatarPreview) {
+          URL.revokeObjectURL(pendingAvatarPreview);
+        }
+
+        setPendingAvatarFile(croppedFile);
+        setPendingAvatarPreview(croppedPreviewUrl);
+        setPendingAvatarRemove(false);
+        setAvatarError(null);
+
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+    }));
+    modalContext.setIsOpen(true);
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handleRemoveAvatar = () => {
-    // Revoke preview URL if exists
-    if (avatarPreview) {
-      URL.revokeObjectURL(avatarPreview);
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+    if (error) {
+      setBannerError(error.message);
+      if (bannerInputRef.current) bannerInputRef.current.value = '';
+      return;
     }
 
-    setAvatarFile(null);
-    setAvatarPreview(null);
-    setRemoveAvatar(true);
+    setBannerError(null);
+
+    const sourcePreviewUrl = URL.createObjectURL(file);
+    let sourcePreviewCleaned = false;
+    const cleanupSourcePreview = () => {
+      if (sourcePreviewCleaned) return;
+      URL.revokeObjectURL(sourcePreviewUrl);
+      sourcePreviewCleaned = true;
+    };
+
+    modalContext.setSize('medium');
+    modalContext.setTitle('Crop banner');
+    modalContext.setContent(createElement(ProfileBannerCropper, {
+      imageSrc: sourcePreviewUrl,
+      onDismiss: cleanupSourcePreview,
+      onCancel: () => {
+        cleanupSourcePreview();
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+      onApply: (croppedFile, croppedPreviewUrl) => {
+        cleanupSourcePreview();
+
+        if (pendingBannerPreview) {
+          URL.revokeObjectURL(pendingBannerPreview);
+        }
+
+        setPendingBannerFile(croppedFile);
+        setPendingBannerPreview(croppedPreviewUrl);
+        setPendingBannerBlurhash(null);
+        setPendingBannerRemove(false);
+        setBannerError(null);
+
+        void generateBlurhash(croppedFile, 4, 3).then((hash) => {
+          setPendingBannerBlurhash(hash);
+        });
+
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+    }));
+    modalContext.setIsOpen(true);
+
+    if (bannerInputRef.current) {
+      bannerInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    if (pendingAvatarPreview) {
+      URL.revokeObjectURL(pendingAvatarPreview);
+    }
+
+    setPendingAvatarFile(null);
+    setPendingAvatarPreview(null);
+    setPendingAvatarRemove(true);
     setAvatarError(null);
   };
 
+  const handleCancelAvatarChange = () => {
+    if (pendingAvatarPreview) {
+      URL.revokeObjectURL(pendingAvatarPreview);
+    }
+
+    setPendingAvatarFile(null);
+    setPendingAvatarPreview(null);
+    setPendingAvatarRemove(false);
+    setAvatarError(null);
+  };
+
+  const handleRemoveBanner = () => {
+    if (pendingBannerPreview) {
+      URL.revokeObjectURL(pendingBannerPreview);
+    }
+
+    setPendingBannerFile(null);
+    setPendingBannerPreview(null);
+    setPendingBannerBlurhash(null);
+    setPendingBannerRemove(true);
+    setBannerError(null);
+  };
+
+  const handleCancelBannerChange = () => {
+    if (pendingBannerPreview) {
+      URL.revokeObjectURL(pendingBannerPreview);
+    }
+
+    setPendingBannerFile(null);
+    setPendingBannerPreview(null);
+    setPendingBannerBlurhash(null);
+    setPendingBannerRemove(false);
+    setBannerError(null);
+  };
+
   const onSubmit = async (data: OnboardingFormData) => {
-    // In test mode without a user, just validate the form and show success message
-    if (isTestMode && !user) {
-      // Double-check nickname availability
+    // In preview mode, validate only — never save profile changes
+    if (isPreviewMode) {
       if (nicknameAvailable === false) {
         setError('nickname', { message: 'This nickname is already taken' });
         return;
       }
 
-      // Show a test mode success message
       setSubmitError(null);
       alert(
-        'Test Mode: Form validation passed! All fields are valid.\n\nIn production, this would save your profile.',
+        'Preview mode: Form validation passed! All fields are valid.\n\nRemove ?preview=true from the URL to complete onboarding for real.',
       );
       return;
     }
@@ -277,22 +414,21 @@ export default function OnboardingClient() {
     setSubmitError(null);
 
     try {
-      // Handle avatar upload/removal first
-      let avatarUrl: string | null = null;
+      let avatarUrl: string | null = savedAvatarUrl;
+      let bannerUrl: string | null = savedBannerUrl;
+      let bannerBlurhash: string | null = savedBannerBlurhash;
 
-      if (removeAvatar) {
-        // User wants to remove avatar
+      if (pendingAvatarRemove) {
         avatarUrl = null;
-      } else if (avatarFile) {
-        // Upload new avatar
-        const fileExt = avatarFile.name.split('.').pop();
+      } else if (pendingAvatarFile) {
+        const fileExt = pendingAvatarFile.name.split('.').pop();
         const randomId = crypto.randomUUID();
         const fileName = `${randomId}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('user-avatars')
-          .upload(filePath, avatarFile, {
+          .upload(filePath, pendingAvatarFile, {
             cacheControl: '3600',
             upsert: false,
           });
@@ -308,18 +444,47 @@ export default function OnboardingClient() {
         } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
 
         avatarUrl = publicUrl;
-      } else {
-        // Keep existing avatar (if any)
-        avatarUrl = profile?.avatar_url || null;
       }
 
-      // Update profile
+      if (pendingBannerRemove) {
+        bannerUrl = null;
+        bannerBlurhash = null;
+      } else if (pendingBannerFile) {
+        const fileExt = pendingBannerFile.name.split('.').pop();
+        const randomId = crypto.randomUUID();
+        const fileName = `${randomId}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('user-banners')
+          .upload(filePath, pendingBannerFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          setSubmitError(`Failed to upload banner: ${uploadError.message}`);
+          setIsSaving(false);
+          return;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('user-banners').getPublicUrl(filePath);
+
+        bannerUrl = publicUrl;
+        bannerBlurhash = pendingBannerBlurhash
+          ?? await generateBlurhash(pendingBannerFile, 4, 3);
+      }
+
       const updateData: {
         nickname: string;
         full_name: string | null;
         email?: string;
         bio: string | null;
         avatar_url: string | null;
+        banner_url: string | null;
+        banner_blurhash: string | null;
         newsletter_opt_in: boolean;
         terms_accepted_at: string;
       } = {
@@ -327,7 +492,8 @@ export default function OnboardingClient() {
         full_name: data.fullName || null,
         bio: data.bio || null,
         avatar_url: avatarUrl,
-        // For backward compatibility, set newsletter_opt_in based on newsletter preference
+        banner_url: bannerUrl,
+        banner_blurhash: bannerBlurhash,
         newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
         terms_accepted_at: new Date().toISOString(),
       };
@@ -339,15 +505,30 @@ export default function OnboardingClient() {
 
       const { error: profileError } = await supabase.from('profiles').update(updateData).eq('id', user.id);
 
-      if (profileError) {
-        if (profileError.code === '23505') {
+      let saveError = profileError;
+      if (saveError?.message?.includes('banner_blurhash')) {
+        const { banner_blurhash: _blurhash, ...updateWithoutBlurhash } = updateData;
+        const retry = await supabase.from('profiles').update(updateWithoutBlurhash).eq('id', user.id);
+        saveError = retry.error;
+      } else if (saveError?.message?.includes('banner_url')) {
+        const {
+          banner_url: _bannerUrl,
+          banner_blurhash: _blurhash,
+          ...updateWithoutBanner
+        } = updateData;
+        const retry = await supabase.from('profiles').update(updateWithoutBanner).eq('id', user.id);
+        saveError = retry.error;
+      }
+
+      if (saveError) {
+        if (saveError.code === '23505') {
           // Unique constraint violation
           setError('nickname', { message: 'This nickname is already taken' });
-        } else if (profileError.code === '23514') {
+        } else if (saveError.code === '23514') {
           // Check constraint violation
           setError('nickname', { message: 'Invalid nickname format' });
         } else {
-          setSubmitError(profileError.message);
+          setSubmitError(saveError.message);
         }
         setIsSaving(false);
         return;
@@ -415,12 +596,32 @@ export default function OnboardingClient() {
   }
 
   // Show loading if redirecting (handled in useEffect)
-  if ((!user && !isTestMode) || (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isTestMode)) {
+  if ((!user && !isPreviewMode) || (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode)) {
     return <PageLoading />;
   }
 
-  // Determine which avatar to display: pending upload preview, existing profile avatar, or null if removed
-  const displayAvatarUrl = removeAvatar ? null : avatarPreview || profile?.avatar_url;
+  const watchedFullName = watch('fullName');
+  const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove;
+  const hasBannerChanges = pendingBannerFile !== null || pendingBannerRemove;
+
+  const displayAvatarUrl = pendingAvatarPreview
+    ? pendingAvatarPreview
+    : pendingAvatarRemove
+      ? null
+      : savedAvatarUrl;
+
+  const displayBannerUrl = pendingBannerPreview
+    ? pendingBannerPreview
+    : pendingBannerRemove
+      ? null
+      : savedBannerUrl;
+
+  const displayBannerBlurhash = pendingBannerPreview
+    ? pendingBannerBlurhash
+    : pendingBannerRemove
+      ? null
+      : savedBannerBlurhash;
+
   const displayName =
     profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
 
@@ -481,17 +682,32 @@ export default function OnboardingClient() {
           <OnboardingProfileSection
             register={register}
             errors={errors}
+            profileId={profile?.id ?? user?.id ?? ''}
+            nickname={watchedNickname}
+            fullName={watchedFullName}
+            displayBannerUrl={displayBannerUrl}
+            displayBannerBlurhash={displayBannerBlurhash}
             displayAvatarUrl={displayAvatarUrl}
-            displayName={displayName}
-            avatarFile={avatarFile}
+            savedBannerUrl={savedBannerUrl}
+            savedAvatarUrl={savedAvatarUrl}
+            pendingBannerFile={pendingBannerFile}
+            pendingAvatarFile={pendingAvatarFile}
+            pendingBannerRemove={pendingBannerRemove}
+            pendingAvatarRemove={pendingAvatarRemove}
+            hasBannerChanges={hasBannerChanges}
+            hasAvatarChanges={hasAvatarChanges}
+            bannerError={bannerError}
             avatarError={avatarError}
             isSaving={isSaving}
             isOAuthUser={isOAuthUser}
             fileInputRef={fileInputRef}
+            bannerInputRef={bannerInputRef}
+            handleBannerUpload={handleBannerUpload}
+            handleRemoveBanner={handleRemoveBanner}
+            handleCancelBannerChange={handleCancelBannerChange}
             handleAvatarUpload={handleAvatarUpload}
             handleRemoveAvatar={handleRemoveAvatar}
-            profileAvatarUrl={profile?.avatar_url}
-            removeAvatar={removeAvatar}
+            handleCancelAvatarChange={handleCancelAvatarChange}
           />
 
           <OnboardingInterestsSection
@@ -560,16 +776,16 @@ export default function OnboardingClient() {
             {submitError}
           </ErrorMessage>}
 
-          {isTestMode && !user && (
+          {isPreviewMode && (
             <div
               className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
             >
               <strong>
-                Test Mode:
+                Preview mode:
               </strong>
               {' '}
-              You are not logged in. Form validation will work, but
-              submission will only show a test message.
+              Auth and profile-completion redirects are disabled. Form validation
+              works, but submission will not save your profile.
             </div>
           )}
 
@@ -580,18 +796,18 @@ export default function OnboardingClient() {
               isSaving ||
               nicknameAvailable === false ||
               !watchedNickname ||
-              (isOAuthUser && !watch('email') && !isTestMode) ||
+              (isOAuthUser && !watch('email') && !isPreviewMode) ||
               !watch('termsAccepted')
             }
             loading={isSaving}
           >
-            {isTestMode && !user ? 'Test Form Validation' : 'Complete setup'}
+            {isPreviewMode ? 'Test form validation' : 'Complete setup'}
           </Button>
 
           <p
             className="text-center text-xs text-foreground/70"
           >
-            You can update your profile picture and other details later in your account settings.
+            You can update your profile picture, banner, and other details later in your account settings.
           </p>
         </form>
       </Container>

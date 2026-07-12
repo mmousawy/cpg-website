@@ -1,118 +1,104 @@
 'use client';
 
-import clsx from 'clsx';
-import Avatar from '@/components/auth/Avatar';
-import Button from '@/components/shared/Button';
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+
+import ProfileImageUploadSections from '@/components/account/ProfileImageUploadSections';
 import Input from '@/components/shared/Input';
 import Textarea from '@/components/shared/Textarea';
-import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingProfileSectionProps {
   register: UseFormRegister<OnboardingFormData>;
   errors: FieldErrors<OnboardingFormData>;
-  displayAvatarUrl: string | null | undefined;
-  displayName: string | null | undefined;
-  avatarFile: File | null;
+  profileId: string;
+  nickname: string;
+  fullName: string;
+  displayBannerUrl: string | null;
+  displayBannerBlurhash: string | null;
+  displayAvatarUrl: string | null;
+  savedBannerUrl: string | null;
+  savedAvatarUrl: string | null;
+  pendingBannerFile: File | null;
+  pendingAvatarFile: File | null;
+  pendingBannerRemove: boolean;
+  pendingAvatarRemove: boolean;
+  hasBannerChanges: boolean;
+  hasAvatarChanges: boolean;
+  bannerError: string | null;
   avatarError: string | null;
   isSaving: boolean;
   isOAuthUser: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
+  bannerInputRef: React.RefObject<HTMLInputElement | null>;
+  handleBannerUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemoveBanner: () => void;
+  handleCancelBannerChange: () => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemoveAvatar: () => void;
-  profileAvatarUrl: string | null | undefined;
-  removeAvatar: boolean;
+  handleCancelAvatarChange: () => void;
 }
 
 export default function OnboardingProfileSection({
   register,
   errors,
+  profileId,
+  nickname,
+  fullName,
+  displayBannerUrl,
+  displayBannerBlurhash,
   displayAvatarUrl,
-  displayName,
-  avatarFile,
+  savedBannerUrl,
+  savedAvatarUrl,
+  pendingBannerFile,
+  pendingAvatarFile,
+  pendingBannerRemove,
+  pendingAvatarRemove,
+  hasBannerChanges,
+  hasAvatarChanges,
+  bannerError,
   avatarError,
   isSaving,
   isOAuthUser,
   fileInputRef,
+  bannerInputRef,
+  handleBannerUpload,
+  handleRemoveBanner,
+  handleCancelBannerChange,
   handleAvatarUpload,
   handleRemoveAvatar,
-  profileAvatarUrl,
-  removeAvatar,
+  handleCancelAvatarChange,
 }: OnboardingProfileSectionProps) {
   return (
     <>
-      {/* Profile Picture */}
-      <div
-        className="flex flex-col gap-2"
-      >
-        <label
-          className="text-sm font-medium"
-        >
-          Profile picture
-          <span
-            className="ml-1.5 text-xs font-normal text-foreground/50"
-          >
-            (optional)
-          </span>
-        </label>
-        <div
-          className="flex items-center gap-4"
-        >
-          <div
-            className={clsx(
-              'rounded-full border-2 transition-colors shrink-0',
-              avatarFile ? 'border-primary' : 'border-border-color',
-            )}
-          >
-            <Avatar
-              avatarUrl={displayAvatarUrl}
-              fullName={displayName}
-              size="xl"
-            />
-          </div>
-          <div
-            className="flex-1 flex flex-col gap-2"
-          >
-            <div
-              className="flex flex-wrap gap-2"
-            >
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSaving}
-                variant="secondary"
-                type="button"
-                size="sm"
-              >
-                {avatarFile ? 'Change picture' : 'Upload picture'}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
-                onChange={handleAvatarUpload}
-                className="hidden"
-                disabled={isSaving}
-              />
-              {(avatarFile || (profileAvatarUrl && !removeAvatar)) && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={handleRemoveAvatar}
-                  disabled={isSaving}
-                  size="sm"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-            {avatarError && <p
-              className="text-sm text-red-500"
-            >
-              {avatarError}
-            </p>}
-          </div>
-        </div>
-      </div>
+      <ProfileImageUploadSections
+        profileId={profileId}
+        nickname={nickname || null}
+        fullName={fullName || null}
+        displayBannerUrl={displayBannerUrl}
+        displayBannerBlurhash={displayBannerBlurhash}
+        displayAvatarUrl={displayAvatarUrl}
+        savedBannerUrl={savedBannerUrl}
+        savedAvatarUrl={savedAvatarUrl}
+        pendingBannerFile={pendingBannerFile}
+        pendingAvatarFile={pendingAvatarFile}
+        pendingBannerRemove={pendingBannerRemove}
+        pendingAvatarRemove={pendingAvatarRemove}
+        hasBannerChanges={hasBannerChanges}
+        hasAvatarChanges={hasAvatarChanges}
+        bannerError={bannerError}
+        avatarError={avatarError}
+        isSaving={isSaving}
+        fileInputRef={fileInputRef}
+        bannerInputRef={bannerInputRef}
+        handleBannerUpload={handleBannerUpload}
+        handleRemoveBanner={handleRemoveBanner}
+        handleCancelBannerChange={handleCancelBannerChange}
+        handleAvatarUpload={handleAvatarUpload}
+        handleRemoveAvatar={handleRemoveAvatar}
+        handleCancelAvatarChange={handleCancelAvatarChange}
+        heroVariant="standalone"
+        showOptionalLabels
+      />
 
       {/* Email Field - Only for OAuth users */}
       {isOAuthUser && (

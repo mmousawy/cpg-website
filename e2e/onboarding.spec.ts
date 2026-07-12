@@ -9,6 +9,14 @@ test.describe('Onboarding Flow', () => {
     await expect(page).toHaveURL(/.*login/i, { timeout: 10000 });
   });
 
+  test('should show onboarding in preview mode without authentication', async ({ page }) => {
+    await page.goto('/onboarding?preview=true');
+
+    await expect(page).toHaveURL(/\/onboarding\?preview=true/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /welcome to the group/i })).toBeVisible();
+    await expect(page.getByText(/preview mode:/i)).toBeVisible();
+  });
+
   test('should have proper navigation from signup to onboarding flow', async ({ page }) => {
     // Navigate to signup page
     await page.goto('/signup');

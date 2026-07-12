@@ -147,6 +147,16 @@ function ProfileMobileLinks({ profile }: { profile: ProfileHeaderProfile }) {
   );
 }
 
+function getProfileDisplayTitle(profile: ProfileHeaderProfile): string {
+  if (profile.full_name) {
+    return profile.full_name;
+  }
+  if (profile.nickname) {
+    return `@${profile.nickname}`;
+  }
+  return 'Your profile';
+}
+
 function ProfileHeaderRow({
   profile,
   hideSocialLinks = false,
@@ -198,9 +208,9 @@ function ProfileHeaderRow({
                   : 'text-[clamp(1.5rem,4.5svw,2rem)]',
               )}
             >
-              {profile.full_name || `@${profile.nickname}`}
+              {getProfileDisplayTitle(profile)}
             </h1>
-            {profile.full_name && (
+            {profile.full_name && profile.nickname && (
               <p
                 className={clsx(
                   'opacity-80 leading-tight ',
@@ -257,7 +267,7 @@ export function ProfileHeroBanner({
         {hasBannerImage ? (
           <BlurImage
             src={profile.banner_url!}
-            alt={`Banner for @${profile.nickname}`}
+            alt={profile.nickname ? `Banner for @${profile.nickname}` : 'Profile banner preview'}
             fill
             className="object-cover"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"

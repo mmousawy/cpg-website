@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
 import { UseFormRegister } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
-import { ProfileHeroBanner, type ProfileHeaderProfile } from '@/components/profile/ProfileHeader';
+import ProfileImageUploadSections from '@/components/account/ProfileImageUploadSections';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
@@ -73,28 +72,6 @@ export default function ProfileSection({
   pendingBannerRemove,
   pendingAvatarRemove,
 }: ProfileSectionProps) {
-  const previewProfile = useMemo((): ProfileHeaderProfile => ({
-    id: profile?.id ?? '',
-    nickname: nickname || profile?.nickname || null,
-    full_name: fullName || profile?.full_name || null,
-    avatar_url: displayAvatarUrl,
-    banner_url: displayBannerUrl,
-    banner_blurhash: displayBannerBlurhash,
-    website: profile?.website ?? null,
-    social_links: profile?.social_links ?? [],
-  }), [
-    profile?.id,
-    profile?.nickname,
-    profile?.full_name,
-    profile?.website,
-    profile?.social_links,
-    nickname,
-    fullName,
-    displayAvatarUrl,
-    displayBannerUrl,
-    displayBannerBlurhash,
-  ]);
-
   return (
     <div>
       <h2
@@ -103,139 +80,34 @@ export default function ProfileSection({
         Basic info
       </h2>
       <Container>
-        {/* Profile Header Preview */}
-        <div
-          className="border-border-color mb-6 border-b pb-4 sm:pb-6"
-        >
-          <div
-            className="relative -mx-4 -mt-4 overflow-hidden rounded-t-xl border-b border-border-color sm:-mx-6 sm:-mt-6"
-          >
-            <ProfileHeroBanner
-              profile={previewProfile}
-              hideSocialLinks
-              variant="preview"
-            />
-          </div>
-
-          <div
-            className="space-y-2 pt-4 sm:pt-6"
-          >
-            <div
-              className="grid gap-5 sm:grid-cols-2"
-            >
-              <div
-                className="space-y-2"
-              >
-                <p
-                  className="text-sm font-medium"
-                >
-                  Profile picture
-                </p>
-                <div
-                  className="flex flex-wrap gap-2"
-                >
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isSaving}
-                    variant="secondary"
-                    type="button"
-                  >
-                    {pendingAvatarFile ? 'Choose different' : 'Upload new'}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                    disabled={isSaving}
-                  />
-                  {(savedAvatarUrl || pendingAvatarFile) && !pendingAvatarRemove && (
-                    <Button
-                      type="button"
-                      variant="danger"
-                      onClick={handleRemoveAvatar}
-                      disabled={isSaving}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                  {hasAvatarChanges && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleCancelAvatarChange}
-                      disabled={isSaving}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-                {avatarError && <p
-                  className="text-sm text-red-500"
-                >{avatarError}</p>}
-              </div>
-
-              <div
-                className="space-y-2"
-              >
-                <p
-                  className="text-sm font-medium"
-                >
-                  Banner image
-                </p>
-                <div
-                  className="flex flex-wrap gap-2"
-                >
-                  <Button
-                    onClick={() => bannerInputRef.current?.click()}
-                    disabled={isSaving}
-                    variant="secondary"
-                    type="button"
-                  >
-                    {pendingBannerFile ? 'Choose different' : 'Upload new'}
-                  </Button>
-                  <input
-                    ref={bannerInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleBannerUpload}
-                    className="hidden"
-                    disabled={isSaving}
-                  />
-                  {(savedBannerUrl || pendingBannerFile) && !pendingBannerRemove && (
-                    <Button
-                      type="button"
-                      variant="danger"
-                      onClick={handleRemoveBanner}
-                      disabled={isSaving}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                  {hasBannerChanges && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleCancelBannerChange}
-                      disabled={isSaving}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-                {bannerError && <p
-                  className="text-sm text-red-500"
-                >{bannerError}</p>}
-              </div>
-            </div>
-            <p
-              className="text-xs text-foreground/60"
-            >
-              JPEG, PNG, GIF, or WebP up to 5 MB.
-            </p>
-          </div>
-        </div>
+        <ProfileImageUploadSections
+          profileId={profile?.id ?? ''}
+          nickname={nickname || profile?.nickname || null}
+          fullName={fullName || profile?.full_name || null}
+          displayBannerUrl={displayBannerUrl}
+          displayBannerBlurhash={displayBannerBlurhash}
+          displayAvatarUrl={displayAvatarUrl}
+          savedBannerUrl={savedBannerUrl}
+          savedAvatarUrl={savedAvatarUrl}
+          pendingBannerFile={pendingBannerFile}
+          pendingAvatarFile={pendingAvatarFile}
+          pendingBannerRemove={pendingBannerRemove}
+          pendingAvatarRemove={pendingAvatarRemove}
+          hasBannerChanges={hasBannerChanges}
+          hasAvatarChanges={hasAvatarChanges}
+          bannerError={bannerError}
+          avatarError={avatarError}
+          isSaving={isSaving}
+          fileInputRef={fileInputRef}
+          bannerInputRef={bannerInputRef}
+          handleBannerUpload={handleBannerUpload}
+          handleRemoveBanner={handleRemoveBanner}
+          handleCancelBannerChange={handleCancelBannerChange}
+          handleAvatarUpload={handleAvatarUpload}
+          handleRemoveAvatar={handleRemoveAvatar}
+          handleCancelAvatarChange={handleCancelAvatarChange}
+          heroVariant="account"
+        />
 
         {/* Form Fields */}
         <div
