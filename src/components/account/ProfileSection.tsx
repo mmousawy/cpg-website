@@ -1,10 +1,10 @@
 'use client';
 
-import clsx from 'clsx';
+import { useMemo } from 'react';
 import { UseFormRegister } from 'react-hook-form';
 
-import Avatar from '@/components/auth/Avatar';
 import Container from '@/components/layout/Container';
+import { ProfileHeroBanner, type ProfileHeaderProfile } from '@/components/profile/ProfileHeader';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
@@ -15,19 +15,30 @@ interface ProfileSectionProps {
   profile: Profile | null;
   userEmail: string | null | undefined;
   nickname: string;
+  displayBannerUrl: string | null;
+  displayBannerBlurhash: string | null;
   displayAvatarUrl: string | null;
+  hasBannerChanges: boolean;
   hasAvatarChanges: boolean;
+  bannerError: string | null;
   avatarError: string | null;
   isSaving: boolean;
   emailChangedFromUrl: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
+  bannerInputRef: React.RefObject<HTMLInputElement | null>;
+  handleBannerUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemoveBanner: () => void;
+  handleCancelBannerChange: () => void;
   handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemoveAvatar: () => void;
   handleCancelAvatarChange: () => void;
   onOpenEmailModal: () => void;
   fullName: string;
+  savedBannerUrl: string | null;
   savedAvatarUrl: string | null;
+  pendingBannerFile: File | null;
   pendingAvatarFile: File | null;
+  pendingBannerRemove: boolean;
   pendingAvatarRemove: boolean;
 }
 
@@ -36,21 +47,54 @@ export default function ProfileSection({
   profile,
   userEmail,
   nickname,
+  displayBannerUrl,
+  displayBannerBlurhash,
   displayAvatarUrl,
+  hasBannerChanges,
   hasAvatarChanges,
+  bannerError,
   avatarError,
   isSaving,
   emailChangedFromUrl,
   fileInputRef,
+  bannerInputRef,
+  handleBannerUpload,
+  handleRemoveBanner,
+  handleCancelBannerChange,
   handleAvatarUpload,
   handleRemoveAvatar,
   handleCancelAvatarChange,
   onOpenEmailModal,
   fullName,
+  savedBannerUrl,
   savedAvatarUrl,
+  pendingBannerFile,
   pendingAvatarFile,
+  pendingBannerRemove,
   pendingAvatarRemove,
 }: ProfileSectionProps) {
+  const previewProfile = useMemo((): ProfileHeaderProfile => ({
+    id: profile?.id ?? '',
+    nickname: nickname || profile?.nickname || null,
+    full_name: fullName || profile?.full_name || null,
+    avatar_url: displayAvatarUrl,
+    banner_url: displayBannerUrl,
+    banner_blurhash: displayBannerBlurhash,
+    website: profile?.website ?? null,
+    social_links: profile?.social_links ?? [],
+  }), [
+    profile?.id,
+    profile?.nickname,
+    profile?.full_name,
+    profile?.website,
+    profile?.social_links,
+    nickname,
+    fullName,
+    displayAvatarUrl,
+    displayBannerUrl,
+    displayBannerBlurhash,
+  ]);
+
   return (
     <div>
       <h2
@@ -59,72 +103,137 @@ export default function ProfileSection({
         Basic info
       </h2>
       <Container>
-        {/* Profile Picture */}
+        {/* Profile Header Preview */}
         <div
-          className="border-border-color mb-6 flex items-center gap-4 sm:gap-6 border-b pb-4 sm:pb-6"
+          className="border-border-color mb-6 border-b pb-4 sm:pb-6"
         >
           <div
-            className={clsx(
-              'rounded-full border-2',
-              hasAvatarChanges ? 'border-primary' : 'border-border-color',
-            )}
+            className="relative -mx-4 -mt-4 overflow-hidden rounded-t-xl border-b border-border-color sm:-mx-6 sm:-mt-6"
           >
-            <Avatar
-              avatarUrl={displayAvatarUrl}
-              fullName={fullName || userEmail}
-              size="xl"
+            <ProfileHeroBanner
+              profile={previewProfile}
+              hideSocialLinks
+              variant="preview"
             />
           </div>
+
           <div
-            className="flex-1"
+            className="space-y-2 pt-4 sm:pt-6"
           >
             <div
-              className="flex flex-wrap gap-2"
+              className="grid gap-5 sm:grid-cols-2"
             >
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSaving}
-                variant="secondary"
-                type="button"
+              <div
+                className="space-y-2"
               >
-                {pendingAvatarFile ? 'Choose different' : 'Upload new'}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
-                onChange={handleAvatarUpload}
-                className="hidden"
-                disabled={isSaving}
-              />
-              {/* Show Remove button if there's a saved avatar or pending upload (and not already marked for removal) */}
-              {(savedAvatarUrl || pendingAvatarFile) && !pendingAvatarRemove && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={handleRemoveAvatar}
-                  disabled={isSaving}
+                <p
+                  className="text-sm font-medium"
                 >
-                  Remove
-                </Button>
-              )}
-              {/* Show Cancel button if there are pending avatar changes */}
-              {hasAvatarChanges && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCancelAvatarChange}
-                  disabled={isSaving}
+                  Profile picture
+                </p>
+                <div
+                  className="flex flex-wrap gap-2"
                 >
-                  Cancel
-                </Button>
-              )}
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSaving}
+                    variant="secondary"
+                    type="button"
+                  >
+                    {pendingAvatarFile ? 'Choose different' : 'Upload new'}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    disabled={isSaving}
+                  />
+                  {(savedAvatarUrl || pendingAvatarFile) && !pendingAvatarRemove && (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={handleRemoveAvatar}
+                      disabled={isSaving}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                  {hasAvatarChanges && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleCancelAvatarChange}
+                      disabled={isSaving}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+                {avatarError && <p
+                  className="text-sm text-red-500"
+                >{avatarError}</p>}
+              </div>
+
+              <div
+                className="space-y-2"
+              >
+                <p
+                  className="text-sm font-medium"
+                >
+                  Banner image
+                </p>
+                <div
+                  className="flex flex-wrap gap-2"
+                >
+                  <Button
+                    onClick={() => bannerInputRef.current?.click()}
+                    disabled={isSaving}
+                    variant="secondary"
+                    type="button"
+                  >
+                    {pendingBannerFile ? 'Choose different' : 'Upload new'}
+                  </Button>
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleBannerUpload}
+                    className="hidden"
+                    disabled={isSaving}
+                  />
+                  {(savedBannerUrl || pendingBannerFile) && !pendingBannerRemove && (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={handleRemoveBanner}
+                      disabled={isSaving}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                  {hasBannerChanges && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleCancelBannerChange}
+                      disabled={isSaving}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+                {bannerError && <p
+                  className="text-sm text-red-500"
+                >{bannerError}</p>}
+              </div>
             </div>
-            {avatarError && <p
-              className="mt-2 text-sm text-red-500"
+            <p
+              className="text-xs text-foreground/60"
             >
-              {avatarError}
-            </p>}
+              JPEG, PNG, GIF, or WebP up to 5 MB.
+            </p>
           </div>
         </div>
 

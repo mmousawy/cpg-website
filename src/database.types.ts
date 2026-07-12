@@ -1226,6 +1226,8 @@ export type Database = {
         Row: {
           album_card_style: string | null
           avatar_url: string | null
+          banner_blurhash: string | null
+          banner_url: string | null
           bio: string | null
           copyright_name: string | null
           created_at: string | null
@@ -1255,6 +1257,8 @@ export type Database = {
         Insert: {
           album_card_style?: string | null
           avatar_url?: string | null
+          banner_blurhash?: string | null
+          banner_url?: string | null
           bio?: string | null
           copyright_name?: string | null
           created_at?: string | null
@@ -1284,6 +1288,8 @@ export type Database = {
         Update: {
           album_card_style?: string | null
           avatar_url?: string | null
+          banner_blurhash?: string | null
+          banner_url?: string | null
           bio?: string | null
           copyright_name?: string | null
           created_at?: string | null

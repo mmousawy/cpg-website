@@ -33,3 +33,35 @@ CREATE POLICY "Public photos are publicly accessible"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'user-photos');
+
+-- Storage bucket policies for user-banners bucket
+-- Run these in Supabase Dashboard -> Storage -> user-banners -> Policies
+
+CREATE POLICY "Users can upload to their own banners folder"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'user-banners' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can update their own banners"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'user-banners' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete their own banners"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'user-banners' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Public banners are publicly accessible"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'user-banners');

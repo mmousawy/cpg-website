@@ -36,7 +36,7 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
           fill
           className="object-cover object-[center_25%] brightness-75"
           sizes="100vw"
-          quality={85}
+          quality={92}
         />
         <div
           className="absolute inset-0 bg-[#bba5fa] mix-blend-overlay"

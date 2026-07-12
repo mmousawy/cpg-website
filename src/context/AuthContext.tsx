@@ -13,6 +13,7 @@ export type AuthState = {
   isLoading: boolean;
   isAdmin: boolean;
   refreshProfile: () => Promise<void>;
+  updateProfileTheme: (theme: 'light' | 'dark' | 'midnight' | 'system') => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   signInWithGoogle: (redirectTo?: string) => Promise<{ error: Error | null }>;
   signInWithDiscord: (redirectTo?: string) => Promise<{ error: Error | null }>;
@@ -65,6 +66,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetchProfile(currentUserIdRef.current, true);
     }
   }, [fetchProfile]);
+
+  const updateProfileTheme = useCallback(async (theme: 'light' | 'dark' | 'midnight' | 'system') => {
+    const userId = currentUserIdRef.current;
+    if (!userId) {
+      return { error: new Error('Not authenticated') };
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ theme })
+      .eq('id', userId);
+
+    if (error) {
+      return { error: new Error(error.message || 'Failed to update theme preference') };
+    }
+
+    setProfile((prev) => (prev ? { ...prev, theme } : null));
+    return { error: null };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -217,10 +237,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({
-    user, session, profile, isLoading, isAdmin, refreshProfile,
+    user, session, profile, isLoading, isAdmin, refreshProfile, updateProfileTheme,
     signOut, signInWithGoogle, signInWithDiscord, signInWithEmail,
     signUpWithEmail, resetPassword, updatePassword,
-  }), [user, session, profile, isLoading, isAdmin, refreshProfile, signOut,
+  }), [user, session, profile, isLoading, isAdmin, refreshProfile, updateProfileTheme, signOut,
     signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail,
     resetPassword, updatePassword]);
 

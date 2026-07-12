@@ -14,6 +14,8 @@ export type ProfileData = Pick<Tables<'profiles'>,
   | 'full_name'
   | 'nickname'
   | 'avatar_url'
+  | 'banner_url'
+  | 'banner_blurhash'
   | 'bio'
   | 'website'
   | 'created_at'
@@ -131,13 +133,28 @@ export async function getProfileByNickname(nickname: string) {
 
   const supabase = createPublicClient();
 
-  const { data: profile, error } = await supabase
+  let { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, full_name, nickname, avatar_url, bio, website, social_links, created_at')
+    .select('id, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, created_at')
     .eq('nickname', nickname)
     .is('suspended_at', null)
     .is('deletion_scheduled_at', null)
     .single();
+
+  if (error?.message?.includes('banner_blurhash')) {
+    const retry = await supabase
+      .from('profiles')
+      .select('id, full_name, nickname, avatar_url, banner_url, bio, website, social_links, created_at')
+      .eq('nickname', nickname)
+      .is('suspended_at', null)
+      .is('deletion_scheduled_at', null)
+      .single();
+
+    profile = retry.data
+      ? { ...retry.data, banner_blurhash: null }
+      : null;
+    error = retry.error;
+  }
 
   if (error || !profile) {
     return null;
@@ -232,7 +249,9 @@ export async function getProfileStats(
   const stats = dbStats as {
     eventsAttended: number;
     commentsMade: number;
+    commentsReceived: number;
     likesReceived: number;
+    likesGiven: number;
     viewsReceived: number;
     challengesParticipated: number;
     challengePhotosAccepted: number;
@@ -243,8 +262,9 @@ export async function getProfileStats(
     albums: albumCount,
     eventsAttended: stats?.eventsAttended ?? 0,
     commentsMade: stats?.commentsMade ?? 0,
-    commentsReceived: 0, // Not tracked in public profile stats
+    commentsReceived: stats?.commentsReceived ?? 0,
     likesReceived: stats?.likesReceived ?? 0,
+    likesGiven: stats?.likesGiven ?? 0,
     viewsReceived: stats?.viewsReceived ?? 0,
     challengesParticipated: stats?.challengesParticipated ?? 0,
     challengePhotosAccepted: stats?.challengePhotosAccepted ?? 0,

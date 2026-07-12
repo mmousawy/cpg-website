@@ -35,7 +35,7 @@ export function getSocialImageUrl(
 ): string | null {
   if (!imageUrl) return null;
 
-  const { width = 1200, height = 630, quality = 85 } = options;
+  const { width = 1200, height = 630, quality = 92 } = options;
 
   try {
     const parsed = new URL(imageUrl);

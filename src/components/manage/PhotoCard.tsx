@@ -191,7 +191,7 @@ function PhotoCard({
           blurhash={photo.blurhash}
           fill
           sizes="200px"
-          quality={85}
+          quality={92}
           className={clsx(
             'object-cover transition-transform',
             disabled && 'grayscale opacity-60',

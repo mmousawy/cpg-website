@@ -25,10 +25,10 @@ const nextConfig: NextConfig = {
     loaderFile: './src/utils/supabaseImageLoader.ts',
     // Cache transformed images for 31 days (reduces re-transformations)
     minimumCacheTTL: 2678400,
-    // Single format reduces variants (Supabase uses WebP automatically)
+    // Single format reduces variants (Supabase auto-serves WebP via /render/image)
     formats: ['image/webp'],
-    // 30 for blur placeholders, 85 for full images
-    qualities: [30, 85],
+    // 30 for blur placeholders, 92 for full images (passed to Supabase ?quality=)
+    qualities: [30, 92],
     remotePatterns: [
       {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',

@@ -47,6 +47,7 @@ export default function AccountPage() {
     success,
     submitError,
     avatarError,
+    bannerError,
     themeMounted,
     emailTypes,
     stats,
@@ -54,14 +55,24 @@ export default function AccountPage() {
 
     // Avatar
     fileInputRef,
+    bannerInputRef,
     displayAvatarUrl,
+    displayBannerUrl,
+    displayBannerBlurhash,
     hasAvatarChanges,
+    hasBannerChanges,
     handleAvatarUpload,
     handleRemoveAvatar,
     handleCancelAvatarChange,
+    handleBannerUpload,
+    handleRemoveBanner,
+    handleCancelBannerChange,
     savedAvatarUrl,
+    savedBannerUrl,
     pendingAvatarFile,
+    pendingBannerFile,
     pendingAvatarRemove,
+    pendingBannerRemove,
 
     // Theme
     resolvedTheme,
@@ -211,19 +222,30 @@ export default function AccountPage() {
                     profile={profile}
                     userEmail={user?.email}
                     nickname={nickname}
+                    displayBannerUrl={displayBannerUrl}
+                    displayBannerBlurhash={displayBannerBlurhash}
                     displayAvatarUrl={displayAvatarUrl}
+                    hasBannerChanges={hasBannerChanges}
                     hasAvatarChanges={hasAvatarChanges}
+                    bannerError={bannerError}
                     avatarError={avatarError}
                     isSaving={isSaving}
                     emailChangedFromUrl={emailChangedFromUrl}
                     fileInputRef={fileInputRef}
+                    bannerInputRef={bannerInputRef}
+                    handleBannerUpload={handleBannerUpload}
+                    handleRemoveBanner={handleRemoveBanner}
+                    handleCancelBannerChange={handleCancelBannerChange}
                     handleAvatarUpload={handleAvatarUpload}
                     handleRemoveAvatar={handleRemoveAvatar}
                     handleCancelAvatarChange={handleCancelAvatarChange}
                     onOpenEmailModal={openEmailModal}
                     fullName={fullName || user?.email || ''}
+                    savedBannerUrl={savedBannerUrl}
                     savedAvatarUrl={savedAvatarUrl}
+                    pendingBannerFile={pendingBannerFile}
                     pendingAvatarFile={pendingAvatarFile}
+                    pendingBannerRemove={pendingBannerRemove}
                     pendingAvatarRemove={pendingAvatarRemove}
                   />
                 </section>

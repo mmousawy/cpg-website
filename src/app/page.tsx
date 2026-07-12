@@ -121,7 +121,7 @@ export default async function Home() {
               {' '}
               <Image
                 src={CameraWithFlash}
-                quality={85}
+                quality={92}
                 height={60}
                 width={60}
                 alt="Camera with flash"

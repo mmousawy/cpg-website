@@ -50,7 +50,7 @@ export default function AlbumCard({
             alt={album.title}
             blurhash={album.cover_image_blurhash}
             sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
-            quality={85}
+            quality={92}
             fill
             loading='lazy'
             className="object-cover group-hover:brightness-110 transition-all duration-200"

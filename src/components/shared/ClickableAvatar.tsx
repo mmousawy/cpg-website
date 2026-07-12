@@ -90,11 +90,11 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
           src={avatarUrl}
           alt={fullName + ' profile avatar' || 'Profile avatar'}
           sizes="100px"
-          width={100}
-          height={100}
+          width={156}
+          height={156}
           loading='eager'
-          quality={85}
-          className="object-cover"
+          quality={92}
+          className="w-full h-full object-cover"
         />
       </a>
     </div>

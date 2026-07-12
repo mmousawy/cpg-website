@@ -78,11 +78,11 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
         <Image
           src={avatarUrl}
           alt={fullName || 'Profile'}
-          sizes='96px'
-          width={100}
-          height={100}
+          sizes='156px'
+          width={156}
+          height={156}
           loading='lazy'
-          quality={85}
+          quality={92}
           className="object-cover w-full h-full"
         />
       );

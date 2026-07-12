@@ -12,11 +12,10 @@ import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
-import { updateThemePreference } from '@/utils/updateTheme';
 import Avatar from '../auth/Avatar';
 
 export default function UserMenu() {
-  const { user, profile, isLoading, signOut } = useAuth();
+  const { user, profile, isLoading, signOut, updateProfileTheme } = useAuth();
   const { isAdmin } = useAdmin();
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useMounted();
@@ -62,6 +61,18 @@ export default function UserMenu() {
       detailsRef.current.open = false;
     }
   }, [pathname]);
+
+  const handleThemeToggle = async () => {
+    const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+
+    if (!user) return;
+
+    const { error } = await updateProfileTheme(newTheme);
+    if (error) {
+      console.error('Failed to save theme preference:', error);
+    }
+  };
 
   return (
     <details
@@ -245,18 +256,7 @@ export default function UserMenu() {
               className="p-2"
             >
               <button
-                onClick={async () => {
-                  const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-                  setTheme(newTheme);
-                  // Save to database if user is logged in
-                  if (user?.id) {
-                    try {
-                      await updateThemePreference(user.id, newTheme);
-                    } catch (error) {
-                      console.error('Failed to save theme preference:', error);
-                    }
-                  }
-                }}
+                onClick={handleThemeToggle}
                 className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
               >
                 <svg
@@ -391,11 +391,7 @@ export default function UserMenu() {
               className="border-t border-border-color mt-2 pt-2"
             >
               <button
-                onClick={async () => {
-                  const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-                  setTheme(newTheme);
-                  // Note: Not saving to DB when not logged in (no user profile)
-                }}
+                onClick={handleThemeToggle}
                 className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
               >
                 <svg

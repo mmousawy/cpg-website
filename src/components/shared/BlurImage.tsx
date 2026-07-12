@@ -17,6 +17,10 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
 type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   /** Blurhash string for instant placeholder (no network request) */
   blurhash?: string | null;
+  /** Decode width for blurhash when using `fill` (not passed to Image) */
+  blurhashWidth?: number;
+  /** Decode height for blurhash when using `fill` (not passed to Image) */
+  blurhashHeight?: number;
   /** Disable blur placeholder */
   noBlur?: boolean;
   /** Use object-contain instead of object-cover (for sized images) */
@@ -38,6 +42,8 @@ export default function BlurImage({
   alt,
   className = '',
   blurhash,
+  blurhashWidth,
+  blurhashHeight,
   noBlur = false,
   fill,
   contain = false,
@@ -174,11 +180,13 @@ export default function BlurImage({
   // Decode blurhash with correct aspect ratio - works on both server (SSR) and client
   const blurhashDataUrl = useMemo(() => {
     if (blurhash && !noBlur) {
-      const dims = getBlurhashDimensions(imgWidth || 0, imgHeight || 0, 64);
+      const sourceWidth = blurhashWidth ?? (imgWidth || 0);
+      const sourceHeight = blurhashHeight ?? (imgHeight || 0);
+      const dims = getBlurhashDimensions(sourceWidth, sourceHeight, 64);
       return blurhashToDataURL(blurhash, dims.width, dims.height);
     }
     return null;
-  }, [blurhash, noBlur, imgWidth, imgHeight]);
+  }, [blurhash, noBlur, blurhashWidth, blurhashHeight, imgWidth, imgHeight]);
 
   // Fall back to Supabase tiny image if no blurhash
   const blurUrl = noBlur ? null : (blurhashDataUrl || getBlurPlaceholderUrl(srcString));

@@ -18,7 +18,7 @@ export default function HeroImage({ src }: HeroImageProps) {
       fetchPriority="high"
       loading="eager"
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px"
-      quality={85}
+      quality={92}
     />
   );
 }

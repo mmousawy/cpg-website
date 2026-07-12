@@ -6,6 +6,9 @@ const SUPABASE_DOMAINS = [
   'lpdjlhlslqtdswhnchmv.supabase.co',
 ];
 
+/** Default quality for Supabase /render/image transforms (20–100). */
+export const DEFAULT_SUPABASE_IMAGE_QUALITY = 92;
+
 /**
  * Check if a URL is a Supabase Storage URL
  */
@@ -74,13 +77,13 @@ export function getBlurPlaceholderUrl(src: string | null | undefined): string | 
  * @param src - Original image URL
  * @param width - Target width
  * @param height - Target height
- * @param quality - Image quality (default: 85)
+ * @param quality - Image quality (default: {@link DEFAULT_SUPABASE_IMAGE_QUALITY})
  */
 export function getCroppedThumbnailUrl(
   src: string | null | undefined,
   width: number,
   height: number,
-  quality: number = 85,
+  quality: number = DEFAULT_SUPABASE_IMAGE_QUALITY,
 ): string | null {
   if (!src || typeof src !== 'string') return null;
 
@@ -117,18 +120,23 @@ export function getCroppedThumbnailUrl(
  *
  * @param src - Original image URL
  * @param size - Size for both width and height (default: 256)
- * @param quality - Image quality (default: 85)
+ * @param quality - Image quality (default: {@link DEFAULT_SUPABASE_IMAGE_QUALITY})
  */
 export function getSquareThumbnailUrl(
   src: string | null | undefined,
   size: number = 256,
-  quality: number = 85,
+  quality: number = DEFAULT_SUPABASE_IMAGE_QUALITY,
 ): string | null {
   return getCroppedThumbnailUrl(src, size, size, quality);
 }
 
 /**
  * Custom image loader that uses Supabase transformations for Supabase-hosted images.
+ *
+ * With `loader: 'custom'` in next.config, Next.js does **not** proxy images through
+ * `/_next/image` or run its own Sharp conversion. This loader returns Supabase
+ * `/render/image/` URLs directly; Supabase resizes, sets quality, and auto-serves
+ * WebP (or AVIF) based on the browser Accept header.
  *
  * Note: External images (discord, google, meetupstatic, etc.) are returned
  * as-is because Next.js doesn't proxy external URLs through /_next/image when using
@@ -181,7 +189,7 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
 
     // Add Supabase transform params
     url.searchParams.set('width', cappedWidth.toString());
-    url.searchParams.set('quality', (quality || 85).toString());
+    url.searchParams.set('quality', (quality ?? DEFAULT_SUPABASE_IMAGE_QUALITY).toString());
 
     // If resize=cover was in the original URL, preserve aspect ratio cropping
     if (hasResizeCover && existingHeight) {

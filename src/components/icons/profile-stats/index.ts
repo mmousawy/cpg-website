@@ -5,6 +5,7 @@ export { CommentsMadeIcon } from './CommentsMadeIcon';
 export { CommentsReceivedIcon } from './CommentsReceivedIcon';
 export { EventsAttendedIcon } from './EventsAttendedIcon';
 export { LikesReceivedIcon } from './LikesReceivedIcon';
+export { LikesGivenIcon } from './LikesGivenIcon';
 export { MemberSinceIcon } from './MemberSinceIcon';
 export { PhotosIcon } from './PhotosIcon';
 export { ViewsReceivedIcon } from './ViewsReceivedIcon';

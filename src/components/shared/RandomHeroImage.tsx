@@ -35,7 +35,7 @@ export default function RandomHeroImage() {
       }`}
       preload
       sizes="60vw"
-      quality={85}
+      quality={92}
       onLoad={() => setIsLoaded(true)}
       suppressHydrationWarning
     />

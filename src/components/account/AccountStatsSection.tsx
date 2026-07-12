@@ -3,9 +3,14 @@
 import Container from '@/components/layout/Container';
 import type { AccountStats, Profile } from '@/hooks/useAccountForm';
 
+type AccountStatsWithChallenges = AccountStats & {
+  challengesParticipated?: number;
+  challengePhotosAccepted?: number;
+};
+
 interface AccountStatsSectionProps {
   profile: Profile | null;
-  stats: AccountStats;
+  stats: AccountStatsWithChallenges;
 }
 
 export default function AccountStatsSection({ profile, stats }: AccountStatsSectionProps) {
@@ -204,6 +209,44 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   {stats.rsvpsCanceled}
                   {' '}
                   canceled
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="border-border-color-strong border-t pt-4"
+          >
+            <p
+              className="text-foreground mb-3 text-sm font-medium"
+            >
+              Challenges
+            </p>
+            <div
+              className="grid grid-cols-2 gap-4 text-sm"
+            >
+              <div>
+                <p
+                  className="text-foreground/70"
+                >
+                  Participated
+                </p>
+                <p
+                  className="text-foreground text-lg font-semibold"
+                >
+                  {stats.challengesParticipated ?? 0}
+                </p>
+              </div>
+              <div>
+                <p
+                  className="text-foreground/70"
+                >
+                  Photos accepted
+                </p>
+                <p
+                  className="text-foreground text-lg font-semibold"
+                >
+                  {stats.challengePhotosAccepted ?? 0}
                 </p>
               </div>
             </div>

@@ -393,6 +393,21 @@ a, button, input, textarea, select, [tabindex] {
   );
 }
 
+.profile-hero-solid {
+  background-color: var(--profile-banner-color-light);
+}
+
+:root.dark .profile-hero-solid,
+:root.midnight .profile-hero-solid {
+  background-color: var(--profile-banner-color-dark);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .profile-hero-solid {
+    background-color: var(--profile-banner-color-dark);
+  }
+}
+
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {

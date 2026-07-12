@@ -346,7 +346,7 @@ function RsvpEventCard({
                       alt={event.title || 'Event cover'}
                       sizes="72px"
                       loading="lazy"
-                      quality={85}
+                      quality={92}
                       fill
                       className="object-cover"
                     />
@@ -421,7 +421,7 @@ function RsvpEventCard({
                     alt={event.title || 'Event cover'}
                     sizes="176px"
                     loading="lazy"
-                    quality={85}
+                    quality={92}
                     fill
                     className="object-cover"
                   />

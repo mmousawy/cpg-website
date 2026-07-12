@@ -288,7 +288,7 @@ function PhotoRows({
                     className="object-cover transition-all duration-200 group-hover:brightness-110"
                     sizes={`${Math.ceil(item.displayWidth * 2)}px`}
                     loading='lazy'
-                    quality={85}
+                    quality={92}
                   />
 
                   {/* Likes overlay */}

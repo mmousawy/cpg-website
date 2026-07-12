@@ -779,7 +779,7 @@ function SharedWithMeCard({
             blurhash={album.cover_image_blurhash}
             fill
             sizes="250px"
-            quality={85}
+            quality={92}
             className="object-cover"
             draggable={false}
           />
@@ -916,7 +916,7 @@ function PendingInviteCard({
             blurhash={album.cover_image_blurhash}
             fill
             sizes="250px"
-            quality={85}
+            quality={92}
             className="object-cover"
             draggable={false}
           />

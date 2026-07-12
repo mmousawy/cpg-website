@@ -184,7 +184,7 @@ export default function EventCard({
               alt={event.title || 'Event cover'}
               sizes="72px"
               loading="lazy"
-              quality={85}
+              quality={92}
               fill
               className="object-cover"
               blurhash={event.image_blurhash}
@@ -297,7 +297,7 @@ export default function EventCard({
               alt={event.title || 'Event cover'}
               sizes="224px"
               loading="lazy"
-              quality={85}
+              quality={92}
               fill
               className="object-cover"
               blurhash={event.image_blurhash}

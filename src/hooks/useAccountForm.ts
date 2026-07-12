@@ -3,15 +3,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme } from 'next-themes';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { createElement, useContext, useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
+import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
+import { ModalContext } from '@/app/providers/ModalProvider';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { validateImage } from '@/utils/imageValidation';
+import { generateBlurhash } from '@/utils/generateBlurhash';
 import {
   getEmailTypes,
   getUserEmailPreferences,
@@ -72,6 +76,8 @@ export type Profile = Pick<
   | 'full_name'
   | 'nickname'
   | 'avatar_url'
+  | 'banner_url'
+  | 'banner_blurhash'
   | 'bio'
   | 'website'
   | 'created_at'
@@ -101,16 +107,20 @@ export type AccountStats = {
   rsvpsConfirmed: number;
   rsvpsCanceled: number;
   eventsAttended: number;
+  challengesParticipated: number;
+  challengePhotosAccepted: number;
   memberSince: string | null;
   lastLoggedIn: string | null;
 };
 
 export function useAccountForm() {
-  const { user, refreshProfile: refreshAuthProfile } = useAuth();
+  const { user, profile: authProfile, refreshProfile: refreshAuthProfile } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const supabase = useSupabase();
+  const modalContext = useContext(ModalContext);
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [nickname, setNickname] = useState('');
@@ -119,6 +129,7 @@ export function useAccountForm() {
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [bannerError, setBannerError] = useState<string | null>(null);
   const [themeMounted, setThemeMounted] = useState(false);
   const [emailTypes, setEmailTypes] = useState<EmailTypeData[]>([]);
   const [emailPreferences, setEmailPreferences] = useState<EmailPreference[]>([]);
@@ -131,6 +142,14 @@ export function useAccountForm() {
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
   const [pendingAvatarRemove, setPendingAvatarRemove] = useState(false);
+
+  // Banner state - saved value and pending changes
+  const [savedBannerUrl, setSavedBannerUrl] = useState<string | null>(null);
+  const [savedBannerBlurhash, setSavedBannerBlurhash] = useState<string | null>(null);
+  const [pendingBannerFile, setPendingBannerFile] = useState<File | null>(null);
+  const [pendingBannerPreview, setPendingBannerPreview] = useState<string | null>(null);
+  const [pendingBannerBlurhash, setPendingBannerBlurhash] = useState<string | null>(null);
+  const [pendingBannerRemove, setPendingBannerRemove] = useState(false);
 
   // Store the saved form values as the baseline for dirty comparison
   const [savedFormValues, setSavedFormValues] = useState<AccountFormData | null>(null);
@@ -147,12 +166,16 @@ export function useAccountForm() {
     rsvpsConfirmed: 0,
     rsvpsCanceled: 0,
     eventsAttended: 0,
+    challengesParticipated: 0,
+    challengePhotosAccepted: 0,
     memberSince: null,
     lastLoggedIn: null,
   });
 
   // Track which user ID we've loaded data for to avoid reloading on token refresh
   const loadedUserIdRef = useRef<string | null>(null);
+  const savedFormValuesRef = useRef(savedFormValues);
+  savedFormValuesRef.current = savedFormValues;
 
   // React Hook Form setup
   const form = useForm<AccountFormData>({
@@ -189,6 +212,7 @@ export function useAccountForm() {
 
   // Check if avatar has pending changes
   const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove;
+  const hasBannerChanges = pendingBannerFile !== null || pendingBannerRemove;
 
   // Track form changes
   const { hasChanges, changeCount } = useFormChanges(
@@ -196,12 +220,29 @@ export function useAccountForm() {
     savedFormValues,
     {},
     hasAvatarChanges,
+    hasBannerChanges,
   );
 
   // Wait for theme to be available client-side
   useEffect(() => {
     setThemeMounted(true);
   }, []);
+
+  // Sync theme when updated externally (e.g. from UserMenu)
+  useEffect(() => {
+    if (!authProfile?.theme || !savedFormValuesRef.current) return;
+
+    const authTheme: AccountFormData['theme'] =
+      ['light', 'dark', 'midnight', 'system'].includes(authProfile.theme)
+        ? (authProfile.theme as AccountFormData['theme'])
+        : 'system';
+
+    if (authTheme === savedFormValuesRef.current.theme) return;
+
+    setValue('theme', authTheme);
+    setSavedFormValues((prev) => (prev ? { ...prev, theme: authTheme } : null));
+    setProfile((prev) => (prev ? { ...prev, theme: authTheme } : null));
+  }, [authProfile?.theme, setValue]);
 
   // Check for email_changed query param (from verification redirect)
   useEffect(() => {
@@ -240,13 +281,41 @@ export function useAccountForm() {
 
         const userInterests = (interestsData || []).map((pi) => pi.interest);
 
-        const { data, error } = await supabase
+        const profileSelectWithBanner = 'id, email, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text';
+        const profileSelectWithoutBannerBlurhash = 'id, email, full_name, nickname, avatar_url, banner_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text';
+        const profileSelectLegacy = 'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text';
+
+        let { data, error } = await supabase
           .from('profiles')
-          .select(
-            'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text',
-          )
+          .select(profileSelectWithBanner)
           .eq('id', user.id)
           .single();
+
+        if (error?.message?.includes('banner_blurhash')) {
+          const retryResult = await supabase
+            .from('profiles')
+            .select(profileSelectWithoutBannerBlurhash)
+            .eq('id', user.id)
+            .single();
+
+          data = retryResult.data
+            ? { ...retryResult.data, banner_blurhash: null }
+            : null;
+          error = retryResult.error;
+        }
+
+        if (error?.message?.includes('banner_url')) {
+          const legacyResult = await supabase
+            .from('profiles')
+            .select(profileSelectLegacy)
+            .eq('id', user.id)
+            .single();
+
+          data = legacyResult.data
+            ? { ...legacyResult.data, banner_url: null, banner_blurhash: null }
+            : null;
+          error = legacyResult.error;
+        }
 
         // PGRST116 = no rows returned (profile doesn't exist yet)
         if (error) {
@@ -259,6 +328,7 @@ export function useAccountForm() {
                 email: user.email,
                 full_name: user.user_metadata?.full_name || null,
                 avatar_url: user.user_metadata?.avatar_url || null,
+                banner_url: null,
               })
               .select()
               .single();
@@ -283,6 +353,8 @@ export function useAccountForm() {
               });
               setNickname(newProfile.nickname || '');
               setSavedAvatarUrl(newProfile.avatar_url);
+              setSavedBannerUrl(newProfile.banner_url);
+              setSavedBannerBlurhash(newProfile.banner_blurhash ?? null);
 
               // Load saved album card style from localStorage (takes priority)
               const storedStyle = localStorage.getItem('album-card-style');
@@ -342,6 +414,8 @@ export function useAccountForm() {
               full_name: user.user_metadata?.full_name || null,
               nickname: null,
               avatar_url: user.user_metadata?.avatar_url || null,
+              banner_url: null,
+              banner_blurhash: null,
               bio: null,
               website: null,
               social_links: null,
@@ -394,6 +468,8 @@ export function useAccountForm() {
           });
           setNickname(data.nickname || '');
           setSavedAvatarUrl(data.avatar_url);
+          setSavedBannerUrl(data.banner_url);
+          setSavedBannerBlurhash(data.banner_blurhash ?? null);
 
           // Load saved album card style from localStorage (takes priority)
           const storedStyle = localStorage.getItem('album-card-style');
@@ -478,6 +554,8 @@ export function useAccountForm() {
           rsvpsConfirmed: 0,
           rsvpsCanceled: 0,
           eventsAttended: 0,
+          challengesParticipated: 0,
+          challengePhotosAccepted: 0,
           memberSince: null,
           lastLoggedIn: null,
         });
@@ -524,21 +602,135 @@ export function useAccountForm() {
 
     setAvatarError(null);
 
-    // Revoke previous preview URL if exists
-    if (pendingAvatarPreview) {
-      URL.revokeObjectURL(pendingAvatarPreview);
-    }
+    const sourcePreviewUrl = URL.createObjectURL(file);
+    let sourcePreviewCleaned = false;
+    const cleanupSourcePreview = () => {
+      if (sourcePreviewCleaned) return;
+      URL.revokeObjectURL(sourcePreviewUrl);
+      sourcePreviewCleaned = true;
+    };
 
-    // Store file and create preview - actual upload happens on save
-    setPendingAvatarFile(file);
-    setPendingAvatarPreview(URL.createObjectURL(file));
-    setPendingAvatarRemove(false);
+    modalContext.setSize('default');
+    modalContext.setTitle('Crop avatar');
+    modalContext.setContent(createElement(ProfileAvatarCropper, {
+      imageSrc: sourcePreviewUrl,
+      onDismiss: cleanupSourcePreview,
+      onCancel: () => {
+        cleanupSourcePreview();
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+      onApply: (croppedFile, croppedPreviewUrl) => {
+        cleanupSourcePreview();
 
-    // Clear the file input
+        if (pendingAvatarPreview) {
+          URL.revokeObjectURL(pendingAvatarPreview);
+        }
+
+        setPendingAvatarFile(croppedFile);
+        setPendingAvatarPreview(croppedPreviewUrl);
+        setPendingAvatarRemove(false);
+        setAvatarError(null);
+
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+    }));
+    modalContext.setIsOpen(true);
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = await validateImage(file, { maxSizeBytes: 5 * 1024 * 1024 });
+    if (error) {
+      setBannerError(error.message);
+      if (bannerInputRef.current) bannerInputRef.current.value = '';
+      return;
+    }
+
+    setBannerError(null);
+
+    const sourcePreviewUrl = URL.createObjectURL(file);
+    let sourcePreviewCleaned = false;
+    const cleanupSourcePreview = () => {
+      if (sourcePreviewCleaned) return;
+      URL.revokeObjectURL(sourcePreviewUrl);
+      sourcePreviewCleaned = true;
+    };
+
+    modalContext.setSize('medium');
+    modalContext.setTitle('Crop banner');
+    modalContext.setContent(createElement(ProfileBannerCropper, {
+      imageSrc: sourcePreviewUrl,
+      onDismiss: cleanupSourcePreview,
+      onCancel: () => {
+        cleanupSourcePreview();
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+      onApply: (croppedFile, croppedPreviewUrl) => {
+        cleanupSourcePreview();
+
+        if (pendingBannerPreview) {
+          URL.revokeObjectURL(pendingBannerPreview);
+        }
+
+        setPendingBannerFile(croppedFile);
+        setPendingBannerPreview(croppedPreviewUrl);
+        setPendingBannerBlurhash(null);
+        setPendingBannerRemove(false);
+        setBannerError(null);
+
+        void generateBlurhash(croppedFile, 4, 3).then((hash) => {
+          setPendingBannerBlurhash(hash);
+        });
+
+        modalContext.setBeforeCloseCheck(null);
+        modalContext.setIsOpen(false);
+      },
+    }));
+    modalContext.setIsOpen(true);
+
+    if (bannerInputRef.current) {
+      bannerInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveBanner = () => {
+    if (pendingBannerPreview) {
+      URL.revokeObjectURL(pendingBannerPreview);
+    }
+
+    setPendingBannerFile(null);
+    setPendingBannerPreview(null);
+    setPendingBannerBlurhash(null);
+    setPendingBannerRemove(true);
+    setBannerError(null);
+  };
+
+  const handleCancelBannerChange = () => {
+    if (pendingBannerPreview) {
+      URL.revokeObjectURL(pendingBannerPreview);
+    }
+
+    setPendingBannerFile(null);
+    setPendingBannerPreview(null);
+    setPendingBannerBlurhash(null);
+    setPendingBannerRemove(false);
+    setBannerError(null);
+  };
+
+  useEffect(() => () => {
+    if (pendingBannerPreview) {
+      URL.revokeObjectURL(pendingBannerPreview);
+    }
+  }, [pendingBannerPreview]);
 
   const handleRemoveAvatar = () => {
     // Revoke previous preview URL if exists
@@ -576,6 +768,8 @@ export function useAccountForm() {
     try {
       // Handle avatar changes first
       let newAvatarUrl: string | null = savedAvatarUrl;
+      let newBannerUrl: string | null = savedBannerUrl;
+      let newBannerBlurhash: string | null = savedBannerBlurhash;
 
       if (pendingAvatarFile) {
         // Upload new avatar
@@ -604,6 +798,37 @@ export function useAccountForm() {
         newAvatarUrl = publicUrl;
       } else if (pendingAvatarRemove) {
         newAvatarUrl = null;
+      }
+
+      if (pendingBannerFile) {
+        const fileExt = pendingBannerFile.name.split('.').pop();
+        const randomId = crypto.randomUUID();
+        const fileName = `${randomId}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('user-banners')
+          .upload(filePath, pendingBannerFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          setSubmitError(`Failed to upload banner: ${uploadError.message}`);
+          setIsSaving(false);
+          return;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('user-banners').getPublicUrl(filePath);
+
+        newBannerUrl = publicUrl;
+        newBannerBlurhash = pendingBannerBlurhash
+          ?? await generateBlurhash(pendingBannerFile, 4, 3);
+      } else if (pendingBannerRemove) {
+        newBannerUrl = null;
+        newBannerBlurhash = null;
       }
 
       // Filter out empty social links
@@ -683,6 +908,8 @@ export function useAccountForm() {
           theme: data.theme,
           newsletter_opt_in: newsletterOptIn,
           avatar_url: newAvatarUrl,
+          banner_url: newBannerUrl,
+          banner_blurhash: newBannerBlurhash,
           default_license: data.defaultLicense,
           copyright_name: data.copyrightName || null,
           watermark_enabled: data.watermarkEnabled,
@@ -693,8 +920,34 @@ export function useAccountForm() {
         })
         .eq('id', user.id);
 
-      if (error) {
-        setSubmitError(error.message);
+      let saveError = error;
+      if (saveError?.message?.includes('banner_blurhash')) {
+        const retry = await supabase
+          .from('profiles')
+          .update({
+            full_name: data.fullName || null,
+            bio: data.bio || null,
+            website: data.website || null,
+            social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
+            album_card_style: data.albumCardStyle,
+            theme: data.theme,
+            newsletter_opt_in: newsletterOptIn,
+            avatar_url: newAvatarUrl,
+            banner_url: newBannerUrl,
+            default_license: data.defaultLicense,
+            copyright_name: data.copyrightName || null,
+            watermark_enabled: data.watermarkEnabled,
+            watermark_style: data.watermarkStyle,
+            watermark_text: data.watermarkText || null,
+            embed_copyright_exif: data.embedCopyrightExif,
+            exif_copyright_text: data.exifCopyrightText || null,
+          })
+          .eq('id', user.id);
+        saveError = retry.error;
+      }
+
+      if (saveError) {
+        setSubmitError(saveError.message);
       } else {
         // Apply theme change
         if (data.theme !== theme) {
@@ -712,8 +965,23 @@ export function useAccountForm() {
         setPendingAvatarPreview(null);
         setPendingAvatarRemove(false);
 
+        setSavedBannerUrl(newBannerUrl);
+        setSavedBannerBlurhash(newBannerBlurhash);
+        if (pendingBannerPreview) {
+          URL.revokeObjectURL(pendingBannerPreview);
+        }
+        setPendingBannerFile(null);
+        setPendingBannerPreview(null);
+        setPendingBannerBlurhash(null);
+        setPendingBannerRemove(false);
+
         // Update profile state
-        setProfile((prev) => (prev ? { ...prev, avatar_url: newAvatarUrl } : null));
+        setProfile((prev) => (prev ? {
+          ...prev,
+          avatar_url: newAvatarUrl,
+          banner_url: newBannerUrl,
+          banner_blurhash: newBannerBlurhash,
+        } : null));
 
         // Reload email preferences to get updated state
         const updatedPreferences = await getUserEmailPreferences(user.id);
@@ -783,6 +1051,16 @@ export function useAccountForm() {
       ? null
       : savedAvatarUrl;
 
+  const displayBannerUrl = pendingBannerPreview
+    ? pendingBannerPreview
+    : pendingBannerRemove
+      ? null
+      : savedBannerUrl;
+
+  const displayBannerBlurhash = pendingBannerRemove
+    ? null
+    : pendingBannerBlurhash ?? savedBannerBlurhash;
+
   return {
     // Form
     form,
@@ -800,6 +1078,7 @@ export function useAccountForm() {
     success,
     submitError,
     avatarError,
+    bannerError,
     themeMounted,
     emailTypes,
     emailPreferences,
@@ -808,14 +1087,24 @@ export function useAccountForm() {
 
     // Avatar
     fileInputRef,
+    bannerInputRef,
     displayAvatarUrl,
+    displayBannerUrl,
+    displayBannerBlurhash,
     hasAvatarChanges,
+    hasBannerChanges,
     handleAvatarUpload,
     handleRemoveAvatar,
     handleCancelAvatarChange,
+    handleBannerUpload,
+    handleRemoveBanner,
+    handleCancelBannerChange,
     savedAvatarUrl,
+    savedBannerUrl,
     pendingAvatarFile,
+    pendingBannerFile,
     pendingAvatarRemove,
+    pendingBannerRemove,
 
     // Theme
     theme,
