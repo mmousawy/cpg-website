@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.1](https://github.com/mmousawy/cpg-website/compare/v1.33.0...v1.33.1) (2026-07-12)
+
+
+### 🐛 Bug Fixes
+
+* swap profile picture and banner image handling in ProfileImageUploadSections ([5974bb6](https://github.com/mmousawy/cpg-website/commit/5974bb6a90a7a2097f7181bd8b6e4c2c30bcc27c))
+
 ## [1.33.0](https://github.com/mmousawy/cpg-website/compare/v1.32.1...v1.33.0) (2026-07-12)
 
 
