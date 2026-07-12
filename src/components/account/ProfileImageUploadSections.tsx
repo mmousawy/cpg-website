@@ -125,6 +125,107 @@ export default function ProfileImageUploadSections({
       <div
         className="space-y-3"
       >
+        {/* Profile picture */}
+        <section
+          className={clsx(
+            'rounded-xl border p-3 transition-colors',
+            pendingAvatarFile ? 'border-primary' : 'border-border-color',
+          )}
+        >
+          <div
+            className="flex items-center gap-3"
+          >
+            <div
+              className={clsx(
+                'shrink-0 overflow-hidden rounded-full border-2 transition-colors',
+                pendingAvatarFile ? 'border-primary' : 'border-border-color',
+              )}
+            >
+              <Avatar
+                avatarUrl={displayAvatarUrl}
+                fullName={fullName}
+                nickname={nickname}
+                size="lg"
+              />
+            </div>
+            <div
+              className="flex min-w-0 flex-1 flex-col gap-1.5"
+            >
+              <p
+                className="text-sm font-medium"
+              >
+                Profile picture
+                {showOptionalLabels && (
+                  <span
+                    className="ml-1.5 text-xs font-normal text-foreground/50"
+                  >
+                    (optional)
+                  </span>
+                )}
+              </p>
+              <div
+                className="flex flex-wrap gap-2"
+              >
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isSaving}
+                  variant="secondary"
+                  type="button"
+                  size="sm"
+                >
+                  {pendingAvatarFile ? 'Choose different' : 'Upload new'}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  disabled={isSaving}
+                />
+                {showRemoveAvatar && (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={handleRemoveAvatar}
+                    disabled={isSaving}
+                    size="sm"
+                    aria-label="Remove profile picture"
+                    icon={<TrashSVG
+                      className="size-4"
+                    />}
+                    className={iconDeleteButtonClassName}
+                  >
+                    <span
+                      className="sr-only"
+                    >
+                      Remove
+                    </span>
+                  </Button>
+                )}
+                {hasAvatarChanges && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleCancelAvatarChange}
+                    disabled={isSaving}
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+              {avatarError && (
+                <p
+                  className="text-sm text-red-500"
+                >
+                  {avatarError}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Banner */}
         <section
           className={clsx(
@@ -243,107 +344,6 @@ export default function ProfileImageUploadSections({
                   className="text-sm text-red-500"
                 >
                   {bannerError}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Profile picture */}
-        <section
-          className={clsx(
-            'rounded-xl border p-3 transition-colors',
-            pendingAvatarFile ? 'border-primary' : 'border-border-color',
-          )}
-        >
-          <div
-            className="flex items-center gap-3"
-          >
-            <div
-              className={clsx(
-                'shrink-0 overflow-hidden rounded-full border-2 transition-colors',
-                pendingAvatarFile ? 'border-primary' : 'border-border-color',
-              )}
-            >
-              <Avatar
-                avatarUrl={displayAvatarUrl}
-                fullName={fullName}
-                nickname={nickname}
-                size="lg"
-              />
-            </div>
-            <div
-              className="flex min-w-0 flex-1 flex-col gap-1.5"
-            >
-              <p
-                className="text-sm font-medium"
-              >
-                Profile picture
-                {showOptionalLabels && (
-                  <span
-                    className="ml-1.5 text-xs font-normal text-foreground/50"
-                  >
-                    (optional)
-                  </span>
-                )}
-              </p>
-              <div
-                className="flex flex-wrap gap-2"
-              >
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isSaving}
-                  variant="secondary"
-                  type="button"
-                  size="sm"
-                >
-                  {pendingAvatarFile ? 'Choose different' : 'Upload new'}
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                  disabled={isSaving}
-                />
-                {showRemoveAvatar && (
-                  <Button
-                    type="button"
-                    variant="danger"
-                    onClick={handleRemoveAvatar}
-                    disabled={isSaving}
-                    size="sm"
-                    aria-label="Remove profile picture"
-                    icon={<TrashSVG
-                      className="size-4"
-                    />}
-                    className={iconDeleteButtonClassName}
-                  >
-                    <span
-                      className="sr-only"
-                    >
-                      Remove
-                    </span>
-                  </Button>
-                )}
-                {hasAvatarChanges && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleCancelAvatarChange}
-                    disabled={isSaving}
-                    size="sm"
-                  >
-                    Cancel
-                  </Button>
-                )}
-              </div>
-              {avatarError && (
-                <p
-                  className="text-sm text-red-500"
-                >
-                  {avatarError}
                 </p>
               )}
             </div>
