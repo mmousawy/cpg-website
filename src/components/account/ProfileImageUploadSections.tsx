@@ -72,8 +72,6 @@ export default function ProfileImageUploadSections({
   heroVariant = 'account',
   showOptionalLabels = false,
 }: ProfileImageUploadSectionsProps) {
-  const displayName = fullName || nickname;
-
   const previewProfile = useMemo((): ProfileHeaderProfile => ({
     id: profileId,
     nickname,
@@ -110,8 +108,11 @@ export default function ProfileImageUploadSections({
     >
       <div
         className={clsx(
-          'overflow-hidden rounded-xl border border-border-color',
-          heroVariant === 'account' && 'relative -mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-6 sm:mb-6 rounded-t-xl border-b',
+          'overflow-hidden border border-border-color',
+          heroVariant === 'account' && 'rounded-xl',
+          heroVariant === 'standalone' && 'rounded-t-xl border-x-0 border-t-0 border-b',
+          heroVariant === 'account' && 'relative -mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-6 sm:mb-6 border-b',
+          heroVariant === 'standalone' && 'relative -mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-6 sm:mb-6',
         )}
       >
         <ProfileHeroBanner
@@ -266,7 +267,8 @@ export default function ProfileImageUploadSections({
             >
               <Avatar
                 avatarUrl={displayAvatarUrl}
-                fullName={displayName}
+                fullName={fullName}
+                nickname={nickname}
                 size="lg"
               />
             </div>

@@ -20,13 +20,13 @@ type AvatarProps = {
 
 // Size mappings
 export const SIZE_MAP = {
-  xxs: { wrapper: 'w-6 h-6', icon: 'w-3 h-3', fontSize: 12 },
-  xs: { wrapper: 'w-8 h-8', icon: 'w-4 h-4', fontSize: 16 },
-  sm: { wrapper: 'w-10 h-10', icon: 'w-5 h-5', fontSize: 20 },
-  md: { wrapper: 'w-12 h-12', icon: 'w-6 h-6', fontSize: 24 },
-  lg: { wrapper: 'w-16 h-16', icon: 'w-8 h-8', fontSize: 32 },
-  xl: { wrapper: 'w-24 h-24', icon: 'w-12 h-12', fontSize: 48 },
-  fill: { wrapper: 'size-full', icon: 'w-6 h-6', fontSize: 24 },
+  xxs: { wrapper: 'w-6 h-6', icon: 'w-3 h-3' },
+  xs: { wrapper: 'w-8 h-8', icon: 'w-4 h-4' },
+  sm: { wrapper: 'w-10 h-10', icon: 'w-5 h-5' },
+  md: { wrapper: 'w-12 h-12', icon: 'w-6 h-6' },
+  lg: { wrapper: 'w-16 h-16', icon: 'w-8 h-8' },
+  xl: { wrapper: 'w-24 h-24', icon: 'w-12 h-12' },
+  fill: { wrapper: 'size-full', icon: 'w-6 h-6' },
 } as const;
 
 function getInitials(
@@ -109,8 +109,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     // Show initials (including "?" when no name data)
     return (
       <div
-        className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none"
-        style={{ fontSize: sizeConfig.fontSize * 0.875 }}
+        className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none text-[43.75cqmin]"
       >
         {initials}
       </div>
@@ -119,7 +118,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
 
   return (
     <div
-      className={clsx('relative overflow-hidden rounded-full shrink-0 bg-border-color', sizeConfig.wrapper, className)}
+      className={clsx('relative overflow-hidden rounded-full shrink-0 bg-border-color @container', sizeConfig.wrapper, className)}
     >
       {hoverEffect &&
         <div

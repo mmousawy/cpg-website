@@ -9,11 +9,12 @@ import Avatar from '@/components/auth/Avatar';
 type ClickableAvatarProps = {
   avatarUrl: string | null
   fullName: string | null
+  nickname?: string | null
   className?: string
   suppressFocusOutline?: boolean
 }
 
-export default function ClickableAvatar({ avatarUrl, fullName, className, suppressFocusOutline }: ClickableAvatarProps) {
+export default function ClickableAvatar({ avatarUrl, fullName, nickname, className, suppressFocusOutline }: ClickableAvatarProps) {
   const galleryId = 'profile-avatar-gallery';
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const imageLoaded = useRef(false);
@@ -67,6 +68,7 @@ export default function ClickableAvatar({ avatarUrl, fullName, className, suppre
       <Avatar
         avatarUrl={null}
         fullName={fullName}
+        nickname={nickname}
         size="fill"
         className={className}
       />

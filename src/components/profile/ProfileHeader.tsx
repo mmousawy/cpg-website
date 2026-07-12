@@ -186,6 +186,7 @@ function ProfileHeaderRow({
           <ClickableAvatar
             avatarUrl={profile.avatar_url}
             fullName={profile.full_name}
+            nickname={profile.nickname}
             className="size-full"
             suppressFocusOutline
           />

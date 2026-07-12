@@ -4,18 +4,14 @@ import { revalidateProfile } from '@/app/actions/revalidate';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
-import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import OnboardingAboutYouSection from '@/components/onboarding/OnboardingAboutYouSection';
 import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
-import OnboardingInterestsSection from '@/components/onboarding/OnboardingInterestsSection';
+import OnboardingFinishSection from '@/components/onboarding/OnboardingFinishSection';
 import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
-import OnboardingProfileSection from '@/components/onboarding/OnboardingProfileSection';
-import Button from '@/components/shared/Button';
-import Checkbox from '@/components/shared/Checkbox';
-import ErrorMessage from '@/components/shared/ErrorMessage';
+import OnboardingProfileImagesSection from '@/components/onboarding/OnboardingProfileImagesSection';
 import HelpLink from '@/components/shared/HelpLink';
 import PageLoading from '@/components/shared/PageLoading';
-import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
@@ -626,27 +622,25 @@ export default function OnboardingClient() {
     profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
 
   return (
-    <PageContainer
-      className="items-center justify-center"
-    >
-      <Container
-        className="mx-auto max-w-lg"
+    <PageContainer>
+      <div
+        className="mx-auto max-w-xl"
       >
         <div
           className="mb-8 text-center"
         >
           <h1
-            className="mb-2 text-2xl sm:text-3xl font-bold font-heading"
+            className="mb-2 text-2xl font-bold sm:text-3xl font-heading"
           >
             Welcome to the group
             {displayName ? ` ${displayName.split(' ')[0]}` : ''}
             !
           </h1>
           <div
-            className="flex items-center justify-center mb-8"
+            className="flex items-center justify-center gap-2"
           >
             <p
-              className="text-base sm:text-lg opacity-70"
+              className="text-base opacity-70 sm:text-lg"
             >
               Just a few steps to get you started
             </p>
@@ -659,7 +653,7 @@ export default function OnboardingClient() {
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6 mt-6"
+          className="space-y-8 text-sm sm:text-base"
         >
           <OnboardingNicknameSection
             register={register}
@@ -668,20 +662,25 @@ export default function OnboardingClient() {
             isCheckingNickname={isCheckingNickname}
             nicknameAvailable={nicknameAvailable}
             onNicknameChange={(value) => {
-              // Clear previous timeout
-              if (nicknameCheckTimeoutRef.current) {
-                clearTimeout(nicknameCheckTimeoutRef.current);
-              }
-              // Debounce the availability check
-              nicknameCheckTimeoutRef.current = setTimeout(() => {
-                checkNicknameAvailability(value);
-              }, 500);
+            if (nicknameCheckTimeoutRef.current) {
+              clearTimeout(nicknameCheckTimeoutRef.current);
+            }
+            nicknameCheckTimeoutRef.current = setTimeout(() => {
+              checkNicknameAvailability(value);
+            }, 500);
             }}
           />
 
-          <OnboardingProfileSection
+          <OnboardingAboutYouSection
             register={register}
             errors={errors}
+            isOAuthUser={isOAuthUser}
+            watch={watch}
+            setValue={setValue}
+            isSaving={isSaving}
+          />
+
+          <OnboardingProfileImagesSection
             profileId={profile?.id ?? user?.id ?? ''}
             nickname={watchedNickname}
             fullName={watchedFullName}
@@ -699,7 +698,6 @@ export default function OnboardingClient() {
             bannerError={bannerError}
             avatarError={avatarError}
             isSaving={isSaving}
-            isOAuthUser={isOAuthUser}
             fileInputRef={fileInputRef}
             bannerInputRef={bannerInputRef}
             handleBannerUpload={handleBannerUpload}
@@ -710,12 +708,6 @@ export default function OnboardingClient() {
             handleCancelAvatarChange={handleCancelAvatarChange}
           />
 
-          <OnboardingInterestsSection
-            watch={watch}
-            setValue={setValue}
-            isSaving={isSaving}
-          />
-
           <OnboardingEmailPreferencesSection
             control={control}
             watch={watch}
@@ -724,93 +716,19 @@ export default function OnboardingClient() {
             isLoadingEmailTypes={isLoadingEmailTypes}
           />
 
-          <div
-            className="rounded-lg border border-border-color bg-background-light p-2 sm:p-4"
-          >
-            <div
-              className="flex items-start gap-3"
-            >
-              <Checkbox
-                id="terms-accepted"
-                {...register('termsAccepted')}
-                className="mt-0.5 shrink-0"
-              />
-              <label
-                htmlFor="terms-accepted"
-                className="text-sm leading-relaxed"
-              >
-                I agree to the
-                {' '}
-                <a
-                  href={routes.terms.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:text-primary-alt underline"
-                >
-                  Terms of Service
-                </a>
-                {' '}
-                and acknowledge that I retain full copyright ownership of my photos. I have also read the
-                {' '}
-                <a
-                  href={routes.privacy.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:text-primary-alt underline"
-                >
-                  Privacy Policy
-                </a>
-                .
-              </label>
-            </div>
-            {errors.termsAccepted && (
-              <p
-                className="mt-2 text-sm text-red-600 dark:text-red-400"
-              >
-                {errors.termsAccepted.message}
-              </p>
-            )}
-          </div>
-
-          {submitError && <ErrorMessage>
-            {submitError}
-          </ErrorMessage>}
-
-          {isPreviewMode && (
-            <div
-              className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
-            >
-              <strong>
-                Preview mode:
-              </strong>
-              {' '}
-              Auth and profile-completion redirects are disabled. Form validation
-              works, but submission will not save your profile.
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={
-              isSaving ||
-              nicknameAvailable === false ||
-              !watchedNickname ||
-              (isOAuthUser && !watch('email') && !isPreviewMode) ||
-              !watch('termsAccepted')
-            }
-            loading={isSaving}
-          >
-            {isPreviewMode ? 'Test form validation' : 'Complete setup'}
-          </Button>
-
-          <p
-            className="text-center text-xs text-foreground/70"
-          >
-            You can update your profile picture, banner, and other details later in your account settings.
-          </p>
+          <OnboardingFinishSection
+            register={register}
+            errors={errors}
+            watch={watch}
+            submitError={submitError}
+            isPreviewMode={isPreviewMode}
+            isSaving={isSaving}
+            isOAuthUser={isOAuthUser}
+            nicknameAvailable={nicknameAvailable}
+            watchedNickname={watchedNickname}
+          />
         </form>
-      </Container>
+      </div>
     </PageContainer>
   );
 }
