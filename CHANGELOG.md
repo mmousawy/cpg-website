@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.33.0](https://github.com/mmousawy/cpg-website/compare/v1.32.1...v1.33.0) (2026-07-12)
+
+
+### ✨ Features
+
+* enhance profile and account features ([26cbc54](https://github.com/mmousawy/cpg-website/commit/26cbc54849f3e011f410608d1ecd8a74be113ec6))
+
+
+### 🐛 Bug Fixes
+
+* enhance onboarding and profile image handling ([31eda0c](https://github.com/mmousawy/cpg-website/commit/31eda0cdc5fac4d499a8bfa6ff165070eec51f98))
+* streamline onboarding process and enhance profile sections ([77dcce4](https://github.com/mmousawy/cpg-website/commit/77dcce4655c3e9073e1a2a8c6f554134d7560fd5))
+* update AlbumDetailClient and useAccountForm for improved photo handling ([1a800db](https://github.com/mmousawy/cpg-website/commit/1a800db1169bf5f409f69b83fe396ba117e3fde2))
+* update ProfileImageUploadSections styles for improved layout ([84916a2](https://github.com/mmousawy/cpg-website/commit/84916a29fa10feae535230a400db5f034d0b7897))
+
 ## [1.32.1](https://github.com/mmousawy/cpg-website/compare/v1.32.0...v1.32.1) (2026-07-07)
 
 
