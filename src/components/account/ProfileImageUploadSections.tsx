@@ -10,7 +10,7 @@ import Button from '@/components/shared/Button';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
 import TrashSVG from 'public/icons/trash.svg';
 
-const iconDeleteButtonClassName = '!size-8 shrink-0 !gap-0 !p-0';
+const iconDeleteButtonClassName = '!size-[34px] shrink-0 !gap-0 !p-0';
 
 export interface ProfileImageUploadSectionsProps {
   profileId?: string;
@@ -108,8 +108,8 @@ export default function ProfileImageUploadSections({
     >
       <div
         className={clsx(
-          'overflow-hidden border border-border-color',
-          heroVariant === 'account' && 'rounded-xl',
+          'overflow-hidden border-b border-border-color',
+          heroVariant === 'account' && 'rounded-t-xl',
           heroVariant === 'standalone' && 'rounded-t-xl border-x-0 border-t-0 border-b',
           heroVariant === 'account' && 'relative -mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-6 sm:mb-6 border-b',
           heroVariant === 'standalone' && 'relative -mx-4 -mt-4 mb-4 sm:-mx-6 sm:-mt-6 sm:mb-6',
