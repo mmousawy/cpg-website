@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.0](https://github.com/mmousawy/cpg-website/compare/v1.33.3...v1.34.0) (2026-07-13)
+
+
+### ✨ Features
+
+* enhance comments functionality with reply composer and smooth scrolling ([e737362](https://github.com/mmousawy/cpg-website/commit/e73736209c3a7620f66a5ac2c90f321c68cf3876))
+
 ## [1.33.3](https://github.com/mmousawy/cpg-website/compare/v1.33.2...v1.33.3) (2026-07-13)
 
 
