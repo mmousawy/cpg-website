@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.33.2](https://github.com/mmousawy/cpg-website/compare/v1.33.1...v1.33.2) (2026-07-13)
+
+
+### 🐛 Bug Fixes
+
+* add wawoff2 dependency and update metadata formatting ([e843ecd](https://github.com/mmousawy/cpg-website/commit/e843ecdb4843d3ea80bd7e544bca74e43846c6e5))
+* add woff2 module and update font loading logic ([c91cae6](https://github.com/mmousawy/cpg-website/commit/c91cae67421b3c4f5fe425ce7a8a3124411370bb))
+
 ## [1.33.1](https://github.com/mmousawy/cpg-website/compare/v1.33.0...v1.33.1) (2026-07-12)
 
 
