@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.3](https://github.com/mmousawy/cpg-website/compare/v1.33.2...v1.33.3) (2026-07-13)
+
+
+### 🐛 Bug Fixes
+
+* implement comment editing functionality and enhance comment actions ([fe802b4](https://github.com/mmousawy/cpg-website/commit/fe802b406a9d7ad15a03aea48133b0e5a2ee29f5))
+
 ## [1.33.2](https://github.com/mmousawy/cpg-website/compare/v1.33.1...v1.33.2) (2026-07-13)
 
 
