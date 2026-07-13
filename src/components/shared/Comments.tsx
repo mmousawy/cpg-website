@@ -73,6 +73,20 @@ function formatFullDate(dateString: string) {
   });
 }
 
+function scrollToComment(commentId: string) {
+  const target = document.getElementById(`comment-${commentId}`);
+  if (!target) return;
+
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const card = target.querySelector(':scope > div');
+  if (card) {
+    card.classList.add('!border-primary', '!bg-primary/5');
+    setTimeout(() => {
+      card.classList.remove('!border-primary', '!bg-primary/5');
+    }, 2000);
+  }
+}
+
 interface CommentsProps {
   albumId?: string
   photoId?: string
@@ -84,6 +98,12 @@ interface CommentsProps {
 // ─── Types for CommentItem props ───────────────────────────────────────────────
 
 // Use the actual Supabase User type for proper type safety
+
+type UserProfileSummary = {
+  full_name: string | null;
+  nickname: string | null;
+  avatar_url: string | null;
+};
 
 interface CommentItemProps {
   comment: Comment;
@@ -99,10 +119,247 @@ interface CommentItemProps {
   onEditComment: (commentId: string, commentText: string) => Promise<void>;
   formatDateFn: (dateString: string) => string;
   user: User | null;
+  currentUserProfile: UserProfileSummary | null;
   isAdmin: boolean;
   isSubmitting: boolean;
   showAuthPrompt: (opts: { feature: string }) => void;
 }
+
+interface ReplyComposerProps {
+  commentId: string;
+  profile: UserProfileSummary | null;
+  repliedToNickname: string;
+  replyText: string;
+  onReplyTextChange: (value: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
+  user: User | null;
+  showAuthPrompt: (opts: { feature: string }) => void;
+}
+
+interface CommentComposerProps {
+  profile: UserProfileSummary | null;
+  commentText: string;
+  onCommentTextChange: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  isSubmitting: boolean;
+  user: User | null;
+  showAuthPrompt: (opts: { feature: string }) => void;
+}
+
+function ComposerCard({
+  profile,
+  meta,
+  children,
+}: {
+  profile: UserProfileSummary | null;
+  meta?: ReactNode;
+  children: ReactNode;
+}) {
+  const profileHeader = (
+    <>
+      <Avatar
+        avatarUrl={profile?.avatar_url}
+        fullName={profile?.full_name}
+        hoverEffect={!!profile?.nickname}
+        size="sm"
+      />
+      <div>
+        <p
+          className="text-sm font-medium leading-tight group-hover:text-primary transition-colors"
+        >
+          {profile?.full_name || 'Anonymous'}
+        </p>
+        {profile?.nickname && (
+          <p
+            className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+          >
+            @
+            {profile.nickname}
+          </p>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div
+      className="dark:bg-[#303033] bg-white rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 relative overflow-visible"
+    >
+      {profile?.nickname ? (
+        <Link
+          href={`/@${profile.nickname}`}
+          className="flex items-start gap-2.5 mb-2 group rounded-lg"
+        >
+          {profileHeader}
+        </Link>
+      ) : (
+        <div
+          className="flex items-start gap-2.5 mb-2"
+        >
+          {profileHeader}
+        </div>
+      )}
+      {meta && (
+        <p
+          className="text-xs text-foreground/50 mb-3"
+        >
+          {meta}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
+
+const ReplyComposer = memo(function ReplyComposer({
+  commentId,
+  profile,
+  repliedToNickname,
+  replyText,
+  onReplyTextChange,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+  user,
+  showAuthPrompt,
+}: ReplyComposerProps) {
+  return (
+    <div
+      id={`reply-composer-${commentId}`}
+    >
+      <ComposerCard
+        profile={profile}
+        meta={(
+          <button
+            type="button"
+            className="hover:text-primary transition-colors"
+            onClick={() => scrollToComment(commentId)}
+          >
+            replying to @
+            {repliedToNickname}
+          </button>
+        )}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit();
+          }}
+          className="space-y-2"
+        >
+          <Textarea
+            value={replyText}
+            onChange={(e) => onReplyTextChange(e.target.value)}
+            onFocus={(e) => {
+              if (!user) {
+                e.target.blur();
+                showAuthPrompt({ feature: 'leave comments' });
+              }
+            }}
+            placeholder="Write a reply..."
+            rows={2}
+            disabled={isSubmitting}
+            className="block max-w-160 text-sm"
+            readOnly={!user}
+            autoFocus
+          />
+          <div
+            className="flex items-center gap-2"
+          >
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              iconRight={<SendSVG
+                className="size-4"
+              />}
+              disabled={isSubmitting || !replyText.trim()}
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  showAuthPrompt({ feature: 'leave comments' });
+                }
+              }}
+            >
+              {isSubmitting ? 'Posting...' : 'Reply'}
+            </Button>
+          </div>
+        </form>
+      </ComposerCard>
+    </div>
+  );
+});
+
+const CommentComposer = memo(function CommentComposer({
+  profile,
+  commentText,
+  onCommentTextChange,
+  onSubmit,
+  isSubmitting,
+  user,
+  showAuthPrompt,
+}: CommentComposerProps) {
+  return (
+    <div
+      className="mt-4"
+    >
+      <ComposerCard
+        profile={profile}
+      >
+        <form
+          onSubmit={onSubmit}
+          className="space-y-2"
+        >
+          <Textarea
+            value={commentText}
+            onChange={(e) => onCommentTextChange(e.target.value)}
+            onFocus={(e) => {
+              if (!user) {
+                e.target.blur();
+                showAuthPrompt({ feature: 'leave comments' });
+              }
+            }}
+            placeholder="Write a comment..."
+            rows={3}
+            disabled={isSubmitting}
+            className="block max-w-160 text-sm"
+            readOnly={!user}
+          />
+          <div
+            className="flex items-center gap-2"
+          >
+            <Button
+              type="submit"
+              size="sm"
+              iconRight={<SendSVG
+                className="size-4"
+              />}
+              disabled={isSubmitting || !commentText.trim()}
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  showAuthPrompt({ feature: 'leave comments' });
+                }
+              }}
+            >
+              {isSubmitting ? 'Posting...' : 'Post'}
+            </Button>
+          </div>
+        </form>
+      </ComposerCard>
+    </div>
+  );
+});
 
 // ─── CommentItem — defined OUTSIDE Comments so its identity is stable ──────────
 
@@ -120,6 +377,7 @@ const CommentItem = memo(function CommentItem({
   onEditComment,
   formatDateFn,
   user: currentUser,
+  currentUserProfile,
   isAdmin: currentIsAdmin,
   isSubmitting: currentIsSubmitting,
   showAuthPrompt: currentShowAuthPrompt,
@@ -131,6 +389,19 @@ const CommentItem = memo(function CommentItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.comment_text);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const handleReplyClickLocal = useCallback(() => {
+    setIsCollapsed(false);
+    onReplyClick(comment.id);
+  }, [comment.id, onReplyClick]);
+
+  useEffect(() => {
+    if (!isCurrentlyReplying) return;
+    requestAnimationFrame(() => {
+      document.getElementById(`reply-composer-${comment.id}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [isCurrentlyReplying, comment.id]);
 
   const handleStartEdit = useCallback(() => {
     setEditText(comment.comment_text);
@@ -232,19 +503,7 @@ const CommentItem = memo(function CommentItem({
               <button
                 type="button"
                 className="hover:text-primary transition-colors"
-                onClick={() => {
-                  const target = document.getElementById(`comment-${comment.replied_to_id}`);
-                  if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    const card = target.querySelector(':scope > div');
-                    if (card) {
-                      card.classList.add('!border-primary', '!bg-primary/5');
-                      setTimeout(() => {
-                        card.classList.remove('!border-primary', '!bg-primary/5');
-                      }, 2000);
-                    }
-                  }
-                }}
+                onClick={() => scrollToComment(comment.replied_to_id!)}
               >
                 replied to @
                 {comment.replied_to_nickname}
@@ -301,81 +560,13 @@ const CommentItem = memo(function CommentItem({
             className="mt-2"
           >
             <Button
-              onClick={() => onReplyClick(comment.id)}
+              onClick={handleReplyClickLocal}
               variant="secondary"
               size="sm"
             >
               Reply
             </Button>
           </div>
-        )}
-        {isCurrentlyReplying && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              onSubmitReply(topLevelCommentId);
-            }}
-            className="mt-3 space-y-2"
-          >
-            <div
-              className="text-xs text-foreground/50 mb-1"
-            >
-              Replying to
-              {' '}
-              <span
-                className="font-medium"
-              >
-                @
-                {comment.profile?.nickname || 'Anonymous'}
-              </span>
-            </div>
-            <Textarea
-              value={replyTextValue}
-              onChange={(e) => {
-                onReplyTextChange(comment.id, e.target.value);
-              }}
-              onFocus={(e) => {
-                if (!currentUser) {
-                  e.target.blur();
-                  currentShowAuthPrompt({ feature: 'leave comments' });
-                }
-              }}
-              placeholder="Write a reply..."
-              rows={2}
-              disabled={currentIsSubmitting}
-              className="block max-w-160 text-sm"
-              readOnly={!currentUser}
-            />
-            <div
-              className="flex items-center gap-2"
-            >
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => onReplyClick(comment.id)}
-                disabled={currentIsSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                iconRight={<SendSVG
-                  className="size-4"
-                />}
-                disabled={currentIsSubmitting || !replyTextValue.trim()}
-                onClick={(e) => {
-                  if (!currentUser) {
-                    e.preventDefault();
-                    currentShowAuthPrompt({ feature: 'leave comments' });
-                  }
-                }}
-              >
-                {currentIsSubmitting ? 'Posting...' : 'Reply'}
-              </Button>
-            </div>
-          </form>
         )}
       </div>
       {/* Collapse/expand toggle — shown below the comment card on the border line */}
@@ -405,7 +596,7 @@ const CommentItem = memo(function CommentItem({
         </button>
       )}
       {/* Render nested replies — cap visual indentation at depth 2 */}
-      {!isCollapsed && (hasNestedReplies || (comment.replies && comment.replies.length > 0)) && (() => {
+      {!isCollapsed && (hasChildren || isCurrentlyReplying) && (() => {
         const childDepth = Math.min(depth + 1, 2);
         const shouldIndent = depth < 2;
         const children = (
@@ -426,6 +617,7 @@ const CommentItem = memo(function CommentItem({
                 onEditComment={onEditComment}
                 formatDateFn={formatDateFn}
                 user={currentUser}
+                currentUserProfile={currentUserProfile}
                 isAdmin={currentIsAdmin}
                 isSubmitting={currentIsSubmitting}
                 showAuthPrompt={currentShowAuthPrompt}
@@ -447,11 +639,26 @@ const CommentItem = memo(function CommentItem({
                 onEditComment={onEditComment}
                 formatDateFn={formatDateFn}
                 user={currentUser}
+                currentUserProfile={currentUserProfile}
                 isAdmin={currentIsAdmin}
                 isSubmitting={currentIsSubmitting}
                 showAuthPrompt={currentShowAuthPrompt}
               />
             ))}
+            {isCurrentlyReplying && (
+              <ReplyComposer
+                commentId={comment.id}
+                profile={currentUserProfile}
+                repliedToNickname={comment.profile?.nickname || 'Anonymous'}
+                replyText={replyTextValue}
+                onReplyTextChange={(value) => onReplyTextChange(comment.id, value)}
+                onSubmit={() => onSubmitReply(topLevelCommentId)}
+                onCancel={handleReplyClickLocal}
+                isSubmitting={currentIsSubmitting}
+                user={currentUser}
+                showAuthPrompt={currentShowAuthPrompt}
+              />
+            )}
           </>
         );
         return shouldIndent ? (
@@ -495,6 +702,8 @@ const CommentItem = memo(function CommentItem({
   // in will actually re-render its DOM — intermediate parents just pass through.
   if (prevProps.allReplyText !== nextProps.allReplyText) return false;
 
+  if (prevProps.currentUserProfile !== nextProps.currentUserProfile) return false;
+
   return true; // All relevant props are equal — skip render
 });
 
@@ -507,7 +716,7 @@ export default function Comments({
   challengeId,
   sceneEventId,
 }: CommentsProps) {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, profile } = useAuth();
   const confirm = useConfirm();
   const supabase = useSupabase();
   const showAuthPrompt = useAuthPrompt();
@@ -648,7 +857,7 @@ export default function Comments({
         `)
         .eq(entityColumn, entityId)
         .is('comments.deleted_at', null)
-        .order('comments(created_at)', { ascending: false })
+        .order('comments(created_at)', { ascending: true })
         .limit(100);
 
       if (error) {
@@ -692,7 +901,9 @@ export default function Comments({
           })) as Comment[];
 
         // Separate top-level comments and replies
-        const topLevelComments = allComments.filter(c => !c.parent_comment_id);
+        const topLevelComments = allComments
+          .filter(c => !c.parent_comment_id)
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         const replies = allComments.filter(c => c.parent_comment_id);
 
         // Build a lookup: comment ID -> display name (for "replied to @nickname")
@@ -988,6 +1199,14 @@ export default function Comments({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- showAuthPrompt is stable from the hook
   }, []);
 
+  const currentUserProfile: UserProfileSummary | null = profile
+    ? {
+      full_name: profile.full_name,
+      nickname: profile.nickname,
+      avatar_url: profile.avatar_url,
+    }
+    : null;
+
   if (!user) {
     return (
       <div
@@ -1074,6 +1293,7 @@ export default function Comments({
                 onEditComment={handleEditComment}
                 formatDateFn={formatDate}
                 user={user}
+                currentUserProfile={currentUserProfile}
                 isAdmin={isAdmin}
                 isSubmitting={isSubmitting}
                 showAuthPrompt={stableShowAuthPrompt}
@@ -1083,44 +1303,15 @@ export default function Comments({
         )}
       </div>
 
-      {/* Comment Form */}
-      <form
+      <CommentComposer
+        profile={currentUserProfile}
+        commentText={commentText}
+        onCommentTextChange={setCommentText}
         onSubmit={handleSubmitComment}
-        className="space-y-3 mt-4"
-      >
-        <Textarea
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          onFocus={(e) => {
-            if (!user) {
-              // Blur immediately to prevent re-triggering when modal closes
-              e.target.blur();
-              showAuthPrompt({ feature: 'leave comments' });
-            }
-          }}
-          placeholder="Write a comment..."
-          rows={3}
-          disabled={isSubmitting}
-          className="block max-w-160"
-          readOnly={!user}
-        />
-        <Button
-          type="submit"
-          size="sm"
-          iconRight={<SendSVG
-            className="size-4"
-          />}
-          disabled={isSubmitting || !commentText.trim()}
-          onClick={(e) => {
-            if (!user) {
-              e.preventDefault();
-              showAuthPrompt({ feature: 'leave comments' });
-            }
-          }}
-        >
-          {isSubmitting ? 'Posting...' : 'Add comment'}
-        </Button>
-      </form>
+        isSubmitting={isSubmitting}
+        user={user}
+        showAuthPrompt={stableShowAuthPrompt}
+      />
     </div>
   );
 }
