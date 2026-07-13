@@ -17,7 +17,7 @@ import { getMostViewedAlbumsLastWeek, getPublicAlbums } from '@/lib/data/albums'
 import { getMostViewedPhotosLastWeek, getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
-  title: 'Gallery & Community Photo Albums',
+  title: 'Community gallery',
   description:
     'Browse photo albums created by our community members. Explore beautiful photos from our photography meetups and community events.',
   canonical: '/gallery',

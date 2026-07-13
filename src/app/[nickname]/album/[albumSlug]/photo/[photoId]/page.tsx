@@ -1,7 +1,7 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
-import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
@@ -40,7 +40,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const photoTitle = `${result.photo.title || 'Photo'} - ${result.currentAlbum.title} by @${nickname}`;
+  const ownerName = formatProfileDisplayName(result.profile.full_name, result.profile.nickname);
+  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} — ${result.currentAlbum.title} by ${ownerName}`;
   const photoDescription = result.photo.description || `Photo from album "${result.currentAlbum.title}" by @${nickname}`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

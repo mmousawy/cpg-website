@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const photoTitle = `${result.photo.title || 'Photo'} - ${result.currentChallenge.title}`;
+  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} — ${result.currentChallenge.title}`;
   const photoDescription = result.photo.description || `Photo from challenge "${result.currentChallenge.title}"`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

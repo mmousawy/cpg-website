@@ -10,7 +10,7 @@ import ArrowRightIcon from 'public/icons/arrow-right.svg';
 const ENTRIES_PER_PAGE = 10;
 
 export const metadata = createMetadata({
-  title: 'Changelog — Detailed Changes',
+  title: 'Changelog — all changes',
   description: 'Detailed list of all updates and changes to Creative Photography Group',
   canonical: '/changelog/details',
 });

@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   return createMetadata({
-    title: `Photos tagged "${tagName}"`,
+    title: `Photos tagged with "${tagName}"`,
     description: `Browse community photos tagged with "${tagName}". Discover photography from our community members.`,
     canonical: `/gallery/tag/${encodeURIComponent(tagName)}`,
     keywords: ['photography', 'photo gallery', tagName, 'community photos'],

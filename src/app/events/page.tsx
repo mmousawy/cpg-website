@@ -12,7 +12,7 @@ import { getEventAttendees, getPastEvents, getUpcomingEvents } from '@/lib/data/
 const PAST_EVENTS_PER_PAGE = 5;
 
 export const metadata = createMetadata({
-  title: 'Events & Meetups',
+  title: 'Upcoming meetups & photo walks',
   description: 'Browse upcoming and past photography meetups and photo walks. Join us for monthly events in the Netherlands.',
   canonical: '/events',
   keywords: ['photography events', 'meetups', 'photo walks', 'Netherlands', 'photography meetups'],

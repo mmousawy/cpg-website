@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   const eventImage = getSocialImageUrl(event.cover_image);
 
   return createMetadata({
-    title: event.title || 'Event',
+    title: `Event: ${event.title || 'Event'}`,
     description: event.description || `Join us for ${event.title || 'this event'}`,
     image: eventImage,
     canonical: `/events/${eventSlug}`,

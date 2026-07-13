@@ -8,7 +8,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { getRecentlyLikedPhotos } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
-  title: 'Recently Liked Photos',
+  title: 'Recently liked photos',
   description: 'Browse photos that received likes recently from the community.',
   canonical: '/gallery/recent-likes',
   keywords: ['recently liked photos', 'popular photos', 'community favorites'],

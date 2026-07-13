@@ -10,7 +10,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
-  title: 'Community Photos',
+  title: 'Community photo stream',
   description: 'Browse photos uploaded by the community.',
   canonical: '/gallery/photos',
   keywords: ['photos', 'community photos', 'photography'],

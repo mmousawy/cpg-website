@@ -7,7 +7,7 @@ import {
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
-import { createMetadata } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     });
   }
 
-  const profileTitle = profile.full_name || `@${profile.nickname}`;
+  const profileTitle = formatProfileDisplayName(profile.full_name, profile.nickname);
 
   return createMetadata({
     title: `Photos by ${profileTitle}`,

@@ -2,7 +2,7 @@ import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
-import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -38,7 +38,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const photoTitle = `${result.photo.title || 'Photo'} by @${nickname}`;
+  const ownerName = formatProfileDisplayName(result.profile.full_name, result.profile.nickname);
+  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} by ${ownerName}`;
   const photoDescription = result.photo.description || `Photo by @${nickname}`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

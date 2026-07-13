@@ -1,5 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
-import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
 
@@ -31,7 +31,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     });
   }
 
-  const albumTitle = `${album.title} by @${nickname}`;
+  const ownerName = formatProfileDisplayName(album.profile?.full_name, album.profile?.nickname ?? nickname);
+  const albumTitle = `Album: ${album.title} by ${ownerName}`;
   const albumDescription = album.description || `Photo album "${album.title}" by @${nickname}`;
 
   // Get first photo from album (sorted by sort_order) for og:image

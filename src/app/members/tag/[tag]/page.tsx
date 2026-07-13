@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   return createMetadata({
-    title: `Members using "${tagName}" tag`,
+    title: `Members tagged with "${tagName}"`,
     description: `Discover community members who frequently use the "${tagName}" tag in their photos. Connect with photographers who share your photo style.`,
     canonical: `/members/tag/${encodeURIComponent(tagName)}`,
     keywords: ['photography community', 'photographers', tagName, 'photo tags', 'member discovery'],

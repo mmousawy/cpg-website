@@ -61,7 +61,7 @@ export async function generateMetadata({
   }
 
   return createMetadata({
-    title: event.title,
+    title: `Scene event: ${event.title}`,
     description:
       event.description ||
       `${event.title} - ${event.location_name}, ${event.location_city}`,

@@ -10,7 +10,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { getPublicAlbums } from '@/lib/data/albums';
 
 export const metadata = createMetadata({
-  title: 'Photo Albums',
+  title: 'Community photo albums',
   description: 'Browse all photo albums created by the community.',
   canonical: '/gallery/albums',
   keywords: ['photo albums', 'photography collections', 'community albums'],

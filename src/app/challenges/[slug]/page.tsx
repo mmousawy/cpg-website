@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return createMetadata({
-    title: challenge.title,
+    title: `Challenge: ${challenge.title}`,
     description: stripHtml(challenge.prompt),
     image: getSocialImageUrl(challenge.cover_image_url),
     canonical: `/challenges/${slug}`,

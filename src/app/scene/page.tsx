@@ -13,18 +13,18 @@ import {
   mergeUpcomingWithCpg,
 } from '@/data/cpg-scene-events';
 import { cpgEventToSceneEvent } from '@/lib/data/cpg-events-to-scene';
+import { getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 import {
   getPastSceneEvents,
   getSceneEventInterests,
   getUpcomingSceneEvents,
 } from '@/lib/data/scene';
-import { getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 import { getAmsterdamDateString } from '@/lib/events/status';
 
 const PAST_EVENTS_PER_PAGE = 20;
 
 export const metadata = createMetadata({
-  title: 'Explore the scene',
+  title: 'Browse the photography scene',
   description:
     'A community-curated guide to photography events — exhibitions, photowalks, workshops, talks, and more. Added by members, for members.',
   canonical: '/scene',

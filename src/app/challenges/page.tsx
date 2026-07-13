@@ -9,7 +9,7 @@ import { createMetadata } from '@/utils/metadata';
 import { getActiveChallenges, getPastChallenges } from '@/lib/data/challenges';
 
 export const metadata = createMetadata({
-  title: 'Photography Challenges',
+  title: 'Photo challenges',
   description: 'Join our themed photo challenges! Submit your best shots, get featured, and showcase your creativity with the community.',
   canonical: '/challenges',
   keywords: ['photo challenges', 'photography contest', 'themed photography', 'photo submissions'],

@@ -20,7 +20,7 @@ import {
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
-import { createMetadata, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
 
 // Pre-render all public profiles at build time for optimal caching
 export async function generateStaticParams() {
@@ -59,14 +59,13 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     });
   }
 
-  const profileTitle = profile.full_name || `@${profile.nickname}`;
+  const profileTitle = formatProfileDisplayName(profile.full_name, profile.nickname);
   const profileDescription = profile.bio || `View the profile and photo albums of @${profile.nickname}`;
-  const profileImage = getSocialImageUrl(profile.avatar_url);
 
   return createMetadata({
-    title: profileTitle,
+    title: `${profileTitle}'s profile`,
     description: profileDescription,
-    image: profileImage,
+    omitImages: true,
     canonical: `/@${encodeURIComponent(nickname)}`,
     type: 'profile',
     keywords: ['photography', 'photographer', profile.nickname || '', profile.full_name || ''],

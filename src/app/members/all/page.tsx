@@ -9,7 +9,7 @@ import { formatJoinedDate } from '@/utils/utils';
 import { getAllMembers } from '@/lib/data/members';
 
 export const metadata = createMetadata({
-  title: 'All members',
+  title: 'All community members',
   description: 'Browse all members of our photography community.',
   canonical: '/members/all',
   keywords: ['photography community', 'photographers', 'all members', 'community members'],

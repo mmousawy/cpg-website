@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   const eventTitle = result.currentEvent.title || 'Event';
-  const photoTitle = `${result.photo.title || 'Photo'} - ${eventTitle}`;
+  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} — ${eventTitle}`;
   const photoDescription = result.photo.description || `Photo from event "${eventTitle}"`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

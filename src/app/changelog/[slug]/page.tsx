@@ -5,6 +5,7 @@ import {
   getChangelogCommitSummary,
   getChangelogDetailMarkdown,
   getChangelogSlugs,
+  getDateFromChangelogSlug,
   getVersionForSlug,
 } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
@@ -26,9 +27,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: ChangelogDetailPageProps) {
   const { slug } = await params;
   const summary = await getChangelogCommitSummary(slug);
+  const date = getDateFromChangelogSlug(slug);
   const title = summary ?? `Changelog ${slug}`;
+  const pageTitle = date ? `Changelog: ${date} - ${title}` : `Changelog: ${title}`;
   return createMetadata({
-    title: `Changelog: ${title}`,
+    title: pageTitle,
     description: summary ?? `Detailed changes for ${slug}`,
     canonical: `/changelog/${slug}`,
   });

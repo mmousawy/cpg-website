@@ -73,6 +73,23 @@ export function truncateDescription(description: string, maxLength = 155): strin
 }
 
 /**
+ * Format a profile name for page titles: "Full Name (@nickname)".
+ * Falls back to "@nickname" when no full name is set.
+ */
+export function formatProfileDisplayName(
+  fullName: string | null | undefined,
+  nickname: string | null | undefined,
+): string {
+  const nick = nickname?.trim();
+  if (!nick) return fullName?.trim() || 'Unknown';
+
+  const atNickname = `@${nick}`;
+  const name = fullName?.trim();
+  if (name) return `${name} (${atNickname})`;
+  return atNickname;
+}
+
+/**
  * Create a full URL from a relative or absolute path
  */
 export function getAbsoluteUrl(path: string): string {
@@ -92,6 +109,8 @@ export interface CreateMetadataOptions {
   title?: string;
   description?: string;
   image?: string | null;
+  /** When true, omit og/twitter image tags so a colocated opengraph-image route can supply them */
+  omitImages?: boolean;
   noindex?: boolean;
   nofollow?: boolean;
   canonical?: string;
@@ -109,6 +128,7 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
     title,
     description = siteConfig.description,
     image,
+    omitImages = false,
     noindex = false,
     nofollow = false,
     canonical,
@@ -124,6 +144,9 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
 
   // Truncate description for SEO
   const truncatedDescription = truncateDescription(description);
+
+  // Browser tab title uses the root layout template; OG/Twitter need the full title explicitly
+  const fullTitle = title ? `${title} - ${siteConfig.name}` : siteConfig.name;
 
   // Note: Title template from root layout will automatically append "- Creative Photography Group"
   // We just pass the title as-is and let Next.js apply the template
@@ -146,24 +169,26 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
       locale: 'en_US',
       url: canonical ? getAbsoluteUrl(canonical) : siteConfig.url,
       siteName: siteConfig.name,
-      title: title || siteConfig.name,
+      title: fullTitle,
       description: truncatedDescription,
-      images: [
-        {
-          url: ogImage,
-          width: 1200,
-          height: 630,
-          alt: title || siteConfig.name,
-        },
-      ],
+      ...(!omitImages && {
+        images: [
+          {
+            url: ogImage,
+            width: 1200,
+            height: 630,
+            alt: fullTitle,
+          },
+        ],
+      }),
       ...(publishedTime && { publishedTime }),
       ...(modifiedTime && { modifiedTime }),
     },
     twitter: {
       card: 'summary_large_image',
-      title: title || siteConfig.name,
+      title: fullTitle,
       description: truncatedDescription,
-      images: [twitterImage],
+      ...(!omitImages && { images: [twitterImage] }),
       ...(siteConfig.twitterHandle && { creator: siteConfig.twitterHandle }),
     },
   };

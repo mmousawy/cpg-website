@@ -17,7 +17,7 @@ import { getPopularInterests } from '@/lib/data/interests';
 import { getNewMembers, getRandomInterestsWithMembers, getRecentlyActiveMembers } from '@/lib/data/members';
 
 export const metadata = createMetadata({
-  title: 'Discover members',
+  title: 'Meet our photographers',
   description: 'Explore and connect with our community members. Find photographers by interests, recent activity, and photo styles.',
   canonical: '/members',
   keywords: ['photography community', 'photographers', 'member discovery', 'community members'],
