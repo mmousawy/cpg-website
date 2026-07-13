@@ -51,3 +51,8 @@ declare module 'swiper/css/*' {
 declare module '*.css';
 
 declare module 'piexifjs';
+
+declare module 'wawoff2' {
+  export function decompress(buffer: Buffer | Uint8Array): Promise<Buffer>;
+  export function compress(buffer: Buffer | Uint8Array): Promise<Buffer>;
+}

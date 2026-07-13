@@ -17,10 +17,11 @@ let fontsPromise: Promise<OgFont[]> | null = null;
 async function loadCheriaHeadingFont(): Promise<OgFont> {
   const woff2 = await readFile(join(process.cwd(), 'public/cheria-bold.woff2'));
   const ttf = await decompress(woff2);
+  const fontData = Uint8Array.from(ttf);
 
   return {
     name: CHERIA_HEADING_FONT_NAME,
-    data: ttf.buffer.slice(ttf.byteOffset, ttf.byteOffset + ttf.byteLength),
+    data: fontData.buffer,
     weight: 700,
     style: 'normal',
   };
