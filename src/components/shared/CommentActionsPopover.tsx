@@ -1,16 +1,36 @@
 'use client';
 
-import CommentActionsMenu from '@/components/shared/CommentActionsMenu';
+import CommentActionsMenu, { getCommentActionsVisibility } from '@/components/shared/CommentActionsMenu';
 import Popover from '@/components/shared/Popover';
+import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 
 type CommentActionsPopoverProps = {
   commentId: string;
   commentUserId: string;
+  isAdmin?: boolean;
+  onDelete?: () => void;
+  onEdit?: () => void;
 };
 
-export default function CommentActionsPopover({ commentId, commentUserId }: CommentActionsPopoverProps) {
+export default function CommentActionsPopover({
+  commentId,
+  commentUserId,
+  isAdmin = false,
+  onDelete,
+  onEdit,
+}: CommentActionsPopoverProps) {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const { canDelete, canEdit, hasActions } = getCommentActionsVisibility({
+    userId: user?.id,
+    commentUserId,
+    isAdmin,
+  });
+
+  if (!hasActions) {
+    return null;
+  }
 
   return (
     <Popover
@@ -43,6 +63,10 @@ export default function CommentActionsPopover({ commentId, commentUserId }: Comm
       <CommentActionsMenu
         commentId={commentId}
         commentUserId={commentUserId}
+        canDelete={canDelete}
+        canEdit={canEdit}
+        onDelete={onDelete}
+        onEdit={onEdit}
         onActionClick={() => setIsOpen(false)}
       />
     </Popover>

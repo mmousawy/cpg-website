@@ -575,6 +575,7 @@ export type Database = {
           comment_text: string
           created_at: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
           parent_comment_id: string | null
           updated_at: string
@@ -584,6 +585,7 @@ export type Database = {
           comment_text: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           parent_comment_id?: string | null
           updated_at?: string
@@ -593,6 +595,7 @@ export type Database = {
           comment_text?: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           parent_comment_id?: string | null
           updated_at?: string

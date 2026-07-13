@@ -15,6 +15,69 @@ import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
+export async function PATCH(request: NextRequest) {
+  const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { commentId, commentText } = body;
+
+  if (!commentId || !commentText?.trim()) {
+    return NextResponse.json(
+      { message: 'Comment ID and comment text are required' },
+      { status: 400 },
+    );
+  }
+
+  const { data: comment, error: fetchError } = await supabase
+    .from('comments')
+    .select('id, user_id, comment_text')
+    .eq('id', commentId)
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !comment) {
+    return NextResponse.json({ message: 'Comment not found' }, { status: 404 });
+  }
+
+  if (comment.user_id !== user.id) {
+    return NextResponse.json(
+      { message: 'You do not have permission to edit this comment' },
+      { status: 403 },
+    );
+  }
+
+  if (comment.comment_text.trim() === commentText.trim()) {
+    return NextResponse.json({ success: true, commentId }, { status: 200 });
+  }
+
+  const { data, error } = await supabase
+    .from('comments')
+    .update({
+      comment_text: commentText.trim(),
+      edited_at: new Date().toISOString(),
+    })
+    .eq('id', commentId)
+    .is('deleted_at', null)
+    .select('id');
+
+  if (error) {
+    console.error('Error updating comment:', error);
+    return NextResponse.json({ message: 'Failed to update comment' }, { status: 500 });
+  }
+
+  if (!data || data.length === 0) {
+    return NextResponse.json({ message: 'Comment could not be updated' }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, commentId }, { status: 200 });
+}
+
 export async function DELETE(request: NextRequest) {
   const supabase = await createClient();
 

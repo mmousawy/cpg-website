@@ -8,7 +8,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, memo, useCallback, useEffect, useState } from 'react';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
 import CommentActionsPopover from './CommentActionsPopover';
@@ -16,7 +16,32 @@ import Textarea from './Textarea';
 
 import SendSVG from 'public/icons/arrow-right.svg';
 import ChevronDownSVG from 'public/icons/chevron-down.svg';
-import TrashSVG from 'public/icons/trash.svg';
+
+const URL_REGEX = /https?:\/\/[^\s<]+/g;
+
+function renderCommentText(text: string) {
+  const parts = text.split(URL_REGEX);
+  const urls = text.match(URL_REGEX);
+  if (!urls) return text;
+
+  return parts.reduce<ReactNode[]>((acc, part, i) => {
+    acc.push(part);
+    if (urls[i]) {
+      acc.push(
+        <a
+          key={i}
+          href={urls[i]}
+          target="_blank"
+          rel="nofollow noreferrer noopener"
+          className="text-accent underline break-all"
+        >
+          {urls[i]}
+        </a>,
+      );
+    }
+    return acc;
+  }, []);
+}
 
 interface Comment {
   id: string
@@ -24,6 +49,7 @@ interface Comment {
   comment_text: string
   created_at: string
   updated_at: string
+  edited_at?: string | null
   parent_comment_id?: string | null
   replied_to_id?: string | null
   replied_to_nickname?: string | null
@@ -34,6 +60,17 @@ interface Comment {
   }
   replies?: Comment[]
   nestedReplies?: Comment[]
+}
+
+function formatFullDate(dateString: string) {
+  const date = new Date(dateString);
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 interface CommentsProps {
@@ -59,6 +96,7 @@ interface CommentItemProps {
   onReplyTextChange: (commentId: string, value: string) => void;
   onSubmitReply: (parentCommentId: string) => void;
   onDeleteComment: (commentId: string) => void;
+  onEditComment: (commentId: string, commentText: string) => Promise<void>;
   formatDateFn: (dateString: string) => string;
   user: User | null;
   isAdmin: boolean;
@@ -79,6 +117,7 @@ const CommentItem = memo(function CommentItem({
   onReplyTextChange,
   onSubmitReply,
   onDeleteComment,
+  onEditComment,
   formatDateFn,
   user: currentUser,
   isAdmin: currentIsAdmin,
@@ -89,6 +128,35 @@ const CommentItem = memo(function CommentItem({
   const hasChildren = hasNestedReplies || (comment.replies && comment.replies.length > 0);
   const isCurrentlyReplying = isReplyingTo === comment.id;
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.comment_text);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const handleStartEdit = useCallback(() => {
+    setEditText(comment.comment_text);
+    setIsEditing(true);
+  }, [comment.comment_text]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditText(comment.comment_text);
+    setIsEditing(false);
+  }, [comment.comment_text]);
+
+  const handleSaveEdit = useCallback(async () => {
+    const trimmedText = editText.trim();
+    if (!trimmedText || trimmedText === comment.comment_text.trim()) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      await onEditComment(comment.id, trimmedText);
+      setIsEditing(false);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  }, [comment.comment_text, comment.id, editText, onEditComment]);
 
   // Count total replies for the collapsed summary
   const totalChildCount = (comment.replies?.length || 0) +
@@ -100,7 +168,7 @@ const CommentItem = memo(function CommentItem({
       id={`comment-${comment.id}`}
     >
       <div
-        className="dark:bg-[#303033] bg-[#fff] rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 transition-colors duration-700 relative"
+        className="dark:bg-[#303033] bg-[#fff] rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 relative overflow-visible"
       >
         <div
           className="flex items-start justify-between gap-2 mb-2"
@@ -137,24 +205,27 @@ const CommentItem = memo(function CommentItem({
             <CommentActionsPopover
               commentId={comment.id}
               commentUserId={comment.user_id}
+              isAdmin={currentIsAdmin}
+              onDelete={() => onDeleteComment(comment.id)}
+              onEdit={handleStartEdit}
             />
-            {(currentUser?.id === comment.user_id || currentIsAdmin) && (
-              <button
-                onClick={() => onDeleteComment(comment.id)}
-                className="rounded p-1 hover:bg-red-600/10"
-                aria-label="Delete comment"
-              >
-                <TrashSVG
-                  className="size-4 text-red-600"
-                />
-              </button>
-            )}
           </div>
         </div>
         <p
           className="text-xs text-foreground/50 mb-3"
         >
           {formatDateFn(comment.created_at)}
+          {comment.edited_at && (
+            <>
+              {' · '}
+              <span
+                className="cursor-default"
+                title={`Original: ${formatFullDate(comment.created_at)}\nEdited: ${formatFullDate(comment.edited_at)}`}
+              >
+                (edited)
+              </span>
+            </>
+          )}
           {comment.replied_to_nickname && comment.replied_to_id && (
             <>
               {' · '}
@@ -181,22 +252,60 @@ const CommentItem = memo(function CommentItem({
             </>
           )}
         </p>
-        <p
-          className="text-sm text-foreground/90 max-w-[60ch]"
-        >
-          {comment.comment_text}
-        </p>
-        {currentUser && (
+        {isEditing ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSaveEdit();
+            }}
+            className="space-y-2"
+          >
+            <Textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={3}
+              disabled={isSavingEdit || currentIsSubmitting}
+              className="block max-w-160 text-sm"
+              autoFocus
+            />
+            <div
+              className="flex items-center gap-2"
+            >
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleCancelEdit}
+                disabled={isSavingEdit || currentIsSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSavingEdit || currentIsSubmitting || !editText.trim()}
+              >
+                {isSavingEdit ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p
+            className="text-sm text-foreground/90 max-w-[60ch] whitespace-pre-wrap"
+          >
+            {renderCommentText(comment.comment_text)}
+          </p>
+        )}
+        {currentUser && !isEditing && !isCurrentlyReplying && (
           <div
             className="mt-2"
           >
             <Button
               onClick={() => onReplyClick(comment.id)}
-              variant="custom"
+              variant="secondary"
               size="sm"
-              className="px-2! py-0.5! text-xs h-auto border border-border-color-strong bg-foreground/5 text-foreground/70"
             >
-              {isCurrentlyReplying ? 'Cancel' : 'Reply'}
+              Reply
             </Button>
           </div>
         )}
@@ -237,22 +346,35 @@ const CommentItem = memo(function CommentItem({
               className="block max-w-160 text-sm"
               readOnly={!currentUser}
             />
-            <Button
-              type="submit"
-              size="sm"
-              iconRight={<SendSVG
-                className="size-4"
-              />}
-              disabled={currentIsSubmitting || !replyTextValue.trim()}
-              onClick={(e) => {
-                if (!currentUser) {
-                  e.preventDefault();
-                  currentShowAuthPrompt({ feature: 'leave comments' });
-                }
-              }}
+            <div
+              className="flex items-center gap-2"
             >
-              {currentIsSubmitting ? 'Posting...' : 'Reply'}
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => onReplyClick(comment.id)}
+                disabled={currentIsSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                iconRight={<SendSVG
+                  className="size-4"
+                />}
+                disabled={currentIsSubmitting || !replyTextValue.trim()}
+                onClick={(e) => {
+                  if (!currentUser) {
+                    e.preventDefault();
+                    currentShowAuthPrompt({ feature: 'leave comments' });
+                  }
+                }}
+              >
+                {currentIsSubmitting ? 'Posting...' : 'Reply'}
+              </Button>
+            </div>
           </form>
         )}
       </div>
@@ -301,6 +423,7 @@ const CommentItem = memo(function CommentItem({
                 onReplyTextChange={onReplyTextChange}
                 onSubmitReply={onSubmitReply}
                 onDeleteComment={onDeleteComment}
+                onEditComment={onEditComment}
                 formatDateFn={formatDateFn}
                 user={currentUser}
                 isAdmin={currentIsAdmin}
@@ -321,6 +444,7 @@ const CommentItem = memo(function CommentItem({
                 onReplyTextChange={onReplyTextChange}
                 onSubmitReply={onSubmitReply}
                 onDeleteComment={onDeleteComment}
+                onEditComment={onEditComment}
                 formatDateFn={formatDateFn}
                 user={currentUser}
                 isAdmin={currentIsAdmin}
@@ -517,6 +641,7 @@ export default function Comments({
             comment_text,
             created_at,
             updated_at,
+            edited_at,
             parent_comment_id,
             profile:profiles(full_name, nickname, avatar_url, suspended_at, deletion_scheduled_at)
           )
@@ -535,6 +660,7 @@ export default function Comments({
           comment_text: string;
           created_at: string;
           updated_at: string;
+          edited_at: string | null;
           parent_comment_id: string | null;
         };
         type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at' | 'deletion_scheduled_at'>;
@@ -555,6 +681,7 @@ export default function Comments({
             comment_text: c.comment_text,
             created_at: c.created_at,
             updated_at: c.updated_at,
+            edited_at: c.edited_at,
             parent_comment_id: c.parent_comment_id || null,
             profile: c.profile ? {
               full_name: c.profile.full_name,
@@ -808,6 +935,32 @@ export default function Comments({
     }
   }, [confirm, fetchComments]);
 
+  const handleEditComment = useCallback(async (commentId: string, commentText: string) => {
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commentId,
+          commentText,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Error updating comment:', data.message);
+        alert(data.message || 'Failed to update comment');
+        return;
+      }
+
+      await fetchComments();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      alert('An unexpected error occurred');
+    }
+  }, [fetchComments]);
+
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -918,6 +1071,7 @@ export default function Comments({
                 onReplyTextChange={handleReplyTextChange}
                 onSubmitReply={handleSubmitReply}
                 onDeleteComment={handleDeleteComment}
+                onEditComment={handleEditComment}
                 formatDateFn={formatDate}
                 user={user}
                 isAdmin={isAdmin}

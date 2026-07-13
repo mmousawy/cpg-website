@@ -988,14 +988,14 @@ CREATE OR REPLACE FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") RETU
 BEGIN
   RETURN jsonb_build_object(
     'eventsAttended', (
-      SELECT COUNT(*)::int FROM events_rsvps 
-      WHERE user_id = p_user_id 
-        AND attended_at IS NOT NULL 
-        AND confirmed_at IS NOT NULL 
+      SELECT COUNT(*)::int FROM events_rsvps
+      WHERE user_id = p_user_id
+        AND attended_at IS NOT NULL
+        AND confirmed_at IS NOT NULL
         AND canceled_at IS NULL
     ),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments 
+      SELECT COUNT(*)::int FROM comments
       WHERE user_id = p_user_id AND deleted_at IS NULL
     ),
     'commentsReceived', (
@@ -1024,11 +1024,11 @@ BEGIN
     ),
     'likesReceived', (
       COALESCE((
-        SELECT SUM(likes_count)::int FROM albums 
+        SELECT SUM(likes_count)::int FROM albums
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0) +
       COALESCE((
-        SELECT SUM(likes_count)::int FROM photos 
+        SELECT SUM(likes_count)::int FROM photos
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0)
     ),
@@ -1044,11 +1044,11 @@ BEGIN
     ),
     'viewsReceived', (
       COALESCE((
-        SELECT SUM(view_count)::int FROM albums 
+        SELECT SUM(view_count)::int FROM albums
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0) +
       COALESCE((
-        SELECT SUM(view_count)::int FROM photos 
+        SELECT SUM(view_count)::int FROM photos
         WHERE user_id = p_user_id AND is_public = true AND deleted_at IS NULL
       ), 0)
     ),
@@ -2557,6 +2557,8 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "watermark_text" "text",
     "exif_copyright_text" "text",
     "deletion_scheduled_at" timestamp with time zone,
+    "banner_url" "text",
+    "banner_blurhash" "text",
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_nickname_format" CHECK ((("nickname" IS NULL) OR ("nickname" ~ '^[a-z0-9-]+$'::"text"))),
@@ -2645,7 +2647,8 @@ CREATE TABLE IF NOT EXISTS "public"."comments" (
     "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
     "deleted_at" timestamp with time zone,
-    "parent_comment_id" "uuid"
+    "parent_comment_id" "uuid",
+    "edited_at" timestamp with time zone
 );
 
 
@@ -2653,6 +2656,10 @@ ALTER TABLE "public"."comments" OWNER TO "supabase_admin";
 
 
 COMMENT ON COLUMN "public"."comments"."parent_comment_id" IS 'Self-referencing foreign key for comment replies. Only single-level threading is supported - replies attach to the original parent comment.';
+
+
+
+COMMENT ON COLUMN "public"."comments"."edited_at" IS 'Timestamp when the comment author last edited the comment text. NULL if never edited.';
 
 
 

@@ -167,7 +167,7 @@ export default function Popover({
   return (
     <details
       ref={detailsRef}
-      className="relative block"
+      className="relative block overflow-visible"
       onToggle={handleToggle}
     >
       <summary

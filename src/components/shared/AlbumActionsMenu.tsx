@@ -13,13 +13,31 @@ type AlbumActionsMenuProps = {
   onActionClick?: () => void; // Callback to close the popover
 };
 
+export function getAlbumActionsVisibility({
+  userId,
+  albumUserId,
+}: {
+  userId?: string | null;
+  albumUserId: string | null;
+}) {
+  const isOwner = !!(userId && albumUserId && userId === albumUserId);
+  const canReport = !isOwner;
+
+  return {
+    canReport,
+    hasActions: canReport,
+  };
+}
+
 export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onActionClick }: AlbumActionsMenuProps) {
   const { user } = useAuth();
   const modalContext = useContext(ModalContext);
+  const { canReport } = getAlbumActionsVisibility({
+    userId: user?.id,
+    albumUserId,
+  });
 
-  // Hide if user is reporting their own content (unless in development). Event albums have no owner (albumUserId null).
-  const isDev = process.env.NODE_ENV === 'development';
-  if (!isDev && user && albumUserId && user.id === albumUserId) {
+  if (!canReport) {
     return null;
   }
 
