@@ -26,36 +26,14 @@ export default function ScrollToTopOnRouteChange() {
   const isFirstPathnameEffect = useRef(true);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const previousRestoration = window.history.scrollRestoration;
-    window.history.scrollRestoration = 'manual';
-
     const onPopState = () => {
       // location is already updated when popstate fires
       pendingHistoryRestoreKey = getRouteKey();
     };
 
     window.addEventListener('popstate', onPopState);
-    return () => {
-      window.removeEventListener('popstate', onPopState);
-      window.history.scrollRestoration = previousRestoration;
-    };
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
-
-  useEffect(() => {
-    const key = getRouteKey();
-
-    const saveScroll = () => {
-      scrollPositions.set(key, window.scrollY);
-    };
-
-    window.addEventListener('scroll', saveScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', saveScroll);
-      saveScroll();
-    };
-  }, [pathname]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -68,6 +46,8 @@ export default function ScrollToTopOnRouteChange() {
     }
 
     if (pendingHistoryRestoreKey === currentKey) {
+      pendingHistoryRestoreKey = null;
+
       const savedTop = scrollPositions.get(currentKey);
       if (savedTop !== undefined) {
         const restore = () => restoreScroll(savedTop);
@@ -93,6 +73,16 @@ export default function ScrollToTopOnRouteChange() {
     const rafId = requestAnimationFrame(scrollToTop);
 
     return () => cancelAnimationFrame(rafId);
+  }, [pathname]);
+
+  // Save scroll position when leaving a route, not on every scroll event.
+  // Listening to scroll breaks when overlays temporarily change window.scrollY.
+  useEffect(() => {
+    const routeKey = getRouteKey();
+
+    return () => {
+      scrollPositions.set(routeKey, window.scrollY);
+    };
   }, [pathname]);
 
   return null;

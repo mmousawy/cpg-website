@@ -102,7 +102,7 @@ export default function ProfileImageUploadSections({
   return (
     <div
       className={clsx(
-        heroVariant === 'account' && 'border-border-color mb-6 border-b pb-4 sm:pb-6',
+        heroVariant === 'account' && 'mb-6',
         heroVariant === 'standalone' && 'space-y-3',
       )}
     >
@@ -128,7 +128,7 @@ export default function ProfileImageUploadSections({
         {/* Profile picture */}
         <section
           className={clsx(
-            'rounded-xl border p-3 transition-colors',
+            'rounded-xl border p-3 transition-colors bg-background/30',
             pendingAvatarFile ? 'border-primary' : 'border-border-color',
           )}
         >
@@ -229,7 +229,7 @@ export default function ProfileImageUploadSections({
         {/* Banner */}
         <section
           className={clsx(
-            'rounded-xl border p-3 transition-colors',
+            'rounded-xl border p-3 transition-colors bg-background/30',
             pendingBannerFile ? 'border-primary' : 'border-border-color',
           )}
         >
