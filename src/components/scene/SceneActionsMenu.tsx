@@ -1,15 +1,15 @@
 'use client';
 
-import { useContext } from 'react';
-import { useRouter } from 'next/navigation';
-import { ModalContext } from '@/app/providers/ModalProvider';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import { ModalContext } from '@/app/providers/ModalProvider';
+import EditSceneEventModal from '@/components/scene/EditSceneEventModal';
+import ReportModal from '@/components/shared/ReportModal';
 import { useAuth } from '@/context/AuthContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import ReportModal from '@/components/shared/ReportModal';
-import EditSceneEventModal from '@/components/scene/EditSceneEventModal';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import type { SceneEvent } from '@/types/scene';
+import { useRouter } from 'next/navigation';
+import { useContext } from 'react';
 
 import EditMiniSVG from 'public/icons/edit-mini.svg';
 import TrashMiniSVG from 'public/icons/trash-mini.svg';
@@ -91,7 +91,7 @@ export default function SceneActionsMenu({
   };
 
   const menuItemClass =
-    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground';
+    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
   const dangerMenuItemClass =
     'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300';
 

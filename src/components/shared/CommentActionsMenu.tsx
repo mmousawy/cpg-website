@@ -3,9 +3,9 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ReportModal from '@/components/shared/ReportModal';
 import { useAuth } from '@/context/AuthContext';
+import EditMiniSVG from 'public/icons/edit-mini.svg';
 import TrashMiniSVG from 'public/icons/trash-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
-import EditMiniSVG from 'public/icons/edit-mini.svg';
 import { useContext } from 'react';
 
 type CommentActionsMenuProps = {
@@ -19,7 +19,7 @@ type CommentActionsMenuProps = {
 };
 
 const menuItemClass =
-  'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground';
+  'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
 const dangerMenuItemClass =
   'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300';
 

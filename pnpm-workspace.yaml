@@ -4,3 +4,6 @@ packages:
 allowBuilds:
   sharp: true
   unrs-resolver: true
+
+patchedDependencies:
+  next@16.3.0-preview.6: patches/next@16.3.0-preview.6.patch

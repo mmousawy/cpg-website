@@ -1,12 +1,12 @@
 'use client';
 
-import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
 import Input from '@/components/shared/Input';
 import InterestInput from '@/components/shared/InterestInput';
 import Textarea from '@/components/shared/Textarea';
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingAboutYouSectionProps {
   register: UseFormRegister<OnboardingFormData>;
@@ -84,7 +84,7 @@ export default function OnboardingAboutYouSection({
                 </p>
               )}
               <p
-                className="text-xs text-foreground/70"
+                className="text-xs text-foreground/80"
               >
                 This email will be used for notifications and account communications.
               </p>
@@ -148,7 +148,7 @@ export default function OnboardingAboutYouSection({
           </div>
 
           <p
-            className="text-xs text-foreground/70"
+            className="text-xs text-foreground/80"
           >
             You can update these details later in your account settings.
           </p>

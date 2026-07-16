@@ -75,7 +75,7 @@ export default function ConfirmModal() {
             {options?.title}
           </h2>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             {options?.message}
           </p>

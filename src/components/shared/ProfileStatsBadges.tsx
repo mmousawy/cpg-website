@@ -72,7 +72,7 @@ function NavButton({
       aria-label={direction === 'prev' ? 'Scroll achievements left' : 'Scroll achievements right'}
     >
       <svg
-        className="size-5 text-foreground/70"
+        className="size-5 text-foreground/80"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

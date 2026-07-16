@@ -393,6 +393,23 @@ a, button, input, textarea, select, [tabindex] {
   );
 }
 
+/* Subtle text shadow for hero titles overlaid on imagery. White glow on
+   light mode to lift text off darker areas, dark shadow on dark themes. */
+.hero-title-shadow {
+  text-shadow: none;
+}
+
+:root.dark .hero-title-shadow,
+:root.midnight .hero-title-shadow {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .hero-title-shadow {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+}
+
 .profile-hero-solid {
   background-color: var(--profile-banner-color-light);
 }

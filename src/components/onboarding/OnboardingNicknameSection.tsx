@@ -1,9 +1,9 @@
 'use client';
 
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
 import Input from '@/components/shared/Input';
-import { UseFormRegister, FieldErrors } from 'react-hook-form';
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
+import { FieldErrors, UseFormRegister } from 'react-hook-form';
 
 interface OnboardingNicknameSectionProps {
   register: UseFormRegister<OnboardingFormData>;
@@ -56,7 +56,7 @@ export default function OnboardingNicknameSection({
               <>
                 {isCheckingNickname && (
                   <svg
-                    className="size-4 animate-spin text-foreground/70"
+                    className="size-4 animate-spin text-foreground/80"
                     fill="none"
                     viewBox="0 0 24 24"
                   >
@@ -130,7 +130,7 @@ export default function OnboardingNicknameSection({
             </p>
           )}
           <p
-            className="text-xs text-foreground/70"
+            className="text-xs text-foreground/80"
           >
             Your profile URL will be:
             <br />

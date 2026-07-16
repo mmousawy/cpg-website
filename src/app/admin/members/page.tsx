@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import MemberConfirmDialog from '@/components/admin/MemberConfirmDialog';
 import MemberSearchFilters from '@/components/admin/MemberSearchFilters';
 import MemberTable from '@/components/admin/MemberTable';
 import type { Tables } from '@/database.types';
+import { useCallback, useEffect, useState } from 'react';
 
 type Member = Pick<
   Tables<'profiles'>,
@@ -164,7 +164,7 @@ export default function AdminMembersPage() {
             Manage members
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             {total}
             {' '}

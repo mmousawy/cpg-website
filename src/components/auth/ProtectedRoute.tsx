@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import PageLoading from '@/components/shared/PageLoading';
 import PageContainer from '@/components/layout/PageContainer';
+import PageLoading from '@/components/shared/PageLoading';
+import { useAuth } from '@/hooks/useAuth';
 import { isProfileComplete } from '@/utils/profileCompletion';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 type ProtectedRouteProps = {
   children: React.ReactNode
@@ -95,7 +95,7 @@ export default function ProtectedRoute({
             Access denied
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             You don&apos;t have permission to access this page.
           </p>

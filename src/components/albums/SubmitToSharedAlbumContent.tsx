@@ -334,7 +334,7 @@ export default function SubmitToSharedAlbumContent({
         className="flex flex-col"
       >
         <p
-          className="text-foreground/70 mb-4"
+          className="text-foreground/80 mb-4"
         >
           You&apos;re about to add
           {' '}
@@ -429,7 +429,7 @@ export default function SubmitToSharedAlbumContent({
               className="flex h-full flex-col items-center justify-center p-8 text-center"
             >
               <p
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 You&apos;ve reached the maximum of
                 {' '}
@@ -449,7 +449,7 @@ export default function SubmitToSharedAlbumContent({
                 className="size-10 mb-2 text-foreground/30"
               />
               <p
-                className="text-foreground/70 mb-2"
+                className="text-foreground/80 mb-2"
               >
                 You don&apos;t have any photos yet
               </p>

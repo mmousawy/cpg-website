@@ -150,7 +150,7 @@ export default function PastSceneEventsPaginated({
       )}
       {isBootstrappingCategory && (
         <div
-          className="flex flex-col items-center justify-center py-8 text-foreground/70"
+          className="flex flex-col items-center justify-center py-8 text-foreground/80"
         >
           <LoadingSpinner
             size="sm"
@@ -166,7 +166,7 @@ export default function PastSceneEventsPaginated({
       {hasMore && allEvents.length > 0 && (
         <div
           ref={sentinelRef}
-          className="flex justify-center pt-4 pb-2"
+          className="flex justify-center max-sm:smb-4 sm:pt-4 pb-2"
         >
           {isPending && (
             <p

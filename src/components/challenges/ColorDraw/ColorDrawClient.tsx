@@ -155,7 +155,7 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
         >
           {!user && !allowGuest && (
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               Sign in to draw a color and join as a participant.
             </p>
@@ -217,7 +217,7 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
 
       {!myDraw && isEnded && (
         <p
-          className="text-sm text-foreground/70"
+          className="text-sm text-foreground/80"
         >
           Color draw has ended. You can still view participants below.
         </p>
@@ -228,7 +228,7 @@ export default function ColorDrawClient({ challengeId, initialDraws, isEnded }: 
           className="rounded-xl border border-border-color bg-background-light p-4"
         >
           <p
-            className="mb-2 text-sm font-medium text-foreground/70"
+            className="mb-2 text-sm font-medium text-foreground/80"
           >
             Your color
           </p>

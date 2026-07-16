@@ -71,7 +71,7 @@ async function CachedDetailsContent({ currentPage }: { currentPage: number }) {
               Detailed Changes
             </h1>
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               Full breakdown of features, fixes, and other changes per version.
             </p>
@@ -82,7 +82,7 @@ async function CachedDetailsContent({ currentPage }: { currentPage: number }) {
               className="rounded-lg border border-border-color bg-background-light p-6 text-center"
             >
               <p
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 No changelog entries found.
               </p>

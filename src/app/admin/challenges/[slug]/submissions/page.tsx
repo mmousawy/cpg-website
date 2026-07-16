@@ -187,7 +187,7 @@ export default function ReviewQueuePage() {
           </h1>
           {challenge && (
             <p
-              className="text-base sm:text-lg mt-2 text-foreground/70"
+              className="text-base sm:text-lg mt-2 text-foreground/80"
             >
               {challenge.title}
             </p>
@@ -231,7 +231,7 @@ export default function ReviewQueuePage() {
               onClick={handleSelectAll}
               variant="secondary"
               size="sm"
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               {selectedIds.size === (submissions || []).length
                 ? 'Deselect all'
@@ -305,7 +305,7 @@ export default function ReviewQueuePage() {
             className="flex items-center gap-3 max-w-screen-md w-full mx-auto"
           >
             <span
-              className="text-sm flex-1 text-foreground/70"
+              className="text-sm flex-1 text-foreground/80"
             >
               {selectedIds.size}
               {' '}

@@ -201,7 +201,7 @@ export default function FeedbackModal({ onSuccess }: FeedbackModalProps) {
         className="space-y-4"
       >
         <p
-          className="text-sm text-foreground/70"
+          className="text-sm text-foreground/80"
         >
           Share your thoughts, report bugs, or suggest improvements.
         </p>

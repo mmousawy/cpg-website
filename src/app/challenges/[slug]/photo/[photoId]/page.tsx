@@ -1,5 +1,4 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
 import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -66,7 +65,6 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
 
   return (
     <>
-      <ScrollToTopOnRouteChange />
       <PhotoPageContent
         photo={result.photo}
         profile={result.profile}

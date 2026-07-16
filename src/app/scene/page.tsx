@@ -100,7 +100,7 @@ export default async function ScenePage() {
           <AddSceneEventButton />
         </div>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/70"
+          className="text-base sm:text-lg mt-2 text-foreground/80"
         >
           A community-curated guide to photography events.
           <br />

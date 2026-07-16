@@ -56,7 +56,7 @@ export default function MobileActionBar({
             className="flex items-center gap-2"
           >
             <span
-              className="text-sm font-medium text-foreground/70"
+              className="text-sm font-medium text-foreground/80"
             >
               {selectedCount}
               {' '}

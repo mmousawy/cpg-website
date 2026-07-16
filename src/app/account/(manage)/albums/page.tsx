@@ -367,7 +367,7 @@ export default function AlbumsPage() {
                   </h3>
                   {selectedSharedAlbum.description && (
                     <p
-                      className="mt-1 text-sm text-foreground/70"
+                      className="mt-1 text-sm text-foreground/80"
                     >
                       {selectedSharedAlbum.description}
                     </p>
@@ -664,7 +664,7 @@ function AlbumSection({
         </p>
         {!isEmpty && (
           <ChevronDownSVG
-            className={`size-4 text-foreground/70 transition-transform duration-300 ${isCollapsed ? '-rotate-90' : ''}`}
+            className={`size-4 text-foreground/80 transition-transform duration-300 ${isCollapsed ? '-rotate-90' : ''}`}
           />
         )}
       </button>
@@ -812,7 +812,7 @@ function SharedWithMeCard({
           className="flex items-center justify-between mt-1.5"
         >
           <div
-            className="flex items-center gap-1.5 text-xs text-foreground/70"
+            className="flex items-center gap-1.5 text-xs text-foreground/80"
           >
             <Avatar
               avatarUrl={album.owner_profile?.avatar_url}
@@ -945,7 +945,7 @@ function PendingInviteCard({
           {album.title}
         </p>
         <div
-          className="flex items-center gap-1.5 text-xs text-foreground/70 mt-1.5"
+          className="flex items-center gap-1.5 text-xs text-foreground/80 mt-1.5"
         >
           <Avatar
             avatarUrl={album.owner_profile?.avatar_url}
@@ -1030,7 +1030,7 @@ function PendingInviteSidebar({
           </h3>
           {album.description && (
             <p
-              className="mt-1 text-sm text-foreground/70"
+              className="mt-1 text-sm text-foreground/80"
             >
               {album.description}
             </p>
@@ -1061,7 +1061,7 @@ function PendingInviteSidebar({
           </p>
         </div>
         <div
-          className="pt-2 border-t border-border-color text-sm text-foreground/70"
+          className="pt-2 border-t border-border-color text-sm text-foreground/80"
         >
           You&apos;ve been invited to this shared album. Accept to start adding and viewing photos.
         </div>

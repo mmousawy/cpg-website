@@ -152,7 +152,7 @@ export default function Header() {
             {/* Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/70 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-2 lg:py-1.5 lg:text-sm lg:hover:border-primary"
+              className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/80 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-2 lg:py-1.5 lg:text-sm lg:hover:border-primary"
               aria-label="Search"
             >
               <svg
@@ -193,7 +193,7 @@ export default function Header() {
             {/* Mobile Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center justify-center rounded-full p-2 text-foreground/70 transition-colors hover:text-foreground"
+              className="flex items-center justify-center rounded-full p-2 text-foreground/80 transition-colors hover:text-foreground"
               aria-label="Search"
             >
               <svg

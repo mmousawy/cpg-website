@@ -88,19 +88,19 @@ export default function UnsubscribePage() {
               No biggie! You&apos;re unsubscribed
             </h1>
             <p
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               {emailTypeLabel
                 ? `You've been unsubscribed from emails ${emailTypeLabel}.`
                 : 'You\'ve been unsubscribed from these emails.'}
             </p>
             <p
-              className="mb-6 text-foreground/70"
+              className="mb-6 text-foreground/80"
             >
               Changed your mind? You can always opt in again in your account settings.
             </p>
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               Got feedback? Reach out to
               {' '}
@@ -132,7 +132,7 @@ export default function UnsubscribePage() {
             Unsubscribe from emails
           </h1>
           <p
-            className="mb-6 text-foreground/70"
+            className="mb-6 text-foreground/80"
           >
             { emailType ? `Are you sure you want to unsubscribe from emails ${emailTypeLabel}?` : 'Are you sure you want to unsubscribe from these emails?' }
           </p>

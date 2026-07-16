@@ -1,5 +1,4 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
@@ -99,7 +98,6 @@ export default async function PhotoPage({ params }: { params: Params }) {
 
   return (
     <>
-      <ScrollToTopOnRouteChange />
       <JsonLd
         data={[imageJsonLd, breadcrumbJsonLd]}
       />

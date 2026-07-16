@@ -62,7 +62,7 @@ export default function AdminEventsPage() {
             Manage events
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             Create, edit, and delete events
           </p>
@@ -215,7 +215,7 @@ function AdminEventCard({ event }: { event: Event }) {
                 </span>
               )}
               <div
-                className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/70"
+                className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/80"
               >
                 {event.date && (
                   <span

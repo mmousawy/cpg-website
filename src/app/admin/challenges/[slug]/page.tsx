@@ -13,9 +13,9 @@ import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
+import { RichTextDescriptionField } from '@/components/shared/RichTextDescriptionField';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import { RichTextDescriptionField } from '@/components/shared/RichTextDescriptionField';
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeBySlug } from '@/hooks/useChallenges';
 import { useFormChanges } from '@/hooks/useFormChanges';
@@ -336,7 +336,7 @@ export default function AdminChallengeFormPage() {
             {isNewChallenge ? 'Create new challenge' : 'Edit challenge'}
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             {isNewChallenge
             ? 'Set up a new photo challenge'
@@ -620,7 +620,7 @@ export default function AdminChallengeFormPage() {
                       className="rounded-lg border-2 border-dashed border-border-color p-8 text-center"
                     >
                       <p
-                        className="mb-3 text-sm text-foreground/70"
+                        className="mb-3 text-sm text-foreground/80"
                       >
                         No cover image selected (optional)
                       </p>
@@ -669,7 +669,7 @@ export default function AdminChallengeFormPage() {
                         Announce challenge
                       </h3>
                       <p
-                        className="text-xs text-foreground/70"
+                        className="text-xs text-foreground/80"
                       >
                         Send a one-time announcement to all members who are opted in
                       </p>
@@ -709,7 +709,7 @@ export default function AdminChallengeFormPage() {
                 Danger zone
               </h3>
               <p
-                className="mb-4 text-sm text-foreground/70"
+                className="mb-4 text-sm text-foreground/80"
               >
                 Once you delete a challenge, there is no going back. This will permanently
                 delete the challenge and all associated submissions.
@@ -755,7 +755,7 @@ export default function AdminChallengeFormPage() {
             )}
             {!error && !success && hasChanges && (
               <span
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 {changeCount}
                 {' '}
@@ -766,7 +766,7 @@ export default function AdminChallengeFormPage() {
             )}
             {!error && !success && isNewChallenge && !hasChanges && (
               <span
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 New challenge
               </span>

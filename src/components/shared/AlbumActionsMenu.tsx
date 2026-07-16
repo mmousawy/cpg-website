@@ -1,10 +1,10 @@
 'use client';
 
-import { useContext } from 'react';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { useAuth } from '@/context/AuthContext';
 import ReportModal from '@/components/shared/ReportModal';
+import { useAuth } from '@/context/AuthContext';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
+import { useContext } from 'react';
 
 type AlbumActionsMenuProps = {
   albumId: string;
@@ -64,7 +64,7 @@ export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onA
     <button
       type="button"
       onClick={handleReportClick}
-      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground"
+      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground"
     >
       <WarningMicroSVG
         className="size-4 shrink-0"

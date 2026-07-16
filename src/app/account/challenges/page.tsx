@@ -185,7 +185,7 @@ export default function MyChallengesPage() {
                 className="h-12 w-12 fill-foreground/20 mx-auto mb-3"
               />
               <p
-                className="text-foreground/70 mb-4"
+                className="text-foreground/80 mb-4"
               >
                 No pending submissions
               </p>
@@ -439,7 +439,7 @@ function SubmissionCard({
         {/* Deadline badge - short on mobile */}
         {!isEnded && deadline && deadlineShort && (
           <div
-            className="flex items-center gap-1.5 text-xs text-foreground/70"
+            className="flex items-center gap-1.5 text-xs text-foreground/80"
           >
             <ClockMiniSVG
               className="size-4 fill-current shrink-0"
@@ -459,7 +459,7 @@ function SubmissionCard({
 
         {/* Meta info */}
         <div
-          className="flex items-center justify-between text-xs text-foreground/70"
+          className="flex items-center justify-between text-xs text-foreground/80"
         >
           <span
             className="flex items-center gap-1.5"

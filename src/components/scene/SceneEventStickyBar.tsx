@@ -1,7 +1,6 @@
 'use client';
 
 import Button from '@/components/shared/Button';
-import SceneActionsPopover from '@/components/scene/SceneActionsPopover';
 import StackedAvatarsPopover, {
   type AvatarPerson,
 } from '@/components/shared/StackedAvatarsPopover';
@@ -125,7 +124,7 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
 
         {count > 0 && (
           <span
-            className="text-xs font-medium text-foreground/70 shrink-0"
+            className="text-xs font-medium text-foreground/80 shrink-0"
           >
             {count}
           </span>

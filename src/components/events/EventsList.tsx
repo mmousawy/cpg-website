@@ -1,20 +1,20 @@
+import BlurImage from '@/components/shared/BlurImage';
+import Button from '@/components/shared/Button';
+import { RichDescription } from '@/components/shared/RichDescription';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { CPGEvent, EventAttendee } from '@/types/events';
-import { RichDescription } from '@/components/shared/RichDescription';
 import clsx from 'clsx';
 import Link from 'next/link';
 
-import Button from '@/components/shared/Button';
+import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
+import { getEventStatus, isEventPast } from '@/lib/events/status';
+import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
-import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
-import { getEventStatus, isEventPast } from '@/lib/events/status';
 import { SIZE_MAP } from '../auth/Avatar';
 import EventCard from './EventCard';
-import EventImage from './EventImage';
-
 type EventsListVariant = 'full' | 'compact';
 
 type EventsListProps = {
@@ -64,7 +64,7 @@ function AttendeesDisplay({ attendees, isPastEvent, avatarSize }: { attendees: E
   if (!attendees || attendees.length === 0) {
     return (
       <div
-        className='text-sm font-semibold text-foreground/70 leading-6'
+        className='text-sm font-semibold text-foreground/80 leading-6'
       >
         {isPastEvent ? 'No attendees recorded' : 'No attendees yet — join and be the first!'}
       </div>
@@ -145,7 +145,7 @@ export default function EventsList({
   if (variant === 'compact') {
     return (
       <div
-        className="space-y-3"
+        className="space-y-3 sm:space-y-5"
       >
         {displayEvents.map((event) => {
           const attendees = attendeesByEvent[event.id] || [];
@@ -177,136 +177,160 @@ export default function EventsList({
           <div
             key={event.id}
             className={clsx(
-              'rounded-xl border bg-background-light p-4 sm:p-6 border-border-color',
+              'rounded-xl border bg-background-light border-border-color overflow-hidden',
             )}
           >
-            <div
-              className={clsx(isPast && 'grayscale', 'sm:hidden')}
-            >
-              <EventImage
-                event={event}
-                size='small'
-              />
-            </div>
-            <div
-              className='mb-6 flex justify-between'
-            >
-              <div
-                className="flex-1"
+            {/* Mobile image - flush to top edges with status tag overlay */}
+            {event.cover_image && (
+              <Link
+                href={`/events/${event.slug}`}
+                className="relative block sm:hidden aspect-[21/9]"
+                tabIndex={-1}
               >
-                {(status === 'past' || status === 'now') && (
-                  <div
-                    className="flex items-center gap-2 mb-1"
+                <BlurImage
+                  fill
+                  sizes="100vw"
+                  loading='eager'
+                  quality={92}
+                  alt={event.title || 'Event cover image'}
+                  className={clsx(
+                    'object-cover rounded-t-xl hover:brightness-90 transition-all duration-200',
+                    isPast && '',
+                  )}
+                  src={getCroppedThumbnailUrl(event.cover_image, 640, 360) || event.cover_image}
+                  blurhash={event.image_blurhash}
+                />
+                <span
+                  className={clsx(
+                    'absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
+                    status === 'past' && 'bg-black/50 text-white backdrop-blur-sm',
+                    status === 'now' && 'bg-green-600/80 text-white backdrop-blur-sm',
+                    status === 'upcoming' && 'bg-primary/80 text-white backdrop-blur-sm',
+                  )}
+                >
+                  {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming'}
+                </span>
+              </Link>
+            )}
+            <div
+              className="flex sm:flex-row flex-col"
+            >
+              {/* Content side */}
+              <div
+                className="flex-1 min-w-0 p-4 sm:p-6"
+              >
+                <div
+                  className='mb-5 sm:mb-6'
+                >
+                  <Link
+                    href={`/events/${event.slug}`}
+                    className="group"
                   >
-                    <span
+                    <h3
                       className={clsx(
-                        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap',
-                        status === 'past' && 'bg-foreground/10 text-foreground/60',
-                        status === 'now' && 'bg-green-600 text-white',
+                        'text-xl sm:text-2xl font-bold transition-colors md:max-w-140',
+                        isPast
+                          ? 'text-foreground/80 group-hover:text-foreground/90'
+                          : 'group-hover:text-primary',
                       )}
                     >
-                      {status === 'past' ? 'Past event' : 'Happening now'}
+                      {event.title}
+                    </h3>
+                  </Link>
+                </div>
+                <div>
+                  <span
+                    className='mb-1 sm:mb-2 flex gap-5 sm:gap-4 text-[15px] font-semibold leading-6'
+                  >
+                    <span
+                      className='flex gap-2'
+                    >
+                      <CalendarSVG
+                        className="shrink-0 fill-foreground"
+                      />
+                      {formatEventDate(event.date!, { includeYear: true })}
                     </span>
-                  </div>
-                )}
+                    <span
+                      className='flex gap-2'
+                    >
+                      <TimeSVG
+                        className="shrink-0 fill-foreground"
+                      />
+                      {event.time ? formatEventTime(event.time) : ''}
+                    </span>
+                  </span>
+                  <span
+                    className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'
+                  >
+                    <LocationSVG
+                      className="shrink-0 fill-foreground"
+                    />
+                    {event.location?.split('\n')[0] ?? ''}
+                  </span>
+                  <span
+                    className='mb-5 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold sm:hidden'
+                  >
+                    <LocationSVG
+                      className="shrink-0 fill-foreground"
+                    />
+                    {event.location}
+                  </span>
+                  <RichDescription
+                    html={event.description ?? ''}
+                    className="whitespace-pre-line line-clamp-5 text-[15px]"
+                  />
+                </div>
+                <div
+                  className='mt-5 sm:mt-8 flex items-end justify-between gap-5 sm:gap-4'
+                >
+                  <AttendeesDisplay
+                    attendees={attendees}
+                    isPastEvent={isPast}
+                    avatarSize="xs"
+                  />
+                  <Button
+                    href={`/events/${event.slug}`}
+                    variant={isPast ? 'secondary' : 'primary'}
+                    size="md"
+                    className="ml-2 self-end sm:hidden"
+                    aria-label={`View event: ${event.title}`}
+                  >
+                    View event
+                  </Button>
+                </div>
+              </div>
+              {/* Image side - flush to top, right, bottom */}
+              {event.cover_image && (
                 <Link
                   href={`/events/${event.slug}`}
-                  className="group"
+                  className="relative w-72 lg:w-80 shrink-0 max-sm:hidden"
+                  tabIndex={-1}
                 >
-                  <h3
+                  <BlurImage
+                    fill
+                    sizes="(min-width: 1024px) 640px, 576px"
+                    loading='eager'
+                    quality={92}
+                    alt={event.title || 'Event cover image'}
                     className={clsx(
-                      'text-2xl font-bold transition-colors md:max-w-140',
-                      isPast
-                        ? 'text-foreground/70 group-hover:text-foreground/90'
-                        : 'group-hover:text-primary',
+                      'object-cover rounded-r-xl hover:brightness-90 transition-all duration-200',
+                      isPast && '',
+                    )}
+                    src={getCroppedThumbnailUrl(event.cover_image, 640, 480) || event.cover_image}
+                    blurhash={event.image_blurhash}
+                  />
+                  <span
+                    className={clsx(
+                      'absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
+                      status === 'past' && 'bg-black/50 text-white backdrop-blur-sm',
+                      status === 'now' && 'bg-green-600/80 text-white backdrop-blur-sm',
+                      status === 'upcoming' && 'bg-primary/80 text-white backdrop-blur-sm',
                     )}
                   >
-                    {event.title}
-                  </h3>
+                    {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming'}
+                  </span>
                 </Link>
-              </div>
-              <Button
-                href={`/events/${event.slug}`}
-                tabIndex={-1}
-                variant={isPast ? 'secondary' : 'primary'}
-                size="sm"
-                className="ml-2 max-sm:hidden self-start"
-              >
-                View event
-              </Button>
-            </div>
-            <div
-              className='flex items-start gap-6'
-            >
-              <div
-                className="min-w-0 flex-1"
-              >
-                <span
-                  className='mb-2 flex gap-4 text-[15px] font-semibold leading-6 max-sm:mb-2'
-                >
-                  <span
-                    className='flex gap-2'
-                  >
-                    <CalendarSVG
-                      className="shrink-0 fill-foreground"
-                    />
-                    {formatEventDate(event.date!, { includeYear: true })}
-                  </span>
-                  <span
-                    className='flex gap-2'
-                  >
-                    <TimeSVG
-                      className="shrink-0 fill-foreground"
-                    />
-                    {event.time ? formatEventTime(event.time) : ''}
-                  </span>
-                </span>
-                <span
-                  className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'
-                >
-                  <LocationSVG
-                    className="shrink-0 fill-foreground"
-                  />
-                  {event.location?.split('\n')[0] ?? ''}
-                </span>
-                <span
-                  className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold max-sm:mb-6 sm:hidden'
-                >
-                  <LocationSVG
-                    className="shrink-0 fill-foreground"
-                  />
-                  {event.location}
-                </span>
-                <RichDescription
-                  html={event.description ?? ''}
-                  className="whitespace-pre-line line-clamp-5"
-                />
-              </div>
-              <div
-                className="ml-auto"
-              >
-                <EventImage
-                  event={event}
-                  tabIndex={-1}
-                />
-              </div>
-            </div>
-            <div
-              className='mt-8 flex items-end justify-between gap-4'
-            >
-              <AttendeesDisplay
-                attendees={attendees}
-                isPastEvent={isPast}
-                avatarSize="xs"
-              />
-              <Button
-                href={`/events/${event.slug}`}
-                variant={isPast ? 'secondary' : 'primary'}
-                size="md"
-                className="ml-2 self-end sm:hidden"
-              >
-                View event
-              </Button>
+              )}
             </div>
           </div>
         );

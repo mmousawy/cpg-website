@@ -402,7 +402,7 @@ export default function SubmitToChallengeContent({
               className="flex h-full flex-col items-center justify-center p-8 text-center"
             >
               <p
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 You&apos;ve reached the maximum of
                 {' '}
@@ -422,7 +422,7 @@ export default function SubmitToChallengeContent({
                 className="size-10 mb-2 text-foreground/30"
               />
               <p
-                className="text-foreground/70 mb-2"
+                className="text-foreground/80 mb-2"
               >
                 You don&apos;t have any photos yet
               </p>

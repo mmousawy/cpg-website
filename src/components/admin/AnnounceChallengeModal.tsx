@@ -219,7 +219,7 @@ export default function AnnounceChallengeModal({
       >
         {isLoadingSubscribers ? (
           <div
-            className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70"
+            className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/80"
           >
             Loading recipients...
           </div>

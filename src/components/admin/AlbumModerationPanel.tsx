@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useAdmin } from '@/hooks/useAdmin';
-import Button from '@/components/shared/Button';
-import Textarea from '@/components/shared/Textarea';
 import Container from '@/components/layout/Container';
+import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
+import Textarea from '@/components/shared/Textarea';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useState } from 'react';
 
 import TrashSVG from 'public/icons/trash.svg';
 
@@ -193,7 +193,7 @@ export default function AlbumModerationPanel({
       </div>
 
       <p
-        className="text-sm text-foreground/70 mb-4"
+        className="text-sm text-foreground/80 mb-4"
       >
         Album:
         {' '}
@@ -210,7 +210,7 @@ export default function AlbumModerationPanel({
       </p>
 
       <p
-        className="text-sm text-foreground/70 mb-4"
+        className="text-sm text-foreground/80 mb-4"
       >
         You can suspend or delete this album if it violates our community guidelines.
         <br />
@@ -229,7 +229,7 @@ export default function AlbumModerationPanel({
           </p>
           {suspensionReason && (
             <p
-              className="mt-1 text-foreground/70"
+              className="mt-1 text-foreground/80"
             >
               Reason:
               {suspensionReason}

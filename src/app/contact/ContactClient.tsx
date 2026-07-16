@@ -85,7 +85,7 @@ function ContactForm() {
             Message sent
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Thank you for reaching out! We&apos;ll get back to you as soon as possible.
           </p>
@@ -114,7 +114,7 @@ function ContactForm() {
           Contact us
         </h1>
         <p
-          className="mt-2 max-w-md text-foreground/70"
+          className="mt-2 max-w-md text-foreground/80"
         >
           Have a question or want to get in touch? Fill out the form below and we&apos;ll respond as soon as we can.
         </p>

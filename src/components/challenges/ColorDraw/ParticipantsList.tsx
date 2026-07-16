@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import Avatar from '@/components/auth/Avatar';
-import ColorSwatch from './ColorSwatch';
 import { getColorLabel } from '@/lib/colorDraw';
+import Link from 'next/link';
+import ColorSwatch from './ColorSwatch';
 
 export type ColorDrawParticipant = {
   id: string;
@@ -29,7 +29,7 @@ export default function ParticipantsList({ draws, onColorClick }: ParticipantsLi
   if (!draws || draws.length === 0) {
     return (
       <div
-        className="text-sm font-semibold text-foreground/70"
+        className="text-sm font-semibold text-foreground/80"
       >
         No participants yet — draw your color to join!
       </div>

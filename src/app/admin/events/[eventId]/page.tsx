@@ -5,8 +5,8 @@ import { useContext, useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import AnnounceEventModal from '@/components/admin/AnnounceEventModal';
 import AddRsvpModal from '@/components/admin/AddRsvpModal';
+import AnnounceEventModal from '@/components/admin/AnnounceEventModal';
 import EmailAttendeesModal from '@/components/admin/EmailAttendeesModal';
 import EventForm from '@/components/admin/EventForm';
 import EventRsvpList from '@/components/admin/EventRsvpList';
@@ -644,7 +644,7 @@ export default function AdminEventFormPage() {
             )}
           </div>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
           </p>
@@ -731,7 +731,7 @@ export default function AdminEventFormPage() {
                           Announce event
                         </h3>
                         <p
-                          className="text-xs text-foreground/70"
+                          className="text-xs text-foreground/80"
                         >
                           Send a one-time announcement to all members who have are opted in to event
                           announcements
@@ -760,7 +760,7 @@ export default function AdminEventFormPage() {
                         Email attendees
                       </h3>
                       <p
-                        className="text-xs text-foreground/70"
+                        className="text-xs text-foreground/80"
                       >
                         Send a custom message to confirmed attendees and hosts
                       </p>
@@ -790,7 +790,7 @@ export default function AdminEventFormPage() {
                   Danger zone
                 </h3>
                 <p
-                  className="mb-4 text-sm text-foreground/70"
+                  className="mb-4 text-sm text-foreground/80"
                 >
                   Once you delete an event, there is no going back. This will permanently delete the
                   event and all associated RSVPs.
@@ -836,7 +836,7 @@ export default function AdminEventFormPage() {
             )}
             {!error && !success && hasChanges && (
               <span
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 {changeCount}
                 {' '}
@@ -847,7 +847,7 @@ export default function AdminEventFormPage() {
             )}
             {!error && !success && isNewEvent && !hasChanges && (
               <span
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 New event
               </span>

@@ -5,9 +5,9 @@ import Link from 'next/link';
 
 import PageContainer from '@/components/layout/PageContainer';
 
+import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import NotificationCommentSVG from 'public/icons/notification-comment.svg';
-import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 
 type AdminCard = {
@@ -182,7 +182,7 @@ export default function AdminDashboardPage() {
                 {card.title}
               </h3>
               <p
-                className="text-sm text-foreground/70"
+                className="text-sm text-foreground/80"
               >
                 {card.description}
               </p>

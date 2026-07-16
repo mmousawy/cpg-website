@@ -1,19 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 
-import { useAuth } from '@/hooks/useAuth';
-import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import { routes } from '@/config/routes';
+import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import HelpLink from '@/components/shared/HelpLink';
+import Input from '@/components/shared/Input';
+import { routes } from '@/config/routes';
+import { useAuth } from '@/hooks/useAuth';
 
-import CheckSVG from 'public/icons/check.svg';
 import ArrowLink from '@/components/shared/ArrowLink';
+import CheckSVG from 'public/icons/check.svg';
 
 export default function ForgotPasswordClient() {
   const { resetPassword } = useAuth();
@@ -61,7 +60,7 @@ export default function ForgotPasswordClient() {
             Check your email
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             We&apos;ve sent a password reset link to
             {' '}
@@ -100,7 +99,7 @@ export default function ForgotPasswordClient() {
           className="flex items-center justify-center mb-8"
         >
           <p
-            className="text-center text-sm text-foreground/70"
+            className="text-center text-sm text-foreground/80"
           >
             No worries, we&apos;ll send you reset instructions.
           </p>
@@ -153,7 +152,7 @@ export default function ForgotPasswordClient() {
         </form>
 
         <p
-          className="mt-6 text-center text-sm text-foreground/70"
+          className="mt-6 text-center text-sm text-foreground/80"
         >
           <ArrowLink
             href={routes.login.url}

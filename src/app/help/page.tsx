@@ -1,13 +1,13 @@
 import Link from 'next/link';
 
-import SectionMobileNav from '@/components/shared/SectionMobileNav';
-import SectionSidebar from '@/components/shared/SectionSidebar';
 import Container from '@/components/layout/Container';
-import { SectionScrollProvider } from '@/context/SectionScrollContext';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpAccordion from '@/components/shared/HelpAccordion';
+import SectionMobileNav from '@/components/shared/SectionMobileNav';
+import SectionSidebar from '@/components/shared/SectionSidebar';
 import { routes } from '@/config/routes';
 import { helpSections } from '@/content/help';
+import { SectionScrollProvider } from '@/context/SectionScrollContext';
 import { createMetadata } from '@/utils/metadata';
 
 export const metadata = createMetadata({
@@ -37,7 +37,7 @@ export default function HelpPage() {
             </h1>
           </div>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             Find answers to common questions about using Creative Photography Group.
           </p>

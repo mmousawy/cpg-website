@@ -244,7 +244,7 @@ export default function ChallengeCard({
 
       {/* Footer stats bar */}
       <div
-        className="flex items-center justify-between px-3 py-3 text-xs font-medium text-foreground/70"
+        className="flex items-center justify-between px-3 py-3 text-xs font-medium text-foreground/80"
       >
         <div
           className="flex items-center gap-1.5"
@@ -332,7 +332,7 @@ export default function ChallengeCard({
 
         {/* Footer stats bar */}
         <div
-          className="flex items-center justify-between px-3 py-3 text-xs font-medium text-foreground/70"
+          className="flex items-center justify-between px-3 py-3 text-xs font-medium text-foreground/80"
         >
           <div
             className="flex items-center gap-3 py-1"

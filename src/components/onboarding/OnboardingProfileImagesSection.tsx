@@ -98,7 +98,7 @@ export default function OnboardingProfileImagesSection({
           showOptionalLabels
         />
         <p
-          className="mt-4 text-xs text-foreground/70"
+          className="mt-4 text-xs text-foreground/80"
         >
           You can update your profile picture and banner later in your account settings.
         </p>

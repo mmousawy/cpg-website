@@ -4,17 +4,17 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import Button from '@/components/shared/Button';
+import HelpLink from '@/components/shared/HelpLink';
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
+import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import type { PhotoWithAlbums } from '@/types/photos';
-import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
-import HelpLink from '@/components/shared/HelpLink';
-import { routes } from '@/config/routes';
 import { confirmDeletePhoto } from '@/utils/confirmHelpers';
+import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -22,7 +22,6 @@ import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
 import SidebarPanel from './SidebarPanel';
 
-import Link from 'next/link';
 import CheckMiniSVG from 'public/icons/check-mini.svg';
 import CloseMiniSVG from 'public/icons/close-mini.svg';
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
@@ -297,7 +296,7 @@ export default function SinglePhotoEditForm({
           className="space-y-4"
         >
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             This photo belongs to another user. You can only remove it from this album.
           </p>
@@ -314,7 +313,7 @@ export default function SinglePhotoEditForm({
               </label>
               {isCurrentCover ? (
                 <p
-                  className="text-sm text-foreground/70"
+                  className="text-sm text-foreground/80"
                 >
                   This photo is the current cover of this album
                 </p>
@@ -456,7 +455,7 @@ export default function SinglePhotoEditForm({
               </label>
               {isCurrentCover ? (
                 <p
-                  className="text-sm text-foreground/70"
+                  className="text-sm text-foreground/80"
                 >
                   This photo is the current cover of this album
                 </p>

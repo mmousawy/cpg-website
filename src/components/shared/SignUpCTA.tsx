@@ -113,7 +113,7 @@ export function SignUpCTASection() {
 
   return (
     <PageContainer
-      className="pt-4!"
+      className="pt-0! pb-12!"
     >
       <SignUpCTA
         variant="inline"

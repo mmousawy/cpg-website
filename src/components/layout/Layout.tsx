@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import ScrollToTopOnRouteChange from '../shared/ScrollToTopOnRouteChange';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -33,6 +34,7 @@ export default function Layout({ children }: LayoutProps) {
     <div
       className={isFullHeight ? 'flex h-full flex-col overflow-hidden' : 'flex min-h-full flex-col'}
     >
+      <ScrollToTopOnRouteChange />
       <Header />
       <main
         className={isFullHeight ? 'flex flex-col flex-1 min-h-0 overflow-hidden' : 'flex grow flex-col'}

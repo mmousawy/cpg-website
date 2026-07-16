@@ -246,7 +246,7 @@ export default function EmailAttendeesModal({
         {/* Recipients List */}
         {isLoadingRecipients ? (
           <div
-            className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70"
+            className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/80"
           >
             Loading recipients...
           </div>
@@ -353,7 +353,7 @@ export default function EmailAttendeesModal({
                           className="text-xs"
                         >
                           <summary
-                            className="cursor-pointer text-foreground/70 hover:text-foreground"
+                            className="cursor-pointer text-foreground/80 hover:text-foreground"
                           >
                             View error details
                           </summary>

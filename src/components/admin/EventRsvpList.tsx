@@ -1,8 +1,8 @@
 'use client';
 
-import clsx from 'clsx';
 import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
+import clsx from 'clsx';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
 import CloseSVG from 'public/icons/close.svg';
 import PlusSVG from 'public/icons/plus.svg';
@@ -103,7 +103,7 @@ export default function EventRsvpList({
       >
         {confirmedRsvps.length === 0 ? (
           <p
-            className="text-center text-sm text-foreground/70 py-4"
+            className="text-center text-sm text-foreground/80 py-4"
           >
             No confirmed RSVPs yet
           </p>

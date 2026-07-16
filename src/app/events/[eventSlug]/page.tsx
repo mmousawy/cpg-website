@@ -25,8 +25,8 @@ import {
   getEventAttendeesForEvent,
   getEventBySlug,
 } from '@/lib/data/events';
-import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getOrganizers } from '@/lib/data/profiles';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
@@ -240,7 +240,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
           {/* Title overlay */}
           <div
-            className="absolute inset-x-0 bottom-0 px-3 pb-0 sm:px-8 sm:pb-4"
+            className="absolute inset-x-0 bottom-0 px-3 pb-0 sm:px-8"
           >
             <div
               className="mx-auto max-w-screen-md"
@@ -335,7 +335,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
           {/* Content wrapper with clearfix for floated image */}
           <div
-            className="overflow-hidden"
+            className="flow-root"
           >
             {event.cover_image && (
               <EventCoverImage

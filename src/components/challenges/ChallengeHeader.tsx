@@ -107,7 +107,7 @@ export default function ChallengeHeader({
 
       {/* Stats Bar */}
       <div
-        className="flex flex-wrap items-center gap-4 text-sm text-foreground/70"
+        className="flex flex-wrap items-center gap-4 text-sm text-foreground/80"
       >
         {/* Photo count */}
         <span

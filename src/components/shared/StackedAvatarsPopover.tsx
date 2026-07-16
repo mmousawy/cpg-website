@@ -190,7 +190,7 @@ export default function StackedAvatarsPopover({
       {showInlineCount && (
         <span
           className={clsx(
-            'block text-xs font-medium text-foreground/70',
+            'block text-xs font-medium text-foreground/80',
             !showCountOnMobile && 'max-sm:hidden',
           )}
         >

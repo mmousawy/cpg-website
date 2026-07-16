@@ -141,7 +141,7 @@ export default function ChangeEmailModal({
             Check your inbox
           </h3>
           <p
-            className="text-foreground/70 text-sm"
+            className="text-foreground/80 text-sm"
           >
             We&apos;ve sent a confirmation link to
             {' '}

@@ -224,7 +224,7 @@ export default function SignupBypassGenerator() {
         className="space-y-4"
       >
         <p
-          className="text-sm text-foreground/70"
+          className="text-sm text-foreground/80"
         >
           Are you sure you want to delete this bypass token? This action cannot be undone.
           {token.status === 'unused' && (
@@ -272,7 +272,7 @@ export default function SignupBypassGenerator() {
           Generate signup bypass link
         </h2>
         <p
-          className="mb-4 text-sm text-foreground/70"
+          className="mb-4 text-sm text-foreground/80"
         >
           Generate a single-use link that allows users to sign up without BotID verification.
           The link expires in 7 days and can only be used once.
@@ -359,7 +359,7 @@ export default function SignupBypassGenerator() {
           Previously generated links
         </h2>
         <p
-          className="mb-4 text-sm text-foreground/70"
+          className="mb-4 text-sm text-foreground/80"
         >
           View all bypass links that have been generated. Links can only be used once and expire after 7 days.
         </p>
@@ -372,7 +372,7 @@ export default function SignupBypassGenerator() {
           </div>
         ) : tokens.length === 0 ? (
           <div
-            className="rounded-md border border-border-color bg-background p-4 text-center text-sm text-foreground/70"
+            className="rounded-md border border-border-color bg-background p-4 text-center text-sm text-foreground/80"
           >
             No bypass links have been generated yet.
           </div>
@@ -433,7 +433,7 @@ export default function SignupBypassGenerator() {
                   </div>
                   {/* Date information */}
                   <div
-                    className="grid grid-cols-1 gap-2 text-xs text-foreground/70 sm:grid-cols-3 sm:gap-1"
+                    className="grid grid-cols-1 gap-2 text-xs text-foreground/80 sm:grid-cols-3 sm:gap-1"
                   >
                     <div>
                       <span

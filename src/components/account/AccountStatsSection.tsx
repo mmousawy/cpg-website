@@ -35,7 +35,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                 Member since
               </p>
               <p
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 {profile?.created_at
                   ? (() => { const d = new Date(profile.created_at); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'long', day: 'numeric' }); })()
@@ -49,7 +49,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                 Last logged in
               </p>
               <p
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 {stats.lastLoggedIn
                   ? (() => { const d = new Date(stats.lastLoggedIn); return d.toLocaleDateString('en-US', { year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric', month: 'long', day: 'numeric' }); })()
@@ -71,7 +71,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
             >
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Albums
                 </p>
@@ -83,7 +83,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Photos
                 </p>
@@ -109,7 +109,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
             >
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Likes received
                 </p>
@@ -121,7 +121,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Likes given
                 </p>
@@ -133,7 +133,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Comments made
                 </p>
@@ -145,7 +145,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Comments received
                 </p>
@@ -157,7 +157,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Views received
                 </p>
@@ -183,7 +183,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
             >
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Events attended
                 </p>
@@ -195,7 +195,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   RSVPs
                 </p>
@@ -227,7 +227,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
             >
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Participated
                 </p>
@@ -239,7 +239,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
               </div>
               <div>
                 <p
-                  className="text-foreground/70"
+                  className="text-foreground/80"
                 >
                   Photos accepted
                 </p>

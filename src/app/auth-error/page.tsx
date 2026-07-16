@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { routes } from '@/config/routes';
 import { createNoIndexMetadata } from '@/utils/metadata';
+import Link from 'next/link';
 
 import ErrorSVG from 'public/icons/error.svg';
 
@@ -33,7 +33,7 @@ export default function AuthErrorPage() {
           Authentication error
         </h1>
         <p
-          className="text-foreground/70 mb-6"
+          className="text-foreground/80 mb-6"
         >
           Something went wrong during the authentication process.
           This could be due to an expired link or an invalid session.

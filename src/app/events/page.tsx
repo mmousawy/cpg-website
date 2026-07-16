@@ -61,7 +61,7 @@ export default async function EventsPage() {
           />
         </div>
         <p
-          className="text-base sm:text-xl mt-2 text-foreground/70"
+          className="text-base sm:text-xl mt-2 text-foreground/80"
         >
           Join us at our upcoming meetups or browse past events
         </p>
@@ -75,7 +75,7 @@ export default async function EventsPage() {
           <h2
             className="text-xl font-semibold mb-4 opacity-80 font-heading"
           >
-            Upcoming
+            Upcoming events ({upcomingEvents.length})
           </h2>
           <div
             className="grid gap-4 sm:gap-6"
@@ -94,7 +94,7 @@ export default async function EventsPage() {
           <h2
             className="text-xl font-semibold mb-4 opacity-80 font-heading"
           >
-            Past events
+            Past events ({pastEventsCount})
           </h2>
           <div
             className="grid gap-4 sm:gap-6"

@@ -1,5 +1,4 @@
 import { cacheLife, cacheTag } from 'next/cache';
-import Image from 'next/image';
 import Link from 'next/link';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
@@ -37,7 +36,6 @@ export const metadata = {
 };
 
 import SignUpCTA from '@/components/shared/SignUpCTA';
-import CameraWithFlash from 'public/camera-with-flash.png';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
@@ -90,22 +88,29 @@ export default async function Home() {
     <>
       {/* Hero Section */}
       <div
-        className="relative h-[clamp(16rem,25svw,24rem)] w-full overflow-hidden bg-background-light"
+        className="relative h-[clamp(16rem,22svw,20rem)] w-full bg-background-light"
       >
-        {/* Background image - server-side selected for optimal LCP */}
-        <HeroImage
-          src={heroImage}
-        />
-
-        {/* Frosted glass blur layer - starts higher on desktop */}
+        {/* Image + scrim wrapper — extends past the hero bottom so the fade
+            to background happens behind the first content section rather than
+            being cut off at a hard edge. */}
         <div
-          className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
-        />
+          className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+5rem)] overflow-hidden"
+        >
+          {/* Background image - server-side selected for optimal LCP */}
+          <HeroImage
+            src={heroImage}
+          />
 
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"
-        />
+          {/* Frosted glass blur layer */}
+          <div
+            className="absolute inset-0 backdrop-blur-md scrim-gradient-mask-strong"
+          />
+
+          {/* Gradient overlay */}
+          <div
+            className="absolute inset-0 scrim-gradient-overlay-strong"
+          />
+        </div>
 
         {/* Content overlay */}
         <div
@@ -114,44 +119,25 @@ export default async function Home() {
           <div
             className="mx-auto max-w-screen-md text-center"
           >
+            <p
+              className="mb-2 text-5xl md:text-7xl font-heading hero-title-shadow sm:mb-3"
+            >
+              Photography, together.
+            </p>
             <h1
-              className="mb-4 text-5xl md:text-7xl font-heading"
+              className="mb-4 mx-auto max-w-2xl font-(family-name:--font-geist-sans)! text-lg opacity-80 sm:text-xl hero-title-shadow font-medium"
             >
-              Creative Photography Group
-              {' '}
-              <Image
-                src={CameraWithFlash}
-                quality={92}
-                height={60}
-                width={60}
-                alt="Camera with flash"
-                className="inline-block ml-2 align-top h-12 w-auto md:h-15"
-              />
+              Creative Photography Group - A community for photographers
             </h1>
-            <h2
-              className="mx-auto max-w-2xl font-(family-name:--font-geist-sans)! text-lg opacity-80 sm:text-xl"
-            >
-              A community for analog and digital photographers
-            </h2>
           </div>
         </div>
       </div>
 
       {/* Explore Section - Events & Galleries */}
       <PageContainer
+        className='relative z-10'
         innerClassName='space-y-6 md:space-y-8'
       >
-
-        <h3
-          className="text-2xl font-bold mb-2 font-heading"
-        >
-          Explore what we&apos;re up to
-        </h3>
-        <p
-          className="text-foreground/70 leading-relaxed mb-8"
-        >
-          Join our meetups and discover photos from the community.
-        </p>
 
         {/* Events */}
         <div

@@ -87,7 +87,7 @@ export default function MemberConfirmDialog({
           </h3>
 
           <p
-            className="mb-4 text-foreground/70"
+            className="mb-4 text-foreground/80"
           >
             {type === 'delete' && (
               <>

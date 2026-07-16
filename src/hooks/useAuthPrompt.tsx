@@ -56,7 +56,7 @@ export function useAuthPrompt() {
             </svg>
           </div>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             {description || `Sign in to ${feature} and connect with our photography community.`}
           </p>

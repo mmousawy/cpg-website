@@ -1,5 +1,6 @@
 'use client';
 
+import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import {
@@ -10,7 +11,6 @@ import {
 import clsx from 'clsx';
 import StarFilledIcon from 'public/icons/star-filled.svg';
 import StarOutlineIcon from 'public/icons/star-outline.svg';
-import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 
 interface SceneEventInterestSectionProps {
   sceneEventId: string;
@@ -121,7 +121,7 @@ export default function SceneEventInterestSection({
 
       <span
         className={clsx(
-          'text-xs font-medium text-foreground/70',
+          'text-xs font-medium text-foreground/80',
           'transition-opacity duration-300',
           count > 0 ? 'opacity-100' : 'opacity-0',
         )}

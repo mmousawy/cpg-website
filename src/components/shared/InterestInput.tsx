@@ -92,7 +92,7 @@ export default function InterestInput({
               {name}
             </span>
             <span
-              className="ml-2 text-foreground/70"
+              className="ml-2 text-foreground/80"
             >
               (
               {countByName.get(name) ?? 0}
@@ -110,7 +110,7 @@ export default function InterestInput({
 
       {helperText && (
         <p
-          className="text-xs text-foreground/70"
+          className="text-xs text-foreground/80"
         >
           {helperText}
         </p>

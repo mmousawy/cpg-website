@@ -1,5 +1,4 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
 import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -67,7 +66,6 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
 
   return (
     <>
-      <ScrollToTopOnRouteChange />
       <PhotoPageContent
         photo={result.photo}
         profile={result.profile}

@@ -66,7 +66,7 @@ export default function AdminFeedbackPage() {
           Feedback
         </h1>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/70"
+          className="text-base sm:text-lg mt-2 text-foreground/80"
         >
           Review user-submitted feedback
         </p>
@@ -319,7 +319,7 @@ export default function AdminFeedbackPage() {
                           Admin notes
                         </div>
                         <p
-                          className="text-sm text-foreground/70"
+                          className="text-sm text-foreground/80"
                         >
                           {feedback.admin_notes}
                         </p>

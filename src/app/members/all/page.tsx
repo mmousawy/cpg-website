@@ -1,12 +1,12 @@
-import ArrowLink from '@/components/shared/ArrowLink';
-import MemberCard from '@/components/shared/MemberCard';
 import PageContainer from '@/components/layout/PageContainer';
+import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
+import MemberCard from '@/components/shared/MemberCard';
 import { routes } from '@/config/routes';
+import { getAllMembers } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
 import { formatJoinedDate } from '@/utils/utils';
-import { getAllMembers } from '@/lib/data/members';
 
 export const metadata = createMetadata({
   title: 'All community members',
@@ -45,7 +45,7 @@ export default async function AllMembersPage() {
             Join our community
           </h2>
           <p
-            className="mb-6 text-foreground/70"
+            className="mb-6 text-foreground/80"
           >
             Sign in to browse all members of our photography community.
           </p>

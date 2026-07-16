@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 
-import { useAuth } from '@/hooks/useAuth';
-import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import { routes } from '@/config/routes';
+import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import HelpLink from '@/components/shared/HelpLink';
+import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
+import { routes } from '@/config/routes';
+import { useAuth } from '@/hooks/useAuth';
 
 import DiscordSVG from 'public/icons/discord2.svg';
 
@@ -98,7 +98,7 @@ function LoginForm() {
           className="flex items-center justify-center mb-8"
         >
           <p
-            className="text-center text-sm text-foreground/70"
+            className="text-center text-sm text-foreground/80"
           >
             Log in to your account to continue
           </p>
@@ -264,7 +264,7 @@ function LoginForm() {
         </form>
 
         <p
-          className="mt-6 text-center text-sm text-foreground/70"
+          className="mt-6 text-center text-sm text-foreground/80"
         >
           Don&apos;t have an account?
           {' '}

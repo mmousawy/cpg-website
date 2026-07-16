@@ -14,13 +14,13 @@ import { useSupabase } from '@/hooks/useSupabase';
 import SadSVG from 'public/icons/sad.svg';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
-import CheckSVG from 'public/icons/check.svg';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
+import CheckSVG from 'public/icons/check.svg';
+import LocationSVG from 'public/icons/location.svg';
 import PlusSVG from 'public/icons/plus.svg';
+import TimeSVG from 'public/icons/time.svg';
 import TrashSVG from 'public/icons/trash-mini.svg';
 import WarningSVG from 'public/icons/warning-micro.svg';
-import LocationSVG from 'public/icons/location.svg';
-import TimeSVG from 'public/icons/time.svg';
 
 type RSVP = Pick<Tables<'events_rsvps'>,
   | 'id'
@@ -188,7 +188,7 @@ export default function AdminEventAttendancePage() {
             Event not found
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             The event you&apos;re looking for doesn&apos;t exist.
           </p>
@@ -212,7 +212,7 @@ export default function AdminEventAttendancePage() {
           Event attendance
         </h1>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/70"
+          className="text-base sm:text-lg mt-2 text-foreground/80"
         >
           Manage attendee check-ins for this event
         </p>
@@ -226,7 +226,7 @@ export default function AdminEventAttendancePage() {
               {event.title}
             </h2>
             <div
-              className="flex flex-wrap gap-4 text-sm text-foreground/70"
+              className="flex flex-wrap gap-4 text-sm text-foreground/80"
             >
               <span
                 className="flex items-center gap-1"

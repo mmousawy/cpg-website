@@ -40,7 +40,7 @@ export default async function ChangelogPage() {
               Changelog
             </h1>
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               All changes to the Creative Photography Group app are listed here.
             </p>
@@ -51,7 +51,7 @@ export default async function ChangelogPage() {
               className="rounded-lg border border-border-color bg-background-light p-6 text-center"
             >
               <p
-                className="text-foreground/70"
+                className="text-foreground/80"
               >
                 No changelog entries found.
               </p>
@@ -79,17 +79,17 @@ export default async function ChangelogPage() {
                       className="border-b border-border-color text-left"
                     >
                       <th
-                        className="pb-2 pr-4 font-medium text-foreground/70"
+                        className="pb-2 pr-4 font-medium text-foreground/80"
                       >
                         Version
                       </th>
                       <th
-                        className="pb-2 pr-4 font-medium text-foreground/70"
+                        className="pb-2 pr-4 font-medium text-foreground/80"
                       >
                         Date
                       </th>
                       <th
-                        className="pb-2 font-medium text-foreground/70"
+                        className="pb-2 font-medium text-foreground/80"
                       >
                         Description
                       </th>

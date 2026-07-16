@@ -4,9 +4,9 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import SignupForm from '@/components/auth/SignupForm';
 import Button from '@/components/shared/Button';
 import StickyActionBar from '@/components/shared/StickyActionBar';
-import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
+import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import type { CPGEvent } from '@/types/events';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { usePathname, useRouter } from 'next/navigation';
@@ -33,6 +33,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
   useEffect(() => {
     if (authLoading) return;
     if (!user) return;
+    if (!profile) return;
 
     if (!isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
       router.push(`/onboarding?redirectTo=${encodeURIComponent(pathname)}`);
@@ -117,7 +118,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
             </p>
           ) : spotsLeft !== null && spotsLeft > 0 ? (
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               {spotsLeft}
               {' '}
@@ -127,13 +128,13 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
             </p>
           ) : spotsLeft === 0 ? (
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               Event is full
             </p>
           ) : (
             <p
-              className="text-sm text-foreground/70"
+              className="text-sm text-foreground/80"
             >
               Reserve your spot
             </p>

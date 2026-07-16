@@ -43,13 +43,13 @@ export default function AccountDeletedPage() {
           </h1>
 
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Your account has been scheduled for permanent deletion. All your content will be permanently removed within 30 days.
           </p>
 
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             If you changed your mind and want to keep your account, please contact us as soon as possible through our contact form.
           </p>

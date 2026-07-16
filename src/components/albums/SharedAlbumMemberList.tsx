@@ -5,8 +5,8 @@ import Button from '@/components/shared/Button';
 import type { SharedAlbumMember } from '@/types/albums';
 import Link from 'next/link';
 
-import PlusSVG from 'public/icons/plus.svg';
 import CloseMiniSVG from 'public/icons/close-mini.svg';
+import PlusSVG from 'public/icons/plus.svg';
 
 type SharedAlbumMemberListProps = {
   members: SharedAlbumMember[];
@@ -73,7 +73,7 @@ export default function SharedAlbumMemberList({
       >
         {members.length === 0 ? (
           <div
-            className="p-4 text-center text-sm text-foreground/70"
+            className="p-4 text-center text-sm text-foreground/80"
           >
             No members yet
           </div>

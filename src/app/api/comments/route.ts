@@ -236,6 +236,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({ success: true, commentId }, { status: 200 });
+  }
+
   // Get commenter info
   const { data: commenterProfile } = await supabase
     .from('profiles')
@@ -360,6 +364,8 @@ export async function POST(request: NextRequest) {
       entityThumbnail = event.cover_image;
       entityLink = `/events/${event.slug}#comments`;
 
+      const notifiedUserIds = new Set<string>([user.id]);
+
       // Get all admins (excluding the commenter)
       const { data: admins } = await supabase
         .from('profiles')
@@ -372,6 +378,7 @@ export async function POST(request: NextRequest) {
       if (admins && admins.length > 0) {
         // Create in-app notifications for all admins
         for (const admin of admins) {
+          notifiedUserIds.add(admin.id);
           await createNotification({
             userId: admin.id,
             actorId: user.id,
@@ -464,6 +471,151 @@ export async function POST(request: NextRequest) {
             }
           } catch (err) {
             console.error(`Error sending event comment notification to ${admin.email}:`, err);
+          }
+        }
+      }
+
+      // Notify confirmed RSVPs for top-level comments (not replies)
+      if (!parentCommentId) {
+        const adminClient = createAdminClient();
+        const { data: rsvps, error: rsvpsError } = await adminClient
+          .from('events_rsvps')
+          .select(`
+            user_id,
+            email,
+            name,
+            profiles:profiles!events_rsvps_user_id_profiles_fkey(
+              id,
+              email,
+              full_name,
+              suspended_at,
+              deletion_scheduled_at
+            )
+          `)
+          .eq('event_id', eventIdNum)
+          .not('confirmed_at', 'is', null)
+          .is('canceled_at', null);
+
+        if (rsvpsError) {
+          console.error('Error fetching RSVPs for comment notifications:', rsvpsError);
+        } else if (rsvps && rsvps.length > 0) {
+          type RsvpProfile = {
+            id: string;
+            email: string | null;
+            full_name: string | null;
+            suspended_at: string | null;
+            deletion_scheduled_at: string | null;
+          };
+          type RsvpRow = {
+            user_id: string | null;
+            email: string | null;
+            name: string | null;
+            profiles: RsvpProfile | RsvpProfile[] | null;
+          };
+
+          const eligibleRsvps = (rsvps as RsvpRow[]).filter((rsvp) => {
+            if (!rsvp.user_id || notifiedUserIds.has(rsvp.user_id)) return false;
+            const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
+            if (profile?.suspended_at || profile?.deletion_scheduled_at) return false;
+            return true;
+          });
+
+          for (const rsvp of eligibleRsvps) {
+            const userId = rsvp.user_id!;
+            notifiedUserIds.add(userId);
+            await createNotification({
+              userId,
+              actorId: user.id,
+              type: 'comment_event',
+              entityType: 'event',
+              entityId: entityId,
+              data: {
+                title: entityTitle,
+                thumbnail: entityThumbnail,
+                link: entityLink,
+                actorName: commenterName,
+                actorNickname: commenterNickname,
+                actorAvatar: commenterAvatarUrl,
+              },
+            });
+          }
+
+          if (eligibleRsvps.length > 0) {
+            const { data: notificationsEmailType } = await supabase
+              .from('email_types')
+              .select('id')
+              .eq('type_key', 'notifications')
+              .single();
+
+            let rsvpPrefsMap = new Map<string, boolean>();
+            if (notificationsEmailType) {
+              const rsvpUserIds = eligibleRsvps.map((rsvp) => rsvp.user_id!);
+              const { data: rsvpPrefs } = await supabase
+                .from('email_preferences')
+                .select('user_id, opted_out')
+                .in('user_id', rsvpUserIds)
+                .eq('email_type_id', notificationsEmailType.id);
+
+              rsvpPrefsMap = new Map(
+                (rsvpPrefs || []).map((p) => [p.user_id, p.opted_out]),
+              );
+            }
+
+            for (const rsvp of eligibleRsvps) {
+              const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
+              const recipientEmail = profile?.email || rsvp.email;
+              if (!recipientEmail || !rsvp.user_id) continue;
+              if (rsvpPrefsMap.get(rsvp.user_id) === true) continue;
+
+              let optOutLink: string | undefined;
+              try {
+                const encrypted = encrypt(JSON.stringify({
+                  userId: rsvp.user_id,
+                  emailType: 'notifications',
+                }));
+                optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
+              } catch (error) {
+                console.error('Error generating opt-out link:', error);
+              }
+
+              const recipientName =
+                profile?.full_name ||
+                rsvp.name ||
+                recipientEmail.split('@')[0] ||
+                'Friend';
+
+              try {
+                const emailResult = await resend.emails.send({
+                  from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+                  to: recipientEmail,
+                  replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+                  subject: `${commenterName} commented on the event "${entityTitle}"`,
+                  html: await render(
+                    CommentNotificationEmail({
+                      ownerName: recipientName,
+                      commenterName,
+                      commenterNickname,
+                      commenterAvatarUrl,
+                      commenterProfileLink,
+                      commentText: commentText.trim(),
+                      entityType: 'event',
+                      entityTitle,
+                      entityThumbnail,
+                      entityLink,
+                      optOutLink,
+                    }),
+                  ),
+                });
+
+                if (emailResult.error) {
+                  console.error(`Error sending event comment notification to ${recipientEmail}:`, emailResult.error);
+                } else {
+                  console.log(`📨 Event comment notification sent to RSVP ${recipientEmail}`);
+                }
+              } catch (err) {
+                console.error(`Error sending event comment notification to ${recipientEmail}:`, err);
+              }
+            }
           }
         }
       }

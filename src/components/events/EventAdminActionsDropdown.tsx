@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
 import Popover from '@/components/shared/Popover';
 import { useAdmin } from '@/hooks/useAdmin';
+import Link from 'next/link';
+import { useState } from 'react';
 
 import EditMiniSVG from 'public/icons/edit-mini.svg';
 
@@ -18,7 +18,7 @@ export default function EventAdminActionsDropdown({ eventSlug }: EventAdminActio
   if (!isAdmin) return null;
 
   const menuItemClass =
-    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground';
+    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
 
   return (
     <Popover

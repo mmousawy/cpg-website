@@ -145,7 +145,7 @@ export default function AdminScenePage() {
           Scene events
         </h1>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/70"
+          className="text-base sm:text-lg mt-2 text-foreground/80"
         >
           Browse and manage community-submitted photography events
         </p>
@@ -237,7 +237,7 @@ export default function AdminScenePage() {
           className="text-center py-12"
         >
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             No events match your filters
           </p>
@@ -349,7 +349,7 @@ function AdminSceneEventCard({
                 {event.title}
               </h4>
               <div
-                className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/70 mt-1"
+                className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/80 mt-1"
               >
                 <span
                   className="flex items-center gap-1"

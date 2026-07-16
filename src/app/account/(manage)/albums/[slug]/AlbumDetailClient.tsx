@@ -491,7 +491,7 @@ export default function AlbumDetailClient() {
           </h3>
           {album.description && (
             <p
-              className="mt-1 text-sm text-foreground/70"
+              className="mt-1 text-sm text-foreground/80"
             >
               {album.description}
             </p>

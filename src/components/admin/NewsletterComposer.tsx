@@ -222,7 +222,7 @@ export default function NewsletterComposer() {
           Send newsletter
         </h2>
         <p
-          className="mb-4 text-sm text-foreground/70"
+          className="mb-4 text-sm text-foreground/80"
         >
           Compose and send a newsletter to members who have not opted out of newsletter emails.
         </p>
@@ -285,7 +285,7 @@ export default function NewsletterComposer() {
           <div>
             {isLoadingSubscribers ? (
               <div
-                className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70"
+                className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/80"
               >
                 Loading recipients...
               </div>
@@ -390,7 +390,7 @@ export default function NewsletterComposer() {
                             className="text-xs"
                           >
                             <summary
-                              className="cursor-pointer text-foreground/70 hover:text-foreground"
+                              className="cursor-pointer text-foreground/80 hover:text-foreground"
                             >
                               View error details
                             </summary>

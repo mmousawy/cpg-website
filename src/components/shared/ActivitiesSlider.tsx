@@ -24,7 +24,7 @@ function NavButton({
       aria-label={direction === 'prev' ? 'Previous slide' : 'Next slide'}
     >
       <svg
-        className="size-5 text-foreground/70"
+        className="size-5 text-foreground/80"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

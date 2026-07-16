@@ -1,5 +1,4 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -82,7 +81,6 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
 
   return (
     <>
-      <ScrollToTopOnRouteChange />
       <PhotoPageContent
         photo={result.photo}
         profile={result.profile}

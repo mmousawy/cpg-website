@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 
-import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
+import Input from '@/components/shared/Input';
 import { routes } from '@/config/routes';
 
 import CheckSVG from 'public/icons/check.svg';
@@ -93,7 +93,7 @@ function ResetPasswordForm() {
             Password updated!
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Your password has been successfully updated. Redirecting you to login...
           </p>
@@ -117,7 +117,7 @@ function ResetPasswordForm() {
             Invalid reset link
           </h1>
           <p
-            className="mb-6 text-foreground/70"
+            className="mb-6 text-foreground/80"
           >
             This password reset link is invalid or has expired.
           </p>
@@ -145,7 +145,7 @@ function ResetPasswordForm() {
           Set new password
         </h1>
         <p
-          className="mb-8 text-center text-sm text-foreground/70"
+          className="mb-8 text-center text-sm text-foreground/80"
         >
           Enter your new password below.
         </p>

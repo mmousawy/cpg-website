@@ -47,3 +47,7 @@ next-env.d.ts
 # scraper local duplicate cache (machine-specific)
 /scripts/.scraper-cache.json
 .vercel
+
+# heap snapshots from dev:debug
+/.heap
+*.heapsnapshot

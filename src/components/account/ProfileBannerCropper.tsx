@@ -10,9 +10,9 @@ import {
   getWidthFitZoom,
 } from '@/components/account/cropperSizing';
 import Button from '@/components/shared/Button';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import Cropper, { type Area, type MediaSize, type Point, type Size } from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
-import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 
 /** Output aspect for profile banner crops (width / height) */
 const BANNER_CROP_ASPECT = 3.2;
@@ -290,7 +290,7 @@ export default function ProfileBannerCropper({
       className="space-y-4"
     >
       <p
-        className="text-sm text-foreground/70"
+        className="text-sm text-foreground/80"
       >
         Drag to position your banner. The preview is unsaved until you click Apply, and still requires Save changes on the account form.
       </p>

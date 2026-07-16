@@ -55,7 +55,7 @@ export default function PublicProfileSection({
       </h2>
       <Container>
         <p
-          className="text-foreground/70 mb-4 text-sm"
+          className="text-foreground/80 mb-4 text-sm"
         >
           This information will be visible on your public profile page.
         </p>
@@ -116,7 +116,7 @@ export default function PublicProfileSection({
               </span>
             </div>
             <p
-              className="text-foreground/70 mb-2 text-xs"
+              className="text-foreground/80 mb-2 text-xs"
             >
               Add up to 3 links to your social profiles
             </p>

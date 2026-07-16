@@ -59,7 +59,7 @@ export default function JavaScriptRequired({ contentClass = 'js-content' }: Java
             JavaScript Required
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Please enable JavaScript in your browser to continue.
           </p>

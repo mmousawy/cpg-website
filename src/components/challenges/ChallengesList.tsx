@@ -24,7 +24,7 @@ export default function ChallengesList({
           className="h-12 w-12 fill-foreground/20 mx-auto mb-3"
         />
         <p
-          className="text-foreground/70"
+          className="text-foreground/80"
         >
           {emptyMessage}
         </p>

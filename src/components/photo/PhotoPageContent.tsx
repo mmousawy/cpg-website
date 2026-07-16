@@ -15,8 +15,8 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
-import CopyrightIcon from 'public/icons/licenses/copyright-outline.svg';
 import CreativeCommonsIcon from 'public/icons/licenses/cc.svg';
+import CopyrightIcon from 'public/icons/licenses/copyright-outline.svg';
 
 interface Album {
   id: string;
@@ -202,7 +202,7 @@ export default function PhotoPageContent({
                 className="mb-4"
               >
                 <p
-                  className="mb-1.5 text-xs font-medium text-foreground/70"
+                  className="mb-1.5 text-xs font-medium text-foreground/80"
                 >
                   Featured in
                 </p>
@@ -229,7 +229,7 @@ export default function PhotoPageContent({
                 className="mb-4"
               >
                 <p
-                  className="mb-1.5 text-xs font-medium text-foreground/70"
+                  className="mb-1.5 text-xs font-medium text-foreground/80"
                 >
                   Seen in
                 </p>

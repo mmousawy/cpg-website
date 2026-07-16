@@ -177,7 +177,7 @@ export default function EventPhotosSection({
             className="rounded-lg border border-border-color bg-background-light p-8 text-center"
           >
             <p
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               No photos yet. Be the first to add yours!
             </p>

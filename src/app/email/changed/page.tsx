@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-import Button from '@/components/shared/Button';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import Button from '@/components/shared/Button';
 
 function EmailChangedContent() {
   const searchParams = useSearchParams();
@@ -45,7 +45,7 @@ function EmailChangedContent() {
             Something went wrong
           </h1>
           <p
-            className="text-foreground/70 mb-6"
+            className="text-foreground/80 mb-6"
           >
             We couldn&apos;t verify your email change. The link may be invalid or expired.
           </p>
@@ -92,7 +92,7 @@ function EmailChangedContent() {
           Email changed successfully!
         </h1>
         <p
-          className="text-foreground/70 mb-2"
+          className="text-foreground/80 mb-2"
         >
           Your email has been updated to:
         </p>
@@ -104,7 +104,7 @@ function EmailChangedContent() {
           </p>
         )}
         <p
-          className="text-foreground/70 text-sm mb-6"
+          className="text-foreground/80 text-sm mb-6"
         >
           You can now use this email to log in to your account.
         </p>
@@ -145,7 +145,7 @@ export default function EmailChangedPage() {
             className="text-center"
           >
             <p
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               Loading...
             </p>

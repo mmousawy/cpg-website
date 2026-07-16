@@ -8,9 +8,9 @@ import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import type { Tables } from '@/database.types';
-import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
+import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { isEventPast } from '@/lib/events/status';
 import Link from 'next/link';
 
@@ -135,7 +135,7 @@ export default function MyEventsPage() {
             JavaScript required
           </p>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Please enable JavaScript to view your event registrations.
           </p>
@@ -150,7 +150,7 @@ export default function MyEventsPage() {
           <h2
             className="mb-4 text-lg font-semibold font-heading opacity-80"
           >
-            Your upcoming events
+            Your upcoming events ({upcomingRSVPs.length})
           </h2>
           {isLoading ? (
             <div
@@ -206,7 +206,7 @@ export default function MyEventsPage() {
             <h2
               className="mb-4 text-lg font-semibold font-heading opacity-80"
             >
-              Past events
+              Past events ({pastRSVPs.length})
             </h2>
             <div
               className="space-y-3"
@@ -364,7 +364,7 @@ function RsvpEventCard({
               </h4>
             </div>
             <div
-              className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-0 text-sm font-semibold text-foreground/70"
+              className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-0 text-sm font-semibold text-foreground/80"
             >
               {event.date && (
                 <span

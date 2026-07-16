@@ -1,12 +1,12 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { useCallback, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import type { AccountStats } from '@/hooks/useAccountForm';
+import { useRouter } from 'next/navigation';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 interface DeleteAccountSectionProps {
   stats: AccountStats;
@@ -61,13 +61,13 @@ function DeleteAccountModalContent({ stats, onDeleted }: DeleteAccountModalConte
   return (
     <>
       <p
-        className="mb-4 text-sm text-foreground/70"
+        className="mb-4 text-sm text-foreground/80"
       >
         This will schedule your account for permanent deletion. After 30 days, the following will be permanently removed:
       </p>
 
       <ul
-        className="mb-4 ml-4 list-disc space-y-1 text-sm text-foreground/70"
+        className="mb-4 ml-4 list-disc space-y-1 text-sm text-foreground/80"
       >
         <li>
           Your profile and account information
@@ -101,7 +101,7 @@ function DeleteAccountModalContent({ stats, onDeleted }: DeleteAccountModalConte
       </ul>
 
       <p
-        className="mb-4 text-sm text-foreground/70"
+        className="mb-4 text-sm text-foreground/80"
       >
         You will be signed out immediately and won&apos;t be able to log in. If you change your mind, contact us through the contact form within 30 days.
       </p>
@@ -173,7 +173,7 @@ export default function DeleteAccountSection({ stats }: DeleteAccountSectionProp
           className="space-y-3"
         >
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             Permanently delete your account and all associated content. This action schedules your account for deletion - your content will be permanently removed within 30 days.
           </p>

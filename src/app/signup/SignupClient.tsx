@@ -92,7 +92,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
             Check your email
           </h1>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             We&apos;ve sent a confirmation link to
             {' '}
@@ -131,7 +131,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
           className="flex items-center justify-center mb-8"
         >
           <p
-            className="text-center text-sm text-foreground/70"
+            className="text-center text-sm text-foreground/80"
           >
             Join the Creative Photography Group community
           </p>
@@ -302,7 +302,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
         </form>
 
         <p
-          className="mt-6 text-center text-sm text-foreground/70"
+          className="mt-6 text-center text-sm text-foreground/80"
         >
           Already have an account?
           {' '}

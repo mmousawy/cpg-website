@@ -103,7 +103,7 @@ export default function SubmitConfirmContent({
       className="flex flex-col"
     >
       <p
-        className="text-foreground/70 mb-4"
+        className="text-foreground/80 mb-4"
       >
         You&apos;re about to submit
         {' '}

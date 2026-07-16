@@ -1,9 +1,11 @@
 'use client';
 
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
+import clsx from 'clsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BlurImage from '@/components/shared/BlurImage';
+import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 
 const MAX_SIZE_DESKTOP = 320;
@@ -12,6 +14,7 @@ interface EventCoverImageProps {
   url: string;
   title: string;
   blurhash?: string | null;
+  isPast?: boolean;
 }
 
 /**
@@ -21,6 +24,7 @@ export default function EventCoverImage({
   url,
   title,
   blurhash,
+  isPast = false,
 }: EventCoverImageProps) {
   const lightboxRef = useRef<PhotoSwipeLightboxInstance | null>(null);
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
@@ -64,7 +68,11 @@ export default function EventCoverImage({
     };
   }, []);
 
-  const imageContent = (
+  // Server-side cropped thumbnail URLs — one per breakpoint to avoid pixelation on landscape images
+  const mobileSrc = getCroppedThumbnailUrl(url, 640, 320) || url;
+  const desktopSrc = getCroppedThumbnailUrl(url, desktopSize.width * 2, desktopSize.height * 2) || url;
+
+  const imageContent = (thumbSrc: string) => (
     <a
       href={url}
       data-pswp-width={dimensions.width}
@@ -74,12 +82,13 @@ export default function EventCoverImage({
       className="relative block h-full w-full"
     >
       <BlurImage
-        src={url}
+        src={thumbSrc}
         alt={title}
         fill
-        className="object-cover"
-        sizes="(max-width: 640px) 100vw, 256px"
+        className={clsx('object-cover', isPast && '')}
+        sizes="(max-width: 640px) 100vw, 640px"
         preload
+        quality={92}
         blurhash={blurhash}
       />
       {/* Zoom icon on hover */}
@@ -95,18 +104,19 @@ export default function EventCoverImage({
 
   return (
     <>
-      {/* Mobile: full width, fixed height at top */}
+      {/* Mobile: full width, flush to top/left/right edges of the card */}
       <div
-        className="event-cover-gallery sm:hidden relative rounded-md sm:rounded-xl overflow-hidden bg-background-medium mb-4 group cursor-zoom-in w-full h-40"
+        className="event-cover-gallery sm:hidden relative overflow-hidden bg-background-medium mb-4 group cursor-zoom-in w-full h-40 -mt-4 -mx-4 rounded-tl-xl rounded-tr-xl"
+        style={{ width: 'calc(100% + 2rem)' }}
       >
-        {imageContent}
+        {imageContent(mobileSrc)}
       </div>
-      {/* Desktop: floated right with dynamic size */}
+      {/* Desktop: floated right, flush to top/right edges of the card */}
       <div
-        className="event-cover-gallery hidden sm:block relative rounded-xl overflow-hidden bg-background-medium float-right ml-4 mb-4 group cursor-zoom-in"
+        className="event-cover-gallery hidden sm:block relative overflow-hidden bg-background-medium float-right ml-6 mb-6 -mt-6 -mr-6 group cursor-zoom-in rounded-bl-xl rounded-tr-xl md:rounded-tr-2xl"
         style={{ width: desktopSize.width, height: desktopSize.height }}
       >
-        {imageContent}
+        {imageContent(desktopSrc)}
       </div>
     </>
   );

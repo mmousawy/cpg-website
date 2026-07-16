@@ -95,15 +95,16 @@ export default function ChallengeCoverImage({
 
   return (
     <>
-      {/* Mobile: full width, fixed height at top */}
+      {/* Mobile: full width, flush to top/left/right edges of the card */}
       <div
-        className="challenge-cover-gallery sm:hidden relative rounded-xl overflow-hidden bg-background-medium mb-4 group cursor-zoom-in w-full h-40"
+        className="challenge-cover-gallery sm:hidden relative overflow-hidden bg-background-medium mb-4 group cursor-zoom-in w-full h-40 -mt-4 -mx-4 rounded-tl-xl rounded-tr-xl"
+        style={{ width: 'calc(100% + 2rem)' }}
       >
         {imageContent}
       </div>
-      {/* Desktop: floated right with dynamic size */}
+      {/* Desktop: floated right, flush to top/right edges of the card */}
       <div
-        className="challenge-cover-gallery hidden sm:block relative rounded-xl overflow-hidden bg-background-medium float-right ml-4 mb-4 group cursor-zoom-in"
+        className="challenge-cover-gallery hidden sm:block relative overflow-hidden bg-background-medium float-right ml-6 mb-6 -mt-6 -mr-6 group cursor-zoom-in rounded-bl-xl rounded-tr-xl md:rounded-tr-2xl"
         style={{ width: desktopSize.width, height: desktopSize.height }}
       >
         {imageContent}

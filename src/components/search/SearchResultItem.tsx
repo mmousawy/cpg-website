@@ -1,13 +1,13 @@
 'use client';
 
-import clsx from 'clsx';
-import Link from 'next/link';
 import Avatar from '@/components/auth/Avatar';
 import BlurImage from '@/components/shared/BlurImage';
-import CalendarSVG from 'public/icons/calendar2.svg';
-import FolderSVG from 'public/icons/folder.svg';
 import type { SearchResult } from '@/types/search';
 import { stripHtml } from '@/utils/stripHtml';
+import clsx from 'clsx';
+import Link from 'next/link';
+import CalendarSVG from 'public/icons/calendar2.svg';
+import FolderSVG from 'public/icons/folder.svg';
 import { useEffect, useRef } from 'react';
 
 interface SearchResultItemProps {
@@ -111,7 +111,7 @@ export default function SearchResultItem({ result, onSelect, isSelected = false 
           </span>
           {result.subtitle && (
             <span
-              className="text-xs text-foreground/70"
+              className="text-xs text-foreground/80"
             >
               {result.subtitle}
             </span>

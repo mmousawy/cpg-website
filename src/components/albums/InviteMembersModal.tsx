@@ -92,7 +92,7 @@ export default function InviteMembersModal({
       className="flex flex-col gap-4"
     >
       <p
-        className="text-sm text-foreground/70"
+        className="text-sm text-foreground/80"
       >
         Search for members to invite to this album. Only closed albums require invites.
       </p>
@@ -118,19 +118,19 @@ export default function InviteMembersModal({
       >
         {isSearching ? (
           <div
-            className="p-4 text-center text-sm text-foreground/70"
+            className="p-4 text-center text-sm text-foreground/80"
           >
             Searching...
           </div>
         ) : query.trim().length < 2 ? (
           <div
-            className="p-4 text-center text-sm text-foreground/70"
+            className="p-4 text-center text-sm text-foreground/80"
           >
             Type at least 2 characters to search
           </div>
         ) : inviteableResults.length === 0 ? (
           <div
-            className="p-4 text-center text-sm text-foreground/70"
+            className="p-4 text-center text-sm text-foreground/80"
           >
             {memberResults.length === 0 ? 'No members found' : 'All results are already members or have pending invites'}
           </div>

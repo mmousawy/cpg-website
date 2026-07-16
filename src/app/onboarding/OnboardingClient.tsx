@@ -25,6 +25,20 @@ import { createElement, useContext, useEffect, useMemo, useRef, useState } from 
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+const PUBLIC_LISTING_PAGES = ['/', '/events'];
+
+function getPostOnboardingRedirect(redirectTo: string | null): string {
+  if (!redirectTo || !redirectTo.startsWith('/') || redirectTo.startsWith('//')) {
+    return '/account/events';
+  }
+
+  if (PUBLIC_LISTING_PAGES.includes(redirectTo)) {
+    return '/account/events';
+  }
+
+  return redirectTo;
+}
+
 // Zod schema for onboarding validation
 const onboardingSchema = z.object({
   nickname: z
@@ -57,6 +71,11 @@ export default function OnboardingClient() {
   const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const isPreviewMode = isOnboardingPreviewMode(searchParams);
+  const redirectToParam = searchParams.get('redirectTo');
+  const postOnboardingRedirect = useMemo(
+    () => getPostOnboardingRedirect(redirectToParam),
+    [redirectToParam],
+  );
 
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -181,10 +200,10 @@ export default function OnboardingClient() {
 
     // Redirect only when profile is fully complete (unless in preview mode)
     if (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode) {
-      router.push('/account/events');
+      router.push(postOnboardingRedirect);
       return;
     }
-  }, [user, profile, isLoading, isPreviewMode, router]);
+  }, [user, profile, isLoading, isPreviewMode, router, postOnboardingRedirect]);
 
   const watchedNickname = watch('nickname');
   const nicknameCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -576,8 +595,7 @@ export default function OnboardingClient() {
       // triggers an internal router refresh that conflicts with router.push
       void revalidateProfile(data.nickname);
 
-      // Redirect to account page
-      router.push('/account/events');
+      router.push(postOnboardingRedirect);
     } catch (err) {
       console.error('Unexpected error saving profile:', err);
       setSubmitError('An unexpected error occurred');

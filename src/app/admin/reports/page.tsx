@@ -194,7 +194,7 @@ function PhotoReportPreview({ photoId }: { photoId: string }) {
           </Link>
           <Link
             href={`/@${owner.nickname}`}
-            className="text-foreground/70 hover:text-primary font-medium"
+            className="text-foreground/80 hover:text-primary font-medium"
           >
             @
             {owner.nickname}
@@ -396,7 +396,7 @@ function AlbumReportPreview({ albumId }: { albumId: string }) {
           </Link>
           <Link
             href={`/@${owner.nickname}`}
-            className="text-foreground/70 hover:text-primary font-medium"
+            className="text-foreground/80 hover:text-primary font-medium"
           >
             @
             {owner.nickname}
@@ -622,7 +622,7 @@ export default function ReportsPage() {
             Content reports
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             Review and manage user-submitted content reports
           </p>
@@ -665,7 +665,7 @@ export default function ReportsPage() {
               onClick={handleSelectAll}
               variant="secondary"
               size="sm"
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               {selectedIds.size === (reports || []).length
                 ? 'Deselect all'
@@ -1054,7 +1054,7 @@ export default function ReportsPage() {
             className="flex items-center gap-3 max-w-screen-md w-full mx-auto"
           >
             <span
-              className="text-sm flex-1 text-foreground/70"
+              className="text-sm flex-1 text-foreground/80"
             >
               {selectedIds.size}
               {' '}

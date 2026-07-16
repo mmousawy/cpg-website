@@ -1,11 +1,11 @@
 'use client';
 
-import { Controller, Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
 import Checkbox from '@/components/shared/Checkbox';
 import type { EmailTypeData } from '@/utils/emailPreferencesClient';
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingEmailPreferencesSectionProps {
   control: Control<OnboardingFormData>;
@@ -31,14 +31,14 @@ export default function OnboardingEmailPreferencesSection({
       </h2>
       <Container>
         <p
-          className="text-xs text-foreground/70 mb-4"
+          className="text-xs text-foreground/80 mb-4"
         >
           Choose which types of emails you&apos;d like to receive. You can change these settings
           anytime.
         </p>
         {isLoadingEmailTypes ? (
           <p
-            className="text-xs text-foreground/70"
+            className="text-xs text-foreground/80"
           >
             Loading preferences...
           </p>
@@ -83,7 +83,7 @@ export default function OnboardingEmailPreferencesSection({
                         </label>
                         {type.description && (
                           <p
-                            className="text-xs text-foreground/70 mt-1"
+                            className="text-xs text-foreground/80 mt-1"
                           >
                             {type.description}
                           </p>
@@ -97,7 +97,7 @@ export default function OnboardingEmailPreferencesSection({
           </div>
         ) : (
           <p
-            className="text-xs text-foreground/70"
+            className="text-xs text-foreground/80"
           >
             Unable to load email preferences
           </p>

@@ -185,7 +185,7 @@ export default function AddToAlbumContent({
             className="flex items-center justify-center h-full"
           >
             <p
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               No photos available to add
             </p>

@@ -61,7 +61,7 @@ export default function RecipientList({
   if (recipients.length === 0) {
     return (
       <div
-        className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/70"
+        className="rounded-lg border border-border-color bg-background-light p-4 text-center text-sm text-foreground/80"
       >
         {emptyMessage}
       </div>
@@ -111,7 +111,7 @@ export default function RecipientList({
             >
               <tr>
                 <th
-                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/70"
+                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/80"
                 >
                   <Checkbox
                     id="select-all"
@@ -121,29 +121,29 @@ export default function RecipientList({
                   />
                 </th>
                 <th
-                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/70"
+                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/80"
                 >
                   Status
                 </th>
                 {showTypeColumn && (
                   <th
-                    className="px-4 py-2 text-left text-xs font-semibold text-foreground/70"
+                    className="px-4 py-2 text-left text-xs font-semibold text-foreground/80"
                   >
                     Type
                   </th>
                 )}
                 <th
-                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/70"
+                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/80"
                 >
                   Name
                 </th>
                 <th
-                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/70"
+                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/80"
                 >
                   Username
                 </th>
                 <th
-                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/70"
+                  className="px-4 py-2 text-left text-xs font-semibold text-foreground/80"
                 >
                   Email
                 </th>

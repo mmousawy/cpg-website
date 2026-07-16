@@ -2,7 +2,7 @@
 
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, useTransition, useCallback } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import Button from '../shared/Button';
 import EventsList from './EventsList';
 
@@ -135,7 +135,7 @@ export default function PastEventsPaginated({
 
       {hasMore && (
         <div
-          className="flex justify-center pt-4"
+          className="flex justify-center max-sm:mb-4 sm:pt-4"
         >
           <Button
             onClick={loadMore}

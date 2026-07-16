@@ -137,7 +137,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             Join our community
           </h2>
           <p
-            className="mb-6 text-foreground/70"
+            className="mb-6 text-foreground/80"
           >
             Sign in to explore members by interests, discover photographers by their photo styles, and connect with recently active community members.
           </p>
@@ -477,7 +477,7 @@ function RandomInterestsSection({ randomInterests }: { randomInterests: Awaited<
             ))}
             {members.length > 4 && (
               <div
-                className="z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-background-medium border-2 border-background text-sm font-semibold text-foreground/70"
+                className="z-10 flex size-12 shrink-0 items-center justify-center rounded-full bg-background-medium border-2 border-background text-sm font-semibold text-foreground/80"
               >
                 +
                 {members.length - 4}

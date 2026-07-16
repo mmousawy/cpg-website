@@ -1,12 +1,12 @@
 'use client';
 
-import { useContext } from 'react';
-import Link from 'next/link';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { useAuth } from '@/context/AuthContext';
 import ReportModal from '@/components/shared/ReportModal';
+import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 import EditMiniSVG from 'public/icons/edit-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
+import { useContext } from 'react';
 
 type ProfileActionsMenuProps = {
   profileId: string;
@@ -21,7 +21,7 @@ export default function ProfileActionsMenu({ profileId, profileNickname, onActio
   const isOwnProfile = !!(user && user.id === profileId);
 
   const menuItemClass =
-    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground';
+    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
 
   if (isOwnProfile) {
     return (

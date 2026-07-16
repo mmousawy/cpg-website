@@ -374,7 +374,7 @@ export default function PhotoListItem({
           {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
             createPortal(
               <div
-                className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/70"
+                className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"
                 style={{
                   top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
                   right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,

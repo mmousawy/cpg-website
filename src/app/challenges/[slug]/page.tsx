@@ -333,7 +333,7 @@ export default async function ChallengePage({
 
           {/* Content wrapper with clearfix for floated image */}
           <div
-            className="overflow-hidden"
+            className="flow-root"
           >
             {challenge.cover_image_url && (
               <ChallengeCoverImage

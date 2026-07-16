@@ -1,12 +1,11 @@
 'use client';
 
-import clsx from 'clsx';
-import Image from 'next/image';
-import Link from 'next/link';
-import type { Tables } from '@/database.types';
 import Avatar from '@/components/auth/Avatar';
 import Button from '@/components/shared/Button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import type { Tables } from '@/database.types';
+import clsx from 'clsx';
+import Link from 'next/link';
 
 type Member = Pick<
   Tables<'profiles'>,
@@ -294,14 +293,14 @@ export default function MemberTable({
 
                   {/* Joined */}
                   <td
-                    className="whitespace-nowrap px-4 py-3 text-foreground/70"
+                    className="whitespace-nowrap px-4 py-3 text-foreground/80"
                   >
                     {formatDate(member.created_at)}
                   </td>
 
                   {/* Last Active */}
                   <td
-                    className="whitespace-nowrap px-4 py-3 text-foreground/70"
+                    className="whitespace-nowrap px-4 py-3 text-foreground/80"
                   >
                     {formatDate(member.last_logged_in)}
                   </td>

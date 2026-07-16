@@ -388,7 +388,7 @@ export default function ScenePageContent({
             className="mx-auto mb-3"
           />
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Loading events...
           </p>
@@ -408,7 +408,7 @@ export default function ScenePageContent({
             This category is empty
           </p>
           <p
-            className="text-foreground/70 max-w-md mx-auto"
+            className="text-foreground/80 max-w-md mx-auto"
           >
             Be the first to add an event.
           </p>
@@ -429,7 +429,7 @@ export default function ScenePageContent({
                 className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                   activeTab === tab.id
                     ? 'border-primary border-2 bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary-alt'
-                    : 'border-transparent border-2 text-foreground/70 hover:text-foreground hover:bg-foreground/5 dark:text-foreground/90 dark:hover:text-foreground dark:hover:bg-foreground/10'
+                    : 'border-transparent border-2 text-foreground/80 hover:text-foreground hover:bg-foreground/5 dark:text-foreground/90 dark:hover:text-foreground dark:hover:bg-foreground/10'
                 }`}
               >
                 {tab.label}
@@ -437,7 +437,7 @@ export default function ScenePageContent({
                   className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold leading-none ${
                     activeTab === tab.id
                       ? 'bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary-alt'
-                      : 'bg-foreground/10 text-foreground/60 dark:bg-foreground/15 dark:text-foreground/70'
+                      : 'bg-foreground/10 text-foreground/60 dark:bg-foreground/15 dark:text-foreground/80'
                   }`}
                 >
                   {counts[tab.id]}

@@ -172,7 +172,7 @@ export default function DetailLikesSection({ entityType, className, entityId, in
       {/* Count display (separate from avatars for likes) */}
       <span
         className={clsx(
-          'text-xs font-medium text-foreground/70',
+          'text-xs font-medium text-foreground/80',
           'transition-opacity duration-300',
           count > 0 ? 'opacity-100' : 'opacity-0',
         )}

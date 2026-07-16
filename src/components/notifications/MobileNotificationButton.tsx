@@ -58,7 +58,7 @@ export default function MobileNotificationButton() {
         aria-label="Notifications"
       >
         <svg
-          className="h-5 w-5 text-foreground/70"
+          className="h-5 w-5 text-foreground/80"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

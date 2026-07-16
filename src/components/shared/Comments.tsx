@@ -8,7 +8,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { type ReactNode, memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState, type ReactNode } from 'react';
 import Avatar from '../auth/Avatar';
 import Button from './Button';
 import CommentActionsPopover from './CommentActionsPopover';
@@ -185,7 +185,7 @@ function ComposerCard({
 
   return (
     <div
-      className="dark:bg-[#303033] bg-white rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 relative overflow-visible"
+      className="dark:bg-[#303033] bg-white rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
     >
       {profile?.nickname ? (
         <Link
@@ -439,7 +439,7 @@ const CommentItem = memo(function CommentItem({
       id={`comment-${comment.id}`}
     >
       <div
-        className="dark:bg-[#303033] bg-[#fff] rounded-md max-w-160 shadow-sm shadow-[#00000008] border border-border-color sm:p-4 p-3 relative overflow-visible"
+        className="dark:bg-[#303033] bg-[#fff] rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
       >
         <div
           className="flex items-start justify-between gap-2 mb-2"
@@ -557,7 +557,7 @@ const CommentItem = memo(function CommentItem({
         )}
         {currentUser && !isEditing && !isCurrentlyReplying && (
           <div
-            className="mt-2"
+            className="mt-4"
           >
             <Button
               onClick={handleReplyClickLocal}
@@ -1219,7 +1219,7 @@ export default function Comments({
           Comments
         </h3>
         <p
-          className="text-sm text-foreground/70 mb-4"
+          className="text-sm text-foreground/80 mb-4"
         >
           Sign in to see comments.
         </p>
@@ -1263,13 +1263,13 @@ export default function Comments({
       >
         {isLoading && comments.length === 0 ? (
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             Loading comments...
           </p>
         ) : comments.length === 0 ? (
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             No comments yet. Be the first to comment!
           </p>

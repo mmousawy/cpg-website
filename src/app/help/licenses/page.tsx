@@ -1,9 +1,9 @@
-import SectionMobileNav from '@/components/shared/SectionMobileNav';
-import SectionSidebar from '@/components/shared/SectionSidebar';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
 import HelpAccordion from '@/components/shared/HelpAccordion';
+import SectionMobileNav from '@/components/shared/SectionMobileNav';
+import SectionSidebar from '@/components/shared/SectionSidebar';
 import { routes } from '@/config/routes';
 import { licensesHelpSections } from '@/content/help/licenses';
 import { SectionScrollProvider } from '@/context/SectionScrollContext';
@@ -40,7 +40,7 @@ export default function LicensesHelpPage() {
             Copyright & licensing
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             Set licenses for your photos, add watermarks, and embed copyright in
             EXIF metadata.

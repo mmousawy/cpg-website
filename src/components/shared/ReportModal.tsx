@@ -292,7 +292,7 @@ export default function ReportModal({
         )}
 
         <p
-          className="text-sm text-foreground/70"
+          className="text-sm text-foreground/80"
         >
           Help us keep the community safe by reporting content that violates our guidelines.
         </p>

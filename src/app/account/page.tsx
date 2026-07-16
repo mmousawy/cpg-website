@@ -1,8 +1,7 @@
 'use client';
 
-import AccountStatsSection from '@/components/account/AccountStatsSection';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { useContext } from 'react';
+import AccountStatsSection from '@/components/account/AccountStatsSection';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import CopyrightSettingsSection from '@/components/account/CopyrightSettingsSection';
 import DeleteAccountSection from '@/components/account/DeleteAccountSection';
@@ -19,6 +18,7 @@ import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import { SectionScrollProvider } from '@/context/SectionScrollContext';
 import { useAccountForm } from '@/hooks/useAccountForm';
+import { useContext } from 'react';
 
 const ACCOUNT_SECTIONS = [
   { id: 'basic-info', title: 'Basic info' },
@@ -125,7 +125,7 @@ export default function AccountPage() {
         )}
         {!submitError && !success && hasChanges && (
           <span
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             {changeCount}
             {' '}
@@ -180,7 +180,7 @@ export default function AccountPage() {
               JavaScript required
             </p>
             <p
-              className="text-foreground/70"
+              className="text-foreground/80"
             >
               This page requires JavaScript to manage your account settings. Please enable
               JavaScript in your browser to continue.

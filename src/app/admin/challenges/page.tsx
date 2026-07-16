@@ -30,7 +30,7 @@ export default function AdminChallengesPage() {
             Manage challenges
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/70"
+            className="text-base sm:text-lg mt-2 text-foreground/80"
           >
             Create, edit, and review photo challenges
           </p>

@@ -51,10 +51,23 @@ const nextConfig: NextConfig = {
     ],
   },
   webpack(config) {
+    // Next.js ships a default asset rule for SVGs. To let @svgr/webpack turn
+    // SVG imports into React components we have to (1) exclude .svg from the
+    // default rule and (2) add our own SVGR rule that still respects Next's
+    // metadata/url resource queries.
+    const fileLoaderRule = config.module.rules.find(
+      (rule: { test?: { test?: (s: string) => boolean } }) =>
+        rule?.test?.test?.('.svg'),
+    );
+
+    if (fileLoaderRule) {
+      fileLoaderRule.exclude = /\.svg$/i;
+    }
+
     config.module.rules.push({
       test: /\.svg$/i,
       issuer: /\.[jt]sx?$/,
-      resourceQuery: { not: [/__next_metadata__/] },
+      resourceQuery: { not: [/__next_metadata__/, /url/] },
       use: ['@svgr/webpack'],
     });
 

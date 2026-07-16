@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Button from '@/components/shared/Button';
 import Textarea from '@/components/shared/Textarea';
+import { useState } from 'react';
 
 export const RESOLUTION_OPTIONS = [
   'Content removed',
@@ -58,7 +58,7 @@ export default function ResolveReportModal({
       className="space-y-4"
     >
       <p
-        className="text-sm text-foreground/70"
+        className="text-sm text-foreground/80"
       >
         {isBulk
           ? actionType === 'resolve'

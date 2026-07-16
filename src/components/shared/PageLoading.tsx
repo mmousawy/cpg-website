@@ -1,7 +1,7 @@
 'use client';
 
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import PageContainer from '@/components/layout/PageContainer';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 type PageLoadingProps = {
   /** Optional message to show below spinner */
@@ -27,7 +27,7 @@ export default function PageLoading({ message }: PageLoadingProps = {}) {
         <LoadingSpinner />
         {message && (
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             {message}
           </p>

@@ -91,7 +91,7 @@ export default function EventCoverUpload({
           className="rounded-lg border-2 border-dashed border-border-color p-8 text-center"
         >
           <p
-            className="mb-3 text-sm text-foreground/70"
+            className="mb-3 text-sm text-foreground/80"
           >
             No cover image selected
           </p>

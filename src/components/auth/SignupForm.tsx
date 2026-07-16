@@ -179,7 +179,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
             Log in to RSVP
           </h3>
           <p
-            className="mb-4 text-sm text-foreground/70"
+            className="mb-4 text-sm text-foreground/80"
           >
             You need an account to sign up for events.
           </p>
@@ -253,7 +253,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
           </div>
 
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             You can cancel your RSVP anytime. You&apos;ll receive a confirmation email with all the event details.
           </p>
@@ -287,7 +287,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
                 You&apos;re signed up for this event!
               </p>
               <p
-                className="mt-1 text-sm font-normal text-foreground/70"
+                className="mt-1 text-sm font-normal text-foreground/80"
               >
                 A confirmation email was sent to
                 {' '}
@@ -297,7 +297,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
           </SuccessMessage>
 
           <p
-            className="text-sm text-foreground/70"
+            className="text-sm text-foreground/80"
           >
             Need to cancel? Click the button below to remove your RSVP.
           </p>

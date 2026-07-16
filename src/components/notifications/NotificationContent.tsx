@@ -204,7 +204,7 @@ export default function NotificationContent({
         </p>
         {notification.data?.title && (
           <p
-            className="text-xs truncate mt-0.5 text-foreground/70"
+            className="text-xs truncate mt-0.5 text-foreground/80"
           >
             {notification.data.title as string}
           </p>

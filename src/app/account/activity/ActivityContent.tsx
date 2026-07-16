@@ -1,9 +1,9 @@
 'use client';
 
 import PageContainer from '@/components/layout/PageContainer';
+import NotificationItem from '@/components/notifications/NotificationItem';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
-import NotificationItem from '@/components/notifications/NotificationItem';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -172,7 +172,7 @@ export default function ActivityContent() {
               <button
                 onClick={handleCreateMocks}
                 disabled={isCreatingMocks}
-                className="text-sm text-foreground/50 hover:text-foreground/70 font-medium disabled:opacity-50"
+                className="text-sm text-foreground/50 hover:text-foreground/80 font-medium disabled:opacity-50"
               >
                 {isCreatingMocks ? 'Adding...' : '+ Add mock'}
               </button>
@@ -213,7 +213,7 @@ export default function ActivityContent() {
             No activity yet
           </h2>
           <p
-            className="text-foreground/70"
+            className="text-foreground/80"
           >
             Your notifications and activity will appear here
           </p>
