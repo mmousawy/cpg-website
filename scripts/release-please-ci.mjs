@@ -1,15 +1,16 @@
 /**
- * CI entrypoint for release-please with retrying fetch().
+ * CI entrypoint for release-please.
  *
- * release-please's GitHub client retries GraphQL 502s but not REST file
- * fetches (manifest/config). GitHub sometimes returns an HTML "Unicorn" page
- * on those REST calls; this wrapper retries before failing.
+ * GitHub's REST contents API intermittently returns HTML 502/503 "Unicorn"
+ * pages. release-please always fetches manifest/config via that API even when
+ * actions/checkout already has them on disk. We read target-branch files from
+ * the workspace first and only fall back to the API (with fetch retries).
  */
+import { access, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import * as core from '@actions/core';
 import { GitHub, Manifest, VERSION } from 'release-please';
-
-const DEFAULT_CONFIG_FILE = 'release-please-config.json';
-const DEFAULT_MANIFEST_FILE = '.release-please-manifest.json';
 
 function installRetryFetch() {
   const originalFetch = globalThis.fetch;
@@ -51,6 +52,36 @@ function installRetryFetch() {
     }
 
     throw new Error('Unreachable');
+  };
+}
+
+/**
+ * Serve files for the release base branch from the checked-out workspace.
+ * actions/checkout runs before this script, so main-branch files are on disk.
+ */
+function installLocalFileReads(github, targetBranch, workspace) {
+  const originalGetContents = github.getFileContentsOnBranch.bind(github);
+
+  github.getFileContentsOnBranch = async (path, branch) => {
+    if (branch === targetBranch) {
+      const filePath = join(workspace, path);
+      try {
+        await access(filePath);
+        const content = await readFile(filePath, 'utf8');
+        core.info(`Reading ${path} from checkout (skipping GitHub REST API)`);
+        return {
+          path,
+          content: Buffer.from(content).toString('base64'),
+          parsedContent: content,
+          sha: 'local-checkout',
+          mode: '100644',
+        };
+      } catch {
+        // File not in workspace; fall back to API.
+      }
+    }
+
+    return originalGetContents(path, branch);
   };
 }
 
@@ -109,9 +140,10 @@ async function main() {
 
   const [owner, repo] = repoUrl.split('/');
   const targetBranch = process.env.RELEASE_PLEASE_TARGET_BRANCH || 'main';
-  const configFile = process.env.RELEASE_PLEASE_CONFIG_FILE || DEFAULT_CONFIG_FILE;
+  const configFile = process.env.RELEASE_PLEASE_CONFIG_FILE || 'release-please-config.json';
   const manifestFile =
-    process.env.RELEASE_PLEASE_MANIFEST_FILE || DEFAULT_MANIFEST_FILE;
+    process.env.RELEASE_PLEASE_MANIFEST_FILE || '.release-please-manifest.json';
+  const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
 
   core.info(`Running release-please version: ${VERSION}`);
 
@@ -121,6 +153,8 @@ async function main() {
     token,
     defaultBranch: targetBranch,
   });
+
+  installLocalFileReads(github, targetBranch, workspace);
 
   const manifest = await Manifest.fromManifest(
     github,
