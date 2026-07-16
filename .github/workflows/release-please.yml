@@ -49,17 +49,13 @@ jobs:
           exit 1
 
       - name: Release Please
-        uses: Wandalen/wretry.action@v3.8.0
+        uses: googleapis/release-please-action@v5
         id: release
         with:
-          action: googleapis/release-please-action@v5
-          attempt_limit: 5
-          attempt_delay: 60000
-          with: |
-            target-branch: main
-            config-file: release-please-config.json
-            manifest-file: .release-please-manifest.json
-            token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
 
       - uses: actions/checkout@v5
         if: ${{ steps.release.outputs.release_created }}
