@@ -19,43 +19,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      # GitHub occasionally returns HTML "Unicorn" 502 pages instead of JSON.
-      # Fail fast with a clear message before release-please spends minutes retrying.
-      - name: Verify GitHub API (manifest on main)
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-        run: |
-          set -euo pipefail
-          for attempt in 1 2 3 4 5; do
-            status=$(curl -sS -o /tmp/manifest-response.json -w "%{http_code}" \
-              -H "Authorization: Bearer ${GH_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/.release-please-manifest.json?ref=main")
-            if [ "$status" = "200" ] && jq -e '.content' /tmp/manifest-response.json >/dev/null 2>&1; then
-              echo "GitHub contents API OK (attempt ${attempt})"
-              exit 0
-            fi
-            if grep -q 'Unicorn' /tmp/manifest-response.json 2>/dev/null; then
-              echo "GitHub returned Unicorn page (attempt ${attempt}, HTTP ${status})"
-            else
-              echo "Unexpected response (attempt ${attempt}, HTTP ${status})"
-              head -c 200 /tmp/manifest-response.json || true
-              echo
-            fi
-            sleep $((attempt * 30))
-          done
-          echo "::error::GitHub API failed after 5 attempts. Regenerate RELEASE_PLEASE_TOKEN (classic PAT with repo scope) or delete the secret to fall back to GITHUB_TOKEN."
-          exit 1
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # Installed ad hoc so we don't need a lockfile entry; see scripts/release-please-ci.mjs
+      - name: Install release-please runner
+        run: npm install --no-save release-please@17.10.3 @actions/core@1.11.1
 
       - name: Release Please
-        uses: googleapis/release-please-action@v5
         id: release
-        with:
-          target-branch: main
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          RELEASE_PLEASE_TARGET_BRANCH: main
+          RELEASE_PLEASE_CONFIG_FILE: release-please-config.json
+          RELEASE_PLEASE_MANIFEST_FILE: .release-please-manifest.json
+        run: node scripts/release-please-ci.mjs
 
       - uses: actions/checkout@v5
         if: ${{ steps.release.outputs.release_created }}
@@ -63,7 +43,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
 
-      - name: Setup Node
+      - name: Setup Node for Vercel
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-node@v6
         with:
