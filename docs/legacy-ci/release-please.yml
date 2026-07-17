@@ -12,38 +12,49 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: googleapis/release-please-action@v4
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # Installed ad hoc so we don't need a lockfile entry; see scripts/release-please-ci.mjs
+      - name: Install release-please runner
+        run: npm install --no-save release-please@17.10.3 @actions/core@1.11.1
+
+      - name: Release Please
         id: release
-        with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          RELEASE_PLEASE_TARGET_BRANCH: main
+          RELEASE_PLEASE_CONFIG_FILE: release-please-config.json
+          RELEASE_PLEASE_MANIFEST_FILE: .release-please-manifest.json
+        run: node scripts/release-please-ci.mjs
 
-  promote:
-    runs-on: ubuntu-latest
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        if: ${{ steps.release.outputs.release_created }}
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node for Vercel
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
 
       - name: Install Vercel CLI
+        if: ${{ steps.release.outputs.release_created }}
         run: npm install -g vercel
 
       - name: Promote preview to production
+        if: ${{ steps.release.outputs.release_created }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -59,6 +70,7 @@ jobs:
             echo "No merge parent found (squash merge?), using current SHA: $PR_HEAD_SHA"
           fi
 
+          # Look up the preview deployment Vercel built for this SHA
           echo "Looking up Vercel preview deployment for SHA: $PR_HEAD_SHA"
           API_RESPONSE=$(curl -s \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
