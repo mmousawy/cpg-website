@@ -11,19 +11,12 @@ env:
 jobs:
   e2e-tests:
     name: E2E Tests
-    # Version-bump PRs from release-please — no E2E (already tested on the feature PR).
-    if: ${{ !startsWith(github.event.pull_request.head.ref, 'release-please--') }}
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      RESEND_API_KEY: re_test_key
-      EMAIL_FROM_NAME: Test
-      EMAIL_FROM_ADDRESS: test@example.com
-      EMAIL_REPLY_TO_NAME: Test
-      EMAIL_REPLY_TO_ADDRESS: test@example.com
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
     steps:
       - uses: actions/checkout@v5
 
@@ -38,100 +31,61 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Wait for Vercel preview
-        id: vercel
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy preview to Vercel
+        id: deploy
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::VERCEL_TOKEN is not set."
+            exit 1
+          fi
+
+          # Pull preview environment config (project settings + env vars).
+          vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+          # Build and deploy a preview. Tag it with the PR head SHA so the
+          # release promote job can locate this exact tested deployment later.
+          vercel build --token="$VERCEL_TOKEN"
+          DEPLOY_URL=$(vercel deploy --prebuilt --token="$VERCEL_TOKEN" \
+            --meta githubCommitSha="$PR_HEAD_SHA" \
+            --meta githubCommitRef="$PR_HEAD_REF")
+
+          echo "Preview deployed: $DEPLOY_URL"
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Verify preview is reachable
+        run: |
+          URL="${{ steps.deploy.outputs.url }}"
 
           if [ -z "$BYPASS_TOKEN" ]; then
             echo "::error::VERCEL_BYPASS_TOKEN is not set. Copy the secret from Vercel → Settings → Deployment Protection → Protection Bypass for Automation."
             exit 1
           fi
 
-          preview_is_ready() {
-            local url="$1"
-            local content_type
-            content_type=$(curl -s -o /dev/null -w "%{content_type}" \
+          for i in $(seq 1 30); do
+            CONTENT_TYPE=$(curl -s -o /dev/null -w "%{content_type}" \
               -X POST \
               -H "Content-Type: application/json" \
               -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
               -H "x-vercel-set-bypass-cookie: true" \
               -d '{"email":"test-e2e-probe@test.local","password":"x","nickname":"probe"}' \
-              "$url/api/test/setup")
-            echo "$content_type" | grep -qi 'application/json'
-          }
+              "$URL/api/test/setup")
 
-          find_preview_url() {
-            local url=""
-
-            # 1. Vercel API — match the PR head commit (most reliable).
-            if [ -n "$PR_HEAD_SHA" ]; then
-              RESPONSE=$(curl -s \
-                -H "Authorization: Bearer $VERCEL_TOKEN" \
-                "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA&limit=5")
-              url=$(echo "$RESPONSE" | jq -r '.deployments[] | select(.target != "production") | .url' | head -1)
-              if [ -n "$url" ] && [ "$url" != "null" ]; then
-                echo "Found deployment for commit $PR_HEAD_SHA" >&2
-                echo "https://$url"
-                return 0
-              fi
+            if echo "$CONTENT_TYPE" | grep -qi 'application/json'; then
+              echo "Preview ready and bypass verified: $URL"
+              exit 0
             fi
 
-            # 2. Vercel API — match branch name from recent preview deployments.
-            if [ -n "$PR_HEAD_REF" ]; then
-              RESPONSE=$(curl -s \
-                -H "Authorization: Bearer $VERCEL_TOKEN" \
-                "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&limit=20")
-              url=$(echo "$RESPONSE" | jq -r --arg ref "$PR_HEAD_REF" \
-                '.deployments[] | select(.target != "production" and .meta.githubCommitRef == $ref) | .url' | head -1)
-              if [ -n "$url" ] && [ "$url" != "null" ]; then
-                echo "Found deployment for branch $PR_HEAD_REF" >&2
-                echo "https://$url"
-                return 0
-              fi
-            fi
-
-            # 3. Fallback — vercel[bot] comment on the PR.
-            url=$(gh pr view "$PR_NUMBER" --json comments \
-              --jq '.comments[] | select(.author.login == "vercel[bot]") | .body' \
-              | grep -oE 'https://[^[:space:]]+\.vercel\.app' | head -1 || true)
-            if [ -n "$url" ]; then
-              echo "Found deployment URL in vercel[bot] PR comment" >&2
-              echo "$url"
-              return 0
-            fi
-
-            return 1
-          }
-
-          for i in $(seq 1 60); do
-            RAW_URL=$(find_preview_url || true)
-
-            if [ -n "$RAW_URL" ]; then
-              BASE_URL=$(echo "$RAW_URL" | cut -d'?' -f1)
-              if preview_is_ready "$BASE_URL"; then
-                echo "Preview ready: $BASE_URL (bypass verified via /api/test/setup)"
-                echo "url=$BASE_URL" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-
-              echo "Attempt $i/60: preview URL found but bypass/API not ready yet, waiting..."
-            else
-              echo "Attempt $i/60: no Vercel preview URL yet, waiting..."
-            fi
-
+            echo "Attempt $i/30: preview not ready (content-type: $CONTENT_TYPE), waiting..."
             sleep 10
           done
 
-          echo "Preview not ready after 10 minutes"
+          echo "Preview not ready after 5 minutes"
           exit 1
 
       - run: pnpm exec playwright install --with-deps chromium
@@ -139,7 +93,7 @@ jobs:
       - name: E2E tests
         run: pnpm run test:e2e
         env:
-          BASE_URL: ${{ steps.vercel.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
+          BASE_URL: ${{ steps.deploy.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
 
       - name: Upload Playwright report

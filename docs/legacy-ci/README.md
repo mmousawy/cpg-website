@@ -43,3 +43,13 @@ On release, the old workflow:
 4. Fell back to `vercel deploy --prod` if promote failed or no preview was found.
 
 This pairs with `vercel.json`'s `ignoreCommand` (`[ "$VERCEL_GIT_COMMIT_REF" = "main" ]`) so Vercel does not build production on main pushes — CI promotes the already-tested preview instead.
+
+### Vercel Git auto-deploy vs. `ignoreCommand` (why we moved to CLI deploys)
+
+We initially relied on Vercel's Git integration to build previews, and used `ignoreCommand` to control which refs build. This caused a cascade of problems:
+
+1. **Duplicate previews** — a branch push and the PR event each triggered a build.
+2. **Skipped builds** — trying to dedupe with `VERCEL_GIT_PULL_REQUEST_ID` backfired: that variable is an empty string on branch pushes (only set on the PR-triggered deploy), so `if [ -z "$VERCEL_GIT_PULL_REQUEST_ID" ]` skipped the push build that was often the only one.
+3. **Unpredictable preview URL** — CI had to scrape the `vercel[bot]` comment or poll the API to find the URL Vercel chose.
+
+Final decision: **disable Vercel Git auto-deploys** (`vercel.json` `git.deploymentEnabled: false`) and have GitHub Actions deploy the preview explicitly via the Vercel CLI (`vercel pull` / `vercel build` / `vercel deploy --prebuilt`). CI owns the deployment URL directly, tags it with `--meta githubCommitSha` for the promote job, then runs E2E against it. This removed the race condition, the duplicates, and the URL-discovery guesswork.
