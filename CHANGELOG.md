@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.35.0](https://github.com/mmousawy/cpg-website/compare/v1.34.0...v1.35.0) (2026-07-17)
+
+
+### ✨ Features
+
+* Update app style ([bd6881b](https://github.com/mmousawy/cpg-website/commit/bd6881be04f17e6bf88297f834a0218bb9b12486))
+* update CI/CD ([44cbf3d](https://github.com/mmousawy/cpg-website/commit/44cbf3d87bad6ae4a749063ed8414bf106288873))
+
+
+### 🐛 Bug Fixes
+
+* Enhance CI workflow for Vercel deployment ([f1b4a5f](https://github.com/mmousawy/cpg-website/commit/f1b4a5f53bd68016e01893106662c0e47a5ccffb))
+* enhance ProfileImageUploadSections and Select component ([8d50dd8](https://github.com/mmousawy/cpg-website/commit/8d50dd8917d533d94e52929f84077ebe9e5a8067))
+* Improve Vercel deployment readiness checks in CI workflow ([d5dad76](https://github.com/mmousawy/cpg-website/commit/d5dad76e825b0e089ecd1c02c755cb8f6b3c0856))
+* Refine health check logic in CI workflow for Vercel deployments ([abf49b4](https://github.com/mmousawy/cpg-website/commit/abf49b4cdc87d6a8e34dda1bb51236cd845ef4ec))
+
+
+### ♻️ Refactoring
+
+* Replace withVercelBypass utility functions with fetchWithVercelBypass ([a06f6f2](https://github.com/mmousawy/cpg-website/commit/a06f6f290dd51a25aaf6cc4b6353ed936ca8a69f))
+
+
+### 🔧 Maintenance
+
+* enhance CI workflows and Vercel configuration ([bf1f30c](https://github.com/mmousawy/cpg-website/commit/bf1f30cfc1054f03a080e7362625d2bd05daa13b))
+* enhance release-please CI script with local file reads ([6fd2c38](https://github.com/mmousawy/cpg-website/commit/6fd2c3847c739cdf26a460f969fdd5c7e9c224e3))
+* enhance Vercel bypass handling in CI and tests ([a37f139](https://github.com/mmousawy/cpg-website/commit/a37f139ae741a282be284ef6620dad3dbb50f7dd))
+* refine Vercel ignore command and CI conditions ([a954774](https://github.com/mmousawy/cpg-website/commit/a954774f25729822dd461d85c1ea14484859a289))
+* refine Vercel ignore command and CI workflow conditions ([06d9ee8](https://github.com/mmousawy/cpg-website/commit/06d9ee8ed7b91262cd414e9dbea98667e916d240))
+* simplify CI workflow and remove redundant steps ([28fe9a5](https://github.com/mmousawy/cpg-website/commit/28fe9a5332723f8c62434d10fade1441f5285969))
+* update CI workflows and Vercel configuration ([06c4d53](https://github.com/mmousawy/cpg-website/commit/06c4d530bd231bed88d5a80f90973dc66ea86a2f))
+* update release-please action in workflow ([8b9ac36](https://github.com/mmousawy/cpg-website/commit/8b9ac36ceecdde1d972b879d067ae12a13aface5))
+* update release-please configuration and workflow ([c3f4186](https://github.com/mmousawy/cpg-website/commit/c3f4186b9ae215382bcb8e8fc9b2283331cc2538))
+* update release-please workflow and setup ([3d65227](https://github.com/mmousawy/cpg-website/commit/3d65227244e859234a7fd0d5cf4920c32316015f))
+* update Vercel deployment strategy and CI workflow ([aae2f9c](https://github.com/mmousawy/cpg-website/commit/aae2f9c1c1889c4ebbfdae9a7f93053863cad816))
+
 ## [1.34.0](https://github.com/mmousawy/cpg-website/compare/v1.33.3...v1.34.0) (2026-07-13)
 
 
