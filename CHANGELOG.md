@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.35.1](https://github.com/mmousawy/cpg-website/compare/v1.35.0...v1.35.1) (2026-07-17)
+
+
+### 🐛 Bug Fixes
+
+* Enhance Home page layout and photo display ([ba9a889](https://github.com/mmousawy/cpg-website/commit/ba9a8897abbb4b5fd36d6aedee1655ad24150b13))
+* Optimize Playwright browser installation in CI workflow ([72ac190](https://github.com/mmousawy/cpg-website/commit/72ac1908f26562295396d14c240b5b4e29cf2c82))
+
 ## [1.35.0](https://github.com/mmousawy/cpg-website/compare/v1.34.0...v1.35.0) (2026-07-17)
 
 
