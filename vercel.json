@@ -1,6 +1,6 @@
 {
   "installCommand": "npx pnpm@11.10.0 install --frozen-lockfile",
-  "ignoreCommand": "bash -c '[[ \"$VERCEL_GIT_COMMIT_REF\" == \"main\" || \"$VERCEL_GIT_COMMIT_REF\" =~ ^release-please-- ]]'",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"main\" ]; then exit 0; else exit 1; fi",
   "crons": [
     {
       "path": "/api/cron/event-reminders",
