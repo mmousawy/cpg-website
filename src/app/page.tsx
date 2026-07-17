@@ -7,6 +7,7 @@ import ChallengesList from '@/components/challenges/ChallengesList';
 import EventsList from '@/components/events/EventsList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
 import ArrowLink from '@/components/shared/ArrowLink';
@@ -69,7 +70,7 @@ export default async function Home() {
     getRecentMembers(50),
     getUpcomingEvents(6),
     getActiveChallenges(),
-    getPublicPhotostream(7),
+    getPublicPhotostream(10),
   ]);
 
   const { events, serverNow } = upcomingEventsData;
@@ -171,7 +172,7 @@ export default async function Home() {
         {/* Challenges */}
         {challenges.length > 0 && (
           <div
-            className="mb-12"
+            className="mb-4"
           >
             <div
               className="mb-4 flex items-center justify-between"
@@ -220,33 +221,35 @@ export default async function Home() {
           </div>
         )}
 
-        {/* Recent Photos */}
-        {photos.length > 0 && (
-          <div
-            className="mb-12"
-          >
-            <div
-              className="mb-4 flex items-center justify-between"
-            >
-              <h3
-                className="text-xl font-semibold opacity-80 font-heading"
-              >
-                Recent photos
-              </h3>
-              <ArrowLink
-                href="/gallery/photos"
-              >
-                View all photos
-              </ArrowLink>
-            </div>
-            <JustifiedPhotoGrid
-              photos={photos}
-              showAttribution
-              maxRowHeight={280}
-            />
-          </div>
-        )}
+      </PageContainer>
 
+      {/* Recent Photos */}
+      {photos.length > 0 && (
+        <WidePageContainer
+          className="pt-0!"
+        >
+          <div
+            className="mb-4 flex items-center justify-between"
+          >
+            <h3
+              className="text-xl font-semibold opacity-80 font-heading"
+            >
+              Recent photos
+            </h3>
+            <ArrowLink
+              href="/gallery/photos"
+            >
+              View all photos
+            </ArrowLink>
+          </div>
+          <JustifiedPhotoGrid
+            photos={photos}
+            showAttribution
+          />
+        </WidePageContainer>
+      )}
+
+      <PageContainer>
         {/* About Section */}
         <Container>
           <h2
