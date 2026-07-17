@@ -11,6 +11,8 @@ env:
 jobs:
   e2e-tests:
     name: E2E Tests
+    # release-please PRs only bump version/changelog — E2E already ran on the feature PR.
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
