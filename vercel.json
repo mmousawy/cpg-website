@@ -1,6 +1,8 @@
 {
   "installCommand": "npx pnpm@11.10.0 install --frozen-lockfile",
-  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"main\" ]; then exit 0; fi; case \"$VERCEL_GIT_COMMIT_REF\" in release-please--*) exit 0 ;; esac; if [ -z \"$VERCEL_GIT_PULL_REQUEST_ID\" ]; then exit 0; fi; exit 1",
+  "git": {
+    "deploymentEnabled": false
+  },
   "crons": [
     {
       "path": "/api/cron/event-reminders",
