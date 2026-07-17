@@ -77,35 +77,33 @@ jobs:
           fi
 
           URL="https://$DEPLOYMENT_URL"
-          HEALTH_URL="$URL/api/health?x-vercel-protection-bypass=$BYPASS_TOKEN"
+          COOKIE_JAR=$(mktemp)
 
-          # Phase 2: wait until bypass works and the app responds (do NOT follow redirects —
-          # Vercel SSO can loop and curl exits 47 with -L).
+          # Phase 2: wait until bypass works and the app responds.
+          # Vercel Authentication uses an initial 307 + Set-Cookie when
+          # x-vercel-set-bypass-cookie is set — use a cookie jar and allow a few redirects.
           for i in $(seq 1 30); do
             PROBE_BODY=$(mktemp)
-            PROBE_HEADERS=$(mktemp)
-            HTTP_CODE=$(curl -sS --max-redirs 0 \
-              -o "$PROBE_BODY" -D "$PROBE_HEADERS" -w "%{http_code}" \
+            HTTP_CODE=$(curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" --max-redirs 5 \
+              -o "$PROBE_BODY" -w "%{http_code}" \
               -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
               -H "x-vercel-set-bypass-cookie: true" \
-              "$HEALTH_URL" || echo "000")
+              "$URL/api/health" || echo "000")
 
-            CONTENT_TYPE=$(grep -i '^content-type:' "$PROBE_HEADERS" | tail -1 | cut -d: -f2- | tr -d ' \r\n' || true)
-            BODY_PREVIEW=$(head -c 200 "$PROBE_BODY" | tr -d '\n')
-
-            if [ "$HTTP_CODE" = "200" ] && echo "$CONTENT_TYPE" | grep -qi 'application/json'; then
+            if [ "$HTTP_CODE" = "200" ] && grep -q '"status"' "$PROBE_BODY"; then
               echo "Preview reachable with bypass: $URL"
               echo "url=$URL" >> "$GITHUB_OUTPUT"
-              rm -f "$PROBE_BODY" "$PROBE_HEADERS"
+              rm -f "$PROBE_BODY" "$COOKIE_JAR"
               exit 0
             fi
 
-            LOCATION=$(grep -i '^location:' "$PROBE_HEADERS" | tail -1 | cut -d: -f2- | tr -d ' \r\n' || true)
-            echo "Reachability $i/30: HTTP $HTTP_CODE content-type=${CONTENT_TYPE:-none} location=${LOCATION:-none}"
-            echo "Body preview: $BODY_PREVIEW"
-            rm -f "$PROBE_BODY" "$PROBE_HEADERS"
+            BODY_PREVIEW=$(head -c 200 "$PROBE_BODY" | tr -d '\n')
+            echo "Reachability $i/30: HTTP $HTTP_CODE body=$BODY_PREVIEW"
+            rm -f "$PROBE_BODY"
             sleep 10
           done
+
+          rm -f "$COOKIE_JAR"
 
           echo "::error::Preview deployment is READY but not reachable with bypass token after 5 minutes."
           echo "Check VERCEL_BYPASS_TOKEN matches Vercel → Deployment Protection → Protection Bypass for Automation."
