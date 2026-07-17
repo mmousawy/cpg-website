@@ -1,7 +1,9 @@
 {
   "installCommand": "npx pnpm@11.10.0 install --frozen-lockfile",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "main": false
+    }
   },
   "crons": [
     {
