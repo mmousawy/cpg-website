@@ -1,5 +1,5 @@
 {
-  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
+  "installCommand": "npx pnpm@11.10.0 install --frozen-lockfile",
   "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" = \"main\" ]",
   "crons": [
     {

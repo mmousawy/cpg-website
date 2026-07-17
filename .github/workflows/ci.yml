@@ -5,12 +5,14 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -21,13 +23,13 @@ jobs:
       EMAIL_REPLY_TO_NAME: Test
       EMAIL_REPLY_TO_ADDRESS: test@example.com
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 11.10.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -35,13 +37,43 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Wait for Vercel preview
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.3
         id: vercel
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 600
-          check_interval: 10
-          vercel_protection_bypass_header: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
+          for i in $(seq 1 60); do
+            URL=$(gh pr view "$PR_NUMBER" --json comments \
+              --jq '.comments[] | select(.author.login == "vercel[bot]") | .body' \
+              | grep -oP 'https://[^\s]+\.vercel\.app' | head -1)
+
+            if [ -n "$URL" ]; then
+              BASE_URL=$(echo "$URL" | cut -d'?' -f1)
+              if [ -n "$BYPASS_TOKEN" ]; then
+                STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                  -H "x-vercel-protection-bypass: $BYPASS_TOKEN" "$BASE_URL")
+              else
+                STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL")
+              fi
+
+              if [ "$STATUS" = "200" ]; then
+                echo "Preview ready: $BASE_URL"
+                echo "url=$BASE_URL" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+
+              echo "Attempt $i/60: preview found but HTTP $STATUS, waiting..."
+            else
+              echo "Attempt $i/60: no Vercel preview URL yet, waiting..."
+            fi
+
+            sleep 10
+          done
+
+          echo "Preview not ready after 10 minutes"
+          exit 1
 
       - run: pnpm exec playwright install --with-deps chromium
 
@@ -53,7 +85,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-report
           path: playwright-report/
