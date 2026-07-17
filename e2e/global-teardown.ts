@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import { withVercelBypassHeaders, withVercelBypassQuery } from './test-utils';
+
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
 async function globalTeardown() {
@@ -31,13 +33,9 @@ async function globalTeardown() {
     // Remove query parameters from baseURL for cleanup API call
     baseUrl = baseUrl.split('?')[0];
 
-    const headers: HeadersInit = { 'Content-Type': 'application/json' };
-    // Add bypass token if available
-    if (process.env.VERCEL_BYPASS_TOKEN) {
-      headers['x-vercel-protection-bypass'] = process.env.VERCEL_BYPASS_TOKEN;
-    }
+    const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' });
 
-    const response = await fetch(`${baseUrl}/api/test/cleanup`, {
+    const response = await fetch(withVercelBypassQuery(`${baseUrl}/api/test/cleanup`), {
       method: 'POST',
       headers,
       body: JSON.stringify({ emails: testEmails }),

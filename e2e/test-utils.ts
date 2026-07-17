@@ -4,6 +4,39 @@ import path from 'path';
 
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
+export function getVercelBypassToken(explicit?: string): string | undefined {
+  if (explicit) return explicit;
+  if (process.env.VERCEL_BYPASS_TOKEN) return process.env.VERCEL_BYPASS_TOKEN;
+  const baseUrlWithToken = process.env.BASE_URL;
+  if (!baseUrlWithToken) return undefined;
+  try {
+    return new URL(baseUrlWithToken).searchParams.get('x-vercel-protection-bypass') || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function withVercelBypassHeaders(
+  headers: HeadersInit = {},
+  bypassToken?: string,
+): HeadersInit {
+  const token = getVercelBypassToken(bypassToken);
+  if (!token) return headers;
+  return {
+    ...headers,
+    'x-vercel-protection-bypass': token,
+    'x-vercel-set-bypass-cookie': 'true',
+  };
+}
+
+export function withVercelBypassQuery(url: string, bypassToken?: string): string {
+  const token = getVercelBypassToken(bypassToken);
+  if (!token) return url;
+  const parsed = new URL(url);
+  parsed.searchParams.set('x-vercel-protection-bypass', token);
+  return parsed.toString();
+}
+
 // Generate unique test email
 export function generateTestEmail(): string {
   const timestamp = Date.now();
@@ -52,29 +85,20 @@ export async function createTestUser(baseUrl: string, bypassToken?: string): Pro
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
 
-  const baseUrlToken = (() => {
-    try {
-      const parsed = new URL(baseUrl);
-      return parsed.searchParams.get('x-vercel-protection-bypass') || undefined;
-    } catch {
-      return undefined;
-    }
-  })();
+  const effectiveBypassToken = getVercelBypassToken(bypassToken);
 
-  const effectiveBypassToken = bypassToken || process.env.VERCEL_BYPASS_TOKEN || baseUrlToken;
-
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (effectiveBypassToken) {
-    headers['x-vercel-protection-bypass'] = effectiveBypassToken;
-  }
+  const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' }, effectiveBypassToken);
 
   const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const response = await fetch(`${baseUrl}/api/test/setup`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ email, password, nickname, fullName: 'Test User' }),
-    });
+    const response = await fetch(
+      withVercelBypassQuery(`${baseUrl}/api/test/setup`, effectiveBypassToken),
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ email, password, nickname, fullName: 'Test User' }),
+      },
+    );
 
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.includes('application/json')) {

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { createTestUser, loginTestUser, type TestUser } from './test-utils';
+import { createTestUser, loginTestUser, withVercelBypassHeaders, withVercelBypassQuery, type TestUser } from './test-utils';
 
 test.describe('Account mobile section nav', () => {
   let testUser: TestUser;
@@ -17,12 +17,9 @@ test.describe('Account mobile section nav', () => {
     if (!testUser || !baseUrl) return;
 
     try {
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (bypassToken) {
-        headers['x-vercel-protection-bypass'] = bypassToken;
-      }
+      const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' }, bypassToken);
 
-      await fetch(`${baseUrl}/api/test/cleanup`, {
+      await fetch(withVercelBypassQuery(`${baseUrl}/api/test/cleanup`, bypassToken), {
         method: 'POST',
         headers,
         body: JSON.stringify({ emails: [testUser.email] }),

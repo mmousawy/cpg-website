@@ -49,6 +49,24 @@ jobs:
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
 
+          if [ -z "$BYPASS_TOKEN" ]; then
+            echo "::error::VERCEL_BYPASS_TOKEN is not set. Copy the secret from Vercel → Settings → Deployment Protection → Protection Bypass for Automation."
+            exit 1
+          fi
+
+          preview_is_ready() {
+            local url="$1"
+            local content_type
+            content_type=$(curl -s -o /dev/null -w "%{content_type}" \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
+              -H "x-vercel-set-bypass-cookie: true" \
+              -d '{"email":"test-e2e-probe@test.local","password":"x","nickname":"probe"}' \
+              "$url/api/test/setup")
+            echo "$content_type" | grep -qi 'application/json'
+          }
+
           find_preview_url() {
             local url=""
 
@@ -97,20 +115,13 @@ jobs:
 
             if [ -n "$RAW_URL" ]; then
               BASE_URL=$(echo "$RAW_URL" | cut -d'?' -f1)
-              if [ -n "$BYPASS_TOKEN" ]; then
-                STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-                  -H "x-vercel-protection-bypass: $BYPASS_TOKEN" "$BASE_URL")
-              else
-                STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL")
-              fi
-
-              if [ "$STATUS" = "200" ] || [ "$STATUS" = "307" ] || [ "$STATUS" = "308" ]; then
-                echo "Preview ready: $BASE_URL (HTTP $STATUS)"
+              if preview_is_ready "$BASE_URL"; then
+                echo "Preview ready: $BASE_URL (bypass verified via /api/test/setup)"
                 echo "url=$BASE_URL" >> "$GITHUB_OUTPUT"
                 exit 0
               fi
 
-              echo "Attempt $i/60: preview found but HTTP $STATUS, waiting..."
+              echo "Attempt $i/60: preview URL found but bypass/API not ready yet, waiting..."
             else
               echo "Attempt $i/60: no Vercel preview URL yet, waiting..."
             fi
