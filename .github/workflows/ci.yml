@@ -36,6 +36,8 @@ jobs:
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          set -euo pipefail
+
           if [ -z "$VERCEL_TOKEN" ]; then
             echo "::error::VERCEL_TOKEN is not set."
             exit 1
@@ -45,13 +47,9 @@ jobs:
             exit 1
           fi
 
-          # Vercel builds the preview automatically (Git integration). We poll the
-          # API for the deployment matching this PR's head commit, then wait until
-          # it is READY and the bypass token grants access.
+          # Phase 1: wait for Vercel to finish building this commit's preview.
           DEPLOYMENT_URL=""
-          DEPLOYMENT_STATE=""
-
-          for i in $(seq 1 60); do
+          for i in $(seq 1 90); do
             RESPONSE=$(curl -s \
               -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA&limit=1")
@@ -65,36 +63,52 @@ jobs:
             fi
 
             if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_STATE" = "READY" ]; then
-              URL="https://$DEPLOYMENT_URL"
-              PROBE=$(curl -s -L \
-                -w '\n%{http_code}\n%{content_type}' \
-                -X POST \
-                -H "Content-Type: application/json" \
-                -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
-                -H "x-vercel-set-bypass-cookie: true" \
-                -d '{"email":"test-e2e-probe@test.local","password":"x","nickname":"probe"}' \
-                "$URL/api/test/setup?x-vercel-protection-bypass=$BYPASS_TOKEN")
-
-              PROBE_CONTENT_TYPE=$(echo "$PROBE" | tail -1)
-              PROBE_STATUS=$(echo "$PROBE" | tail -2 | head -1)
-              PROBE_BODY=$(echo "$PROBE" | sed '$d' | sed '$d')
-
-              if echo "$PROBE_CONTENT_TYPE" | grep -qi 'application/json'; then
-                echo "Preview ready and bypass verified: $URL"
-                echo "url=$URL" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-
-              echo "Attempt $i/60: deployment READY but API not JSON yet (HTTP $PROBE_STATUS, content-type: $PROBE_CONTENT_TYPE)"
-              echo "Response preview: $(echo "$PROBE_BODY" | head -c 300)"
-            else
-              echo "Attempt $i/60: waiting for preview (state: ${DEPLOYMENT_STATE:-none}, url: ${DEPLOYMENT_URL:-none})..."
+              echo "Vercel deployment READY: https://$DEPLOYMENT_URL"
+              break
             fi
 
+            echo "Build $i/90: state=${DEPLOYMENT_STATE:-none} url=${DEPLOYMENT_URL:-pending}"
             sleep 10
           done
 
-          echo "::error::Preview not ready after 10 minutes for commit $PR_HEAD_SHA"
+          if [ -z "$DEPLOYMENT_URL" ] || [ "$DEPLOYMENT_STATE" != "READY" ]; then
+            echo "::error::Vercel preview not READY after 15 minutes for commit $PR_HEAD_SHA"
+            exit 1
+          fi
+
+          URL="https://$DEPLOYMENT_URL"
+          HEALTH_URL="$URL/api/health?x-vercel-protection-bypass=$BYPASS_TOKEN"
+
+          # Phase 2: wait until bypass works and the app responds (do NOT follow redirects —
+          # Vercel SSO can loop and curl exits 47 with -L).
+          for i in $(seq 1 30); do
+            PROBE_BODY=$(mktemp)
+            PROBE_HEADERS=$(mktemp)
+            HTTP_CODE=$(curl -sS --max-redirs 0 \
+              -o "$PROBE_BODY" -D "$PROBE_HEADERS" -w "%{http_code}" \
+              -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
+              -H "x-vercel-set-bypass-cookie: true" \
+              "$HEALTH_URL" || echo "000")
+
+            CONTENT_TYPE=$(grep -i '^content-type:' "$PROBE_HEADERS" | tail -1 | cut -d: -f2- | tr -d ' \r\n' || true)
+            BODY_PREVIEW=$(head -c 200 "$PROBE_BODY" | tr -d '\n')
+
+            if [ "$HTTP_CODE" = "200" ] && echo "$CONTENT_TYPE" | grep -qi 'application/json'; then
+              echo "Preview reachable with bypass: $URL"
+              echo "url=$URL" >> "$GITHUB_OUTPUT"
+              rm -f "$PROBE_BODY" "$PROBE_HEADERS"
+              exit 0
+            fi
+
+            LOCATION=$(grep -i '^location:' "$PROBE_HEADERS" | tail -1 | cut -d: -f2- | tr -d ' \r\n' || true)
+            echo "Reachability $i/30: HTTP $HTTP_CODE content-type=${CONTENT_TYPE:-none} location=${LOCATION:-none}"
+            echo "Body preview: $BODY_PREVIEW"
+            rm -f "$PROBE_BODY" "$PROBE_HEADERS"
+            sleep 10
+          done
+
+          echo "::error::Preview deployment is READY but not reachable with bypass token after 5 minutes."
+          echo "Check VERCEL_BYPASS_TOKEN matches Vercel → Deployment Protection → Protection Bypass for Automation."
           exit 1
 
       - run: pnpm exec playwright install --with-deps chromium
