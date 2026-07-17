@@ -66,21 +66,27 @@ jobs:
 
             if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_STATE" = "READY" ]; then
               URL="https://$DEPLOYMENT_URL"
-              CONTENT_TYPE=$(curl -s -o /dev/null -w "%{content_type}" \
+              PROBE=$(curl -s -L \
+                -w '\n%{http_code}\n%{content_type}' \
                 -X POST \
                 -H "Content-Type: application/json" \
                 -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
                 -H "x-vercel-set-bypass-cookie: true" \
                 -d '{"email":"test-e2e-probe@test.local","password":"x","nickname":"probe"}' \
-                "$URL/api/test/setup")
+                "$URL/api/test/setup?x-vercel-protection-bypass=$BYPASS_TOKEN")
 
-              if echo "$CONTENT_TYPE" | grep -qi 'application/json'; then
+              PROBE_CONTENT_TYPE=$(echo "$PROBE" | tail -1)
+              PROBE_STATUS=$(echo "$PROBE" | tail -2 | head -1)
+              PROBE_BODY=$(echo "$PROBE" | sed '$d' | sed '$d')
+
+              if echo "$PROBE_CONTENT_TYPE" | grep -qi 'application/json'; then
                 echo "Preview ready and bypass verified: $URL"
                 echo "url=$URL" >> "$GITHUB_OUTPUT"
                 exit 0
               fi
 
-              echo "Attempt $i/60: deployment READY but API not reachable yet (content-type: $CONTENT_TYPE), waiting..."
+              echo "Attempt $i/60: deployment READY but API not JSON yet (HTTP $PROBE_STATUS, content-type: $PROBE_CONTENT_TYPE)"
+              echo "Response preview: $(echo "$PROBE_BODY" | head -c 300)"
             else
               echo "Attempt $i/60: waiting for preview (state: ${DEPLOYMENT_STATE:-none}, url: ${DEPLOYMENT_URL:-none})..."
             fi
