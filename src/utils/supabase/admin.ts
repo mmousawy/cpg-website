@@ -21,9 +21,17 @@ function createAdminClientInstance(): SupabaseClient<Database> {
   return adminClient;
 }
 
-// Export singleton instance directly
-export const adminSupabase = createAdminClientInstance();
+// Export singleton instance on first use (not at import time — avoids build failures
+// when env vars are unavailable during `next build` static analysis).
+export const createAdminClient = () => createAdminClientInstance();
 
-// Keep createAdminClient() function for backward compatibility
-// Admin client with service role key - use only in server-side code
-export const createAdminClient = () => adminSupabase;
+export const adminSupabase: SupabaseClient<Database> = new Proxy(
+  {} as SupabaseClient<Database>,
+  {
+    get(_target, prop) {
+      const client = createAdminClientInstance();
+      const value = Reflect.get(client, prop, client);
+      return typeof value === 'function' ? value.bind(client) : value;
+    },
+  },
+);

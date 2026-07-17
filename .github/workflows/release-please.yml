@@ -52,35 +52,38 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # For a merge commit, HEAD^2 is the PR branch head — the exact SHA
-          # that Vercel built the preview for and E2E tests ran against.
+          # Collect candidate SHAs for the preview Vercel built and E2E tested.
+          # HEAD^2 = merged PR branch (release-please or feature).
+          # HEAD^1^2 = when main was a merge commit, the prior feature PR head.
+          SHAS_TO_TRY=()
           if git cat-file -e HEAD^2 2>/dev/null; then
-            PR_HEAD_SHA=$(git rev-parse HEAD^2)
-            echo "Merge commit detected, PR head SHA: $PR_HEAD_SHA"
-          else
-            PR_HEAD_SHA="${{ github.sha }}"
-            echo "No merge parent found (squash merge?), using current SHA: $PR_HEAD_SHA"
+            SHAS_TO_TRY+=("$(git rev-parse HEAD^2)")
           fi
+          if git cat-file -e HEAD^1^2 2>/dev/null; then
+            SHAS_TO_TRY+=("$(git rev-parse HEAD^1^2)")
+          fi
+          SHAS_TO_TRY+=("${{ github.sha }}")
 
-          echo "Looking up Vercel preview deployment for SHA: $PR_HEAD_SHA"
-          API_RESPONSE=$(curl -s \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA")
-          echo "API response: $API_RESPONSE"
-          DEPLOYMENT_UID=$(echo "$API_RESPONSE" | \
-            jq -r '.deployments[] | select(.target != "production") | .uid' | head -1)
+          DEPLOYMENT_UID=""
+          for PR_HEAD_SHA in "${SHAS_TO_TRY[@]}"; do
+            echo "Looking up Vercel preview deployment for SHA: $PR_HEAD_SHA"
+            API_RESPONSE=$(curl -s \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA")
+            echo "API response: $API_RESPONSE"
+            DEPLOYMENT_UID=$(echo "$API_RESPONSE" | \
+              jq -r '.deployments[] | select(.target != "production") | .uid' | head -1)
+
+            if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
+              break
+            fi
+          done
 
           if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
             echo "Promoting tested preview to production (UID: $DEPLOYMENT_UID)..."
-            if vercel promote "$DEPLOYMENT_UID" --scope="$VERCEL_ORG_ID" --yes --token="$VERCEL_TOKEN"; then
-              echo "Successfully promoted to production."
-            else
-              echo "Promote failed, falling back to fresh deploy..."
-              vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-              vercel deploy --prod --yes --token="$VERCEL_TOKEN"
-            fi
+            vercel promote "$DEPLOYMENT_UID" --scope="$VERCEL_ORG_ID" --yes --token="$VERCEL_TOKEN"
           else
-            echo "No preview deployment found for SHA $PR_HEAD_SHA, falling back to fresh deploy..."
-            vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-            vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+            echo "No preview deployment found for candidate SHAs: ${SHAS_TO_TRY[*]}"
+            echo "Production deploy skipped — merge a PR with a successful Vercel preview first."
+            exit 1
           fi

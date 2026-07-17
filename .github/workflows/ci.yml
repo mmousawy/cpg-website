@@ -41,16 +41,62 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
 
-          for i in $(seq 1 60); do
-            URL=$(gh pr view "$PR_NUMBER" --json comments \
-              --jq '.comments[] | select(.author.login == "vercel[bot]") | .body' \
-              | grep -oP 'https://[^\s]+\.vercel\.app' | head -1)
+          find_preview_url() {
+            local url=""
 
-            if [ -n "$URL" ]; then
-              BASE_URL=$(echo "$URL" | cut -d'?' -f1)
+            # 1. Vercel API — match the PR head commit (most reliable).
+            if [ -n "$PR_HEAD_SHA" ]; then
+              RESPONSE=$(curl -s \
+                -H "Authorization: Bearer $VERCEL_TOKEN" \
+                "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA&limit=5")
+              url=$(echo "$RESPONSE" | jq -r '.deployments[] | select(.target != "production") | .url' | head -1)
+              if [ -n "$url" ] && [ "$url" != "null" ]; then
+                echo "Found deployment for commit $PR_HEAD_SHA" >&2
+                echo "https://$url"
+                return 0
+              fi
+            fi
+
+            # 2. Vercel API — match branch name from recent preview deployments.
+            if [ -n "$PR_HEAD_REF" ]; then
+              RESPONSE=$(curl -s \
+                -H "Authorization: Bearer $VERCEL_TOKEN" \
+                "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&limit=20")
+              url=$(echo "$RESPONSE" | jq -r --arg ref "$PR_HEAD_REF" \
+                '.deployments[] | select(.target != "production" and .meta.githubCommitRef == $ref) | .url' | head -1)
+              if [ -n "$url" ] && [ "$url" != "null" ]; then
+                echo "Found deployment for branch $PR_HEAD_REF" >&2
+                echo "https://$url"
+                return 0
+              fi
+            fi
+
+            # 3. Fallback — vercel[bot] comment on the PR.
+            url=$(gh pr view "$PR_NUMBER" --json comments \
+              --jq '.comments[] | select(.author.login == "vercel[bot]") | .body' \
+              | grep -oE 'https://[^[:space:]]+\.vercel\.app' | head -1 || true)
+            if [ -n "$url" ]; then
+              echo "Found deployment URL in vercel[bot] PR comment" >&2
+              echo "$url"
+              return 0
+            fi
+
+            return 1
+          }
+
+          for i in $(seq 1 60); do
+            RAW_URL=$(find_preview_url || true)
+
+            if [ -n "$RAW_URL" ]; then
+              BASE_URL=$(echo "$RAW_URL" | cut -d'?' -f1)
               if [ -n "$BYPASS_TOKEN" ]; then
                 STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
                   -H "x-vercel-protection-bypass: $BYPASS_TOKEN" "$BASE_URL")
@@ -58,8 +104,8 @@ jobs:
                 STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL")
               fi
 
-              if [ "$STATUS" = "200" ]; then
-                echo "Preview ready: $BASE_URL"
+              if [ "$STATUS" = "200" ] || [ "$STATUS" = "307" ] || [ "$STATUS" = "308" ]; then
+                echo "Preview ready: $BASE_URL (HTTP $STATUS)"
                 echo "url=$BASE_URL" >> "$GITHUB_OUTPUT"
                 exit 0
               fi
