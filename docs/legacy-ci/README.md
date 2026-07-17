@@ -52,4 +52,17 @@ We initially relied on Vercel's Git integration to build previews, and used `ign
 2. **Skipped builds** — trying to dedupe with `VERCEL_GIT_PULL_REQUEST_ID` backfired: that variable is an empty string on branch pushes (only set on the PR-triggered deploy), so `if [ -z "$VERCEL_GIT_PULL_REQUEST_ID" ]` skipped the push build that was often the only one.
 3. **Unpredictable preview URL** — CI had to scrape the `vercel[bot]` comment or poll the API to find the URL Vercel chose.
 
-Final decision: **disable Vercel Git auto-deploys** (`vercel.json` `git.deploymentEnabled: false`) and have GitHub Actions deploy the preview explicitly via the Vercel CLI (`vercel pull` / `vercel build` / `vercel deploy --prebuilt`). CI owns the deployment URL directly, tags it with `--meta githubCommitSha` for the promote job, then runs E2E against it. This removed the race condition, the duplicates, and the URL-discovery guesswork.
+We briefly tried having GitHub Actions build and deploy the preview via the Vercel CLI (`vercel build` + `vercel deploy --prebuilt`). This hit the free-tier upload limit: `Too many requests - try again in 24 hours (more than 5000, code: "api-upload-free")`, because `.next` output is thousands of small files. `--archive=tgz` mitigates it, but building on CI also duplicates what Vercel does natively.
+
+Final decision: **let Vercel build previews natively, disable only production auto-builds** via `vercel.json`:
+
+```json
+"git": { "deploymentEnabled": { "main": false } }
+```
+
+- Preview branches build on Vercel's platform (no CLI build, no upload limits).
+- `main` never auto-builds — production is reached only by `vercel promote` in the release workflow.
+- CI polls the Vercel API by `meta-githubCommitSha` for the PR head commit, waits for `state == READY`, verifies the bypass token, then runs E2E against that exact URL.
+- The promote job reuses the same `meta-githubCommitSha` lookup (set automatically by Vercel's Git integration) to promote the tested preview.
+
+This avoids the duplicate-build race (production never auto-builds; Vercel dedupes identical preview SHAs) and the free-tier upload cap, while keeping a single deterministic preview URL per commit.

@@ -31,61 +31,64 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Deploy preview to Vercel
-        id: deploy
+      - name: Wait for Vercel preview
+        id: preview
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
             echo "::error::VERCEL_TOKEN is not set."
             exit 1
           fi
-
-          # Pull preview environment config (project settings + env vars).
-          vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
-
-          # Build and deploy a preview. Tag it with the PR head SHA so the
-          # release promote job can locate this exact tested deployment later.
-          vercel build --token="$VERCEL_TOKEN"
-          DEPLOY_URL=$(vercel deploy --prebuilt --token="$VERCEL_TOKEN" \
-            --meta githubCommitSha="$PR_HEAD_SHA" \
-            --meta githubCommitRef="$PR_HEAD_REF")
-
-          echo "Preview deployed: $DEPLOY_URL"
-          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-
-      - name: Verify preview is reachable
-        run: |
-          URL="${{ steps.deploy.outputs.url }}"
-
           if [ -z "$BYPASS_TOKEN" ]; then
             echo "::error::VERCEL_BYPASS_TOKEN is not set. Copy the secret from Vercel → Settings → Deployment Protection → Protection Bypass for Automation."
             exit 1
           fi
 
-          for i in $(seq 1 30); do
-            CONTENT_TYPE=$(curl -s -o /dev/null -w "%{content_type}" \
-              -X POST \
-              -H "Content-Type: application/json" \
-              -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
-              -H "x-vercel-set-bypass-cookie: true" \
-              -d '{"email":"test-e2e-probe@test.local","password":"x","nickname":"probe"}' \
-              "$URL/api/test/setup")
+          # Vercel builds the preview automatically (Git integration). We poll the
+          # API for the deployment matching this PR's head commit, then wait until
+          # it is READY and the bypass token grants access.
+          DEPLOYMENT_URL=""
+          DEPLOYMENT_STATE=""
 
-            if echo "$CONTENT_TYPE" | grep -qi 'application/json'; then
-              echo "Preview ready and bypass verified: $URL"
-              exit 0
+          for i in $(seq 1 60); do
+            RESPONSE=$(curl -s \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA&limit=1")
+
+            DEPLOYMENT_URL=$(echo "$RESPONSE" | jq -r '.deployments[0].url // empty')
+            DEPLOYMENT_STATE=$(echo "$RESPONSE" | jq -r '.deployments[0].state // .deployments[0].readyState // empty')
+
+            if [ "$DEPLOYMENT_STATE" = "ERROR" ] || [ "$DEPLOYMENT_STATE" = "CANCELED" ]; then
+              echo "::error::Vercel preview build $DEPLOYMENT_STATE for commit $PR_HEAD_SHA"
+              exit 1
             fi
 
-            echo "Attempt $i/30: preview not ready (content-type: $CONTENT_TYPE), waiting..."
+            if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_STATE" = "READY" ]; then
+              URL="https://$DEPLOYMENT_URL"
+              CONTENT_TYPE=$(curl -s -o /dev/null -w "%{content_type}" \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
+                -H "x-vercel-set-bypass-cookie: true" \
+                -d '{"email":"test-e2e-probe@test.local","password":"x","nickname":"probe"}' \
+                "$URL/api/test/setup")
+
+              if echo "$CONTENT_TYPE" | grep -qi 'application/json'; then
+                echo "Preview ready and bypass verified: $URL"
+                echo "url=$URL" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+
+              echo "Attempt $i/60: deployment READY but API not reachable yet (content-type: $CONTENT_TYPE), waiting..."
+            else
+              echo "Attempt $i/60: waiting for preview (state: ${DEPLOYMENT_STATE:-none}, url: ${DEPLOYMENT_URL:-none})..."
+            fi
+
             sleep 10
           done
 
-          echo "Preview not ready after 5 minutes"
+          echo "::error::Preview not ready after 10 minutes for commit $PR_HEAD_SHA"
           exit 1
 
       - run: pnpm exec playwright install --with-deps chromium
@@ -93,7 +96,7 @@ jobs:
       - name: E2E tests
         run: pnpm run test:e2e
         env:
-          BASE_URL: ${{ steps.deploy.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
+          BASE_URL: ${{ steps.preview.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
 
       - name: Upload Playwright report
