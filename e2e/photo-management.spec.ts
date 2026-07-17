@@ -1,38 +1,23 @@
 import { expect, test } from '@playwright/test';
 import path from 'path';
-import { createTestUser, loginTestUser, withVercelBypassHeaders, withVercelBypassQuery, type TestUser } from './test-utils';
+import { cleanupTestUsers, createTestUser, loginTestUser, type TestUser } from './test-utils';
 
 test.describe('Photo Management Flow', () => {
   let testUser: TestUser;
-  let baseUrl: string;
-  let bypassToken: string | undefined;
 
-  test.beforeAll(async ({ }, testInfo) => {
-    // Get base URL from config
-    baseUrl = testInfo.project.use.baseURL || 'http://localhost:3000';
-    bypassToken = process.env.VERCEL_BYPASS_TOKEN;
-
-    // Create a test user for all tests in this suite
-    testUser = await createTestUser(baseUrl, bypassToken);
+  test.beforeAll(async ({ request }) => {
+    testUser = await createTestUser(request);
     console.log(`Created test user: ${testUser.email}`);
   });
 
-  test.afterAll(async () => {
-    // Cleanup test user data explicitly (photos, albums, etc.)
-    // This ensures cleanup happens even if individual tests fail
-    if (testUser && baseUrl) {
-      try {
-        const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' }, bypassToken);
+  test.afterAll(async ({ request }) => {
+    if (!testUser) return;
 
-        await fetch(withVercelBypassQuery(`${baseUrl}/api/test/cleanup`, bypassToken), {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ emails: [testUser.email] }),
-        });
-        console.log(`Cleaned up test user: ${testUser.email}`);
-      } catch (err) {
-        console.error('Failed to cleanup test user:', err);
-      }
+    try {
+      await cleanupTestUsers(request, [testUser.email]);
+      console.log(`Cleaned up test user: ${testUser.email}`);
+    } catch (err) {
+      console.error('Failed to cleanup test user:', err);
     }
   });
 

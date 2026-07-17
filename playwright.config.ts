@@ -1,11 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Extract base URL and bypass token from BASE_URL env var
-const baseUrlWithToken = process.env.BASE_URL || 'http://localhost:3000';
-const [baseUrl, queryString] = baseUrlWithToken.split('?');
-const bypassToken = queryString?.includes('x-vercel-protection-bypass')
-  ? new URLSearchParams(queryString).get('x-vercel-protection-bypass')
-  : process.env.VERCEL_BYPASS_TOKEN;
+import { getPlaywrightApiContextOptions } from './e2e/test-utils';
+
+const { baseURL, extraHTTPHeaders } = getPlaywrightApiContextOptions();
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,16 +16,10 @@ export default defineConfig({
   globalTeardown: './e2e/global-teardown.ts',
 
   use: {
-    baseURL: baseUrl,
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    // Add bypass token to all requests if available
-    extraHTTPHeaders: bypassToken
-      ? {
-        'x-vercel-protection-bypass': bypassToken,
-        'x-vercel-set-bypass-cookie': 'true',
-      }
-      : {},
+    extraHTTPHeaders,
   },
 
   projects: [

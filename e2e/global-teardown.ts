@@ -1,7 +1,8 @@
+import { request } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
-import { withVercelBypassHeaders, withVercelBypassQuery } from './test-utils';
+import { getPlaywrightApiContextOptions } from './test-utils';
 
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
@@ -27,31 +28,26 @@ async function globalTeardown() {
 
   console.log(`Found ${testEmails.length} test emails to clean up`);
 
+  const apiRequest = await request.newContext(getPlaywrightApiContextOptions());
+
   try {
-    // Use BASE_URL if available (for Vercel previews), otherwise fallback to localhost
-    let baseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    // Remove query parameters from baseURL for cleanup API call
-    baseUrl = baseUrl.split('?')[0];
-
-    const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' });
-
-    const response = await fetch(withVercelBypassQuery(`${baseUrl}/api/test/cleanup`), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ emails: testEmails }),
+    const response = await apiRequest.post('/api/test/cleanup', {
+      data: { emails: testEmails },
     });
 
-    if (response.ok) {
+    if (response.ok()) {
       const result = await response.json();
       console.log(`✅ Cleaned up ${result.deleted?.length || 0} test users`);
       if (result.errors?.length > 0) {
         console.log('⚠️ Some errors:', result.errors);
       }
     } else {
-      console.log('❌ Cleanup API returned error:', response.status);
+      console.log('❌ Cleanup API returned error:', response.status());
     }
   } catch (error) {
     console.log('❌ Failed to call cleanup API:', error);
+  } finally {
+    await apiRequest.dispose();
   }
 
   // Clean up the file

@@ -1,29 +1,19 @@
 import { expect, test } from '@playwright/test';
 
-import { createTestUser, loginTestUser, withVercelBypassHeaders, withVercelBypassQuery, type TestUser } from './test-utils';
+import { cleanupTestUsers, createTestUser, loginTestUser, type TestUser } from './test-utils';
 
 test.describe('Account mobile section nav', () => {
   let testUser: TestUser;
-  let baseUrl: string;
-  let bypassToken: string | undefined;
 
-  test.beforeAll(async ({ }, testInfo) => {
-    baseUrl = testInfo.project.use.baseURL || 'http://localhost:3000';
-    bypassToken = process.env.VERCEL_BYPASS_TOKEN;
-    testUser = await createTestUser(baseUrl, bypassToken);
+  test.beforeAll(async ({ request }) => {
+    testUser = await createTestUser(request);
   });
 
-  test.afterAll(async () => {
-    if (!testUser || !baseUrl) return;
+  test.afterAll(async ({ request }) => {
+    if (!testUser) return;
 
     try {
-      const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' }, bypassToken);
-
-      await fetch(withVercelBypassQuery(`${baseUrl}/api/test/cleanup`, bypassToken), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ emails: [testUser.email] }),
-      });
+      await cleanupTestUsers(request, [testUser.email]);
     } catch (error) {
       console.error('Failed to cleanup test user:', error);
     }

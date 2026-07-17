@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -35,6 +35,21 @@ export function withVercelBypassQuery(url: string, bypassToken?: string): string
   const parsed = new URL(url);
   parsed.searchParams.set('x-vercel-protection-bypass', token);
   return parsed.toString();
+}
+
+/** Shared Playwright request context options (mirrors playwright.config.ts). */
+export function getPlaywrightApiContextOptions(): {
+  baseURL: string;
+  extraHTTPHeaders: Record<string, string>;
+  } {
+  const baseUrlWithToken = process.env.BASE_URL || 'http://localhost:3000';
+  const [baseUrl] = baseUrlWithToken.split('?');
+  const bypassHeaders = withVercelBypassHeaders({});
+
+  return {
+    baseURL: baseUrl,
+    extraHTTPHeaders: bypassHeaders as Record<string, string>,
+  };
 }
 
 // Generate unique test email
@@ -78,36 +93,28 @@ export interface TestUser {
 }
 
 /**
- * Create a fully verified test user via the test setup API
+ * Create a fully verified test user via the test setup API.
+ * Uses Playwright's request context so Vercel bypass headers match browser tests.
  */
-export async function createTestUser(baseUrl: string, bypassToken?: string): Promise<TestUser> {
+export async function createTestUser(apiRequest: APIRequestContext): Promise<TestUser> {
   const email = generateTestEmail();
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
 
-  const effectiveBypassToken = getVercelBypassToken(bypassToken);
-
-  const headers = withVercelBypassHeaders({ 'Content-Type': 'application/json' }, effectiveBypassToken);
-
   const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const response = await fetch(
-      withVercelBypassQuery(`${baseUrl}/api/test/setup`, effectiveBypassToken),
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ email, password, nickname, fullName: 'Test User' }),
-      },
-    );
+    const response = await apiRequest.post('/api/test/setup', {
+      data: { email, password, nickname, fullName: 'Test User' },
+    });
 
-    const contentType = response.headers.get('content-type') ?? '';
+    const contentType = response.headers()['content-type'] ?? '';
     if (!contentType.includes('application/json')) {
       const text = await response.text();
       const looksLikeProtectionPage = /vercel|authentication required|deployment protection|password/i.test(text);
       const reasonHint = looksLikeProtectionPage
         ? 'Likely Vercel deployment protection. Ensure VERCEL_BYPASS_TOKEN is set in CI.'
         : 'Server may not be ready yet.';
-      const msg = `Attempt ${attempt}/${maxAttempts}: Expected JSON from /api/test/setup but got "${contentType}" (HTTP ${response.status}). ${reasonHint}`;
+      const msg = `Attempt ${attempt}/${maxAttempts}: Expected JSON from /api/test/setup but got "${contentType}" (HTTP ${response.status()}). ${reasonHint}`;
       console.warn(msg, '\nResponse preview:', text.slice(0, 200));
       if (attempt < maxAttempts) {
         await new Promise(r => setTimeout(r, Math.min(10000, attempt * 1500)));
@@ -116,9 +123,9 @@ export async function createTestUser(baseUrl: string, bypassToken?: string): Pro
       throw new Error(msg);
     }
 
-    if (!response.ok) {
+    if (!response.ok()) {
       const error = await response.json();
-      throw new Error(`Failed to create test user: ${error.error || response.statusText}`);
+      throw new Error(`Failed to create test user: ${error.error || response.statusText()}`);
     }
 
     const data = await response.json();
@@ -135,6 +142,15 @@ export async function createTestUser(baseUrl: string, bypassToken?: string): Pro
   }
 
   throw new Error('createTestUser: exhausted all retries');
+}
+
+/** Delete test users created during E2E runs. */
+export async function cleanupTestUsers(
+  apiRequest: APIRequestContext,
+  emails: string[],
+): Promise<void> {
+  if (emails.length === 0) return;
+  await apiRequest.post('/api/test/cleanup', { data: { emails } });
 }
 
 /**
