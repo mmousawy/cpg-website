@@ -1,5 +1,7 @@
 'use client';
 
+import 'react-quill-new/dist/quill.snow.css';
+
 import dynamic from 'next/dynamic';
 import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

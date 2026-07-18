@@ -105,6 +105,10 @@ export default function RootLayout({
       className="h-full overflow-x-clip"
     >
       <head>
+        <link
+          rel="preconnect"
+          href="https://db.creativephotography.group"
+        />
         <meta
           name="apple-mobile-web-app-title"
           content="Creative Photography Group"

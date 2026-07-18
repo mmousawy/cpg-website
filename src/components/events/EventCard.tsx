@@ -70,6 +70,8 @@ type EventCardProps = {
   attendees?: EventAttendee[];
   disableAttendeesPopover?: boolean;
   serverNow?: number;
+  /** Prioritize loading for LCP (first visible event card on homepage) */
+  priority?: boolean;
 };
 
 function getStatusLabel(status: EventStatus): string {
@@ -113,6 +115,7 @@ export default function EventCard({
   attendees = [],
   disableAttendeesPopover = false,
   serverNow,
+  priority = false,
 }: EventCardProps) {
   const status =
     serverNow !== undefined
@@ -139,7 +142,9 @@ export default function EventCard({
           <BlurImage
             fill
             sizes="100vw"
-            loading='lazy'
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : undefined}
+            priority={priority}
             quality={92}
             alt={event.title || 'Event cover image'}
             className={clsx(
@@ -263,7 +268,9 @@ export default function EventCard({
             <BlurImage
               fill
               sizes="(min-width: 1024px) 448px, 384px"
-              loading='lazy'
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : undefined}
+              priority={priority}
               quality={92}
               alt={event.title || 'Event cover image'}
               className={clsx(

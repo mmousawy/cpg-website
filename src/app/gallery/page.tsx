@@ -88,13 +88,13 @@ export default async function GalleryPage() {
                     className="group"
                   >
                     <h2
-                      className="text-xl font-semibold group-hover:text-primary transition-colors font-heading opacity-80"
+                      className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
                     >
                       Most viewed this week
                     </h2>
                   </Link>
                   <p
-                    className="text-foreground/60 mt-1 text-sm"
+                    className="text-foreground/80 mt-1 text-sm"
                   >
                     Popular photos from the last 7 days
                   </p>
@@ -127,13 +127,13 @@ export default async function GalleryPage() {
                 className="group"
               >
                 <h2
-                  className="text-xl font-semibold group-hover:text-primary transition-colors font-heading opacity-80"
+                  className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
                 >
                   Trending albums
                 </h2>
               </Link>
               <p
-                className="text-foreground/60 mt-1 text-sm"
+                className="text-foreground/80 mt-1 text-sm"
               >
                 Most viewed albums from the last 7 days
               </p>
@@ -172,13 +172,13 @@ export default async function GalleryPage() {
                     className="group"
                   >
                     <h2
-                      className="text-xl font-semibold group-hover:text-primary transition-colors font-heading opacity-80"
+                      className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
                     >
                       Recent photos
                     </h2>
                   </Link>
                   <p
-                    className="text-foreground/60 mt-1 text-sm"
+                    className="text-foreground/80 mt-1 text-sm"
                   >
                     Latest uploads from the community
                   </p>
@@ -208,13 +208,13 @@ export default async function GalleryPage() {
               className="group"
             >
               <h2
-                className="text-xl font-semibold group-hover:text-primary transition-colors font-heading opacity-80"
+                className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
               >
                 Recent albums
               </h2>
             </Link>
             <p
-              className="text-foreground/60 mt-1 text-sm"
+              className="text-foreground/80 mt-1 text-sm"
             >
               Photo collections from community members
             </p>

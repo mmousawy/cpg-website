@@ -147,7 +147,7 @@ export default function EventsList({
       <div
         className="space-y-3 sm:space-y-5"
       >
-        {displayEvents.map((event) => {
+        {displayEvents.map((event, index) => {
           const attendees = attendeesByEvent[event.id] || [];
           return (
             <EventCard
@@ -158,6 +158,7 @@ export default function EventsList({
               attendees={attendees}
               disableAttendeesPopover={disableAttendeesPopover}
               serverNow={serverNow}
+              priority={index === 0}
             />
           );
         })}

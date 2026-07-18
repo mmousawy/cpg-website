@@ -67,7 +67,7 @@ export default async function Home() {
   const [albums, organizers, members, upcomingEventsData, challengesData, photos] = await Promise.all([
     getRecentAlbums(3),
     getOrganizers(5),
-    getRecentMembers(50),
+    getRecentMembers(20),
     getUpcomingEvents(6),
     getActiveChallenges(),
     getPublicPhotostream(10),
@@ -102,9 +102,9 @@ export default async function Home() {
             src={heroImage}
           />
 
-          {/* Frosted glass blur layer */}
+          {/* Scrim mask — blur is applied directly on the hero image */}
           <div
-            className="absolute inset-0 backdrop-blur-md scrim-gradient-mask-strong"
+            className="absolute inset-0 scrim-gradient-mask-strong"
           />
 
           {/* Gradient overlay */}
@@ -118,17 +118,21 @@ export default async function Home() {
           className="absolute inset-x-0 bottom-0 px-2 sm:px-8"
         >
           <div
-            className="mx-auto max-w-screen-md text-center"
+            className="flex flex-col items-center mx-auto max-w-screen-md"
           >
             <p
-              className="mb-2 text-5xl md:text-7xl font-heading hero-title-shadow sm:mb-3"
+              className="mb-2 px-4 text-5xl md:text-7xl font-heading hero-title-shadow sm:mb-3 text-center"
             >
               Photography, together.
             </p>
             <h1
-              className="mb-4 mx-auto max-w-2xl font-(family-name:--font-geist-sans)! text-lg opacity-80 sm:text-xl hero-title-shadow font-medium"
+              className="inline-grid max-sm:grid-rows-2 sm:grid-cols-2 mb-4 px-4 max-w-2xl font-(family-name:--font-geist-sans)! text-lg opacity-80 sm:text-xl hero-title-shadow font-medium"
             >
-              Creative Photography Group - A community for photographers
+              Creative Photography Group <span
+                className="flex items-center max-sm:justify-center"
+              ><span
+                className="max-sm:hidden mx-2"
+              >&mdash;</span> Shoot. Share. Explore.</span>
             </h1>
           </div>
         </div>
@@ -148,7 +152,7 @@ export default async function Home() {
             className="mb-4 flex items-center justify-between"
           >
             <h2
-              className="text-xl font-semibold opacity-80 font-heading"
+              className="text-xl font-semibold font-heading"
             >
               Upcoming events
             </h2>
@@ -178,7 +182,7 @@ export default async function Home() {
               className="mb-4 flex items-center justify-between"
             >
               <h3
-                className="text-xl font-semibold opacity-80 font-heading"
+                className="text-xl font-semibold font-heading"
               >
                 Photo challenges
               </h3>
@@ -204,7 +208,7 @@ export default async function Home() {
               className="mb-4 flex items-center justify-between"
             >
               <h3
-                className="text-xl font-semibold opacity-80 font-heading"
+                className="text-xl font-semibold font-heading"
               >
                 Recent albums
               </h3>
@@ -232,7 +236,7 @@ export default async function Home() {
             className="mb-4 flex items-center justify-between"
           >
             <h3
-              className="text-xl font-semibold opacity-80 font-heading"
+              className="text-xl font-semibold font-heading"
             >
               Recent photos
             </h3>
@@ -355,13 +359,13 @@ export default async function Home() {
                 Organizers
               </h3>
               <div
-                className="grid gap-4 sm:grid-cols-2"
+                className="grid gap-4 sm:grid-cols-2 sm:gap-6"
               >
                 {organizers.map((organizer) => (
                   <Link
                     key={organizer.id}
                     href={organizer.nickname ? `/@${organizer.nickname}` : '#'}
-                    className="flex items-start gap-4 rounded-xl border border-border-color bg-background p-4 transition-colors hover:border-primary group"
+                    className="flex items-start gap-4 rounded-xl border border-border-color bg-background/60 p-4 transition-colors hover:border-primary group"
                   >
                     <Avatar
                       avatarUrl={organizer.avatar_url}
@@ -373,13 +377,13 @@ export default async function Home() {
                       className="flex-1 min-w-0"
                     >
                       <p
-                        className="font-semibold group-hover:text-primary transition-colors"
+                        className="font-semibold group-hover:text-primary transition-colors leading-tight"
                       >
                         {organizer.full_name || 'Organizer'}
                       </p>
                       {organizer.nickname && (
                         <p
-                          className="text-sm opacity-70 group-hover:text-primary transition-colors"
+                          className="text-sm opacity-80 group-hover:text-primary transition-colors"
                         >
                           {`@${
                             organizer.nickname
@@ -388,7 +392,7 @@ export default async function Home() {
                       )}
                       {organizer.bio && (
                         <p
-                          className="mt-2 text-sm text-foreground/70 line-clamp-2"
+                          className="mt-4 text-sm text-foreground/80 line-clamp-2"
                         >
                           {organizer.bio}
                         </p>

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
-@import "react-quill-new/dist/quill.snow.css";
 
 /* Base/fallback: use system preference when JS is disabled */
 :root {
