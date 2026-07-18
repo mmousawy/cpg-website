@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.35.2](https://github.com/mmousawy/cpg-website/compare/v1.35.1...v1.35.2) (2026-07-18)
+
+
+### 🐛 Bug Fixes
+
+* Update global styles and enhance layout components ([5e9f991](https://github.com/mmousawy/cpg-website/commit/5e9f99120c0885cd8f35725cd1650db1a6714ca6))
+
+
+### ♻️ Refactoring
+
+* Enhance account and admin layouts with authentication guards and loading states ([6401957](https://github.com/mmousawy/cpg-website/commit/64019573931ef52525d0738ab61545ad9e52c480))
+
 ## [1.35.1](https://github.com/mmousawy/cpg-website/compare/v1.35.0...v1.35.1) (2026-07-17)
 
 
