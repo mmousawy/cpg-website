@@ -59,7 +59,7 @@ export default async function GalleryPage() {
             />
           </div>
           <p
-            className="text-base sm:text-lg opacity-70"
+            className="text-base sm:text-lg opacity-80"
           >
             Explore beautiful photos from the community
           </p>

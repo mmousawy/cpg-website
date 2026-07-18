@@ -49,7 +49,7 @@ export default async function ChallengesPage() {
           />
         </div>
         <p
-          className="text-base sm:text-xl mt-2 text-foreground/80"
+          className="text-base sm:text-lg opacity-80"
         >
           Join our themed challenges and showcase your photography skills
         </p>

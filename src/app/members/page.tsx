@@ -9,6 +9,7 @@ import { createMetadata } from '@/utils/metadata';
 import { createClient } from '@/utils/supabase/server';
 import { formatJoinedDate } from '@/utils/utils';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 // Cached data functions
 import { routes } from '@/config/routes';
@@ -22,6 +23,18 @@ export const metadata = createMetadata({
   canonical: '/members',
   keywords: ['photography community', 'photographers', 'member discovery', 'community members'],
 });
+
+export default function MembersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  return (
+    <Suspense
+      fallback={<MembersPageSkeleton />}
+    >
+      <MembersPageContent
+        searchParams={searchParams}
+      />
+    </Suspense>
+  );
+}
 
 async function getMembersPageData() {
   const [popularInterestsResult, randomInterestsResult, recentlyActiveResult, popularTagsResult, newMembersResult] = await Promise.allSettled([
@@ -78,7 +91,7 @@ async function getMembersPageUser() {
   }
 }
 
-export default async function MembersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+async function MembersPageContent({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const [user, resolvedSearchParams] = await Promise.all([getMembersPageUser(), searchParams]);
   const showSkeleton = resolvedSearchParams.skeleton !== undefined;
   const membersData = user && !showSkeleton ? await getMembersPageData() : null;
@@ -105,7 +118,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
             />
           </div>
           <p
-            className="text-base sm:text-lg opacity-70"
+            className="text-base sm:text-lg opacity-80"
           >
             Sign in to discover and connect with our community members
           </p>
@@ -166,29 +179,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   return (
     <>
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <div
-            className="flex items-center gap-2 mb-2"
-          >
-            <h1
-              className="text-2xl sm:text-3xl font-bold font-heading"
-            >
-              Discover our community
-            </h1>
-            <HelpLink
-              href="discover-members"
-              label="Help with discovering members"
-              size="lg"
-            />
-          </div>
-          <p
-            className="text-base sm:text-lg opacity-70"
-          >
-            Explore members by interests, recent activity, and photo styles
-          </p>
-        </div>
+        <MembersPageHeader />
 
         {/* Popular Interests Section */}
         <div
@@ -307,6 +298,109 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         </div>
       </PageContainer>
     </>
+  );
+}
+
+function MembersPageHeader() {
+  return (
+    <div
+      className="mb-8"
+    >
+      <div
+        className="flex items-center gap-2 mb-2"
+      >
+        <h1
+          className="text-2xl sm:text-3xl font-bold font-heading"
+        >
+          Discover our community
+        </h1>
+        <HelpLink
+          href="discover-members"
+          label="Help with discovering members"
+          size="lg"
+        />
+      </div>
+      <p
+        className="text-base sm:text-lg opacity-80"
+      >
+        Explore members by interests, recent activity, and photo styles
+      </p>
+    </div>
+  );
+}
+
+function MembersPageSkeleton() {
+  return (
+    <PageContainer>
+      <MembersPageHeader />
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-3 text-xl font-semibold font-heading opacity-80"
+        >
+          Popular interests
+        </h2>
+        <InterestsSkeleton />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-4 text-xl font-semibold font-heading opacity-80"
+        >
+          Explore by interests
+        </h2>
+        <InterestCardsSkeleton />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
+          Recently active
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Members who have shared photos or albums recently
+        </p>
+        <MemberGridSkeleton
+          count={12}
+        />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
+          Explore by photo style
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Discover members who frequently use these photo tags
+        </p>
+        <InterestsSkeleton />
+      </div>
+      <div>
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
+          New members
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Welcome our newest community members
+        </p>
+        <MemberGridSkeleton
+          count={12}
+        />
+      </div>
+    </PageContainer>
   );
 }
 

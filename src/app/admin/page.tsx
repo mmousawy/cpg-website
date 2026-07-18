@@ -1,5 +1,3 @@
-'use client';
-
 import clsx from 'clsx';
 import Link from 'next/link';
 
@@ -10,6 +8,9 @@ import CalendarSVG from 'public/icons/calendar2.svg';
 import NotificationCommentSVG from 'public/icons/notification-comment.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 
+// Auth-gated admin UI — opt out of instant-navigation validation
+export const instant = false;
+
 type AdminCard = {
   title: string
   description: string
@@ -19,7 +20,7 @@ type AdminCard = {
 }
 
 export default function AdminDashboardPage() {
-  // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
+  // Admin access is enforced by proxy middleware and AdminRoleGuard in layout
 
   const adminCards: AdminCard[] = [
     {

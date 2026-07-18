@@ -1,25 +1,26 @@
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
-import { getServerAuth } from '@/utils/supabase/getServerAuth';
+import { Suspense } from 'react';
+
 import { createNoIndexMetadata } from '@/utils/metadata';
 import { isProfileComplete } from '@/utils/profileCompletion';
+import { getServerAuth } from '@/utils/supabase/getServerAuth';
 
 export const metadata = createNoIndexMetadata({
   title: 'Account',
   description: 'Manage your Creative Photography Group account settings',
 });
 
-export default async function AccountLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+async function AccountConnection() {
   // Opt out of static generation - account pages require authentication
   await connection();
+  return null;
+}
 
+async function AccountAuthGuard() {
   const { user, profile } = await getServerAuth();
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (proxy middleware also enforces this)
   if (!user) {
     redirect('/login?redirectTo=/account');
   }
@@ -32,7 +33,27 @@ export default async function AccountLayout({
     redirect('/onboarding');
   }
 
-  return <>
-    {children}
-  </>;
+  return null;
+}
+
+export default function AccountLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <>
+      <Suspense
+        fallback={null}
+      >
+        <AccountConnection />
+      </Suspense>
+      <Suspense
+        fallback={null}
+      >
+        <AccountAuthGuard />
+      </Suspense>
+      {children}
+    </>
+  );
 }

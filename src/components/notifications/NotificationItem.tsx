@@ -33,8 +33,8 @@ export default function NotificationItem({ notification, onView, onDismiss, onMa
   return (
     <div
       className={clsx(
-        'relative flex items-center gap-3 p-4 hover:bg-background-medium transition-colors',
-        isUnseen ? 'border-l-3 border-l-primary' : 'border-l-3 border-l-transparent opacity-80',
+        'relative flex items-center gap-3 p-4 hover:bg-background/40 transition-colors',
+        isUnseen ? 'border-l-3 border-l-primary' : 'border-l-3 border-l-transparent opacity-90',
       )}
     >
       <NotificationContent

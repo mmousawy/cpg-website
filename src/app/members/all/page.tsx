@@ -30,7 +30,7 @@ export default async function AllMembersPage() {
             All members
           </h1>
           <p
-            className="text-base sm:text-lg opacity-70"
+            className="text-base sm:text-lg opacity-80"
           >
             Sign in to see all community members
           </p>
@@ -90,7 +90,7 @@ export default async function AllMembersPage() {
           All members
         </h1>
         <p
-          className="text-base sm:text-lg opacity-70"
+          className="text-base sm:text-lg opacity-80"
         >
           {members.length}
           {' '}

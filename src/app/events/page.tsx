@@ -61,9 +61,9 @@ export default async function EventsPage() {
           />
         </div>
         <p
-          className="text-base sm:text-xl mt-2 text-foreground/80"
+          className="text-base sm:text-lg opacity-80"
         >
-          Join us at our upcoming meetups or browse past events
+          Join our upcoming meetups or explore past events
         </p>
       </div>
 

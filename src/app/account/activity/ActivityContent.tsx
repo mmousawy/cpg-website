@@ -124,7 +124,7 @@ export default function ActivityContent() {
             />
           </div>
           <p
-            className="text-base sm:text-lg opacity-70"
+            className="text-base sm:text-lg opacity-80"
           >
             View your notifications and activity
           </p>
@@ -190,7 +190,7 @@ export default function ActivityContent() {
           </div>
         </div>
         <p
-          className="text-base sm:text-lg opacity-70"
+          className="text-base sm:text-lg opacity-80"
         >
           View your notifications and activity
         </p>

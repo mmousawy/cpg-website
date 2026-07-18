@@ -115,7 +115,7 @@ export default function MyEventsPage() {
           />
         </div>
         <p
-          className="text-base sm:text-lg opacity-70"
+          className="text-base sm:text-lg opacity-80"
         >
           View and manage your event registrations
         </p>

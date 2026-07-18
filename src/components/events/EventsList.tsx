@@ -185,7 +185,7 @@ export default function EventsList({
             {event.cover_image && (
               <Link
                 href={`/events/${event.slug}`}
-                className="relative block sm:hidden aspect-[21/9]"
+                className="relative block sm:hidden aspect-21/9"
                 tabIndex={-1}
               >
                 <BlurImage
