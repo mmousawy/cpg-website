@@ -7,7 +7,7 @@ import Link from 'next/link';
 import BlurImage from '@/components/shared/BlurImage';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getEventStatus, type EventStatus } from '@/lib/events/status';
-import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
+import { getCroppedThumbnailUrl, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -123,6 +123,7 @@ export default function EventCard({
       : 'upcoming';
   const isPast = status === 'past';
   const imageSrc = event.cover_image;
+  const imageQuality = THUMBNAIL_IMAGE_QUALITY;
   const attendeePeople = transformAttendeesToAvatarPeople(attendees);
 
   const wrapperClasses = clsx(
@@ -144,8 +145,8 @@ export default function EventCard({
             sizes="100vw"
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
-            priority={priority}
-            quality={92}
+            preload={priority}
+            quality={imageQuality}
             alt={event.title || 'Event cover image'}
             className={clsx(
               'object-cover rounded-t-xl',
@@ -187,14 +188,14 @@ export default function EventCard({
             </div>
           )}
 
-          <h4
+          <h3
             className={clsx(
               'text-lg font-semibold leading-tight line-clamp-2 mb-3 transition-colors',
               isPast ? 'text-foreground/80' : 'group-hover:text-primary',
             )}
           >
             {event.title}
-          </h4>
+          </h3>
 
           <div
             className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-sm text-foreground/80"
@@ -270,8 +271,8 @@ export default function EventCard({
               sizes="(min-width: 1024px) 448px, 384px"
               loading={priority ? 'eager' : 'lazy'}
               fetchPriority={priority ? 'high' : undefined}
-              priority={priority}
-              quality={92}
+              preload={priority}
+              quality={imageQuality}
               alt={event.title || 'Event cover image'}
               className={clsx(
                 'object-cover rounded-r-xl',

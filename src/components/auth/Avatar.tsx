@@ -109,7 +109,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     // Show initials (including "?" when no name data)
     return (
       <div
-        className="flex w-full h-full items-center justify-center bg-[#5e9b84] font-bold text-white leading-none text-[43.75cqmin]"
+        className="flex w-full h-full items-center justify-center bg-[#2d6b55] font-bold text-white leading-none text-[43.75cqmin]"
       >
         {initials}
       </div>

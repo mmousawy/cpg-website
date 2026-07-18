@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
+import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckCircleSVG from 'public/icons/check-circle.svg';
@@ -115,8 +116,9 @@ export default function ChallengeCard({
             alt={challenge.title}
             fill
             className="object-cover transition-all duration-200 group-hover:brightness-110"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 400px, (max-width: 1024px) 50vw, 33vw"
             blurhash={challenge.image_blurhash}
+            quality={THUMBNAIL_IMAGE_QUALITY}
           />
           {/* Bottom blur layer with gradient mask */}
           <div

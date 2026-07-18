@@ -78,6 +78,11 @@ export default function NotificationButton() {
     return null;
   }
 
+  const notificationAriaLabel =
+    unseenCount > 0
+      ? `${unseenCount} unread notification${unseenCount === 1 ? '' : 's'}`
+      : 'Notifications';
+
   return (
     <details
       ref={detailsRef}
@@ -86,7 +91,7 @@ export default function NotificationButton() {
     >
       <summary
         className="list-none cursor-pointer relative flex items-center justify-center size-10 rounded-full hover:bg-foreground/5 transition-colors [&::-webkit-details-marker]:hidden"
-        aria-label="Notifications"
+        aria-label={notificationAriaLabel}
       >
         <svg
           className="h-5 w-5 text-foreground/80"
@@ -104,7 +109,7 @@ export default function NotificationButton() {
         {unseenCount > 0 && (
           <span
             className={clsx(
-              'absolute top-1 right-1 bg-red-500 text-white text-[10px] font-medium',
+              'absolute top-1 right-1 bg-red-700 text-white text-[10px] font-medium',
               'rounded-full min-w-4 h-4 flex items-center justify-center px-1',
               unseenCount > 99 && 'text-[9px]',
             )}

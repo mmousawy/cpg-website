@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
+import { preload } from 'react-dom';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Avatar from '@/components/auth/Avatar';
@@ -16,6 +17,11 @@ import HeroImage from '@/components/shared/HeroImage';
 import { routes } from '@/config/routes';
 import { socialLinks } from '@/config/socials';
 import { createMetadata } from '@/utils/metadata';
+import {
+  DEFAULT_SUPABASE_IMAGE_QUALITY,
+  getCroppedThumbnailUrl,
+  getPreloadImageUrl,
+} from '@/utils/supabaseImageLoader';
 
 // Cached data functions
 import { getRecentAlbums } from '@/lib/data/albums';
@@ -84,6 +90,21 @@ export default async function Home() {
   const yearStart = new Date(serverDate.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((serverNow - yearStart.getTime()) / (1000 * 60 * 60 * 24));
   const heroImage = heroImages[dayOfYear % heroImages.length];
+
+  preload(
+    getPreloadImageUrl(heroImage, undefined, DEFAULT_SUPABASE_IMAGE_QUALITY),
+    { as: 'image', fetchPriority: 'high' },
+  );
+
+  const firstEvent = events[0];
+  if (firstEvent?.cover_image) {
+    const eventCoverSrc =
+      getCroppedThumbnailUrl(firstEvent.cover_image, 640, 274) ?? firstEvent.cover_image;
+    preload(
+      getPreloadImageUrl(eventCoverSrc, undefined, DEFAULT_SUPABASE_IMAGE_QUALITY),
+      { as: 'image', fetchPriority: 'high' },
+    );
+  }
 
   return (
     <>

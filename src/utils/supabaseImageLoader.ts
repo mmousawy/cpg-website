@@ -9,6 +9,12 @@ const SUPABASE_DOMAINS = [
 /** Default quality for Supabase /render/image transforms (20–100). */
 export const DEFAULT_SUPABASE_IMAGE_QUALITY = 92;
 
+/** Lower quality for grid thumbnails and below-the-fold cards. */
+export const THUMBNAIL_IMAGE_QUALITY = 80;
+
+/** ~414px mobile viewport at 2x DPR — matches sizes="100vw" preload width. */
+export const MOBILE_PRELOAD_WIDTH = 828;
+
 /**
  * Check if a URL is a Supabase Storage URL
  */
@@ -214,4 +220,16 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
     return `${imageSrc}${separator}w=${width}`;
   }
   return String(imageSrc);
+}
+
+/**
+ * Build the URL the custom loader would fetch for a preload hint.
+ * Use the same width/quality as the corresponding next/image instance.
+ */
+export function getPreloadImageUrl(
+  src: string,
+  displayWidth: number = MOBILE_PRELOAD_WIDTH,
+  quality: number = DEFAULT_SUPABASE_IMAGE_QUALITY,
+): string {
+  return supabaseImageLoader({ src, width: displayWidth, quality });
 }

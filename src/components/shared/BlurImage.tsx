@@ -48,9 +48,12 @@ export default function BlurImage({
   fill,
   contain = false,
   onLoad: onLoadProp,
+  preload,
+  fetchPriority,
   ...props
 }: BlurImageProps) {
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
+  const isPriority = !!(preload || fetchPriority === 'high');
 
   // Cache key must uniquely identify the actual fetched resource.
   // The same base URL produces very different fetches depending on props:
@@ -72,6 +75,7 @@ export default function BlurImage({
   const [currentSrc, setCurrentSrc] = useState(srcString);
   const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>(() => {
     if (cacheKey && loadedImages?.has(cacheKey)) return 'visible';
+    if (isPriority) return 'visible';
     return 'loading';
   });
   const hasCalledOnLoad = useRef(false);
@@ -82,7 +86,7 @@ export default function BlurImage({
   // Reset state when src changes (during render, not in effect)
   if (srcString !== currentSrc) {
     setCurrentSrc(srcString);
-    setLoadState('loading');
+    setLoadState(isPriority ? 'visible' : 'loading');
     setUseRawFallback(false);
   }
 
@@ -119,7 +123,7 @@ export default function BlurImage({
     if (img && img.complete && img.naturalWidth > 0) {
       hasCalledOnLoad.current = true;
       if (cacheKey) loadedImages?.add(cacheKey);
-      setLoadState('fade-in');
+      setLoadState(isPriority ? 'visible' : 'fade-in');
       onLoadPropRef.current?.();
       return;
     }
@@ -140,15 +144,11 @@ export default function BlurImage({
     // Remember this image for future navigations
     if (cacheKey) loadedImages?.add(cacheKey);
 
-    // Always fade in. The SPA cache (checked in the layout effect above) is the
-    // only reliable way to skip the fade — timing heuristics are unreliable because
-    // SSR-preloaded images fire onLoad almost instantly during hydration even though
-    // they were fetched from the network.
-    setLoadState('fade-in');
+    setLoadState(isPriority ? 'visible' : 'fade-in');
 
     // Call external onLoad callback
     onLoadProp?.();
-  }, [cacheKey, onLoadProp]);
+  }, [cacheKey, onLoadProp, isPriority]);
 
   // Transition to 'visible' once the fade-in animation completes.
   // This lets us safely remove the blurhash background after the fade finishes,
@@ -162,10 +162,13 @@ export default function BlurImage({
   // Map loadState to CSS class.
   // Uses a CSS @keyframes animation for fade-in (works in a single React commit)
   // instead of CSS transitions which are unreliable with React's batched rendering.
-  const opacityClass =
-    loadState === 'visible' ? 'opacity-100' :
-    loadState === 'fade-in' ? 'animate-fade-in-fast' :
-    'opacity-0';
+  const opacityClass = isPriority
+    ? 'opacity-100'
+    : loadState === 'visible'
+      ? 'opacity-100'
+      : loadState === 'fade-in'
+        ? 'animate-fade-in-fast'
+        : 'opacity-0';
 
   const isLoaded = loadState !== 'loading';
 
@@ -202,6 +205,8 @@ export default function BlurImage({
         fill={fill}
         onLoad={handleImageLoad}
         onError={handleImageError}
+        preload={preload}
+        fetchPriority={fetchPriority}
         {...props}
         unoptimized={effectiveUnoptimized}
       />
@@ -251,6 +256,8 @@ export default function BlurImage({
           className={`${className} ${opacityClass}`}
           onLoad={handleImageLoad}
           onError={handleImageError}
+          preload={preload}
+          fetchPriority={fetchPriority}
           {...props}
           unoptimized={effectiveUnoptimized}
         />
@@ -291,6 +298,8 @@ export default function BlurImage({
           onLoad={handleImageLoad}
           onError={handleImageError}
           onAnimationEnd={handleAnimationEnd}
+          preload={preload}
+          fetchPriority={fetchPriority}
           {...props}
           unoptimized={effectiveUnoptimized}
         />
@@ -351,6 +360,8 @@ export default function BlurImage({
         className={`absolute inset-0 w-full h-full object-cover ${opacityClass}`}
         onLoad={handleImageLoad}
         onError={handleImageError}
+        preload={preload}
+        fetchPriority={fetchPriority}
         {...props}
         unoptimized={effectiveUnoptimized}
       />

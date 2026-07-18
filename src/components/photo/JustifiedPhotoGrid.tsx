@@ -4,6 +4,7 @@ import { useBatchPhotoLikeCounts } from '@/hooks/useLikes';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
+import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import Link from 'next/link';
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
@@ -282,13 +283,13 @@ function PhotoRows({
                 >
                   <BlurImage
                     src={thumbnailUrl}
-                    alt={photo?.title || 'Photo'}
+                    alt=""
                     blurhash={photo?.blurhash}
                     fill
                     className="object-cover transition-all duration-200 group-hover:brightness-110"
-                    sizes={`${Math.ceil(item.displayWidth * 2)}px`}
+                    sizes={`${Math.ceil(item.displayWidth * 1.5)}px`}
                     loading='lazy'
-                    quality={92}
+                    quality={THUMBNAIL_IMAGE_QUALITY}
                   />
 
                   {/* Likes overlay */}

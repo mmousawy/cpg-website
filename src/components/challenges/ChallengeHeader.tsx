@@ -76,7 +76,7 @@ export default function ChallengeHeader({
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 1200px"
             blurhash={challenge.image_blurhash}
-            priority
+            preload
           />
         </div>
       )}

@@ -46,6 +46,11 @@ export default function MobileNotificationButton() {
     return null;
   }
 
+  const notificationAriaLabel =
+    unseenCount > 0
+      ? `${unseenCount} unread notification${unseenCount === 1 ? '' : 's'}`
+      : 'Notifications';
+
   return (
     <>
       <button
@@ -55,7 +60,7 @@ export default function MobileNotificationButton() {
           window.dispatchEvent(new CustomEvent('notifications:sheet-open'));
         }}
         className="relative flex items-center justify-center size-8 rounded-full hover:bg-foreground/5 transition-colors"
-        aria-label="Notifications"
+        aria-label={notificationAriaLabel}
       >
         <svg
           className="h-5 w-5 text-foreground/80"
@@ -73,7 +78,7 @@ export default function MobileNotificationButton() {
         {unseenCount > 0 && (
           <span
             className={clsx(
-              'absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-medium',
+              'absolute -top-0.5 -right-0.5 bg-red-700 text-white text-[9px] font-medium',
               'rounded-full min-w-3.5 h-3.5 flex items-center justify-center px-0.5',
             )}
           >
