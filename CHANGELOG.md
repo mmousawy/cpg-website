@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.0](https://github.com/mmousawy/cpg-website/compare/v1.35.2...v1.36.0) (2026-07-18)
+
+
+### ✨ Features
+
+* Enhance image loading and notification components ([239c9d8](https://github.com/mmousawy/cpg-website/commit/239c9d8dace577ab32822220660541a66f630703))
+
 ## [1.35.2](https://github.com/mmousawy/cpg-website/compare/v1.35.1...v1.35.2) (2026-07-18)
 
 
