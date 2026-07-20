@@ -4,6 +4,8 @@ import {
   Text,
 } from '@react-email/components';
 
+import { getEmailReplyToAddress, getEmailSiteUrl } from '@/emails/utils/siteUrl';
+
 export default function Footer({
   fullName,
   optOutLink,
@@ -13,6 +15,9 @@ export default function Footer({
   optOutLink?: string;
   emailType?: 'events' | 'notifications' | 'newsletter' | 'photo_challenges' | 'admin_notifications';
 }) {
+  const replyToAddress = getEmailReplyToAddress();
+  const contactUrl = `${getEmailSiteUrl()}/contact`;
+
   const getUnsubscribeText = () => {
     switch (emailType) {
       case 'events':
@@ -47,16 +52,42 @@ export default function Footer({
             >
               {fullName}
             </span>
-            . If you
-            were not expecting this email, you can ignore this email. If
-            you are concerned about your security, please reply to
-            this email to get in touch with us.
+            .
+          </>
+        ) : (
+          <>This message was sent by Creative Photography Group.</>
+        )}
+        {' '}
+        If you were not expecting this email, you can ignore it.
+      </Text>
+      <Text
+        className="mt-2! mb-0! text-[12px] leading-6 text-[#666666]"
+      >
+        Questions or feedback?
+        {' '}
+        {replyToAddress ? (
+          <>
+            Reply to this email or contact us at
+            {' '}
+            <Link
+              href={`mailto:${replyToAddress}`}
+              className="text-[#666666] underline"
+            >
+              {replyToAddress}
+            </Link>
+            .
           </>
         ) : (
           <>
-            If you were not expecting this email, you can ignore this email. If
-            you are concerned about your security, please reply to
-            this email to get in touch with us.
+            Reply to this email or
+            {' '}
+            <Link
+              href={contactUrl}
+              className="text-[#666666] underline"
+            >
+              contact us on the website
+            </Link>
+            .
           </>
         )}
       </Text>

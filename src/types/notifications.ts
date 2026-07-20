@@ -29,6 +29,19 @@ export type NotificationType =
   | 'shared_album_invite_accepted'
   | 'feedback_submitted';
 
+/** Notification types covered by the events email preference, not the weekly digest */
+export const EVENT_NOTIFICATION_TYPES = [
+  'comment_event',
+  'event_reminder',
+  'event_announcement',
+] as const satisfies readonly NotificationType[];
+
+export type EventNotificationType = (typeof EVENT_NOTIFICATION_TYPES)[number];
+
+export function isEventNotificationType(type: string): type is EventNotificationType {
+  return (EVENT_NOTIFICATION_TYPES as readonly string[]).includes(type);
+}
+
 export type NotificationEntityType =
   | 'photo'
   | 'album'

@@ -11,6 +11,7 @@ export type EventAlbum = {
     title?: string | null;
     width?: number | null;
     height?: number | null;
+    sort_order?: number | null;
     added_by?: string | null;
     contributor?: {
       nickname: string | null;

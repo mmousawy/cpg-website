@@ -22,6 +22,7 @@ function transformToStreamPhotos(photos: EventAlbum['photos']): StreamPhoto[] {
 
   return photos
     .filter((p) => p.photo?.id && p.photo?.url)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((p) => ({
       id: p.photo!.id,
       short_id: p.photo!.short_id ?? '',

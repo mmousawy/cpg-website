@@ -1,5 +1,7 @@
-import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
+
+import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -10,5 +12,16 @@ export async function GET(request: NextRequest) {
   revalidateTag('events', 'max');
   revalidateTag('home', 'max');
 
-  return NextResponse.json({ revalidated: true, now: new Date().toISOString() });
+  let notificationEmails = { sent: 0, cancelled: 0, failed: 0, processed: 0 };
+  try {
+    notificationEmails = await flushPendingNotificationEmails();
+  } catch (error) {
+    console.error('Error flushing pending notification emails:', error);
+  }
+
+  return NextResponse.json({
+    revalidated: true,
+    notificationEmails,
+    now: new Date().toISOString(),
+  });
 }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import { WeeklyDigestEmail } from '@/emails/weekly-digest';
+import { getWeeklyDigestSubject, WeeklyDigestEmail } from '@/emails/weekly-digest';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
-import type { NotificationWithActor } from '@/types/notifications';
+import { isEventNotificationType, type NotificationWithActor } from '@/types/notifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 const BATCH_SIZE = 100;
@@ -142,12 +142,21 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
+    // Event notifications are covered by the events email preference
+    const digestNotifications = notifications.filter(
+      (notification) => !isEventNotificationType(notification.type),
+    );
+
+    if (digestNotifications.length === 0) {
+      continue;
+    }
+
     userDigests.push({
       userId,
       email: userProfile.email,
       fullName: userProfile.full_name,
-      notifications: notifications.slice(0, 5), // Top 5 for email
-      totalCount: notifications.length,
+      notifications: digestNotifications.slice(0, 5), // Top 5 for email
+      totalCount: digestNotifications.length,
     });
   }
 
@@ -186,7 +195,7 @@ export async function GET(request: NextRequest) {
           from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
           to: digest.email,
           replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-          subject: `You have ${digest.totalCount} new notification${digest.totalCount === 1 ? '' : 's'}`,
+          subject: getWeeklyDigestSubject(digest.totalCount),
           html: await render(
             WeeklyDigestEmail({
               recipientName: digest.fullName || digest.email.split('@')[0] || 'Friend',

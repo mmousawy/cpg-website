@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { CommentNotificationEmail } from '@/emails/comment-notification';
-import { encrypt } from '@/utils/encrypt';
-import { render } from '@react-email/render';
+import {
+  queueCommentNotificationEmail,
+  type CommentEmailEntityType,
+} from '@/lib/notifications/emailQueue';
 import {
   revalidateAlbumBySlug,
   revalidateGalleryData,
   revalidateSceneEvent,
 } from '@/app/actions/revalidate';
 import { createNotification } from '@/lib/notifications/create';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function PATCH(request: NextRequest) {
   const supabase = await createClient();
@@ -254,6 +252,37 @@ export async function POST(request: NextRequest) {
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/@${commenterNickname}`
     : null;
 
+  const queueCommentEmail = async (params: {
+    recipientUserId: string;
+    entityId: string;
+    emailEntityType: CommentEmailEntityType;
+    batchEntityType?: string;
+    notificationId?: string;
+    isReply: boolean;
+  }) => {
+    if (!commentId) {
+      return;
+    }
+
+    await queueCommentNotificationEmail({
+      recipientUserId: params.recipientUserId,
+      entityId: params.entityId,
+      notificationId: params.notificationId,
+      commentId,
+      commenterName,
+      commenterNickname,
+      commenterAvatarUrl,
+      commenterProfileLink,
+      commentText,
+      entityType: params.emailEntityType,
+      entityTitle,
+      entityThumbnail,
+      entityLink,
+      isReply: params.isReply,
+      batchEntityType: params.batchEntityType,
+    });
+  };
+
   // Handle reply notifications - fetch parent comment author if replying
   let parentCommentAuthorId: string | null = null;
   let parentCommentAuthorProfile: { id: string; email: string | null; full_name: string | null; nickname: string | null } | null = null;
@@ -379,7 +408,7 @@ export async function POST(request: NextRequest) {
         // Create in-app notifications for all admins
         for (const admin of admins) {
           notifiedUserIds.add(admin.id);
-          await createNotification({
+          const notificationResult = await createNotification({
             userId: admin.id,
             actorId: user.id,
             type: 'comment_event',
@@ -394,83 +423,15 @@ export async function POST(request: NextRequest) {
               actorAvatar: commenterAvatarUrl,
             },
           });
-        }
 
-        // Check notification preferences and send emails to all admins
-        const { data: notificationsEmailType } = await supabase
-          .from('email_types')
-          .select('id')
-          .eq('type_key', 'notifications')
-          .single();
-
-        // Batch fetch all admin email preferences at once (instead of N queries in loop)
-        let adminPrefsMap = new Map<string, boolean>();
-        if (notificationsEmailType) {
-          const adminIds = admins.map((a) => a.id);
-          const { data: adminPrefs } = await supabase
-            .from('email_preferences')
-            .select('user_id, opted_out')
-            .in('user_id', adminIds)
-            .eq('email_type_id', notificationsEmailType.id);
-
-          adminPrefsMap = new Map(
-            (adminPrefs || []).map((p) => [p.user_id, p.opted_out]),
-          );
-        }
-
-        for (const admin of admins) {
-          if (!admin.email) continue;
-
-          // Check if this admin has opted out (using pre-fetched map)
-          if (adminPrefsMap.get(admin.id) === true) {
-            continue;
-          }
-
-          // Generate opt-out link for this admin
-          let adminOptOutLink: string | undefined;
-          try {
-            const encrypted = encrypt(JSON.stringify({
-              userId: admin.id,
-              emailType: 'notifications',
-            }));
-            adminOptOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-          } catch (error) {
-            console.error('Error generating opt-out link:', error);
-          }
-
-          // Send notification email to this admin
-          const adminName = admin.full_name || admin.email.split('@')[0] || 'Admin';
-
-          try {
-            const emailResult = await resend.emails.send({
-              from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-              to: admin.email,
-              replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-              subject: `${commenterName} commented on the event "${entityTitle}"`,
-              html: await render(
-                CommentNotificationEmail({
-                  ownerName: adminName,
-                  commenterName,
-                  commenterNickname,
-                  commenterAvatarUrl,
-                  commenterProfileLink,
-                  commentText: commentText.trim(),
-                  entityType: 'event',
-                  entityTitle,
-                  entityThumbnail,
-                  entityLink,
-                  optOutLink: adminOptOutLink,
-                }),
-              ),
+          if (admin.email) {
+            await queueCommentEmail({
+              recipientUserId: admin.id,
+              entityId,
+              emailEntityType: 'event',
+              notificationId: notificationResult.notificationId,
+              isReply: false,
             });
-
-            if (emailResult.error) {
-              console.error(`Error sending event comment notification to ${admin.email}:`, emailResult.error);
-            } else {
-              console.log(`📨 Event comment notification sent to admin ${admin.email}`);
-            }
-          } catch (err) {
-            console.error(`Error sending event comment notification to ${admin.email}:`, err);
           }
         }
       }
@@ -523,7 +484,7 @@ export async function POST(request: NextRequest) {
           for (const rsvp of eligibleRsvps) {
             const userId = rsvp.user_id!;
             notifiedUserIds.add(userId);
-            await createNotification({
+            const notificationResult = await createNotification({
               userId,
               actorId: user.id,
               type: 'comment_event',
@@ -538,83 +499,17 @@ export async function POST(request: NextRequest) {
                 actorAvatar: commenterAvatarUrl,
               },
             });
-          }
 
-          if (eligibleRsvps.length > 0) {
-            const { data: notificationsEmailType } = await supabase
-              .from('email_types')
-              .select('id')
-              .eq('type_key', 'notifications')
-              .single();
-
-            let rsvpPrefsMap = new Map<string, boolean>();
-            if (notificationsEmailType) {
-              const rsvpUserIds = eligibleRsvps.map((rsvp) => rsvp.user_id!);
-              const { data: rsvpPrefs } = await supabase
-                .from('email_preferences')
-                .select('user_id, opted_out')
-                .in('user_id', rsvpUserIds)
-                .eq('email_type_id', notificationsEmailType.id);
-
-              rsvpPrefsMap = new Map(
-                (rsvpPrefs || []).map((p) => [p.user_id, p.opted_out]),
-              );
-            }
-
-            for (const rsvp of eligibleRsvps) {
-              const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
-              const recipientEmail = profile?.email || rsvp.email;
-              if (!recipientEmail || !rsvp.user_id) continue;
-              if (rsvpPrefsMap.get(rsvp.user_id) === true) continue;
-
-              let optOutLink: string | undefined;
-              try {
-                const encrypted = encrypt(JSON.stringify({
-                  userId: rsvp.user_id,
-                  emailType: 'notifications',
-                }));
-                optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-              } catch (error) {
-                console.error('Error generating opt-out link:', error);
-              }
-
-              const recipientName =
-                profile?.full_name ||
-                rsvp.name ||
-                recipientEmail.split('@')[0] ||
-                'Friend';
-
-              try {
-                const emailResult = await resend.emails.send({
-                  from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-                  to: recipientEmail,
-                  replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-                  subject: `${commenterName} commented on the event "${entityTitle}"`,
-                  html: await render(
-                    CommentNotificationEmail({
-                      ownerName: recipientName,
-                      commenterName,
-                      commenterNickname,
-                      commenterAvatarUrl,
-                      commenterProfileLink,
-                      commentText: commentText.trim(),
-                      entityType: 'event',
-                      entityTitle,
-                      entityThumbnail,
-                      entityLink,
-                      optOutLink,
-                    }),
-                  ),
-                });
-
-                if (emailResult.error) {
-                  console.error(`Error sending event comment notification to ${recipientEmail}:`, emailResult.error);
-                } else {
-                  console.log(`📨 Event comment notification sent to RSVP ${recipientEmail}`);
-                }
-              } catch (err) {
-                console.error(`Error sending event comment notification to ${recipientEmail}:`, err);
-              }
+            const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
+            const recipientEmail = profile?.email || rsvp.email;
+            if (recipientEmail) {
+              await queueCommentEmail({
+                recipientUserId: userId,
+                entityId,
+                emailEntityType: 'event',
+                notificationId: notificationResult.notificationId,
+                isReply: false,
+              });
             }
           }
         }
@@ -622,7 +517,7 @@ export async function POST(request: NextRequest) {
 
       // If replying, also notify parent comment author
       if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
-        await createNotification({
+        const notificationResult = await createNotification({
           userId: parentCommentAuthorId,
           actorId: user.id,
           type: 'comment_reply',
@@ -638,75 +533,14 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Send email to parent comment author if they haven't opted out
         if (parentCommentAuthorProfile.email) {
-          const { data: notificationsEmailType } = await supabase
-            .from('email_types')
-            .select('id')
-            .eq('type_key', 'notifications')
-            .single();
-
-          let shouldSendEmail = true;
-          if (notificationsEmailType) {
-            const { data: preference } = await supabase
-              .from('email_preferences')
-              .select('opted_out')
-              .eq('user_id', parentCommentAuthorId)
-              .eq('email_type_id', notificationsEmailType.id)
-              .single();
-
-            if (preference && preference.opted_out === true) {
-              shouldSendEmail = false;
-            }
-          }
-
-          if (shouldSendEmail) {
-            let optOutLink: string | undefined;
-            try {
-              const encrypted = encrypt(JSON.stringify({
-                userId: parentCommentAuthorId,
-                emailType: 'notifications',
-              }));
-              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-            } catch (error) {
-              console.error('Error generating opt-out link:', error);
-            }
-
-            const parentAuthorName = parentCommentAuthorProfile.full_name || parentCommentAuthorProfile.email.split('@')[0] || 'Friend';
-
-            try {
-              const emailResult = await resend.emails.send({
-                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-                to: parentCommentAuthorProfile.email,
-                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-                subject: `${commenterName} replied to your comment on the event "${entityTitle}"`,
-                html: await render(
-                  CommentNotificationEmail({
-                    ownerName: parentAuthorName,
-                    commenterName,
-                    commenterNickname,
-                    commenterAvatarUrl,
-                    commenterProfileLink,
-                    commentText: commentText.trim(),
-                    entityType: 'event',
-                    entityTitle,
-                    entityThumbnail,
-                    entityLink,
-                    optOutLink,
-                    isReply: true,
-                  }),
-                ),
-              });
-
-              if (emailResult.error) {
-                console.error(`Error sending event reply notification to ${parentCommentAuthorProfile.email}:`, emailResult.error);
-              } else {
-                console.log(`📨 Event reply notification sent to ${parentCommentAuthorProfile.email}`);
-              }
-            } catch (err) {
-              console.error(`Error sending event reply notification to ${parentCommentAuthorProfile.email}:`, err);
-            }
-          }
+          await queueCommentEmail({
+            recipientUserId: parentCommentAuthorId,
+            entityId,
+            emailEntityType: 'event',
+            notificationId: notificationResult.notificationId,
+            isReply: true,
+          });
         }
       }
 
@@ -741,7 +575,7 @@ export async function POST(request: NextRequest) {
       if (admins && admins.length > 0) {
         // Create in-app notifications for all admins
         for (const admin of admins) {
-          await createNotification({
+          const notificationResult = await createNotification({
             userId: admin.id,
             actorId: user.id,
             type: 'comment_challenge',
@@ -756,90 +590,22 @@ export async function POST(request: NextRequest) {
               actorAvatar: commenterAvatarUrl,
             },
           });
-        }
 
-        // Check notification preferences and send emails to all admins
-        const { data: notificationsEmailType } = await supabase
-          .from('email_types')
-          .select('id')
-          .eq('type_key', 'notifications')
-          .single();
-
-        // Batch fetch all admin email preferences at once
-        let adminPrefsMap = new Map<string, boolean>();
-        if (notificationsEmailType) {
-          const adminIds = admins.map((a) => a.id);
-          const { data: adminPrefs } = await supabase
-            .from('email_preferences')
-            .select('user_id, opted_out')
-            .in('user_id', adminIds)
-            .eq('email_type_id', notificationsEmailType.id);
-
-          adminPrefsMap = new Map(
-            (adminPrefs || []).map((p) => [p.user_id, p.opted_out]),
-          );
-        }
-
-        for (const admin of admins) {
-          if (!admin.email) continue;
-
-          // Check if this admin has opted out
-          if (adminPrefsMap.get(admin.id) === true) {
-            continue;
-          }
-
-          // Generate opt-out link for this admin
-          let adminOptOutLink: string | undefined;
-          try {
-            const encrypted = encrypt(JSON.stringify({
-              userId: admin.id,
-              emailType: 'notifications',
-            }));
-            adminOptOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-          } catch (error) {
-            console.error('Error generating opt-out link:', error);
-          }
-
-          // Send notification email to this admin
-          const adminName = admin.full_name || admin.email.split('@')[0] || 'Admin';
-
-          try {
-            const emailResult = await resend.emails.send({
-              from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-              to: admin.email,
-              replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-              subject: `${commenterName} commented on the challenge "${entityTitle}"`,
-              html: await render(
-                CommentNotificationEmail({
-                  ownerName: adminName,
-                  commenterName,
-                  commenterNickname,
-                  commenterAvatarUrl,
-                  commenterProfileLink,
-                  commentText: commentText.trim(),
-                  entityType: 'challenge',
-                  entityTitle,
-                  entityThumbnail,
-                  entityLink,
-                  optOutLink: adminOptOutLink,
-                }),
-              ),
+          if (admin.email) {
+            await queueCommentEmail({
+              recipientUserId: admin.id,
+              entityId,
+              emailEntityType: 'challenge',
+              notificationId: notificationResult.notificationId,
+              isReply: false,
             });
-
-            if (emailResult.error) {
-              console.error(`Error sending challenge comment notification to ${admin.email}:`, emailResult.error);
-            } else {
-              console.log(`📨 Challenge comment notification sent to admin ${admin.email}`);
-            }
-          } catch (err) {
-            console.error(`Error sending challenge comment notification to ${admin.email}:`, err);
           }
         }
       }
 
       // If replying, also notify parent comment author
       if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
-        await createNotification({
+        const notificationResult = await createNotification({
           userId: parentCommentAuthorId,
           actorId: user.id,
           type: 'comment_reply',
@@ -855,75 +621,14 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Send email to parent comment author if they haven't opted out
         if (parentCommentAuthorProfile.email) {
-          const { data: notificationsEmailType } = await supabase
-            .from('email_types')
-            .select('id')
-            .eq('type_key', 'notifications')
-            .single();
-
-          let shouldSendEmail = true;
-          if (notificationsEmailType) {
-            const { data: preference } = await supabase
-              .from('email_preferences')
-              .select('opted_out')
-              .eq('user_id', parentCommentAuthorId)
-              .eq('email_type_id', notificationsEmailType.id)
-              .single();
-
-            if (preference && preference.opted_out === true) {
-              shouldSendEmail = false;
-            }
-          }
-
-          if (shouldSendEmail) {
-            let optOutLink: string | undefined;
-            try {
-              const encrypted = encrypt(JSON.stringify({
-                userId: parentCommentAuthorId,
-                emailType: 'notifications',
-              }));
-              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-            } catch (error) {
-              console.error('Error generating opt-out link:', error);
-            }
-
-            const parentAuthorName = parentCommentAuthorProfile.full_name || parentCommentAuthorProfile.email.split('@')[0] || 'Friend';
-
-            try {
-              const emailResult = await resend.emails.send({
-                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-                to: parentCommentAuthorProfile.email,
-                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-                subject: `${commenterName} replied to your comment on the challenge "${entityTitle}"`,
-                html: await render(
-                  CommentNotificationEmail({
-                    ownerName: parentAuthorName,
-                    commenterName,
-                    commenterNickname,
-                    commenterAvatarUrl,
-                    commenterProfileLink,
-                    commentText: commentText.trim(),
-                    entityType: 'challenge',
-                    entityTitle,
-                    entityThumbnail,
-                    entityLink,
-                    optOutLink,
-                    isReply: true,
-                  }),
-                ),
-              });
-
-              if (emailResult.error) {
-                console.error(`Error sending challenge reply notification to ${parentCommentAuthorProfile.email}:`, emailResult.error);
-              } else {
-                console.log(`📨 Challenge reply notification sent to ${parentCommentAuthorProfile.email}`);
-              }
-            } catch (err) {
-              console.error(`Error sending challenge reply notification to ${parentCommentAuthorProfile.email}:`, err);
-            }
-          }
+          await queueCommentEmail({
+            recipientUserId: parentCommentAuthorId,
+            entityId,
+            emailEntityType: 'challenge',
+            notificationId: notificationResult.notificationId,
+            isReply: true,
+          });
         }
       }
 
@@ -963,7 +668,7 @@ export async function POST(request: NextRequest) {
           .eq('id', submitterId)
           .single();
 
-        await createNotification({
+        const notificationResult = await createNotification({
           userId: submitterId,
           actorId: user.id,
           type: 'comment_scene_event',
@@ -979,71 +684,15 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Email to submitter if not opted out
         if (submitterProfile?.email) {
-          const { data: notificationsEmailType } = await supabase
-            .from('email_types')
-            .select('id')
-            .eq('type_key', 'notifications')
-            .single();
-
-          let shouldSendEmail = true;
-          if (notificationsEmailType) {
-            const { data: pref } = await supabase
-              .from('email_preferences')
-              .select('opted_out')
-              .eq('user_id', submitterId)
-              .eq('email_type_id', notificationsEmailType.id)
-              .single();
-            if (pref?.opted_out === true) shouldSendEmail = false;
-          }
-
-          if (shouldSendEmail) {
-            let optOutLink: string | undefined;
-            try {
-              const encrypted = encrypt(
-                JSON.stringify({ userId: submitterId, emailType: 'notifications' }),
-              );
-              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-            } catch (e) {
-              console.error('Error generating opt-out link:', e);
-            }
-            const ownerName =
-              submitterProfile.full_name ||
-              submitterProfile.email.split('@')[0] ||
-              'Friend';
-            try {
-              const emailResult = await resend.emails.send({
-                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-                to: submitterProfile.email,
-                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-                subject: `${commenterName} commented on the event "${entityTitle}"`,
-                html: await render(
-                  CommentNotificationEmail({
-                    ownerName,
-                    commenterName,
-                    commenterNickname,
-                    commenterAvatarUrl,
-                    commenterProfileLink,
-                    commentText: commentText.trim(),
-                    entityType: 'event',
-                    entityTitle,
-                    entityThumbnail,
-                    entityLink,
-                    optOutLink,
-                  }),
-                ),
-              });
-              if (emailResult.error) {
-                console.error(
-                  `Error sending scene event comment notification to ${submitterProfile.email}:`,
-                  emailResult.error,
-                );
-              }
-            } catch (err) {
-              console.error('Error sending scene event comment notification:', err);
-            }
-          }
+          await queueCommentEmail({
+            recipientUserId: submitterId,
+            entityId,
+            emailEntityType: 'event',
+            batchEntityType: 'scene_event',
+            notificationId: notificationResult.notificationId,
+            isReply: false,
+          });
         }
       }
 
@@ -1085,7 +734,7 @@ export async function POST(request: NextRequest) {
         parentCommentAuthorId !== user.id &&
         parentCommentAuthorProfile
       ) {
-        await createNotification({
+        const notificationResult = await createNotification({
           userId: parentCommentAuthorId,
           actorId: user.id,
           type: 'comment_reply',
@@ -1102,67 +751,14 @@ export async function POST(request: NextRequest) {
         });
 
         if (parentCommentAuthorProfile.email) {
-          const { data: notificationsEmailType } = await supabase
-            .from('email_types')
-            .select('id')
-            .eq('type_key', 'notifications')
-            .single();
-
-          let shouldSendEmail = true;
-          if (notificationsEmailType) {
-            const { data: pref } = await supabase
-              .from('email_preferences')
-              .select('opted_out')
-              .eq('user_id', parentCommentAuthorId)
-              .eq('email_type_id', notificationsEmailType.id)
-              .single();
-            if (pref?.opted_out === true) shouldSendEmail = false;
-          }
-
-          if (shouldSendEmail) {
-            let optOutLink: string | undefined;
-            try {
-              const encrypted = encrypt(
-                JSON.stringify({
-                  userId: parentCommentAuthorId,
-                  emailType: 'notifications',
-                }),
-              );
-              optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-            } catch (e) {
-              console.error('Error generating opt-out link:', e);
-            }
-            const parentAuthorName =
-              parentCommentAuthorProfile.full_name ||
-              parentCommentAuthorProfile.email.split('@')[0] ||
-              'Friend';
-            try {
-              await resend.emails.send({
-                from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-                to: parentCommentAuthorProfile.email,
-                replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-                subject: `${commenterName} replied to your comment on the event "${entityTitle}"`,
-                html: await render(
-                  CommentNotificationEmail({
-                    ownerName: parentAuthorName,
-                    commenterName,
-                    commenterNickname,
-                    commenterAvatarUrl,
-                    commenterProfileLink,
-                    commentText: commentText.trim(),
-                    entityType: 'event',
-                    entityTitle,
-                    entityThumbnail,
-                    entityLink,
-                    optOutLink,
-                    isReply: true,
-                  }),
-                ),
-              });
-            } catch (err) {
-              console.error('Error sending scene event reply notification:', err);
-            }
-          }
+          await queueCommentEmail({
+            recipientUserId: parentCommentAuthorId,
+            entityId,
+            emailEntityType: 'event',
+            batchEntityType: 'scene_event',
+            notificationId: notificationResult.notificationId,
+            isReply: true,
+          });
         }
       }
 
@@ -1192,7 +788,7 @@ export async function POST(request: NextRequest) {
 
   // Handle reply notifications - notify parent comment author
   if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
-    await createNotification({
+    const notificationResult = await createNotification({
       userId: parentCommentAuthorId,
       actorId: user.id,
       type: 'comment_reply',
@@ -1207,6 +803,16 @@ export async function POST(request: NextRequest) {
         actorAvatar: commenterAvatarUrl,
       },
     });
+
+    if (parentCommentAuthorProfile.email) {
+      await queueCommentEmail({
+        recipientUserId: parentCommentAuthorId,
+        entityId,
+        emailEntityType: entityType as CommentEmailEntityType,
+        notificationId: notificationResult.notificationId,
+        isReply: true,
+      });
+    }
   }
 
   // Create in-app notification for album and photo comments (not events)
@@ -1214,7 +820,7 @@ export async function POST(request: NextRequest) {
   if (!parentCommentId && ownerId && ownerId !== user.id && ownerProfile && (entityType === 'album' || entityType === 'photo')) {
     const notificationType = entityType === 'album' ? 'comment_album' : 'comment_photo';
 
-    await createNotification({
+    const notificationResult = await createNotification({
       userId: ownerId,
       actorId: user.id,
       type: notificationType,
@@ -1229,162 +835,16 @@ export async function POST(request: NextRequest) {
         actorAvatar: commenterAvatarUrl,
       },
     });
-  }
 
-  // Handle email notifications for replies
-  if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile && parentCommentAuthorProfile.email) {
-    // Check if parent comment author has opted out
-    const { data: notificationsEmailType } = await supabase
-      .from('email_types')
-      .select('id')
-      .eq('type_key', 'notifications')
-      .single();
-
-    let shouldSendEmail = true;
-    if (notificationsEmailType) {
-      const { data: preference } = await supabase
-        .from('email_preferences')
-        .select('opted_out')
-        .eq('user_id', parentCommentAuthorId)
-        .eq('email_type_id', notificationsEmailType.id)
-        .single();
-
-      if (preference && preference.opted_out === true) {
-        shouldSendEmail = false;
-      }
+    if (ownerProfile.email) {
+      await queueCommentEmail({
+        recipientUserId: ownerId,
+        entityId,
+        emailEntityType: entityType,
+        notificationId: notificationResult.notificationId,
+        isReply: false,
+      });
     }
-
-    if (shouldSendEmail) {
-      // Generate opt-out link
-      let optOutLink: string | undefined;
-      try {
-        const encrypted = encrypt(JSON.stringify({
-          userId: parentCommentAuthorId,
-          emailType: 'notifications',
-        }));
-        optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-      } catch (error) {
-        console.error('Error generating opt-out link:', error);
-      }
-
-      const parentAuthorName = parentCommentAuthorProfile.full_name || parentCommentAuthorProfile.email.split('@')[0] || 'Friend';
-
-      try {
-        const emailResult = await resend.emails.send({
-          from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-          to: parentCommentAuthorProfile.email,
-          replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-          subject: `${commenterName} replied to your comment on ${entityTitle}`,
-          html: await render(
-            CommentNotificationEmail({
-              ownerName: parentAuthorName,
-              commenterName,
-              commenterNickname,
-              commenterAvatarUrl,
-              commenterProfileLink,
-              commentText: commentText.trim(),
-              entityType,
-              entityTitle,
-              entityThumbnail,
-              entityLink,
-              optOutLink,
-              isReply: true,
-            }),
-          ),
-        });
-
-        if (emailResult.error) {
-          console.error('Error sending reply notification email:', emailResult.error);
-        } else {
-          console.log(`📨 Reply notification email sent to ${parentCommentAuthorProfile.email}`);
-        }
-      } catch (err) {
-        console.error('Error sending reply notification email:', err);
-      }
-    }
-
-    // For replies, return early (don't send entity owner email)
-    return NextResponse.json({ success: true, commentId }, { status: 200 });
-  }
-
-  // Don't send email notification if:
-  // 1. Owner not found
-  // 2. Owner has no email
-  // 3. Commenting on own content
-  // 4. It's a reply (handled above)
-  if (!ownerId || ownerId === user.id || !ownerProfile || !ownerProfile.email || parentCommentId) {
-    return NextResponse.json({ success: true, commentId }, { status: 200 });
-  }
-
-  // Check if owner has opted out of "notifications" email type
-  const { data: notificationsEmailType } = await supabase
-    .from('email_types')
-    .select('id')
-    .eq('type_key', 'notifications')
-    .single();
-
-  if (notificationsEmailType) {
-    const notificationsEmailTypeId = notificationsEmailType.id;
-    const { data: preference } = await supabase
-      .from('email_preferences')
-      .select('opted_out')
-      .eq('user_id', ownerId)
-      .eq('email_type_id', notificationsEmailTypeId)
-      .single();
-
-    // If opted out, don't send email
-    if (preference && preference.opted_out === true) {
-      return NextResponse.json({ success: true, commentId }, { status: 200 });
-    }
-  }
-
-  // Generate opt-out link
-  let optOutLink: string | undefined;
-  try {
-    const encrypted = encrypt(JSON.stringify({
-      userId: ownerId,
-      emailType: 'notifications',
-    }));
-    optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(encrypted)}`;
-  } catch (error) {
-    console.error('Error generating opt-out link:', error);
-  }
-
-  // Send notification email
-  const ownerName = ownerProfile.full_name || ownerProfile.email.split('@')[0] || 'Friend';
-
-  try {
-    const emailResult = await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to: ownerProfile.email,
-      replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-      subject: `${commenterName} commented on your ${entityType === 'album' ? 'album' : 'photo'}`,
-      html: await render(
-        CommentNotificationEmail({
-          ownerName,
-          commenterName,
-          commenterNickname,
-          commenterAvatarUrl,
-          commenterProfileLink,
-          commentText: commentText.trim(),
-          entityType,
-          entityTitle,
-          entityThumbnail,
-          entityLink,
-          optOutLink,
-        }),
-      ),
-    });
-
-    if (emailResult.error) {
-      console.error('Error sending comment notification email:', emailResult.error);
-      // Don't fail the request if email fails - comment is already created
-    } else {
-      console.log(`📨 Comment notification email sent to ${ownerProfile.email}`);
-    }
-  } catch (err) {
-    console.error('Error sending comment notification email:', err);
-    // Don't fail the request if email fails
   }
 
   return NextResponse.json({ success: true, commentId }, { status: 200 });

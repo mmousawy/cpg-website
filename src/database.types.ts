@@ -936,7 +936,57 @@ export type Database = {
           id?: string
           name?: string
         }
-        Relationships: []
+        Relationships: [        ]
+      }
+      notification_email_batches: {
+        Row: {
+          batch_key: string
+          created_at: string
+          email_type: string
+          id: string
+          items: Json
+          notification_ids: string[]
+          recipient_user_id: string
+          send_after: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          batch_key: string
+          created_at?: string
+          email_type?: string
+          id?: string
+          items?: Json
+          notification_ids?: string[]
+          recipient_user_id: string
+          send_after: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_key?: string
+          created_at?: string
+          email_type?: string
+          id?: string
+          items?: Json
+          notification_ids?: string[]
+          recipient_user_id?: string
+          send_after?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notification_email_batches_recipient_user_id_fkey'
+            columns: ['recipient_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1735,6 +1785,17 @@ export type Database = {
       }
     }
     Functions: {
+      enqueue_notification_email_batch: {
+        Args: {
+          p_batch_key: string
+          p_debounce_minutes?: number
+          p_email_type?: string
+          p_item: Json
+          p_notification_id?: string
+          p_recipient_user_id: string
+        }
+        Returns: string
+      }
       add_challenge_comment: {
         Args: {
           p_challenge_id: string

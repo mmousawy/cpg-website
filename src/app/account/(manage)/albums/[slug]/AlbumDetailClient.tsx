@@ -60,7 +60,7 @@ export default function AlbumDetailClient() {
   const ownerNickname = searchParams.get('owner');
   const isSharedWithMe = !!ownerNickname;
 
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   const modalContext = useContext(ModalContext);
@@ -98,7 +98,7 @@ export default function AlbumDetailClient() {
   const bulkUpdateAlbumPhotosMutation = useBulkUpdateAlbumPhotos(album?.id, profile?.nickname);
   const deleteAlbumPhotoMutation = useDeleteAlbumPhoto(album?.id, user?.id, profile?.nickname);
   const removeFromAlbumMutation = useRemoveFromAlbum(album?.id, user?.id, profile?.nickname);
-  const reorderAlbumPhotosMutation = useReorderAlbumPhotos(album?.id, profile?.nickname);
+  const reorderAlbumPhotosMutation = useReorderAlbumPhotos(album?.id, profile?.nickname, user?.id);
   const updateAlbumMutation = useUpdateAlbum(user?.id, profile?.nickname);
   const deleteAlbumsMutation = useDeleteAlbums(user?.id, profile?.nickname);
   const setAlbumCoverMutation = useSetAlbumCover(user?.id, profile?.nickname);
@@ -420,6 +420,7 @@ export default function AlbumDetailClient() {
     handleUpload(fakeEvent);
   };
 
+  const canReorderPhotos = !isSharedWithMe && (album?.event_id == null || isAdmin);
   const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
   const selectedCount = selectedPhotoIds.size;
   const hasNonOwnedSelected = selectedPhotos.some((p) => p.user_id !== user?.id);
@@ -734,7 +735,7 @@ export default function AlbumDetailClient() {
                 onReorder={handleReorderPhotos}
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
-                sortable
+                sortable={canReorderPhotos}
                 alwaysShowMobileSpacer
                 albumCoverUrl={album?.cover_image_url}
                 currentAlbumTitle={album?.title}

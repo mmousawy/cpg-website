@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateAlbumBySlug, revalidateGalleryData, revalidateHome } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData, revalidateHome } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -12,6 +12,16 @@ function findAlbumInCache(queryClient: QueryClient, userId: string, albumId: str
     const found = cached?.find((a) => a.id === albumId);
     if (found) return found;
   }
+
+  const allEventAlbums = queryClient.getQueryData<AlbumWithPhotos[]>(['all-event-albums', userId]);
+  const eventAlbum = allEventAlbums?.find((a) => a.id === albumId);
+  if (eventAlbum) return eventAlbum;
+
+  const albumQueries = queryClient.getQueriesData<AlbumWithPhotos>({ queryKey: ['album', userId] });
+  for (const [, cached] of albumQueries) {
+    if (cached?.id === albumId) return cached;
+  }
+
   return undefined;
 }
 
@@ -82,6 +92,7 @@ export function useRemoveFromAlbum(
 export function useReorderAlbumPhotos(
   albumId: string | undefined,
   nickname: string | null | undefined,
+  userId: string | undefined,
 ) {
   const queryClient = useQueryClient();
 
@@ -108,18 +119,17 @@ export function useReorderAlbumPhotos(
         }));
 
       if (updates.length > 0) {
-        await supabase.rpc('batch_update_album_photos', { photo_updates: updates });
+        const { error } = await supabase.rpc('batch_update_album_photos', { photo_updates: updates });
+        if (error) {
+          throw new Error(error.message || 'Failed to reorder album photos');
+        }
 
-        if (nickname && albumId) {
-          let albumSlug: string | undefined;
-          const queries = queryClient.getQueriesData<AlbumWithPhotos[]>({ queryKey: ['albums'] });
-          for (const [, cached] of queries) {
-            const found = cached?.find((a) => a.id === albumId);
-            if (found?.slug) { albumSlug = found.slug; break; }
-          }
-          if (albumSlug) {
-            await revalidateAlbumBySlug(nickname, albumSlug);
-          }
+        const album = userId ? findAlbumInCache(queryClient, userId, albumId) : undefined;
+
+        if (album?.event_id) {
+          await revalidateEventAlbum(album.event_id);
+        } else if (nickname && album?.slug) {
+          await revalidateAlbumBySlug(nickname, album.slug);
         }
       }
 

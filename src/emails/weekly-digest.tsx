@@ -75,6 +75,19 @@ function getResizedThumbnail(src: string | null | undefined, width = 96, quality
   return src;
 }
 
+function formatUnreadCount(totalCount: number): string {
+  const noun = totalCount === 1 ? 'notification' : 'notifications';
+  return `${totalCount} unread ${noun}`;
+}
+
+export function getWeeklyDigestSubject(totalCount: number): string {
+  return `Weekly digest: ${formatUnreadCount(totalCount)}`;
+}
+
+function getWeeklyDigestPreview(totalCount: number): string {
+  return `Your weekly reminder — ${formatUnreadCount(totalCount)} from the past week`;
+}
+
 // Format date in Amsterdam time: "Sat, Jan 31 at 14:25"
 function formatNotificationDate(dateString: string | null): string {
   if (!dateString) return '';
@@ -147,7 +160,7 @@ export const WeeklyDigestEmail = ({
     unsubscribeUrl = `${baseUrl}/unsubscribe/preview-token`;
   }
 
-  const previewText = `You have ${totalCount} new notification${totalCount === 1 ? '' : 's'}`;
+  const previewText = getWeeklyDigestPreview(totalCount);
 
   return (
     <Html>
@@ -167,12 +180,7 @@ export const WeeklyDigestEmail = ({
             <Heading
               className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
             >
-              You have
-              {' '}
-              {totalCount}
-              {' '}
-              new notification
-              {totalCount === 1 ? '' : 's'}
+              Weekly digest
             </Heading>
 
             <Text
@@ -186,7 +194,11 @@ export const WeeklyDigestEmail = ({
             <Text
               className="text-[14px] leading-[24px] text-[#171717]"
             >
-              Here are your recent notifications from the past week:
+              You have
+              {' '}
+              {formatUnreadCount(totalCount)}
+              {' '}
+              from the past week. Here&apos;s a summary:
             </Text>
 
             {/* Notifications list */}

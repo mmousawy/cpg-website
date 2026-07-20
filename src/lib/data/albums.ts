@@ -446,12 +446,14 @@ export async function getEventAlbum(eventId: number) {
 
   // Filter out photos whose underlying photo record is deleted or whose contributor is suspended/deleted
   type ContributorProfile = { nickname: string | null; full_name: string | null; avatar_url: string | null; suspended_at: string | null; deletion_scheduled_at: string | null } | null;
-  const activePhotos = (album.photos || []).filter((p) => {
-    if (p.photo?.deleted_at) return false;
-    const contributor = p.contributor as ContributorProfile;
-    if (contributor?.suspended_at || contributor?.deletion_scheduled_at) return false;
-    return true;
-  });
+  const activePhotos = (album.photos || [])
+    .filter((p) => {
+      if (p.photo?.deleted_at) return false;
+      const contributor = p.contributor as ContributorProfile;
+      if (contributor?.suspended_at || contributor?.deletion_scheduled_at) return false;
+      return true;
+    })
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
   return {
     ...album,

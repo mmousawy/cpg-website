@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 
 import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
+import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
@@ -427,7 +428,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(results, { status: 200 });
+    let notificationEmails = { sent: 0, cancelled: 0, failed: 0, processed: 0 };
+    try {
+      notificationEmails = await flushPendingNotificationEmails();
+    } catch (flushError) {
+      console.error('Error flushing pending notification emails:', flushError);
+    }
+
+    return NextResponse.json({ ...results, notificationEmails }, { status: 200 });
   } catch (error) {
     console.error('Error in event reminders cron:', error);
     return NextResponse.json(

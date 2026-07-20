@@ -9,11 +9,15 @@ import { revalidateTag } from 'next/cache';
  * Create a notification in the database
  * Uses service role to bypass RLS for server-side creation
  */
-export async function createNotification(params: CreateNotificationParams): Promise<{ success: boolean; error?: string }> {
+export async function createNotification(params: CreateNotificationParams): Promise<{
+  success: boolean;
+  notificationId?: string;
+  error?: string;
+}> {
   const supabase = createAdminClient();
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('notifications')
       .insert({
         user_id: params.userId,
@@ -22,7 +26,9 @@ export async function createNotification(params: CreateNotificationParams): Prom
         entity_type: params.entityType,
         entity_id: params.entityId || null,
         data: (params.data || {}) as Json,
-      });
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Error creating notification:', error);
@@ -30,7 +36,7 @@ export async function createNotification(params: CreateNotificationParams): Prom
     }
 
     revalidateTag(`notifications-${params.userId}`, 'max');
-    return { success: true };
+    return { success: true, notificationId: data.id };
   } catch (err) {
     const error = err instanceof Error ? err : new Error('Unknown error');
     console.error('Exception creating notification:', error);
