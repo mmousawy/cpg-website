@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.1](https://github.com/mmousawy/cpg-website/compare/v1.36.0...v1.36.1) (2026-07-20)
+
+
+### 🐛 Bug Fixes
+
+* Enhance notification system and email handling ([b2e784d](https://github.com/mmousawy/cpg-website/commit/b2e784d943a456e471363089a059edf219578129))
+
 ## [1.36.0](https://github.com/mmousawy/cpg-website/compare/v1.35.2...v1.36.0) (2026-07-18)
 
 
