@@ -1,5 +1,7 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import { Database } from '@/database.types';
+import { CPGEvent } from '@/types/events';
 import { createClient } from '@/utils/supabase/server';
 import CancelBlock from './CancelBlock';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -27,16 +29,10 @@ export default async function Cancel({
   const supabase = await createClient();
   const { uuid } = await params;
 
-  // Single query with JOIN instead of 2 sequential queries
-  const { data: rsvp } = await supabase.from('events_rsvps')
-    .select(`
-      *,
-      events (*)
-    `)
-    .eq('uuid', uuid)
-    .single();
-
-  const event = rsvp?.events || null;
+  const { data: rsvpPayload } = await supabase.rpc('get_rsvp_by_uuid', { p_uuid: uuid });
+  const payload = rsvpPayload as { rsvp?: Database['public']['Tables']['events_rsvps']['Row']; event?: CPGEvent } | null;
+  const rsvp = payload?.rsvp ?? null;
+  const event = payload?.event ?? null;
 
   return (
     <PageContainer>

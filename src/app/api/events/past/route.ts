@@ -1,5 +1,6 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import { getEventQueryContext } from '@/lib/events/status';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -45,13 +46,12 @@ export async function GET(request: NextRequest) {
   // Fetch attendees for these events
   const eventIds = pastEvents.map(e => e.id);
 
-  const { data: attendees } = await supabase
+  const { data: attendees } = await createAdminClient()
     .from('events_rsvps')
     .select(`
       id,
       event_id,
       user_id,
-      email,
       confirmed_at,
       profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
     `)
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       id: String(attendee.id),
       event_id: eventId,
       user_id: attendee.user_id,
-      email: attendee.email || '',
+      email: '',
       confirmed_at: attendee.confirmed_at || '',
       profiles: attendee.profiles,
     });

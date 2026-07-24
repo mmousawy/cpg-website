@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { ConfirmEmail } from '../../../emails/confirm';
 import { render } from '@react-email/render';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
@@ -9,7 +9,7 @@ import { revalidateEventAttendees } from '@/app/actions/revalidate';
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   const { uuid } = await request.json();
 
@@ -17,20 +17,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
   }
 
-  // Get the RSVP
-  const { data: rsvp } = await supabase.from('events_rsvps')
-    .select()
-    .eq('uuid', uuid)
-    .single();
+  const { data: rsvpPayload } = await adminClient.rpc('get_rsvp_by_uuid', { p_uuid: uuid });
+  const payload = rsvpPayload as { rsvp?: Record<string, unknown>; event?: Record<string, unknown> } | null;
+  const rsvp = payload?.rsvp ?? null;
+  const event = payload?.event ?? null;
 
-  // Get the event and check if it exists
-  const { data: event } = await supabase.from('events')
-    .select()
-    .eq('id', rsvp?.event_id || -1)
-    .eq('is_draft', false)
-    .single();
-
-  if (!rsvp || !event) {
+  if (!rsvp || !event || event.is_draft === true) {
     return NextResponse.json({ message: 'RSVP or event not found' }, { status: 404 });
   }
 
@@ -40,15 +32,15 @@ export async function POST(request: NextRequest) {
   }
 
   // Get email recipient
-  const recipientEmail = rsvp.email;
-  const recipientName = rsvp.name || 'Guest';
+  const recipientEmail = rsvp.email as string;
+  const recipientName = (rsvp.name as string | null) || 'Guest';
 
   if (!recipientEmail) {
     return NextResponse.json({ message: 'No email associated with this RSVP' }, { status: 400 });
   }
 
   // Confirm the RSVP in the database
-  const result = await supabase.from('events_rsvps')
+  const result = await adminClient.from('events_rsvps')
     .update({
       confirmed_at: new Date().toISOString(),
     })
@@ -67,8 +59,8 @@ export async function POST(request: NextRequest) {
     from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
     to: recipientEmail,
     replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-    subject: `Confirmed RSVP: ${event.title}`,
-    html: await render(ConfirmEmail({ fullName: recipientName, event, cancellationLink })),
+    subject: `Confirmed RSVP: ${event.title as string}`,
+    html: await render(ConfirmEmail({ fullName: recipientName, event: event as never, cancellationLink })),
   });
 
   if (emailResult.error) {

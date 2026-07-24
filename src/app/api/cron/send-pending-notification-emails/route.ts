@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
+import { flushPendingNotifications } from '@/lib/notifications/schedule';
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -22,10 +23,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const pendingNotifications = await flushPendingNotifications();
     const result = await flushPendingNotificationEmails();
 
     return NextResponse.json({
       message: 'Pending notification emails processed',
+      pendingNotifications,
       ...result,
       timestamp: new Date().toISOString(),
     });

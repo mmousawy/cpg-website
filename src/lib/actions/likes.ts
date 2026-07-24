@@ -1,8 +1,11 @@
 'use server';
 
 import { revalidateAlbumLikes, revalidatePhotoLikes } from '@/app/actions/revalidate';
+import {
+  removeActorFromPendingNotification,
+  scheduleNotification,
+} from '@/lib/notifications/schedule';
 import { createClient } from '@/utils/supabase/server';
-import { createNotification } from '@/lib/notifications/create';
 
 /**
  * Toggle like/unlike for a photo or album
@@ -80,6 +83,16 @@ export async function toggleLike(
         return { liked: false, count: 0, error: 'Delete succeeded but no rows were deleted. Check RLS policies.' };
       }
 
+      if (photo?.user_id) {
+        await removeActorFromPendingNotification({
+          type: 'like_photo',
+          recipientUserId: photo.user_id,
+          actorId: user.id,
+          entityType: 'photo',
+          entityId,
+        });
+      }
+
     } else {
       // Like: insert the like
       const { data: insertedData, error: insertError } = await supabase
@@ -125,12 +138,13 @@ export async function toggleLike(
         if (ownerProfile?.nickname && photoDetails) {
           const link = `/@${ownerProfile.nickname}/photo/${photoDetails.short_id}`;
 
-          await createNotification({
+          await scheduleNotification({
             userId: photo.user_id,
             actorId: user.id,
             type: 'like_photo',
             entityType: 'photo',
             entityId,
+            validateAction: 'like_photo',
             data: {
               title: photoDetails.title || 'Untitled photo',
               thumbnail: photoDetails.url,
@@ -210,6 +224,16 @@ export async function toggleLike(
         console.error('Album like delete: No rows deleted - RLS policy may be blocking');
         return { liked: false, count: 0, error: 'Delete succeeded but no rows were deleted. Check RLS policies.' };
       }
+
+      if (album?.user_id) {
+        await removeActorFromPendingNotification({
+          type: 'like_album',
+          recipientUserId: album.user_id,
+          actorId: user.id,
+          entityType: 'album',
+          entityId,
+        });
+      }
     } else {
       // Like: insert the like
       const { data: insertedData, error: insertError } = await supabase
@@ -248,12 +272,13 @@ export async function toggleLike(
         if (ownerNickname && albumDetails) {
           const link = `/@${ownerNickname}/album/${albumDetails.slug}`;
 
-          await createNotification({
+          await scheduleNotification({
             userId: album.user_id,
             actorId: user.id,
             type: 'like_album',
             entityType: 'album',
             entityId,
+            validateAction: 'like_album',
             data: {
               title: albumDetails.title,
               thumbnail: albumDetails.cover_image_url,

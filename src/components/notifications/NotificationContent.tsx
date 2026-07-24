@@ -21,6 +21,45 @@ import PhotoStackSVG from 'public/icons/photo-stack-mini.svg';
 
 dayjs.extend(relativeTime);
 
+function formatWithOthers(
+  actor: string | null,
+  otherCount: number,
+  action: string,
+): string {
+  const name = actor || 'Someone';
+  if (otherCount > 0) {
+    return `${name} and ${otherCount} other${otherCount === 1 ? '' : 's'} ${action}`;
+  }
+  return `${name} ${action}`;
+}
+
+function formatCommentMessage(
+  actor: string | null,
+  data: NotificationData | null,
+  target: string,
+): string {
+  const otherCount = (data?.otherCount as number) || 0;
+  const commentCount = (data?.commentCount as number) || 1;
+  const name = actor || 'Someone';
+
+  if (otherCount > 0) {
+    return `${name} and ${otherCount} other${otherCount === 1 ? '' : 's'} commented on ${target}`;
+  }
+  if (commentCount > 1) {
+    return `${name} commented ${commentCount} times on ${target}`;
+  }
+  return `${name} commented on ${target}`;
+}
+
+function formatReplyMessage(actor: string | null, data: NotificationData | null): string {
+  const commentCount = (data?.commentCount as number) || 1;
+  const name = actor || 'Someone';
+  if (commentCount > 1) {
+    return `${name} replied ${commentCount} times to your comment`;
+  }
+  return `${name} replied to your comment`;
+}
+
 // Map notification types to their SVG icons
 export const notificationIcons: Record<NotificationType, React.FC<{ className?: string }>> = {
   like_photo: HeartSVG,
@@ -51,15 +90,14 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
 };
 
 export const notificationMessages: Record<NotificationType, (actor: string | null, data: NotificationData | null) => string> = {
-  like_photo: (actor) => `${actor || 'Someone'} liked your photo`,
-  like_album: (actor) => `${actor || 'Someone'} liked your album`,
-  comment_photo: (actor) => `${actor || 'Someone'} commented on your photo`,
-  comment_album: (actor) => `${actor || 'Someone'} commented on your album`,
-  comment_event: (actor) => `${actor || 'Someone'} commented on the event`,
-  comment_challenge: (actor) => `${actor || 'Someone'} commented on the challenge`,
-  comment_scene_event: (actor) =>
-    `${actor || 'Someone'} commented on a Scene event`,
-  comment_reply: (actor) => `${actor || 'Someone'} replied to your comment`,
+  like_photo: (actor, data) => formatWithOthers(actor, (data?.otherCount as number) || 0, 'liked your photo'),
+  like_album: (actor, data) => formatWithOthers(actor, (data?.otherCount as number) || 0, 'liked your album'),
+  comment_photo: (actor, data) => formatCommentMessage(actor, data, 'your photo'),
+  comment_album: (actor, data) => formatCommentMessage(actor, data, 'your album'),
+  comment_event: (actor, data) => formatCommentMessage(actor, data, 'the event'),
+  comment_challenge: (actor, data) => formatCommentMessage(actor, data, 'the challenge'),
+  comment_scene_event: (actor, data) => formatCommentMessage(actor, data, 'a Scene event'),
+  comment_reply: (actor, data) => formatReplyMessage(actor, data),
   follow: (actor) => `${actor || 'Someone'} started following you`,
   followed_upload: (actor, data) => {
     const count = (data?.photoCount as number) || 1;

@@ -43,14 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchingProfileRef.current = userId;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.rpc('get_own_profile');
 
-      setProfile(error ? null : data);
-      return data;
+      const profile = error ? null : (data as Profile | null);
+      setProfile(profile);
+      return profile;
     } catch {
       setProfile(null);
       return null;

@@ -1,4 +1,4 @@
-import { createNotification } from '@/lib/notifications/create';
+import { scheduleNotification } from '@/lib/notifications/schedule';
 import type { NotificationType } from '@/types/notifications';
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
@@ -55,10 +55,8 @@ export async function POST(request: NextRequest) {
 
     switch (body.type) {
       case 'shared_album_request_received': {
-        // Sent to album owner → link to manage album (where they can see join requests)
-        // Skip for event albums (no owner)
         if (body.ownerId) {
-          await createNotification({
+          await scheduleNotification({
             userId: body.ownerId,
             actorId: user.id,
             type: 'shared_album_request_received' as NotificationType,
@@ -74,8 +72,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'shared_album_invite_received': {
-        // Sent to invitee → link to my albums list (where they can accept/decline)
-        await createNotification({
+        await scheduleNotification({
           userId: body.inviteeId,
           actorId: user.id,
           type: 'shared_album_invite_received' as NotificationType,
@@ -90,8 +87,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'shared_album_request_accepted': {
-        // Sent to requester → link to shared album in manage interface
-        await createNotification({
+        await scheduleNotification({
           userId: body.userId,
           actorId: user.id,
           type: body.type as NotificationType,
@@ -106,8 +102,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'shared_album_request_declined': {
-        // Sent to requester → link to my albums list
-        await createNotification({
+        await scheduleNotification({
           userId: body.userId,
           actorId: user.id,
           type: body.type as NotificationType,
@@ -122,9 +117,8 @@ export async function POST(request: NextRequest) {
         break;
       }
       case 'shared_album_invite_accepted': {
-        // Sent to album owner → link to manage album (skip for event albums with no owner)
         if (body.ownerId) {
-          await createNotification({
+          await scheduleNotification({
             userId: body.ownerId,
             actorId: body.accepterId,
             type: 'shared_album_invite_accepted' as NotificationType,
@@ -156,4 +150,3 @@ async function getActorNickname(userId: string): Promise<string | null> {
   const { data } = await supabase.from('profiles').select('nickname').eq('id', userId).single();
   return data?.nickname ?? null;
 }
-

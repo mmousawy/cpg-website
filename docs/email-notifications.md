@@ -98,12 +98,32 @@ Sent when someone comments on a user's album or photo.
 **Template:** `src/emails/comment-notification.tsx`  
 **Email Preference:** Respects 'notifications' email type
 
+Comment emails are enqueued when the in-app notification is delivered (after the 30-second delay), then batched with a 15-minute debounce per entity.
+
+### Social Activity Notifications (In-App)
+
+All user-triggered social notifications use a unified **30-second delay** before appearing in-app. This prevents spam from rapid toggles (like/unlike, follow/unfollow) and coalesces burst activity.
+
+**Delayed types:** `like_photo`, `like_album`, `comment_*`, `comment_reply`, `follow`, `followed_upload`, `shared_album_*`
+
+**Immediate types:** `event_reminder`, `event_announcement`, `challenge_announced`, `new_submission`, `submission_*`, `admin_message`, `report_*`, `feedback_submitted`
+
+**Anti-spam rules:**
+- **30s debounce:** Upserting a pending notification resets the delivery timer
+- **Cross-actor coalesce:** Likes and top-level comments on the same entity merge into one notification (e.g. "Alice and 2 others liked your photo")
+- **Cancel on undo:** Unfollow and unlike cancel or adjust pending notifications before delivery
+- **Dedupe on deliver:** Follow and shared-album actions skip if an undismissed notification from the same actor already exists
+- **Upload coalesce:** `followed_upload` merges unseen notifications within 24 hours
+- **Safety net:** `flushPendingNotifications()` runs via `after()` callbacks and existing cron routes
+
+Implementation: [`src/lib/notifications/schedule.ts`](src/lib/notifications/schedule.ts)
+
 ### Follow and Upload Notifications
 
 Follow activity and new uploads from followed photographers do **not** trigger instant emails.
 
-- **Follow:** When a member follows a photographer, the photographer receives an in-app `follow` notification after a 1-minute delay. If the follower unfollows within that minute, no notification is sent.
-- **New uploads:** When a followed photographer publishes public photos (upload as public or private → public), followers receive a coalesced `followed_upload` in-app notification. Multiple uploads within 24 hours are grouped into one notification per follower.
+- **Follow:** When a member follows a photographer, the photographer receives an in-app `follow` notification after a 30-second delay. If the follower unfollows within that window, no notification is sent. Re-following resets the timer, and duplicate undismissed notifications from the same follower are not created.
+- **New uploads:** When a followed photographer publishes public photos (upload as public or private → public), followers receive a coalesced `followed_upload` in-app notification after the delay. Multiple uploads within 24 hours are grouped into one notification per follower.
 - **Weekly digest:** Both notification types appear in the Sunday weekly digest for users who have not opted out of `weekly_digest`.
 
 **API routes:**

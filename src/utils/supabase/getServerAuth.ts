@@ -25,16 +25,12 @@ export async function getServerAuth(): Promise<ServerAuth> {
       return { user: null, profile: null };
     }
 
-    // Fetch profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, email, full_name, nickname, avatar_url, terms_accepted_at, is_admin')
-      .eq('id', user.id)
-      .single();
+    const { data: profileData } = await supabase.rpc('get_own_profile');
+    const profile = profileData as ServerProfile | null;
 
     return {
       user,
-      profile: profile as ServerProfile | null,
+      profile,
     };
   } catch (error) {
     // Silently fail during static generation/prerendering (no cookies available)

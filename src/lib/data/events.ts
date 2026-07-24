@@ -1,5 +1,6 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import { getEventQueryContext } from '@/lib/events/status';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -158,11 +159,11 @@ export async function getEventAttendeesForEvent(eventId: number) {
   cacheLife('max');
   cacheTag('event-attendees');
 
-  const supabase = createPublicClient();
+  const supabase = createAdminClient();
 
   const { data: attendees } = await supabase
     .from('events_rsvps')
-    .select('id, user_id, email, confirmed_at, profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)')
+    .select('id, user_id, confirmed_at, profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)')
     .eq('event_id', eventId)
     .not('confirmed_at', 'is', null)
     .is('canceled_at', null)
@@ -173,7 +174,13 @@ export async function getEventAttendeesForEvent(eventId: number) {
   return (attendees || []).filter((a) => {
     const p = a.profiles as { suspended_at?: string | null; deletion_scheduled_at?: string | null } | null;
     return !p?.suspended_at && !p?.deletion_scheduled_at;
-  });
+  }).map((attendee) => ({
+    id: attendee.id,
+    user_id: attendee.user_id,
+    email: null,
+    confirmed_at: attendee.confirmed_at,
+    profiles: attendee.profiles as EventAttendee['profiles'],
+  }));
 }
 
 /**
@@ -189,7 +196,7 @@ export async function getEventAttendees(eventIds: number[]) {
     return {} as Record<number, EventAttendee[]>;
   }
 
-  const supabase = createPublicClient();
+  const supabase = createAdminClient();
 
   const { data: allAttendees } = await supabase
     .from('events_rsvps')
@@ -197,7 +204,6 @@ export async function getEventAttendees(eventIds: number[]) {
       id,
       event_id,
       user_id,
-      email,
       confirmed_at,
       profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
     `)
@@ -222,7 +228,7 @@ export async function getEventAttendees(eventIds: number[]) {
       id: String(attendee.id),
       event_id: eventId,
       user_id: attendee.user_id,
-      email: attendee.email || '',
+      email: '',
       confirmed_at: attendee.confirmed_at || '',
       profiles: attendee.profiles,
     });

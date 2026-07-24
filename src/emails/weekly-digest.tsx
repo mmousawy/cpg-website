@@ -20,6 +20,36 @@ import type { NotificationWithActor } from '@/types/notifications';
 import Footer from './components/Footer';
 import EmailHeader from './components/Header';
 
+function formatWithOthers(
+  actor: string | null,
+  otherCount: number,
+  action: string,
+): string {
+  const name = actor || 'Someone';
+  if (otherCount > 0) {
+    return `${name} and ${otherCount} other${otherCount === 1 ? '' : 's'} ${action}`;
+  }
+  return `${name} ${action}`;
+}
+
+function formatCommentMessage(
+  actor: string | null,
+  data: NotificationWithActor['data'] | undefined,
+  target: string,
+): string {
+  const otherCount = (data?.otherCount as number) || 0;
+  const commentCount = (data?.commentCount as number) || 1;
+  const name = actor || 'Someone';
+
+  if (otherCount > 0) {
+    return `${name} and ${otherCount} other${otherCount === 1 ? '' : 's'} commented on ${target}`;
+  }
+  if (commentCount > 1) {
+    return `${name} commented ${commentCount} times on ${target}`;
+  }
+  return `${name} commented on ${target}`;
+}
+
 const notificationIcons: Record<string, string> = {
   like_photo: '🖼️',
   like_album: '📸',
@@ -34,11 +64,11 @@ const notificationIcons: Record<string, string> = {
 };
 
 const notificationMessages: Record<string, (actor: string | null, data?: NotificationWithActor['data']) => string> = {
-  like_photo: (actor) => `${actor || 'Someone'} liked your photo`,
-  like_album: (actor) => `${actor || 'Someone'} liked your album`,
-  comment_photo: (actor) => `${actor || 'Someone'} commented on your photo`,
-  comment_album: (actor) => `${actor || 'Someone'} commented on your album`,
-  comment_event: (actor) => `${actor || 'Someone'} commented on the event`,
+  like_photo: (actor, data) => formatWithOthers(actor, (data?.otherCount as number) || 0, 'liked your photo'),
+  like_album: (actor, data) => formatWithOthers(actor, (data?.otherCount as number) || 0, 'liked your album'),
+  comment_photo: (actor, data) => formatCommentMessage(actor, data, 'your photo'),
+  comment_album: (actor, data) => formatCommentMessage(actor, data, 'your album'),
+  comment_event: (actor, data) => formatCommentMessage(actor, data, 'the event'),
   follow: (actor) => `${actor || 'Someone'} started following you`,
   followed_upload: (actor, data) => {
     const count = (data?.photoCount as number) || 1;

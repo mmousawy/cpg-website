@@ -52,7 +52,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 
 
 
-CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA "public";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA "extensions";
 
 
 
@@ -104,26 +104,26 @@ CREATE OR REPLACE FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uu
     SET "search_path" TO ''
     AS $$
 DECLARE
-  v_comment_id UUID;
-  v_user_id UUID;
-  v_actual_parent_id UUID;
+  v_comment_id uuid;
+  v_user_id uuid;
+  v_actual_parent_id uuid;
 BEGIN
-  -- Get current user
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Authentication required';
   END IF;
 
-  -- Verify challenge exists
-  IF NOT EXISTS (SELECT 1 FROM "public"."challenges" WHERE id = p_challenge_id) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.challenges
+    WHERE id = p_challenge_id
+      AND (is_active = true OR public.is_admin())
+  ) THEN
     RAISE EXCEPTION 'Challenge not found';
   END IF;
 
-  -- If replying, validate parent comment exists and is not deleted
   IF p_parent_comment_id IS NOT NULL THEN
-    -- Get the parent comment and flatten to original parent if it's already a reply
     SELECT COALESCE(parent_comment_id, id) INTO v_actual_parent_id
-    FROM "public"."comments"
+    FROM public.comments
     WHERE id = p_parent_comment_id
       AND deleted_at IS NULL;
 
@@ -132,13 +132,11 @@ BEGIN
     END IF;
   END IF;
 
-  -- Create the comment with parent_comment_id if replying
-  INSERT INTO "public"."comments" (user_id, comment_text, parent_comment_id)
+  INSERT INTO public.comments (user_id, comment_text, parent_comment_id)
   VALUES (v_user_id, p_comment_text, v_actual_parent_id)
   RETURNING id INTO v_comment_id;
 
-  -- Link to challenge (even for replies, so they show up in challenge queries)
-  INSERT INTO "public"."challenge_comments" (challenge_id, comment_id)
+  INSERT INTO public.challenge_comments (challenge_id, comment_id)
   VALUES (p_challenge_id, v_comment_id);
 
   RETURN v_comment_id;
@@ -158,19 +156,28 @@ CREATE OR REPLACE FUNCTION "public"."add_comment"("p_entity_type" "text", "p_ent
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_comment_id UUID;
-  v_user_id UUID;
-  v_actual_parent_id UUID;
+  v_comment_id uuid;
+  v_user_id uuid;
+  v_actual_parent_id uuid;
 BEGIN
-  -- Get the current user
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  -- If replying, validate parent comment exists and is not deleted
+  IF p_entity_type = 'album' THEN
+    IF NOT public.can_comment_on_album(p_entity_id) THEN
+      RAISE EXCEPTION 'Not authorized to comment on this album';
+    END IF;
+  ELSIF p_entity_type = 'photo' THEN
+    IF NOT public.can_comment_on_photo(p_entity_id) THEN
+      RAISE EXCEPTION 'Not authorized to comment on this photo';
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'Invalid entity type: %', p_entity_type;
+  END IF;
+
   IF p_parent_comment_id IS NOT NULL THEN
-    -- Get the parent comment and flatten to original parent if it's already a reply
     SELECT COALESCE(parent_comment_id, id) INTO v_actual_parent_id
     FROM comments
     WHERE id = p_parent_comment_id
@@ -181,20 +188,16 @@ BEGIN
     END IF;
   END IF;
 
-  -- Insert the comment with parent_comment_id if replying
   INSERT INTO comments (user_id, comment_text, parent_comment_id)
   VALUES (v_user_id, p_comment_text, v_actual_parent_id)
   RETURNING id INTO v_comment_id;
 
-  -- Link to the appropriate entity (even for replies, so they show up in entity queries)
   IF p_entity_type = 'album' THEN
     INSERT INTO album_comments (album_id, comment_id)
     VALUES (p_entity_id, v_comment_id);
-  ELSIF p_entity_type = 'photo' THEN
+  ELSE
     INSERT INTO photo_comments (photo_id, comment_id)
     VALUES (p_entity_id, v_comment_id);
-  ELSE
-    RAISE EXCEPTION 'Invalid entity type: %', p_entity_type;
   END IF;
 
   RETURN v_comment_id;
@@ -214,19 +217,20 @@ CREATE OR REPLACE FUNCTION "public"."add_event_comment"("p_event_id" integer, "p
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_comment_id UUID;
-  v_user_id UUID;
-  v_actual_parent_id UUID;
+  v_comment_id uuid;
+  v_user_id uuid;
+  v_actual_parent_id uuid;
 BEGIN
-  -- Get the current user
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  -- If replying, validate parent comment exists and is not deleted
+  IF NOT EXISTS (SELECT 1 FROM events WHERE id = p_event_id) THEN
+    RAISE EXCEPTION 'Event not found';
+  END IF;
+
   IF p_parent_comment_id IS NOT NULL THEN
-    -- Get the parent comment and flatten to original parent if it's already a reply
     SELECT COALESCE(parent_comment_id, id) INTO v_actual_parent_id
     FROM comments
     WHERE id = p_parent_comment_id
@@ -237,12 +241,10 @@ BEGIN
     END IF;
   END IF;
 
-  -- Insert the comment with parent_comment_id if replying
   INSERT INTO comments (user_id, comment_text, parent_comment_id)
   VALUES (v_user_id, p_comment_text, v_actual_parent_id)
   RETURNING id INTO v_comment_id;
 
-  -- Link to the event (even for replies, so they show up in event queries)
   INSERT INTO event_comments (event_id, comment_id)
   VALUES (p_event_id, v_comment_id);
 
@@ -447,22 +449,26 @@ CREATE OR REPLACE FUNCTION "public"."add_scene_event_comment"("p_scene_event_id"
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  v_comment_id UUID;
-  v_user_id UUID;
-  v_actual_parent_id UUID;
+  v_comment_id uuid;
+  v_user_id uuid;
+  v_actual_parent_id uuid;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
-    RAISE EXCEPTION 'Authentication required';
+    RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM "public"."scene_events" WHERE id = p_scene_event_id AND deleted_at IS NULL) THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM scene_events
+    WHERE id = p_scene_event_id
+      AND deleted_at IS NULL
+  ) THEN
     RAISE EXCEPTION 'Scene event not found';
   END IF;
 
   IF p_parent_comment_id IS NOT NULL THEN
     SELECT COALESCE(parent_comment_id, id) INTO v_actual_parent_id
-    FROM "public"."comments"
+    FROM comments
     WHERE id = p_parent_comment_id
       AND deleted_at IS NULL;
 
@@ -471,11 +477,11 @@ BEGIN
     END IF;
   END IF;
 
-  INSERT INTO "public"."comments" (user_id, comment_text, parent_comment_id)
+  INSERT INTO comments (user_id, comment_text, parent_comment_id)
   VALUES (v_user_id, p_comment_text, v_actual_parent_id)
   RETURNING id INTO v_comment_id;
 
-  INSERT INTO "public"."scene_event_comments" (scene_event_id, comment_id)
+  INSERT INTO scene_event_comments (scene_event_id, comment_id)
   VALUES (p_scene_event_id, v_comment_id);
 
   RETURN v_comment_id;
@@ -626,24 +632,52 @@ CREATE OR REPLACE FUNCTION "public"."batch_update_album_photos"("photo_updates" 
     SET "search_path" TO ''
     AS $$
 DECLARE
-  album_user_id uuid;
   v_is_admin boolean;
+  v_album_id uuid;
+  v_album_user_id uuid;
+  v_unauthorized_count integer;
 BEGIN
-  SELECT a.user_id INTO album_user_id
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  SELECT public.is_admin() INTO v_is_admin;
+
+  SELECT ap.album_id, a.user_id
+  INTO v_album_id, v_album_user_id
   FROM public.album_photos ap
   JOIN public.albums a ON a.id = ap.album_id
-  WHERE ap.id = ((photo_updates->0)->>'id')::uuid
-  LIMIT 1;
+  WHERE ap.id = ((photo_updates->0)->>'id')::uuid;
 
-  -- Allow if owner, or admin (including for ownerless event albums)
-  IF (album_user_id IS NOT NULL AND album_user_id = auth.uid()) OR (SELECT is_admin FROM public.profiles WHERE id = auth.uid()) THEN
-    UPDATE public.album_photos
-    SET
-      title = COALESCE(update_item->>'title', public.album_photos.title),
-      sort_order = COALESCE((update_item->>'sort_order')::int, public.album_photos.sort_order)
-    FROM jsonb_array_elements(photo_updates) AS update_item
-    WHERE public.album_photos.id = (update_item->>'id')::uuid;
+  IF v_album_id IS NULL THEN
+    RAISE EXCEPTION 'Album photo not found';
   END IF;
+
+  SELECT COUNT(*) INTO v_unauthorized_count
+  FROM jsonb_array_elements(photo_updates) AS update_item
+  LEFT JOIN public.album_photos ap
+    ON ap.id = (update_item->>'id')::uuid
+   AND ap.album_id = v_album_id
+  WHERE ap.id IS NULL;
+
+  IF v_unauthorized_count > 0 THEN
+    RAISE EXCEPTION 'Not authorized to update album photos';
+  END IF;
+
+  IF v_album_user_id IS NOT NULL AND v_album_user_id <> auth.uid() AND NOT v_is_admin THEN
+    RAISE EXCEPTION 'Not authorized to update album photos';
+  END IF;
+
+  IF v_album_user_id IS NULL AND NOT v_is_admin THEN
+    RAISE EXCEPTION 'Not authorized to update album photos';
+  END IF;
+
+  UPDATE public.album_photos
+  SET
+    title = COALESCE(update_item->>'title', public.album_photos.title),
+    sort_order = COALESCE((update_item->>'sort_order')::int, public.album_photos.sort_order)
+  FROM jsonb_array_elements(photo_updates) AS update_item
+  WHERE public.album_photos.id = (update_item->>'id')::uuid;
 END;
 $$;
 
@@ -718,42 +752,53 @@ COMMENT ON FUNCTION "public"."bulk_delete_photos"("p_photo_ids" "uuid"[]) IS 'So
 
 CREATE OR REPLACE FUNCTION "public"."bulk_remove_from_album"("p_album_photo_ids" "uuid"[]) RETURNS integer
     LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
+    SET "search_path" TO ''
     AS $$
 DECLARE
-  v_user_id UUID;
-  v_album_user_id UUID;
-  v_is_admin BOOLEAN;
-  v_deleted_count INTEGER;
+  v_user_id uuid := auth.uid();
+  v_is_admin boolean;
+  v_album_id uuid;
+  v_album_user_id uuid;
+  v_deleted_count integer;
+  v_unauthorized_count integer;
 BEGIN
-  v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  SELECT a.user_id INTO v_album_user_id
-  FROM album_photos ap
-  JOIN albums a ON a.id = ap.album_id
-  WHERE ap.id = ANY(p_album_photo_ids)
-  LIMIT 1;
+  SELECT public.is_admin() INTO v_is_admin;
+
+  SELECT ap.album_id, a.user_id
+  INTO v_album_id, v_album_user_id
+  FROM public.album_photos ap
+  JOIN public.albums a ON a.id = ap.album_id
+  WHERE ap.id = p_album_photo_ids[1];
+
+  IF v_album_id IS NULL THEN
+    RAISE EXCEPTION 'Album photo not found';
+  END IF;
+
+  SELECT COUNT(*) INTO v_unauthorized_count
+  FROM unnest(p_album_photo_ids) AS requested_id
+  LEFT JOIN public.album_photos ap
+    ON ap.id = requested_id
+   AND ap.album_id = v_album_id
+  WHERE ap.id IS NULL;
+
+  IF v_unauthorized_count > 0 THEN
+    RAISE EXCEPTION 'Not authorized to modify this album';
+  END IF;
 
   IF v_album_user_id IS NULL THEN
-    -- Album not found or ownerless (event album): allow only admin
-    IF NOT (SELECT is_admin FROM profiles WHERE id = v_user_id) THEN
+    IF NOT v_is_admin THEN
       RAISE EXCEPTION 'Not authorized to modify this album';
     END IF;
-  ELSE
-    -- Allow if owner or admin
-    IF v_album_user_id != v_user_id THEN
-      SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_user_id;
-      IF NOT COALESCE(v_is_admin, false) THEN
-        RAISE EXCEPTION 'Not authorized to modify this album';
-      END IF;
-    END IF;
+  ELSIF v_album_user_id <> v_user_id AND NOT v_is_admin THEN
+    RAISE EXCEPTION 'Not authorized to modify this album';
   END IF;
 
   WITH deleted AS (
-    DELETE FROM album_photos
+    DELETE FROM public.album_photos
     WHERE id = ANY(p_album_photo_ids)
     RETURNING id
   )
@@ -820,6 +865,49 @@ COMMENT ON FUNCTION "public"."bulk_review_challenge_submissions"("p_submission_i
 
 
 
+CREATE OR REPLACE FUNCTION "public"."can_comment_on_album"("p_album_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.albums a
+    WHERE a.id = p_album_id
+      AND a.deleted_at IS NULL
+      AND (
+        a.user_id = auth.uid()
+        OR (a.is_public = true AND COALESCE(a.is_suspended, false) = false)
+        OR public.is_shared_album_member(a.id, auth.uid())
+        OR public.is_admin()
+      )
+  );
+$$;
+
+
+ALTER FUNCTION "public"."can_comment_on_album"("p_album_id" "uuid") OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."can_comment_on_photo"("p_photo_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.photos p
+    WHERE p.id = p_photo_id
+      AND p.deleted_at IS NULL
+      AND (
+        p.user_id = auth.uid()
+        OR p.is_public = true
+        OR public.is_admin()
+      )
+  );
+$$;
+
+
+ALTER FUNCTION "public"."can_comment_on_photo"("p_photo_id" "uuid") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."cleanup_expired_auth_tokens"() RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -832,6 +920,63 @@ $$;
 
 
 ALTER FUNCTION "public"."cleanup_expired_auth_tokens"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  SELECT
+    public.is_admin()
+    OR EXISTS (
+      SELECT 1 FROM public.comments c
+      WHERE c.id = p_comment_id AND c.user_id = auth.uid()
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.album_comments ac
+      JOIN public.albums a ON a.id = ac.album_id
+      WHERE ac.comment_id = p_comment_id
+        AND a.deleted_at IS NULL
+        AND (
+          a.user_id = auth.uid()
+          OR (a.is_public = true AND COALESCE(a.is_suspended, false) = false)
+          OR public.is_shared_album_member(a.id, auth.uid())
+        )
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.photo_comments pc
+      JOIN public.photos p ON p.id = pc.photo_id
+      WHERE pc.comment_id = p_comment_id
+        AND p.deleted_at IS NULL
+        AND (
+          p.user_id = auth.uid()
+          OR p.is_public = true
+        )
+    )
+    OR EXISTS (
+      SELECT 1 FROM public.event_comments ec
+      WHERE ec.comment_id = p_comment_id
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.challenge_comments cc
+      JOIN public.challenges ch ON ch.id = cc.challenge_id
+      WHERE cc.comment_id = p_comment_id
+        AND (ch.is_active = true OR public.is_admin())
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.scene_event_comments sec
+      JOIN public.scene_events se ON se.id = sec.scene_event_id
+      WHERE sec.comment_id = p_comment_id
+        AND se.deleted_at IS NULL
+    );
+$$;
+
+
+ALTER FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."create_event_album"("p_event_id" integer) RETURNS "uuid"
@@ -944,6 +1089,83 @@ COMMENT ON FUNCTION "public"."delete_album"("p_album_id" "uuid") IS 'Soft delete
 
 
 
+CREATE OR REPLACE FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text" DEFAULT 'notifications'::"text", "p_notification_id" "uuid" DEFAULT NULL::"uuid", "p_debounce_minutes" integer DEFAULT 15) RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_batch_id uuid;
+  v_send_after timestamptz := now() + make_interval(mins => p_debounce_minutes);
+BEGIN
+  IF auth.role() <> 'service_role' THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  UPDATE public.notification_email_batches
+  SET
+    items = items || jsonb_build_array(p_item),
+    notification_ids = CASE
+      WHEN p_notification_id IS NOT NULL THEN notification_ids || p_notification_id
+      ELSE notification_ids
+    END,
+    send_after = v_send_after,
+    updated_at = now()
+  WHERE recipient_user_id = p_recipient_user_id
+    AND batch_key = p_batch_key
+    AND status = 'pending'
+  RETURNING id INTO v_batch_id;
+
+  IF v_batch_id IS NOT NULL THEN
+    RETURN v_batch_id;
+  END IF;
+
+  BEGIN
+    INSERT INTO public.notification_email_batches (
+      recipient_user_id,
+      batch_key,
+      email_type,
+      items,
+      notification_ids,
+      send_after
+    ) VALUES (
+      p_recipient_user_id,
+      p_batch_key,
+      p_email_type,
+      jsonb_build_array(p_item),
+      CASE
+        WHEN p_notification_id IS NOT NULL THEN ARRAY[p_notification_id]
+        ELSE ARRAY[]::uuid[]
+      END,
+      v_send_after
+    )
+    RETURNING id INTO v_batch_id;
+
+    RETURN v_batch_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      UPDATE public.notification_email_batches
+      SET
+        items = items || jsonb_build_array(p_item),
+        notification_ids = CASE
+          WHEN p_notification_id IS NOT NULL THEN notification_ids || p_notification_id
+          ELSE notification_ids
+        END,
+        send_after = v_send_after,
+        updated_at = now()
+      WHERE recipient_user_id = p_recipient_user_id
+        AND batch_key = p_batch_key
+        AND status = 'pending'
+      RETURNING id INTO v_batch_id;
+
+      RETURN v_batch_id;
+  END;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer) OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."generate_short_id"("size" integer DEFAULT 5) RETURNS "text"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -981,8 +1203,56 @@ $$;
 ALTER FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_own_profile"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_result jsonb;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  SELECT to_jsonb(p) INTO v_result
+  FROM public.profiles p
+  WHERE p.id = v_user_id;
+
+  RETURN v_result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_own_profile"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_photo_exif"("p_photo_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  SELECT p.exif_data INTO v_result
+  FROM public.photos p
+  WHERE p.id = p_photo_id
+    AND p.deleted_at IS NULL
+    AND (
+      p.user_id = auth.uid()
+      OR public.is_admin()
+    );
+
+  RETURN v_result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_photo_exif"("p_photo_id" "uuid") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") RETURNS "jsonb"
-    LANGUAGE "plpgsql" STABLE
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 BEGIN
@@ -995,8 +1265,37 @@ BEGIN
         AND canceled_at IS NULL
     ),
     'commentsMade', (
-      SELECT COUNT(*)::int FROM comments
-      WHERE user_id = p_user_id AND deleted_at IS NULL
+      SELECT COUNT(DISTINCT c.id)::int
+      FROM comments c
+      WHERE c.user_id = p_user_id
+        AND c.deleted_at IS NULL
+        AND (
+          EXISTS (
+            SELECT 1 FROM album_comments ac
+            JOIN albums a ON a.id = ac.album_id
+            WHERE ac.comment_id = c.id
+              AND a.is_public = true
+              AND a.deleted_at IS NULL
+          )
+          OR EXISTS (
+            SELECT 1 FROM photo_comments pc
+            JOIN photos p ON p.id = pc.photo_id
+            WHERE pc.comment_id = c.id
+              AND p.is_public = true
+              AND p.deleted_at IS NULL
+          )
+          OR EXISTS (SELECT 1 FROM event_comments ec WHERE ec.comment_id = c.id)
+          OR EXISTS (
+            SELECT 1 FROM challenge_comments cc
+            JOIN challenges ch ON ch.id = cc.challenge_id
+            WHERE cc.comment_id = c.id AND ch.is_active = true
+          )
+          OR EXISTS (
+            SELECT 1 FROM scene_event_comments sec
+            JOIN scene_events se ON se.id = sec.scene_event_id
+            WHERE sec.comment_id = c.id AND se.deleted_at IS NULL
+          )
+        )
     ),
     'commentsReceived', (
       SELECT COUNT(DISTINCT c.id)::int FROM comments c
@@ -1033,14 +1332,8 @@ BEGIN
       ), 0)
     ),
     'likesGiven', (
-      COALESCE((
-        SELECT COUNT(*)::int FROM album_likes
-        WHERE user_id = p_user_id
-      ), 0) +
-      COALESCE((
-        SELECT COUNT(*)::int FROM photo_likes
-        WHERE user_id = p_user_id
-      ), 0)
+      COALESCE((SELECT COUNT(*)::int FROM album_likes WHERE user_id = p_user_id), 0) +
+      COALESCE((SELECT COUNT(*)::int FROM photo_likes WHERE user_id = p_user_id), 0)
     ),
     'viewsReceived', (
       COALESCE((
@@ -1053,9 +1346,12 @@ BEGIN
       ), 0)
     ),
     'challengesParticipated', (
-      SELECT COUNT(DISTINCT cs.challenge_id)::int FROM challenge_submissions cs
+      SELECT COUNT(DISTINCT cs.challenge_id)::int
+      FROM challenge_submissions cs
       JOIN photos p ON p.id = cs.photo_id
-      WHERE cs.user_id = p_user_id AND p.deleted_at IS NULL
+      WHERE cs.user_id = p_user_id
+        AND cs.status = 'accepted'
+        AND p.deleted_at IS NULL
     ),
     'challengePhotosAccepted', (
       SELECT COUNT(*)::int FROM challenge_submissions cs
@@ -1072,6 +1368,33 @@ ALTER FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") OWNER TO "supaba
 
 COMMENT ON FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") IS 'Returns public profile stats in a single query. Replaces 12+ individual queries. Used by getProfileStats().';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  SELECT jsonb_build_object(
+    'rsvp', (
+      to_jsonb(r)
+      - 'ip_address'
+    ),
+    'event', to_jsonb(e)
+  )
+  INTO v_result
+  FROM public.events_rsvps r
+  JOIN public.events e ON e.id = r.event_id
+  WHERE r.uuid = p_uuid;
+
+  RETURN v_result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_user_album_photos_count"("user_uuid" "uuid") RETURNS integer
@@ -1100,20 +1423,26 @@ DECLARE
   v_album_ids uuid[];
   v_photo_ids uuid[];
   v_result jsonb;
+  v_caller uuid := auth.uid();
 BEGIN
-  -- Get user's album IDs once (reused multiple times)
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF v_caller <> p_user_id AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
   SELECT COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_album_ids
   FROM albums
   WHERE user_id = p_user_id AND deleted_at IS NULL;
 
-  -- Get user's public and private, non-event photo IDs directly (matches getUserPublicPhotoCount)
   SELECT COALESCE(array_agg(id), ARRAY[]::uuid[]) INTO v_photo_ids
   FROM photos
   WHERE user_id = p_user_id
     AND deleted_at IS NULL
     AND storage_path NOT LIKE 'events/%';
 
-  -- Build result JSON with all stats
   SELECT jsonb_build_object(
     'albums', COALESCE(array_length(v_album_ids, 1), 0),
     'photos', COALESCE(array_length(v_photo_ids, 1), 0),
@@ -1211,7 +1540,6 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
     ) AS query
   ),
   all_results AS (
-    -- Members (no blurhash needed for avatars)
     SELECT
       'members'::text AS entity_type,
       p.id::text AS entity_id,
@@ -1230,22 +1558,19 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
-    -- Albums (simplified - show photo count from aggregated data)
     SELECT
-      'albums'::text AS entity_type,
-      a.id::text AS entity_id,
-      a.title AS title,
-      -- Use simple description instead of counting photos each time
-      COALESCE(a.description, 'Album') AS subtitle,
-      a.cover_image_url AS image_url,
-      -- Blurhash only if cover is from a photo (skip expensive lookup)
-      NULL::text AS image_blurhash,
+      'albums'::text,
+      a.id::text,
+      a.title,
+      COALESCE(a.description, 'Album'),
+      a.cover_image_url,
+      NULL::text,
       CASE
         WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/album/' || a.slug
         WHEN a.event_id IS NOT NULL THEN '/events/' || (SELECT slug FROM events WHERE id = a.event_id) || '#photos'
         ELSE NULL
-      END AS url,
-      ts_rank(a.search_vector, sq.query) AS rank
+      END,
+      ts_rank(a.search_vector, sq.query)
     FROM albums a
     LEFT JOIN profiles p ON p.id = a.user_id
     CROSS JOIN search_tsquery sq
@@ -1258,16 +1583,15 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
-    -- Photos (include blurhash)
     SELECT
-      'photos'::text AS entity_type,
-      ph.id::text AS entity_id,
-      COALESCE(ph.title, 'Untitled Photo') AS title,
-      COALESCE(ph.description, '') AS subtitle,
-      ph.url AS image_url,
-      ph.blurhash AS image_blurhash,
-      CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/photo/' || ph.short_id ELSE NULL END AS url,
-      ts_rank(ph.search_vector, sq.query) AS rank
+      'photos'::text,
+      ph.id::text,
+      COALESCE(ph.title, 'Untitled Photo'),
+      COALESCE(ph.description, ''),
+      ph.url,
+      ph.blurhash,
+      CASE WHEN p.nickname IS NOT NULL THEN '/@' || p.nickname || '/photo/' || ph.short_id ELSE NULL END,
+      ts_rank(ph.search_vector, sq.query)
     FROM photos ph
     JOIN profiles p ON p.id = ph.user_id
     CROSS JOIN search_tsquery sq
@@ -1279,16 +1603,15 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
-    -- Events (no blurhash for event covers)
     SELECT
-      'events'::text AS entity_type,
-      e.id::text AS entity_id,
-      COALESCE(e.title, 'Untitled Event') AS title,
-      COALESCE(e.location, '') AS subtitle,
-      e.cover_image AS image_url,
-      NULL::text AS image_blurhash,
-      '/events/' || e.slug AS url,
-      ts_rank(e.search_vector, sq.query) AS rank
+      'events'::text,
+      e.id::text,
+      COALESCE(e.title, 'Untitled Event'),
+      COALESCE(e.location, ''),
+      e.cover_image,
+      NULL::text,
+      '/events/' || e.slug,
+      ts_rank(e.search_vector, sq.query)
     FROM events e
     CROSS JOIN search_tsquery sq
     WHERE 'events' = ANY(search_types)
@@ -1296,16 +1619,15 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
-    -- Scene Events (community photography events)
     SELECT
-      'scene-events'::text AS entity_type,
-      se.id::text AS entity_id,
-      se.title AS title,
-      COALESCE(se.category || ' • ' || se.location_city, se.location_city) AS subtitle,
-      se.cover_image_url AS image_url,
-      se.image_blurhash AS image_blurhash,
-      '/scene/' || se.slug AS url,
-      ts_rank(se.search_vector, sq.query) AS rank
+      'scene-events'::text,
+      se.id::text,
+      se.title,
+      COALESCE(se.category || ' • ' || se.location_city, se.location_city),
+      se.cover_image_url,
+      se.image_blurhash,
+      '/scene/' || se.slug,
+      ts_rank(se.search_vector, sq.query)
     FROM scene_events se
     CROSS JOIN search_tsquery sq
     WHERE 'scene-events' = ANY(search_types)
@@ -1314,22 +1636,20 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
-    -- Challenges (return raw prompt - HTML stripping done in frontend)
     SELECT
-      'challenges'::text AS entity_type,
-      c.id::text AS entity_id,
-      c.title AS title,
-      -- Return raw prompt (first 200 chars) - frontend will strip HTML
-      LEFT(c.prompt, 200) AS subtitle,
-      c.cover_image_url AS image_url,
-      c.image_blurhash AS image_blurhash,
-      '/challenges/' || c.slug AS url,
+      'challenges'::text,
+      c.id::text,
+      c.title,
+      LEFT(c.prompt, 200),
+      c.cover_image_url,
+      c.image_blurhash,
+      '/challenges/' || c.slug,
       CASE
         WHEN c.title ILIKE search_query || '%' THEN 1.0::real
         WHEN c.title ILIKE '%' || search_query || '%' THEN 0.8::real
         WHEN c.prompt ILIKE '%' || search_query || '%' THEN 0.5::real
         ELSE 0.1::real
-      END AS rank
+      END
     FROM challenges c
     WHERE 'challenges' = ANY(search_types)
       AND c.is_active = true
@@ -1340,34 +1660,22 @@ CREATE OR REPLACE FUNCTION "public"."global_search"("search_query" "text", "resu
 
     UNION ALL
 
-    -- Tags (no images)
     SELECT
-      'tags'::text AS entity_type,
-      at.tag AS entity_id,
-      at.tag AS title,
-      (
-        SELECT COUNT(DISTINCT ap.photo_id)::text || ' photo' ||
-               CASE WHEN COUNT(DISTINCT ap.photo_id) != 1 THEN 's' ELSE '' END
-        FROM album_tags at2
-        JOIN album_photos_active ap ON ap.album_id = at2.album_id
-        JOIN albums a ON a.id = at2.album_id
-        WHERE at2.tag = at.tag
-          AND a.is_public = true
-          AND a.deleted_at IS NULL
-          AND (a.is_suspended = false OR a.is_suspended IS NULL)
-      ) AS subtitle,
-      NULL::text AS image_url,
-      NULL::text AS image_blurhash,
-      '/gallery/tag/' || at.tag AS url,
+      'tags'::text,
+      t.name,
+      t.name,
+      COALESCE(t.count, 0)::text || ' photo' || CASE WHEN COALESCE(t.count, 0) = 1 THEN '' ELSE 's' END,
+      NULL::text,
+      NULL::text,
+      '/gallery/tag/' || t.name,
       CASE
-        WHEN at.tag ILIKE search_query || '%' THEN 1.0::real
-        WHEN at.tag ILIKE '%' || search_query || '%' THEN 0.5::real
+        WHEN t.name ILIKE search_query || '%' THEN 1.0::real
+        WHEN t.name ILIKE '%' || search_query || '%' THEN 0.5::real
         ELSE 0.1::real
-      END AS rank
-    FROM album_tags at
+      END
+    FROM tags t
     WHERE 'tags' = ANY(search_types)
-      AND (at.tag ILIKE search_query || '%' OR at.tag ILIKE '%' || search_query || '%')
-    GROUP BY at.tag
+      AND (t.name ILIKE search_query || '%' OR t.name ILIKE '%' || search_query || '%')
   )
   SELECT
     entity_type,
@@ -1388,7 +1696,7 @@ $$;
 ALTER FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) OWNER TO "supabase_admin";
 
 
-COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search across albums, photos, members, events, scene events, challenges, and tags. Returns ranked results with entity metadata including blurhash for blur placeholders. Respects RLS policies.';
+COMMENT ON FUNCTION "public"."global_search"("search_query" "text", "result_limit" integer, "search_types" "text"[]) IS 'Unified full-text search across albums, photos, members, events, scene events, challenges, and tags. SECURITY DEFINER with explicit public-only filters.';
 
 
 
@@ -1402,7 +1710,7 @@ BEGIN
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
-    NULLIF(NEW.raw_user_meta_data->>'nickname', ''),  -- NULL if empty or not provided
+    NULL,
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
     NOW(),
     NOW()
@@ -1410,7 +1718,6 @@ BEGIN
   RETURN NEW;
 EXCEPTION
   WHEN unique_violation THEN
-    -- Profile already exists (e.g., nickname conflict), just return
     RETURN NEW;
 END;
 $$;
@@ -1424,15 +1731,34 @@ CREATE OR REPLACE FUNCTION "public"."increment_view_count"("p_entity_type" "text
     SET "search_path" TO 'public'
     AS $$
 BEGIN
+  IF auth.role() <> 'service_role' THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
   IF p_entity_type = 'photo' THEN
-    -- Increment total view count
+    IF NOT EXISTS (
+      SELECT 1 FROM photos
+      WHERE id = p_entity_id
+        AND is_public = true
+        AND deleted_at IS NULL
+    ) THEN
+      RETURN;
+    END IF;
+
     UPDATE photos SET view_count = view_count + 1 WHERE id = p_entity_id;
-    -- Log individual view with timestamp
     INSERT INTO photo_views (photo_id, viewed_at) VALUES (p_entity_id, NOW());
   ELSIF p_entity_type = 'album' THEN
-    -- Increment total view count
+    IF NOT EXISTS (
+      SELECT 1 FROM albums
+      WHERE id = p_entity_id
+        AND is_public = true
+        AND deleted_at IS NULL
+        AND COALESCE(is_suspended, false) = false
+    ) THEN
+      RETURN;
+    END IF;
+
     UPDATE albums SET view_count = view_count + 1 WHERE id = p_entity_id;
-    -- Log individual view with timestamp
     INSERT INTO album_views (album_id, viewed_at) VALUES (p_entity_id, NOW());
   END IF;
 END;
@@ -1516,6 +1842,20 @@ ALTER FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_id
 
 COMMENT ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) IS 'Invite users to a closed shared album';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."is_admin"() RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  SELECT COALESCE(
+    (SELECT p.is_admin FROM public.profiles p WHERE p.id = auth.uid()),
+    false
+  );
+$$;
+
+
+ALTER FUNCTION "public"."is_admin"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_user_id" "uuid") RETURNS boolean
@@ -1652,6 +1992,67 @@ ALTER FUNCTION "public"."prevent_private_challenge_photo"() OWNER TO "supabase_a
 
 COMMENT ON FUNCTION "public"."prevent_private_challenge_photo"() IS 'Prevents photos with accepted challenge submissions from being made private';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_notifications_columns"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.user_id IS DISTINCT FROM OLD.user_id
+     OR NEW.actor_id IS DISTINCT FROM OLD.actor_id
+     OR NEW.type IS DISTINCT FROM OLD.type
+     OR NEW.entity_type IS DISTINCT FROM OLD.entity_type
+     OR NEW.entity_id IS DISTINCT FROM OLD.entity_id
+     OR NEW.data IS DISTINCT FROM OLD.data
+     OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+    RAISE EXCEPTION 'Can only update seen_at and dismissed_at';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_notifications_columns"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_profiles_privileged_columns"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.is_admin IS DISTINCT FROM OLD.is_admin THEN
+    RAISE EXCEPTION 'Cannot modify is_admin';
+  END IF;
+
+  IF NEW.email IS DISTINCT FROM OLD.email THEN
+    RAISE EXCEPTION 'Cannot modify email';
+  END IF;
+
+  IF NEW.suspended_at IS DISTINCT FROM OLD.suspended_at
+     OR NEW.suspended_reason IS DISTINCT FROM OLD.suspended_reason THEN
+    RAISE EXCEPTION 'Cannot modify suspension fields';
+  END IF;
+
+  IF NEW.deletion_scheduled_at IS DISTINCT FROM OLD.deletion_scheduled_at THEN
+    RAISE EXCEPTION 'Cannot modify deletion_scheduled_at';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_profiles_privileged_columns"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."remove_album_member"("p_album_id" "uuid", "p_user_id" "uuid") RETURNS "void"
@@ -2826,6 +3227,17 @@ COMMENT ON COLUMN "public"."feedback"."screenshots" IS 'Up to 3 screenshot URLs 
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."follows" (
+    "follower_id" "uuid" NOT NULL,
+    "following_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "follows_no_self" CHECK (("follower_id" <> "following_id"))
+);
+
+
+ALTER TABLE "public"."follows" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."interests" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "name" "text" NOT NULL,
@@ -2835,6 +3247,25 @@ CREATE TABLE IF NOT EXISTS "public"."interests" (
 
 
 ALTER TABLE "public"."interests" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."notification_email_batches" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "recipient_user_id" "uuid" NOT NULL,
+    "batch_key" "text" NOT NULL,
+    "email_type" "text" DEFAULT 'notifications'::"text" NOT NULL,
+    "items" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
+    "notification_ids" "uuid"[] DEFAULT '{}'::"uuid"[] NOT NULL,
+    "send_after" timestamp with time zone NOT NULL,
+    "status" "text" DEFAULT 'pending'::"text" NOT NULL,
+    "sent_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "notification_email_batches_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'sent'::"text", 'cancelled'::"text"])))
+);
+
+
+ALTER TABLE "public"."notification_email_batches" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."notifications" (
@@ -2852,6 +3283,23 @@ CREATE TABLE IF NOT EXISTS "public"."notifications" (
 
 
 ALTER TABLE "public"."notifications" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."pending_notifications" (
+    "dedupe_key" "text" NOT NULL,
+    "recipient_user_id" "uuid" NOT NULL,
+    "actor_id" "uuid",
+    "type" "text" NOT NULL,
+    "entity_type" "text" NOT NULL,
+    "entity_id" "text",
+    "deliver_at" timestamp with time zone NOT NULL,
+    "notification_data" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."pending_notifications" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."photo_comments" (
@@ -3240,6 +3688,11 @@ ALTER TABLE ONLY "public"."feedback"
 
 
 
+ALTER TABLE ONLY "public"."follows"
+    ADD CONSTRAINT "follows_pkey" PRIMARY KEY ("follower_id", "following_id");
+
+
+
 ALTER TABLE ONLY "public"."photos"
     ADD CONSTRAINT "images_pkey" PRIMARY KEY ("id");
 
@@ -3265,8 +3718,18 @@ ALTER TABLE ONLY "public"."interests"
 
 
 
+ALTER TABLE ONLY "public"."notification_email_batches"
+    ADD CONSTRAINT "notification_email_batches_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."notifications"
     ADD CONSTRAINT "notifications_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."pending_notifications"
+    ADD CONSTRAINT "pending_notifications_pkey" PRIMARY KEY ("dedupe_key");
 
 
 
@@ -3461,11 +3924,7 @@ CREATE INDEX "idx_album_tags_tag" ON "public"."album_tags" USING "btree" ("tag")
 
 
 
-CREATE INDEX "idx_album_tags_tag_trgm" ON "public"."album_tags" USING "gin" ("tag" "public"."gin_trgm_ops");
-
-
-
-COMMENT ON INDEX "public"."idx_album_tags_tag_trgm" IS 'Trigram index for fast ILIKE pattern matching on tags';
+CREATE INDEX "idx_album_tags_tag_trgm" ON "public"."album_tags" USING "gin" ("tag" "extensions"."gin_trgm_ops");
 
 
 
@@ -3478,6 +3937,10 @@ CREATE INDEX "idx_album_views_viewed_at" ON "public"."album_views" USING "btree"
 
 
 CREATE INDEX "idx_albums_deleted_at" ON "public"."albums" USING "btree" ("deleted_at") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_albums_event_id" ON "public"."albums" USING "btree" ("event_id");
 
 
 
@@ -3529,7 +3992,19 @@ CREATE INDEX "idx_challenge_announcements_challenge" ON "public"."challenge_anno
 
 
 
+CREATE INDEX "idx_challenge_comments_challenge_id" ON "public"."challenge_comments" USING "btree" ("challenge_id");
+
+
+
+CREATE INDEX "idx_challenge_comments_comment_id" ON "public"."challenge_comments" USING "btree" ("comment_id");
+
+
+
 CREATE INDEX "idx_challenge_submissions_challenge_status" ON "public"."challenge_submissions" USING "btree" ("challenge_id", "status");
+
+
+
+CREATE INDEX "idx_challenge_submissions_photo_id" ON "public"."challenge_submissions" USING "btree" ("photo_id");
 
 
 
@@ -3545,11 +4020,7 @@ COMMENT ON INDEX "public"."idx_challenges_active" IS 'Filter index for active ch
 
 
 
-CREATE INDEX "idx_challenges_prompt_trgm" ON "public"."challenges" USING "gin" ("prompt" "public"."gin_trgm_ops");
-
-
-
-COMMENT ON INDEX "public"."idx_challenges_prompt_trgm" IS 'Trigram index for fast ILIKE pattern matching on challenge prompts';
+CREATE INDEX "idx_challenges_prompt_trgm" ON "public"."challenges" USING "gin" ("prompt" "extensions"."gin_trgm_ops");
 
 
 
@@ -3557,11 +4028,7 @@ CREATE INDEX "idx_challenges_slug" ON "public"."challenges" USING "btree" ("slug
 
 
 
-CREATE INDEX "idx_challenges_title_trgm" ON "public"."challenges" USING "gin" ("title" "public"."gin_trgm_ops");
-
-
-
-COMMENT ON INDEX "public"."idx_challenges_title_trgm" IS 'Trigram index for fast ILIKE pattern matching on challenge titles';
+CREATE INDEX "idx_challenges_title_trgm" ON "public"."challenges" USING "gin" ("title" "extensions"."gin_trgm_ops");
 
 
 
@@ -3597,6 +4064,14 @@ CREATE INDEX "idx_event_announcements_event_id" ON "public"."event_announcements
 
 
 
+CREATE INDEX "idx_event_comments_comment_id" ON "public"."event_comments" USING "btree" ("comment_id");
+
+
+
+CREATE INDEX "idx_event_comments_event_id" ON "public"."event_comments" USING "btree" ("event_id");
+
+
+
 CREATE INDEX "idx_events_rsvps_user_confirmed" ON "public"."events_rsvps" USING "btree" ("user_id", "confirmed_at") WHERE (("confirmed_at" IS NOT NULL) AND ("canceled_at" IS NULL));
 
 
@@ -3614,6 +4089,14 @@ CREATE INDEX "idx_feedback_status" ON "public"."feedback" USING "btree" ("status
 
 
 CREATE INDEX "idx_feedback_user_id" ON "public"."feedback" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_follows_follower_id" ON "public"."follows" USING "btree" ("follower_id");
+
+
+
+CREATE INDEX "idx_follows_following_id" ON "public"."follows" USING "btree" ("following_id");
 
 
 
@@ -3638,6 +4121,14 @@ CREATE INDEX "idx_notifications_user_all" ON "public"."notifications" USING "btr
 
 
 CREATE INDEX "idx_notifications_user_unseen" ON "public"."notifications" USING "btree" ("user_id", "created_at" DESC) WHERE (("seen_at" IS NULL) AND ("dismissed_at" IS NULL));
+
+
+
+CREATE INDEX "idx_pending_notifications_deliver_at" ON "public"."pending_notifications" USING "btree" ("deliver_at");
+
+
+
+CREATE INDEX "idx_pending_notifications_recipient" ON "public"."pending_notifications" USING "btree" ("recipient_user_id");
 
 
 
@@ -3757,6 +4248,14 @@ CREATE INDEX "idx_reports_status" ON "public"."reports" USING "btree" ("status")
 
 
 
+CREATE INDEX "idx_scene_event_comments_comment_id" ON "public"."scene_event_comments" USING "btree" ("comment_id");
+
+
+
+CREATE INDEX "idx_scene_event_comments_scene_event_id" ON "public"."scene_event_comments" USING "btree" ("scene_event_id");
+
+
+
 CREATE INDEX "idx_scene_event_interests_scene_event_id" ON "public"."scene_event_interests" USING "btree" ("scene_event_id");
 
 
@@ -3805,6 +4304,14 @@ CREATE INDEX "idx_tags_name_prefix" ON "public"."tags" USING "btree" ("name" "te
 
 
 
+CREATE INDEX "notification_email_batches_pending_send_after_idx" ON "public"."notification_email_batches" USING "btree" ("status", "send_after") WHERE ("status" = 'pending'::"text");
+
+
+
+CREATE UNIQUE INDEX "notification_email_batches_pending_unique" ON "public"."notification_email_batches" USING "btree" ("recipient_user_id", "batch_key") WHERE ("status" = 'pending'::"text");
+
+
+
 CREATE INDEX "profiles_email_idx" ON "public"."profiles" USING "btree" ("email");
 
 
@@ -3822,6 +4329,14 @@ CREATE OR REPLACE TRIGGER "photo_sort_order_trigger" BEFORE INSERT ON "public"."
 
 
 CREATE OR REPLACE TRIGGER "prevent_private_challenge_photo_trigger" BEFORE UPDATE ON "public"."photos" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_private_challenge_photo"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_notifications_columns_trigger" BEFORE UPDATE ON "public"."notifications" FOR EACH ROW EXECUTE FUNCTION "public"."protect_notifications_columns"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_profiles_privileged_columns_trigger" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."protect_profiles_privileged_columns"();
 
 
 
@@ -4052,6 +4567,21 @@ ALTER TABLE ONLY "public"."feedback"
 
 
 
+ALTER TABLE ONLY "public"."follows"
+    ADD CONSTRAINT "follows_follower_id_fkey" FOREIGN KEY ("follower_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."follows"
+    ADD CONSTRAINT "follows_following_id_fkey" FOREIGN KEY ("following_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."notification_email_batches"
+    ADD CONSTRAINT "notification_email_batches_recipient_user_id_fkey" FOREIGN KEY ("recipient_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."notifications"
     ADD CONSTRAINT "notifications_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
 
@@ -4059,6 +4589,16 @@ ALTER TABLE ONLY "public"."notifications"
 
 ALTER TABLE ONLY "public"."notifications"
     ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."pending_notifications"
+    ADD CONSTRAINT "pending_notifications_actor_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."pending_notifications"
+    ADD CONSTRAINT "pending_notifications_recipient_user_id_fkey" FOREIGN KEY ("recipient_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -4245,15 +4785,13 @@ CREATE POLICY "Album likes are publicly readable" ON "public"."album_likes" FOR 
 
 
 
-CREATE POLICY "Album views are publicly readable" ON "public"."album_views" FOR SELECT USING (true);
+CREATE POLICY "Album views readable by owners and admins" ON "public"."album_views" FOR SELECT USING (("public"."is_admin"() OR (EXISTS ( SELECT 1
+   FROM "public"."albums" "a"
+  WHERE (("a"."id" = "album_views"."album_id") AND ("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
 
 CREATE POLICY "Anon can create guest color draw" ON "public"."challenge_color_draws" FOR INSERT TO "anon" WITH CHECK ((("user_id" IS NULL) AND ("guest_nickname" IS NOT NULL) AND (TRIM(BOTH FROM "guest_nickname") <> ''::"text")));
-
-
-
-CREATE POLICY "Anon can update guest color draw" ON "public"."challenge_color_draws" FOR UPDATE TO "anon" USING (("user_id" IS NULL)) WITH CHECK (("user_id" IS NULL));
 
 
 
@@ -4281,19 +4819,7 @@ CREATE POLICY "Authenticated select submissions" ON "public"."challenge_submissi
 
 
 
-CREATE POLICY "Authenticated users can add challenge comments" ON "public"."challenge_comments" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
-
-
-
-CREATE POLICY "Authenticated users can add event comments" ON "public"."event_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
-
-
-
 CREATE POLICY "Authenticated users can add own interest" ON "public"."scene_event_interests" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
-
-
-
-CREATE POLICY "Authenticated users can add scene event comments" ON "public"."scene_event_comments" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
 
 
 
@@ -4323,11 +4849,11 @@ CREATE POLICY "Authenticated users can insert tags" ON "public"."tags" FOR INSER
 
 
 
-CREATE POLICY "Authenticated users can like albums" ON "public"."album_likes" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+CREATE POLICY "Authenticated users can like albums" ON "public"."album_likes" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
-CREATE POLICY "Authenticated users can like photos" ON "public"."photo_likes" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+CREATE POLICY "Authenticated users can like photos" ON "public"."photo_likes" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
 
@@ -4335,19 +4861,11 @@ CREATE POLICY "Authenticated users can swap own color draw" ON "public"."challen
 
 
 
-CREATE POLICY "Authenticated users can update interests" ON "public"."interests" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
-
-
-
-CREATE POLICY "Authenticated users can update tags" ON "public"."tags" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
-
-
-
 CREATE POLICY "Challenge comments are viewable by everyone" ON "public"."challenge_comments" FOR SELECT TO "authenticated", "anon" USING (true);
 
 
 
-CREATE POLICY "Comments are publicly readable" ON "public"."comments" FOR SELECT USING (true);
+CREATE POLICY "Comments visible via parent entity" ON "public"."comments" FOR SELECT USING (("public"."comment_is_readable"("id") AND (("deleted_at" IS NULL) OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())));
 
 
 
@@ -4381,7 +4899,7 @@ CREATE POLICY "Events are viewable by everyone" ON "public"."events" FOR SELECT 
 
 
 
-CREATE POLICY "Insert album comment links" ON "public"."album_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+CREATE POLICY "Insert album comment links" ON "public"."album_comments" FOR INSERT WITH CHECK (false);
 
 
 
@@ -4389,11 +4907,19 @@ CREATE POLICY "Insert email preferences policy" ON "public"."email_preferences" 
 
 
 
-CREATE POLICY "Insert photo comment links" ON "public"."photo_comments" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") IS NOT NULL));
+CREATE POLICY "Insert photo comment links" ON "public"."photo_comments" FOR INSERT WITH CHECK (false);
 
 
 
 CREATE POLICY "Interests are viewable by everyone" ON "public"."interests" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "No direct challenge comment inserts" ON "public"."challenge_comments" FOR INSERT WITH CHECK (false);
+
+
+
+CREATE POLICY "No direct event comment inserts" ON "public"."event_comments" FOR INSERT WITH CHECK (false);
 
 
 
@@ -4418,6 +4944,10 @@ CREATE POLICY "No direct request inserts" ON "public"."shared_album_requests" FO
 
 
 CREATE POLICY "No direct request updates" ON "public"."shared_album_requests" FOR UPDATE USING (false);
+
+
+
+CREATE POLICY "No direct scene event comment inserts" ON "public"."scene_event_comments" FOR INSERT WITH CHECK (false);
 
 
 
@@ -4447,7 +4977,9 @@ CREATE POLICY "Photo likes are publicly readable" ON "public"."photo_likes" FOR 
 
 
 
-CREATE POLICY "Photo views are publicly readable" ON "public"."photo_views" FOR SELECT USING (true);
+CREATE POLICY "Photo views readable by owners and admins" ON "public"."photo_views" FOR SELECT USING (("public"."is_admin"() OR (EXISTS ( SELECT 1
+   FROM "public"."photos" "p"
+  WHERE (("p"."id" = "photo_views"."photo_id") AND ("p"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
 
 
 
@@ -4483,9 +5015,7 @@ CREATE POLICY "Scene event interests are publicly readable" ON "public"."scene_e
 
 
 
-CREATE POLICY "Select RSVPs policy" ON "public"."events_rsvps" FOR SELECT USING (((("confirmed_at" IS NOT NULL) AND ("canceled_at" IS NULL)) OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Select RSVPs policy" ON "public"."events_rsvps" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -4505,15 +5035,21 @@ CREATE POLICY "Select album tags policy" ON "public"."album_tags" FOR SELECT USI
 
 
 
-CREATE POLICY "Select albums policy" ON "public"."albums" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("is_public" = true) AND (("is_suspended" IS NULL) OR ("is_suspended" = false))) OR "public"."is_shared_album_member"("id", ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Select albums policy" ON "public"."albums" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("is_public" = true) AND ("deleted_at" IS NULL) AND (("is_suspended" IS NULL) OR ("is_suspended" = false))) OR "public"."is_shared_album_member"("id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "Select email preferences policy" ON "public"."email_preferences" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+
+
+
+CREATE POLICY "Service role manages notification email batches" ON "public"."notification_email_batches" TO "service_role" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Service role manages pending notifications" ON "public"."pending_notifications" TO "service_role" USING (true) WITH CHECK (true);
 
 
 
@@ -4605,6 +5141,10 @@ CREATE POLICY "Users can delete tags from their own photos" ON "public"."photo_t
 
 
 
+CREATE POLICY "Users can follow others" ON "public"."follows" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "follower_id"));
+
+
+
 CREATE POLICY "Users can insert own comments" ON "public"."comments" FOR INSERT WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
 
 
@@ -4621,6 +5161,10 @@ CREATE POLICY "Users can mark own notifications as seen" ON "public"."notificati
 
 
 
+CREATE POLICY "Users can read own follows" ON "public"."follows" FOR SELECT USING (((( SELECT "auth"."uid"() AS "uid") = "follower_id") OR (( SELECT "auth"."uid"() AS "uid") = "following_id")));
+
+
+
 CREATE POLICY "Users can read own notifications" ON "public"."notifications" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
@@ -4632,6 +5176,10 @@ CREATE POLICY "Users can remove own interest" ON "public"."scene_event_interests
 CREATE POLICY "Users can submit to active challenges" ON "public"."challenge_submissions" FOR INSERT TO "authenticated" WITH CHECK (((( SELECT "auth"."uid"() AS "uid") = "user_id") AND (EXISTS ( SELECT 1
    FROM "public"."challenges"
   WHERE (("challenges"."id" = "challenge_submissions"."challenge_id") AND ("challenges"."is_active" = true) AND (("challenges"."ends_at" IS NULL) OR ("challenges"."ends_at" > "now"())))))));
+
+
+
+CREATE POLICY "Users can unfollow" ON "public"."follows" FOR DELETE USING ((( SELECT "auth"."uid"() AS "uid") = "follower_id"));
 
 
 
@@ -4717,9 +5265,7 @@ CREATE POLICY "View photo comment links" ON "public"."photo_comments" FOR SELECT
 
 
 
-CREATE POLICY "View public or own photos" ON "public"."photos" FOR SELECT USING ((("is_public" = true) OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "View public or own photos" ON "public"."photos" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"() OR (("is_public" = true) AND ("deleted_at" IS NULL))));
 
 
 
@@ -4813,10 +5359,19 @@ ALTER TABLE "public"."events_rsvps" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."feedback" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."follows" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."interests" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."notification_email_batches" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."notifications" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."pending_notifications" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."photo_comments" ENABLE ROW LEVEL SECURITY;
@@ -4884,17 +5439,96 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5103,56 +5737,48 @@ GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "service_role";
 
 
 GRANT ALL ON FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."add_comment"("p_entity_type" "text", "p_entity_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_comment"("p_entity_type" "text", "p_entity_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."add_comment"("p_entity_type" "text", "p_entity_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_comment"("p_entity_type" "text", "p_entity_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_event_comment"("p_event_id" integer, "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_photos_to_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_photos_to_shared_album"("p_album_id" "uuid", "p_photo_ids" "uuid"[]) TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_scene_event_comment"("p_scene_event_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."add_shared_album_owner"("p_album_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."add_shared_album_owner"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."add_shared_album_owner"("p_album_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."add_shared_album_owner"("p_album_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."admin_delete_album"("p_album_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."admin_delete_album"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_delete_album"("p_album_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_delete_album"("p_album_id" "uuid") TO "service_role";
 
@@ -5166,58 +5792,75 @@ GRANT ALL ON FUNCTION "public"."auto_assign_album_photo_sort_order"() TO "servic
 
 
 GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "postgres";
-GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."batch_update_album_photos"("photo_updates" "jsonb") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb") TO "postgres";
-GRANT ALL ON FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."batch_update_photos"("photo_updates" "jsonb") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."bulk_delete_photos"("p_photo_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."bulk_delete_photos"("p_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."bulk_delete_photos"("p_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."bulk_delete_photos"("p_photo_ids" "uuid"[]) TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."bulk_remove_from_album"("p_album_photo_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."bulk_remove_from_album"("p_album_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."bulk_remove_from_album"("p_album_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."bulk_remove_from_album"("p_album_photo_ids" "uuid"[]) TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."bulk_review_challenge_submissions"("p_submission_ids" "uuid"[], "p_status" "text", "p_rejection_reason" "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."bulk_review_challenge_submissions"("p_submission_ids" "uuid"[], "p_status" "text", "p_rejection_reason" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."bulk_review_challenge_submissions"("p_submission_ids" "uuid"[], "p_status" "text", "p_rejection_reason" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."bulk_review_challenge_submissions"("p_submission_ids" "uuid"[], "p_status" "text", "p_rejection_reason" "text") TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."can_comment_on_album"("p_album_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."can_comment_on_album"("p_album_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."can_comment_on_album"("p_album_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."can_comment_on_album"("p_album_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."can_comment_on_photo"("p_photo_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."can_comment_on_photo"("p_photo_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."can_comment_on_photo"("p_photo_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."can_comment_on_photo"("p_photo_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."cleanup_expired_auth_tokens"() TO "postgres";
-GRANT ALL ON FUNCTION "public"."cleanup_expired_auth_tokens"() TO "anon";
-GRANT ALL ON FUNCTION "public"."cleanup_expired_auth_tokens"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."cleanup_expired_auth_tokens"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."comment_is_readable"("p_comment_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."create_event_album"("p_event_id" integer) TO "postgres";
-GRANT ALL ON FUNCTION "public"."create_event_album"("p_event_id" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."create_event_album"("p_event_id" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."create_event_album"("p_event_id" integer) TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."delete_album"("p_album_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."delete_album"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."delete_album"("p_album_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."delete_album"("p_album_id" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer) TO "postgres";
+GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer) TO "service_role";
 
 
 
@@ -5235,10 +5878,31 @@ GRANT ALL ON FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") TO "
 
 
 
+GRANT ALL ON FUNCTION "public"."get_own_profile"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_own_profile"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_own_profile"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_own_profile"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_photo_exif"("p_photo_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_photo_exif"("p_photo_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_photo_exif"("p_photo_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_photo_exif"("p_photo_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") TO "postgres";
 GRANT ALL ON FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_profile_stats"("p_user_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") TO "service_role";
 
 
 
@@ -5250,37 +5914,8 @@ GRANT ALL ON FUNCTION "public"."get_user_album_photos_count"("user_uuid" "uuid")
 
 
 GRANT ALL ON FUNCTION "public"."get_user_stats"("p_user_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."get_user_stats"("p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_user_stats"("p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_user_stats"("p_user_id" "uuid") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "service_role";
 
 
 
@@ -5291,69 +5926,6 @@ GRANT ALL ON FUNCTION "public"."global_search"("search_query" "text", "result_li
 
 
 
-GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "postgres";
-GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "anon";
-GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
@@ -5361,17 +5933,22 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."invite_to_shared_album"("p_album_id" "uuid", "p_user_ids" "uuid"[]) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "anon";
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
 
 
 
@@ -5383,14 +5960,12 @@ GRANT ALL ON FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_
 
 
 GRANT ALL ON FUNCTION "public"."join_shared_album"("p_album_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."join_shared_album"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."join_shared_album"("p_album_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."join_shared_album"("p_album_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."leave_shared_album"("p_album_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."leave_shared_album"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."leave_shared_album"("p_album_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."leave_shared_album"("p_album_id" "uuid") TO "service_role";
 
@@ -5403,59 +5978,59 @@ GRANT ALL ON FUNCTION "public"."prevent_private_challenge_photo"() TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."remove_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."remove_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."remove_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."remove_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."remove_shared_album_photo"("p_album_id" "uuid", "p_album_photo_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."remove_shared_album_photo"("p_album_id" "uuid", "p_album_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."remove_shared_album_photo"("p_album_id" "uuid", "p_album_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."remove_shared_album_photo"("p_album_id" "uuid", "p_album_photo_ids" "uuid"[]) TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."restore_album"("p_album_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."restore_comment"("p_comment_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."restore_comment"("p_comment_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."restore_comment"("p_comment_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."restore_comment"("p_comment_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."restore_photo"("p_photo_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."restore_photo"("p_photo_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."restore_photo"("p_photo_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."restore_photo"("p_photo_id" "uuid") TO "service_role";
 
 
 
 GRANT ALL ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "uuid", "p_status" "text", "p_rejection_reason" "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "uuid", "p_status" "text", "p_rejection_reason" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "uuid", "p_status" "text", "p_rejection_reason" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "uuid", "p_status" "text", "p_rejection_reason" "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "postgres";
-GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "anon";
-GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "service_role";
 
 
 
@@ -5466,78 +6041,7 @@ GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."show_limit"() TO "postgres";
-GRANT ALL ON FUNCTION "public"."show_limit"() TO "anon";
-GRANT ALL ON FUNCTION "public"."show_limit"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."show_limit"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "anon";
-GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "postgres";
-GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "service_role";
 
@@ -5618,41 +6122,6 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "postgres";
-GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "service_role";
-
-
-
 
 
 
@@ -5728,8 +6197,6 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."auth_tokens" TO "postgres";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."auth_tokens" TO "anon";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."auth_tokens" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."auth_tokens" TO "service_role";
 
 
@@ -5836,8 +6303,8 @@ GRANT ALL ON SEQUENCE "public"."events_id_seq" TO "service_role";
 
 
 
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."events_rsvps" TO "anon";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."events_rsvps" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,UPDATE ON TABLE "public"."events_rsvps" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,UPDATE ON TABLE "public"."events_rsvps" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."events_rsvps" TO "service_role";
 
 
@@ -5855,6 +6322,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."follows" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."follows" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."follows" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."follows" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "authenticated";
@@ -5862,10 +6336,20 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notification_email_batches" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notification_email_batches" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."notifications" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."pending_notifications" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."pending_notifications" TO "service_role";
 
 
 

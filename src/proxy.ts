@@ -121,12 +121,17 @@ export default async function proxy(request: NextRequest) {
   } | null = null;
 
   if (user) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('deletion_scheduled_at, email, full_name, nickname, terms_accepted_at')
-      .eq('id', user.id)
-      .single();
-    profile = data;
+    const { data } = await supabase.rpc('get_own_profile');
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      const ownProfile = data as Record<string, unknown>;
+      profile = {
+        deletion_scheduled_at: (ownProfile.deletion_scheduled_at as string | null) ?? null,
+        email: (ownProfile.email as string | null) ?? null,
+        full_name: (ownProfile.full_name as string | null) ?? null,
+        nickname: (ownProfile.nickname as string | null) ?? null,
+        terms_accepted_at: (ownProfile.terms_accepted_at as string | null) ?? null,
+      };
+    }
   }
 
   // Block users whose account is scheduled for deletion

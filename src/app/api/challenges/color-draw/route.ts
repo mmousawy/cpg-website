@@ -1,5 +1,6 @@
 import { revalidateTag } from 'next/cache';
 import { COLOR_PALETTE } from '@/lib/colorDraw';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient, createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -79,8 +80,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Fetch challenge for validation
-  const publicClient = createPublicClient();
-  const { data: challenge } = await publicClient
+  const adminClient = createAdminClient();
+
+  const { data: challenge } = await adminClient
     .from('challenges')
     .select('is_active, ends_at, color_draw_guest_key')
     .eq('id', challenge_id)
@@ -207,7 +209,7 @@ export async function POST(request: NextRequest) {
     taken.add(existing.color);
     const newColor = pickRandomColor(taken);
 
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await adminClient
       .from('challenge_color_draws')
       .update({ color: newColor, swapped_at: new Date().toISOString() })
       .eq('id', existing.id)
@@ -242,7 +244,7 @@ export async function POST(request: NextRequest) {
   const taken = new Set((allDraws || []).map((d) => d.color));
   const color = pickRandomColor(taken);
 
-  const { data: inserted, error: insertError } = await supabase
+  const { data: inserted, error: insertError } = await adminClient
     .from('challenge_color_draws')
     .insert({
       challenge_id,

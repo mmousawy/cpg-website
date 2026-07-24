@@ -1,18 +1,14 @@
-import type { Json } from '@/database.types';
-import { createNotification } from '@/lib/notifications/create';
+import { scheduleNotification } from '@/lib/notifications/schedule';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { revalidateTag } from 'next/cache';
 
 type PublicPhoto = {
   id: string;
   url: string | null;
 };
 
-const COALESCE_WINDOW_MS = 24 * 60 * 60 * 1000;
-
 /**
  * Notify followers when a photographer publishes public photos.
- * Coalesces multiple uploads within 24h into one in-app notification per follower.
+ * Schedules coalesced followed_upload notifications with a 30s delay per follower.
  */
 export async function notifyFollowersOfPublicPhotos(
   photographerId: string,
@@ -52,7 +48,6 @@ export async function notifyFollowersOfPublicPhotos(
   const photoCount = photos.length;
   const thumbnail = photos[photos.length - 1]?.url ?? null;
   const link = `/@${photographerProfile.nickname}`;
-  const coalesceSince = new Date(Date.now() - COALESCE_WINDOW_MS).toISOString();
 
   const actorData = {
     actorName: photographerProfile.full_name,
@@ -67,65 +62,16 @@ export async function notifyFollowersOfPublicPhotos(
   let notifiedCount = 0;
 
   for (const { follower_id: followerId } of followers) {
-    const { data: existingNotification, error: existingError } = await adminSupabase
-      .from('notifications')
-      .select('id, data')
-      .eq('user_id', followerId)
-      .eq('actor_id', photographerId)
-      .eq('type', 'followed_upload')
-      .eq('entity_type', 'profile')
-      .eq('entity_id', photographerId)
-      .is('seen_at', null)
-      .is('dismissed_at', null)
-      .gte('created_at', coalesceSince)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (existingError) {
-      console.error('Failed to check existing followed_upload notification:', existingError);
-      continue;
-    }
-
-    if (existingNotification) {
-      const existingData = (existingNotification.data || {}) as Record<string, unknown>;
-      const previousCount = typeof existingData.photoCount === 'number' ? existingData.photoCount : 0;
-
-      const { error: updateError } = await adminSupabase
-        .from('notifications')
-        .update({
-          data: {
-            ...existingData,
-            ...actorData,
-            photoCount: previousCount + photoCount,
-            thumbnail,
-            link,
-          } as Json,
-        })
-        .eq('id', existingNotification.id);
-
-      if (updateError) {
-        console.error('Failed to update followed_upload notification:', updateError);
-        continue;
-      }
-
-      revalidateTag(`notifications-${followerId}`, 'max');
-      notifiedCount += 1;
-      continue;
-    }
-
-    const result = await createNotification({
+    await scheduleNotification({
       userId: followerId,
       actorId: photographerId,
       type: 'followed_upload',
       entityType: 'profile',
       entityId: photographerId,
+      coalesceIncrement: { field: 'photoCount', by: photoCount },
       data: actorData,
     });
-
-    if (result.success) {
-      notifiedCount += 1;
-    }
+    notifiedCount += 1;
   }
 
   return { notifiedCount };

@@ -1,3 +1,4 @@
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient, createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -135,7 +136,8 @@ export async function POST(request: NextRequest) {
       // Auth check failed — proceed with tracking (non-critical)
     }
 
-    const { error } = await supabase.rpc('increment_view_count', {
+    const adminClient = createAdminClient();
+    const { error } = await adminClient.rpc('increment_view_count', {
       p_entity_type: type,
       p_entity_id: id,
     });

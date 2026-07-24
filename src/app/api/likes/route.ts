@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
-import { createNotification } from '@/lib/notifications/create';
 import { revalidateAlbumLikes, revalidatePhotoLikes } from '@/app/actions/revalidate';
+import {
+  removeActorFromPendingNotification,
+  scheduleNotification,
+} from '@/lib/notifications/schedule';
+import { createClient } from '@/utils/supabase/server';
 
 type LikeRequest = {
   entityType: 'photo' | 'album';
@@ -38,8 +41,8 @@ export async function POST(request: NextRequest) {
   }
 
   let ownerNickname: string | null = null;
+  let ownerId: string | null = null;
 
-  // Get actor profile for notifications
   const { data: actorProfile } = await supabase
     .from('profiles')
     .select('full_name, nickname, avatar_url')
@@ -48,7 +51,6 @@ export async function POST(request: NextRequest) {
 
   try {
     if (entityType === 'photo') {
-      // Check current state
       const { data: existingLike } = await supabase
         .from('photo_likes')
         .select('photo_id')
@@ -58,9 +60,7 @@ export async function POST(request: NextRequest) {
 
       const isCurrentlyLiked = !!existingLike;
 
-      // Only act if state needs to change
       if (liked && !isCurrentlyLiked) {
-        // Insert like
         const { error: insertError } = await supabase
           .from('photo_likes')
           .insert({ photo_id: entityId, user_id: user.id });
@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
         }
 
-        // Create notification for photo owner
         const { data: photo } = await supabase
           .from('photos')
           .select('user_id, title, short_id, url')
@@ -77,6 +76,8 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (photo?.user_id && photo.user_id !== user.id) {
+          ownerId = photo.user_id;
+
           const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('nickname')
@@ -86,18 +87,17 @@ export async function POST(request: NextRequest) {
           if (ownerProfile?.nickname) {
             ownerNickname = ownerProfile.nickname;
 
-            const link = `/@${ownerProfile.nickname}/photo/${photo.short_id}`;
-
-            await createNotification({
+            await scheduleNotification({
               userId: photo.user_id,
               actorId: user.id,
               type: 'like_photo',
               entityType: 'photo',
               entityId,
+              validateAction: 'like_photo',
               data: {
                 title: photo.title || 'Untitled photo',
                 thumbnail: photo.url,
-                link,
+                link: `/@${ownerProfile.nickname}/photo/${photo.short_id}`,
                 actorName: actorProfile?.full_name || null,
                 actorNickname: actorProfile?.nickname || null,
                 actorAvatar: actorProfile?.avatar_url || null,
@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
           }
         }
       } else if (!liked && isCurrentlyLiked) {
-        // Delete like
         const { error: deleteError } = await supabase
           .from('photo_likes')
           .delete()
@@ -117,7 +116,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ success: false, error: deleteError.message }, { status: 500 });
         }
 
-        // Get owner for cache invalidation
         const { data: photo } = await supabase
           .from('photos')
           .select('user_id')
@@ -125,6 +123,8 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (photo?.user_id) {
+          ownerId = photo.user_id;
+
           const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('nickname')
@@ -132,15 +132,21 @@ export async function POST(request: NextRequest) {
             .maybeSingle();
 
           ownerNickname = ownerProfile?.nickname || null;
+
+          await removeActorFromPendingNotification({
+            type: 'like_photo',
+            recipientUserId: photo.user_id,
+            actorId: user.id,
+            entityType: 'photo',
+            entityId,
+          });
         }
       }
-      // If liked === isCurrentlyLiked, no action needed (already in sync)
 
       if (ownerNickname) {
         await revalidatePhotoLikes(entityId, ownerNickname);
       }
     } else {
-      // Album like
       const { data: existingLike } = await supabase
         .from('album_likes')
         .select('album_id')
@@ -151,7 +157,6 @@ export async function POST(request: NextRequest) {
       const isCurrentlyLiked = !!existingLike;
 
       if (liked && !isCurrentlyLiked) {
-        // Insert like
         const { error: insertError } = await supabase
           .from('album_likes')
           .insert({ album_id: entityId, user_id: user.id });
@@ -160,7 +165,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
         }
 
-        // Create notification for album owner
         const { data: album } = await supabase
           .from('albums')
           .select('user_id, title, slug, cover_image_url')
@@ -168,6 +172,8 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (album?.user_id && album.user_id !== user.id) {
+          ownerId = album.user_id;
+
           const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('nickname')
@@ -177,12 +183,13 @@ export async function POST(request: NextRequest) {
           if (ownerProfile?.nickname) {
             ownerNickname = ownerProfile.nickname;
 
-            await createNotification({
+            await scheduleNotification({
               userId: album.user_id,
               actorId: user.id,
               type: 'like_album',
               entityType: 'album',
               entityId,
+              validateAction: 'like_album',
               data: {
                 title: album.title,
                 thumbnail: album.cover_image_url,
@@ -195,7 +202,6 @@ export async function POST(request: NextRequest) {
           }
         }
       } else if (!liked && isCurrentlyLiked) {
-        // Delete like
         const { error: deleteError } = await supabase
           .from('album_likes')
           .delete()
@@ -206,7 +212,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ success: false, error: deleteError.message }, { status: 500 });
         }
 
-        // Get owner for cache invalidation
         const { data: album } = await supabase
           .from('albums')
           .select('user_id')
@@ -214,6 +219,8 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (album?.user_id) {
+          ownerId = album.user_id;
+
           const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('nickname')
@@ -221,6 +228,14 @@ export async function POST(request: NextRequest) {
             .maybeSingle();
 
           ownerNickname = ownerProfile?.nickname || null;
+
+          await removeActorFromPendingNotification({
+            type: 'like_album',
+            recipientUserId: album.user_id,
+            actorId: user.id,
+            entityType: 'album',
+            entityId,
+          });
         }
       }
 

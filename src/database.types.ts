@@ -969,7 +969,7 @@ export type Database = {
           id?: string
           name?: string
         }
-        Relationships: [        ]
+        Relationships: []
       }
       notification_email_batches: {
         Row: {
@@ -1075,39 +1075,54 @@ export type Database = {
           },
         ]
       }
-      pending_follow_notifications: {
+      pending_notifications: {
         Row: {
+          actor_id: string | null
           created_at: string
+          dedupe_key: string
           deliver_at: string
-          follower_id: string
-          following_id: string
+          entity_id: string | null
+          entity_type: string
           notification_data: Json
+          recipient_user_id: string
+          type: string
+          updated_at: string
         }
         Insert: {
+          actor_id?: string | null
           created_at?: string
+          dedupe_key: string
           deliver_at: string
-          follower_id: string
-          following_id: string
+          entity_id?: string | null
+          entity_type: string
           notification_data?: Json
+          recipient_user_id: string
+          type: string
+          updated_at?: string
         }
         Update: {
+          actor_id?: string | null
           created_at?: string
+          dedupe_key?: string
           deliver_at?: string
-          follower_id?: string
-          following_id?: string
+          entity_id?: string | null
+          entity_type?: string
           notification_data?: Json
+          recipient_user_id?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'pending_follow_notifications_follower_id_fkey'
-            columns: ['follower_id']
+            foreignKeyName: 'pending_notifications_actor_id_fkey'
+            columns: ['actor_id']
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'pending_follow_notifications_following_id_fkey'
-            columns: ['following_id']
+            foreignKeyName: 'pending_notifications_recipient_user_id_fkey'
+            columns: ['recipient_user_id']
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']
@@ -1857,17 +1872,6 @@ export type Database = {
       }
     }
     Functions: {
-      enqueue_notification_email_batch: {
-        Args: {
-          p_batch_key: string
-          p_debounce_minutes?: number
-          p_email_type?: string
-          p_item: Json
-          p_notification_id?: string
-          p_recipient_user_id: string
-        }
-        Returns: string
-      }
       add_challenge_comment: {
         Args: {
           p_challenge_id: string
@@ -1932,12 +1936,29 @@ export type Database = {
         }
         Returns: number
       }
+      can_comment_on_album: { Args: { p_album_id: string }; Returns: boolean }
+      can_comment_on_photo: { Args: { p_photo_id: string }; Returns: boolean }
       cleanup_expired_auth_tokens: { Args: never; Returns: undefined }
+      comment_is_readable: { Args: { p_comment_id: string }; Returns: boolean }
       create_event_album: { Args: { p_event_id: number }; Returns: string }
       delete_album: { Args: { p_album_id: string }; Returns: boolean }
+      enqueue_notification_email_batch: {
+        Args: {
+          p_batch_key: string
+          p_debounce_minutes?: number
+          p_email_type?: string
+          p_item: Json
+          p_notification_id?: string
+          p_recipient_user_id: string
+        }
+        Returns: string
+      }
       generate_short_id: { Args: { size?: number }; Returns: string }
       get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
+      get_own_profile: { Args: never; Returns: Json }
+      get_photo_exif: { Args: { p_photo_id: string }; Returns: Json }
       get_profile_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_rsvp_by_uuid: { Args: { p_uuid: string }; Returns: Json }
       get_user_album_photos_count: {
         Args: { user_uuid: string }
         Returns: number
@@ -1952,8 +1973,8 @@ export type Database = {
         Returns: {
           entity_id: string
           entity_type: string
-          image_url: string
           image_blurhash: string
+          image_url: string
           rank: number
           subtitle: string
           title: string
@@ -1968,6 +1989,7 @@ export type Database = {
         Args: { p_album_id: string; p_user_ids: string[] }
         Returns: Json
       }
+      is_admin: { Args: never; Returns: boolean }
       is_shared_album_member: {
         Args: { p_album_id: string; p_user_id: string }
         Returns: boolean
@@ -2146,3 +2168,4 @@ export const Constants = {
     },
   },
 } as const;
+

@@ -3,15 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import {
-  queueCommentNotificationEmail,
   type CommentEmailEntityType,
 } from '@/lib/notifications/emailQueue';
+import {
+  scheduleNotification,
+} from '@/lib/notifications/schedule';
+import type { NotificationEntityType, NotificationType } from '@/types/notifications';
 import {
   revalidateAlbumBySlug,
   revalidateGalleryData,
   revalidateSceneEvent,
 } from '@/app/actions/revalidate';
-import { createNotification } from '@/lib/notifications/create';
 
 export async function PATCH(request: NextRequest) {
   const supabase = await createClient();
@@ -234,10 +236,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({ success: true, commentId }, { status: 200 });
-  }
-
   // Get commenter info
   const { data: commenterProfile } = await supabase
     .from('profiles')
@@ -252,34 +250,49 @@ export async function POST(request: NextRequest) {
     ? `${process.env.NEXT_PUBLIC_SITE_URL}/@${commenterNickname}`
     : null;
 
-  const queueCommentEmail = async (params: {
+  const scheduleCommentNotification = async (params: {
     recipientUserId: string;
+    type: NotificationType;
+    entityType: NotificationEntityType;
     entityId: string;
-    emailEntityType: CommentEmailEntityType;
+    emailEntityType?: CommentEmailEntityType;
     batchEntityType?: string;
-    notificationId?: string;
     isReply: boolean;
+    includeEmail?: boolean;
   }) => {
-    if (!commentId) {
-      return;
-    }
+    const pendingEmail = commentId && params.includeEmail !== false
+      ? {
+        commentId,
+        commenterName,
+        commenterNickname,
+        commenterAvatarUrl,
+        commenterProfileLink,
+        commentText,
+        entityType: params.emailEntityType ?? params.entityType as CommentEmailEntityType,
+        entityTitle,
+        entityThumbnail,
+        entityLink,
+        isReply: params.isReply,
+        batchEntityType: params.batchEntityType,
+      }
+      : undefined;
 
-    await queueCommentNotificationEmail({
-      recipientUserId: params.recipientUserId,
+    await scheduleNotification({
+      userId: params.recipientUserId,
+      actorId: user.id,
+      type: params.type,
+      entityType: params.entityType,
       entityId: params.entityId,
-      notificationId: params.notificationId,
-      commentId,
-      commenterName,
-      commenterNickname,
-      commenterAvatarUrl,
-      commenterProfileLink,
-      commentText,
-      entityType: params.emailEntityType,
-      entityTitle,
-      entityThumbnail,
-      entityLink,
-      isReply: params.isReply,
-      batchEntityType: params.batchEntityType,
+      coalesceIncrement: { field: 'commentCount' },
+      pendingEmail,
+      data: {
+        title: entityTitle,
+        thumbnail: entityThumbnail,
+        link: entityLink,
+        actorName: commenterName,
+        actorNickname: commenterNickname,
+        actorAvatar: commenterAvatarUrl,
+      },
     });
   };
 
@@ -408,31 +421,15 @@ export async function POST(request: NextRequest) {
         // Create in-app notifications for all admins
         for (const admin of admins) {
           notifiedUserIds.add(admin.id);
-          const notificationResult = await createNotification({
-            userId: admin.id,
-            actorId: user.id,
+          await scheduleCommentNotification({
+            recipientUserId: admin.id,
             type: 'comment_event',
             entityType: 'event',
-            entityId: entityId,
-            data: {
-              title: entityTitle,
-              thumbnail: entityThumbnail,
-              link: entityLink,
-              actorName: commenterName,
-              actorNickname: commenterNickname,
-              actorAvatar: commenterAvatarUrl,
-            },
+            entityId,
+            emailEntityType: 'event',
+            isReply: false,
+            includeEmail: !!admin.email,
           });
-
-          if (admin.email) {
-            await queueCommentEmail({
-              recipientUserId: admin.id,
-              entityId,
-              emailEntityType: 'event',
-              notificationId: notificationResult.notificationId,
-              isReply: false,
-            });
-          }
         }
       }
 
@@ -484,64 +481,33 @@ export async function POST(request: NextRequest) {
           for (const rsvp of eligibleRsvps) {
             const userId = rsvp.user_id!;
             notifiedUserIds.add(userId);
-            const notificationResult = await createNotification({
-              userId,
-              actorId: user.id,
-              type: 'comment_event',
-              entityType: 'event',
-              entityId: entityId,
-              data: {
-                title: entityTitle,
-                thumbnail: entityThumbnail,
-                link: entityLink,
-                actorName: commenterName,
-                actorNickname: commenterNickname,
-                actorAvatar: commenterAvatarUrl,
-              },
-            });
-
             const profile = Array.isArray(rsvp.profiles) ? rsvp.profiles[0] : rsvp.profiles;
             const recipientEmail = profile?.email || rsvp.email;
-            if (recipientEmail) {
-              await queueCommentEmail({
-                recipientUserId: userId,
-                entityId,
-                emailEntityType: 'event',
-                notificationId: notificationResult.notificationId,
-                isReply: false,
-              });
-            }
+
+            await scheduleCommentNotification({
+              recipientUserId: userId,
+              type: 'comment_event',
+              entityType: 'event',
+              entityId,
+              emailEntityType: 'event',
+              isReply: false,
+              includeEmail: !!recipientEmail,
+            });
           }
         }
       }
 
       // If replying, also notify parent comment author
       if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
-        const notificationResult = await createNotification({
-          userId: parentCommentAuthorId,
-          actorId: user.id,
+        await scheduleCommentNotification({
+          recipientUserId: parentCommentAuthorId,
           type: 'comment_reply',
           entityType: 'event',
-          entityId: entityId,
-          data: {
-            title: entityTitle,
-            thumbnail: entityThumbnail,
-            link: entityLink,
-            actorName: commenterName,
-            actorNickname: commenterNickname,
-            actorAvatar: commenterAvatarUrl,
-          },
+          entityId,
+          emailEntityType: 'event',
+          isReply: true,
+          includeEmail: !!parentCommentAuthorProfile.email,
         });
-
-        if (parentCommentAuthorProfile.email) {
-          await queueCommentEmail({
-            recipientUserId: parentCommentAuthorId,
-            entityId,
-            emailEntityType: 'event',
-            notificationId: notificationResult.notificationId,
-            isReply: true,
-          });
-        }
       }
 
       // Revalidate event cache so comment count is reflected
@@ -575,61 +541,29 @@ export async function POST(request: NextRequest) {
       if (admins && admins.length > 0) {
         // Create in-app notifications for all admins
         for (const admin of admins) {
-          const notificationResult = await createNotification({
-            userId: admin.id,
-            actorId: user.id,
+          await scheduleCommentNotification({
+            recipientUserId: admin.id,
             type: 'comment_challenge',
             entityType: 'challenge',
-            entityId: entityId,
-            data: {
-              title: entityTitle,
-              thumbnail: entityThumbnail,
-              link: entityLink,
-              actorName: commenterName,
-              actorNickname: commenterNickname,
-              actorAvatar: commenterAvatarUrl,
-            },
+            entityId,
+            emailEntityType: 'challenge',
+            isReply: false,
+            includeEmail: !!admin.email,
           });
-
-          if (admin.email) {
-            await queueCommentEmail({
-              recipientUserId: admin.id,
-              entityId,
-              emailEntityType: 'challenge',
-              notificationId: notificationResult.notificationId,
-              isReply: false,
-            });
-          }
         }
       }
 
       // If replying, also notify parent comment author
       if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
-        const notificationResult = await createNotification({
-          userId: parentCommentAuthorId,
-          actorId: user.id,
+        await scheduleCommentNotification({
+          recipientUserId: parentCommentAuthorId,
           type: 'comment_reply',
           entityType: 'challenge',
-          entityId: entityId,
-          data: {
-            title: entityTitle,
-            thumbnail: entityThumbnail,
-            link: entityLink,
-            actorName: commenterName,
-            actorNickname: commenterNickname,
-            actorAvatar: commenterAvatarUrl,
-          },
+          entityId,
+          emailEntityType: 'challenge',
+          isReply: true,
+          includeEmail: !!parentCommentAuthorProfile.email,
         });
-
-        if (parentCommentAuthorProfile.email) {
-          await queueCommentEmail({
-            recipientUserId: parentCommentAuthorId,
-            entityId,
-            emailEntityType: 'challenge',
-            notificationId: notificationResult.notificationId,
-            isReply: true,
-          });
-        }
       }
 
       // Revalidate challenge cache so comment count is reflected
@@ -668,32 +602,16 @@ export async function POST(request: NextRequest) {
           .eq('id', submitterId)
           .single();
 
-        const notificationResult = await createNotification({
-          userId: submitterId,
-          actorId: user.id,
+        await scheduleCommentNotification({
+          recipientUserId: submitterId,
           type: 'comment_scene_event',
           entityType: 'scene_event',
-          entityId: entityId,
-          data: {
-            title: entityTitle,
-            thumbnail: entityThumbnail,
-            link: entityLink,
-            actorName: commenterName,
-            actorNickname: commenterNickname,
-            actorAvatar: commenterAvatarUrl,
-          },
+          entityId,
+          emailEntityType: 'event',
+          batchEntityType: 'scene_event',
+          isReply: false,
+          includeEmail: !!submitterProfile?.email,
         });
-
-        if (submitterProfile?.email) {
-          await queueCommentEmail({
-            recipientUserId: submitterId,
-            entityId,
-            emailEntityType: 'event',
-            batchEntityType: 'scene_event',
-            notificationId: notificationResult.notificationId,
-            isReply: false,
-          });
-        }
       }
 
       // Notify interested users (top-level comments only, skip already-notified)
@@ -708,20 +626,13 @@ export async function POST(request: NextRequest) {
             if (notifiedUserIds.has(interestedUserId)) continue;
             notifiedUserIds.add(interestedUserId);
 
-            await createNotification({
-              userId: interestedUserId,
-              actorId: user.id,
+            await scheduleCommentNotification({
+              recipientUserId: interestedUserId,
               type: 'comment_scene_event',
               entityType: 'scene_event',
-              entityId: entityId,
-              data: {
-                title: entityTitle,
-                thumbnail: entityThumbnail,
-                link: entityLink,
-                actorName: commenterName,
-                actorNickname: commenterNickname,
-                actorAvatar: commenterAvatarUrl,
-              },
+              entityId,
+              isReply: false,
+              includeEmail: false,
             });
           }
         }
@@ -734,32 +645,16 @@ export async function POST(request: NextRequest) {
         parentCommentAuthorId !== user.id &&
         parentCommentAuthorProfile
       ) {
-        const notificationResult = await createNotification({
-          userId: parentCommentAuthorId,
-          actorId: user.id,
+        await scheduleCommentNotification({
+          recipientUserId: parentCommentAuthorId,
           type: 'comment_reply',
           entityType: 'scene_event',
-          entityId: entityId,
-          data: {
-            title: entityTitle,
-            thumbnail: entityThumbnail,
-            link: entityLink,
-            actorName: commenterName,
-            actorNickname: commenterNickname,
-            actorAvatar: commenterAvatarUrl,
-          },
+          entityId,
+          emailEntityType: 'event',
+          batchEntityType: 'scene_event',
+          isReply: true,
+          includeEmail: !!parentCommentAuthorProfile.email,
         });
-
-        if (parentCommentAuthorProfile.email) {
-          await queueCommentEmail({
-            recipientUserId: parentCommentAuthorId,
-            entityId,
-            emailEntityType: 'event',
-            batchEntityType: 'scene_event',
-            notificationId: notificationResult.notificationId,
-            isReply: true,
-          });
-        }
       }
 
       await revalidateSceneEvent(sceneEvent.slug);
@@ -788,31 +683,15 @@ export async function POST(request: NextRequest) {
 
   // Handle reply notifications - notify parent comment author
   if (parentCommentId && parentCommentAuthorId && parentCommentAuthorId !== user.id && parentCommentAuthorProfile) {
-    const notificationResult = await createNotification({
-      userId: parentCommentAuthorId,
-      actorId: user.id,
+    await scheduleCommentNotification({
+      recipientUserId: parentCommentAuthorId,
       type: 'comment_reply',
       entityType,
       entityId,
-      data: {
-        title: entityTitle,
-        thumbnail: entityThumbnail,
-        link: entityLink,
-        actorName: commenterName,
-        actorNickname: commenterNickname,
-        actorAvatar: commenterAvatarUrl,
-      },
+      emailEntityType: entityType as CommentEmailEntityType,
+      isReply: true,
+      includeEmail: !!parentCommentAuthorProfile.email,
     });
-
-    if (parentCommentAuthorProfile.email) {
-      await queueCommentEmail({
-        recipientUserId: parentCommentAuthorId,
-        entityId,
-        emailEntityType: entityType as CommentEmailEntityType,
-        notificationId: notificationResult.notificationId,
-        isReply: true,
-      });
-    }
   }
 
   // Create in-app notification for album and photo comments (not events)
@@ -820,31 +699,15 @@ export async function POST(request: NextRequest) {
   if (!parentCommentId && ownerId && ownerId !== user.id && ownerProfile && (entityType === 'album' || entityType === 'photo')) {
     const notificationType = entityType === 'album' ? 'comment_album' : 'comment_photo';
 
-    const notificationResult = await createNotification({
-      userId: ownerId,
-      actorId: user.id,
+    await scheduleCommentNotification({
+      recipientUserId: ownerId,
       type: notificationType,
       entityType,
       entityId,
-      data: {
-        title: entityTitle,
-        thumbnail: entityThumbnail,
-        link: entityLink,
-        actorName: commenterName,
-        actorNickname: commenterNickname,
-        actorAvatar: commenterAvatarUrl,
-      },
+      emailEntityType: entityType as CommentEmailEntityType,
+      isReply: false,
+      includeEmail: !!ownerProfile.email,
     });
-
-    if (ownerProfile.email) {
-      await queueCommentEmail({
-        recipientUserId: ownerId,
-        entityId,
-        emailEntityType: entityType,
-        notificationId: notificationResult.notificationId,
-        isReply: false,
-      });
-    }
   }
 
   return NextResponse.json({ success: true, commentId }, { status: 200 });

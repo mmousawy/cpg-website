@@ -27,11 +27,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Get user profile for name
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email, full_name, nickname, terms_accepted_at')
-    .eq('id', user.id)
-    .single();
+  const { data: profileData } = await supabase.rpc('get_own_profile');
+  const profile = profileData as {
+    email?: string | null;
+    full_name?: string | null;
+    nickname?: string | null;
+    terms_accepted_at?: string | null;
+  } | null;
 
   if (!isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
     return NextResponse.json({ message: 'Please complete your profile before RSVPing.' }, { status: 403 });
