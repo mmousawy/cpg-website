@@ -98,6 +98,18 @@ Sent when someone comments on a user's album or photo.
 **Template:** `src/emails/comment-notification.tsx`  
 **Email Preference:** Respects 'notifications' email type
 
+### Follow and Upload Notifications
+
+Follow activity and new uploads from followed photographers do **not** trigger instant emails.
+
+- **Follow:** When a member follows a photographer, the photographer receives an in-app `follow` notification after a 1-minute delay. If the follower unfollows within that minute, no notification is sent.
+- **New uploads:** When a followed photographer publishes public photos (upload as public or private → public), followers receive a coalesced `followed_upload` in-app notification. Multiple uploads within 24 hours are grouped into one notification per follower.
+- **Weekly digest:** Both notification types appear in the Sunday weekly digest for users who have not opted out of `weekly_digest`.
+
+**API routes:**
+- `GET/POST/DELETE /api/follows` — follow status and follow/unfollow actions
+- `POST /api/follows/notify-upload` — fan-out upload notifications to followers (called after publish)
+
 ## Email Templates
 
 All email templates are located in `src/emails/` and use React Email components.

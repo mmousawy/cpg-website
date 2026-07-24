@@ -1,9 +1,9 @@
 import ArrowLink from '@/components/shared/ArrowLink';
 import BlurImage from '@/components/shared/BlurImage';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
+import { ProfileDesktopSocialLinks, ProfileMobileSocialLinks } from '@/components/profile/ProfileSocialLinks';
 import ProfileActionsPopover from '@/components/shared/ProfileActionsPopover';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
-import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 
@@ -44,108 +44,6 @@ export const profileHeroMobileGapClassName = 'max-sm:pt-4!';
 
 /** Tight top spacing below the profile hero */
 export const profileHeroPageClassName = `${profileHeroMobileGapClassName} sm:pt-0! pb-4! md:pt-4! md:pb-6!`;
-
-function ProfileDesktopLinks({ profile }: { profile: ProfileHeaderProfile }) {
-  const socialLinks = (profile.social_links || []) as SocialLink[];
-  const hasLinks = profile.website || socialLinks.length > 0;
-
-  if (!hasLinks) {
-    return null;
-  }
-
-  return (
-    <div
-      className="hidden sm:flex flex-wrap items-center gap-2 sm:mt-2"
-    >
-      {profile.website && (
-        <a
-          href={profile.website}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2 py-1 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
-        >
-          <svg
-            className="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-            />
-          </svg>
-          {getDomain(profile.website)}
-        </a>
-      )}
-      {socialLinks.map((link, index) => (
-        <a
-          key={index}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full border border-border-color bg-background-light px-2 py-1 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
-        >
-          {getSocialIcon(link.label)}
-          {link.label}
-        </a>
-      ))}
-    </div>
-  );
-}
-
-function ProfileMobileLinks({ profile }: { profile: ProfileHeaderProfile }) {
-  const socialLinks = (profile.social_links || []) as SocialLink[];
-  const hasLinks = profile.website || socialLinks.length > 0;
-
-  if (!hasLinks) {
-    return null;
-  }
-
-  return (
-    <div
-      className="mt-2 flex w-full min-w-0 flex-wrap items-center gap-2 sm:hidden"
-    >
-      {profile.website && (
-        <a
-          href={profile.website}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
-        >
-          <svg
-            className="size-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-            />
-          </svg>
-          {getDomain(profile.website)}
-        </a>
-      )}
-      {socialLinks.map((link, index) => (
-        <a
-          key={index}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2.5 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
-        >
-          {getSocialIcon(link.label)}
-          {link.label}
-        </a>
-      ))}
-    </div>
-  );
-}
 
 function getProfileDisplayTitle(profile: ProfileHeaderProfile): string {
   if (profile.full_name) {
@@ -195,47 +93,43 @@ function ProfileHeaderRow({
       <div
         className="min-w-0 flex-1"
       >
-        <div
-          className="flex items-start justify-between gap-2"
-        >
-          <div
-            className="min-w-0"
-          >
-            <h1
-              className={clsx(
-                'leading-tight font-bold line-clamp-2 font-heading',
-                isPreview
-                  ? 'text-xl sm:text-2xl'
-                  : 'text-[clamp(1.5rem,4.5svw,2rem)]',
-              )}
-            >
-              {getProfileDisplayTitle(profile)}
-            </h1>
-            {profile.full_name && profile.nickname && (
-              <p
-                className={clsx(
-                  'opacity-80 leading-tight ',
-                  isPreview ? 'text-base sm:text-lg' : 'text-[clamp(0.875rem,2svw,1.125rem)]',
-                )}
-              >
-                @
-                {profile.nickname}
-              </p>
-            )}
-          </div>
-          {!hideSocialLinks && profile.nickname && (
-            <ProfileActionsPopover
-              profileId={profile.id}
-              profileNickname={profile.nickname}
-            />
+        <h1
+          className={clsx(
+            'leading-tight font-bold line-clamp-2 font-heading',
+            isPreview
+              ? 'text-xl sm:text-2xl'
+              : 'text-[clamp(1.5rem,4.5svw,2rem)]',
           )}
-        </div>
+        >
+          {getProfileDisplayTitle(profile)}
+        </h1>
+        {profile.full_name && profile.nickname && (
+          <p
+            className={clsx(
+              'opacity-80 leading-tight ',
+              isPreview ? 'text-base sm:text-lg' : 'text-[clamp(0.875rem,2svw,1.125rem)]',
+            )}
+          >
+            @
+            {profile.nickname}
+          </p>
+        )}
         {!hideSocialLinks && (
-          <ProfileDesktopLinks
+          <ProfileDesktopSocialLinks
             profile={profile}
           />
         )}
       </div>
+      {!hideSocialLinks && profile.nickname && (
+        <div
+          className="flex shrink-0 items-center self-center"
+        >
+          <ProfileActionsPopover
+            profileId={profile.id}
+            profileNickname={profile.nickname}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -323,7 +217,7 @@ export function ProfileHeroBanner({
             variant={variant}
           />
           {!hideSocialLinks && (
-            <ProfileMobileLinks
+            <ProfileMobileSocialLinks
               profile={profile}
             />
           )}

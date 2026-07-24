@@ -94,7 +94,9 @@ export default function ClickableAvatar({ avatarUrl, fullName, nickname, classNa
           sizes="100px"
           width={156}
           height={156}
-          loading='eager'
+          loading="eager"
+          preload
+          fetchPriority="high"
           quality={92}
           className="w-full h-full object-cover"
         />

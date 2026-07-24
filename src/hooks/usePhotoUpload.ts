@@ -2,6 +2,7 @@
 
 import type { Photo } from '@/types/photos';
 import { validateImageFile, validateImageResolution } from '@/utils/imageValidation';
+import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useCallback, useState } from 'react';
 
@@ -279,6 +280,11 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
             error: message,
           });
         }
+      }
+
+      const publicPhotoIds = results.filter((photo) => photo.is_public).map((photo) => photo.id);
+      if (publicPhotoIds.length > 0) {
+        void notifyFollowersOfUpload(publicPhotoIds);
       }
 
       return results;

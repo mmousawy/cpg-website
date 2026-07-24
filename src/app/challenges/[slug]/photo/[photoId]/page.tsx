@@ -1,6 +1,6 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
-import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -34,7 +34,12 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} — ${result.currentChallenge.title}`;
+  const ownerName = formatProfileDisplayName(result.profile.full_name, result.profile.nickname);
+  const photoTitle = formatPhotoPageTitle({
+    ownerName,
+    photoTitle: result.photo.title,
+    contextTitle: result.currentChallenge.title,
+  });
   const photoDescription = result.photo.description || `Photo from challenge "${result.currentChallenge.title}"`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

@@ -4,7 +4,7 @@ import GridCheckbox from '@/components/shared/GridCheckbox';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useSortable, type AnimateLayoutChanges } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 const animateLayoutChanges: AnimateLayoutChanges = () => false;
 
@@ -21,7 +21,7 @@ export interface SortableItemProps<T> {
   onItemDoubleClick?: (item: T) => void;
   onCheckboxClick: (id: string) => void;
   sortable: boolean;
-  isMultiSelectMode: boolean; // True when in multi-select mode (after first long-press)
+  isMultiSelectMode: boolean; // True when in multi-select mode (after checkbox tap on mobile)
   onEnterMultiSelectMode: () => void; // Callback to enter multi-select mode
   disabled?: boolean; // If true, item is non-selectable and checkbox is hidden
   isActiveDrag?: boolean; // True if this item is the one currently being dragged (from parent state, survives dnd-kit cleanup)
@@ -46,12 +46,6 @@ export default function SortableGridItem<T>({
   isActiveDrag = false,
 }: SortableItemProps<T>) {
   const isMobile = useIsMobile();
-
-  // Long-press detection for mobile multi-select
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPressRef = useRef(false);
-  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
-  const [isPressing, setIsPressing] = useState(false); // Visual feedback for long press
 
   const {
     attributes,
@@ -95,22 +89,11 @@ export default function SortableGridItem<T>({
   // Use dnd-kit's transition for single-item drag, custom transition for multi-drag push effect
   const customTransition = 'transform 150ms ease, opacity 150ms ease';
 
-  const getTransform = () => {
-    const baseTransform = sortable && shouldTransform
-      ? CSS.Translate.toString(effectiveTransform)
-      : pushTransform;
-
-    if (isPressing) {
-      return baseTransform ? `${baseTransform} scale(0.95)` : 'scale(0.95)';
-    }
-    return baseTransform;
-  };
-
-  const computedTransform = getTransform();
+  const computedTransform = sortable && shouldTransform
+    ? CSS.Translate.toString(effectiveTransform)
+    : pushTransform;
   const dndTransition = transformJustCleared ? 'none' : (transform ? transition : undefined);
-  const computedTransition = isPressing
-    ? 'transform 150ms ease, opacity 150ms ease'
-    : (sortable && shouldTransform ? dndTransition : customTransition);
+  const computedTransition = sortable && shouldTransform ? dndTransition : customTransition;
   const computedOpacity = isBeingDragged ? 0.5 : 1;
   /* eslint-enable */
 
@@ -123,78 +106,16 @@ export default function SortableGridItem<T>({
   // On mobile, always show checkbox; on desktop, show on hover or when selected
   const showCheckbox = isMobile || isSelected || isHovered;
 
-  // Long-press handlers for mobile (touch events only fire on touch devices)
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
-    isLongPressRef.current = false;
-    setIsPressing(true); // Start visual feedback
-
-    longPressTimerRef.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      setIsPressing(false); // End visual feedback
-      // Trigger haptic feedback if available
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-      // Enter multi-select mode and select this item
-      onEnterMultiSelectMode();
-      onCheckboxClick(id);
-    }, 500); // 500ms for long press
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPosRef.current) return;
-
-    const touch = e.touches[0];
-    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
-    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
-
-    // Cancel long press if moved more than 10px
-    if (dx > 10 || dy > 10) {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-      setIsPressing(false);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-    touchStartPosRef.current = null;
-    setIsPressing(false);
-  };
-
-  // Prevent context menu on long press
   const handleContextMenu = (e: React.MouseEvent) => {
-    // Only prevent on touch devices (context menu from long press)
-    if (isLongPressRef.current || touchStartPosRef.current) {
+    // Prevent iOS callout / context menu from fighting long-press drag on sortable items
+    if (sortable) {
       e.preventDefault();
     }
   };
 
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-    };
-  }, []);
-
   const handleClick = (e: React.MouseEvent) => {
     if (isDragging) return;
     e.stopPropagation();
-
-    // If it was a long press, the action was already triggered - just reset and ignore
-    if (isLongPressRef.current) {
-      isLongPressRef.current = false;
-      return;
-    }
 
     // In multi-select mode, taps toggle selection (like checkbox)
     if (isMultiSelectMode) {
@@ -214,7 +135,14 @@ export default function SortableGridItem<T>({
     }
   };
 
-  const sortableProps = sortable && !isMobile ? { ...attributes, ...listeners } : {};
+  const handleCheckboxClick = () => {
+    if (isMobile) {
+      onEnterMultiSelectMode();
+    }
+    onCheckboxClick(id);
+  };
+
+  const sortableProps = sortable ? { ...attributes, ...listeners } : {};
   return (
     <div
       ref={setNodeRef}
@@ -227,10 +155,6 @@ export default function SortableGridItem<T>({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
       onDoubleClick={(e) => {
         if (!isDragging && onItemDoubleClick) {
           e.stopPropagation();
@@ -242,7 +166,7 @@ export default function SortableGridItem<T>({
       {!disabled && (
         <GridCheckbox
           isSelected={isSelected}
-          onClick={() => onCheckboxClick(id)}
+          onClick={handleCheckboxClick}
           alwaysVisible={showCheckbox}
         />
       )}

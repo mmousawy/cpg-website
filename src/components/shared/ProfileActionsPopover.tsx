@@ -21,7 +21,7 @@ export default function ProfileActionsPopover({ profileId, profileNickname }: Pr
       trigger={
         <button
           type="button"
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border-color bg-background-light transition-colors hover:border-primary hover:text-primary mt-1"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-border-color bg-background-light transition-colors hover:border-primary hover:text-primary"
           aria-label="More actions"
         >
           <svg

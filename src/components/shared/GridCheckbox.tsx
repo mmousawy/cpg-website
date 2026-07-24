@@ -36,6 +36,8 @@ export default function GridCheckbox({
             : 'border-white/80 bg-white/60 opacity-0 shadow-[inset_0_0_0_1px_#0000005a,0_0_0_1px_#0000005a] group-hover:opacity-100',
         className,
       )}
+      onPointerDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation();
         onClick(e);

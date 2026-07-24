@@ -389,7 +389,7 @@ Deploy to Vercel:
 - [x] Manual album cover selection
 - [x] Tags on individual photos
 - [x] Copyright & licensing (per-photo licenses, watermarking, EXIF copyright)
-- [ ] Mobile-friendly drag/drop
+- [x] Mobile-friendly drag/drop
 
 ### Events
 
@@ -411,7 +411,7 @@ Deploy to Vercel:
 
 - [x] Photo/album likes
 - [x] View tracking and stats
-- [ ] Follow photographers
+- [x] Follow photographers
 - [x] Activity feed
 - [x] In-app notifications
 - [x] Community photo albums

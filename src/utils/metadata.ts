@@ -90,6 +90,23 @@ export function formatProfileDisplayName(
 }
 
 /**
+ * Build a photo page title. Untitled photos use "Photo by {owner}";
+ * titled photos use "{title} by {owner}". Optionally appends " — {context}".
+ */
+export function formatPhotoPageTitle(options: {
+  photoTitle?: string | null;
+  ownerName: string;
+  contextTitle?: string | null;
+}): string {
+  const { photoTitle, ownerName, contextTitle } = options;
+  const trimmedTitle = photoTitle?.trim();
+  const context = contextTitle?.trim();
+
+  const base = trimmedTitle ? `${trimmedTitle} by ${ownerName}` : `Photo by ${ownerName}`;
+  return context ? `${base} — ${context}` : base;
+}
+
+/**
  * Create a full URL from a relative or absolute path
  */
 export function getAbsoluteUrl(path: string): string {

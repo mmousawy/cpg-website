@@ -1,6 +1,6 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
-import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -34,9 +34,13 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const eventTitle = result.currentEvent.title || 'Event';
-  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} — ${eventTitle}`;
-  const photoDescription = result.photo.description || `Photo from event "${eventTitle}"`;
+  const ownerName = formatProfileDisplayName(result.profile.full_name, result.profile.nickname);
+  const photoTitle = formatPhotoPageTitle({
+    ownerName,
+    photoTitle: result.photo.title,
+    contextTitle: result.currentEvent.title || 'Event',
+  });
+  const photoDescription = result.photo.description || `Photo from event "${result.currentEvent.title || 'Event'}"`;
   const photoImage = getSocialImageUrl(result.photo.url);
 
   return createMetadata({
@@ -45,7 +49,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     image: photoImage,
     canonical: `/events/${encodeURIComponent(eventSlug)}/photo/${encodeURIComponent(photoId)}`,
     type: 'article',
-    keywords: ['photography', 'photo', result.photo.title || '', eventTitle],
+    keywords: ['photography', 'photo', result.photo.title || '', result.currentEvent.title || ''],
   });
 }
 

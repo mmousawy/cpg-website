@@ -1,7 +1,7 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
-import { createMetadata, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
+import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   const ownerName = formatProfileDisplayName(result.profile.full_name, result.profile.nickname);
-  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} by ${ownerName}`;
+  const photoTitle = formatPhotoPageTitle({ ownerName, photoTitle: result.photo.title });
   const photoDescription = result.photo.description || `Photo by @${nickname}`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

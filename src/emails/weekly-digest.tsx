@@ -27,18 +27,23 @@ const notificationIcons: Record<string, string> = {
   comment_album: '💬',
   comment_event: '💬',
   follow: '👤',
+  followed_upload: '📷',
   event_reminder: '📅',
   event_announcement: '📢',
   admin_message: '⚙️',
 };
 
-const notificationMessages: Record<string, (actor: string | null) => string> = {
+const notificationMessages: Record<string, (actor: string | null, data?: NotificationWithActor['data']) => string> = {
   like_photo: (actor) => `${actor || 'Someone'} liked your photo`,
   like_album: (actor) => `${actor || 'Someone'} liked your album`,
   comment_photo: (actor) => `${actor || 'Someone'} commented on your photo`,
   comment_album: (actor) => `${actor || 'Someone'} commented on your album`,
   comment_event: (actor) => `${actor || 'Someone'} commented on the event`,
   follow: (actor) => `${actor || 'Someone'} started following you`,
+  followed_upload: (actor, data) => {
+    const count = (data?.photoCount as number) || 1;
+    return `${actor || 'Someone'} uploaded ${count} new photo${count !== 1 ? 's' : ''}`;
+  },
   event_reminder: () => 'Event reminder',
   event_announcement: () => 'New event announcement',
   admin_message: () => 'Admin message',
@@ -207,7 +212,7 @@ export const WeeklyDigestEmail = ({
             >
               {notifications.map((notification, index) => {
                 const actorName = notification.actor?.full_name || notification.actor?.nickname || null;
-                const message = notificationMessages[notification.type]?.(actorName) || 'New notification';
+                const message = notificationMessages[notification.type]?.(actorName, notification.data) || 'New notification';
                 const icon = notificationIcons[notification.type] || '🔔';
                 const title = notification.data?.title as string | undefined;
                 const thumbnail = getResizedThumbnail(notification.data?.thumbnail as string | undefined);

@@ -32,6 +32,7 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   comment_scene_event: CommentSVG,
   comment_reply: CommentSVG,
   follow: HeartSVG,
+  followed_upload: PhotoStackSVG,
   event_reminder: CalendarSVG,
   event_announcement: MegaphoneSVG,
   challenge_announced: AwardStarSVG,
@@ -60,6 +61,10 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
     `${actor || 'Someone'} commented on a Scene event`,
   comment_reply: (actor) => `${actor || 'Someone'} replied to your comment`,
   follow: (actor) => `${actor || 'Someone'} started following you`,
+  followed_upload: (actor, data) => {
+    const count = (data?.photoCount as number) || 1;
+    return `${actor || 'Someone'} uploaded ${count} new photo${count !== 1 ? 's' : ''}`;
+  },
   event_reminder: () => 'Event reminder',
   event_announcement: () => 'New event announcement',
   challenge_announced: () => 'New challenge announced',

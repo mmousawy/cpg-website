@@ -1,6 +1,7 @@
 import { revalidateAlbum, revalidateGalleryData, revalidateHome, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -214,6 +215,10 @@ export function useUpdatePhoto(
       if (previousPhoto && previousPhoto.is_public !== data.data.is_public) {
         await Promise.all([revalidateGalleryData(), revalidateHome()]);
       }
+
+      if (previousPhoto && !previousPhoto.is_public && data.data.is_public) {
+        void notifyFollowersOfUpload([data.photoId]);
+      }
     },
   });
 }
@@ -411,6 +416,15 @@ export function useBulkUpdatePhotos(
         );
         if (anyVisibilityChanged) {
           await Promise.all([revalidateGalleryData(), revalidateHome()]);
+        }
+      }
+
+      if (data.data.is_public === true) {
+        const newlyPublicIds = data.previousPhotos
+          ?.filter((p) => data.photoIds.includes(p.id) && !p.is_public)
+          .map((p) => p.id) ?? [];
+        if (newlyPublicIds.length > 0) {
+          void notifyFollowersOfUpload(newlyPublicIds);
         }
       }
     },

@@ -917,6 +917,39 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'follows_follower_id_fkey'
+            columns: ['follower_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'follows_following_id_fkey'
+            columns: ['following_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       interests: {
         Row: {
           count: number | null
@@ -1036,6 +1069,45 @@ export type Database = {
           {
             foreignKeyName: 'notifications_user_id_fkey'
             columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      pending_follow_notifications: {
+        Row: {
+          created_at: string
+          deliver_at: string
+          follower_id: string
+          following_id: string
+          notification_data: Json
+        }
+        Insert: {
+          created_at?: string
+          deliver_at: string
+          follower_id: string
+          following_id: string
+          notification_data?: Json
+        }
+        Update: {
+          created_at?: string
+          deliver_at?: string
+          follower_id?: string
+          following_id?: string
+          notification_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pending_follow_notifications_follower_id_fkey'
+            columns: ['follower_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'pending_follow_notifications_following_id_fkey'
+            columns: ['following_id']
             isOneToOne: false
             referencedRelation: 'profiles'
             referencedColumns: ['id']

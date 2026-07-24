@@ -11,8 +11,8 @@ import {
   DragOverlay,
   DragStartEvent,
   KeyboardSensor,
+  MouseSensor,
   Over,
-  PointerSensor,
   TouchSensor,
   pointerWithin,
   rectIntersection,
@@ -93,7 +93,7 @@ export default function SelectableGrid<T>({
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   // Track if current drag is a multi-drag for collision detection
   const isMultiDragRef = useRef(false);
-  // Track if in multi-select mode (activated by long-press on mobile)
+  // Track if in multi-select mode (activated by checkbox tap on mobile)
   const [isMultiSelectModeActive, setIsMultiSelectModeActive] = useState(false);
   // Multi-select mode is only active when there are selected items
   const isMultiSelectMode = isMultiSelectModeActive && selectedIds.size > 0;
@@ -112,15 +112,15 @@ export default function SelectableGrid<T>({
   }, []);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8, // Require 8px movement before starting drag
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 200, // 200ms delay to distinguish tap from drag on touch devices
-        tolerance: 5, // Allow 5px movement during delay
+        delay: 300, // Long-press to distinguish tap from drag on touch devices
+        tolerance: 8, // Allow slight finger movement during delay
       },
     }),
     useSensor(KeyboardSensor, {
@@ -187,7 +187,7 @@ export default function SelectableGrid<T>({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onSelectMultiple, items, getId]);
 
-  // Track actual mouse position during drag
+  // Track actual pointer position during drag (mouse + touch)
   useEffect(() => {
     if (!activeDragId) return;
 
@@ -195,8 +195,19 @@ export default function SelectableGrid<T>({
       mousePositionRef.current = { x: e.clientX, y: e.clientY };
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) {
+        mousePositionRef.current = { x: touch.clientX, y: touch.clientY };
+      }
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
   }, [activeDragId]);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -613,6 +624,13 @@ export default function SelectableGrid<T>({
       <DndContext
         sensors={sensors}
         collisionDetection={customCollisionDetection}
+        autoScroll={{
+          threshold: {
+            x: 0,
+            y: 0.2,
+          },
+          acceleration: 10,
+        }}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragMove={handleDragMove}

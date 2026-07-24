@@ -1,6 +1,6 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
-import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
+import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
@@ -40,7 +40,11 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   const ownerName = formatProfileDisplayName(result.profile.full_name, result.profile.nickname);
-  const photoTitle = `Photo: ${result.photo.title || 'Untitled'} — ${result.currentAlbum.title} by ${ownerName}`;
+  const photoTitle = formatPhotoPageTitle({
+    ownerName,
+    photoTitle: result.photo.title,
+    contextTitle: result.currentAlbum.title,
+  });
   const photoDescription = result.photo.description || `Photo from album "${result.currentAlbum.title}" by @${nickname}`;
   const photoImage = getSocialImageUrl(result.photo.url);
 

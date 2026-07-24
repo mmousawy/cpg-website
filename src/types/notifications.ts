@@ -13,6 +13,7 @@ export type NotificationType =
   | 'comment_scene_event'
   | 'comment_reply'
   | 'follow'
+  | 'followed_upload'
   | 'event_reminder'
   | 'event_announcement'
   | 'challenge_announced'

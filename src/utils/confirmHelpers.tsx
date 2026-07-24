@@ -166,3 +166,12 @@ export function confirmDisableAlbumSharing(album: AlbumWithPhotos): ConfirmOptio
     variant: 'danger',
   };
 }
+
+export function confirmUnfollow(nickname: string): ConfirmOptions {
+  return {
+    title: 'Unfollow',
+    message: `Stop following @${nickname}? You won't receive notifications when they upload new photos.`,
+    confirmLabel: 'Unfollow',
+    variant: 'default',
+  };
+}
