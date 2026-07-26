@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.2](https://github.com/mmousawy/cpg-website/compare/v1.37.1...v1.37.2) (2026-07-26)
+
+
+### 🐛 Bug Fixes
+
+* Update image handling and configuration for improved performance ([4352ada](https://github.com/mmousawy/cpg-website/commit/4352ada482ceeb02364d61a3eb53687e65ce651b))
+
 ## [1.37.1](https://github.com/mmousawy/cpg-website/compare/v1.37.0...v1.37.1) (2026-07-26)
 
 
