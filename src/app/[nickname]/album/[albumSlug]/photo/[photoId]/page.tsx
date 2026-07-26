@@ -1,7 +1,6 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 type Params = Promise<{
@@ -29,7 +28,6 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  // Use cached function
   const result = await getAlbumPhotoByShortId(nickname, albumSlug, photoId);
 
   if (!result) {
@@ -59,8 +57,6 @@ export async function generateMetadata({ params }: { params: Params }) {
 }
 
 export default async function AlbumPhotoPage({ params }: { params: Params }) {
-  'use cache';
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
@@ -71,12 +67,6 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  cacheLife('max');
-  cacheTag('albums');
-  cacheTag(`profile-${nickname}`);
-  cacheTag(`photo-${photoId}`);
-  cacheTag(`album-${nickname}-${albumSlug}`);
-
   const result = await getAlbumPhotoByShortId(nickname, albumSlug, photoId);
 
   if (!result) {
@@ -84,16 +74,14 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
   }
 
   return (
-    <>
-      <PhotoPageContent
-        photo={result.photo}
-        profile={result.profile}
-        albumOwnerNickname={result.albumOwnerNickname}
-        currentAlbum={result.currentAlbum}
-        albums={result.albums}
-        challenges={result.challenges}
-        siblingPhotos={result.siblingPhotos}
-      />
-    </>
+    <PhotoPageContent
+      photo={result.photo}
+      profile={result.profile}
+      albumOwnerNickname={result.albumOwnerNickname}
+      currentAlbum={result.currentAlbum}
+      albums={result.albums}
+      challenges={result.challenges}
+      siblingPhotos={result.siblingPhotos}
+    />
   );
 }

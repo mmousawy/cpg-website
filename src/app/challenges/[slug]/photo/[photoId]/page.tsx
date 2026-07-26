@@ -69,15 +69,13 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
   }
 
   return (
-    <>
-      <PhotoPageContent
-        photo={result.photo}
-        profile={result.profile}
-        albums={result.albums}
-        challenges={result.challenges}
-        currentChallenge={result.currentChallenge}
-        siblingPhotos={result.siblingPhotos}
-      />
-    </>
+    <PhotoPageContent
+      photo={result.photo}
+      profile={result.profile}
+      albums={result.albums}
+      challenges={result.challenges}
+      currentChallenge={result.currentChallenge}
+      siblingPhotos={result.siblingPhotos}
+    />
   );
 }

@@ -117,7 +117,7 @@ export default function ProfileImageUploadSections({
       >
         <ProfileHeroBanner
           profile={previewProfile}
-          hideSocialLinks
+          hideFollowStats
           variant="preview"
         />
       </div>

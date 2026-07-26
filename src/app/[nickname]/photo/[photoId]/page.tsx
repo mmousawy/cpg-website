@@ -27,7 +27,6 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  // Use cached function
   const result = await getPhotoByShortId(nickname, photoId);
 
   if (!result) {

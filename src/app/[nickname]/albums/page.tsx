@@ -2,6 +2,7 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { ProfileBackToProfileLink, ProfileHeroBanner } from '@/components/profile/ProfileHeader';
 import { getUserPublicAlbums } from '@/lib/data/albums';
+import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
   getProfileByNickname,
 } from '@/lib/data/profiles';
@@ -84,7 +85,10 @@ async function CachedAlbumsContent({
   cacheLife('max');
   cacheTag(`profile-${nickname}`);
 
-  const albums = await getUserPublicAlbums(profile.id, nickname, 100);
+  const [albums, followCounts] = await Promise.all([
+    getUserPublicAlbums(profile.id, nickname, 100),
+    getProfileFollowCounts(profile.id, nickname),
+  ]);
 
   const profileNickname = profile.nickname || nickname;
 
@@ -92,6 +96,8 @@ async function CachedAlbumsContent({
     <>
       <ProfileHeroBanner
         profile={profile}
+        followerCount={followCounts.followerCount}
+        followingCount={followCounts.followingCount}
       />
 
       <ProfileBackToProfileLink

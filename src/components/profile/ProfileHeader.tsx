@@ -1,7 +1,7 @@
+import ProfileFollowStats from '@/components/profile/ProfileFollowStats';
 import ArrowLink from '@/components/shared/ArrowLink';
 import BlurImage from '@/components/shared/BlurImage';
 import ClickableAvatar from '@/components/shared/ClickableAvatar';
-import { ProfileDesktopSocialLinks, ProfileMobileSocialLinks } from '@/components/profile/ProfileSocialLinks';
 import ProfileActionsPopover from '@/components/shared/ProfileActionsPopover';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
 import clsx from 'clsx';
@@ -33,17 +33,17 @@ type ProfileHeaderProps = {
 
 /** Height of the profile hero banner — keep in sync with ProfileBannerCropper aspect */
 export const profileHeroBannerHeightClassName =
-  'aspect-[3.2/1] w-full min-h-[10rem] max-h-[18rem] overflow-hidden';
+  'aspect-[3.2/1] w-full min-h-[10rem] max-h-[18rem]';
 
 /** Shorter height for in-settings profile preview */
 export const profileHeroBannerPreviewHeightClassName =
-  'h-32 min-h-32 sm:h-40 sm:min-h-40 overflow-hidden';
+  'h-32 min-h-32 sm:h-40 sm:min-h-40';
 
 /** Extra top spacing below the profile hero on mobile */
 export const profileHeroMobileGapClassName = 'max-sm:pt-4!';
 
 /** Tight top spacing below the profile hero */
-export const profileHeroPageClassName = `${profileHeroMobileGapClassName} sm:pt-0! pb-4! md:pt-4! md:pb-6!`;
+export const profileHeroPageClassName = `${profileHeroMobileGapClassName} sm:pt-0! pb-4! sm:pt-4! sm:pb-6!`;
 
 function getProfileDisplayTitle(profile: ProfileHeaderProfile): string {
   if (profile.full_name) {
@@ -57,11 +57,15 @@ function getProfileDisplayTitle(profile: ProfileHeaderProfile): string {
 
 function ProfileHeaderRow({
   profile,
-  hideSocialLinks = false,
+  hideFollowStats = false,
+  followerCount = 0,
+  followingCount = 0,
   variant = 'default',
 }: {
   profile: ProfileHeaderProfile;
-  hideSocialLinks?: boolean;
+  hideFollowStats?: boolean;
+  followerCount?: number;
+  followingCount?: number;
   variant?: 'default' | 'preview';
 }) {
   const isPreview = variant === 'preview';
@@ -95,10 +99,10 @@ function ProfileHeaderRow({
       >
         <h1
           className={clsx(
-            'leading-tight font-bold line-clamp-2 font-heading',
+            'leading-none font-bold line-clamp-2 font-heading',
             isPreview
               ? 'text-xl sm:text-2xl'
-              : 'text-[clamp(1.5rem,4.5svw,2rem)]',
+              : 'text-[clamp(1.65rem,4.5svw,2rem)]',
           )}
         >
           {getProfileDisplayTitle(profile)}
@@ -107,22 +111,24 @@ function ProfileHeaderRow({
           <p
             className={clsx(
               'opacity-80 leading-tight ',
-              isPreview ? 'text-base sm:text-lg' : 'text-[clamp(0.875rem,2svw,1.125rem)]',
+              isPreview ? 'text-base sm:text-lg' : 'text-[clamp(1rem,2svw,1.125rem)]',
             )}
           >
             @
             {profile.nickname}
           </p>
         )}
-        {!hideSocialLinks && (
-          <ProfileDesktopSocialLinks
-            profile={profile}
+        {!hideFollowStats && !isPreview && (
+          <ProfileFollowStats
+            profileId={profile.id}
+            followerCount={followerCount}
+            followingCount={followingCount}
           />
         )}
       </div>
-      {!hideSocialLinks && profile.nickname && (
+      {profile.nickname && (
         <div
-          className="flex shrink-0 items-center self-center"
+          className="flex shrink-0 items-center self-start sm:mt-2"
         >
           <ProfileActionsPopover
             profileId={profile.id}
@@ -136,10 +142,14 @@ function ProfileHeaderRow({
 
 export function ProfileHeroBanner({
   profile,
-  hideSocialLinks = false,
+  hideFollowStats = false,
+  followerCount = 0,
+  followingCount = 0,
   variant = 'default',
 }: ProfileHeaderProps & {
-  hideSocialLinks?: boolean;
+  hideFollowStats?: boolean;
+  followerCount?: number;
+  followingCount?: number;
   variant?: 'default' | 'preview';
 }) {
   const isPreview = variant === 'preview';
@@ -213,14 +223,11 @@ export function ProfileHeroBanner({
         >
           <ProfileHeaderRow
             profile={profile}
-            hideSocialLinks={hideSocialLinks}
+            hideFollowStats={hideFollowStats}
+            followerCount={followerCount}
+            followingCount={followingCount}
             variant={variant}
           />
-          {!hideSocialLinks && (
-            <ProfileMobileSocialLinks
-              profile={profile}
-            />
-          )}
         </div>
       </div>
     </div>

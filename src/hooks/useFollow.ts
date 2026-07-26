@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 async function fetchFollowStatus(profileId: string): Promise<{ isFollowing: boolean }> {
   const response = await fetch(`/api/follows?profileId=${encodeURIComponent(profileId)}`);
@@ -27,6 +27,7 @@ export function useFollowStatus(profileId: string, enabled = true) {
 
 export function useFollowMutation(profileId: string) {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async (follow: boolean) => {
@@ -60,6 +61,7 @@ export function useFollowMutation(profileId: string) {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['follow', profileId], { isFollowing: data.isFollowing });
+      router.refresh();
     },
   });
 }

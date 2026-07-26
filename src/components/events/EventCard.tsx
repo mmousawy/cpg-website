@@ -142,7 +142,7 @@ export default function EventCard({
         >
           <BlurImage
             fill
-            sizes="100vw"
+            sizes="calc(100vw - 1.5rem)"
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
             preload={priority}

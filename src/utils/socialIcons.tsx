@@ -11,7 +11,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['twitter', 'x.com', '/x/'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -26,7 +26,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['instagram'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -41,7 +41,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['threads'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -56,7 +56,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['bluesky', 'bsky'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -71,7 +71,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['tiktok'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -86,7 +86,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['youtube', 'youtu.be'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -101,7 +101,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['discord'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -116,7 +116,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['reddit'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -131,7 +131,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['snapchat'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -146,7 +146,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['pinterest'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -161,7 +161,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['mastodon'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -176,7 +176,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['github'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -191,7 +191,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['linkedin'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -206,7 +206,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['facebook', 'fb.com'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -221,7 +221,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['flickr'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -236,7 +236,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['500px'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -251,7 +251,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['twitch'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -266,7 +266,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['spotify'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -281,7 +281,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['dribbble'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -296,7 +296,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['behance'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -311,7 +311,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['medium'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -326,7 +326,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['vimeo'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -341,7 +341,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['telegram', 't.me'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -356,7 +356,7 @@ const socialIcons: SocialIconConfig[] = [
     keywords: ['whatsapp', 'wa.me'],
     icon: (
       <svg
-        className="size-4"
+        className="size-3.5"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -371,7 +371,7 @@ const socialIcons: SocialIconConfig[] = [
 // Default link icon for unknown platforms
 const defaultIcon = (
   <svg
-    className="size-4"
+    className="size-3.5"
     fill="none"
     stroke="currentColor"
     viewBox="0 0 24 24"

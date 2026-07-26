@@ -3,6 +3,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import { ProfileBelowHeroSection, ProfileHeroBanner, profileHeroPageClassName } from '@/components/profile/ProfileHeader';
+import { ProfileSocialSection } from '@/components/profile/ProfileSocialLinks';
 import Button from '@/components/shared/Button';
 import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
@@ -20,6 +21,7 @@ import {
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
+import { getProfileFollowCounts } from '@/lib/data/follows';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
 
 // Pre-render all public profiles at build time for optimal caching
@@ -110,10 +112,11 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
   cacheTag(`profile-${nickname}`);
 
   // Fetch user's albums and photos using cached data functions
-  const [albums, publicPhotos, totalPhotos] = await Promise.all([
+  const [albums, publicPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname, 50),
     getUserPublicPhotos(profile.id, nickname, 20),
     getUserPublicPhotoCount(profile.id, nickname),
+    getProfileFollowCounts(profile.id, nickname),
   ]);
 
   // Fetch stats using cached data function
@@ -146,12 +149,18 @@ async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awai
       />
       <ProfileHeroBanner
         profile={profile}
+        followerCount={followCounts.followerCount}
+        followingCount={followCounts.followingCount}
       />
 
       <PageContainer
         className={profileHeroPageClassName}
       >
         <ProfileBelowHeroSection>
+          <ProfileSocialSection
+            profile={profile}
+          />
+
           {profile.bio && (
             <div
               className="sm:text-lg text-base mb-4 whitespace-pre-line max-w-[50ch]"

@@ -1,8 +1,8 @@
 diff --git a/dist/build/swc/index.js b/dist/build/swc/index.js
-index 707be301ee2decb1e6a7829a43547679d5b6d0d4..af7006f012097451efc7c5c57719576bb9355efa 100644
+index fbf1b3c1b10f3df4eb4b80cc2a97feb2f2114584..7e654c52a4b6cc17cbc71dcff267ee5ae223432f 100644
 --- a/dist/build/swc/index.js
 +++ b/dist/build/swc/index.js
-@@ -498,41 +498,66 @@ function bindingToApi(binding, bindingPath, _wasm) {
+@@ -499,41 +499,66 @@ function bindingToApi(binding, bindingPath, _wasm) {
                  else buffer[0] = item;
              }
          }

@@ -4,7 +4,7 @@ import BlurImage from '@/components/shared/BlurImage';
 import { useProgressRouter } from '@/components/layout/NavigationProgress';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
-import Link from 'next/link';
+import HoverPrefetchLink from '@/components/shared/HoverPrefetchLink';
 import ArrowLeftFillSVG from 'public/icons/arrow-left-fill.svg';
 import ArrowRightFillSVG from 'public/icons/arrow-right-fill.svg';
 import { useCallback, useEffect, useRef } from 'react';
@@ -156,7 +156,7 @@ export default function AlbumFilmstrip({
           const isLastPhoto = index === photos.length - 1;
 
           return (
-            <Link
+            <HoverPrefetchLink
               key={photo.shortId}
               ref={isActive ? activeThumbnailRef : null}
               href={getPhotoHref(photo.shortId)}
@@ -179,7 +179,7 @@ export default function AlbumFilmstrip({
                 loading="lazy"
                 className="object-cover"
               />
-            </Link>
+            </HoverPrefetchLink>
           );
         })}
       </div>

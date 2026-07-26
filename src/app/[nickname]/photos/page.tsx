@@ -2,6 +2,7 @@ import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { ProfileBackToProfileLink, ProfileHeroBanner } from '@/components/profile/ProfileHeader';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
   getProfileByNickname,
   getUserPublicPhotoCount,
@@ -87,9 +88,10 @@ async function CachedPhotosContent({
   cacheTag(`profile-${nickname}`);
 
   const perPage = 20;
-  const [allPhotos, totalPhotos] = await Promise.all([
+  const [allPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicPhotos(profile.id, nickname, perPage + 1),
     getUserPublicPhotoCount(profile.id, nickname),
+    getProfileFollowCounts(profile.id, nickname),
   ]);
 
   const initialPhotos = allPhotos.slice(0, perPage);
@@ -110,6 +112,8 @@ async function CachedPhotosContent({
     <>
       <ProfileHeroBanner
         profile={profile}
+        followerCount={followCounts.followerCount}
+        followingCount={followCounts.followingCount}
       />
 
       <ProfileBackToProfileLink

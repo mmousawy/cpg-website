@@ -69,15 +69,13 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
   }
 
   return (
-    <>
-      <PhotoPageContent
-        photo={result.photo}
-        profile={result.profile}
-        albums={result.albums}
-        challenges={result.challenges}
-        currentEvent={result.currentEvent}
-        siblingPhotos={result.siblingPhotos}
-      />
-    </>
+    <PhotoPageContent
+      photo={result.photo}
+      profile={result.profile}
+      albums={result.albums}
+      challenges={result.challenges}
+      currentEvent={result.currentEvent}
+      siblingPhotos={result.siblingPhotos}
+    />
   );
 }

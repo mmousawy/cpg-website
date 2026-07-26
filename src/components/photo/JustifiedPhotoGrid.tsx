@@ -5,7 +5,7 @@ import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
 import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
-import Link from 'next/link';
+import HoverPrefetchLink from '../shared/HoverPrefetchLink';
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
 import CardLikes from '../shared/CardLikes';
@@ -267,7 +267,7 @@ function PhotoRows({
                 : `View photo by @${nickname}`;
 
               return (
-                <Link
+                <HoverPrefetchLink
                   key={item.photo.id}
                   href={photoHref}
                   className="group relative block overflow-hidden bg-background-light"
@@ -361,7 +361,7 @@ function PhotoRows({
                       </span>
                     </div>
                   )}
-                </Link>
+                </HoverPrefetchLink>
               );
             })}
           </div>

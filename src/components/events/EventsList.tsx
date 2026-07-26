@@ -190,7 +190,7 @@ export default function EventsList({
               >
                 <BlurImage
                   fill
-                  sizes="100vw"
+                  sizes="calc(100vw - 1.5rem)"
                   loading='eager'
                   quality={92}
                   alt={event.title || 'Event cover image'}

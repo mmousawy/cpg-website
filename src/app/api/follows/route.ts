@@ -3,11 +3,21 @@ import {
   scheduleFollowNotification,
 } from '@/lib/follows/scheduleFollowNotification';
 import { createClient } from '@/utils/supabase/server';
+import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 type FollowRequest = {
   profileId: string;
 };
+
+function revalidateFollowProfiles(nicknames: Array<string | null | undefined>) {
+  for (const nickname of nicknames) {
+    if (nickname) {
+      revalidateTag(`profile-${nickname}`, 'max');
+    }
+  }
+  revalidateTag('search', 'max');
+}
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -91,6 +101,7 @@ export async function POST(request: NextRequest) {
 
   if (insertError) {
     if (insertError.code === '23505') {
+      revalidateFollowProfiles([actorProfile?.nickname, targetProfile.nickname]);
       return NextResponse.json({ success: true, isFollowing: true });
     }
     return NextResponse.json({ error: insertError.message }, { status: 500 });
@@ -109,6 +120,8 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  revalidateFollowProfiles([actorProfile?.nickname, targetProfile.nickname]);
+
   return NextResponse.json({ success: true, isFollowing: true });
 }
 
@@ -126,6 +139,19 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'profileId is required' }, { status: 400 });
   }
 
+  const [{ data: actorProfile }, { data: targetProfile }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('nickname')
+      .eq('id', profileId)
+      .maybeSingle(),
+  ]);
+
   const { error: deleteError } = await supabase
     .from('follows')
     .delete()
@@ -137,6 +163,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   await cancelPendingFollowNotification(user.id, profileId);
+
+  revalidateFollowProfiles([actorProfile?.nickname, targetProfile?.nickname]);
 
   return NextResponse.json({ success: true, isFollowing: false });
 }

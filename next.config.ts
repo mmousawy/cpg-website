@@ -17,8 +17,14 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // Memory optimization for Webpack builds (production)
   experimental: {
+    // TypeScript 7 dropped the compiler API Next used to load; use the tsc CLI instead.
+    useTypeScriptCli: true,
     webpackMemoryOptimizations: true,
     optimizeCss: true,
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
   images: {
     loader: 'custom',

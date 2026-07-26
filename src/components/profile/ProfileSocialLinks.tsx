@@ -25,7 +25,7 @@ export function ProfileDesktopSocialLinks({ profile }: { profile: ProfileHeaderP
 
   return (
     <div
-      className="mt-2 hidden flex-wrap items-center gap-2 sm:flex"
+      className="hidden flex-wrap items-center gap-2 sm:flex"
     >
       {showFollow && profile.nickname && (
         <FollowButton
@@ -42,7 +42,7 @@ export function ProfileDesktopSocialLinks({ profile }: { profile: ProfileHeaderP
           className="inline-flex items-center gap-1.5 rounded-full border border-border-color bg-background-light px-2 py-1 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
         >
           <svg
-            className="size-4"
+            className="size-3.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -82,7 +82,7 @@ export function ProfileMobileSocialLinks({ profile }: { profile: ProfileHeaderPr
 
   return (
     <div
-      className="mt-2 flex w-full min-w-0 flex-wrap items-center gap-2 sm:hidden"
+      className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:hidden"
     >
       {showFollow && profile.nickname && (
         <FollowButton
@@ -125,6 +125,27 @@ export function ProfileMobileSocialLinks({ profile }: { profile: ProfileHeaderPr
           {link.label}
         </a>
       ))}
+    </div>
+  );
+}
+
+export function ProfileSocialSection({ profile }: { profile: ProfileHeaderProfile }) {
+  const { hasLinks, showFollow } = useProfileSocialLinks(profile);
+
+  if (!showFollow && !hasLinks) {
+    return null;
+  }
+
+  return (
+    <div
+      className="mb-4"
+    >
+      <ProfileDesktopSocialLinks
+        profile={profile}
+      />
+      <ProfileMobileSocialLinks
+        profile={profile}
+      />
     </div>
   );
 }
