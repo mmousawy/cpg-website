@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.37.0](https://github.com/mmousawy/cpg-website/compare/v1.36.1...v1.37.0) (2026-07-24)
+
+
+### ✨ Features
+
+* Enhance photo upload notifications and improve metadata handling ([20880e1](https://github.com/mmousawy/cpg-website/commit/20880e17f4170f7e4431a460878609903970d0a4))
+
+
+### 🐛 Bug Fixes
+
+* Simplify ActivityPage and enhance AllMembersPage with Suspense ([cd28de3](https://github.com/mmousawy/cpg-website/commit/cd28de37e6fa0362570b52634742aed020c7fa5a))
+
+
+### 🔧 Maintenance
+
+* Enhance notification handling and improve database queries ([58f4947](https://github.com/mmousawy/cpg-website/commit/58f4947b9ceb2634101e4d38d5c0cffd60985f88))
+
 ## [1.36.1](https://github.com/mmousawy/cpg-website/compare/v1.36.0...v1.36.1) (2026-07-20)
 
 
