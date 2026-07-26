@@ -1,9 +1,14 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Header from './Header';
-import Footer from './Footer';
+
+const Footer = dynamic(
+  () => import('./Footer'),
+  { ssr: false },
+);
 
 // Pages where footer should be hidden (full-height layouts)
 const noFooterPaths = ['/account/photos', '/account/albums'];

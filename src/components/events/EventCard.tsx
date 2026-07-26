@@ -142,7 +142,7 @@ export default function EventCard({
         >
           <BlurImage
             fill
-            sizes="calc(100vw - 1.5rem)"
+            sizes="(max-width: 640px) 90vw, 480px"
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
             quality={imageQuality}
@@ -151,7 +151,7 @@ export default function EventCard({
               'object-cover rounded-t-xl',
               isPast && '',
             )}
-            src={getCroppedThumbnailUrl(imageSrc, 640, 274) || imageSrc}
+            src={getCroppedThumbnailUrl(imageSrc, 480, 206) || imageSrc}
             blurhash={event.image_blurhash}
           />
           {showBadge && (
@@ -267,7 +267,7 @@ export default function EventCard({
           >
             <BlurImage
               fill
-              sizes="(min-width: 1024px) 448px, 384px"
+              sizes="(min-width: 1024px) 384px, 320px"
               loading="lazy"
               quality={imageQuality}
               alt={event.title || 'Event cover image'}
@@ -275,7 +275,7 @@ export default function EventCard({
                 'object-cover rounded-r-xl',
                 isPast && '',
               )}
-              src={getCroppedThumbnailUrl(imageSrc, 448, 336) || imageSrc}
+              src={getCroppedThumbnailUrl(imageSrc, 384, 288) || imageSrc}
               blurhash={event.image_blurhash}
             />
             {showBadge && (

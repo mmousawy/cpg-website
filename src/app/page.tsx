@@ -14,6 +14,7 @@ import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import HeroImage from '@/components/shared/HeroImage';
 import { routes } from '@/config/routes';
+import { HERO_IMAGES } from '@/config/heroImages';
 import { socialLinks } from '@/config/socials';
 import { createMetadata } from '@/utils/metadata';
 
@@ -48,15 +49,7 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
   WhatsApp: WhatsAppSVG,
 };
 
-const heroImages = [
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero1.jpg',
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero2.jpg',
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero3.jpg',
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero4.jpg',
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero5.jpg',
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero6.jpg',
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero7.jpg',
-];
+const heroImages = HERO_IMAGES;
 
 export default async function Home() {
   'use cache';
@@ -85,8 +78,6 @@ export default async function Home() {
   const dayOfYear = Math.floor((serverNow - yearStart.getTime()) / (1000 * 60 * 60 * 24));
   const heroImage = heroImages[dayOfYear % heroImages.length];
 
-  // LCP preload is handled by <HeroImage preload /> (responsive imageSrcSet).
-
   return (
     <>
       {/* Hero Section */}
@@ -101,7 +92,8 @@ export default async function Home() {
         >
           {/* Background image - server-side selected for optimal LCP */}
           <HeroImage
-            src={heroImage}
+            src={heroImage.src}
+            blurhash={heroImage.blurhash}
           />
 
           {/* Scrim mask — blur is applied directly on the hero image */}

@@ -116,7 +116,7 @@ export default function ChallengeCard({
             alt={challenge.title}
             fill
             className="object-cover transition-all duration-200 group-hover:brightness-110"
-            sizes="(max-width: 640px) 400px, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 280px, (max-width: 1024px) 40vw, 320px"
             blurhash={challenge.image_blurhash}
             quality={THUMBNAIL_IMAGE_QUALITY}
           />

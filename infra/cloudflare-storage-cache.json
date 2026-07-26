@@ -1,0 +1,15 @@
+{
+  "description": "Apply in Cloudflare dashboard for zone db.creativephotography.group (or parent zone if proxied).",
+  "rules": [
+    {
+      "name": "Long cache for Supabase image transforms",
+      "expression": "(http.host eq \"db.creativephotography.group\" and starts_with(http.request.uri.path, \"/storage/v1/render/image/\"))",
+      "action": "set_cache_settings",
+      "settings": {
+        "edge_ttl_seconds": 2592000,
+        "browser_ttl_seconds": 604800,
+        "cache": true
+      }
+    }
+  ]
+}

@@ -11,8 +11,6 @@ import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
-import MobileMenu from './MobileMenu';
-import UserMenu from './UserMenu';
 
 const SearchModal = dynamic(
   () => import('../search/SearchModal'),
@@ -26,6 +24,24 @@ const NotificationButton = dynamic(
 
 const MobileNotificationButton = dynamic(
   () => import('../notifications/MobileNotificationButton'),
+  { ssr: false },
+);
+
+const UserMenu = dynamic(
+  () => import('./UserMenu'),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="hidden h-10 w-20 animate-pulse rounded-full bg-background-medium sm:block"
+        aria-hidden
+      />
+    ),
+  },
+);
+
+const MobileMenu = dynamic(
+  () => import('./MobileMenu'),
   { ssr: false },
 );
 

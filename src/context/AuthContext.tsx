@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase/client';
 import { Database } from '@/database.types';
+import { scheduleIdleWork } from '@/utils/scheduleIdle';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const currentUserIdRef = useRef<string | null>(null);
   const fetchingProfileRef = useRef<string | null>(null);
@@ -93,25 +94,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => {});
     };
 
-    // Initialize session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
+    // Defer session bootstrap so anonymous first visits can paint sooner.
+    scheduleIdleWork(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!mounted) return;
 
-      const userId = session?.user?.id ?? null;
-      setUser(session?.user ?? null);
-      setSession(session);
-      currentUserIdRef.current = userId;
-      setIsLoading(false);
+        const userId = session?.user?.id ?? null;
+        setUser(session?.user ?? null);
+        setSession(session);
+        currentUserIdRef.current = userId;
+        setIsLoading(false);
 
-      if (userId) {
-        updateLastLoggedIn(userId);
-        fetchProfile(userId);
-      }
-    }).catch(() => {
-      if (mounted) setIsLoading(false);
-    });
+        if (userId) {
+          updateLastLoggedIn(userId);
+          fetchProfile(userId);
+        }
+      }).catch(() => {
+        if (mounted) setIsLoading(false);
+      });
+    }, 1500);
 
-    // Listen for auth changes
+    // Listen for auth changes immediately (login/logout in another tab, OAuth return).
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted || event === 'INITIAL_SESSION') return;
 

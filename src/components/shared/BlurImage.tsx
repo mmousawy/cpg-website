@@ -53,7 +53,6 @@ export default function BlurImage({
   ...props
 }: BlurImageProps) {
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
-  const isPriority = !!(preload || fetchPriority === 'high');
 
   // Cache key must uniquely identify the actual fetched resource.
   // The same base URL produces very different fetches depending on props:
@@ -75,7 +74,6 @@ export default function BlurImage({
   const [currentSrc, setCurrentSrc] = useState(srcString);
   const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>(() => {
     if (cacheKey && loadedImages?.has(cacheKey)) return 'visible';
-    if (isPriority) return 'visible';
     return 'loading';
   });
   const hasCalledOnLoad = useRef(false);
@@ -86,7 +84,7 @@ export default function BlurImage({
   // Reset state when src changes (during render, not in effect)
   if (srcString !== currentSrc) {
     setCurrentSrc(srcString);
-    setLoadState(isPriority ? 'visible' : 'loading');
+    setLoadState(loadedImages?.has(cacheKey ?? '') ? 'visible' : 'loading');
     setUseRawFallback(false);
   }
 
@@ -123,7 +121,7 @@ export default function BlurImage({
     if (img && img.complete && img.naturalWidth > 0) {
       hasCalledOnLoad.current = true;
       if (cacheKey) loadedImages?.add(cacheKey);
-      setLoadState(isPriority ? 'visible' : 'fade-in');
+      setLoadState('fade-in');
       onLoadPropRef.current?.();
       return;
     }
@@ -144,11 +142,11 @@ export default function BlurImage({
     // Remember this image for future navigations
     if (cacheKey) loadedImages?.add(cacheKey);
 
-    setLoadState(isPriority ? 'visible' : 'fade-in');
+    setLoadState('fade-in');
 
     // Call external onLoad callback
     onLoadProp?.();
-  }, [cacheKey, onLoadProp, isPriority]);
+  }, [cacheKey, onLoadProp]);
 
   // Transition to 'visible' once the fade-in animation completes.
   // This lets us safely remove the blurhash background after the fade finishes,
@@ -162,9 +160,8 @@ export default function BlurImage({
   // Map loadState to CSS class.
   // Uses a CSS @keyframes animation for fade-in (works in a single React commit)
   // instead of CSS transitions which are unreliable with React's batched rendering.
-  const opacityClass = isPriority
-    ? 'opacity-100'
-    : loadState === 'visible'
+  const opacityClass =
+    loadState === 'visible'
       ? 'opacity-100'
       : loadState === 'fade-in'
         ? 'animate-fade-in-fast'
@@ -255,6 +252,7 @@ export default function BlurImage({
           className={`${className} ${opacityClass}`}
           onLoad={handleImageLoad}
           onError={handleImageError}
+          onAnimationEnd={handleAnimationEnd}
           preload={preload}
           fetchPriority={fetchPriority}
           {...props}

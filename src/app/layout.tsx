@@ -8,14 +8,12 @@ import ConfirmProvider from '@/app/providers/ConfirmProvider';
 import ModalProvider from '@/app/providers/ModalProvider';
 import QueryProvider from '@/app/providers/QueryProvider';
 import { ThemeProviderWrapper as ThemeProvider } from '@/app/providers/ThemeProvider';
-import VersionLogger from '@/components/VersionLogger';
+import ClientShellExtras from '@/components/layout/ClientShellExtras';
+import LazyOverlays from '@/components/layout/LazyOverlays';
 import Layout from '@/components/layout/Layout';
 import NavigationProgress from '@/components/layout/NavigationProgress';
-import NotificationToastManager from '@/components/notifications/NotificationToastManager';
-import ConfirmModal from '@/components/shared/ConfirmModal';
+import DeferredNotificationToastManager from '@/components/notifications/DeferredNotificationToastManager';
 import JsonLd from '@/components/shared/JsonLd';
-import Modal from '@/components/shared/Modal';
-import SmoothScrollProvider from '@/components/shared/SmoothScrollProvider';
 import { socialLinks } from '@/config/socials';
 import { AuthProvider } from '@/context/AuthContext';
 import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
@@ -113,6 +111,7 @@ export default function RootLayout({
         <link
           rel="preconnect"
           href="https://db.creativephotography.group"
+          crossOrigin="anonymous"
         />
         <meta
           name="apple-mobile-web-app-title"
@@ -149,12 +148,7 @@ export default function RootLayout({
         >
           <NavigationProgress />
         </Suspense>
-        <Suspense
-          fallback={null}
-        >
-          <SmoothScrollProvider />
-        </Suspense>
-        <VersionLogger />
+        <ClientShellExtras />
         <SupabaseProvider>
           <QueryProvider>
             <AuthProvider>
@@ -169,16 +163,15 @@ export default function RootLayout({
                           {children}
                         </Layout>
                       </Suspense>
-                      <Modal />
+                      <LazyOverlays />
                     </ModalProvider>
                   </UnsavedChangesProvider>
-                  <ConfirmModal />
                 </ConfirmProvider>
               </ThemeProvider>
               <Suspense
                 fallback={null}
               >
-                <NotificationToastManager />
+                <DeferredNotificationToastManager />
               </Suspense>
             </AuthProvider>
           </QueryProvider>

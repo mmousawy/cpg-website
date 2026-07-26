@@ -33,8 +33,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2678400,
     // Single format reduces variants (Supabase auto-serves WebP via /render/image)
     formats: ['image/webp'],
-    // 30 for blur placeholders, 80/92 for full images (passed to Supabase ?quality=)
-    qualities: [30, 80, 92],
+    // 30 for blur placeholders, 60/80 for cards, 92 for heroes (passed to Supabase ?quality=)
+    qualities: [30, 60, 80, 92],
     remotePatterns: [
       {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',
@@ -97,7 +97,8 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           // Note: CSP and HSTS should be configured at the hosting/CDN level (Vercel)
-          // Trusted Types requires more complex setup and may break existing functionality
+          // Supabase image cache TTL (~4h) is set on db.creativephotography.group — raise via
+          // Cloudflare Cache Rule: /storage/v1/render/image/* → Edge TTL 30d, Browser TTL 7d
         ],
       },
     ];
