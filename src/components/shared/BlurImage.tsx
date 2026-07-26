@@ -241,7 +241,6 @@ export default function BlurImage({
             aria-hidden="true"
             fill
             className={`${className}`}
-            preload
             quality={30}
             sizes="64px"
           />
@@ -338,7 +337,6 @@ export default function BlurImage({
           width={props.width}
           height={props.height}
           className={`${className} ${isLoaded ? 'invisible' : ''}`}
-          preload
           quality={30}
           sizes="64px"
         />

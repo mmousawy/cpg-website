@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import clsx from 'clsx';
 import Image from 'next/image';
+import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 
 type AvatarProps = {
   // For static mode: provide user data directly
@@ -82,7 +83,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
           width={156}
           height={156}
           loading='lazy'
-          quality={92}
+          quality={THUMBNAIL_IMAGE_QUALITY}
           className="object-cover w-full h-full"
         />
       );

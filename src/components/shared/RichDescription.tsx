@@ -1,27 +1,5 @@
-'use client';
-
 import clsx from 'clsx';
-import sanitizeHtml from 'sanitize-html';
-import { normalizeQuillLists } from '@/utils/normalizeQuillLists';
-
-const ALLOWED_TAGS = ['p', 'h2', 'h3', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'blockquote', 'br', 'span', 'hr', 'img'];
-
-function isPlainText(content: string): boolean {
-  return !/<[a-z][\s\S]*>/i.test(content);
-}
-
-function sanitizeForWeb(html: string, disableLinks = false): string {
-  const tags = disableLinks ? ALLOWED_TAGS.filter((t) => t !== 'a') : ALLOWED_TAGS;
-  return sanitizeHtml(html, {
-    allowedTags: tags,
-    allowedAttributes: {
-      a: ['href', 'target', 'rel'],
-      img: ['src', 'alt', 'width', 'class'],
-      span: ['class'],
-    },
-    allowedSchemes: ['http', 'https', 'mailto'],
-  });
-}
+import { prepareRichDescription } from '@/utils/sanitizeRichHtml';
 
 export interface RichDescriptionProps {
   html: string;
@@ -31,15 +9,14 @@ export interface RichDescriptionProps {
 }
 
 /**
- * Drop-in component that safely renders rich HTML descriptions on the web.
- * Handles both plain text (backward compatibility) and HTML.
+ * Safely renders rich HTML descriptions on the web.
+ * Sanitization runs on the server to keep sanitize-html out of the client bundle.
  */
 export function RichDescription({ html, className, disableLinks = false }: RichDescriptionProps) {
-  if (!html || !html.trim()) return null;
+  const prepared = prepareRichDescription(html, disableLinks);
+  if (!prepared) return null;
 
-  const normalized = html.replace(/&nbsp;/g, ' ');
-  const isPlain = isPlainText(normalized);
-  const content = isPlain ? normalized : sanitizeForWeb(normalizeQuillLists(normalized), disableLinks);
+  const { content, isPlain } = prepared;
   const classes = clsx('rich-description', className);
 
   if (isPlain) {

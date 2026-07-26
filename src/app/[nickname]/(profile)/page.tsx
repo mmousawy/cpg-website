@@ -6,7 +6,7 @@ import { ProfileBelowHeroSection, ProfileHeroBanner, profileHeroPageClassName } 
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialLinks';
 import Button from '@/components/shared/Button';
 import InterestCloud from '@/components/shared/InterestCloud';
-import ProfileStatsBadges from '@/components/shared/ProfileStatsBadges';
+import ProfileStatsBadges from '@/components/shared/ProfileStatsBadgesWrapper';
 import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 

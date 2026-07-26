@@ -36,7 +36,7 @@ import TicketSVG from 'public/icons/ticket.svg';
 
 import ClockSolidMiniSVG from 'public/icons/clock-solid-mini.svg';
 
-import RelatedEventsSlider from '@/components/scene/RelatedEventsSlider';
+import RelatedEventsSlider from '@/components/scene/RelatedEventsSliderWrapper';
 import SceneEventComments from '@/components/scene/SceneEventComments';
 import SceneEventStickyBar from '@/components/scene/SceneEventStickyBar';
 

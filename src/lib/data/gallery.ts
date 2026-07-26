@@ -2,6 +2,7 @@ import type { Photo, Tag } from '@/types/photos';
 import type { Tables } from '@/database.types';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+import { PHOTO_LIST_COLUMNS } from './columns';
 
 /** Photo with owner profile info for display in community stream */
 export type StreamPhoto = Photo & {
@@ -27,16 +28,18 @@ export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popu
   const orderColumn = sortBy === 'popular' ? 'view_count' : 'created_at';
 
   // Fetch photos (likes_count is now a column on the photos table)
-  const { data: photos } = await supabase
+  const { data: rawPhotos } = await supabase
     .from('photos')
-    .select('*')
+    .select(PHOTO_LIST_COLUMNS)
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%')
     .order(orderColumn, { ascending: false })
     .limit(limit);
 
-  if (!photos || photos.length === 0) {
+  const photos = (rawPhotos ?? []) as unknown as Photo[];
+
+  if (photos.length === 0) {
     return [];
   }
 
@@ -122,15 +125,17 @@ export async function getRecentlyLikedPhotos(limit = 10) {
   }
 
   // Fetch the actual photos
-  const { data: photos } = await supabase
+  const { data: rawPhotos } = await supabase
     .from('photos')
-    .select('*')
+    .select(PHOTO_LIST_COLUMNS)
     .in('id', uniquePhotoIds)
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%');
 
-  if (!photos || photos.length === 0) {
+  const photos = (rawPhotos ?? []) as unknown as Photo[];
+
+  if (photos.length === 0) {
     return [];
   }
 
@@ -329,9 +334,9 @@ export async function getPhotosByTag(tagName: string, limit = 100) {
   const photoIds = photoTags.map((pt) => pt.photo_id);
 
   // Fetch the actual photos (likes_count is now a column on the photos table)
-  const { data: photos } = await supabase
+  const { data: rawPhotos } = await supabase
     .from('photos')
-    .select('*')
+    .select(PHOTO_LIST_COLUMNS)
     .in('id', photoIds)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -339,7 +344,9 @@ export async function getPhotosByTag(tagName: string, limit = 100) {
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (!photos || photos.length === 0) {
+  const photos = (rawPhotos ?? []) as unknown as Photo[];
+
+  if (photos.length === 0) {
     return [];
   }
 

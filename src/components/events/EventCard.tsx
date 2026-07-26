@@ -145,7 +145,6 @@ export default function EventCard({
             sizes="calc(100vw - 1.5rem)"
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
-            preload={priority}
             quality={imageQuality}
             alt={event.title || 'Event cover image'}
             className={clsx(
@@ -269,9 +268,7 @@ export default function EventCard({
             <BlurImage
               fill
               sizes="(min-width: 1024px) 448px, 384px"
-              loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : undefined}
-              preload={priority}
+              loading="lazy"
               quality={imageQuality}
               alt={event.title || 'Event cover image'}
               className={clsx(

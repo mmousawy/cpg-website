@@ -2,7 +2,7 @@ import Link from 'next/link';
 import FolderSVG from 'public/icons/folder.svg';
 
 import type { AlbumWithPhotos } from '@/types/albums';
-import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
+import { getCroppedThumbnailUrl, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
@@ -50,7 +50,7 @@ export default function AlbumCard({
             alt={album.title}
             blurhash={album.cover_image_blurhash}
             sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 512px"
-            quality={92}
+            quality={THUMBNAIL_IMAGE_QUALITY}
             fill
             loading='lazy'
             className="object-cover group-hover:brightness-110 transition-all duration-200"

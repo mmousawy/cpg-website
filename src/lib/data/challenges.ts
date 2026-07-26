@@ -7,6 +7,7 @@ import type {
 import type { Photo } from '@/types/photos';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+import { CHALLENGE_LIST_COLUMNS } from './columns';
 
 /**
  * Get all challenge slugs for static generation
@@ -28,7 +29,7 @@ export async function getAllChallengeSlugs() {
  * Get active challenges (accepting submissions)
  * Tagged with 'challenges' for granular cache invalidation
  */
-export async function getActiveChallenges() {
+export async function getActiveChallenges(limit?: number) {
   'use cache';
   cacheLife('max');
   cacheTag('challenges');
@@ -36,15 +37,21 @@ export async function getActiveChallenges() {
   const supabase = createPublicClient();
   const now = new Date().toISOString();
 
-  const { data } = await supabase
+  let query = supabase
     .from('challenges')
-    .select('*')
+    .select(CHALLENGE_LIST_COLUMNS)
     .eq('is_active', true)
     .or(`ends_at.is.null,ends_at.gt.${now}`)
     .order('starts_at', { ascending: false });
 
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data } = await query;
+
   // Get submission counts for each challenge
-  const challenges = (data || []) as Challenge[];
+  const challenges = (data ?? []) as unknown as Challenge[];
   const challengesWithStats = await addSubmissionCounts(challenges);
 
   return {
@@ -67,12 +74,12 @@ export async function getPastChallenges(limit = 10) {
 
   const { data, count } = await supabase
     .from('challenges')
-    .select('*', { count: 'exact' })
+    .select(CHALLENGE_LIST_COLUMNS, { count: 'exact' })
     .or(`is_active.eq.false,ends_at.lt.${now}`)
     .order('ends_at', { ascending: false, nullsFirst: false })
     .limit(limit);
 
-  const challenges = (data || []) as Challenge[];
+  const challenges = (data ?? []) as unknown as Challenge[];
   const challengesWithStats = await addSubmissionCounts(challenges);
 
   return {
@@ -98,7 +105,7 @@ export async function getAllChallenges() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  const challenges = (data || []) as Challenge[];
+  const challenges = (data ?? []) as unknown as Challenge[];
   const challengesWithStats = await addSubmissionCounts(challenges);
 
   return {

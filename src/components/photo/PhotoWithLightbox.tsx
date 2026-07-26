@@ -1,9 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
 import { useEffect, useRef, useState } from 'react';
+import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import BlurImage from '../shared/BlurImage';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
@@ -18,22 +17,34 @@ type PhotoWithLightboxProps = {
 
 export default function PhotoWithLightbox({ url, title, width, height, blurhash, isInAlbum = false }: PhotoWithLightboxProps) {
   const galleryRef = useRef<HTMLDivElement>(null);
+  const lightboxRef = useRef<PhotoSwipeLightboxInstance | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
 
   useEffect(() => {
     if (!galleryRef.current) return;
 
-    const lightbox = new PhotoSwipeLightbox({
-      gallery: galleryRef.current,
-      children: 'a',
-      pswpModule: () => import('photoswipe'),
+    let mounted = true;
+
+    initPhotoSwipe().then((PhotoSwipeLightbox) => {
+      if (!mounted || !galleryRef.current) return;
+
+      const lightbox = new PhotoSwipeLightbox({
+        gallery: galleryRef.current,
+        children: 'a',
+        pswpModule: () => import('photoswipe'),
+      });
+
+      lightbox.init();
+      lightboxRef.current = lightbox;
     });
 
-    lightbox.init();
-
     return () => {
-      lightbox.destroy();
+      mounted = false;
+      if (lightboxRef.current) {
+        lightboxRef.current.destroy();
+        lightboxRef.current = null;
+      }
     };
   }, []);
 

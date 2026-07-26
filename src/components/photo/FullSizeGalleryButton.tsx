@@ -2,7 +2,6 @@
 
 import Button from '@/components/shared/Button';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
-import 'photoswipe/style.css';
 import ExpandSVG from 'public/icons/expand.svg';
 import { useEffect, useRef } from 'react';
 

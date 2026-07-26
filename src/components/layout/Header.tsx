@@ -1,6 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
@@ -10,11 +11,23 @@ import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
-import MobileNotificationButton from '../notifications/MobileNotificationButton';
-import NotificationButton from '../notifications/NotificationButton';
-import SearchModal from '../search/SearchModal';
 import MobileMenu from './MobileMenu';
 import UserMenu from './UserMenu';
+
+const SearchModal = dynamic(
+  () => import('../search/SearchModal'),
+  { ssr: false },
+);
+
+const NotificationButton = dynamic(
+  () => import('../notifications/NotificationButton'),
+  { ssr: false },
+);
+
+const MobileNotificationButton = dynamic(
+  () => import('../notifications/MobileNotificationButton'),
+  { ssr: false },
+);
 
 // Navigation link component with active state
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -264,11 +277,13 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={searchOpen}
-        onClose={() => setSearchOpen(false)}
-      />
+      {/* Search Modal — loaded only when opened */}
+      {searchOpen && (
+        <SearchModal
+          isOpen={searchOpen}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
     </header>
   );
 }

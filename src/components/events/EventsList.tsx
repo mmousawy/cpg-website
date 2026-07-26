@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { getEventStatus, isEventPast } from '@/lib/events/status';
-import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
+import { getCroppedThumbnailUrl, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
@@ -147,7 +147,7 @@ export default function EventsList({
       <div
         className="space-y-3 sm:space-y-5"
       >
-        {displayEvents.map((event, index) => {
+        {displayEvents.map((event) => {
           const attendees = attendeesByEvent[event.id] || [];
           return (
             <EventCard
@@ -158,7 +158,6 @@ export default function EventsList({
               attendees={attendees}
               disableAttendeesPopover={disableAttendeesPopover}
               serverNow={serverNow}
-              priority={index === 0}
             />
           );
         })}
@@ -192,7 +191,7 @@ export default function EventsList({
                   fill
                   sizes="calc(100vw - 1.5rem)"
                   loading='eager'
-                  quality={92}
+                  quality={THUMBNAIL_IMAGE_QUALITY}
                   alt={event.title || 'Event cover image'}
                   className={clsx(
                     'object-cover rounded-t-xl hover:brightness-90 transition-all duration-200',
@@ -311,7 +310,7 @@ export default function EventsList({
                     fill
                     sizes="(min-width: 1024px) 640px, 576px"
                     loading='eager'
-                    quality={92}
+                    quality={THUMBNAIL_IMAGE_QUALITY}
                     alt={event.title || 'Event cover image'}
                     className={clsx(
                       'object-cover rounded-r-xl hover:brightness-90 transition-all duration-200',

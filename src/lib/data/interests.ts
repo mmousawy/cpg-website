@@ -2,6 +2,7 @@ import { cacheTag, cacheLife } from 'next/cache';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
+import { INTEREST_LIST_COLUMNS } from './columns';
 
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
 
@@ -18,7 +19,7 @@ export async function getPopularInterests(limit = 20) {
 
   const { data } = await supabase
     .from('interests')
-    .select('*')
+    .select(INTEREST_LIST_COLUMNS)
     .order('count', { ascending: false })
     .order('name', { ascending: true })
     .limit(limit);

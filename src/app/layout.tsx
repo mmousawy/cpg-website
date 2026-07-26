@@ -28,21 +28,26 @@ const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
   display: 'swap',
+  // Preload races App Router streaming: Link headers fire before @font-face CSS
+  // applies, which triggers Firefox "preloaded but not used" warnings.
+  preload: false,
 });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 });
 
 const cheriaHeading = localFont({
   src: '../../public/cheria-bold.woff2',
   variable: '--font-cheria-heading',
-  weight: '700',
+  // Bold display face — cover heading weights so the face matches font-heading usage.
+  weight: '400 700',
   display: 'swap',
+  preload: false,
 });
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,

@@ -3,6 +3,7 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+import { PHOTO_LIST_COLUMNS } from './columns';
 
 /** Resolve blurhash for an album's cover image from its photos */
 function resolveCoverBlurhash(
@@ -325,18 +326,20 @@ export async function getPhotosByUrls(photoUrls: string[]) {
 
   const supabase = createPublicClient();
 
-  const { data: photos } = await supabase
+  const { data: rawPhotos } = await supabase
     .from('photos')
-    .select('*')
+    .select(PHOTO_LIST_COLUMNS)
     .in('url', photoUrls)
     .is('deleted_at', null);
 
-  if (!photos || photos.length === 0) {
+  const photos = (rawPhotos ?? []) as unknown as Photo[];
+
+  if (photos.length === 0) {
     return [];
   }
 
   // likes_count is already included in the photo object from the database
-  return photos as Photo[];
+  return photos;
 }
 
 /**
