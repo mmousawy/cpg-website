@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.37.1](https://github.com/mmousawy/cpg-website/compare/v1.37.0...v1.37.1) (2026-07-26)
+
+
+### 🐛 Bug Fixes
+
+* Update dependencies and enhance Next.js configuration ([47d9647](https://github.com/mmousawy/cpg-website/commit/47d964787049a872c6fecb875131286136d44074))
+
+
+### 🔧 Maintenance
+
+* Remove unused dependencies and optimize image handling ([2e0d735](https://github.com/mmousawy/cpg-website/commit/2e0d735d5f640b6f65a7e8604c601be4bb5245c8))
+* Update pnpm version in configuration files ([0292c1f](https://github.com/mmousawy/cpg-website/commit/0292c1fc83d75b2faa7ca8ce03a439bbe653144e))
+
 ## [1.37.0](https://github.com/mmousawy/cpg-website/compare/v1.36.1...v1.37.0) (2026-07-24)
 
 
