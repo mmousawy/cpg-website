@@ -1,12 +1,11 @@
 'use client';
 
 import Button from '@/components/shared/Button';
-import StackedAvatarsPopover, {
-  type AvatarPerson,
-} from '@/components/shared/StackedAvatarsPopover';
+import StackedAvatarsPopover from '@/components/shared/StackedAvatarsPopover';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import {
   useSceneEventInterest,
   useToggleSceneEventInterest,
@@ -23,7 +22,83 @@ type SceneEventStickyBarProps = {
   event: SceneEvent;
 };
 
-export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps) {
+function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
+  const showAuthPrompt = useAuthPrompt();
+  const count = event.interest_count ?? 0;
+
+  return (
+    <StickyActionBar
+      constrainWidth
+    >
+      <div
+        className="flex items-center gap-2 min-w-0"
+      >
+        <button
+          type="button"
+          onClick={() => showAuthPrompt({ feature: 'show interest in Scene events' })}
+          className={clsx(
+            'group flex items-center justify-center gap-2 shrink-0',
+            'size-9 rounded-full sm:size-auto sm:h-9 sm:min-w-35 sm:px-3',
+            'border border-border-color-strong',
+            'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
+            'bg-background-light hover:bg-background-medium',
+          )}
+          aria-label="I'm interested"
+        >
+          <StarOutlineIcon
+            className="size-4 shrink-0 sm:-ml-[0.2rem] text-foreground transition-colors group-hover:text-primary"
+          />
+          <span
+            className="hidden sm:inline text-sm font-medium"
+          >
+            I&apos;m interested
+          </span>
+        </button>
+
+        {count > 0 && (
+          <span
+            className="text-xs font-medium text-foreground/80 shrink-0"
+          >
+            {count}
+          </span>
+        )}
+      </div>
+
+      <div
+        className="flex items-center gap-2 shrink-0"
+      >
+        {event.url && (
+          <Button
+            href={event.url}
+            variant="primary"
+            size="md"
+            target="_blank"
+            rel="noopener noreferrer"
+            iconRight={(
+              <ArrowRightSVG
+                className="size-4 fill-current"
+              />
+            )}
+            className="rounded-full shrink-0"
+          >
+            <span
+              className="hidden sm:inline"
+            >
+              Visit website
+            </span>
+            <span
+              className="inline sm:hidden"
+            >
+              Visit
+            </span>
+          </Button>
+        )}
+      </div>
+    </StickyActionBar>
+  );
+}
+
+function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
   const { user, profile } = useAuth();
   const showAuthPrompt = useAuthPrompt();
   const interestQuery = useSceneEventInterest(event.id, {
@@ -39,7 +114,7 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
   const shouldShowOptimisticUser =
     interested && user && profile && !userAlreadyInList;
 
-  const people: AvatarPerson[] = shouldShowOptimisticUser
+  const people = shouldShowOptimisticUser
     ? [
       {
         id: user.id,
@@ -73,7 +148,6 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
     <StickyActionBar
       constrainWidth
     >
-      {/* Left: star button + interested people */}
       <div
         className="flex items-center gap-2 min-w-0"
       >
@@ -131,7 +205,6 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
         )}
       </div>
 
-      {/* Right: actions menu + visit website */}
       <div
         className="flex items-center gap-2 shrink-0"
       >
@@ -142,11 +215,11 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
             size="md"
             target="_blank"
             rel="noopener noreferrer"
-            iconRight={
+            iconRight={(
               <ArrowRightSVG
                 className="size-4 fill-current"
               />
-            }
+            )}
             className="rounded-full shrink-0"
           >
             <span
@@ -163,5 +236,23 @@ export default function SceneEventStickyBar({ event }: SceneEventStickyBarProps)
         )}
       </div>
     </StickyActionBar>
+  );
+}
+
+export default function SceneEventStickyBar(props: SceneEventStickyBarProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <SceneEventStickyBarGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <SceneEventStickyBarAuthenticated
+      {...props}
+    />
   );
 }

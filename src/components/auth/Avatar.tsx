@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import { useMounted } from '@/hooks/useMounted';
 import clsx from 'clsx';
 import Image from 'next/image';
@@ -45,11 +45,14 @@ function getInitials(
 }
 
 export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFullName, nickname: staticNickname, size = 'md', className, hoverEffect = false, usePersonIconFallback = false }: AvatarProps) {
-  const { user, profile, isLoading } = useAuth();
+  const session = useSession();
   const mounted = useMounted();
 
   // Determine if we're in static mode (props provided) or dynamic mode (using current user)
   const isStaticMode = staticAvatarUrl !== undefined || staticFullName !== undefined || staticNickname !== undefined;
+  const user = isStaticMode ? null : session.user;
+  const profile = isStaticMode ? null : session.profile;
+  const isLoading = false;
 
   // Get size config - fallback to 'md' if invalid size provided
   const sizeConfig = SIZE_MAP[size as keyof typeof SIZE_MAP] || SIZE_MAP.md;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import { useSupabase } from '@/hooks/useSupabase';
 
 import CheckSVG from 'public/icons/check.svg';
@@ -14,11 +15,11 @@ type UserWentBadgeProps = {
   className?: string;
 };
 
-/**
- * Shows "You went!" when the current user has attended this past event (events_rsvps.attended_at set).
- * Renders nothing if the user did not attend or is not logged in.
- */
-export default function UserWentBadge({ eventId, variant = 'default', className = '' }: UserWentBadgeProps) {
+function UserWentBadgeAuthenticated({
+  eventId,
+  variant = 'default',
+  className = '',
+}: UserWentBadgeProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
   const [attended, setAttended] = useState<boolean | null>(null);
@@ -60,5 +61,19 @@ export default function UserWentBadge({ eventId, variant = 'default', className 
       />
       You went!
     </span>
+  );
+}
+
+export default function UserWentBadge(props: UserWentBadgeProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return null;
+  }
+
+  return (
+    <UserWentBadgeAuthenticated
+      {...props}
+    />
   );
 }

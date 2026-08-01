@@ -4,7 +4,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useMySharedAlbumMembership } from '@/hooks/useSharedAlbumMembers';
+import { useSession } from '@/hooks/useSession';
 import { useMyPhotoCountInAlbum } from '@/hooks/useSharedAlbumSubmissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -25,22 +25,42 @@ type SubmitToSharedAlbumButtonProps = {
   canAddPhotos: boolean;
 };
 
-export default function SubmitToSharedAlbumButton({
-  albumId,
-  albumTitle,
-  albumSlug,
-  ownerNickname,
-  maxPhotosPerUser,
-  eventId,
+function SubmitToSharedAlbumButtonGuest({
   canAddPhotos,
 }: SubmitToSharedAlbumButtonProps) {
-  const { user } = useAuth();
   const showAuthPrompt = useAuthPrompt();
+
+  if (!canAddPhotos) return null;
+
+  return (
+    <Button
+      onClick={() => showAuthPrompt({ feature: 'add photos to this album' })}
+      variant="primary"
+      size="md"
+    >
+      <PlusSVG
+        className="h-5 w-5"
+      />
+      Add photos
+    </Button>
+  );
+}
+
+function SubmitToSharedAlbumButtonAuthenticated(props: SubmitToSharedAlbumButtonProps) {
+  const {
+    albumId,
+    albumTitle,
+    albumSlug,
+    ownerNickname,
+    maxPhotosPerUser,
+    eventId,
+    canAddPhotos,
+  } = props;
   const modalContext = useContext(ModalContext);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { user } = useAuth();
 
-  const { data: membership } = useMySharedAlbumMembership(albumId, user?.id);
   const { data: myCount = 0 } = useMyPhotoCountInAlbum(albumId, user?.id);
 
   const hasReachedLimit = maxPhotosPerUser ? myCount >= maxPhotosPerUser : false;
@@ -98,11 +118,6 @@ export default function SubmitToSharedAlbumButton({
   };
 
   const handleClick = () => {
-    if (!user) {
-      showAuthPrompt({ feature: 'add photos to this album' });
-      return;
-    }
-
     modalContext.setSize('large');
     modalContext.setTitle(`Add photos to: ${albumTitle}`);
     modalContext.setContent(
@@ -117,7 +132,7 @@ export default function SubmitToSharedAlbumButton({
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={(submittedCount, photoUrls) => {
           queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
-          queryClient.invalidateQueries({ queryKey: ['album-photos-count', albumId, user.id] });
+          queryClient.invalidateQueries({ queryKey: ['album-photos-count', albumId, user?.id] });
           queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
           showSuccessModal(submittedCount, photoUrls);
         }}
@@ -157,5 +172,23 @@ export default function SubmitToSharedAlbumButton({
       />
       Add photos
     </Button>
+  );
+}
+
+export default function SubmitToSharedAlbumButton(props: SubmitToSharedAlbumButtonProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <SubmitToSharedAlbumButtonGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <SubmitToSharedAlbumButtonAuthenticated
+      {...props}
+    />
   );
 }

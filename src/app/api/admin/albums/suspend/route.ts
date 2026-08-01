@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateAlbum } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateEventAlbum } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -64,10 +64,9 @@ export async function POST(request: NextRequest) {
           await revalidateAlbum(owner.nickname, album.slug);
         }
       } else if (album.event_id) {
+        await revalidateEventAlbum(album.event_id);
         const { revalidateTag } = await import('next/cache');
         revalidateTag('albums', 'max');
-        revalidateTag('events', 'max');
-        revalidateTag(`event-album-${album.event_id}`, 'max');
       }
     }
 

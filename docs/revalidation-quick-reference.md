@@ -22,8 +22,14 @@
 | `album-likes-[albumId]` | Like count for a specific album |
 | `notifications-[userId]` | Notifications for a specific user |
 | `search` | Search results |
-| `home` | Homepage data |
-| `changelog` | Changelog data |
+| `home` | Homepage shell (`src/app/page.tsx`) |
+| `changelog` | Changelog index, details, and detail pages |
+| `changelog-[slug]` | Specific changelog detail page |
+| `scene` | Scene event listings |
+| `scene-[slug]` | Specific scene event detail page |
+| `challenge-color-draws` | All challenge color draws |
+| `challenge-color-draws-[id]` | Color draws for one challenge |
+| `event-album-[id]` | Event album photos for one event |
 | `interests` | All interests data |
 | `interest-[name]` | Members with a specific interest |
 
@@ -31,9 +37,10 @@
 
 | Action | Call |
 |--------|------|
-| Event created/updated/deleted | `revalidateEvents()` |
-| Specific event changed | `revalidateEventBySlug(slug)` |
-| RSVP signup/confirm/cancel | `revalidateEventAttendees()` |
+| Event created/updated/deleted | `revalidateEvents()` (+ `revalidateEventBySlug` on slug rename) |
+| Event album photos changed | `revalidateEventAlbum(eventId)` |
+| Specific event detail only | `revalidateEventBySlug(slug)` |
+| RSVP signup/confirm/cancel | `revalidateEventAttendees()` (does **not** bust `events`) |
 | Album created/updated/deleted | `revalidateAlbum(nickname, slug)` |
 | Specific album changed (granular) | `revalidateAlbumBySlug(nickname, slug)` |
 | Bulk album operations | `revalidateAlbums(nickname, slugs)` |
@@ -49,10 +56,29 @@
 | Photo added to album | `revalidateAlbum(nickname, slug)` |
 | Challenge created/updated/deleted | `revalidateChallenges()` |
 | Challenge detail changed | `revalidateChallenge(slug, id?)` |
-| Homepage content changed | `revalidateHome()` |
-| Changelog updated | `revalidateChangelog()` |
+| Color draw or swap | `revalidateChallengeColorDraws(challengeId)` |
+| Scene event created/updated/deleted | `revalidateScene()` |
+| Scene event detail changed | `revalidateSceneEvent(slug)` |
+| Homepage content changed | `revalidateHome()` (also cascades from event/album/gallery/challenge/profile helpers) |
+| Changelog updated (after deploy) | `GET /api/revalidate-changelog?secret=…` or `revalidateChangelog()` |
 | Admin suspends user | `revalidateAll()` |
 | Admin deletes user | `revalidateAll()` |
+
+> **Homepage note:** `revalidateEvents()`, `revalidateEventAttendees()`, `revalidateAlbum()`, `revalidateAlbums()`, `revalidateGalleryData()`, `revalidateProfiles()`, `revalidateChallenges()`, and `revalidateChallenge()` also invalidate the `home` tag.
+
+> **Granular helpers:** `revalidateEventBySlug(slug)` only busts one event detail page — call it explicitly when needed (e.g. slug rename); it is not invoked by other helpers.
+
+> **RSVP counts:** Public capacity UI uses `attendees.length`, not `events.rsvp_count`. RSVP helpers only bust `event-attendees` + `home`.
+
+> **Scene page:** `/scene` tags both `scene` and `events` so embedded CPG meetups refresh with event CRUD/cron.
+
+## Secret / scheduled endpoints
+
+| Endpoint | When |
+|----------|------|
+| `GET /api/cron/revalidate-events` | Vercel Cron (2×/day) — `events`, `home` |
+| `GET /api/revalidate-changelog?secret=…` | After changelog filesystem updates |
+| `GET /api/revalidate-all?secret=…` | Full public cache bust (scraper, manual) |
 
 ## Import
 
@@ -61,6 +87,8 @@ import {
   revalidateEvents,
   revalidateEventAttendees,
   revalidateEventBySlug,
+  revalidateEventAlbum,
+  revalidateChallengeColorDraws,
   revalidateAlbum,
   revalidateAlbumBySlug,
   revalidateAlbums,
@@ -74,6 +102,8 @@ import {
   revalidateAlbumLikes,
   revalidateChallenges,
   revalidateChallenge,
+  revalidateScene,
+  revalidateSceneEvent,
   revalidateHome,
   revalidateChangelog,
   revalidateAll,
@@ -165,4 +195,5 @@ export async function revalidateYourData() {
 
 - **Data layer**: `src/lib/data/*.ts`
 - **Revalidation actions**: `src/app/actions/revalidate.ts`
+- **Secret endpoints**: `src/app/api/revalidate-all/route.ts`, `src/app/api/revalidate-changelog/route.ts`
 - **Config**: `next.config.ts` (`cacheComponents: true`)

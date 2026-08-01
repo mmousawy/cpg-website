@@ -2,7 +2,7 @@
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useContext } from 'react';
 
@@ -11,7 +11,7 @@ import AddSceneEventModal from './AddSceneEventModal';
 import PlusSVG from 'public/icons/plus.svg';
 
 export default function AddSceneEventButton() {
-  const { user } = useAuth();
+  const { user } = useSession();
   const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
 

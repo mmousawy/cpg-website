@@ -4,21 +4,13 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
 
-import ConfirmProvider from '@/app/providers/ConfirmProvider';
-import ModalProvider from '@/app/providers/ModalProvider';
-import QueryProvider from '@/app/providers/QueryProvider';
-import { ThemeProviderWrapper as ThemeProvider } from '@/app/providers/ThemeProvider';
+import AppProvidersTree from '@/components/layout/AppProvidersTree';
 import ClientShellExtras from '@/components/layout/ClientShellExtras';
-import LazyOverlays from '@/components/layout/LazyOverlays';
-import Layout from '@/components/layout/Layout';
 import NavigationProgress from '@/components/layout/NavigationProgress';
-import DeferredNotificationToastManager from '@/components/notifications/DeferredNotificationToastManager';
+import ThemeProviderShell from '@/app/providers/ThemeProvider';
 import JsonLd from '@/components/shared/JsonLd';
 import { socialLinks } from '@/config/socials';
-import { AuthProvider } from '@/context/AuthContext';
-import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 import { defaultOgImage, defaultTwitterImage, getAbsoluteUrl, siteConfig, truncateDescription } from '@/utils/metadata';
-import SupabaseProvider from './providers/SupabaseProvider';
 
 import './globals.css';
 
@@ -26,8 +18,6 @@ const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
   display: 'swap',
-  // Preload races App Router streaming: Link headers fire before @font-face CSS
-  // applies, which triggers Firefox "preloaded but not used" warnings.
   preload: false,
 });
 
@@ -41,11 +31,11 @@ const geistMono = Geist_Mono({
 const cheriaHeading = localFont({
   src: '../../public/cheria-bold.woff2',
   variable: '--font-cheria-heading',
-  // Bold display face — cover heading weights so the face matches font-heading usage.
   weight: '400 700',
   display: 'swap',
   preload: false,
 });
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
@@ -149,33 +139,11 @@ export default function RootLayout({
           <NavigationProgress />
         </Suspense>
         <ClientShellExtras />
-        <SupabaseProvider>
-          <QueryProvider>
-            <AuthProvider>
-              <ThemeProvider>
-                <ConfirmProvider>
-                  <UnsavedChangesProvider>
-                    <ModalProvider>
-                      <Suspense
-                        fallback={null}
-                      >
-                        <Layout>
-                          {children}
-                        </Layout>
-                      </Suspense>
-                      <LazyOverlays />
-                    </ModalProvider>
-                  </UnsavedChangesProvider>
-                </ConfirmProvider>
-              </ThemeProvider>
-              <Suspense
-                fallback={null}
-              >
-                <DeferredNotificationToastManager />
-              </Suspense>
-            </AuthProvider>
-          </QueryProvider>
-        </SupabaseProvider>
+        <ThemeProviderShell>
+          <AppProvidersTree>
+            {children}
+          </AppProvidersTree>
+        </ThemeProviderShell>
         <Analytics />
       </body>
     </html>

@@ -97,3 +97,10 @@ When analyzing git changes:
 - Generate the changelog entry completely automatically - do not ask the user for information
 - If changes are unclear after analysis, make reasonable inferences based on file contents and git diff
 - Always check and update README.md as part of the changelog process to keep documentation in sync
+
+7. **Refresh production changelog cache (after deploy):**
+   - Changelog pages are cached with the `changelog` tag until invalidated
+   - After the changelog commit is deployed, call the changelog revalidation endpoint:
+     `GET /api/revalidate-changelog?secret=REVALIDATION_SECRET`
+   - Or use `/api/revalidate-all` if you need a full cache bust
+   - Set `REVALIDATION_SECRET` in your environment; for local changelog work against production, use the production site URL

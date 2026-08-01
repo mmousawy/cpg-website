@@ -2,7 +2,6 @@
 
 import { useContext } from 'react';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import FeedbackModal from '@/components/shared/FeedbackModal';
 import Button from '@/components/shared/Button';
 
 type FeedbackButtonProps = {
@@ -17,7 +16,9 @@ type FeedbackButtonProps = {
 export default function FeedbackButton({ variant = 'button', className }: FeedbackButtonProps) {
   const modalContext = useContext(ModalContext);
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    const { default: FeedbackModal } = await import('@/components/shared/FeedbackModal');
+
     modalContext.setSize('default');
     modalContext.setTitle('Send feedback');
     modalContext.setContent(

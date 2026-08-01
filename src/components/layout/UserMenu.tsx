@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useTheme } from 'next-themes';
+import { useAppTheme } from '@/hooks/useAppTheme';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
@@ -17,7 +17,7 @@ import Avatar from '../auth/Avatar';
 export default function UserMenu() {
   const { user, profile, isLoading, signOut, updateProfileTheme } = useAuth();
   const { isAdmin } = useAdmin();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useAppTheme();
   const mounted = useMounted();
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();

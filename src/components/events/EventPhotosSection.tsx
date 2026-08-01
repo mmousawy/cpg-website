@@ -2,7 +2,7 @@
 
 import SubmitToSharedAlbumButton from '@/components/albums/SubmitToSharedAlbumButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { EventAlbum } from '@/lib/eventAlbums';
 
@@ -97,7 +97,7 @@ export function EventPhotosAddButton({
 }
 
 function Header({ photoCount, album, albumSlug, ownerNickname, eventId }: { photoCount: number; album: EventAlbum; albumSlug: string; ownerNickname: string | null; eventId: number }) {
-  const { user } = useAuth();
+  const { user } = useSession();
 
   return (
     <div
@@ -127,7 +127,7 @@ export default function EventPhotosSection({
   album,
   variant = 'full',
 }: EventPhotosSectionProps) {
-  const { user } = useAuth();
+  const { user } = useSession();
   const ownerNickname = album?.profile?.nickname ?? null;
   const albumSlug = album?.slug ?? '';
 

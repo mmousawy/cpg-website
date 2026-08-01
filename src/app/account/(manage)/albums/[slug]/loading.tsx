@@ -1,17 +1,5 @@
-import ManageLayout from '@/components/manage/ManageLayout';
-import PageLoading from '@/components/shared/PageLoading';
+import ManageAlbumDetailSkeleton from '@/components/manage/ManageAlbumDetailSkeleton';
 
 export default function Loading() {
-  return (
-    <ManageLayout
-      albumDetail={{ title: '...', slug: '' }}
-      sidebar={<PageLoading
-        message="Loading..."
-      />}
-    >
-      <PageLoading
-        message="Loading album..."
-      />
-    </ManageLayout>
-  );
+  return <ManageAlbumDetailSkeleton />;
 }

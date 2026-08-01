@@ -12,11 +12,11 @@ import {
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
+import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
 import HelpLink from '@/components/shared/HelpLink';
-import PageLoading from '@/components/shared/PageLoading';
 import Select from '@/components/shared/Select';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -373,9 +373,7 @@ export default function PhotosPage() {
           overlayMessage="Drop to upload"
         >
           {photosLoading && photos.length === 0 ? (
-            <PageLoading
-              message="Loading photos..."
-            />
+            <ManagePhotoGridSkeleton />
           ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
             <div
               className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"

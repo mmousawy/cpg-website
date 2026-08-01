@@ -5,10 +5,6 @@ import { supabase } from '@/utils/supabase/client';
 import type { AlbumLike } from '@/types/albums';
 import type { PhotoLike } from '@/types/photos';
 
-/**
- * Fetch full likes data for a photo (with profiles)
- * Used by DetailLikesSection for on-demand loading
- */
 async function fetchPhotoLikes(photoId: string): Promise<{
   likes: PhotoLike[];
   count: number;
@@ -18,7 +14,6 @@ async function fetchPhotoLikes(photoId: string): Promise<{
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Get likes with profiles
   const { data: likes, error } = await supabase
     .from('photo_likes')
     .select(`
@@ -34,7 +29,6 @@ async function fetchPhotoLikes(photoId: string): Promise<{
     throw error;
   }
 
-  // Filter out likes from suspended or deleted users
   type LikeProfile = { nickname: string | null; avatar_url: string | null; full_name: string | null; suspended_at: string | null; deletion_scheduled_at: string | null };
   const activeLikes = (likes || []).filter((like) => {
     const p = like.profile as LikeProfile | null;
@@ -57,10 +51,6 @@ async function fetchPhotoLikes(photoId: string): Promise<{
   };
 }
 
-/**
- * Fetch full likes data for an album (with profiles)
- * Used by DetailLikesSection for on-demand loading
- */
 async function fetchAlbumLikes(albumId: string): Promise<{
   likes: AlbumLike[];
   count: number;
@@ -70,7 +60,6 @@ async function fetchAlbumLikes(albumId: string): Promise<{
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Get likes with profiles
   const { data: likes, error } = await supabase
     .from('album_likes')
     .select(`
@@ -86,7 +75,6 @@ async function fetchAlbumLikes(albumId: string): Promise<{
     throw error;
   }
 
-  // Filter out likes from suspended or deleted users
   type LikeProfile = { nickname: string | null; avatar_url: string | null; full_name: string | null; suspended_at: string | null; deletion_scheduled_at: string | null };
   const activeLikes = (likes || []).filter((like) => {
     const p = like.profile as LikeProfile | null;
@@ -109,110 +97,6 @@ async function fetchAlbumLikes(albumId: string): Promise<{
   };
 }
 
-/**
- * Lightweight batch fetch - only gets counts from likes_count column
- * Use for card display where we only need the count
- */
-async function fetchBatchPhotoLikeCounts(shortIds: string[]): Promise<Map<string, number>> {
-  if (shortIds.length === 0) {
-    return new Map();
-  }
-
-  // Query photos by short_id and get likes_count column directly
-  const { data: photos, error } = await supabase
-    .from('photos')
-    .select('short_id, likes_count')
-    .in('short_id', shortIds);
-
-  if (error) {
-    throw error;
-  }
-
-  // Build count map
-  const result = new Map<string, number>();
-  for (const photo of photos || []) {
-    result.set(photo.short_id, photo.likes_count ?? 0);
-  }
-
-  // Ensure all requested short_ids are in the result
-  for (const shortId of shortIds) {
-    if (!result.has(shortId)) {
-      result.set(shortId, 0);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Lightweight batch fetch - only gets counts from likes_count column
- * Use for card display where we only need the count
- */
-async function fetchBatchAlbumLikeCounts(slugs: string[]): Promise<Map<string, number>> {
-  if (slugs.length === 0) {
-    return new Map();
-  }
-
-  // Query albums by slug and get likes_count column directly
-  const { data: albums, error } = await supabase
-    .from('albums')
-    .select('slug, likes_count')
-    .in('slug', slugs);
-
-  if (error) {
-    throw error;
-  }
-
-  // Build count map
-  const result = new Map<string, number>();
-  for (const album of albums || []) {
-    result.set(album.slug, album.likes_count ?? 0);
-  }
-
-  // Ensure all requested slugs are in the result
-  for (const slug of slugs) {
-    if (!result.has(slug)) {
-      result.set(slug, 0);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Lightweight batch fetch for photo likes - counts only
- * Use for card display in grids/lists for real-time updates
- */
-export function useBatchPhotoLikeCounts(shortIds: string[]) {
-  return useQuery({
-    queryKey: ['batch-photo-like-counts', shortIds.sort().join(',')],
-    queryFn: () => fetchBatchPhotoLikeCounts(shortIds),
-    enabled: shortIds.length > 0,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnMount: true, // Refetch when component mounts for fresh data
-    refetchOnWindowFocus: false,
-  });
-}
-
-/**
- * Lightweight batch fetch for album likes - counts only
- * Use for card display in grids/lists for real-time updates
- */
-export function useBatchAlbumLikeCounts(slugs: string[]) {
-  return useQuery({
-    queryKey: ['batch-album-like-counts', slugs.sort().join(',')],
-    queryFn: () => fetchBatchAlbumLikeCounts(slugs),
-    enabled: slugs.length > 0,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnMount: true, // Refetch when component mounts for fresh data
-    refetchOnWindowFocus: false,
-  });
-}
-
-/**
- * Hook for fetching photo likes with full profile data
- * Used by DetailLikesSection to load likers on demand
- */
 export function usePhotoLikes(
   photoId: string | undefined,
   options?: {
@@ -223,23 +107,17 @@ export function usePhotoLikes(
     refetchOnWindowFocus?: boolean;
   },
 ) {
-  // Cache invalidation is handled by the sync handler via getQueryClient()
-  // This ensures invalidation works even when this hook is unmounted
   return useQuery({
     queryKey: ['photo-likes', photoId],
     queryFn: () => fetchPhotoLikes(photoId!),
     enabled: options?.enabled !== undefined ? options.enabled : !!photoId,
     initialData: options?.initialData,
-    staleTime: options?.staleTime ?? 30 * 1000, // 30 seconds - likes change frequently
+    staleTime: options?.staleTime ?? 30 * 1000,
     refetchOnMount: options?.refetchOnMount,
     refetchOnWindowFocus: options?.refetchOnWindowFocus,
   });
 }
 
-/**
- * Hook for fetching album likes with full profile data
- * Used by DetailLikesSection to load likers on demand
- */
 export function useAlbumLikes(
   albumId: string | undefined,
   options?: {
@@ -250,14 +128,12 @@ export function useAlbumLikes(
     refetchOnWindowFocus?: boolean;
   },
 ) {
-  // Cache invalidation is handled by the sync handler via getQueryClient()
-  // This ensures invalidation works even when this hook is unmounted
   return useQuery({
     queryKey: ['album-likes', albumId],
     queryFn: () => fetchAlbumLikes(albumId!),
     enabled: options?.enabled !== undefined ? options.enabled : !!albumId,
     initialData: options?.initialData,
-    staleTime: options?.staleTime ?? 30 * 1000, // 30 seconds - likes change frequently
+    staleTime: options?.staleTime ?? 30 * 1000,
     refetchOnMount: options?.refetchOnMount,
     refetchOnWindowFocus: options?.refetchOnWindowFocus,
   });

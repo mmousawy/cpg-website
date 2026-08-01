@@ -392,7 +392,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 <p
                   className="text-sm text-foreground/70"
                 >
-                  {event.rsvp_count || 0}
+                  {attendees.length}
                   {' '}
                   /
                   {event.max_attendees}
@@ -531,6 +531,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       {/* Sticky Action Bar - only show for upcoming events */}
       {!isPastEvent && <EventSignupBar
         event={event}
+        confirmedAttendeeCount={attendees.length}
       />}
 
       {/* Comments Section */}

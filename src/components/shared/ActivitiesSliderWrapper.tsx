@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState } from 'react';
 
 function ActivitiesSliderPlaceholder() {
   return (
@@ -21,5 +22,32 @@ const ActivitiesSlider = dynamic(
 );
 
 export default function ActivitiesSliderWrapper() {
-  return <ActivitiesSlider />;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+    >
+      {isNearViewport ? <ActivitiesSlider /> : <ActivitiesSliderPlaceholder />}
+    </div>
+  );
 }

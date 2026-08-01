@@ -1,4 +1,4 @@
-import { revalidateTag } from 'next/cache';
+import { revalidateChallengeColorDraws } from '@/app/actions/revalidate';
 import { COLOR_PALETTE } from '@/lib/colorDraw';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient, createPublicClient } from '@/utils/supabase/server';
@@ -136,8 +136,7 @@ export async function POST(request: NextRequest) {
           console.error('Error swapping color:', updateError);
           return NextResponse.json({ error: 'Failed to swap color' }, { status: 500 });
         }
-        revalidateTag('challenge-color-draws', 'max');
-        revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
+        await revalidateChallengeColorDraws(challenge_id);
         return NextResponse.json({ draw: updated, swapped: true });
       }
       return NextResponse.json({ error: 'You have already drawn a color for this challenge' }, { status: 400 });
@@ -166,8 +165,7 @@ export async function POST(request: NextRequest) {
       console.error('Error creating color draw:', insertError);
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
-    revalidateTag('challenge-color-draws', 'max');
-    revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
+    await revalidateChallengeColorDraws(challenge_id);
     return NextResponse.json({ draw: inserted });
   }
 
@@ -220,8 +218,7 @@ export async function POST(request: NextRequest) {
       console.error('Error swapping color:', updateError);
       return NextResponse.json({ error: 'Failed to swap color' }, { status: 500 });
     }
-    revalidateTag('challenge-color-draws', 'max');
-    revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
+    await revalidateChallengeColorDraws(challenge_id);
     return NextResponse.json({ draw: updated, swapped: true });
   }
 
@@ -259,7 +256,6 @@ export async function POST(request: NextRequest) {
     console.error('Error creating guest color draw:', insertError);
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
-  revalidateTag('challenge-color-draws', 'max');
-  revalidateTag(`challenge-color-draws-${challenge_id}`, 'max');
+  await revalidateChallengeColorDraws(challenge_id);
   return NextResponse.json({ draw: inserted });
 }

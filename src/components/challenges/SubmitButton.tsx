@@ -4,6 +4,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import { useMySubmissionsForChallenge } from '@/hooks/useChallengeSubmissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -20,14 +21,33 @@ type SubmitButtonProps = {
   maxPhotosPerUser?: number | null;
 };
 
-export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPerUser }: SubmitButtonProps) {
-  const { user } = useAuth();
+function SubmitButtonGuest({ challengeTitle }: SubmitButtonProps) {
   const showAuthPrompt = useAuthPrompt();
+
+  return (
+    <Button
+      onClick={() => showAuthPrompt({ feature: 'submit photos to this challenge' })}
+      variant="primary"
+      size="md"
+    >
+      <PlusSVG
+        className="h-5 w-5"
+      />
+      Submit photos
+    </Button>
+  );
+}
+
+function SubmitButtonAuthenticated({
+  challengeId,
+  challengeTitle,
+  maxPhotosPerUser,
+}: SubmitButtonProps) {
+  const { user } = useAuth();
   const modalContext = useContext(ModalContext);
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // Check user's existing submissions
   const { data: existingSubmissions } = useMySubmissionsForChallenge(user?.id, challengeId);
   const currentSubmissionCount = existingSubmissions?.length || 0;
   const hasReachedLimit = maxPhotosPerUser
@@ -71,11 +91,6 @@ export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPer
   };
 
   const handleSubmit = () => {
-    if (!user) {
-      showAuthPrompt({ feature: 'submit photos to this challenge' });
-      return;
-    }
-
     modalContext.setSize('large');
     modalContext.setTitle(`Submit to: ${challengeTitle}`);
     modalContext.setContent(
@@ -96,7 +111,6 @@ export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPer
     modalContext.setIsOpen(true);
   };
 
-  // User has reached their limit
   if (hasReachedLimit) {
     return (
       <Button
@@ -126,5 +140,23 @@ export default function SubmitButton({ challengeId, challengeTitle, maxPhotosPer
       />
       Submit photos
     </Button>
+  );
+}
+
+export default function SubmitButton(props: SubmitButtonProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <SubmitButtonGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <SubmitButtonAuthenticated
+      {...props}
+    />
   );
 }

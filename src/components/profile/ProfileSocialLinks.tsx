@@ -2,13 +2,13 @@
 
 import FollowButton from '@/components/profile/FollowButton';
 import type { ProfileHeaderProfile } from '@/components/profile/ProfileHeader';
-import { useAuth } from '@/context/AuthContext';
+import { useSession } from '@/context/SessionContext';
 import { getDomain, getSocialIcon } from '@/utils/socialIcons';
 
 type SocialLink = { label: string; url: string };
 
 function useProfileSocialLinks(profile: ProfileHeaderProfile) {
-  const { user } = useAuth();
+  const { user } = useSession();
   const socialLinks = (profile.social_links || []) as SocialLink[];
   const hasLinks = !!(profile.website || socialLinks.length > 0);
   const showFollow = !!(profile.nickname && user?.id !== profile.id);

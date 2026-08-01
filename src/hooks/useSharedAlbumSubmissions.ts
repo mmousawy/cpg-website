@@ -63,18 +63,20 @@ export function useAddPhotosToSharedAlbum(
       if (error) throw new Error(error.message || 'Failed to add photos');
       return data as number;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (albumId) {
         queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
         queryClient.invalidateQueries({ queryKey: ['album-photos-count', albumId] });
       }
       if (ownerNickname) {
-        revalidateAlbumBySlug(ownerNickname, albumSlug);
-        revalidateAlbum(ownerNickname, albumSlug);
-        revalidateGalleryData();
+        await Promise.all([
+          revalidateAlbumBySlug(ownerNickname, albumSlug),
+          revalidateAlbum(ownerNickname, albumSlug),
+          revalidateGalleryData(),
+        ]);
       }
       if (eventId) {
-        revalidateEventAlbum(eventId);
+        await revalidateEventAlbum(eventId);
       }
     },
   });

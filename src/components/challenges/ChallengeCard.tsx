@@ -24,6 +24,7 @@ type ChallengeCardProps = {
   isPast?: boolean;
   /** Show admin action buttons (Edit, Review) in footer */
   showAdminActions?: boolean;
+  prefetch?: boolean;
 };
 
 /**
@@ -84,6 +85,7 @@ export default function ChallengeCard({
   serverNow,
   isPast = false,
   showAdminActions = false,
+  prefetch = true,
 }: ChallengeCardProps) {
   const deadline = formatDeadline(challenge.ends_at, serverNow);
   const deadlineShort = formatDeadlineShort(challenge.ends_at, serverNow);
@@ -327,6 +329,7 @@ export default function ChallengeCard({
         {/* Cover Image Area - clickable link to challenge */}
         <Link
           href={challengeLink}
+          prefetch={prefetch}
           className="relative aspect-16/10 w-full overflow-hidden bg-background-medium block flex-1"
         >
           {coverImageContent}
@@ -437,6 +440,7 @@ export default function ChallengeCard({
   return (
     <Link
       href={challengeLink}
+      prefetch={prefetch}
       className={wrapperClasses}
     >
       {cardContent}

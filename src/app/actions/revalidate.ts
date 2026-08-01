@@ -26,6 +26,11 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  * @see docs/revalidation-system.md for usage details
  */
 
+/** Invalidate the homepage shell (tagged `home` in src/app/page.tsx). */
+function invalidateHomeTag() {
+  revalidateTag('home', 'max');
+}
+
 // ============================================================================
 // Event Revalidation
 // ============================================================================
@@ -37,6 +42,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 export async function revalidateEvents() {
   revalidateTag('events', 'max');
   revalidateTag('search', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -46,6 +52,7 @@ export async function revalidateEvents() {
  */
 export async function revalidateEventAttendees() {
   revalidateTag('event-attendees', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -63,6 +70,7 @@ export async function revalidateEventBySlug(slug: string) {
 export async function revalidateEventAlbum(eventId: number) {
   revalidateTag(`event-album-${eventId}`, 'max');
   revalidateTag('events', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -89,6 +97,7 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
   revalidateTag(`profile-${nickname}`, 'max');
   // Revalidate search (albums are searchable)
   revalidateTag('search', 'max');
+  invalidateHomeTag();
 
   // Also revalidate the specific album page granular tag
   if (albumSlug) {
@@ -115,6 +124,7 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   revalidateTag(`profile-${nickname}`, 'max');
   // Revalidate search (albums are searchable)
   revalidateTag('search', 'max');
+  invalidateHomeTag();
 }
 
 // ============================================================================
@@ -128,6 +138,7 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
 export async function revalidateGalleryData() {
   revalidateTag('gallery', 'max');
   revalidateTag('search', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -152,6 +163,7 @@ export async function revalidateTagPhotos(tagName: string) {
 export async function revalidateProfiles() {
   revalidateTag('profiles', 'max');
   revalidateTag('search', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -266,6 +278,7 @@ export async function revalidatePhotos(photoShortIds: string[]) {
 export async function revalidateChallenges() {
   revalidateTag('challenges', 'max');
   revalidateTag('challenge-photos', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -281,6 +294,7 @@ export async function revalidateChallenge(challengeSlug: string, challengeId?: s
   }
   revalidateTag('challenge-photos', 'max');
   revalidateTag('challenge-color-draws', 'max');
+  invalidateHomeTag();
   revalidatePath(`/challenges/${challengeSlug}`);
 }
 
@@ -293,7 +307,7 @@ export async function revalidateChallenge(challengeSlug: string, challengeId?: s
  * Use when: Content changes affect the homepage
  */
 export async function revalidateHome() {
-  revalidateTag('home', 'max');
+  invalidateHomeTag();
 }
 
 /**
@@ -302,6 +316,8 @@ export async function revalidateHome() {
  */
 export async function revalidateChangelog() {
   revalidateTag('changelog', 'max');
+  revalidatePath('/changelog');
+  revalidatePath('/changelog/details');
 }
 
 // ============================================================================

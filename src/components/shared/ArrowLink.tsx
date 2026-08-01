@@ -8,6 +8,7 @@ type ArrowLinkProps = {
   direction?: 'left' | 'right'
   children: React.ReactNode
   className?: string
+  prefetch?: boolean
 }
 
 export default function ArrowLink({
@@ -15,6 +16,7 @@ export default function ArrowLink({
   direction = 'right',
   children,
   className,
+  prefetch = true,
 }: ArrowLinkProps) {
   const ArrowIcon = direction === 'left' ? ArrowLeftSVG : ArrowRightSVG;
   const hoverTransform = direction === 'left'
@@ -24,6 +26,7 @@ export default function ArrowLink({
   return (
     <Link
       href={href}
+      prefetch={prefetch}
       className={clsx(
         'group inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4',
         className,

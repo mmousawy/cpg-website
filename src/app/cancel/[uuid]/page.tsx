@@ -7,6 +7,9 @@ import CancelBlock from './CancelBlock';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
+
+import CancelLoading from './loading';
 
 // Provide sample params for build-time validation (required with cacheComponents)
 export async function generateStaticParams() {
@@ -18,7 +21,23 @@ export const metadata = createNoIndexMetadata({
   description: 'Cancel your event RSVP',
 });
 
-export default async function Cancel({
+export default function Cancel({
+  params,
+}: {
+  params: Promise<{ uuid: string }>
+}) {
+  return (
+    <Suspense
+      fallback={<CancelLoading />}
+    >
+      <CancelContent
+        params={params}
+      />
+    </Suspense>
+  );
+}
+
+async function CancelContent({
   params,
 }: {
   params: Promise<{ uuid: string }>

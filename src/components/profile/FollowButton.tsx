@@ -2,6 +2,7 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { useAuth } from '@/context/AuthContext';
+import { useSession } from '@/hooks/useSession';
 import { useFollowLoginHref, useFollowMutation, useFollowStatus } from '@/hooks/useFollow';
 import { confirmUnfollow } from '@/utils/confirmHelpers';
 import clsx from 'clsx';
@@ -59,16 +60,53 @@ function FollowingStateContent() {
   );
 }
 
-export default function FollowButton({ profileId, profileNickname, showLabel = false }: FollowButtonProps) {
+function FollowButtonGuest({
+  profileNickname,
+  showLabel = false,
+}: FollowButtonProps) {
+  const loginHref = useFollowLoginHref();
+  const loggedOutClassName = clsx(
+    showLabel ? labeledSizeClassName : iconOnlySizeClassName,
+    activeFollowClassName,
+  );
+
+  if (showLabel) {
+    return (
+      <Link
+        href={loginHref}
+        className={loggedOutClassName}
+        aria-label={`Follow @${profileNickname}`}
+      >
+        <FollowIcon
+          filled={false}
+        />
+        Follow
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href={loginHref}
+      className={loggedOutClassName}
+      aria-label={`Follow @${profileNickname}`}
+    >
+      <FollowIcon
+        filled={false}
+      />
+    </Link>
+  );
+}
+
+function FollowButtonAuthenticated({
+  profileId,
+  profileNickname,
+  showLabel = false,
+}: FollowButtonProps) {
   const { user } = useAuth();
   const confirm = useConfirm();
-  const loginHref = useFollowLoginHref();
   const { data, isLoading } = useFollowStatus(profileId);
   const followMutation = useFollowMutation(profileId);
-
-  if (user?.id === profileId) {
-    return null;
-  }
 
   const isFollowing = data?.isFollowing ?? false;
   const isPending = followMutation.isPending || isLoading;
@@ -91,38 +129,8 @@ export default function FollowButton({ profileId, profileNickname, showLabel = f
     followMutation.mutate(true);
   };
 
-  if (!user) {
-    const loggedOutClassName = clsx(
-      showLabel ? labeledSizeClassName : iconOnlySizeClassName,
-      activeFollowClassName,
-    );
-
-    if (showLabel) {
-      return (
-        <Link
-          href={loginHref}
-          className={loggedOutClassName}
-          aria-label={`Follow @${profileNickname}`}
-        >
-          <FollowIcon
-            filled={false}
-          />
-          Follow
-        </Link>
-      );
-    }
-
-    return (
-      <Link
-        href={loginHref}
-        className={loggedOutClassName}
-        aria-label={`Follow @${profileNickname}`}
-      >
-        <FollowIcon
-          filled={false}
-        />
-      </Link>
-    );
+  if (user?.id === profileId) {
+    return null;
   }
 
   return (
@@ -145,5 +153,27 @@ export default function FollowButton({ profileId, profileNickname, showLabel = f
         </>
       )}
     </button>
+  );
+}
+
+export default function FollowButton(props: FollowButtonProps) {
+  const { isLoggedIn, user } = useSession();
+
+  if (user?.id === props.profileId) {
+    return null;
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <FollowButtonGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <FollowButtonAuthenticated
+      {...props}
+    />
   );
 }

@@ -2,6 +2,7 @@ import type { Photo, Tag } from '@/types/photos';
 import type { Tables } from '@/database.types';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+import { getMostViewedAlbumsLastWeek, getPublicAlbums } from './albums';
 import { PHOTO_LIST_COLUMNS } from './columns';
 
 /** Photo with owner profile info for display in community stream */
@@ -509,4 +510,33 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
     });
 
   return validPhotos;
+}
+
+export type GalleryHomeData = {
+  popularTags: Tag[];
+  albums: Awaited<ReturnType<typeof getPublicAlbums>>;
+  photos: Awaited<ReturnType<typeof getPublicPhotostream>>;
+  mostViewedPhotos: Awaited<ReturnType<typeof getMostViewedPhotosLastWeek>>;
+  mostViewedAlbums: Awaited<ReturnType<typeof getMostViewedAlbumsLastWeek>>;
+};
+
+/**
+ * Aggregated data for the /gallery home page.
+ */
+export async function getGalleryHomeData(): Promise<GalleryHomeData> {
+  const [albums, photos, mostViewedPhotos, mostViewedAlbums, popularTags] = await Promise.all([
+    getPublicAlbums(10),
+    getPublicPhotostream(10),
+    getMostViewedPhotosLastWeek(10),
+    getMostViewedAlbumsLastWeek(10),
+    getPopularTags(30),
+  ]);
+
+  return {
+    popularTags,
+    albums,
+    photos,
+    mostViewedPhotos,
+    mostViewedAlbums,
+  };
 }

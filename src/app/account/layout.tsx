@@ -6,6 +6,8 @@ import { createNoIndexMetadata } from '@/utils/metadata';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
 
+import AuthRouteProvidersLayout from '@/components/layout/AuthRouteProvidersLayout';
+
 export const metadata = createNoIndexMetadata({
   title: 'Account',
   description: 'Manage your Creative Photography Group account settings',
@@ -42,18 +44,20 @@ export default function AccountLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
-      <Suspense
-        fallback={null}
-      >
-        <AccountConnection />
-      </Suspense>
-      <Suspense
-        fallback={null}
-      >
-        <AccountAuthGuard />
-      </Suspense>
-      {children}
-    </>
+    <AuthRouteProvidersLayout>
+      <>
+        <Suspense
+          fallback={null}
+        >
+          <AccountConnection />
+        </Suspense>
+        <Suspense
+          fallback={null}
+        >
+          <AccountAuthGuard />
+        </Suspense>
+        {children}
+      </>
+    </AuthRouteProvidersLayout>
   );
 }

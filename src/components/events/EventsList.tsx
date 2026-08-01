@@ -45,6 +45,8 @@ type EventsListProps = {
    * Size of the avatars
    */
   avatarSize?: keyof typeof SIZE_MAP
+  /** When false, disables Next.js viewport prefetch on event links */
+  prefetchLinks?: boolean
 }
 
 // Transform attendees to AvatarPerson format for the shared component
@@ -94,6 +96,7 @@ export default function EventsList({
   disableAttendeesPopover = false,
   serverNow,
   avatarSize = 'xxs',
+  prefetchLinks = true,
 }: EventsListProps) {
   if (!events || events.length === 0) {
     return (
@@ -158,6 +161,7 @@ export default function EventsList({
               attendees={attendees}
               disableAttendeesPopover={disableAttendeesPopover}
               serverNow={serverNow}
+              prefetch={prefetchLinks}
             />
           );
         })}
@@ -184,6 +188,7 @@ export default function EventsList({
             {event.cover_image && (
               <Link
                 href={`/events/${event.slug}`}
+                prefetch={prefetchLinks}
                 className="relative block sm:hidden aspect-21/9"
                 tabIndex={-1}
               >
@@ -224,6 +229,7 @@ export default function EventsList({
                 >
                   <Link
                     href={`/events/${event.slug}`}
+                    prefetch={prefetchLinks}
                     className="group"
                   >
                     <h3
@@ -290,6 +296,7 @@ export default function EventsList({
                   />
                   <Button
                     href={`/events/${event.slug}`}
+                    prefetch={prefetchLinks}
                     variant={isPast ? 'secondary' : 'primary'}
                     size="md"
                     className="ml-2 self-end sm:hidden"
@@ -303,6 +310,7 @@ export default function EventsList({
               {event.cover_image && (
                 <Link
                   href={`/events/${event.slug}`}
+                  prefetch={prefetchLinks}
                   className="relative w-72 lg:w-80 shrink-0 max-sm:hidden"
                   tabIndex={-1}
                 >

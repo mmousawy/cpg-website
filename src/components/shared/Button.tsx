@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import Link from 'next/link';
+import Link, { type LinkProps } from 'next/link';
 import { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
 
 // Loading spinner component - defined outside to avoid React Compiler warning
@@ -73,6 +73,7 @@ type ButtonAsButton = BaseButtonProps &
 type ButtonAsLink = BaseButtonProps &
   Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> & {
     href: string;
+    prefetch?: LinkProps['prefetch'];
   };
 
 type ButtonProps = ButtonAsButton | ButtonAsLink;
@@ -144,7 +145,7 @@ export default function Button({
   );
 
   if ('href' in props && props.href) {
-    const { href, ...linkProps } = props as ButtonAsLink;
+    const { href, prefetch, ...linkProps } = props as ButtonAsLink;
     // Use regular <a> tag for external links or when target/download attributes are present
     const isExternalLink = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:');
     const hasExternalAttrs = 'target' in linkProps || 'download' in linkProps;
@@ -164,6 +165,7 @@ export default function Button({
     return (
       <Link
         href={href}
+        prefetch={prefetch}
         className={classes}
         {...linkProps}
         scroll

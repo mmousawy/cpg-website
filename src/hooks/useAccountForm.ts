@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTheme } from 'next-themes';
+import { useAppTheme } from '@/hooks/useAppTheme';
 import { useSearchParams } from 'next/navigation';
 import { createElement, useContext, useEffect, useRef, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -116,7 +116,7 @@ export type AccountStats = {
 
 export function useAccountForm() {
   const { user, profile: authProfile, refreshProfile: refreshAuthProfile } = useAuth();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useAppTheme();
   const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const searchParams = useSearchParams();

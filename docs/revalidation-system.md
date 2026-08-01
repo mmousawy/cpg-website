@@ -70,8 +70,14 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 | `album-likes-[albumId]` | Like count for a specific album | Album liked/unliked |
 | `notifications-[userId]` | Notifications for a specific user | Notification created/read/dismissed |
 | `search` | Search results | Content changes |
-| `home` | Homepage data | Homepage content changes |
-| `changelog` | Changelog data | Changelog updates |
+| `home` | Homepage shell (`src/app/page.tsx`) | Event/album/gallery/challenge/profile mutations (see below) |
+| `changelog` | Changelog index, details, and detail pages | Changelog filesystem updates |
+| `changelog-[slug]` | Specific changelog detail page (`/changelog/[slug]`) | Same as `changelog` |
+| `scene` | Scene event listings | Scene CRUD, interest changes |
+| `scene-[slug]` | Specific scene event detail page | Scene event updates |
+| `challenge-color-draws` | All challenge color draws | Color draw/swap |
+| `challenge-color-draws-[id]` | Color draws for one challenge | Color draw/swap for that challenge |
+| `event-album-[id]` | Event album photos for one event | Event album photo changes |
 | `interests` | All interests data | Interests added/removed |
 | `interest-[name]` | Members with a specific interest | Interest membership changes |
 
@@ -87,6 +93,89 @@ const nextConfig: NextConfig = {
 ```
 
 > Optional on Vercel: you can use **`'use cache: remote'`** instead of **`'use cache'`** to store entries in Vercel Runtime Cache (shared across instances). That is separate from ISR and may be metered on your plan; this repo uses in-memory **`'use cache'`** only.
+
+## Homepage caching
+
+The homepage (`src/app/page.tsx`) caches its full RSC payload with `cacheTag('home')`. Nested data functions also carry their own tags (`events`, `albums`, `gallery`, `challenges`, `profiles`, etc.), but the page shell only refreshes when the `home` tag is invalidated.
+
+These helpers also invalidate `home` so homepage sections stay in sync:
+
+| Helper | Homepage sections affected |
+|--------|---------------------------|
+| `revalidateEvents()` | Upcoming events |
+| `revalidateEventAttendees()` | Event RSVP counts |
+| `revalidateEventAlbum()` | Event-linked albums |
+| `revalidateAlbum()` / `revalidateAlbums()` | Recent albums |
+| `revalidateGalleryData()` | Community photostream |
+| `revalidateProfiles()` | Organizers, recent members |
+| `revalidateChallenges()` / `revalidateChallenge()` | Active challenges |
+| `revalidateHome()` | Direct homepage bust (also called from photo upload hooks) |
+
+The events cron (`/api/cron/revalidate-events`, twice daily) also revalidates `home` alongside `events`.
+
+## Changelog revalidation
+
+Changelog pages read markdown from the `changelog/` directory. They are cached with the `changelog` tag (and `changelog-[slug]` on detail pages).
+
+After adding or editing changelog entries and deploying:
+
+```bash
+GET /api/revalidate-changelog?secret=REVALIDATION_SECRET
+```
+
+This calls `revalidateChangelog()`, which invalidates the `changelog` tag and revalidates `/changelog` and `/changelog/details`. Use `/api/revalidate-all` for a full cache bust.
+
+New `/changelog/[slug]` routes are created at deploy time via `generateStaticParams`. Existing detail pages refresh when the `changelog` tag is invalidated.
+
+## Scheduled and secret revalidation
+
+| Endpoint | Auth | Invalidates |
+|----------|------|-------------|
+| `GET /api/cron/revalidate-events` | `CRON_SECRET` (Vercel Cron, 2×/day) | `events`, `home` |
+| `GET /api/revalidate-changelog?secret=…` | `REVALIDATION_SECRET` | `changelog` (+ changelog paths) |
+| `GET /api/revalidate-all?secret=…` | `REVALIDATION_SECRET` | All public tags |
+
+The scraper (`scripts/scraper-utils.ts`) calls `/api/revalidate-all` after inserts when `REVALIDATION_SECRET` is set.
+
+## Meetup events revalidation
+
+Meetup events (`/events`, RSVPs, event albums) use tags `events`, `event-attendees`, `event-[slug]`, and `event-album-[id]`.
+
+### Cached public surfaces
+
+| Route | Page tags | Data tags consumed |
+|-------|-----------|-------------------|
+| `/` | `home` | `events`, `event-attendees` (upcoming + avatars) |
+| `/events` | `events`, `event-attendees` | same |
+| `/events/[slug]` | `events`, `event-attendees`, `event-[slug]` | `event-album-[id]` for album section |
+| `/scene` | `scene`, `events` | CPG meetups embedded via `getUpcomingEvents` / `getPastEvents` |
+
+The `/scene` page also uses `cacheLife('hours')` for community scene content, but the `events` tag ensures embedded CPG meetups refresh when event CRUD or the events cron runs.
+
+### RSVP vs event metadata
+
+RSVP mutations bust **`event-attendees` and `home` only** — not `events`. That is intentional: attendee avatars and lists refresh without invalidating the full event cache.
+
+Public RSVP counts and “spots left” on the event detail page use **`attendees.length`** from `getEventAttendeesForEvent`, not the `events.rsvp_count` column (which is not maintained by app code).
+
+### Call sites
+
+| Trigger | Location | Helper(s) |
+|---------|----------|-----------|
+| RSVP signup | `src/app/api/signup/route.ts` | `revalidateEventAttendees()` |
+| RSVP confirm / cancel | `src/app/api/confirm/route.ts`, `cancel/route.ts` | `revalidateEventAttendees()` |
+| Admin manage RSVP | `src/app/api/admin/manage-rsvp/route.ts` | `revalidateEventAttendees()` |
+| Mark attendance | `src/app/api/admin/mark-attendance/route.ts` | `revalidateEventAttendees()` |
+| Admin API event CRUD | `src/app/api/admin/events/route.ts` | `revalidateEvents()` (+ attendees on create/delete) |
+| Admin UI event editor | `src/app/admin/events/[eventId]/page.tsx` | `revalidateEvents()` + `revalidateEventBySlug()` (old + new slug on rename) |
+| Admin event announce | `src/app/api/admin/events/announce/route.ts` | `revalidateEvents()` |
+| Event album photo changes | hooks, `AlbumDetailClient`, `revalidateEventAlbum` | `revalidateEventAlbum(eventId)` |
+| Admin event album delete/suspend | `src/app/api/admin/albums/delete|suspend|unsuspend` | `revalidateEventAlbum()` + `albums` tag |
+| Events cron (2×/day) | `src/app/api/cron/revalidate-events/route.ts` | `events`, `home` |
+
+**Do not use** the deprecated `revalidateEvent()` helper — it misses `home` and `search`. The admin event editor was migrated to `revalidateEvents()`.
+
+**`revalidateEventBySlug(slug)`** is for slug renames or when only one event detail page needs busting. Normal CRUD via `revalidateEvents()` already covers listings; call `revalidateEventBySlug` for the previous slug when renaming.
 
 ## Implementation
 
@@ -262,25 +351,29 @@ export async function POST(request: NextRequest) {
 
 | Function | Invalidates | Use When |
 |----------|-------------|----------|
-| `revalidateEvents()` | `events`, `search` | Event CRUD |
-| `revalidateEventAttendees()` | `event-attendees` | RSVP changes |
-| `revalidateEventBySlug(slug)` | `event-[slug]` | Specific event changes |
-| `revalidateAlbum(nick, slug)` | `albums`, `profile-[nick]`, `gallery`, `album-[n]-[s]` | Album update |
-| `revalidateAlbumBySlug(nick, slug)` | `album-[nick]-[slug]`, `profile-[nick]` | Specific album changes |
-| `revalidateAlbums(nick, slugs)` | `albums`, `profile-[nick]`, `gallery` | Bulk album ops |
-| `revalidateGalleryData()` | `gallery`, `search` | Photo CRUD |
-| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]`, `profiles`, `search` | Photo tagged/untagged |
-| `revalidateProfile(nick)` | `profiles`, `profile-[nick]`, `search` | Profile update |
-| `revalidateProfiles()` | `profiles`, `search` | Member list changes |
-| `revalidateChallenges()` | `challenges`, `challenge-photos` | Challenge CRUD |
-| `revalidateChallenge(slug, id?)` | `challenge-[slug]`, `challenges`, `challenge-photos`, `challenge-photos-[id]` | Challenge detail changes |
+| `revalidateEvents()` | `events`, `search`, `home` | Event CRUD |
+| `revalidateEventAttendees()` | `event-attendees`, `home` | RSVP changes |
+| `revalidateEventBySlug(slug)` | `event-[slug]` | Specific event detail only (not called automatically) |
+| `revalidateEventAlbum(id)` | `event-album-[id]`, `events`, `home` | Event album photo changes |
+| `revalidateChallengeColorDraws(id)` | `challenge-color-draws`, `challenge-color-draws-[id]` | Color draw/swap |
+| `revalidateAlbum(nick, slug)` | `albums`, `profile-[nick]`, `search`, `home`, `album-[n]-[s]` | Album update |
+| `revalidateAlbumBySlug(nick, slug)` | `album-[nick]-[slug]`, `profile-[nick]` | Specific album changes (comments, etc.) |
+| `revalidateAlbums(nick, slugs)` | `albums`, `profile-[nick]`, `search`, `home` | Bulk album ops |
+| `revalidateGalleryData()` | `gallery`, `search`, `home` | Photo CRUD |
+| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]`, `search` | Photo tagged/untagged |
+| `revalidateProfile(nick)` | `profile-[nick]`, `search` | Profile update |
+| `revalidateProfiles()` | `profiles`, `search`, `home` | Member list changes |
+| `revalidateChallenges()` | `challenges`, `challenge-photos`, `home` | Challenge CRUD |
+| `revalidateChallenge(slug, id?)` | `challenge-[slug]`, `challenges`, `challenge-photos`, `challenge-photos-[id]`, `challenge-color-draws`, `home`, path | Challenge detail changes |
 | `revalidatePhoto(shortId)` | `photo-[shortId]` | Photo metadata changes |
 | `revalidatePhotos(shortIds)` | `photo-[shortId]` (multiple) | Bulk photo changes |
 | `revalidatePhotoLikes(photoId, nick)` | `photo-likes-[photoId]`, `profile-[nick]` | Photo like/unlike |
 | `revalidateAlbumLikes(albumId, nick)` | `album-likes-[albumId]`, `profile-[nick]` | Album like/unlike |
-| `revalidateHome()` | `home` | Homepage content changes |
-| `revalidateChangelog()` | `changelog` | Changelog updates |
-| `revalidateAll()` | All tags | Admin operations |
+| `revalidateScene()` | `scene`, `search`, path `/scene` | Scene CRUD |
+| `revalidateSceneEvent(slug)` | `scene-[slug]`, `scene` | Scene event detail changes |
+| `revalidateHome()` | `home` | Direct homepage bust |
+| `revalidateChangelog()` | `changelog`, paths `/changelog`, `/changelog/details` | Changelog filesystem updates |
+| `revalidateAll()` | All tags + layout path | Admin operations |
 
 ## Adding New Cached Data
 

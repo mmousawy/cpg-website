@@ -9,6 +9,8 @@ import Button from '../shared/Button';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import { useSupabase } from '@/hooks/useSupabase';
 import { CPGEvent } from '@/types/events';
 
@@ -19,7 +21,37 @@ type Props = {
   event?: CPGEvent;
 }
 
-export default function EventRsvpStatus({ className, event }: Props) {
+function EventRsvpStatusGuest({ className, event }: Props) {
+  const showAuthPrompt = useAuthPrompt();
+  const isPastEvent = isEventPast(event?.date ?? null, undefined, event?.time ?? null);
+
+  if (isPastEvent) {
+    return (
+      <span
+        className={clsx('inline-flex self-start font-(family-name:--font-geist-mono) items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1.5 text-sm font-medium text-foreground/60 whitespace-nowrap', className)}
+      >
+        Event passed
+      </span>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      onClick={() => showAuthPrompt({
+        feature: 'RSVP for events',
+        title: 'Join this event',
+        description: 'Sign in or create a free account to reserve your spot.',
+      })}
+      className={clsx('rounded-full inline-flex', className)}
+      variant="primary"
+    >
+      Join event
+    </Button>
+  );
+}
+
+function EventRsvpStatusAuthenticated({ className, event }: Props) {
   const modalContext = useContext(ModalContext);
   const { user } = useAuth();
   const supabase = useSupabase();
@@ -27,7 +59,6 @@ export default function EventRsvpStatus({ className, event }: Props) {
   const [rsvpUuid, setRsvpUuid] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if event is in the past
   const isPastEvent = isEventPast(event?.date ?? null, undefined, event?.time ?? null);
 
   useEffect(() => {
@@ -65,7 +96,6 @@ export default function EventRsvpStatus({ className, event }: Props) {
     modalContext.setIsOpen(true);
   };
 
-  // Show "Event passed" for past events if user didn't RSVP
   if (isPastEvent && !hasRSVP) {
     return (
       <span
@@ -106,5 +136,23 @@ export default function EventRsvpStatus({ className, event }: Props) {
     >
       Join event
     </Button>
+  );
+}
+
+export default function EventRsvpStatus(props: Props) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <EventRsvpStatusGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <EventRsvpStatusAuthenticated
+      {...props}
+    />
   );
 }

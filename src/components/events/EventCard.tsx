@@ -72,6 +72,7 @@ type EventCardProps = {
   serverNow?: number;
   /** Prioritize loading for LCP (first visible event card on homepage) */
   priority?: boolean;
+  prefetch?: boolean;
 };
 
 function getStatusLabel(status: EventStatus): string {
@@ -116,6 +117,7 @@ export default function EventCard({
   disableAttendeesPopover = false,
   serverNow,
   priority = false,
+  prefetch = true,
 }: EventCardProps) {
   const status =
     serverNow !== undefined
@@ -319,6 +321,7 @@ export default function EventCard({
     return (
       <Link
         href={`/events/${event.slug}`}
+        prefetch={prefetch}
         className={wrapperClasses}
       >
         {content}

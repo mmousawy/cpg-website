@@ -19,6 +19,7 @@ type AlbumCardProps = {
   onClick?: (album: AlbumWithPhotos) => void
   /** Like count to display */
   likesCount?: number
+  prefetch?: boolean
 }
 
 export default function AlbumCard({
@@ -27,6 +28,7 @@ export default function AlbumCard({
   variant = 'large',
   onClick,
   likesCount,
+  prefetch = true,
 }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
@@ -217,6 +219,7 @@ export default function AlbumCard({
   return (
     <Link
       href={albumUrl}
+      prefetch={prefetch}
       className="group block"
     >
       {cardContent}

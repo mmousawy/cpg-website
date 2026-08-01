@@ -1,6 +1,5 @@
 import BlurImage from './BlurImage';
 import { HERO_BLURHASH_HEIGHT, HERO_BLURHASH_WIDTH } from '@/config/heroImages';
-import { MOBILE_PRELOAD_WIDTH } from '@/utils/supabaseImageLoader';
 
 interface HeroImageProps {
   src: string;
@@ -21,7 +20,7 @@ export default function HeroImage({ src, blurhash }: HeroImageProps) {
       fetchPriority="high"
       loading="eager"
       preload
-      sizes={`(max-width: 768px) ${MOBILE_PRELOAD_WIDTH}px, (max-width: 1200px) 75vw, 1200px`}
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px"
       quality={92}
       blurhash={blurhash}
       blurhashWidth={HERO_BLURHASH_WIDTH}

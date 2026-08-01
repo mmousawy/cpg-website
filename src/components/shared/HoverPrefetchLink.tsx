@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { useState, type ComponentProps } from 'react';
 
 /**
- * Defers route prefetch until hover/focus/touch so loading UI is visible on click.
- * Default <Link> viewport prefetch resolves dynamic photo pages before navigation.
+ * Defers route prefetch until hover/focus/touch to avoid flooding dense photo grids.
  */
 export default function HoverPrefetchLink({
   onMouseEnter,

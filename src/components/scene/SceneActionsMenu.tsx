@@ -4,8 +4,8 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import EditSceneEventModal from '@/components/scene/EditSceneEventModal';
 import ReportModal from '@/components/shared/ReportModal';
-import { useAuth } from '@/context/AuthContext';
-import { useAdmin } from '@/hooks/useAdmin';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import type { SceneEvent } from '@/types/scene';
 import { useRouter } from 'next/navigation';
@@ -20,20 +20,48 @@ type SceneActionsMenuProps = {
   onActionClick?: () => void;
 };
 
-export default function SceneActionsMenu({
+const menuItemClass =
+  'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
+const dangerMenuItemClass =
+  'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300';
+
+function SceneActionsMenuGuest({
+  event,
+  onActionClick,
+}: SceneActionsMenuProps) {
+  const showAuthPrompt = useAuthPrompt();
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        onActionClick?.();
+        showAuthPrompt({ feature: 'report this event' });
+      }}
+      className={menuItemClass}
+    >
+      <WarningMicroSVG
+        className="size-4 shrink-0"
+      />
+      <span>
+        Report
+      </span>
+    </button>
+  );
+}
+
+function SceneActionsMenuAuthenticated({
   event,
   onActionClick,
 }: SceneActionsMenuProps) {
   const router = useRouter();
-  const { user } = useAuth();
-  const { isAdmin } = useAdmin();
+  const { user, isAdmin } = useSession();
   const modalContext = useContext(ModalContext);
   const confirm = useConfirm();
   const deleteMutation = useDeleteSceneEvent();
 
   const isOwner = !!(user && event.submitted_by && user.id === event.submitted_by);
   const canEdit = isOwner || isAdmin;
-  const canDelete = isOwner;
 
   const handleEditClick = () => {
     onActionClick?.();
@@ -90,12 +118,6 @@ export default function SceneActionsMenu({
     modalContext.setIsOpen(true);
   };
 
-  const menuItemClass =
-    'flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground';
-  const dangerMenuItemClass =
-    'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300';
-
-  // Owner: Edit, Delete
   if (isOwner) {
     return (
       <div>
@@ -128,8 +150,7 @@ export default function SceneActionsMenu({
     );
   }
 
-  // Admin (not owner): Edit
-  if (isAdmin) {
+  if (canEdit) {
     return (
       <div>
         <button
@@ -160,7 +181,6 @@ export default function SceneActionsMenu({
     );
   }
 
-  // Non-owner, non-admin: Report
   return (
     <button
       type="button"
@@ -174,5 +194,23 @@ export default function SceneActionsMenu({
         Report
       </span>
     </button>
+  );
+}
+
+export default function SceneActionsMenu(props: SceneActionsMenuProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <SceneActionsMenuGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <SceneActionsMenuAuthenticated
+      {...props}
+    />
   );
 }

@@ -2,7 +2,8 @@
 
 import { useContext } from 'react';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import ReportModal from '@/components/shared/ReportModal';
 import Button from '@/components/shared/Button';
 import type { ReportEntityType } from '@/types/reports';
@@ -30,7 +31,8 @@ export default function ReportButton({
   variant = 'button',
   className,
 }: ReportButtonProps) {
-  const { user } = useAuth();
+  const { user } = useSession();
+  const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
 
   // Hide if user is reporting their own content
@@ -39,6 +41,11 @@ export default function ReportButton({
   }
 
   const handleClick = () => {
+    if (!user) {
+      showAuthPrompt({ feature: `report this ${entityType}` });
+      return;
+    }
+
     modalContext.setSize('default');
     modalContext.setTitle(`Report ${entityLabel || entityType}`);
     modalContext.setContent(

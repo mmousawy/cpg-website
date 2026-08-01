@@ -5,7 +5,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import clsx from 'clsx';
 
 const BANNER_BACKGROUND =
@@ -19,9 +19,9 @@ type SignUpCTAProps = {
 };
 
 export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isSessionReady } = useSession();
 
-  if (isLoading || user) {
+  if (!isSessionReady || user) {
     return null;
   }
 
@@ -105,9 +105,9 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
 
 /** Wraps inline SignUpCTA in PageContainer; renders nothing when user is logged in (avoids empty space) */
 export function SignUpCTASection() {
-  const { user, isLoading } = useAuth();
+  const { user, isSessionReady } = useSession();
 
-  if (isLoading || user) {
+  if (!isSessionReady || user) {
     return null;
   }
 

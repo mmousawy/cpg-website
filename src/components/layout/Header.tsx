@@ -8,7 +8,7 @@ import LogoSVG from 'public/cpg-logo.svg';
 import { useEffect, useMemo, useState } from 'react';
 
 import { routes } from '@/config/routes';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
 
@@ -76,7 +76,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
   const mounted = useMounted();
-  const { profile } = useAuth();
+  const { profile, user } = useSession();
 
   // Detect Mac vs other OS for keyboard shortcut display (only after mount)
   const isMac = useMemo(() => {
@@ -211,8 +211,8 @@ export default function Header() {
                 K
               </kbd>
             </button>
-            <NotificationButton />
-            <UserMenu />
+            {user ? <NotificationButton /> : null}
+            {user ? <UserMenu /> : null}
           </div>
 
           {/* Mobile Only: Search + Notifications + Avatar + Menu Button */}
@@ -240,8 +240,7 @@ export default function Header() {
                 />
               </svg>
             </button>
-            {/* Mobile Notifications */}
-            <MobileNotificationButton />
+            {user ? <MobileNotificationButton /> : null}
 
             {/* Mobile Avatar - opens mobile menu */}
             <button

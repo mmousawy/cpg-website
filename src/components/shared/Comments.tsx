@@ -2,7 +2,7 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import type { Tables } from '@/database.types';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
@@ -716,7 +716,7 @@ export default function Comments({
   challengeId,
   sceneEventId,
 }: CommentsProps) {
-  const { user, isAdmin, profile } = useAuth();
+  const { user, isAdmin, profile } = useSession();
   const confirm = useConfirm();
   const supabase = useSupabase();
   const showAuthPrompt = useAuthPrompt();

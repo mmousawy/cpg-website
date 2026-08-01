@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Popover from '@/components/shared/Popover';
 import AlbumActionsMenu, { getAlbumActionsVisibility } from '@/components/shared/AlbumActionsMenu';
-import { useAuth } from '@/context/AuthContext';
+import { useSession } from '@/hooks/useSession';
 
 type AlbumActionsPopoverProps = {
   albumId: string;
@@ -12,7 +12,7 @@ type AlbumActionsPopoverProps = {
 };
 
 export default function AlbumActionsPopover({ albumId, albumTitle, albumUserId }: AlbumActionsPopoverProps) {
-  const { user } = useAuth();
+  const { user } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const { hasActions } = getAlbumActionsVisibility({
     userId: user?.id,

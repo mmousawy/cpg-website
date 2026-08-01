@@ -9,6 +9,7 @@ import {
   getVersionForSlug,
 } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 import type { Components } from 'react-markdown';
 import ReactMarkdown from 'react-markdown';
@@ -130,7 +131,13 @@ const markdownComponents: Components = {
 };
 
 export default async function ChangelogDetailPage({ params }: ChangelogDetailPageProps) {
+  'use cache';
+  cacheLife('max');
+
   const { slug } = await params;
+  cacheTag('changelog');
+  cacheTag(`changelog-${slug}`);
+
   const [markdown, summary, version] = await Promise.all([
     getChangelogDetailMarkdown(slug),
     getChangelogCommitSummary(slug),

@@ -5,6 +5,8 @@ import SignupForm from '@/components/auth/SignupForm';
 import Button from '@/components/shared/Button';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import { useSupabase } from '@/hooks/useSupabase';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import type { CPGEvent } from '@/types/events';
@@ -17,9 +19,92 @@ import CloseSVG from 'public/icons/close.svg';
 
 type EventSignupBarProps = {
   event: CPGEvent
+  confirmedAttendeeCount: number
 }
 
-export default function EventSignupBar({ event }: EventSignupBarProps) {
+function getSpotsLeft(event: CPGEvent, confirmedAttendeeCount: number) {
+  return event.max_attendees
+    ? event.max_attendees - confirmedAttendeeCount
+    : null;
+}
+
+function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarProps) {
+  const showAuthPrompt = useAuthPrompt();
+  const spotsLeft = getSpotsLeft(event, confirmedAttendeeCount);
+
+  const openAuthPrompt = () => {
+    showAuthPrompt({
+      feature: 'RSVP for events',
+      title: 'Join this event',
+      description: 'Sign in or create a free account to reserve your spot.',
+    });
+  };
+
+  return (
+    <StickyActionBar
+      constrainWidth
+    >
+      <div
+        className="flex flex-col gap-0.5"
+      >
+        <p
+          className="text-xs sm:text-sm text-foreground font-medium"
+        >
+          {formatEventDate(event.date || '', { includeYear: true })}
+          {' '}
+          at
+          {' '}
+          {formatEventTime(event.time || '')}
+        </p>
+
+        <div
+          className="flex-1"
+        >
+          {spotsLeft !== null && spotsLeft > 0 ? (
+            <p
+              className="text-sm text-foreground/80"
+            >
+              {spotsLeft}
+              {' '}
+              {spotsLeft === 1 ? 'spot' : 'spots'}
+              {' '}
+              left
+            </p>
+          ) : spotsLeft === 0 ? (
+            <p
+              className="text-sm text-foreground/80"
+            >
+              Event is full
+            </p>
+          ) : (
+            <p
+              className="text-sm text-foreground/80"
+            >
+              Reserve your spot
+            </p>
+          )}
+        </div>
+      </div>
+
+      <Button
+        onClick={openAuthPrompt}
+        disabled={spotsLeft === 0}
+        icon={(
+          <CheckSVG
+            className="size-4 -ml-0.5 fill-current"
+          />
+        )}
+        variant="primary"
+        size="md"
+        className="rounded-full"
+      >
+        Join event
+      </Button>
+    </StickyActionBar>
+  );
+}
+
+function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSignupBarProps) {
   const modalContext = useContext(ModalContext);
   const { user, profile, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -29,6 +114,7 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   const supabase = useSupabase();
+  const spotsLeft = getSpotsLeft(event, confirmedAttendeeCount);
 
   useEffect(() => {
     if (authLoading) return;
@@ -76,11 +162,6 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
     modalContext.setFooter(null);
     modalContext.setIsOpen(true);
   };
-
-  // Calculate spots left
-  const spotsLeft = event.max_attendees
-    ? event.max_attendees - (event.rsvp_count || 0)
-    : null;
 
   return (
     <StickyActionBar
@@ -158,5 +239,23 @@ export default function EventSignupBar({ event }: EventSignupBarProps) {
 
       </Button>
     </StickyActionBar>
+  );
+}
+
+export default function EventSignupBar(props: EventSignupBarProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <EventSignupBarGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <EventSignupBarAuthenticated
+      {...props}
+    />
   );
 }

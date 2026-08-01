@@ -4,6 +4,7 @@ import type { StreamPhoto } from '@/lib/data/gallery';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
+import JustifiedPhotoGridSkeleton from '../photo/JustifiedPhotoGridSkeleton';
 import Button from '../shared/Button';
 
 type PhotoBatch = {
@@ -247,10 +248,13 @@ export default function PhotosPaginated({
             No photos found.
           </p>
         </div>
+      ) : isSorting ? (
+        <JustifiedPhotoGridSkeleton
+          rows={4}
+          header={header}
+        />
       ) : (
-        <div
-          className={isSorting ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}
-        >
+        <div>
           {/* Render each batch as its own grid - each has stable layout */}
           {batches.map((batch, index) => (
             <div
@@ -260,6 +264,7 @@ export default function PhotosPaginated({
               <JustifiedPhotoGrid
                 photos={batch.photos}
                 showAttribution
+                liveLikeCounts={false}
                 header={index === 0 ? header : undefined}
               />
             </div>

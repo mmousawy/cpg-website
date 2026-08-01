@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 
 interface SceneCardInterestRowProps {
@@ -12,7 +12,7 @@ export default function SceneCardInterestRow({
   people,
   interestCount,
 }: SceneCardInterestRowProps) {
-  const { user } = useAuth();
+  const { user } = useSession();
 
   return (
     <StackedAvatarsPopover

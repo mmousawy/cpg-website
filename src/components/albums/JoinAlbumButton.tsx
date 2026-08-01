@@ -3,6 +3,7 @@
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import {
   useJoinSharedAlbum,
   useMySharedAlbumMembership,
@@ -23,17 +24,39 @@ type JoinAlbumButtonProps = {
   isEventAlbum?: boolean;
 };
 
-export default function JoinAlbumButton({
-  albumId,
-  albumSlug,
-  albumTitle,
-  ownerNickname,
-  ownerId,
+function JoinAlbumButtonGuest({
   joinPolicy,
   isEventAlbum = false,
 }: JoinAlbumButtonProps) {
-  const { user } = useAuth();
   const showAuthPrompt = useAuthPrompt();
+
+  if (isEventAlbum || !joinPolicy) {
+    return null;
+  }
+
+  const label = joinPolicy === 'open' ? 'Join album' : 'Request to join';
+
+  return (
+    <Button
+      variant="primary"
+      onClick={() => showAuthPrompt({ feature: 'join this album' })}
+    >
+      {label}
+    </Button>
+  );
+}
+
+function JoinAlbumButtonAuthenticated(props: JoinAlbumButtonProps) {
+  const {
+    albumId,
+    albumSlug,
+    albumTitle,
+    ownerNickname,
+    ownerId,
+    joinPolicy,
+    isEventAlbum = false,
+  } = props;
+  const { user } = useAuth();
   const modalContext = useContext(ModalContext);
 
   const { data: membership, isLoading: membershipLoading } = useMySharedAlbumMembership(
@@ -59,10 +82,6 @@ export default function JoinAlbumButton({
   );
 
   const handleClick = () => {
-    if (!user) {
-      showAuthPrompt({ feature: 'join this album' });
-      return;
-    }
     joinMutation.mutate(undefined, {
       onSuccess: (result) => {
         if (result?.status === 'already_requested' || result?.status === 'requested') {
@@ -132,5 +151,23 @@ export default function JoinAlbumButton({
     >
       {label}
     </Button>
+  );
+}
+
+export default function JoinAlbumButton(props: JoinAlbumButtonProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <JoinAlbumButtonGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <JoinAlbumButtonAuthenticated
+      {...props}
+    />
   );
 }

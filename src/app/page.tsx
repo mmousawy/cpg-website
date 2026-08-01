@@ -57,14 +57,17 @@ export default async function Home() {
   cacheTag('home');
 
   // Fetch all data in parallel using cached data functions
-  const [albums, organizers, members, upcomingEventsData, challengesData, photos] = await Promise.all([
+  const [albums, organizers, recentMembers, upcomingEventsData, challengesData, photos] = await Promise.all([
     getRecentAlbums(3),
     getOrganizers(5),
-    getRecentMembers(12),
+    getRecentMembers(8),
     getUpcomingEvents(3),
     getActiveChallenges(3),
     getPublicPhotostream(10),
   ]);
+
+  const { members, total: memberTotal } = recentMembers;
+  const otherMembersCount = Math.max(0, memberTotal - members.length);
 
   const { events, serverNow } = upcomingEventsData;
   const attendeesByEvent = await getEventAttendees(events.map((event) => event.id));
@@ -152,6 +155,7 @@ export default async function Home() {
             </h2>
             <ArrowLink
               href={routes.events.url}
+              prefetch={false}
             >
               View all events
             </ArrowLink>
@@ -164,6 +168,7 @@ export default async function Home() {
             disableAttendeesPopover
             avatarSize="xs"
             serverNow={serverNow}
+            prefetchLinks={false}
           />
         </div>
 
@@ -182,6 +187,7 @@ export default async function Home() {
               </h3>
               <ArrowLink
                 href={routes.challenges.url}
+                prefetch={false}
               >
                 View all challenges
               </ArrowLink>
@@ -189,6 +195,7 @@ export default async function Home() {
             <ChallengesList
               challenges={challenges}
               serverNow={serverNow}
+              prefetchLinks={false}
             />
           </div>
         )}
@@ -208,12 +215,15 @@ export default async function Home() {
               </h3>
               <ArrowLink
                 href={routes.gallery.url}
+                prefetch={false}
               >
                 View all albums
               </ArrowLink>
             </div>
             <AlbumGrid
               albums={albums}
+              liveLikeCounts={false}
+              prefetchLinks={false}
               className="grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
             />
           </div>
@@ -236,6 +246,7 @@ export default async function Home() {
             </h3>
             <ArrowLink
               href="/gallery/photos"
+              prefetch={false}
             >
               View all photos
             </ArrowLink>
@@ -243,6 +254,7 @@ export default async function Home() {
           <JustifiedPhotoGrid
             photos={photos}
             showAttribution
+            liveLikeCounts={false}
           />
         </WidePageContainer>
       )}
@@ -359,6 +371,7 @@ export default async function Home() {
                   <Link
                     key={organizer.id}
                     href={organizer.nickname ? `/@${organizer.nickname}` : '#'}
+                    prefetch={false}
                     className="flex items-start gap-4 rounded-xl border border-border-color bg-background/60 p-4 transition-colors hover:border-primary group"
                   >
                     <Avatar
@@ -413,6 +426,7 @@ export default async function Home() {
                   <Button
                     key={member.id}
                     href={member.nickname ? `/@${member.nickname}` : '#'}
+                    prefetch={false}
                     variant="secondary"
                     size="sm"
                     className="px-2!"
@@ -430,6 +444,16 @@ export default async function Home() {
                     }`}
                   </Button>
                 ))}
+                {otherMembersCount > 0 && (
+                  <Button
+                    href={routes.members.url}
+                    prefetch={false}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    {`+${otherMembersCount} other ${otherMembersCount === 1 ? 'member' : 'members'}`}
+                  </Button>
+                )}
               </div>
             </div>
           )}

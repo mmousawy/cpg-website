@@ -5,6 +5,9 @@ import HelpLink from '@/components/shared/HelpLink';
 import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
+import { Suspense } from 'react';
+
+import GalleryPhotosSkeleton from './GalleryPhotosSkeleton';
 
 // Cached data functions
 import { getPublicPhotostream } from '@/lib/data/gallery';
@@ -20,7 +23,19 @@ type PageProps = {
   searchParams: Promise<{ sort?: string }>;
 };
 
-export default async function PhotosPage({ searchParams }: PageProps) {
+export default function PhotosPage(props: PageProps) {
+  return (
+    <Suspense
+      fallback={<GalleryPhotosSkeleton />}
+    >
+      <PhotosPageContent
+        {...props}
+      />
+    </Suspense>
+  );
+}
+
+async function PhotosPageContent({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
 

@@ -2,7 +2,8 @@
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ReportModal from '@/components/shared/ReportModal';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 import { useContext } from 'react';
 
@@ -30,7 +31,8 @@ export function getAlbumActionsVisibility({
 }
 
 export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onActionClick }: AlbumActionsMenuProps) {
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useSession();
+  const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
   const { canReport } = getAlbumActionsVisibility({
     userId: user?.id,
@@ -42,8 +44,12 @@ export default function AlbumActionsMenu({ albumId, albumTitle, albumUserId, onA
   }
 
   const handleReportClick = () => {
-    // Close the popover
     onActionClick?.();
+
+    if (!isLoggedIn) {
+      showAuthPrompt({ feature: 'report albums' });
+      return;
+    }
 
     modalContext.setSize('default');
     modalContext.setTitle(`Report album "${albumTitle || 'Untitled'}"`);

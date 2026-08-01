@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateAlbums } from '@/app/actions/revalidate';
+import { revalidateAlbums, revalidateEventAlbum } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -73,10 +73,9 @@ export async function POST(request: NextRequest) {
         await revalidateAlbums(owner.nickname);
       }
     } else if (album.event_id) {
+      await revalidateEventAlbum(album.event_id);
       const { revalidateTag } = await import('next/cache');
       revalidateTag('albums', 'max');
-      revalidateTag('events', 'max');
-      revalidateTag(`event-album-${album.event_id}`, 'max');
     }
 
     // TODO: Send notification email to album owner about deletion

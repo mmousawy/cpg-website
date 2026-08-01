@@ -1,5 +1,8 @@
 import { render } from '@react-email/render';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
+
+import EmailLoading from './loading';
 
 // Email template mapping
 type EmailTemplateComponent = React.ComponentType<{ preview?: boolean; [key: string]: unknown }>;
@@ -19,7 +22,23 @@ const templates: Record<string, () => Promise<EmailModule>> = {
   'weekly-digest': () => import('../../../emails/weekly-digest') as unknown as Promise<EmailModule>,
 };
 
-export default async function Email({
+export default function Email({
+  params,
+}: {
+  params: Promise<{ template: string }>
+}) {
+  return (
+    <Suspense
+      fallback={<EmailLoading />}
+    >
+      <EmailContent
+        params={params}
+      />
+    </Suspense>
+  );
+}
+
+async function EmailContent({
   params,
 }: {
   params: Promise<{ template: string }>

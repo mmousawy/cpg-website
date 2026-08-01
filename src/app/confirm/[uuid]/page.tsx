@@ -7,6 +7,9 @@ import ConfirmBlock from './ConfirmBlock';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import { connection } from 'next/server';
+import { Suspense } from 'react';
+
+import ConfirmLoading from './loading';
 
 // Provide sample params for build-time validation (required with cacheComponents)
 export async function generateStaticParams() {
@@ -18,7 +21,23 @@ export const metadata = createNoIndexMetadata({
   description: 'Confirm your event sign up',
 });
 
-export default async function Confirm({
+export default function Confirm({
+  params,
+}: {
+  params: Promise<{ uuid: string }>
+}) {
+  return (
+    <Suspense
+      fallback={<ConfirmLoading />}
+    >
+      <ConfirmContent
+        params={params}
+      />
+    </Suspense>
+  );
+}
+
+async function ConfirmContent({
   params,
 }: {
   params: Promise<{ uuid: string }>

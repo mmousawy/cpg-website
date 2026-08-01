@@ -5,6 +5,8 @@ import { Suspense } from 'react';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
 
+import AuthRouteProvidersLayout from '@/components/layout/AuthRouteProvidersLayout';
+
 export const metadata = createNoIndexMetadata({
   title: 'Admin',
   description: 'Admin dashboard for Creative Photography Group',
@@ -33,18 +35,20 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
-      <Suspense
-        fallback={null}
-      >
-        <AdminConnection />
-      </Suspense>
-      <Suspense
-        fallback={null}
-      >
-        <AdminRoleGuard />
-      </Suspense>
-      {children}
-    </>
+    <AuthRouteProvidersLayout>
+      <>
+        <Suspense
+          fallback={null}
+        >
+          <AdminConnection />
+        </Suspense>
+        <Suspense
+          fallback={null}
+        >
+          <AdminRoleGuard />
+        </Suspense>
+        {children}
+      </>
+    </AuthRouteProvidersLayout>
   );
 }

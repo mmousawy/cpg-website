@@ -9,12 +9,12 @@ import {
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import MobileActionBar from '@/components/manage/MobileActionBar';
+import ManageAlbumSectionsSkeleton from '@/components/manage/ManageAlbumSectionsSkeleton';
 import type { SharedAlbumFormData } from '@/components/manage/SharedAlbumEditForm';
 import SidebarPanel from '@/components/manage/SidebarPanel';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
-import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import {
   useBulkUpdateAlbums,
@@ -469,9 +469,7 @@ export default function AlbumsPage() {
         }
       >
         {albumsLoading && personalAlbums.length === 0 ? (
-          <PageLoading
-            message="Loading albums..."
-          />
+          <ManageAlbumSectionsSkeleton />
         ) : personalAlbums.length === 0 && yourSharedAlbums.length === 0 && sharedWithMeAlbums.length === 0 ? (
           <div
             className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"

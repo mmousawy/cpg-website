@@ -69,26 +69,29 @@ export async function getOrganizers(limit = 5) {
 }
 
 /**
- * Get recent members for homepage
+ * Get recent members for homepage, plus total active member count
  * Tagged with 'profiles' for granular cache invalidation
  */
-export async function getRecentMembers(limit = 12) {
+export async function getRecentMembers(limit = 8) {
   'use cache';
   cacheLife('max');
   cacheTag('profiles');
 
   const supabase = createPublicClient();
 
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from('profiles')
-    .select('id, full_name, nickname, avatar_url')
+    .select('id, full_name, nickname, avatar_url', { count: 'exact' })
     .not('nickname', 'is', null)
     .is('suspended_at', null)
     .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  return (data || []) as Member[];
+  return {
+    members: (data || []) as Member[],
+    total: count ?? 0,
+  };
 }
 
 /**

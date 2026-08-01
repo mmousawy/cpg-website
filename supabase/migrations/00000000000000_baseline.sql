@@ -4785,9 +4785,7 @@ CREATE POLICY "Album likes are publicly readable" ON "public"."album_likes" FOR 
 
 
 
-CREATE POLICY "Album views readable by owners and admins" ON "public"."album_views" FOR SELECT USING (("public"."is_admin"() OR (EXISTS ( SELECT 1
-   FROM "public"."albums" "a"
-  WHERE (("a"."id" = "album_views"."album_id") AND ("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+CREATE POLICY "Album views are publicly readable" ON "public"."album_views" FOR SELECT USING (true);
 
 
 
@@ -4977,9 +4975,7 @@ CREATE POLICY "Photo likes are publicly readable" ON "public"."photo_likes" FOR 
 
 
 
-CREATE POLICY "Photo views readable by owners and admins" ON "public"."photo_views" FOR SELECT USING (("public"."is_admin"() OR (EXISTS ( SELECT 1
-   FROM "public"."photos" "p"
-  WHERE (("p"."id" = "photo_views"."photo_id") AND ("p"."user_id" = ( SELECT "auth"."uid"() AS "uid")))))));
+CREATE POLICY "Photo views are publicly readable" ON "public"."photo_views" FOR SELECT USING (true);
 
 
 

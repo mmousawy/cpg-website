@@ -2,6 +2,7 @@ import { connection } from 'next/server';
 import { Suspense } from 'react';
 
 import { ManageDataProvider } from '@/context/ManageDataContext';
+import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 
 async function ManageConnection() {
   // Opt out of static generation - manage routes require authentication
@@ -22,7 +23,9 @@ export default function ManageLayout({
         <ManageConnection />
       </Suspense>
       <ManageDataProvider>
-        {children}
+        <UnsavedChangesProvider>
+          {children}
+        </UnsavedChangesProvider>
       </ManageDataProvider>
     </>
   );

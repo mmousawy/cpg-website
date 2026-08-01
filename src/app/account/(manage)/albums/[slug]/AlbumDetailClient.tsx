@@ -15,11 +15,12 @@ import {
   type BulkPhotoFormData,
   type PhotoFormData,
 } from '@/components/manage';
+import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
 import SidebarPanel from '@/components/manage/SidebarPanel';
+import ManageSidebarSkeleton from '@/components/manage/ManageSidebarSkeleton';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
-import PageLoading from '@/components/shared/PageLoading';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useDeleteAlbums, useUpdateAlbum } from '@/hooks/useAlbumMutations';
 import {
@@ -272,6 +273,10 @@ export default function AlbumDetailClient() {
       queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
       queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', user?.id] });
       setSelectedPhotoIds(new Set());
+
+      if (album.event_id) {
+        await revalidateEventAlbum(album.event_id);
+      }
     }
   };
 
@@ -461,13 +466,9 @@ export default function AlbumDetailClient() {
     return (
       <ManageLayout
         albumDetail={{ title: '...', slug }}
-        sidebar={<PageLoading
-          message="Loading..."
-        />}
+        sidebar={<ManageSidebarSkeleton />}
       >
-        <PageLoading
-          message="Loading album..."
-        />
+        <ManagePhotoGridSkeleton />
       </ManageLayout>
     );
   }
@@ -666,9 +667,7 @@ export default function AlbumDetailClient() {
         {isSharedWithMe ? (
           // Shared-with-me: view all photos, own photos are selectable/editable
           photosLoading && photos.length === 0 ? (
-            <PageLoading
-              message="Loading photos..."
-            />
+            <ManagePhotoGridSkeleton />
           ) : photos.length === 0 ? (
             <div
               className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
@@ -705,9 +704,7 @@ export default function AlbumDetailClient() {
             overlayMessage="Drop to add to album"
           >
             {photosLoading && photos.length === 0 ? (
-              <PageLoading
-                message="Loading photos..."
-              />
+              <ManagePhotoGridSkeleton />
             ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
               <div
                 className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"

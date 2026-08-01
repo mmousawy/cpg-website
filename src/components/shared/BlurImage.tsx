@@ -216,7 +216,7 @@ export default function BlurImage({
       <>
         {/* Background color - instant fallback */}
         <div
-          className={`${className} absolute inset-0 bg-neutral-200 dark:bg-neutral-800`}
+          className={`${className} absolute inset-0 bg-neutral-200 dark:bg-neutral-800 ${loadState === 'loading' ? 'animate-pulse' : ''}`}
           aria-hidden="true"
         />
 

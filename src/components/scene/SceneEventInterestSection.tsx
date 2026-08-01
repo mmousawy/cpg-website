@@ -3,6 +3,7 @@
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import {
   useSceneEventInterest,
   useToggleSceneEventInterest,
@@ -19,7 +20,57 @@ interface SceneEventInterestSectionProps {
   className?: string;
 }
 
-export default function SceneEventInterestSection({
+function SceneEventInterestSectionGuest({
+  initialCount = 0,
+  className,
+}: SceneEventInterestSectionProps) {
+  const showAuthPrompt = useAuthPrompt();
+
+  return (
+    <div
+      className={clsx('flex items-center gap-2', className)}
+    >
+      <button
+        type="button"
+        onClick={() => showAuthPrompt({ feature: 'show interest in Scene events' })}
+        className={clsx(
+          'group relative z-10',
+          'inline-flex items-center justify-center gap-2',
+          initialCount > 0
+            ? 'size-9 rounded-full px-3 sm:size-auto sm:h-9 sm:min-w-35 sm:rounded-full'
+            : 'h-9 min-w-35 rounded-full px-3',
+          'text-sm font-medium text-foreground',
+          'transition-colors overflow-visible',
+          'border border-border-color-strong',
+          'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
+          'bg-background-light hover:bg-background-medium focus-visible:bg-background-medium',
+        )}
+        aria-label="I'm interested"
+      >
+        <StarOutlineIcon
+          className="size-4 shrink-0 text-foreground transition-colors group-hover:text-primary"
+        />
+        <span
+          className={initialCount > 0 ? 'max-sm:sr-only' : undefined}
+        >
+          I&apos;m interested
+        </span>
+      </button>
+
+      <span
+        className={clsx(
+          'text-xs font-medium text-foreground/80',
+          'transition-opacity duration-300',
+          initialCount > 0 ? 'opacity-100' : 'opacity-0',
+        )}
+      >
+        {initialCount > 0 ? initialCount : ''}
+      </span>
+    </div>
+  );
+}
+
+function SceneEventInterestSectionAuthenticated({
   sceneEventId,
   initialCount = 0,
   className,
@@ -129,5 +180,23 @@ export default function SceneEventInterestSection({
         {count > 0 ? count : ''}
       </span>
     </div>
+  );
+}
+
+export default function SceneEventInterestSection(props: SceneEventInterestSectionProps) {
+  const { isLoggedIn } = useSession();
+
+  if (!isLoggedIn) {
+    return (
+      <SceneEventInterestSectionGuest
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <SceneEventInterestSectionAuthenticated
+      {...props}
+    />
   );
 }

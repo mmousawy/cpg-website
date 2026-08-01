@@ -1,11 +1,26 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { Database } from '@/database.types';
 import { scheduleIdleWork } from '@/utils/scheduleIdle';
+import { useSession } from '@/context/SessionContext';
+import type { ServerAuth, ServerProfile } from '@/utils/supabase/getServerAuth';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
+
+function toServerProfile(profile: Profile): ServerProfile {
+  return {
+    id: profile.id,
+    email: profile.email,
+    full_name: profile.full_name,
+    nickname: profile.nickname,
+    avatar_url: profile.avatar_url,
+    terms_accepted_at: profile.terms_accepted_at,
+    is_admin: !!profile.is_admin,
+  };
+}
 
 export type AuthState = {
   user: User | null;
@@ -26,17 +41,38 @@ export type AuthState = {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export function AuthProvider({
+  children,
+  initialAuth,
+}: {
+  children: ReactNode;
+  initialAuth?: ServerAuth;
+}) {
+  const router = useRouter();
+  const { setSession, clearSession } = useSession();
+  const [user, setUser] = useState<User | null>(initialAuth?.user ?? null);
+  const [session, setSessionState] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(
+    (initialAuth?.profile as Profile | null) ?? null,
+  );
+  const [isLoading, setIsLoading] = useState(!initialAuth?.user);
 
-  const currentUserIdRef = useRef<string | null>(null);
+  const currentUserIdRef = useRef<string | null>(initialAuth?.user?.id ?? null);
   const fetchingProfileRef = useRef<string | null>(null);
   const lastLoggedInUpdatedRef = useRef<string | null>(null);
+  const hasInitialAuth = !!initialAuth?.user;
 
   const isAdmin = useMemo(() => !!profile?.is_admin, [profile]);
+
+  const syncSessionContext = useCallback((nextUser: User | null, nextProfile: Profile | null) => {
+    if (nextUser && nextProfile) {
+      setSession({ user: nextUser, profile: toServerProfile(nextProfile) });
+      return;
+    }
+    if (!nextUser) {
+      clearSession();
+    }
+  }, [setSession, clearSession]);
 
   const fetchProfile = useCallback(async (userId: string, force = false) => {
     if (!force && fetchingProfileRef.current === userId) return null;
@@ -46,9 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase.rpc('get_own_profile');
 
-      const profile = error ? null : (data as Profile | null);
-      setProfile(profile);
-      return profile;
+      const nextProfile = error ? null : (data as Profile | null);
+      setProfile(nextProfile);
+      if (nextProfile) {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.user) {
+          syncSessionContext(currentSession.user, nextProfile);
+        }
+      }
+      return nextProfile;
     } catch {
       setProfile(null);
       return null;
@@ -57,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchingProfileRef.current = null;
       }
     }
-  }, []);
+  }, [syncSessionContext]);
 
   const refreshProfile = useCallback(async () => {
     if (currentUserIdRef.current) {
@@ -94,35 +136,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => {});
     };
 
-    // Defer session bootstrap so anonymous first visits can paint sooner.
-    scheduleIdleWork(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
+    const forceProfileRefresh = !initialAuth?.profile;
+
+    const bootstrapSession = () => {
+      supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
         if (!mounted) return;
 
-        const userId = session?.user?.id ?? null;
-        setUser(session?.user ?? null);
-        setSession(session);
+        const userId = nextSession?.user?.id ?? null;
+        setUser(nextSession?.user ?? null);
+        setSessionState(nextSession);
         currentUserIdRef.current = userId;
         setIsLoading(false);
 
         if (userId) {
           updateLastLoggedIn(userId);
-          fetchProfile(userId);
+          if (!hasInitialAuth || forceProfileRefresh) {
+            fetchProfile(userId);
+          }
         }
       }).catch(() => {
         if (mounted) setIsLoading(false);
       });
-    }, 1500);
+    };
+
+    if (hasInitialAuth) {
+      bootstrapSession();
+    } else {
+      scheduleIdleWork(bootstrapSession, 1500);
+    }
 
     // Listen for auth changes immediately (login/logout in another tab, OAuth return).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted || event === 'INITIAL_SESSION') return;
 
-      const userId = session?.user?.id ?? null;
+      const userId = nextSession?.user?.id ?? null;
       const userChanged = userId !== currentUserIdRef.current;
 
-      setUser(session?.user ?? null);
-      setSession(session);
+      setUser(nextSession?.user ?? null);
+      setSessionState(nextSession);
       currentUserIdRef.current = userId;
 
       if (userChanged) {
@@ -134,6 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null);
           lastLoggedInUpdatedRef.current = null;
+          clearSession();
+          router.refresh();
         }
       }
     });
@@ -142,11 +195,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [clearSession, fetchProfile, hasInitialAuth, initialAuth?.profile, router]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  }, []);
+    clearSession();
+    router.refresh();
+  }, [clearSession, router]);
 
   const signInWithGoogle = useCallback(async (redirectTo?: string) => {
     const { error } = await supabase.auth.signInWithOAuth({

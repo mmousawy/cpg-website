@@ -1,97 +1,35 @@
 'use client';
 
-import { useAuth } from '@/hooks/useAuth';
-import { useBatchAlbumLikeCounts } from '@/hooks/useLikes';
-import type { AlbumWithPhotos } from '@/types/albums';
-import { useSyncExternalStore } from 'react';
-import AlbumCard, { type AlbumCardVariant } from './AlbumCard';
+import dynamic from 'next/dynamic';
+import AlbumGridSkeleton from './AlbumGridSkeleton';
+import AlbumGridStatic from './AlbumGridStatic';
+import type { AlbumGridProps } from './albumGridTypes';
 
-const STORAGE_KEY = 'album-card-style';
+const AlbumGridWithLiveLikes = dynamic(
+  () => import('./AlbumGridWithLiveLikes'),
+  {
+    ssr: false,
+    loading: () => <AlbumGridSkeleton />,
+  },
+);
 
-// Subscribe to storage events for cross-tab sync
-function subscribeToStorage(callback: () => void) {
-  window.addEventListener('storage', callback);
-  return () => window.removeEventListener('storage', callback);
-}
-
-function getStoredPreference(): AlbumCardVariant | null {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'large' || stored === 'compact') {
-    return stored;
-  }
-  return null;
-}
-
-function getServerSnapshot(): AlbumCardVariant | null {
-  return null;
-}
-
-type AlbumGridProps = {
-  albums: AlbumWithPhotos[]
-  isOwner?: boolean
-  /** Override the user's preference with a specific variant */
-  variant?: AlbumCardVariant
-  /** Additional className for the grid container */
-  className?: string
-  /** If provided, clicking an album will call this instead of navigating */
-  onAlbumClick?: (album: AlbumWithPhotos) => void
-}
+export type { AlbumGridProps } from './albumGridTypes';
 
 /**
  * Grid of AlbumCards that automatically uses the user's album_card_style preference.
  * Reads from localStorage first, then falls back to profile preference, then 'large'.
  */
 export default function AlbumGrid({
-  albums,
-  isOwner = false,
-  variant,
-  className = 'grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]',
-  onAlbumClick,
+  liveLikeCounts = true,
+  ...props
 }: AlbumGridProps) {
-  const { profile } = useAuth();
+  if (liveLikeCounts === false) {
+    return <AlbumGridStatic
+      {...props}
+    />;
+  }
 
-  // Read from localStorage using useSyncExternalStore
-  const localPreference = useSyncExternalStore(
-    subscribeToStorage,
-    getStoredPreference,
-    getServerSnapshot,
-  );
-
-  // Validate that profile preference is a valid variant
-  const profileVariant = profile?.album_card_style === 'large' || profile?.album_card_style === 'compact'
-    ? profile.album_card_style
-    : undefined;
-
-  // Use explicit variant if provided, otherwise localStorage, then profile, default to 'large'
-  const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? profileVariant ?? 'large';
-
-  // Collect all album slugs for batch fetching
-  const slugs = albums.map((a) => a.slug).filter((slug): slug is string => !!slug);
-
-  // Batch fetch like counts client-side for real-time updates
-  const batchLikesQuery = useBatchAlbumLikeCounts(slugs);
-  const batchLikesMap = batchLikesQuery.data || new Map<string, number>();
-
-  return (
-    <div
-      className={className}
-    >
-      {albums.map((album) => {
-        // Get likes count from client-side batch fetch, fallback to server-provided column
-        const likesCount = batchLikesMap.get(album.slug) ?? album.likes_count ?? 0;
-
-        return (
-          <AlbumCard
-            key={album.id}
-            album={album}
-            isOwner={isOwner}
-            variant={effectiveVariant}
-            onClick={onAlbumClick}
-            likesCount={likesCount}
-          />
-        );
-      })}
-    </div>
-  );
+  return <AlbumGridWithLiveLikes
+    {...props}
+  />;
 }

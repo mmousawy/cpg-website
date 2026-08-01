@@ -2,7 +2,8 @@
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ReportModal from '@/components/shared/ReportModal';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import Link from 'next/link';
 import EditMiniSVG from 'public/icons/edit-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
@@ -15,7 +16,8 @@ type ProfileActionsMenuProps = {
 };
 
 export default function ProfileActionsMenu({ profileId, profileNickname, onActionClick }: ProfileActionsMenuProps) {
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useSession();
+  const showAuthPrompt = useAuthPrompt();
   const modalContext = useContext(ModalContext);
 
   const isOwnProfile = !!(user && user.id === profileId);
@@ -42,6 +44,11 @@ export default function ProfileActionsMenu({ profileId, profileNickname, onActio
 
   const handleReportClick = () => {
     onActionClick?.();
+
+    if (!isLoggedIn) {
+      showAuthPrompt({ feature: 'report profiles' });
+      return;
+    }
 
     modalContext.setSize('default');
     modalContext.setTitle(`Report user @${profileNickname}`);

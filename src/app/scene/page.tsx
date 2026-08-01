@@ -41,6 +41,7 @@ export default async function ScenePage() {
   'use cache';
   cacheLife('hours');
   cacheTag('scene');
+  cacheTag('events');
 
   const [upcomingData, pastData, cpgUpcomingData, cpgPastData] = await Promise.all([
     getUpcomingSceneEvents(),

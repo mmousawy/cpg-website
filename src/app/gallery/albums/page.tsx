@@ -5,6 +5,9 @@ import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
+import { Suspense } from 'react';
+
+import GalleryAlbumsSkeleton from './GalleryAlbumsSkeleton';
 
 // Cached data functions
 import { getPublicAlbums } from '@/lib/data/albums';
@@ -20,7 +23,19 @@ type PageProps = {
   searchParams: Promise<{ sort?: string }>;
 };
 
-export default async function AlbumsPage({ searchParams }: PageProps) {
+export default function AlbumsPage(props: PageProps) {
+  return (
+    <Suspense
+      fallback={<GalleryAlbumsSkeleton />}
+    >
+      <AlbumsPageContent
+        {...props}
+      />
+    </Suspense>
+  );
+}
+
+async function AlbumsPageContent({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
 

@@ -1,14 +1,20 @@
-'use client';
+import { ThemeProvider } from '@wrksz/themes/next';
 
-import { ThemeProvider } from 'next-themes';
+import { appThemes } from '@/hooks/useAppTheme';
 
-export function ThemeProviderWrapper({ children }: { children: React.ReactNode }) {
+const themes = appThemes;
+
+export default async function ThemeProviderShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
       enableSystem
-      themes={['light', 'dark', 'midnight', 'system']}
+      themes={themes}
     >
       {children}
     </ThemeProvider>

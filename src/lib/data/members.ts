@@ -2,6 +2,8 @@ import { cacheTag, cacheLife } from 'next/cache';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
+import { getPopularTagsWithMemberCounts } from './gallery';
+import { getPopularInterests } from './interests';
 import { INTEREST_LIST_COLUMNS } from './columns';
 
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
@@ -422,5 +424,56 @@ export async function getMembersByTag(tagName: string) {
 
   return {
     members: sortedMembers as Member[],
+  };
+}
+
+export type MembersDiscoveryData = {
+  popularInterests: Awaited<ReturnType<typeof getPopularInterests>>;
+  randomInterests: Awaited<ReturnType<typeof getRandomInterestsWithMembers>>;
+  recentlyActive: Awaited<ReturnType<typeof getRecentlyActiveMembers>>;
+  popularTags: Awaited<ReturnType<typeof getPopularTagsWithMemberCounts>>;
+  newMembers: Awaited<ReturnType<typeof getNewMembers>>;
+};
+
+/**
+ * Aggregated discovery data for the /members page.
+ */
+export async function getMembersDiscoveryData(): Promise<MembersDiscoveryData> {
+  const [popularInterestsResult, randomInterestsResult, recentlyActiveResult, popularTagsResult, newMembersResult] = await Promise.allSettled([
+    getPopularInterests(20),
+    getRandomInterestsWithMembers(6, 10),
+    getRecentlyActiveMembers(12),
+    getPopularTagsWithMemberCounts(20),
+    getNewMembers(12),
+  ]);
+
+  const popularInterests = popularInterestsResult.status === 'fulfilled' ? popularInterestsResult.value : [];
+  const randomInterests = randomInterestsResult.status === 'fulfilled' ? randomInterestsResult.value : [];
+  const recentlyActive = recentlyActiveResult.status === 'fulfilled' ? recentlyActiveResult.value : [];
+  const popularTags = popularTagsResult.status === 'fulfilled' ? popularTagsResult.value : [];
+  const newMembers = newMembersResult.status === 'fulfilled' ? newMembersResult.value : [];
+
+  if (
+    popularInterestsResult.status === 'rejected'
+    || randomInterestsResult.status === 'rejected'
+    || recentlyActiveResult.status === 'rejected'
+    || popularTagsResult.status === 'rejected'
+    || newMembersResult.status === 'rejected'
+  ) {
+    console.error('Members discovery: one or more section queries failed', {
+      popularInterestsError: popularInterestsResult.status === 'rejected' ? popularInterestsResult.reason : null,
+      randomInterestsError: randomInterestsResult.status === 'rejected' ? randomInterestsResult.reason : null,
+      recentlyActiveError: recentlyActiveResult.status === 'rejected' ? recentlyActiveResult.reason : null,
+      popularTagsError: popularTagsResult.status === 'rejected' ? popularTagsResult.reason : null,
+      newMembersError: newMembersResult.status === 'rejected' ? newMembersResult.reason : null,
+    });
+  }
+
+  return {
+    popularInterests,
+    randomInterests,
+    recentlyActive,
+    popularTags,
+    newMembers,
   };
 }

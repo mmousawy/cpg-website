@@ -52,13 +52,23 @@ function SkeletonCommentRow() {
   );
 }
 
-export default function PhotoPageSkeleton() {
+export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'page' | 'overlay' }) {
+  const isOverlay = variant === 'overlay';
+
+  const photoColumnClass = isOverlay
+    ? 'md:flex-1 md:sticky md:self-start md:top-4 md:flex md:h-[calc(100vh-4.5rem)] md:flex-col'
+    : 'md:flex-1 md:sticky md:self-start md:top-[90px] md:flex md:h-[calc(100vh-106px)] md:flex-col lg:top-[106px] lg:h-[calc(100vh-138px)]';
+
+  const sidebarClass = isOverlay
+    ? 'md:h-[calc(100vh-4.5rem)]'
+    : 'md:h-[calc(100vh-106px)] lg:h-[calc(100vh-138px)]';
+
   return (
     <div
-      className="w-full px-4 pt-4 md:flex md:gap-4 md:p-4 md:items-stretch lg:p-8 lg:gap-8"
+      className="w-full px-4 pt-4 md:flex md:min-h-0 md:gap-4 md:p-4 md:items-stretch lg:p-8 lg:gap-8"
     >
       <div
-        className="md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col"
+        className={photoColumnClass}
       >
         <div
           className="flex min-h-[40vh] flex-1 items-center justify-center md:min-h-0"
@@ -72,7 +82,7 @@ export default function PhotoPageSkeleton() {
       </div>
 
       <div
-        className="relative mt-4 -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 pb-8 md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6 lg:w-lg"
+        className={`relative mt-4 -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 pb-8 md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6 lg:w-lg ${sidebarClass}`}
       >
         <SkeletonBar
           className="absolute top-4 right-4 size-8 rounded-full md:top-6 md:right-6"

@@ -2,7 +2,7 @@
 
 import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/hooks/useSession';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -16,7 +16,7 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps) {
-  const { user, profile } = useAuth();
+  const { user, profile } = useSession();
   const { isAdmin } = useAdmin();
   const pathname = usePathname();
 

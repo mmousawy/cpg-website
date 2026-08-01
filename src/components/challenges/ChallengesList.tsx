@@ -7,6 +7,7 @@ type ChallengesListProps = {
   emptyMessage?: string;
   serverNow: number;
   isPast?: boolean;
+  prefetchLinks?: boolean;
 };
 
 export default function ChallengesList({
@@ -14,6 +15,7 @@ export default function ChallengesList({
   emptyMessage = 'No challenges found.',
   serverNow,
   isPast = false,
+  prefetchLinks = true,
 }: ChallengesListProps) {
   if (challenges.length === 0) {
     return (
@@ -42,6 +44,7 @@ export default function ChallengesList({
           challenge={challenge}
           serverNow={serverNow}
           isPast={isPast}
+          prefetch={prefetchLinks}
         />
       ))}
     </div>

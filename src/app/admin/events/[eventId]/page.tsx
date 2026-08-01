@@ -22,7 +22,7 @@ import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteEvent } from '@/utils/confirmHelpers';
 
-import { revalidateEvent } from '@/app/actions/revalidate';
+import { revalidateEventBySlug, revalidateEvents } from '@/app/actions/revalidate';
 import { generateBlurhash } from '@/utils/generateBlurhash';
 import EmailForwardSVG from 'public/icons/email-forward.svg';
 import MegaphoneSVG from 'public/icons/megaphone.svg';
@@ -369,8 +369,6 @@ export default function AdminEventFormPage() {
     });
 
     if (result.ok) {
-      // Revalidate event pages
-      await revalidateEvent(eventSlug);
       router.push('/admin/events');
     } else {
       const data = await result.json();
@@ -540,8 +538,8 @@ export default function AdminEventFormPage() {
 
         setIsDraft(asDraft);
 
-        // Revalidate event pages
-        await revalidateEvent(finalSlug);
+        await revalidateEvents();
+        await revalidateEventBySlug(finalSlug);
 
         setSuccess(true);
         setTimeout(() => {
@@ -596,8 +594,11 @@ export default function AdminEventFormPage() {
           coverImage: coverImageUrl,
         });
 
-        // Revalidate event pages
-        await revalidateEvent(finalSlug);
+        await revalidateEvents();
+        if (eventSlug !== finalSlug) {
+          await revalidateEventBySlug(eventSlug);
+        }
+        await revalidateEventBySlug(finalSlug);
 
         setSuccess(true);
         setTimeout(() => {
