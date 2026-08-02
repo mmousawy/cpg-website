@@ -21,7 +21,7 @@ export default function HeroImage({ src, blurhash }: HeroImageProps) {
       loading="eager"
       preload
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px"
-      quality={92}
+      quality={80}
       blurhash={blurhash}
       blurhashWidth={HERO_BLURHASH_WIDTH}
       blurhashHeight={HERO_BLURHASH_HEIGHT}

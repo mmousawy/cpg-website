@@ -1,5 +1,15 @@
 {
-  "description": "Apply in Cloudflare dashboard for zone db.creativephotography.group (or parent zone if proxied).",
+  "description": "Apply in Cloudflare dashboard for zone db.creativephotography.group (must be proxied / orange-cloud).",
+  "verification": {
+    "command": "curl -sI \"https://db.creativephotography.group/storage/v1/render/image/public/user-photos/...?width=640&quality=80\" | grep -i cache",
+    "expected": "Cache-Control: max-age=604800 (7d browser) or higher after rule is live with override origin",
+    "notes": [
+      "Lighthouse flags ~4h TTL when origin returns max-age=14400 (user-photos and event-covers transforms).",
+      "cpg-public/hero transforms already return max-age=31536000 — the rule still applies uniformly to all /render/image paths.",
+      "Set Edge TTL to override origin (do not use 'respect origin'), otherwise user-photo and event-cover transforms stay at 4h.",
+      "cf-cache-status: HIT means Cloudflare edge cached the response; max-age in Cache-Control is what browsers and Lighthouse see."
+    ]
+  },
   "rules": [
     {
       "name": "Long cache for Supabase image transforms",

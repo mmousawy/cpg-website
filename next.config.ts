@@ -97,8 +97,9 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           // Note: CSP and HSTS should be configured at the hosting/CDN level (Vercel)
-          // Supabase image cache TTL (~4h) is set on db.creativephotography.group — raise via
-          // Cloudflare Cache Rule: /storage/v1/render/image/* → Edge TTL 30d, Browser TTL 7d
+          // Supabase /render/image default TTL is ~4h for user-photos; cpg-public heroes may differ.
+          // Fix: Cloudflare Cache Rule on db.creativephotography.group — see infra/cloudflare-storage-cache.json
+          // Verify: curl -sI "https://db.../render/image/public/user-photos/...?width=640" | grep -i cache
         ],
       },
     ];

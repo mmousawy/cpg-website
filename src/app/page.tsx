@@ -5,11 +5,10 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 import Avatar from '@/components/auth/Avatar';
 import ChallengesList from '@/components/challenges/ChallengesList';
 import EventsList from '@/components/events/EventsList';
+import { HomeActivitiesSlider, HomeRecentPhotos, HomeSignUpCTA } from '@/components/home/HomeDeferredSections';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
-import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import HeroImage from '@/components/shared/HeroImage';
@@ -24,6 +23,9 @@ import { getActiveChallenges } from '@/lib/data/challenges';
 import { getEventAttendees, getUpcomingEvents } from '@/lib/data/events';
 import { getPublicPhotostream } from '@/lib/data/gallery';
 import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
+import DiscordSVG from 'public/icons/discord.svg';
+import InstagramSVG from 'public/icons/instagram.svg';
+import WhatsAppSVG from 'public/icons/whatsapp.svg';
 
 export const metadata = {
   ...createMetadata({
@@ -36,11 +38,6 @@ export const metadata = {
     absolute: 'Photography meetups & community in the Netherlands - Creative Photography Group',
   },
 };
-
-import SignUpCTA from '@/components/shared/SignUpCTA';
-import DiscordSVG from 'public/icons/discord.svg';
-import InstagramSVG from 'public/icons/instagram.svg';
-import WhatsAppSVG from 'public/icons/whatsapp.svg';
 
 // Map for social icons
 const socialIconMap: Record<string, typeof DiscordSVG> = {
@@ -251,10 +248,8 @@ export default async function Home() {
               View all photos
             </ArrowLink>
           </div>
-          <JustifiedPhotoGrid
+          <HomeRecentPhotos
             photos={photos}
-            showAttribution
-            liveLikeCounts={false}
           />
         </WidePageContainer>
       )}
@@ -319,9 +314,7 @@ export default async function Home() {
         </Container>
       </PageContainer>
 
-      <SignUpCTA
-        variant="banner"
-      />
+      <HomeSignUpCTA />
 
       <PageContainer
         className='pt-0!'
@@ -337,7 +330,7 @@ export default async function Home() {
             >
               What keeps us clicking
             </h2>
-            <ActivitiesSliderWrapper />
+            <HomeActivitiesSlider />
           </div>
         </div>
 
