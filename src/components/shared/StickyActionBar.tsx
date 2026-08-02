@@ -26,12 +26,13 @@ export default function StickyActionBar({
   return (
     <div
       className={clsx(
+        'relative',
         sticky && 'sticky z-30',
         sticky && (position === 'bottom' ? 'bottom-0' : 'top-0'),
         className,
       )}
     >
-      {/* Add shadow at top of bar with div element gradient with 0px at top and 20px at bottom */}
+      {/* Fade above/below bar so scrolling content softens underneath */}
       <div
         className={clsx(
           'absolute left-0 right-0 pointer-events-none',

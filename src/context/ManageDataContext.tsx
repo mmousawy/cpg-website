@@ -1,31 +1,24 @@
 'use client';
 
-import { usePhotos } from '@/hooks/usePhotos';
 import { useAlbumSectionCounts, usePendingAlbumInvites, usePersonalAlbums, useSharedWithMeAlbums, useYourSharedAlbums } from '@/hooks/useAlbums';
-import { usePhotoCounts } from '@/hooks/usePhotoCounts';
 import { useAuth } from '@/hooks/useAuth';
+import { useAlbumCount, usePhotoCount } from '@/hooks/usePhotoCounts';
 
 /**
- * Context provider that prefetches and shares manage section data across all pages.
- * This ensures data is cached and available immediately when navigating between
- * photos and albums pages, eliminating loading jank.
+ * Context provider that prefetches manage section data across album pages.
+ * Photo listing is loaded on the photos page only (paginated infinite scroll).
+ * Tab badge counts are cheap head queries and are prefetched for both tabs.
  */
 export function ManageDataProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
-  // Prefetch all data using React Query hooks
-  // This populates the cache so pages can use cached data immediately
-  usePhotoCounts(user?.id);
+  usePhotoCount(user?.id);
+  useAlbumCount(user?.id);
   useAlbumSectionCounts(user?.id);
   usePersonalAlbums(user?.id);
   useYourSharedAlbums(user?.id);
   useSharedWithMeAlbums(user?.id);
   usePendingAlbumInvites(user?.id);
-
-  // Prefetch all photo filter variants to warm up cache
-  usePhotos(user?.id, 'all');
-  usePhotos(user?.id, 'public');
-  usePhotos(user?.id, 'private');
 
   return <>
     {children}

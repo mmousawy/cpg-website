@@ -3,7 +3,9 @@
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useMounted } from '@/hooks/useMounted';
 
 import CloseSVG from 'public/icons/close.svg';
 
@@ -32,6 +34,7 @@ export default function BottomSheet({
   const [shouldRender, setShouldRender] = useState(false);
   // Track if animation should show open state (delayed to allow mount animation)
   const [isAnimatedOpen, setIsAnimatedOpen] = useState(false);
+  const mounted = useMounted();
 
   // Handle mount/unmount with animation
   useEffect(() => {
@@ -131,36 +134,37 @@ export default function BottomSheet({
     setIsDragging(false);
   };
 
-  // Calculate transform based on drag
-  const getTransform = () => {
-    if (!isDragging || startY === null || currentY === null) return '';
-    const deltaY = Math.max(0, currentY - startY);
-    return `translateY(${deltaY}px)`;
+  const dragDeltaY = isDragging && startY !== null && currentY !== null
+    ? Math.max(0, currentY - startY)
+    : 0;
+
+  const getBackdropOpacity = () => {
+    if (!isOpen || !isAnimatedOpen) return 0;
+    if (dragDeltaY <= 0) return 1;
+    const sheetHeightPx = (maxHeight / 100) * window.innerHeight;
+    return Math.max(0, 1 - dragDeltaY / sheetHeightPx);
   };
 
   // Don't render anything if not needed (prevents fixed overlay from affecting page)
-  if (!shouldRender) {
+  if (!mounted || !shouldRender) {
     return null;
   }
 
-  return (
+  // Portal to body so manage layout overflow:hidden can't clip the full-viewport backdrop.
+  return createPortal(
     <div
       className={clsx(
         'fixed inset-0 z-50',
         isAnimatedOpen ? 'pointer-events-auto' : 'pointer-events-none',
       )}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
     >
-      {/* Backdrop */}
       <div
         className={clsx(
-          'absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300',
-          isAnimatedOpen ? 'opacity-100' : 'opacity-0',
+          'absolute inset-0 bg-black/40 backdrop-blur-sm',
+          !isDragging && 'transition-opacity duration-300',
         )}
+        style={{ opacity: getBackdropOpacity() }}
+        onClick={onClose}
       />
 
       <FocusTrap
@@ -177,13 +181,13 @@ export default function BottomSheet({
           className={clsx(
             'absolute bottom-0 left-0 right-0 flex flex-col',
             'bg-background-light rounded-t-2xl border-t border-border-color-strong shadow-xl',
-            'transition-transform duration-300 ease-out',
+            !isDragging && 'transition-transform duration-300 ease-out',
             isAnimatedOpen ? 'translate-y-0' : 'translate-y-full',
           )}
           style={{
             maxHeight: `${maxHeight}vh`,
             height: `${maxHeight}vh`,
-            transform: isDragging ? getTransform() : undefined,
+            transform: isDragging ? `translateY(${dragDeltaY}px)` : undefined,
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -229,6 +233,7 @@ export default function BottomSheet({
           </div>
         </div>
       </FocusTrap>
-    </div>
+    </div>,
+    document.body,
   );
 }

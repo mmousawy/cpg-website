@@ -4,6 +4,7 @@ import type { SharedAlbumFormData } from '@/components/manage/SharedAlbumEditFor
 import type { TablesUpdate } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { supabase } from '@/utils/supabase/client';
+import { albumCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 function isSharedAlbumFormData(data: AlbumFormData | SharedAlbumFormData): data is SharedAlbumFormData {
@@ -58,7 +59,7 @@ export function useCreateAlbum(userId: string | undefined, nickname: string | nu
         return old ? [newAlbumWithPhotos, ...old] : [newAlbumWithPhotos];
       });
 
-      queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+      queryClient.invalidateQueries({ queryKey: albumCountQueryKey(userId) });
       queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
 
       if (nickname && data.isPublic && newAlbum) {
@@ -411,7 +412,7 @@ export function useDeleteAlbums(userId: string | undefined, nickname: string | n
       }
 
       // Invalidate counts
-      queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+      queryClient.invalidateQueries({ queryKey: albumCountQueryKey(userId) });
       queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
 
       return { albumIds, previousAlbums: allCached };

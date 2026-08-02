@@ -8,6 +8,8 @@ import Checkbox from '@/components/shared/Checkbox';
 import Input from '@/components/shared/Input';
 import { useCreateAlbum } from '@/hooks/useAlbumMutations';
 import { useAuth } from '@/hooks/useAuth';
+import { photosQueryFilterKey } from '@/hooks/photoQueryCache';
+import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -244,8 +246,10 @@ export default function AddPhotosToAlbumModal({
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['albums', user.id] });
         queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', user.id] });
-        queryClient.invalidateQueries({ queryKey: ['photos', user.id] });
-        queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'all') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'public') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'private') });
+        queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
       }
 
       // Revalidate server-side cache for own albums that photos were added to

@@ -1,36 +1,40 @@
 import { revalidateAlbum, revalidateGalleryData, revalidateHome, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
+import {
+  getFlatPhotosFromCache,
+  getPhotosInfiniteData,
+  type PhotoFilter,
+  type PhotosInfiniteData,
+  photosQueryFilterKey,
+  setAllPhotosQueriesFromFlat,
+  updateAllPhotosQueries,
+} from '@/hooks/photoQueryCache';
+import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-type PhotoFilter = 'all' | 'public' | 'private';
-
-// Helper to update photos in cache with isExiting flag
 function markPhotosExiting(
   queryClient: ReturnType<typeof useQueryClient>,
   userId: string,
   photoIds: string[],
   filter: PhotoFilter,
 ) {
-  queryClient.setQueryData<PhotoWithAlbums[]>(['photos', userId, filter], (old) => {
-    if (!old) return old;
-    return old.map((p) => (photoIds.includes(p.id) ? { ...p, isExiting: true } : p));
-  });
+  updateAllPhotosQueries(queryClient, userId, filter, (photos) =>
+    photos.map((p) => (photoIds.includes(p.id) ? { ...p, isExiting: true } : p)),
+  );
 }
 
-// Helper to remove photos from cache
 function removePhotosFromCache(
   queryClient: ReturnType<typeof useQueryClient>,
   userId: string,
   photoIds: string[],
   filter: PhotoFilter,
 ) {
-  queryClient.setQueryData<PhotoWithAlbums[]>(['photos', userId, filter], (old) => {
-    if (!old) return old;
-    return old.filter((p) => !photoIds.includes(p.id));
-  });
+  updateAllPhotosQueries(queryClient, userId, filter, (photos) =>
+    photos.filter((p) => !photoIds.includes(p.id)),
+  );
 }
 
 export function useDeletePhotos(
@@ -41,30 +45,29 @@ export function useDeletePhotos(
   const queryClient = useQueryClient();
 
   return useMutation<
-    { photoIds: string[]; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
+    {
+      photoIds: string[];
+      previousPhotos: PhotoWithAlbums[] | undefined;
+      affectedAlbums: string[];
+    },
     Error,
     { photoIds: string[]; storagePaths: string[] },
-    { previousPhotos: PhotoWithAlbums[] | undefined }
+    { previousData: PhotosInfiniteData | undefined }
   >({
     mutationFn: async ({ photoIds, storagePaths }: { photoIds: string[]; storagePaths: string[] }) => {
       if (!userId) throw new Error('User not authenticated');
 
-      // Mark photos for exit animation
       markPhotosExiting(queryClient, userId, photoIds, filter);
 
-      // Wait for animation (300ms)
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // Optimistically remove from cache
-      const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['photos', userId, filter]);
+      const previousPhotos = getFlatPhotosFromCache(queryClient, userId, filter);
       removePhotosFromCache(queryClient, userId, photoIds, filter);
 
-      // Delete storage files
       if (storagePaths.length > 0) {
         await supabase.storage.from('user-photos').remove(storagePaths);
       }
 
-      // Delete photo records
       const { error } = await supabase.rpc('bulk_delete_photos', {
         p_photo_ids: photoIds,
       });
@@ -73,27 +76,31 @@ export function useDeletePhotos(
         throw new Error(error.message || 'Failed to delete photos');
       }
 
-      // Get affected albums for revalidation
       const affectedAlbums = previousPhotos
-        ?.filter((p) => photoIds.includes(p.id))
+        .filter((p) => photoIds.includes(p.id))
         .flatMap((p) => p.albums || [])
-        .map((a) => a.slug) || [];
+        .map((a) => a.slug);
 
       return { photoIds, previousPhotos, affectedAlbums };
     },
-    onError: (err, variables, context) => {
-      // Rollback on error
-      if (userId && context?.previousPhotos) {
-        queryClient.setQueryData(['photos', userId, filter], context.previousPhotos);
+    onError: (_err, _variables, context) => {
+      if (userId && context?.previousData) {
+        queryClient.setQueriesData<PhotosInfiniteData>(
+          { queryKey: photosQueryFilterKey(userId, filter) },
+          context.previousData,
+        );
       }
     },
+    onMutate: () => {
+      if (!userId) return { previousData: undefined };
+      const previousData = getPhotosInfiniteData(queryClient, userId, filter);
+      return { previousData };
+    },
     onSuccess: async (data) => {
-      // Invalidate counts
       if (userId) {
-        queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+        queryClient.invalidateQueries({ queryKey: photoCountQueryKey(userId) });
       }
 
-      // Revalidate profile (photostream) and affected albums
       if (nickname) {
         await revalidateProfile(nickname);
         if (data.affectedAlbums.length > 0) {
@@ -101,7 +108,6 @@ export function useDeletePhotos(
         }
       }
 
-      // Revalidate gallery and home if any deleted photos were public
       const hadPublicPhotos = data.previousPhotos?.some(
         (p) => data.photoIds.includes(p.id) && p.is_public,
       );
@@ -120,19 +126,27 @@ export function useUpdatePhoto(
   const queryClient = useQueryClient();
 
   return useMutation<
-    { photoId: string; data: PhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
-    Error,
-    { photoId: string; data: PhotoFormData },
-    { previousPhotos: PhotoWithAlbums[] | undefined }
+  {
+    photoId: string;
+    data: PhotoFormData;
+    previousPhotos: PhotoWithAlbums[] | undefined;
+    affectedAlbums: string[];
+  },
+  Error,
+  { photoId: string; data: PhotoFormData },
+  { previousData: PhotosInfiniteData | undefined }
   >({
+    onMutate: () => {
+      if (!userId) return { previousData: undefined };
+      return { previousData: getPhotosInfiniteData(queryClient, userId, filter) };
+    },
     mutationFn: async ({ photoId, data }: { photoId: string; data: PhotoFormData }) => {
       if (!userId) throw new Error('User not authenticated');
 
-      // Optimistically update cache
-      const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['photos', userId, filter]);
-      queryClient.setQueryData<PhotoWithAlbums[]>(['photos', userId, filter], (old) => {
-        if (!old) return old;
-        return old.map((p) =>
+      const previousPhotos = getFlatPhotosFromCache(queryClient, userId, filter);
+
+      updateAllPhotosQueries(queryClient, userId, filter, (photos) =>
+        photos.map((p) =>
           p.id === photoId
             ? {
               ...p,
@@ -143,8 +157,8 @@ export function useUpdatePhoto(
               tags: data.tags?.map((tag) => ({ tag: tag.toLowerCase() })) || [],
             }
             : p,
-        );
-      });
+        ),
+      );
 
       const { error } = await supabase
         .from('photos')
@@ -162,12 +176,10 @@ export function useUpdatePhoto(
         throw new Error(error.message || 'Failed to update photo');
       }
 
-      // Get previous tags before updating
-      const previousPhoto = previousPhotos?.find((p) => p.id === photoId);
+      const previousPhoto = previousPhotos.find((p) => p.id === photoId);
       const previousTags = previousPhoto?.tags?.map((t) => (typeof t === 'string' ? t : t.tag).toLowerCase()) || [];
       const newTags = data.tags?.map((t) => t.toLowerCase()) || [];
 
-      // Update tags - delete existing and insert new ones
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
       if (data.tags && data.tags.length > 0) {
         await supabase.from('photo_tags').insert(
@@ -175,34 +187,31 @@ export function useUpdatePhoto(
         );
       }
 
-      // Invalidate global tags cache
       queryClient.invalidateQueries({ queryKey: ['global-tags'] });
 
-      // Revalidate tag-specific member pages for changed tags
       const { revalidateTagPhotos } = await import('@/app/actions/revalidate');
       const allAffectedTags = [...new Set([...previousTags, ...newTags])];
       await Promise.all(allAffectedTags.map((tag) => revalidateTagPhotos(tag)));
 
-      // Get affected albums for revalidation and cache invalidation
-      const photo = previousPhotos?.find((p) => p.id === photoId);
+      const photo = previousPhotos.find((p) => p.id === photoId);
       const affectedAlbums = photo?.albums?.map((a) => a.slug) || [];
       const affectedAlbumIds = photo?.albums?.map((a) => a.id) || [];
 
-      // Invalidate album photos caches to ensure tags show up when viewing photos in albums
       affectedAlbumIds.forEach((albumId) => {
         queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
       });
 
       return { photoId, data, previousPhotos, affectedAlbums };
     },
-    onError: (err, variables, context) => {
-      // Rollback on error
-      if (userId && context?.previousPhotos) {
-        queryClient.setQueryData(['photos', userId, filter], context.previousPhotos);
+    onError: (_err, _variables, context) => {
+      if (userId && context?.previousData) {
+        queryClient.setQueriesData<PhotosInfiniteData>(
+          { queryKey: photosQueryFilterKey(userId, filter) },
+          context.previousData,
+        );
       }
     },
     onSuccess: async (data) => {
-      // Revalidate profile (photostream) and affected albums
       if (nickname) {
         await revalidateProfile(nickname);
         if (data.affectedAlbums.length > 0) {
@@ -210,7 +219,6 @@ export function useUpdatePhoto(
         }
       }
 
-      // Revalidate gallery and home when visibility changed (affects public listings)
       const previousPhoto = data.previousPhotos?.find((p) => p.id === data.photoId);
       if (previousPhoto && previousPhoto.is_public !== data.data.is_public) {
         await Promise.all([revalidateGalleryData(), revalidateHome()]);
@@ -231,18 +239,25 @@ export function useBulkUpdatePhotos(
   const queryClient = useQueryClient();
 
   return useMutation<
-    { photoIds: string[]; data: BulkPhotoFormData; previousPhotos: PhotoWithAlbums[] | undefined; affectedAlbums: string[] },
-    Error,
-    { photoIds: string[]; data: BulkPhotoFormData },
-    { previousPhotos: PhotoWithAlbums[] | undefined }
+  {
+    photoIds: string[];
+    data: BulkPhotoFormData;
+    previousPhotos: PhotoWithAlbums[] | undefined;
+    affectedAlbums: string[];
+  },
+  Error,
+  { photoIds: string[]; data: BulkPhotoFormData },
+  { previousData: PhotosInfiniteData | undefined }
   >({
+    onMutate: () => {
+      if (!userId) return { previousData: undefined };
+      return { previousData: getPhotosInfiniteData(queryClient, userId, filter) };
+    },
     mutationFn: async ({ photoIds, data }: { photoIds: string[]; data: BulkPhotoFormData }) => {
       if (!userId) throw new Error('User not authenticated');
 
-      // Optimistically update cache
-      const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['photos', userId, filter]);
+      const previousPhotos = getFlatPhotosFromCache(queryClient, userId, filter);
 
-      // Pre-compute tag sets for optimistic update
       const desiredTagsForCache = data.tags !== undefined
         ? new Set(data.tags.map((t) => t.toLowerCase()))
         : null;
@@ -253,21 +268,16 @@ export function useBulkUpdatePhotos(
         ? new Set([...originalCommonTagsForCache].filter((tag) => !desiredTagsForCache.has(tag)))
         : new Set<string>();
 
-      queryClient.setQueryData<PhotoWithAlbums[]>(['photos', userId, filter], (old) => {
-        if (!old) return old;
-        return old.map((p) => {
+      updateAllPhotosQueries(queryClient, userId, filter, (photos) =>
+        photos.map((p) => {
           if (!photoIds.includes(p.id)) return p;
 
-          // For tags, we need to preserve partial tags (not in originalCommonTags)
-          // and only apply changes to common tags
           let newTags = p.tags;
           if (desiredTagsForCache !== null) {
             const existingTags = p.tags?.map((t) => t.tag.toLowerCase()) || [];
-            // Keep tags that are: (1) in desired set, OR (2) not explicitly removed (partial tags)
             const keptTags = existingTags.filter(
               (tag) => desiredTagsForCache.has(tag) || !explicitlyRemovedTagsForCache.has(tag),
             );
-            // Add new tags from desired set that don't exist yet
             const tagsToAdd = [...desiredTagsForCache].filter((tag) => !existingTags.includes(tag));
             newTags = [...new Set([...keptTags, ...tagsToAdd])].map((tag) => ({ tag }));
           }
@@ -280,8 +290,8 @@ export function useBulkUpdatePhotos(
             ...(data.license && { license: data.license }),
             ...(desiredTagsForCache !== null && { tags: newTags }),
           };
-        });
-      });
+        }),
+      );
 
       const updates = photoIds.map((id) => ({
         id,
@@ -299,19 +309,15 @@ export function useBulkUpdatePhotos(
         throw new Error(error.message || 'Failed to update photos');
       }
 
-      // Sync tags: add missing tags and remove only tags that were explicitly removed
       if (data.tags !== undefined) {
         const desiredTags = new Set(data.tags.map((t) => t.toLowerCase()));
-        // Original common tags - only these were in the form, so only these can be "removed"
         const originalCommonTags = new Set(
           (data.originalCommonTags || []).map((t) => t.toLowerCase()),
         );
-        // Tags that user explicitly removed = originalCommonTags - desiredTags
         const explicitlyRemovedTags = new Set(
           [...originalCommonTags].filter((tag) => !desiredTags.has(tag)),
         );
 
-        // Fetch existing tags for these photos
         const { data: existingTags } = await supabase
           .from('photo_tags')
           .select('photo_id, tag')
@@ -325,23 +331,18 @@ export function useBulkUpdatePhotos(
           tagsByPhoto.get(photo_id)!.add(tag.toLowerCase());
         });
 
-        // Determine which tags to add and which to remove
         const tagInserts: { photo_id: string; tag: string }[] = [];
         const tagDeletes: { photo_id: string; tag: string }[] = [];
 
         photoIds.forEach((photoId) => {
           const existing = tagsByPhoto.get(photoId) || new Set();
 
-          // Add tags that are in desired list but not in existing
           desiredTags.forEach((tag) => {
             if (!existing.has(tag) && existing.size + tagInserts.filter((t) => t.photo_id === photoId).length < 5) {
               tagInserts.push({ photo_id: photoId, tag });
             }
           });
 
-          // Remove only tags that were explicitly removed by the user
-          // (i.e., were in originalCommonTags but no longer in desiredTags)
-          // This preserves partial tags that the user never had control over
           existing.forEach((tag) => {
             if (explicitlyRemovedTags.has(tag)) {
               tagDeletes.push({ photo_id: photoId, tag });
@@ -349,7 +350,6 @@ export function useBulkUpdatePhotos(
           });
         });
 
-        // Delete tags that need to be removed
         if (tagDeletes.length > 0) {
           for (const { photo_id, tag } of tagDeletes) {
             const { error: deleteError } = await supabase
@@ -363,7 +363,6 @@ export function useBulkUpdatePhotos(
           }
         }
 
-        // Add tags that need to be added
         if (tagInserts.length > 0) {
           const { error: tagError } = await supabase.from('photo_tags').insert(tagInserts);
           if (tagError) {
@@ -371,14 +370,12 @@ export function useBulkUpdatePhotos(
           }
         }
 
-        // Invalidate global tags cache
         queryClient.invalidateQueries({ queryKey: ['global-tags'] });
       }
 
-      // Get affected albums for revalidation and cache invalidation
       const affectedAlbums = new Set<string>();
       const affectedAlbumIds = new Set<string>();
-      previousPhotos?.forEach((p) => {
+      previousPhotos.forEach((p) => {
         if (photoIds.includes(p.id)) {
           p.albums?.forEach((a) => {
             affectedAlbums.add(a.slug);
@@ -387,21 +384,21 @@ export function useBulkUpdatePhotos(
         }
       });
 
-      // Invalidate album photos caches to ensure tags show up when viewing photos in albums
       affectedAlbumIds.forEach((albumId) => {
         queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
       });
 
       return { photoIds, data, previousPhotos, affectedAlbums: Array.from(affectedAlbums) };
     },
-    onError: (err, variables, context) => {
-      // Rollback on error
-      if (userId && context?.previousPhotos) {
-        queryClient.setQueryData(['photos', userId, filter], context.previousPhotos);
+    onError: (_err, _variables, context) => {
+      if (userId && context?.previousData) {
+        queryClient.setQueriesData<PhotosInfiniteData>(
+          { queryKey: photosQueryFilterKey(userId, filter) },
+          context.previousData,
+        );
       }
     },
     onSuccess: async (data) => {
-      // Revalidate profile (photostream) and affected albums
       if (nickname) {
         await revalidateProfile(nickname);
         if (data.affectedAlbums.length > 0) {
@@ -409,7 +406,6 @@ export function useBulkUpdatePhotos(
         }
       }
 
-      // Revalidate gallery and home when visibility changed (affects public listings)
       if (data.data.is_public !== null) {
         const anyVisibilityChanged = data.previousPhotos?.some(
           (p) => data.photoIds.includes(p.id) && p.is_public !== data.data.is_public,
@@ -442,13 +438,13 @@ export function useReorderPhotos(
     { photos: PhotoWithAlbums[] },
     Error,
     PhotoWithAlbums[],
-    { previousPhotos: PhotoWithAlbums[] | undefined }
+    { previousData: PhotosInfiniteData | undefined }
   >({
     onMutate: async (photos: PhotoWithAlbums[]) => {
-      await queryClient.cancelQueries({ queryKey: ['photos', userId, filter] });
-      const previousPhotos = queryClient.getQueryData<PhotoWithAlbums[]>(['photos', userId, filter]);
-      queryClient.setQueryData<PhotoWithAlbums[]>(['photos', userId, filter], photos);
-      return { previousPhotos };
+      await queryClient.cancelQueries({ queryKey: photosQueryFilterKey(userId!, filter) });
+      const previousData = getPhotosInfiniteData(queryClient, userId!, filter);
+      setAllPhotosQueriesFromFlat(queryClient, userId!, filter, photos);
+      return { previousData };
     },
     mutationFn: async (photos: PhotoWithAlbums[]) => {
       if (!userId) throw new Error('User not authenticated');
@@ -468,17 +464,18 @@ export function useReorderPhotos(
 
       return { photos };
     },
-    onError: (err, variables, context) => {
-      if (userId && context?.previousPhotos) {
-        queryClient.setQueryData(['photos', userId, filter], context.previousPhotos);
+    onError: (_err, _variables, context) => {
+      if (userId && context?.previousData) {
+        queryClient.setQueriesData<PhotosInfiniteData>(
+          { queryKey: photosQueryFilterKey(userId, filter) },
+          context.previousData,
+        );
       }
     },
     onSuccess: async () => {
-      // Invalidate photos cache to ensure fresh data
       if (userId) {
-        queryClient.invalidateQueries({ queryKey: ['photos', userId, filter] });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, filter) });
       }
-      // Revalidate profile page (photostream order changed)
       if (nickname) {
         await revalidateProfile(nickname);
       }

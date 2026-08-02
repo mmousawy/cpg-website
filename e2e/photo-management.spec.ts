@@ -91,11 +91,11 @@ test.describe('Photo Management Flow', () => {
     await expect(page.getByText(/in albums/i)).toBeVisible({ timeout: 5000 });
 
     // Clean up: Delete the photo
-    const deleteButton = page.getByRole('button', { name: /delete/i }).first();
+    const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
     await deleteButton.click();
 
-    // Wait for confirm dialog and click confirm
-    const confirmDialog = page.locator('[role="dialog"]').or(page.locator('dialog[open]'));
+    // Native <dialog> only — avoids matching Next.js error overlay [role=dialog]
+    const confirmDialog = page.locator('dialog[open]');
     await expect(confirmDialog).toBeVisible({ timeout: 5000 });
     const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
     await confirmButton.click();
@@ -150,12 +150,12 @@ test.describe('Photo Management Flow', () => {
         }
 
         // Delete all selected photos
-        const deleteButton = page.getByRole('button', { name: /delete/i }).first();
+        const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
         await expect(deleteButton).toBeVisible({ timeout: 5000 });
         await deleteButton.click();
 
-        // Confirm deletion
-        const confirmDialog = page.locator('[role="dialog"]').or(page.locator('dialog[open]'));
+        // Native <dialog> only — avoids matching Next.js error overlay [role=dialog]
+        const confirmDialog = page.locator('dialog[open]');
         await expect(confirmDialog).toBeVisible({ timeout: 5000 });
         const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
         await confirmButton.click();
@@ -219,11 +219,11 @@ test.describe('Photo Management Flow', () => {
     // First ensure we're back to the main view by waiting for sidebar
     await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
 
-    const deleteButton = page.getByRole('button', { name: /delete/i }).first();
+    const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
     await deleteButton.click();
 
     // Wait for confirm dialog to appear and click the confirm button inside it
-    const confirmDialog = page.locator('[role="dialog"]').or(page.locator('dialog[open]'));
+    const confirmDialog = page.locator('dialog[open]');
     await expect(confirmDialog).toBeVisible({ timeout: 5000 });
 
     const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });

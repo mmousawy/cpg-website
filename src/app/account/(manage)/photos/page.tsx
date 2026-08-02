@@ -11,6 +11,7 @@ import {
   type PhotoFormData,
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
+import ManageLoadMoreSentinel from '@/components/manage/ManageLoadMoreSentinel';
 import MobileActionBar from '@/components/manage/MobileActionBar';
 import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
 import BottomSheet from '@/components/shared/BottomSheet';
@@ -19,6 +20,8 @@ import DropZone from '@/components/shared/DropZone';
 import HelpLink from '@/components/shared/HelpLink';
 import Select from '@/components/shared/Select';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
+import { photosQueryFilterKey, setAllPhotosQueriesFromFlat } from '@/hooks/photoQueryCache';
+import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useAuth } from '@/hooks/useAuth';
 import {
   useBulkUpdatePhotos,
@@ -55,7 +58,13 @@ export default function PhotosPage() {
   const [photoFilter, setPhotoFilter] = useState<'all' | 'public' | 'private'>('all');
 
   // React Query hooks
-  const { data: photos = [], isLoading: photosLoading } = usePhotos(user?.id, photoFilter);
+  const {
+    photos,
+    isLoading: photosLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePhotos(user?.id, photoFilter);
   const deletePhotosMutation = useDeletePhotos(user?.id, photoFilter, profile?.nickname);
   const updatePhotoMutation = useUpdatePhoto(user?.id, photoFilter, profile?.nickname);
   const bulkUpdatePhotosMutation = useBulkUpdatePhotos(user?.id, photoFilter, profile?.nickname);
@@ -188,8 +197,10 @@ export default function PhotosPage() {
         photos={photosToAdd}
         onClose={() => modalContext.setIsOpen(false)}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['photos', user?.id, photoFilter] });
-          queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
+          if (user?.id) {
+            queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, photoFilter) });
+            queryClient.invalidateQueries({ queryKey: ['albums', user.id] });
+          }
         }}
       />,
     );
@@ -197,8 +208,8 @@ export default function PhotosPage() {
   };
 
   const handleReorderPhotos = (newPhotos: PhotoWithAlbums[]) => {
-    // Update cache synchronously so dnd-kit's transform clear and the new item order render in the same frame
-    queryClient.setQueryData<PhotoWithAlbums[]>(['photos', user?.id, photoFilter], newPhotos);
+    if (!user?.id) return;
+    setAllPhotosQueriesFromFlat(queryClient, user.id, photoFilter, newPhotos);
     reorderPhotosMutation.mutate(newPhotos);
   };
 
@@ -218,8 +229,8 @@ export default function PhotosPage() {
       }
 
       // Refresh the list and wait for it to refetch
-      await queryClient.refetchQueries({ queryKey: ['photos', user.id, photoFilter] });
-      queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
+      await queryClient.refetchQueries({ queryKey: photosQueryFilterKey(user.id, photoFilter) });
+      queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
 
       // Clear completed uploads after query has refetched and images are preloaded
       clearCompleted();
@@ -265,7 +276,9 @@ export default function PhotosPage() {
   };
 
   return (
-    <>
+    <div
+      className="flex flex-1 min-h-0"
+    >
       <ManageLayout
         actions={
           <>
@@ -369,7 +382,7 @@ export default function PhotosPage() {
         <DropZone
           onDrop={handleUpload}
           disabled={isUploading}
-          className="flex-1 flex flex-col min-h-0"
+          className="flex flex-col"
           overlayMessage="Drop to upload"
         >
           {photosLoading && photos.length === 0 ? (
@@ -401,29 +414,37 @@ export default function PhotosPage() {
               </Button>
             </div>
           ) : (
-            <PhotoGrid
-              photos={photos}
-              selectedPhotoIds={selectedPhotoIds}
-              onSelectPhoto={handleSelectPhoto}
-              onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
-              onClearSelection={handleClearSelection}
-              onSelectMultiple={handleSelectMultiple}
-              onReorder={handleReorderPhotos}
-              sortable
-              leadingContent={
-                uploadingPhotos.length > 0 ? (
-                  <>
-                    {uploadingPhotos.map((upload) => (
-                      <UploadingPhotoCard
-                        key={upload.id}
-                        upload={upload}
-                        onDismiss={dismissUpload}
-                      />
-                    ))}
-                  </>
-                ) : undefined
-              }
-            />
+            <>
+              <PhotoGrid
+                photos={photos}
+                selectedPhotoIds={selectedPhotoIds}
+                onSelectPhoto={handleSelectPhoto}
+                onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+                onClearSelection={handleClearSelection}
+                onSelectMultiple={handleSelectMultiple}
+                onReorder={handleReorderPhotos}
+                sortable
+                leadingContent={
+                  uploadingPhotos.length > 0 ? (
+                    <>
+                      {uploadingPhotos.map((upload) => (
+                        <UploadingPhotoCard
+                          key={upload.id}
+                          upload={upload}
+                          onDismiss={dismissUpload}
+                        />
+                      ))}
+                    </>
+                  ) : undefined
+                }
+              />
+              <ManageLoadMoreSentinel
+                hasNextPage={hasNextPage ?? false}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={() => fetchNextPage()}
+                resetKey={photoFilter}
+              />
+            </>
           )}
         </DropZone>
       </ManageLayout>
@@ -446,6 +467,6 @@ export default function PhotosPage() {
           hideTitle
         />
       </BottomSheet>
-    </>
+    </div>
   );
 }

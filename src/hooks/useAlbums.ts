@@ -171,14 +171,17 @@ async function fetchAlbumSectionCounts(userId: string): Promise<AlbumSectionCoun
       .not('event_id', 'is', null),
     supabase
       .from('shared_album_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId),
+      .select('id, albums!inner(id)', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .neq('albums.user_id', userId)
+      .is('albums.deleted_at', null),
     supabase
       .from('shared_album_requests')
-      .select('id', { count: 'exact', head: true })
+      .select('id, albums!inner(id)', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'pending')
-      .eq('type', 'invite'),
+      .eq('type', 'invite')
+      .is('albums.deleted_at', null),
   ]);
 
   return {

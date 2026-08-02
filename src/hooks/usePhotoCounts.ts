@@ -1,37 +1,55 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/utils/supabase/client';
 
-type PhotoCounts = {
-  photoCount: number;
-  albumCount: number;
-};
+async function fetchPhotoCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('photos')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .not('storage_path', 'like', 'events/%');
 
-async function fetchPhotoCounts(userId: string): Promise<PhotoCounts> {
+  if (error) {
+    throw new Error(error.message || 'Failed to fetch photo count');
+  }
 
-  const [photosResult, albumsResult] = await Promise.all([
-    supabase
-      .from('photos')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .not('storage_path', 'like', 'events/%'),
-    supabase
-      .from('albums')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .is('deleted_at', null),
-  ]);
-
-  return {
-    photoCount: photosResult.count ?? 0,
-    albumCount: albumsResult.count ?? 0,
-  };
+  return count ?? 0;
 }
 
-export function usePhotoCounts(userId: string | undefined) {
+async function fetchAlbumCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('albums')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('deleted_at', null);
+
+  if (error) {
+    throw new Error(error.message || 'Failed to fetch album count');
+  }
+
+  return count ?? 0;
+}
+
+export function photoCountQueryKey(userId: string) {
+  return ['counts', 'photos', userId] as const;
+}
+
+export function albumCountQueryKey(userId: string) {
+  return ['counts', 'albums', userId] as const;
+}
+
+export function usePhotoCount(userId: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ['counts', userId],
-    queryFn: () => fetchPhotoCounts(userId!),
-    enabled: !!userId,
+    queryKey: photoCountQueryKey(userId!),
+    queryFn: () => fetchPhotoCount(userId!),
+    enabled: !!userId && (options?.enabled ?? true),
+  });
+}
+
+export function useAlbumCount(userId: string | undefined, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: albumCountQueryKey(userId!),
+    queryFn: () => fetchAlbumCount(userId!),
+    enabled: !!userId && (options?.enabled ?? true),
   });
 }

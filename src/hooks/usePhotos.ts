@@ -1,11 +1,26 @@
 import type { Tables } from '@/database.types';
+import {
+  getFlatPhotos,
+  MANAGE_PHOTOS_PAGE_SIZE_DESKTOP,
+  MANAGE_PHOTOS_PAGE_SIZE_MOBILE,
+  type PhotoFilter,
+  type PhotosInfiniteData,
+  type PhotosInfinitePage,
+  photosQueryKey,
+} from '@/hooks/photoQueryCache';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useMounted } from '@/hooks/useMounted';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { supabase } from '@/utils/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
-type PhotoFilter = 'all' | 'public' | 'private';
-
-async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWithAlbums[]> {
+async function fetchPhotosPage(
+  userId: string,
+  filter: PhotoFilter,
+  offset: number,
+  pageSize: number,
+): Promise<PhotosInfinitePage> {
+  const fetchLimit = pageSize + 1;
 
   let query = supabase
     .from('photos')
@@ -39,7 +54,7 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
     .not('storage_path', 'like', 'events/%')
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
-    .limit(100);
+    .range(offset, offset + fetchLimit - 1);
 
   if (filter === 'public') {
     query = query.eq('is_public', true);
@@ -74,7 +89,11 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
     challenge_submissions?: ChallengeSubmissionJoin[] | null;
   };
 
-  const photosWithAlbums = (data || []).map((photo: PhotoQueryResult) => {
+  const rows = (data || []) as PhotoQueryResult[];
+  const hasMore = rows.length > pageSize;
+  const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
+
+  const photosWithAlbums = pageRows.map((photo) => {
     const albums = (photo.album_photos || [])
       .map((ap) => ap.album)
       .filter((a): a is NonNullable<typeof a> => a !== null && !a.deleted_at)
@@ -104,13 +123,32 @@ async function fetchPhotos(userId: string, filter: PhotoFilter): Promise<PhotoWi
     return { ...photoData, albums, challenges, tags } as PhotoWithAlbums;
   });
 
-  return photosWithAlbums;
+  return { photos: photosWithAlbums, hasMore };
 }
 
 export function usePhotos(userId: string | undefined, filter: PhotoFilter = 'all') {
-  return useQuery({
-    queryKey: ['photos', userId, filter],
-    queryFn: () => fetchPhotos(userId!, filter),
-    enabled: !!userId,
+  const mounted = useMounted();
+  const isMobile = useIsMobile();
+  const pageSize = mounted
+    ? (isMobile ? MANAGE_PHOTOS_PAGE_SIZE_MOBILE : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP)
+    : MANAGE_PHOTOS_PAGE_SIZE_DESKTOP;
+
+  const query = useInfiniteQuery({
+    queryKey: photosQueryKey(userId!, filter, pageSize),
+    queryFn: ({ pageParam }) => fetchPhotosPage(userId!, filter, pageParam, pageSize),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.hasMore) return undefined;
+      return allPages.reduce((total, page) => total + page.photos.length, 0);
+    },
+    enabled: !!userId && mounted,
   });
+
+  const photos = getFlatPhotos(query.data as PhotosInfiniteData | undefined);
+
+  return {
+    ...query,
+    photos,
+    pageSize,
+  };
 }

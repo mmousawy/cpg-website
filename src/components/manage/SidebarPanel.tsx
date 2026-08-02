@@ -27,11 +27,11 @@ export default function SidebarPanel({
   return (
     <div
       data-testid="sidebar-panel"
-      className={clsx('flex h-full flex-col', className)}
+      className={clsx('flex h-full min-h-0 flex-col overflow-hidden', className)}
     >
-      {/* Scrollable content */}
+      {/* Scrollable content — min-h-0 lets this flex child shrink so the footer stays on-screen */}
       <div
-        className="flex-1 overflow-y-auto p-4"
+        className="flex-1 min-h-0 overflow-y-auto p-4"
       >
         {title && !hideTitle && (
           <h2
@@ -42,11 +42,18 @@ export default function SidebarPanel({
         )}
         {children}
       </div>
-      {footer && <StickyActionBar
-        variant="compact"
-      >
-        {footer}
-      </StickyActionBar>}
+      {footer && (
+        <div
+          className="shrink-0"
+        >
+          <StickyActionBar
+            variant="compact"
+            sticky={false}
+          >
+            {footer}
+          </StickyActionBar>
+        </div>
+      )}
     </div>
   );
 }

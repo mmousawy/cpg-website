@@ -19,7 +19,15 @@ const SearchModal = dynamic(
 
 const NotificationButton = dynamic(
   () => import('../notifications/NotificationButton'),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="size-10 animate-pulse rounded-full bg-background-medium"
+        aria-hidden
+      />
+    ),
+  },
 );
 
 const MobileNotificationButton = dynamic(
@@ -33,7 +41,7 @@ const UserMenu = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="hidden h-10 w-20 animate-pulse rounded-full bg-background-medium sm:block"
+        className="size-12 animate-pulse rounded-full bg-background-medium"
         aria-hidden
       />
     ),

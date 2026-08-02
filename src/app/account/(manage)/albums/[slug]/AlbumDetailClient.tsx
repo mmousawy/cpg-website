@@ -31,6 +31,8 @@ import {
   useSetAlbumCover,
   useUpdateAlbumPhoto,
 } from '@/hooks/useAlbumPhotoMutations';
+import { photosQueryFilterKey } from '@/hooks/photoQueryCache';
+import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useAlbumPhotos } from '@/hooks/useAlbumPhotos';
 import { useAlbumBySlug, useSharedAlbumByOwnerAndSlug, type SharedWithMeAlbum } from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
@@ -336,8 +338,12 @@ export default function AlbumDetailClient() {
           queryClient.invalidateQueries({ queryKey: ['album-photos', album.id] });
           queryClient.invalidateQueries({ queryKey: ['albums', user?.id] });
           queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', user?.id] });
-          queryClient.invalidateQueries({ queryKey: ['photos', user?.id] });
-          queryClient.invalidateQueries({ queryKey: ['counts', user?.id] });
+          if (user?.id) {
+            queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'all') });
+            queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'public') });
+            queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'private') });
+            queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
+          }
           // Revalidate server-side cache for public pages
           if (album.is_public) {
             const albumOwnerNickname = isSharedWithMe ? ownerNickname : profile?.nickname;
@@ -393,7 +399,10 @@ export default function AlbumDetailClient() {
 
       // Refresh the list and wait for it to refetch
       await queryClient.refetchQueries({ queryKey: ['album-photos', album.id] });
-      queryClient.invalidateQueries({ queryKey: ['counts', user.id] });
+      queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'all') });
+      queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'public') });
+      queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(user.id, 'private') });
+      queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
       queryClient.invalidateQueries({ queryKey: ['albums', user.id] });
 
       // Revalidate server-side cache for public pages

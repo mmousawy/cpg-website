@@ -5,6 +5,7 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import { supabase } from '@/utils/supabase/client';
 import type { QueryClient } from '@tanstack/react-query';
+import { photosQueryFilterKey } from '@/hooks/photoQueryCache';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 function findAlbumInCache(queryClient: QueryClient, userId: string, albumId: string): AlbumWithPhotos | undefined {
@@ -64,11 +65,9 @@ export function useRemoveFromAlbum(
         // Invalidate albums query to update album cards (photo counts)
         queryClient.invalidateQueries({ queryKey: ['albums', userId] });
 
-        // Invalidate photos query to update which albums photos belong to
-        queryClient.invalidateQueries({ queryKey: ['photos', userId] });
-
-        // Invalidate counts query to update photo/album counts
-        queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'all') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'public') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
       }
 
       // Revalidate album page
@@ -235,7 +234,9 @@ export function useUpdateAlbumPhoto(
         }
       }
       if (userId) {
-        queryClient.invalidateQueries({ queryKey: ['photos', userId] });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'all') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'public') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
       }
 
       // Revalidate album page
@@ -296,11 +297,9 @@ export function useDeleteAlbumPhoto(
         // Invalidate albums query to update album cards (photo counts)
         queryClient.invalidateQueries({ queryKey: ['albums', userId] });
 
-        // Invalidate photos query to update which albums photos belong to
-        queryClient.invalidateQueries({ queryKey: ['photos', userId] });
-
-        // Invalidate counts query to update photo/album counts
-        queryClient.invalidateQueries({ queryKey: ['counts', userId] });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'all') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'public') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
       }
 
       // Revalidate album page
@@ -505,7 +504,9 @@ export function useBulkUpdateAlbumPhotos(
         }
       }
       if (userId) {
-        queryClient.invalidateQueries({ queryKey: ['photos', userId] });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'all') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'public') });
+        queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
       }
 
       // Revalidate album page
@@ -607,7 +608,9 @@ export function useSetAlbumCover(
       queryClient.invalidateQueries({ queryKey: ['album-photos', albumId] });
 
       // Invalidate main photos cache so cover badges update on photos page
-      queryClient.invalidateQueries({ queryKey: ['photos', userId] });
+      queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'all') });
+      queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'public') });
+      queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
 
       // Revalidate album page (set cover only affects album page, not listings)
       if (nickname && albumSlug) {

@@ -162,13 +162,16 @@ export default function AlbumsPage() {
     setSelectedSharedAlbumId((prev) => (prev === albumId ? null : albumId));
   };
 
-  const handleSharedAlbumDoubleClick = (album: SharedWithMeAlbum) => {
-    // Ensure the album stays selected on double-click (first click may toggle off)
-    setSelectedSharedAlbumId(album.id);
+  const openSharedAlbum = (album: SharedWithMeAlbum) => {
     const nickname = album.owner_profile?.nickname;
     if (nickname) {
       router.push(`/account/albums/${album.slug}?owner=${encodeURIComponent(nickname)}`);
     }
+  };
+
+  const handleSharedAlbumDoubleClick = (album: SharedWithMeAlbum) => {
+    setSelectedSharedAlbumId(album.id);
+    openSharedAlbum(album);
   };
 
   const handleClearSelection = async () => {
@@ -274,6 +277,21 @@ export default function AlbumsPage() {
     () => [...sharedWithMeAlbums].sort(sortByDate),
     [sharedWithMeAlbums, sortByDate],
   );
+  const sharedWithYouCount = useMemo(() => {
+    if (!sharedWithMeLoading && !pendingInvitesLoading) {
+      return sharedWithMeAlbums.length + pendingInvites.length;
+    }
+    if (sectionCounts) {
+      return (sectionCounts.sharedWithMe ?? 0) + (sectionCounts.pendingInvites ?? 0);
+    }
+    return undefined;
+  }, [
+    sharedWithMeLoading,
+    pendingInvitesLoading,
+    sharedWithMeAlbums.length,
+    pendingInvites.length,
+    sectionCounts,
+  ]);
   /* eslint-enable react-hooks/preserve-manual-memoization */
 
   // All sections are always visible so users can see counts even when empty
@@ -402,8 +420,22 @@ export default function AlbumsPage() {
                 <div
                   className="pt-2 border-t border-border-color text-xs text-foreground/50"
                 >
-                  You are a member of this shared album. Double-click to open.
+                  {selectedSharedAlbum.owner_profile?.nickname
+                    ? 'You are a member of this shared album.'
+                    : 'This album owner has no public nickname, so it cannot be opened from here.'}
                 </div>
+                {selectedSharedAlbum.owner_profile?.nickname && (
+                  <Button
+                    onClick={() => openSharedAlbum(selectedSharedAlbum)}
+                    variant="secondary"
+                    size="sm"
+                    icon={<FolderOpenMiniSVG
+                      className="size-5 -ml-0.5"
+                    />}
+                  >
+                    Open album
+                  </Button>
+                )}
               </div>
             </SidebarPanel>
           ) : (
@@ -450,6 +482,22 @@ export default function AlbumsPage() {
                       const album = selectedAlbums[0];
                       if (album) router.push(`/account/albums/${album.slug}`);
                     }}
+                    variant="secondary"
+                    size="sm"
+                    icon={<FolderOpenMiniSVG
+                      className="size-5 -ml-0.5"
+                    />}
+                  >
+                    <span
+                      className="hidden md:inline-block"
+                    >
+                      Open
+                    </span>
+                  </Button>
+                )}
+                {selectedSharedAlbum?.owner_profile?.nickname && (
+                  <Button
+                    onClick={() => openSharedAlbum(selectedSharedAlbum)}
                     variant="secondary"
                     size="sm"
                     icon={<FolderOpenMiniSVG
@@ -539,7 +587,7 @@ export default function AlbumsPage() {
 
             <AlbumSection
               title="Shared with you"
-              count={(sharedWithMeAlbums.length + pendingInvites.length) > 0 ? (sharedWithMeAlbums.length + pendingInvites.length) : sectionCounts ? ((sectionCounts.sharedWithMe ?? 0) + (sectionCounts.pendingInvites ?? 0)) : undefined}
+              count={sharedWithYouCount}
               isCollapsed={!!collapsedSections.sharedWithYou}
               isLoading={(sharedWithMeLoading || pendingInvitesLoading) && (sharedWithMeAlbums.length + pendingInvites.length) === 0}
               onToggle={() => toggleSection('sharedWithYou')}
