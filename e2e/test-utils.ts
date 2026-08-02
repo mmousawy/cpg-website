@@ -16,16 +16,35 @@ export function getVercelBypassToken(explicit?: string): string | undefined {
   }
 }
 
+/** Same secret the app uses in verifyInternalApiRequest (INTERNAL_API_SECRET → CRON_SECRET). */
+export function getInternalApiSecret(): string | undefined {
+  return process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET || undefined;
+}
+
 export function withVercelBypassHeaders(
-  headers: HeadersInit = {},
+  headers: Record<string, string> = {},
   bypassToken?: string,
-): HeadersInit {
+): Record<string, string> {
   const token = getVercelBypassToken(bypassToken);
   if (!token) return headers;
   return {
     ...headers,
     'x-vercel-protection-bypass': token,
     'x-vercel-set-bypass-cookie': 'true',
+  };
+}
+
+/** Headers for /api/test/* — Vercel bypass + internal API bearer. */
+export function withInternalApiHeaders(
+  headers: Record<string, string> = {},
+  bypassToken?: string,
+): Record<string, string> {
+  const withBypass = withVercelBypassHeaders(headers, bypassToken);
+  const secret = getInternalApiSecret();
+  if (!secret) return withBypass;
+  return {
+    ...withBypass,
+    Authorization: `Bearer ${secret}`,
   };
 }
 
@@ -48,7 +67,7 @@ export function getPlaywrightApiContextOptions(): {
 
   return {
     baseURL: baseUrl,
-    extraHTTPHeaders: bypassHeaders as Record<string, string>,
+    extraHTTPHeaders: bypassHeaders,
   };
 }
 
@@ -101,10 +120,17 @@ export async function createTestUser(apiRequest: APIRequestContext): Promise<Tes
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
 
+  if (!getInternalApiSecret()) {
+    throw new Error(
+      'INTERNAL_API_SECRET or CRON_SECRET must be set to call /api/test/setup (matches the preview env).',
+    );
+  }
+
   const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = await apiRequest.post('/api/test/setup', {
       data: { email, password, nickname, fullName: 'Test User' },
+      headers: withInternalApiHeaders(),
     });
 
     const contentType = response.headers()['content-type'] ?? '';
@@ -125,7 +151,10 @@ export async function createTestUser(apiRequest: APIRequestContext): Promise<Tes
 
     if (!response.ok()) {
       const error = await response.json();
-      throw new Error(`Failed to create test user: ${error.error || response.statusText()}`);
+      const hint = response.status() === 401
+        ? ' Check that INTERNAL_API_SECRET/CRON_SECRET in CI matches the Vercel preview env.'
+        : '';
+      throw new Error(`Failed to create test user: ${error.error || response.statusText()}${hint}`);
     }
 
     const data = await response.json();
@@ -150,7 +179,10 @@ export async function cleanupTestUsers(
   emails: string[],
 ): Promise<void> {
   if (emails.length === 0) return;
-  await apiRequest.post('/api/test/cleanup', { data: { emails } });
+  await apiRequest.post('/api/test/cleanup', {
+    data: { emails },
+    headers: withInternalApiHeaders(),
+  });
 }
 
 /**

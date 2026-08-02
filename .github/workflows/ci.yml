@@ -17,6 +17,8 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+      INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - uses: actions/checkout@v5
 
@@ -56,6 +58,10 @@ jobs:
           fi
           if [ -z "$BYPASS_TOKEN" ]; then
             echo "::error::VERCEL_BYPASS_TOKEN is not set. Copy the secret from Vercel → Settings → Deployment Protection → Protection Bypass for Automation."
+            exit 1
+          fi
+          if [ -z "${INTERNAL_API_SECRET:-}" ] && [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::Set INTERNAL_API_SECRET or CRON_SECRET in GitHub Actions secrets to match the Vercel preview env (required for /api/test/* Bearer auth)."
             exit 1
           fi
 
@@ -127,6 +133,9 @@ jobs:
         env:
           BASE_URL: ${{ steps.preview.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+          # Must match INTERNAL_API_SECRET or CRON_SECRET on the Vercel preview (Bearer for /api/test/*)
+          INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
 
       - name: Upload Playwright report
         if: always()

@@ -2,7 +2,7 @@ import { request } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
-import { getPlaywrightApiContextOptions } from './test-utils';
+import { getPlaywrightApiContextOptions, withInternalApiHeaders } from './test-utils';
 
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
@@ -33,6 +33,7 @@ async function globalTeardown() {
   try {
     const response = await apiRequest.post('/api/test/cleanup', {
       data: { emails: testEmails },
+      headers: withInternalApiHeaders(),
     });
 
     if (response.ok()) {
@@ -42,7 +43,8 @@ async function globalTeardown() {
         console.log('⚠️ Some errors:', result.errors);
       }
     } else {
-      console.log('❌ Cleanup API returned error:', response.status());
+      const body = await response.text().catch(() => '');
+      console.log('❌ Cleanup API returned error:', response.status(), body.slice(0, 200));
     }
   } catch (error) {
     console.log('❌ Failed to call cleanup API:', error);
