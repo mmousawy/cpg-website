@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.37.3](https://github.com/mmousawy/cpg-website/compare/v1.37.2...v1.37.3) (2026-08-02)
+
+
+### 🐛 Bug Fixes
+
+* Enhance photo management and album handling ([5535126](https://github.com/mmousawy/cpg-website/commit/55351264669a3942533176adde7ccfdfbfb8f871))
+* Update dependencies and improve revalidation system ([ca3c714](https://github.com/mmousawy/cpg-website/commit/ca3c71404fb0871b97826bec00be8cf59b05addd))
+
+
+### 🔧 Maintenance
+
+* Add lint-staged configuration for TypeScript files ([b8e9b59](https://github.com/mmousawy/cpg-website/commit/b8e9b59cd2bd9df3efb2283cd836a86c4e49b942))
+
 ## [1.37.2](https://github.com/mmousawy/cpg-website/compare/v1.37.1...v1.37.2) (2026-07-26)
 
 
