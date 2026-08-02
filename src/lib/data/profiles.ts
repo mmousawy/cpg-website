@@ -2,6 +2,7 @@ import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import type { Photo } from '@/types/photos';
 import { createPublicClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type Organizer = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url' | 'bio'>;
@@ -55,7 +56,7 @@ export async function getOrganizers(limit = 5) {
   cacheLife('max');
   cacheTag('profiles');
 
-  const supabase = createPublicClient();
+  const supabase = createAdminClient();
 
   const { data } = await supabase
     .from('profiles')

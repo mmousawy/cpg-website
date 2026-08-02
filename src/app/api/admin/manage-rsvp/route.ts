@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import type { TablesInsert } from '@/database.types';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createClient } from '@/utils/supabase/server';
 
 async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -8,13 +9,8 @@ async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) 
 
   if (authError || !user) return null;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) return null;
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) return null;
 
   return user;
 }

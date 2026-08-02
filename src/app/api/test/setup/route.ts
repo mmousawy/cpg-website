@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/database.types';
+import type { NextRequest } from 'next/server';
+
+import { isTestApiEnvironmentAllowed, verifyInternalApiRequest } from '@/lib/auth/verifyInternalApi';
 
 /**
  * Test Setup API - Creates a fully verified test user for E2E tests
- * Only works in development, test, or preview environments
+ * Only works in development or CI with INTERNAL_API_SECRET
  */
 
-export async function POST(request: Request) {
-  // Only allow in development, test, or preview environments
-  const isPreview = process.env.VERCEL_ENV === 'preview';
-  const isDev = process.env.NODE_ENV !== 'production';
-  const isCI = !!process.env.CI;
+export async function POST(request: NextRequest) {
+  const authError = verifyInternalApiRequest(request);
+  if (authError) return authError;
 
-  if (!isDev && !isCI && !isPreview) {
+  if (!isTestApiEnvironmentAllowed()) {
     return NextResponse.json(
       { error: 'Not available in production' },
       { status: 403 },

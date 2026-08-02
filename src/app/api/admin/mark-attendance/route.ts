@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import type { TablesUpdate } from '@/database.types';
 import { createClient } from '@/utils/supabase/server';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -14,13 +15,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 

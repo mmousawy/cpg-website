@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { NewsletterEmail } from '@/emails/newsletter';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createClient } from '@/utils/supabase/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -18,16 +19,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin, email')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
+
+  const { data: profileData } = await supabase.rpc('get_own_profile');
+  const profile = profileData && typeof profileData === 'object' && !Array.isArray(profileData)
+    ? profileData as { email?: string | null }
+    : null;
 
   const body = await request.json();
   const { subject, body: newsletterBody, recipientEmails, testEmail } = body;
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   // Test email mode: send only to the admin's own email
   if (testEmail) {
-    const adminEmail = profile.email || user.email;
+    const adminEmail = profile?.email || user.email;
     if (!adminEmail) {
       return NextResponse.json(
         { message: 'Cannot send test email: no email address found for your account' },

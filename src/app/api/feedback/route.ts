@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
+import { notifyAdminsOfFeedback } from '@/lib/notifications/notifyAdminsOfFeedback';
 import { FEEDBACK_SUBJECTS } from '@/types/feedback';
 
 const VALID_SUBJECTS = FEEDBACK_SUBJECTS.map((s) => s.value);
@@ -118,11 +119,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      fetch(`${request.nextUrl.origin}/api/feedback/notify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feedbackId: feedback.id }),
-      }).catch((err) => {
+      void notifyAdminsOfFeedback(feedback.id).catch((err) => {
         console.error('Error notifying admins:', err);
       });
 
@@ -164,11 +161,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    fetch(`${request.nextUrl.origin}/api/feedback/notify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ feedbackId: feedback.id }),
-    }).catch((err) => {
+    void notifyAdminsOfFeedback(feedback.id).catch((err) => {
       console.error('Error notifying admins:', err);
     });
 

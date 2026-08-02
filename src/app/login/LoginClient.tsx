@@ -13,22 +13,9 @@ import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
+import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 
 import DiscordSVG from 'public/icons/discord2.svg';
-
-// Pages that should redirect to user dashboard after login
-const PUBLIC_LISTING_PAGES = ['/', '/events'];
-
-// Determine the final redirect destination after login
-function getPostLoginRedirect(redirectTo: string | null): string {
-  // If no explicit redirect or it's a public listing page, go to user dashboard
-  if (!redirectTo || PUBLIC_LISTING_PAGES.includes(redirectTo)) {
-    return '/account/events';
-  }
-
-  // Otherwise, return to the requested page (specific album, event, etc.)
-  return redirectTo;
-}
 
 function LoginForm() {
   const searchParams = useSearchParams();

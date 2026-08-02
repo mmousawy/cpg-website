@@ -1,5 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 import { normalizeQuillLists } from '@/utils/normalizeQuillLists';
+import { safePixelWidth } from '@/utils/security';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
@@ -42,6 +43,7 @@ function sanitizeRichContent(html: string): string {
       img: ['src', 'alt', 'width', 'class', 'style'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
+    allowProtocolRelative: false,
     transformTags: {
       p: (tagName: string, attribs: Record<string, string>) => addInlineStyle(tagName, attribs),
       h2: (tagName: string, attribs: Record<string, string>) => addInlineStyle(tagName, attribs),
@@ -53,7 +55,7 @@ function sanitizeRichContent(html: string): string {
       hr: (tagName: string, attribs: Record<string, string>) => addInlineStyle(tagName, attribs),
       img: (tagName: string, attribs: Record<string, string>) => {
         let style = INLINE_STYLES.img;
-        const width = attribs.width;
+        const width = safePixelWidth(attribs.width);
         if (width) style += ` width: ${width}px;`;
 
         const cls = attribs.class || '';

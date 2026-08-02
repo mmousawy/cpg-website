@@ -1,8 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 import { isProfileComplete } from '@/utils/profileCompletion';
+import { getClientIp } from '@/utils/security';
 
-const blacklist = process.env.BLACKLIST_IPS?.split(',') || [];
+const blacklist = process.env.BLACKLIST_IPS?.split(',').map((ip) => ip.trim()).filter(Boolean) || [];
 
 // Public API routes that don't need auth check
 // This avoids the 160-250ms overhead of supabase.auth.getUser() for each request
@@ -19,10 +20,8 @@ const publicApiPaths = [
   '/api/cron/',           // Cron jobs (use CRON_SECRET instead)
   '/api/revalidate-all',  // Revalidation (uses REVALIDATION_SECRET)
   '/api/revalidate-changelog',  // Changelog revalidation (uses REVALIDATION_SECRET)
-  '/api/challenges/notify-result',     // Webhook-style endpoint
-  '/api/challenges/notify-submission', // Webhook-style endpoint
-  '/api/test/',           // Test endpoints
-  '/api/test-supabase',   // Test endpoint
+  '/api/challenges/notify-result',     // Webhook-style endpoint (auth checked in route)
+  '/api/challenges/notify-submission', // Webhook-style endpoint (auth checked in route)
 ];
 
 const KNOWN_ROUTES = new Set([
@@ -34,10 +33,12 @@ const KNOWN_ROUTES = new Set([
 ]);
 
 export default async function proxy(request: NextRequest) {
-  const ipAddress = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for');
+  const ipAddress = getClientIp(
+    request.headers.get('x-real-ip'),
+    request.headers.get('x-forwarded-for'),
+  );
 
-  // If IP address exists in blacklist, return 403
-  if (blacklist.includes(ipAddress || '')) {
+  if (ipAddress && blacklist.includes(ipAddress)) {
     return NextResponse.json({ message: 'Blacklisted' }, { status: 403 });
   }
 
@@ -115,6 +116,7 @@ export default async function proxy(request: NextRequest) {
 
   let profile: {
     deletion_scheduled_at: string | null;
+    suspended_at: string | null;
     email: string | null;
     full_name: string | null;
     nickname: string | null;
@@ -127,6 +129,7 @@ export default async function proxy(request: NextRequest) {
       const ownProfile = data as Record<string, unknown>;
       profile = {
         deletion_scheduled_at: (ownProfile.deletion_scheduled_at as string | null) ?? null,
+        suspended_at: (ownProfile.suspended_at as string | null) ?? null,
         email: (ownProfile.email as string | null) ?? null,
         full_name: (ownProfile.full_name as string | null) ?? null,
         nickname: (ownProfile.nickname as string | null) ?? null,
@@ -136,12 +139,26 @@ export default async function proxy(request: NextRequest) {
   }
 
   // Block users whose account is scheduled for deletion
-  // Sign them out and redirect to the deletion notice page
   if (user && profile?.deletion_scheduled_at && !matchesRoute('/account-deleted')) {
     await supabase.auth.signOut();
     const url = request.nextUrl.clone();
     url.pathname = '/account-deleted';
     url.search = '';
+    return NextResponse.redirect(url);
+  }
+
+  // Block suspended users from account/admin areas and write APIs
+  const isSuspended = !!user && !!profile?.suspended_at;
+  const suspendedAllowedPaths = ['/login', '/logout', '/contact', '/help', '/terms', '/privacy', '/account-deleted'];
+  if (
+    isSuspended
+    && !suspendedAllowedPaths.some((path) => matchesRoute(path))
+    && (matchesRoute('/account') || matchesRoute('/admin') || pathname.startsWith('/api/'))
+  ) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('error', 'suspended');
     return NextResponse.redirect(url);
   }
 

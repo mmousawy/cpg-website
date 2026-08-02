@@ -10,7 +10,7 @@ import { z } from 'zod';
 import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import type { Tables } from '@/database.types';
+import type { Database, Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -282,41 +282,10 @@ export function useAccountForm() {
 
         const userInterests = (interestsData || []).map((pi) => pi.interest);
 
-        const profileSelectWithBanner = 'id, email, full_name, nickname, avatar_url, banner_url, banner_blurhash, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text';
-        const profileSelectWithoutBannerBlurhash = 'id, email, full_name, nickname, avatar_url, banner_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text';
-        const profileSelectLegacy = 'id, email, full_name, nickname, avatar_url, bio, website, social_links, album_card_style, theme, created_at, last_logged_in, is_admin, newsletter_opt_in, default_license, copyright_name, watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text';
-
-        let { data, error } = await supabase
-          .from('profiles')
-          .select(profileSelectWithBanner)
-          .eq('id', user.id)
-          .single();
-
-        if (error?.message?.includes('banner_blurhash')) {
-          const retryResult = await supabase
-            .from('profiles')
-            .select(profileSelectWithoutBannerBlurhash)
-            .eq('id', user.id)
-            .single();
-
-          data = retryResult.data
-            ? { ...retryResult.data, banner_blurhash: null }
-            : null;
-          error = retryResult.error;
-        }
-
-        if (error?.message?.includes('banner_url')) {
-          const legacyResult = await supabase
-            .from('profiles')
-            .select(profileSelectLegacy)
-            .eq('id', user.id)
-            .single();
-
-          data = legacyResult.data
-            ? { ...legacyResult.data, banner_url: null, banner_blurhash: null }
-            : null;
-          error = legacyResult.error;
-        }
+        const { data: profileJson, error } = await supabase.rpc('get_own_profile');
+        const data = (profileJson && typeof profileJson === 'object' && !Array.isArray(profileJson)
+          ? profileJson
+          : null) as Database['public']['Tables']['profiles']['Row'] | null;
 
         // PGRST116 = no rows returned (profile doesn't exist yet)
         if (error) {

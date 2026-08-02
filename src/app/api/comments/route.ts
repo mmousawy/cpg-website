@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import {
   type CommentEmailEntityType,
 } from '@/lib/notifications/emailQueue';
@@ -95,14 +96,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: 'Comment ID is required' }, { status: 400 });
   }
 
-  // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  const isAdmin = profile?.is_admin === true;
+  const isAdmin = await checkIsAdmin(supabase);
 
   // Get the comment to verify ownership
   const { data: comment, error: fetchError } = await supabase
@@ -409,7 +403,8 @@ export async function POST(request: NextRequest) {
       const notifiedUserIds = new Set<string>([user.id]);
 
       // Get all admins (excluding the commenter)
-      const { data: admins } = await supabase
+      const adminSupabase = createAdminClient();
+      const { data: admins } = await adminSupabase
         .from('profiles')
         .select('id, email, full_name, nickname')
         .eq('is_admin', true)
@@ -530,7 +525,8 @@ export async function POST(request: NextRequest) {
       entityLink = `/challenges/${challenge.slug}#comments`;
 
       // Get all admins (excluding the commenter)
-      const { data: admins } = await supabase
+      const adminSupabase = createAdminClient();
+      const { data: admins } = await adminSupabase
         .from('profiles')
         .select('id, email, full_name, nickname')
         .eq('is_admin', true)

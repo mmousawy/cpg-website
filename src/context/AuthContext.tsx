@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { Database } from '@/database.types';
 import { scheduleIdleWork } from '@/utils/scheduleIdle';
+import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 import { useSession } from '@/context/SessionContext';
 import type { ServerAuth, ServerProfile } from '@/utils/supabase/getServerAuth';
 
@@ -204,17 +205,21 @@ export function AuthProvider({
   }, [clearSession, router]);
 
   const signInWithGoogle = useCallback(async (redirectTo?: string) => {
+    const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
+    const query = safePath ? `?redirectTo=${encodeURIComponent(safePath)}` : '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth-callback${redirectTo ? `?redirectTo=${redirectTo}` : ''}` },
+      options: { redirectTo: `${window.location.origin}/auth-callback${query}` },
     });
     return { error };
   }, []);
 
   const signInWithDiscord = useCallback(async (redirectTo?: string) => {
+    const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
+    const query = safePath ? `?redirectTo=${encodeURIComponent(safePath)}` : '';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
-      options: { redirectTo: `${window.location.origin}/auth-callback${redirectTo ? `?redirectTo=${redirectTo}` : ''}` },
+      options: { redirectTo: `${window.location.origin}/auth-callback${query}` },
     });
     return { error };
   }, []);
@@ -225,15 +230,17 @@ export function AuthProvider({
 
     // Block login if account is scheduled for deletion
     if (data.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('deletion_scheduled_at')
-        .eq('id', data.user.id)
-        .single();
+      const { data: profileData, error: profileError } = await supabase.rpc('get_own_profile');
+      const profile = profileError ? null : profileData as Profile | null;
 
       if (profile?.deletion_scheduled_at) {
         await supabase.auth.signOut();
         return { error: new Error('This account is scheduled for deletion. If you want to cancel the deletion, please contact us through the contact form.') };
+      }
+
+      if (profile?.suspended_at) {
+        await supabase.auth.signOut();
+        return { error: new Error('This account has been suspended. Please contact us if you believe this is an error.') };
       }
     }
 

@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
@@ -34,15 +35,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!adminProfile?.is_admin) {
+    const isAdmin = await checkIsAdmin(supabase);
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
+
+    const adminSupabase = createAdminClient();
 
     // Get query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -55,7 +53,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query
-    let query = supabase
+    let query = adminSupabase
       .from('profiles')
       .select('id, email, full_name, nickname, avatar_url, is_admin, created_at, last_logged_in, suspended_at, suspended_reason, deletion_scheduled_at', { count: 'exact' });
 
@@ -110,13 +108,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!adminProfile?.is_admin) {
+    const isAdmin = await checkIsAdmin(supabase);
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -208,13 +201,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!adminProfile?.is_admin) {
+    const isAdmin = await checkIsAdmin(supabase);
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

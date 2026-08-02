@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const fetchLimit = limit + 1;
   const { data: photos, error } = await supabase
     .from('photos')
-    .select('*')
+    .select('id, user_id, title, description, url, storage_path, short_id, width, height, blurhash, is_public, likes_count, view_count, created_at, deleted_at, file_size, mime_type, original_filename, sort_order, license, copyright_notice')
     .eq('is_public', true)
     .is('deleted_at', null)
     .not('storage_path', 'like', 'events/%')

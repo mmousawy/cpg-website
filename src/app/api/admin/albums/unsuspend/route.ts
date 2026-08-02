@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateAlbum, revalidateEventAlbum } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
+    const isAdmin = await checkIsAdmin(supabase);
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 

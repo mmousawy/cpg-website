@@ -1,4 +1,5 @@
 import { scheduleNotification } from '@/lib/notifications/schedule';
+import { verifyAlbumNotifyAuthorization } from '@/lib/albums/verifyAlbumNotify';
 import type { NotificationType } from '@/types/notifications';
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
@@ -48,6 +49,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as NotifyBody;
+
+    const authorized = await verifyAlbumNotifyAuthorization(supabase, user.id, body);
+    if (!authorized) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const manageAlbumLink = `/account/albums/${body.albumSlug}`;
     const sharedWithMeLink = body.ownerNickname
       ? `/account/albums/${body.albumSlug}?owner=${body.ownerNickname}`

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
+import { notifyAdminsOfReport } from '@/lib/notifications/notifyAdminsOfReport';
 import type { ReportEntityType } from '@/types/reports';
 
 export async function POST(request: NextRequest) {
@@ -118,11 +119,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Trigger admin notifications (fire-and-forget)
-      fetch(`${request.nextUrl.origin}/api/reports/notify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportId: report.id }),
-      }).catch((err) => {
+      void notifyAdminsOfReport(report.id).catch((err) => {
         console.error('Error notifying admins:', err);
       });
 
@@ -192,11 +189,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Trigger admin notifications (fire-and-forget)
-    fetch(`${request.nextUrl.origin}/api/reports/notify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reportId: report.id }),
-    }).catch((err) => {
+    void notifyAdminsOfReport(report.id).catch((err) => {
       console.error('Error notifying admins:', err);
     });
 

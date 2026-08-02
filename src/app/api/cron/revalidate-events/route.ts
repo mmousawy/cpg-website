@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { flushPendingNotifications } from '@/lib/notifications/schedule';
+import { safeEqualSecret } from '@/utils/security';
 import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret) {
+    console.error('CRON_SECRET environment variable is not set');
+    return NextResponse.json({ error: 'Cron secret not configured' }, { status: 500 });
+  }
+
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!safeEqualSecret(token ?? undefined, cronSecret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

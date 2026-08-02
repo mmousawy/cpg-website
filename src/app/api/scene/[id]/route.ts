@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { revalidateScene, revalidateSceneEvent } from '@/app/actions/revalidate';
 import { downloadAndUploadOgImage } from '@/lib/og';
 import {
@@ -50,14 +51,8 @@ export async function PATCH(
       );
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
+    const isAdmin = await checkIsAdmin(supabase);
     const isOwner = user.id === event.submitted_by;
-    const isAdmin = !!profile?.is_admin;
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json(

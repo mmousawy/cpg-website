@@ -4,6 +4,7 @@
  */
 
 import { adminSupabase } from '@/utils/supabase/admin';
+import { isSafeFetchUrl } from '@/utils/safeFetchUrl';
 
 const FETCH_TIMEOUT_MS = 5000;
 const BUCKET_NAME = 'event-covers';
@@ -81,6 +82,11 @@ function resolveImageUrl(imageUrl: string, baseUrl: string): string {
  * Returns the absolute image URL, or null if none found or fetch failed.
  */
 export async function fetchOgImage(url: string): Promise<string | null> {
+  if (!(await isSafeFetchUrl(url))) {
+    console.log(`[og] Blocked unsafe URL: ${url}`);
+    return null;
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
@@ -150,6 +156,11 @@ export async function downloadAndUploadOgImage(
   const externalUrl = await fetchOgImage(eventUrl);
   if (!externalUrl) {
     console.log('[og] No image URL found, skipping download');
+    return null;
+  }
+
+  if (!(await isSafeFetchUrl(externalUrl))) {
+    console.log(`[og] Blocked unsafe image URL: ${externalUrl}`);
     return null;
   }
 

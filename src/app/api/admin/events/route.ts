@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { revalidateEvents, revalidateEventAttendees } from '@/app/actions/revalidate';
 
 export async function POST(request: NextRequest) {
@@ -13,13 +15,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
@@ -57,7 +54,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Automatically add all hosts (admins) as attendees
-  const { data: admins } = await supabase
+  const adminSupabase = createAdminClient();
+  const { data: admins } = await adminSupabase
     .from('profiles')
     .select('id, full_name, email')
     .eq('is_admin', true);
@@ -99,13 +97,8 @@ export async function PUT(request: NextRequest) {
   }
 
   // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 
@@ -156,13 +149,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 

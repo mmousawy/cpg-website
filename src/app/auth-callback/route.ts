@@ -2,19 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 
-// Pages that should redirect to user dashboard after login
-const PUBLIC_LISTING_PAGES = ['/', '/events'];
-
-// Determine the final redirect destination after login
-function getPostLoginRedirect(redirectTo: string | null): string {
-  // If no explicit redirect or it's a public listing page, go to user dashboard
-  if (!redirectTo || PUBLIC_LISTING_PAGES.includes(redirectTo)) {
-    return '/account/events';
-  }
-
-  // Otherwise, return to the requested page (specific album, event, etc.)
-  return redirectTo;
-}
+import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -24,7 +12,6 @@ export async function GET(request: NextRequest) {
   if (code) {
     const cookieStore = await cookies();
 
-    // Create response first so we can set cookies on it
     const finalRedirect = getPostLoginRedirect(redirectToParam);
     const response = NextResponse.redirect(`${origin}${finalRedirect}`);
 
@@ -54,11 +41,10 @@ export async function GET(request: NextRequest) {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .single();
+        const { data: profileData } = await supabase.rpc('get_own_profile');
+        const profile = profileData && typeof profileData === 'object' && !Array.isArray(profileData)
+          ? profileData as Record<string, unknown>
+          : null;
 
         if (!profile) {
           // Create profile for new user
@@ -83,11 +69,6 @@ export async function GET(request: NextRequest) {
           // and OAuth provides one
           if (!profile.avatar_url && oauthAvatarUrl) {
             updateData.avatar_url = oauthAvatarUrl;
-          }
-
-          // Sync email if auth email differs from profile email (e.g., after email change confirmation)
-          if (user.email && user.email.toLowerCase() !== profile.email?.toLowerCase()) {
-            updateData.email = user.email.toLowerCase();
           }
 
           await supabase

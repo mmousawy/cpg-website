@@ -25,12 +25,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // Validate bypass token if provided (short ID stored directly in token_hash)
+    // Validate bypass token if provided (hashed at rest)
     if (bypassToken) {
+      const tokenHash = hashToken(bypassToken);
       const { data: token, error: tokenError } = await supabase
         .from('auth_tokens')
         .select('*')
-        .eq('token_hash', bypassToken) // Compare short ID directly
+        .eq('token_hash', tokenHash)
         .eq('token_type', 'signup_bypass')
         .is('used_at', null)
         .gt('expires_at', new Date().toISOString())
@@ -43,13 +44,20 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Mark token as used
-      await supabase
+      const { data: consumed } = await supabase
         .from('auth_tokens')
         .update({ used_at: new Date().toISOString() })
-        .eq('id', token.id);
+        .eq('id', token.id)
+        .is('used_at', null)
+        .select('id')
+        .maybeSingle();
 
-      console.log('Bypass token validated, skipping bot check');
+      if (!consumed) {
+        return NextResponse.json(
+          { message: 'Invalid or expired bypass link' },
+          { status: 400 },
+        );
+      }
     }
 
     // Validate required fields

@@ -6,6 +6,7 @@ import { revalidateChallenges } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -24,13 +25,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if user is admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 

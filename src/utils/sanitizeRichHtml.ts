@@ -17,6 +17,7 @@ function sanitizeForWeb(html: string, disableLinks = false): string {
       span: ['class'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
+    allowProtocolRelative: false,
   });
 }
 

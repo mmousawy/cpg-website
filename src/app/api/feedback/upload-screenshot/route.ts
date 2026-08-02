@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
 import { validateImageFile } from '@/utils/imageValidation';
+import { safeFileExtension } from '@/utils/security';
 
 const BUCKET = 'email-assets';
 const PREFIX = 'feedback/';
@@ -12,7 +13,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -36,9 +39,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ext = file.name.split('.').pop() || 'png';
-    const safeExt = /^[a-z0-9]+$/i.test(ext) ? ext : 'png';
-    const path = `${PREFIX}${crypto.randomUUID()}.${safeExt}`;
+    const safeExt = safeFileExtension(file.name);
+    const path = `${PREFIX}${user.id}/${crypto.randomUUID()}.${safeExt}`;
 
     const { error } = await adminSupabase.storage
       .from(BUCKET)

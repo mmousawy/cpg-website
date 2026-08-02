@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/database.types';
+import type { NextRequest } from 'next/server';
 
-// This endpoint only works in development/test environments
-// It cleans up test users created during E2E tests
+import { isTestApiEnvironmentAllowed, verifyInternalApiRequest } from '@/lib/auth/verifyInternalApi';
 
-export async function POST(request: Request) {
-  // Only allow in development, test, or preview environments
-  // VERCEL_ENV is 'preview' for PR deployments, 'production' for main branch
-  const isPreview = process.env.VERCEL_ENV === 'preview';
-  const isDev = process.env.NODE_ENV !== 'production';
-  const isCI = !!process.env.CI;
+export async function POST(request: NextRequest) {
+  const authError = verifyInternalApiRequest(request);
+  if (authError) return authError;
 
-  if (!isDev && !isCI && !isPreview) {
+  if (!isTestApiEnvironmentAllowed()) {
     return NextResponse.json(
       { error: 'Not available in production' },
       { status: 403 },

@@ -63,21 +63,8 @@ export default function EmailAttendeesModal({
           throw new Error('Failed to load RSVPs');
         }
 
-        // Fetch all admin profiles (hosts), sorted by joined date
-        const { data: admins, error: adminsError } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, nickname, created_at')
-          .eq('is_admin', true)
-          .is('suspended_at', null)
-          .is('deletion_scheduled_at', null)
-          .not('email', 'is', null)
-          .order('created_at', { ascending: true }); // Oldest first
-
-        if (adminsError) {
-          throw new Error('Failed to load admin profiles');
-        }
-
-        // Combine and deduplicate by email, preserving joined date for sorting
+        // Hosts are included via confirmed RSVPs (auto-added on event create).
+        // Mark hosts by cross-referencing admin nicknames from the RSVP list only.
         const recipientMap = new Map<string, EmailRecipient & { joinedAt: string | null }>();
 
         // Add RSVPs
@@ -92,22 +79,6 @@ export default function EmailAttendeesModal({
                 type: 'attendee',
                 selected: true, // All recipients selected by default
                 joinedAt: profile?.created_at || null,
-              });
-            }
-          });
-        }
-
-        // Add admins
-        if (admins) {
-          admins.forEach((admin) => {
-            if (admin.email) {
-              recipientMap.set(admin.email.toLowerCase(), {
-                email: admin.email,
-                name: admin.full_name || admin.email.split('@')[0] || 'Friend',
-                nickname: admin.nickname,
-                type: 'host',
-                selected: true, // All recipients selected by default
-                joinedAt: admin.created_at || null,
               });
             }
           });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 
 /** GET — search members by name/nickname/email, excluding those already RSVP'd to an event */
 export async function GET(request: NextRequest) {
@@ -11,13 +12,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.is_admin) {
+  const isAdmin = await checkIsAdmin(supabase);
+  if (!isAdmin) {
     return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
   }
 

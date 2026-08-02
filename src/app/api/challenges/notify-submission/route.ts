@@ -32,6 +32,27 @@ export async function POST(request: NextRequest) {
 
   const photoCount = photoIds.length;
 
+  const { data: ownedPhotos, error: photosError } = await supabase
+    .from('photos')
+    .select('id')
+    .in('id', photoIds)
+    .eq('user_id', user.id);
+
+  if (photosError || !ownedPhotos || ownedPhotos.length !== photoIds.length) {
+    return NextResponse.json({ message: 'Invalid photo submission' }, { status: 403 });
+  }
+
+  const { data: submissions } = await supabase
+    .from('challenge_submissions')
+    .select('photo_id')
+    .eq('challenge_id', challengeId)
+    .in('photo_id', photoIds)
+    .eq('user_id', user.id);
+
+  if (!submissions || submissions.length !== photoIds.length) {
+    return NextResponse.json({ message: 'Photos are not submitted to this challenge' }, { status: 403 });
+  }
+
   // Fetch photo details for the email
   const { data: photos } = await supabase
     .from('photos')

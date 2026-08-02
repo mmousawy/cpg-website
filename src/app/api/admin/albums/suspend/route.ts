@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateAlbum, revalidateEventAlbum } from '@/app/actions/revalidate';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile?.is_admin) {
+    const isAdmin = await checkIsAdmin(supabase);
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
