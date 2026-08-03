@@ -35,12 +35,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
     }
 
-    // Fetch user profile for processing options
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('watermark_enabled, watermark_style, watermark_text, embed_copyright_exif, exif_copyright_text, copyright_name, full_name')
-      .eq('id', user.id)
-      .single();
+    const { data: profileJson } = await supabase.rpc('get_own_profile');
+    const profile = (
+      profileJson && typeof profileJson === 'object' && !Array.isArray(profileJson)
+        ? profileJson
+        : null
+    ) as {
+      watermark_enabled?: boolean | null;
+      watermark_style?: string | null;
+      watermark_text?: string | null;
+      embed_copyright_exif?: boolean | null;
+      exif_copyright_text?: string | null;
+      copyright_name?: string | null;
+      full_name?: string | null;
+    } | null;
 
     const watermarkEnabled = profile?.watermark_enabled ?? false;
     const embedExif = profile?.embed_copyright_exif ?? false;

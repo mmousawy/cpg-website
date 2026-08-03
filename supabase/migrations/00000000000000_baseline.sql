@@ -1994,6 +1994,62 @@ COMMENT ON FUNCTION "public"."prevent_private_challenge_photo"() IS 'Prevents ph
 
 
 
+CREATE OR REPLACE FUNCTION "public"."protect_albums_moderation_columns"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NOT public.is_admin() THEN
+    IF NEW.is_suspended IS DISTINCT FROM OLD.is_suspended
+       OR NEW.suspended_at IS DISTINCT FROM OLD.suspended_at
+       OR NEW.suspended_by IS DISTINCT FROM OLD.suspended_by
+       OR NEW.suspension_reason IS DISTINCT FROM OLD.suspension_reason THEN
+      RAISE EXCEPTION 'Cannot modify album suspension fields';
+    END IF;
+
+    IF NEW.likes_count IS DISTINCT FROM OLD.likes_count
+       OR NEW.view_count IS DISTINCT FROM OLD.view_count THEN
+      RAISE EXCEPTION 'Cannot modify album engagement counters';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_albums_moderation_columns"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_feedback_admin_columns_on_insert"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.status IS DISTINCT FROM 'new' THEN
+    RAISE EXCEPTION 'Invalid feedback status on insert';
+  END IF;
+
+  IF NEW.admin_notes IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set admin fields on insert';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_feedback_admin_columns_on_insert"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."protect_notifications_columns"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -2019,6 +2075,30 @@ $$;
 
 
 ALTER FUNCTION "public"."protect_notifications_columns"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_photos_engagement_columns"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NOT public.is_admin() THEN
+    IF NEW.likes_count IS DISTINCT FROM OLD.likes_count
+       OR NEW.view_count IS DISTINCT FROM OLD.view_count THEN
+      RAISE EXCEPTION 'Cannot modify photo engagement counters';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_photos_engagement_columns"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."protect_profiles_privileged_columns"() RETURNS "trigger"
@@ -2053,6 +2133,85 @@ $$;
 
 
 ALTER FUNCTION "public"."protect_profiles_privileged_columns"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_profiles_privileged_columns_on_insert"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.is_admin IS TRUE THEN
+    RAISE EXCEPTION 'Cannot set is_admin';
+  END IF;
+
+  IF NEW.suspended_at IS NOT NULL OR NEW.suspended_reason IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set suspension fields';
+  END IF;
+
+  IF NEW.deletion_scheduled_at IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set deletion_scheduled_at';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_profiles_privileged_columns_on_insert"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_reports_admin_columns_on_insert"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.status IS DISTINCT FROM 'pending' THEN
+    RAISE EXCEPTION 'Invalid report status on insert';
+  END IF;
+
+  IF NEW.admin_notes IS NOT NULL
+     OR NEW.reviewed_at IS NOT NULL
+     OR NEW.reviewed_by IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set admin fields on insert';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_reports_admin_columns_on_insert"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."protect_rsvp_attendance_columns"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  IF NOT public.is_admin() THEN
+    IF NEW.attended_at IS DISTINCT FROM OLD.attended_at THEN
+      RAISE EXCEPTION 'Cannot modify attendance';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."protect_rsvp_attendance_columns"() OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."remove_album_member"("p_album_id" "uuid", "p_user_id" "uuid") RETURNS "void"
@@ -4332,11 +4491,35 @@ CREATE OR REPLACE TRIGGER "prevent_private_challenge_photo_trigger" BEFORE UPDAT
 
 
 
+CREATE OR REPLACE TRIGGER "protect_albums_moderation_columns_trigger" BEFORE UPDATE ON "public"."albums" FOR EACH ROW EXECUTE FUNCTION "public"."protect_albums_moderation_columns"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_feedback_admin_columns_insert_trigger" BEFORE INSERT ON "public"."feedback" FOR EACH ROW EXECUTE FUNCTION "public"."protect_feedback_admin_columns_on_insert"();
+
+
+
 CREATE OR REPLACE TRIGGER "protect_notifications_columns_trigger" BEFORE UPDATE ON "public"."notifications" FOR EACH ROW EXECUTE FUNCTION "public"."protect_notifications_columns"();
 
 
 
+CREATE OR REPLACE TRIGGER "protect_photos_engagement_columns_trigger" BEFORE UPDATE ON "public"."photos" FOR EACH ROW EXECUTE FUNCTION "public"."protect_photos_engagement_columns"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_profiles_privileged_columns_insert_trigger" BEFORE INSERT ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."protect_profiles_privileged_columns_on_insert"();
+
+
+
 CREATE OR REPLACE TRIGGER "protect_profiles_privileged_columns_trigger" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."protect_profiles_privileged_columns"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_reports_admin_columns_insert_trigger" BEFORE INSERT ON "public"."reports" FOR EACH ROW EXECUTE FUNCTION "public"."protect_reports_admin_columns_on_insert"();
+
+
+
+CREATE OR REPLACE TRIGGER "protect_rsvp_attendance_columns_trigger" BEFORE UPDATE ON "public"."events_rsvps" FOR EACH ROW EXECUTE FUNCTION "public"."protect_rsvp_attendance_columns"();
 
 
 
@@ -4707,81 +4890,61 @@ ALTER TABLE ONLY "public"."shared_album_requests"
 
 
 
-CREATE POLICY "Admins can create announcements" ON "public"."challenge_announcements" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can create announcements" ON "public"."challenge_announcements" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can create challenges" ON "public"."challenges" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can create challenges" ON "public"."challenges" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can create event announcements" ON "public"."event_announcements" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can create event announcements" ON "public"."event_announcements" FOR INSERT WITH CHECK ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can delete challenges" ON "public"."challenges" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can delete challenges" ON "public"."challenges" FOR DELETE TO "authenticated" USING ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can review submissions" ON "public"."challenge_submissions" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can review submissions" ON "public"."challenge_submissions" FOR UPDATE TO "authenticated" USING ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can update challenges" ON "public"."challenges" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can update challenges" ON "public"."challenges" FOR UPDATE TO "authenticated" USING ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can update feedback" ON "public"."feedback" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can update feedback" ON "public"."feedback" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can update reports" ON "public"."reports" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))) WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can update reports" ON "public"."reports" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can view all event announcements" ON "public"."event_announcements" FOR SELECT USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can view all event announcements" ON "public"."event_announcements" FOR SELECT USING ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can view all feedback" ON "public"."feedback" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can view all events" ON "public"."events" FOR SELECT USING ("public"."is_admin"());
 
 
 
-CREATE POLICY "Admins can view announcements" ON "public"."challenge_announcements" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Admins can view all feedback" ON "public"."feedback" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+
+CREATE POLICY "Admins can view all profiles" ON "public"."profiles" FOR SELECT USING ("public"."is_admin"());
+
+
+
+CREATE POLICY "Admins can view announcements" ON "public"."challenge_announcements" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
 
 
 
 CREATE POLICY "Album likes are publicly readable" ON "public"."album_likes" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_likes"."album_id") AND (("albums"."is_public" = true) OR ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-           FROM "public"."profiles"
-          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))) AND ("albums"."deleted_at" IS NULL)))));
+  WHERE (("albums"."id" = "album_likes"."album_id") AND (("albums"."is_public" = true) OR ("albums"."user_id" = "auth"."uid"()) OR "public"."is_admin"()) AND ("albums"."deleted_at" IS NULL)))));
 
 
 
@@ -4805,15 +4968,11 @@ CREATE POLICY "Anyone can view challenge color draws" ON "public"."challenge_col
 
 
 
-CREATE POLICY "Authenticated select challenges" ON "public"."challenges" FOR SELECT TO "authenticated" USING ((("is_active" = true) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Authenticated select challenges" ON "public"."challenges" FOR SELECT TO "authenticated" USING ((("is_active" = true) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Authenticated select submissions" ON "public"."challenge_submissions" FOR SELECT TO "authenticated" USING ((("status" = 'accepted'::"text") OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Authenticated select submissions" ON "public"."challenge_submissions" FOR SELECT TO "authenticated" USING ((("status" = 'accepted'::"text") OR ("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -4825,9 +4984,7 @@ CREATE POLICY "Authenticated users can add scene events" ON "public"."scene_even
 
 
 
-CREATE POLICY "Authenticated users can create RSVPs" ON "public"."events_rsvps" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Authenticated users can create RSVPs" ON "public"."events_rsvps" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -4873,9 +5030,7 @@ CREATE POLICY "Delete album comment links" ON "public"."album_comments" FOR DELE
 
 
 
-CREATE POLICY "Delete albums policy" ON "public"."albums" FOR DELETE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Delete albums policy" ON "public"."albums" FOR DELETE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -4893,7 +5048,7 @@ CREATE POLICY "Event comments are viewable by everyone" ON "public"."event_comme
 
 
 
-CREATE POLICY "Events are viewable by everyone" ON "public"."events" FOR SELECT USING (true);
+CREATE POLICY "Follows are publicly readable" ON "public"."follows" FOR SELECT USING (true);
 
 
 
@@ -4949,29 +5104,21 @@ CREATE POLICY "No direct scene event comment inserts" ON "public"."scene_event_c
 
 
 
-CREATE POLICY "Only admins can create events" ON "public"."events" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Only admins can create events" ON "public"."events" FOR INSERT WITH CHECK ("public"."is_admin"());
 
 
 
-CREATE POLICY "Only admins can delete events" ON "public"."events" FOR DELETE USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Only admins can delete events" ON "public"."events" FOR DELETE USING ("public"."is_admin"());
 
 
 
-CREATE POLICY "Only admins can update events" ON "public"."events" FOR UPDATE USING ((EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))));
+CREATE POLICY "Only admins can update events" ON "public"."events" FOR UPDATE USING ("public"."is_admin"());
 
 
 
 CREATE POLICY "Photo likes are publicly readable" ON "public"."photo_likes" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."photos"
-  WHERE (("photos"."id" = "photo_likes"."photo_id") AND (("photos"."is_public" = true) OR ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-           FROM "public"."profiles"
-          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))))));
+  WHERE (("photos"."id" = "photo_likes"."photo_id") AND (("photos"."is_public" = true) OR ("photos"."user_id" = "auth"."uid"()) OR "public"."is_admin"())))));
 
 
 
@@ -4983,23 +5130,23 @@ CREATE POLICY "Profile interests are viewable by everyone" ON "public"."profile_
 
 
 
-CREATE POLICY "Profiles are viewable by everyone" ON "public"."profiles" FOR SELECT USING (true);
+CREATE POLICY "Profiles are viewable by active members" ON "public"."profiles" FOR SELECT USING ((("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL)));
 
 
 
-CREATE POLICY "Read own or managed members" ON "public"."shared_album_members" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+CREATE POLICY "Published events are viewable by everyone" ON "public"."events" FOR SELECT USING (("is_draft" = false));
+
+
+
+CREATE POLICY "Read own or managed members" ON "public"."shared_album_members" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR (EXISTS ( SELECT 1
    FROM "public"."albums" "a"
-  WHERE (("a"."id" = "shared_album_members"."album_id") AND (("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR COALESCE(( SELECT "profiles"."is_admin"
-           FROM "public"."profiles"
-          WHERE ("profiles"."id" = ( SELECT "auth"."uid"() AS "uid"))), false)))))));
+  WHERE (("a"."id" = "shared_album_members"."album_id") AND (("a"."user_id" = "auth"."uid"()) OR "public"."is_admin"()))))));
 
 
 
-CREATE POLICY "Read own requests or owner-managed requests" ON "public"."shared_album_requests" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR ("initiated_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
+CREATE POLICY "Read own requests or owner-managed requests" ON "public"."shared_album_requests" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR ("initiated_by" = "auth"."uid"()) OR (EXISTS ( SELECT 1
    FROM "public"."albums" "a"
-  WHERE (("a"."id" = "shared_album_requests"."album_id") AND (("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR COALESCE(( SELECT "profiles"."is_admin"
-           FROM "public"."profiles"
-          WHERE ("profiles"."id" = ( SELECT "auth"."uid"() AS "uid"))), false)))))));
+  WHERE (("a"."id" = "shared_album_requests"."album_id") AND (("a"."user_id" = "auth"."uid"()) OR "public"."is_admin"()))))));
 
 
 
@@ -5017,17 +5164,13 @@ CREATE POLICY "Select RSVPs policy" ON "public"."events_rsvps" FOR SELECT USING 
 
 CREATE POLICY "Select album photos policy" ON "public"."album_photos" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_photos"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-           FROM "public"."profiles"
-          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))))));
+  WHERE (("albums"."id" = "album_photos"."album_id") AND (("albums"."user_id" = "auth"."uid"()) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", "auth"."uid"()) OR "public"."is_admin"())))));
 
 
 
 CREATE POLICY "Select album tags policy" ON "public"."album_tags" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_tags"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-           FROM "public"."profiles"
-          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))))));
+  WHERE (("albums"."id" = "album_tags"."album_id") AND (("albums"."user_id" = "auth"."uid"()) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", "auth"."uid"()) OR "public"."is_admin"())))));
 
 
 
@@ -5035,9 +5178,7 @@ CREATE POLICY "Select albums policy" ON "public"."albums" FOR SELECT USING ((("u
 
 
 
-CREATE POLICY "Select email preferences policy" ON "public"."email_preferences" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Select email preferences policy" ON "public"."email_preferences" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -5057,21 +5198,15 @@ CREATE POLICY "Tags are viewable by everyone" ON "public"."tags" FOR SELECT USIN
 
 
 
-CREATE POLICY "Update RSVPs policy" ON "public"."events_rsvps" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Update RSVPs policy" ON "public"."events_rsvps" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Update albums policy" ON "public"."albums" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Update albums policy" ON "public"."albums" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Update email preferences policy" ON "public"."email_preferences" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Update email preferences policy" ON "public"."email_preferences" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -5113,9 +5248,7 @@ CREATE POLICY "Users can delete own comments" ON "public"."comments" FOR DELETE 
 
 
 
-CREATE POLICY "Users can delete own photos" ON "public"."photos" FOR DELETE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Users can delete own photos" ON "public"."photos" FOR DELETE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -5157,10 +5290,6 @@ CREATE POLICY "Users can mark own notifications as seen" ON "public"."notificati
 
 
 
-CREATE POLICY "Users can read own follows" ON "public"."follows" FOR SELECT USING (((( SELECT "auth"."uid"() AS "uid") = "follower_id") OR (( SELECT "auth"."uid"() AS "uid") = "following_id")));
-
-
-
 CREATE POLICY "Users can read own notifications" ON "public"."notifications" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
@@ -5191,9 +5320,7 @@ CREATE POLICY "Users can update own comments" ON "public"."comments" FOR UPDATE 
 
 
 
-CREATE POLICY "Users can update own photos" ON "public"."photos" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Users can update own photos" ON "public"."photos" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -5203,15 +5330,15 @@ CREATE POLICY "Users can update own profile" ON "public"."profiles" FOR UPDATE U
 
 CREATE POLICY "Users can update photos in their own albums" ON "public"."album_photos" FOR UPDATE USING (((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_photos"."album_id") AND ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+  WHERE (("albums"."id" = "album_photos"."album_id") AND ("albums"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Users can view own reports or admins view all" ON "public"."reports" FOR SELECT TO "authenticated" USING ((("reporter_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Users can view own profile" ON "public"."profiles" FOR SELECT USING (("id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can view own reports or admins view all" ON "public"."reports" FOR SELECT TO "authenticated" USING ((("reporter_id" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -5223,41 +5350,31 @@ CREATE POLICY "Users can view tags from public photos or their own photos" ON "p
 
 CREATE POLICY "Users or admins can delete challenge comments" ON "public"."challenge_comments" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
    FROM "public"."comments"
-  WHERE (("comments"."id" = "challenge_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+  WHERE (("comments"."id" = "challenge_comments"."comment_id") AND ("comments"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "Users or admins can delete event comments" ON "public"."event_comments" FOR DELETE USING (((EXISTS ( SELECT 1
    FROM "public"."comments"
-  WHERE (("comments"."id" = "event_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+  WHERE (("comments"."id" = "event_comments"."comment_id") AND ("comments"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "Users or admins can delete scene event comments" ON "public"."scene_event_comments" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
    FROM "public"."comments"
-  WHERE (("comments"."id" = "scene_event_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+  WHERE (("comments"."id" = "scene_event_comments"."comment_id") AND ("comments"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "View album comment links" ON "public"."album_comments" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_comments"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR (EXISTS ( SELECT 1
-           FROM "public"."profiles"
-          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))))));
+  WHERE (("albums"."id" = "album_comments"."album_id") AND (("albums"."user_id" = "auth"."uid"()) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_admin"())))));
 
 
 
 CREATE POLICY "View photo comment links" ON "public"."photo_comments" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."photos"
-  WHERE (("photos"."id" = "photo_comments"."photo_id") AND (("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR ("photos"."is_public" = true) OR (EXISTS ( SELECT 1
-           FROM "public"."profiles"
-          WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))))));
+  WHERE (("photos"."id" = "photo_comments"."photo_id") AND (("photos"."user_id" = "auth"."uid"()) OR ("photos"."is_public" = true) OR "public"."is_admin"())))));
 
 
 
@@ -5265,9 +5382,7 @@ CREATE POLICY "View public or own photos" ON "public"."photos" FOR SELECT USING 
 
 
 
-CREATE POLICY "Withdraw pending or admin delete" ON "public"."challenge_submissions" FOR DELETE TO "authenticated" USING (((("user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("status" = 'pending'::"text")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "Withdraw pending or admin delete" ON "public"."challenge_submissions" FOR DELETE TO "authenticated" USING (((("user_id" = "auth"."uid"()) AND ("status" = 'pending'::"text")) OR "public"."is_admin"()));
 
 
 
@@ -5296,23 +5411,15 @@ CREATE POLICY "anon_select_live_scene_events" ON "public"."scene_events" FOR SEL
 ALTER TABLE "public"."auth_tokens" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "authenticated_delete_scene_events" ON "public"."scene_events" FOR DELETE TO "authenticated" USING ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "authenticated_delete_scene_events" ON "public"."scene_events" FOR DELETE TO "authenticated" USING ((("submitted_by" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "authenticated_select_scene_events" ON "public"."scene_events" FOR SELECT TO "authenticated" USING ((("deleted_at" IS NULL) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "authenticated_select_scene_events" ON "public"."scene_events" FOR SELECT TO "authenticated" USING ((("deleted_at" IS NULL) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR UPDATE TO "authenticated" USING (((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("deleted_at" IS NULL)) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true)))))) WITH CHECK ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles"
-  WHERE (("profiles"."id" = ( SELECT "auth"."uid"() AS "uid")) AND ("profiles"."is_admin" = true))))));
+CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR UPDATE TO "authenticated" USING (((("submitted_by" = "auth"."uid"()) AND ("deleted_at" IS NULL)) OR "public"."is_admin"())) WITH CHECK ((("submitted_by" = "auth"."uid"()) OR "public"."is_admin"()));
 
 
 
@@ -5949,7 +6056,6 @@ GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
 
 
 GRANT ALL ON FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "postgres";
-GRANT ALL ON FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_user_id" "uuid") TO "service_role";
 
@@ -5974,6 +6080,20 @@ GRANT ALL ON FUNCTION "public"."prevent_private_challenge_photo"() TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."protect_feedback_admin_columns_on_insert"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_feedback_admin_columns_on_insert"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_feedback_admin_columns_on_insert"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_feedback_admin_columns_on_insert"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "anon";
 GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "authenticated";
@@ -5981,10 +6101,38 @@ GRANT ALL ON FUNCTION "public"."protect_notifications_columns"() TO "service_rol
 
 
 
+GRANT ALL ON FUNCTION "public"."protect_photos_engagement_columns"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_photos_engagement_columns"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_photos_engagement_columns"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_photos_engagement_columns"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "anon";
 GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns_on_insert"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns_on_insert"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns_on_insert"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_profiles_privileged_columns_on_insert"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."protect_reports_admin_columns_on_insert"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_reports_admin_columns_on_insert"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_reports_admin_columns_on_insert"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_reports_admin_columns_on_insert"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."protect_rsvp_attendance_columns"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."protect_rsvp_attendance_columns"() TO "anon";
+GRANT ALL ON FUNCTION "public"."protect_rsvp_attendance_columns"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."protect_rsvp_attendance_columns"() TO "service_role";
 
 
 
@@ -6225,9 +6373,84 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "anon";
-GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "authenticated";
+GRANT INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "anon";
+GRANT INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."profiles" TO "service_role";
+
+
+
+GRANT SELECT("id"),REFERENCES("id") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("id"),REFERENCES("id") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("full_name") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("full_name") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("nickname") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("nickname") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("avatar_url") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("avatar_url") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("bio") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("bio") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("website") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("website") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("last_logged_in") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("last_logged_in") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("created_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("created_at") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("social_links") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("social_links") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("suspended_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("suspended_at") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("newsletter_opt_in") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("newsletter_opt_in") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("terms_accepted_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("terms_accepted_at") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("deletion_scheduled_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("deletion_scheduled_at") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("banner_url") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("banner_url") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
+GRANT SELECT("banner_blurhash") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("banner_blurhash") ON TABLE "public"."profiles" TO "authenticated";
 
 
 

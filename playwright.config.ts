@@ -31,7 +31,7 @@ export default defineConfig({
 
   // Auto-start server for tests (only if not using external URL)
   webServer: process.env.BASE_URL ? undefined : {
-    command: process.env.CI ? 'npm start' : 'npm run dev:light',
+    command: process.env.CI ? 'npm start' : 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI, // Reuse existing server locally
     timeout: 120000,

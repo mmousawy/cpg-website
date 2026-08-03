@@ -91,13 +91,24 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
       // Fetch user profile for default license and copyright (used for all uploads in this batch)
       let defaultLicense: 'all-rights-reserved' | 'cc-by-nc-nd-4.0' | 'cc-by-nc-4.0' | 'cc-by-4.0' | 'cc0' = 'all-rights-reserved';
       let copyrightNotice: string | null = null;
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('default_license, copyright_name, full_name, watermark_enabled, embed_copyright_exif')
-        .eq('id', userId)
-        .maybeSingle();
+      let watermarkEnabled = false;
+      let embedCopyrightExif = false;
+      const { data: profileJson } = await supabase.rpc('get_own_profile');
+      const profileData = (
+        profileJson && typeof profileJson === 'object' && !Array.isArray(profileJson)
+          ? profileJson
+          : null
+      ) as {
+        default_license?: string | null;
+        copyright_name?: string | null;
+        full_name?: string | null;
+        watermark_enabled?: boolean | null;
+        embed_copyright_exif?: boolean | null;
+      } | null;
       if (profileData) {
         defaultLicense = (profileData.default_license as typeof defaultLicense) || 'all-rights-reserved';
+        watermarkEnabled = profileData.watermark_enabled ?? false;
+        embedCopyrightExif = profileData.embed_copyright_exif ?? false;
         const copyrightName = profileData.copyright_name || profileData.full_name;
         if (copyrightName) {
           const { formatCopyrightNotice } = await import('@/utils/licenses');
@@ -132,7 +143,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           const filePath = `${prefix}${fileName}`;
 
           // Upload with progress tracking using XHR
-          const { publicUrl } = await uploadWithProgress(
+          const { publicUrl } = await uploadToStorage(
             supabase,
             bucketName,
             filePath,
@@ -205,7 +216,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           }
 
           // Trigger server-side processing (watermark, EXIF) if user has it enabled
-          if (profileData?.watermark_enabled || profileData?.embed_copyright_exif) {
+          if (watermarkEnabled || embedCopyrightExif) {
             fetch('/api/photos/process', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -330,55 +341,40 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 }
 
 /**
- * Upload file with progress tracking using XMLHttpRequest
+ * Upload file via server API (service role) so uploads work when storage RLS blocks direct client access.
  */
-async function uploadWithProgress(
-  supabase: SupabaseClient,
+async function uploadToStorage(
+  _supabase: SupabaseClient,
   bucketName: string,
   filePath: string,
   file: File,
   onProgress: (progress: number) => void,
 ): Promise<{ publicUrl: string }> {
-  // Get the storage URL and auth token
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    throw new Error('Not authenticated');
+  onProgress(10);
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('bucket', bucketName);
+  formData.append('path', filePath);
+
+  const response = await fetch('/api/photos/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  onProgress(80);
+
+  const payload = await response.json().catch(() => ({})) as { publicUrl?: string; error?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Upload failed');
   }
 
-  // Construct the upload URL
-  // @ts-expect-error - accessing protected property for URL
-  const supabaseUrl = supabase.supabaseUrl || supabase.storageUrl?.replace('/storage/v1', '');
-  const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucketName}/${filePath}`;
+  if (!payload.publicUrl) {
+    throw new Error('Upload failed: missing public URL');
+  }
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+  onProgress(100);
 
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        const progress = Math.round((event.loaded / event.total) * 100);
-        onProgress(progress);
-      }
-    });
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(filePath);
-        resolve({ publicUrl });
-      } else {
-        reject(new Error(`Upload failed: ${xhr.statusText}`));
-      }
-    });
-
-    xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed'));
-    });
-
-    xhr.open('POST', uploadUrl);
-    xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-    xhr.setRequestHeader('x-upsert', 'false');
-    xhr.send(file);
-  });
+  return { publicUrl: payload.publicUrl };
 }
