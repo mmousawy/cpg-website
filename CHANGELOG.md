@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.5](https://github.com/mmousawy/cpg-website/compare/v1.37.4...v1.37.5) (2026-08-08)
+
+
+### 🐛 Bug Fixes
+
+* Replace body scroll lock implementation with custom hook ([b6cb445](https://github.com/mmousawy/cpg-website/commit/b6cb44519bc8c0eaed30a8ccbfc7016f86ae18b6))
+
 ## [1.37.4](https://github.com/mmousawy/cpg-website/compare/v1.37.3...v1.37.4) (2026-08-03)
 
 
