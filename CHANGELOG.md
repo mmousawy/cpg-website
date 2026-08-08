@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.37.4](https://github.com/mmousawy/cpg-website/compare/v1.37.3...v1.37.4) (2026-08-03)
+
+
+### 🐛 Bug Fixes
+
+* Add internal API secret and enhance proxy logic ([7a41886](https://github.com/mmousawy/cpg-website/commit/7a4188671cc35551aa953414798f344f820dd577))
+* Allow E2E test APIs in specific environments ([da53450](https://github.com/mmousawy/cpg-website/commit/da53450a4d53fc6ae789638202b4fdb52cee69f5))
+* Update caching and image handling for improved performance ([280c6c3](https://github.com/mmousawy/cpg-website/commit/280c6c31df11ba2b151fed832e1ad2e18046da2d))
+* Update profile fetching and upload logic for improved consistency ([b053c5b](https://github.com/mmousawy/cpg-website/commit/b053c5bc46ebbb46ed72a9940a2c227e508cc7ee))
+
+
+### 🔧 Maintenance
+
+* Integrate internal API secret handling for E2E tests ([fc407c8](https://github.com/mmousawy/cpg-website/commit/fc407c80d895524016bea4eb153e75067b1d1f19))
+
 ## [1.37.3](https://github.com/mmousawy/cpg-website/compare/v1.37.2...v1.37.3) (2026-08-02)
 
 
