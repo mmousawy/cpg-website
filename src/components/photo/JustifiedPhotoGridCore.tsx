@@ -227,7 +227,7 @@ function PhotoRows({
                     blurhash={photo?.blurhash}
                     fill
                     className="object-cover transition-all duration-200 group-hover:brightness-110"
-                    sizes={`${Math.ceil(item.displayWidth)}px`}
+                    sizes={`${Math.min(Math.ceil(item.displayWidth * 2), maxDisplayWidth)}px`}
                     loading='lazy'
                     quality={THUMBNAIL_IMAGE_QUALITY}
                   />

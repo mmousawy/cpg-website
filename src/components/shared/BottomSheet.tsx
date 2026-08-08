@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useMounted } from '@/hooks/useMounted';
 
 import CloseSVG from 'public/icons/close.svg';
@@ -68,16 +68,16 @@ export default function BottomSheet({
   }, [isOpen]);
 
   // Handle body scroll lock
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
-    if (isOpen) {
-      lockBodyScroll();
-      const timerId = setTimeout(() => setIsTrapped(true), 16);
-      return () => clearTimeout(timerId);
-    } else {
-      unlockBodyScroll();
+    if (!isOpen) {
       const timerId = setTimeout(() => setIsTrapped(false), 0);
       return () => clearTimeout(timerId);
     }
+
+    const timerId = setTimeout(() => setIsTrapped(true), 16);
+    return () => clearTimeout(timerId);
   }, [isOpen]);
 
   // Reset drag state when closing

@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 
 import CloseSVG from 'public/icons/close.svg';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { getColorLabel, getColorSwatchStyle, isLightColor } from '@/lib/colorDraw';
 
 function useIsMounted() {
@@ -30,15 +30,13 @@ export default function ColorFullscreen({ color, isOpen, onClose }: ColorFullscr
     [onClose],
   );
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
-    if (isOpen) {
-      lockBodyScroll();
-      window.addEventListener('keydown', handleEscape);
-      return () => {
-        unlockBodyScroll();
-        window.removeEventListener('keydown', handleEscape);
-      };
-    }
+    if (!isOpen) return;
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, handleEscape]);
 
   const mounted = useIsMounted();

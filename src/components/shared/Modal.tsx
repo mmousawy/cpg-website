@@ -7,7 +7,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import CloseSVG from 'public/icons/close.svg';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 export default function Modal() {
   const { isOpen, setIsOpen, requestClose, title, content, footer, size, flushContentTop } = useContext(ModalContext);
@@ -31,22 +31,20 @@ export default function Modal() {
     fullscreen: 'max-w-[95vw] w-[95vw] max-h-[90vh]',
   };
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
-    if (modalRef.current) {
-      if (isOpen) {
-        modalRef.current.show();
-        lockBodyScroll();
-        // Focus trap the dialog element after a brief delay
-        const timerId = setTimeout(() => setIsTrapped(true), 16);
-        return () => clearTimeout(timerId);
-      } else {
-        modalRef.current.close();
-        unlockBodyScroll();
-        // Untrap the dialog element (via microtask to satisfy React Compiler)
-        const timerId = setTimeout(() => setIsTrapped(false), 0);
-        return () => clearTimeout(timerId);
-      }
+    if (!isOpen) {
+      modalRef.current?.close();
+      // Untrap the dialog element (via microtask to satisfy React Compiler)
+      const timerId = setTimeout(() => setIsTrapped(false), 0);
+      return () => clearTimeout(timerId);
     }
+
+    modalRef.current?.show();
+    // Focus trap the dialog element after a brief delay
+    const timerId = setTimeout(() => setIsTrapped(true), 16);
+    return () => clearTimeout(timerId);
   }, [isOpen]);
 
   // This effect is used to add an event listener to the dialog element

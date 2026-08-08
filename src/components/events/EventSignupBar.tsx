@@ -12,7 +12,7 @@ import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import type { CPGEvent } from '@/types/events';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { usePathname, useRouter } from 'next/navigation';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
@@ -126,28 +126,50 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
     }
   }, [authLoading, user, profile, pathname, router]);
 
+  const loadRSVPStatus = useCallback(async () => {
+    if (!user || !event) {
+      return { hasRSVP: false, rsvpUuid: null };
+    }
+
+    const { data } = await supabase
+      .from('events_rsvps')
+      .select('id, uuid')
+      .eq('event_id', event.id)
+      .eq('user_id', user.id)
+      .is('canceled_at', null)
+      .not('confirmed_at', 'is', null)
+      .maybeSingle();
+
+    return { hasRSVP: !!data, rsvpUuid: data?.uuid ?? null };
+  }, [user, event, supabase]);
+
   useEffect(() => {
     const checkRSVP = async () => {
-      if (!user || !event || authLoading || !isProfileComplete(profile, { fallbackEmail: user.email ?? null })) {
+      if (authLoading) return;
+      if (!user || !event) {
         setIsLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from('events_rsvps')
-        .select('id, uuid')
-        .eq('event_id', event.id)
-        .eq('user_id', user.id)
-        .is('canceled_at', null)
-        .not('confirmed_at', 'is', null)
-        .single();
 
-      setHasRSVP(!!data);
-      setRsvpUuid(data?.uuid || null);
+      const status = await loadRSVPStatus();
+      setHasRSVP(status.hasRSVP);
+      setRsvpUuid(status.rsvpUuid);
       setIsLoading(false);
     };
 
     checkRSVP();
-  }, [user, profile, event, supabase, authLoading]);
+  }, [authLoading, user, event, loadRSVPStatus]);
+
+  const handleRSVPChange = useCallback(async (nextHasRSVP: boolean) => {
+    if (nextHasRSVP) {
+      const status = await loadRSVPStatus();
+      setHasRSVP(status.hasRSVP);
+      setRsvpUuid(status.rsvpUuid);
+    } else {
+      setHasRSVP(false);
+      setRsvpUuid(null);
+    }
+  }, [loadRSVPStatus]);
 
   const openModal = () => {
     modalContext.setTitle(`${event.title}`);
@@ -156,7 +178,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         event={event}
         hasExistingRSVP={hasRSVP}
         rsvpUuid={rsvpUuid}
-        onRSVPChange={setHasRSVP}
+        onRSVPChange={handleRSVPChange}
       />,
     );
     modalContext.setFooter(null);

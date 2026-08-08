@@ -5,7 +5,7 @@ import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfirmState } from '@/app/providers/ConfirmProvider';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import TrashSVG from 'public/icons/trash.svg';
 import Button from './Button';
 
@@ -14,20 +14,18 @@ export default function ConfirmModal() {
   const modalRef = useRef<HTMLDialogElement>(null);
   const [isTrapped, setIsTrapped] = useState(false);
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
-    if (modalRef.current) {
-      if (isOpen) {
-        modalRef.current.show();
-        lockBodyScroll();
-        const timerId = setTimeout(() => setIsTrapped(true), 16);
-        return () => clearTimeout(timerId);
-      } else {
-        modalRef.current.close();
-        unlockBodyScroll();
-        const timerId = setTimeout(() => setIsTrapped(false), 0);
-        return () => clearTimeout(timerId);
-      }
+    if (!isOpen) {
+      modalRef.current?.close();
+      const timerId = setTimeout(() => setIsTrapped(false), 0);
+      return () => clearTimeout(timerId);
     }
+
+    modalRef.current?.show();
+    const timerId = setTimeout(() => setIsTrapped(true), 16);
+    return () => clearTimeout(timerId);
   }, [isOpen]);
 
   const handleConfirm = () => {

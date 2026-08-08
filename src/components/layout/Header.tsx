@@ -300,8 +300,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Search Modal — loaded only when opened */}
-      {searchOpen && (
+      {/* Search modal — stay mounted so open/close CSS transitions run */}
+      {mounted && (
         <SearchModal
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}

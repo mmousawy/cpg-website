@@ -6,11 +6,11 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useFollowList } from '@/hooks/useFollowList';
 import type { FollowListType } from '@/types/follows';
 import type { SearchResult } from '@/types/search';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import CloseSVG from 'public/icons/close.svg';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type FollowListModalProps = {
   isOpen: boolean;
@@ -69,6 +69,8 @@ export default function FollowListModal({
   const results = useMemo(() => members.map(memberToSearchResult), [members]);
   const isSearching = query.trim().length >= 2;
 
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     if (!isOpen) {
       modalRef.current?.close();
@@ -77,13 +79,8 @@ export default function FollowListModal({
     }
 
     modalRef.current?.show();
-    lockBodyScroll();
     const trapTimerId = setTimeout(() => setIsTrapped(true), 16);
-
-    return () => {
-      clearTimeout(trapTimerId);
-      unlockBodyScroll();
-    };
+    return () => clearTimeout(trapTimerId);
   }, [isOpen]);
 
   useEffect(() => {

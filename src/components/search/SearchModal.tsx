@@ -6,7 +6,7 @@ import { FocusTrap } from 'focus-trap-react';
 import { useRouter } from 'next/navigation';
 import CloseSVG from 'public/icons/close.svg';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import SearchInput from './SearchInput';
 import SearchResults from './SearchResults';
 
@@ -32,20 +32,18 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   }, [setQuery]);
 
   // Handle modal open/close
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
-    if (modalRef.current) {
-      if (isOpen) {
-        modalRef.current.show();
-        lockBodyScroll();
-        const timerId = setTimeout(() => setIsTrapped(true), 16);
-        return () => clearTimeout(timerId);
-      } else {
-        modalRef.current.close();
-        unlockBodyScroll();
-        const timerId = setTimeout(() => setIsTrapped(false), 0);
-        return () => clearTimeout(timerId);
-      }
+    if (!isOpen) {
+      modalRef.current?.close();
+      const timerId = setTimeout(() => setIsTrapped(false), 0);
+      return () => clearTimeout(timerId);
     }
+
+    modalRef.current?.show();
+    const timerId = setTimeout(() => setIsTrapped(true), 16);
+    return () => clearTimeout(timerId);
   }, [isOpen]);
 
   // Reset search when modal closes
