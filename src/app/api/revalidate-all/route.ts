@@ -1,4 +1,4 @@
-import { revalidateTag } from 'next/cache';
+import { expireTags } from '@/lib/cache/expireTag';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -28,19 +28,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Revalidate all cache tags
-    revalidateTag('events', 'max');
-    revalidateTag('event-attendees', 'max');
-    revalidateTag('albums', 'max');
-    revalidateTag('gallery', 'max');
-    revalidateTag('profiles', 'max');
-    revalidateTag('interests', 'max');
-    revalidateTag('challenges', 'max');
-    revalidateTag('challenge-photos', 'max');
-    revalidateTag('search', 'max');
-    revalidateTag('scene', 'max');
-    revalidateTag('home', 'max');
-    revalidateTag('changelog', 'max');
+    expireTags([
+      'events', 'event-attendees', 'albums', 'gallery', 'profiles',
+      'interests', 'challenges', 'challenge-photos', 'search', 'scene', 'home', 'changelog',
+    ]);
 
     return NextResponse.json({
       success: true,

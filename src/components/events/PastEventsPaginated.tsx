@@ -1,8 +1,7 @@
 'use client';
 
 import type { CPGEvent, EventAttendee } from '@/types/events';
-import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Button from '../shared/Button';
 import EventsList from './EventsList';
 
@@ -11,10 +10,10 @@ type PastEventsPaginatedProps = {
   initialAttendees: Record<number, EventAttendee[]>;
   totalCount: number;
   perPage: number;
+  serverNow: number;
 };
 
-// Session storage key
-const STORAGE_KEY_PREFIX = 'past-events-paginated-';
+const STORAGE_KEY = 'past-events-paginated-/events';
 
 type CachedState = {
   events: CPGEvent[];
@@ -30,52 +29,28 @@ export default function PastEventsPaginated({
   initialAttendees,
   totalCount,
   perPage,
+  serverNow,
 }: PastEventsPaginatedProps) {
-  const pathname = usePathname();
-  const storageKey = `${STORAGE_KEY_PREFIX}${pathname}`;
+  const [events, setEvents] = useState<CPGEvent[]>(initialEvents);
+  const [attendeesByEvent, setAttendeesByEvent] = useState<Record<number, EventAttendee[]>>(initialAttendees);
+  const [isPending, startLoadMore] = useTransition();
 
-  // Initialize state from sessionStorage if available
-  const getInitialState = useCallback((): { events: CPGEvent[]; attendeesByEvent: Record<number, EventAttendee[]> } => {
-    if (typeof window === 'undefined') {
-      return { events: initialEvents, attendeesByEvent: initialAttendees };
-    }
-
+  // Restore extra loaded pages from sessionStorage after mount
+  useEffect(() => {
     try {
-      const cached = sessionStorage.getItem(storageKey);
-      if (cached) {
-        const parsed: CachedState = JSON.parse(cached);
-        // Check if cache is still valid
-        if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS && parsed.events.length > 0) {
-          return { events: parsed.events, attendeesByEvent: parsed.attendeesByEvent };
-        }
-      }
+      const cached = sessionStorage.getItem(STORAGE_KEY);
+      if (!cached) return;
+
+      const parsed: CachedState = JSON.parse(cached);
+      if (Date.now() - parsed.timestamp >= CACHE_EXPIRY_MS) return;
+      if (parsed.events.length <= initialEvents.length) return;
+
+      setEvents(parsed.events);
+      setAttendeesByEvent(parsed.attendeesByEvent);
     } catch {
       // Ignore storage errors
     }
-
-    return { events: initialEvents, attendeesByEvent: initialAttendees };
-  }, [storageKey, initialEvents, initialAttendees]);
-
-  const [events, setEvents] = useState<CPGEvent[]>(() => getInitialState().events);
-  const [attendeesByEvent, setAttendeesByEvent] = useState<Record<number, EventAttendee[]>>(() => getInitialState().attendeesByEvent);
-  const [isPending, startTransition] = useTransition();
-
-  // Start with a fixed timestamp for SSR (Jan 1, 2026), update on client
-  const [clientNow, setClientNow] = useState(1767225600000);
-
-  useEffect(() => {
-    setClientNow(Date.now());
-  }, []);
-
-  // Restore state from sessionStorage on mount (client-side only)
-  useEffect(() => {
-    const { events: cachedEvents, attendeesByEvent: cachedAttendees } = getInitialState();
-    // Only restore if we have more than initial events
-    if (cachedEvents.length > initialEvents.length) {
-      setEvents(cachedEvents);
-      setAttendeesByEvent(cachedAttendees);
-    }
-  }, [getInitialState, initialEvents.length]);
+  }, [initialEvents.length]);
 
   // Persist state to sessionStorage when events change
   useEffect(() => {
@@ -87,18 +62,18 @@ export default function PastEventsPaginated({
           attendeesByEvent,
           timestamp: Date.now(),
         };
-        sessionStorage.setItem(storageKey, JSON.stringify(state));
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch {
         // Ignore storage errors (quota exceeded, etc.)
       }
     }
-  }, [events, attendeesByEvent, storageKey, initialEvents.length]);
+  }, [events, attendeesByEvent, initialEvents.length]);
 
   const hasMore = events.length < totalCount;
   const remainingCount = totalCount - events.length;
 
   const loadMore = () => {
-    startTransition(async () => {
+    startLoadMore(async () => {
       try {
         const res = await fetch(`/api/events/past?offset=${events.length}&limit=${perPage}`);
 
@@ -117,12 +92,14 @@ export default function PastEventsPaginated({
   };
 
   if (events.length === 0) {
-    return <EventsList
-      events={[]}
-      attendeesByEvent={{}}
-      emptyMessage="No past events yet"
-      serverNow={clientNow}
-    />;
+    return (
+      <EventsList
+        events={[]}
+        attendeesByEvent={{}}
+        emptyMessage="No past events yet"
+        serverNow={serverNow}
+      />
+    );
   }
 
   return (
@@ -130,7 +107,7 @@ export default function PastEventsPaginated({
       <EventsList
         events={events}
         attendeesByEvent={attendeesByEvent}
-        serverNow={clientNow}
+        serverNow={serverNow}
       />
 
       {hasMore && (

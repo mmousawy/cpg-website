@@ -1,7 +1,10 @@
 import type { Tables } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { supabase } from '@/utils/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { fetchAlbumPhotos } from '@/hooks/useAlbumPhotos';
 
 type AlbumFilter = 'all' | 'personal' | 'shared' | 'event';
 
@@ -400,11 +403,37 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
   return albumWithFilteredPhotos as unknown as AlbumWithPhotos;
 }
 
+function findOwnedAlbumInCaches(
+  queryClient: QueryClient,
+  userId: string,
+  slug: string,
+): AlbumWithPhotos | undefined {
+  const listKeys: Array<readonly unknown[]> = [
+    ['albums', userId, 'personal'],
+    ['albums', userId, 'shared'],
+    ['all-event-albums', userId],
+  ];
+
+  for (const queryKey of listKeys) {
+    const albums = queryClient.getQueryData<AlbumWithPhotos[]>(queryKey);
+    const match = albums?.find((album) => album.slug === slug);
+    if (match) return match;
+  }
+
+  return undefined;
+}
+
 export function useAlbumBySlug(userId: string | undefined, slug: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ['album', userId, slug],
     queryFn: () => fetchAlbumBySlug(userId!, slug!),
     enabled: !!userId && !!slug,
+    placeholderData: () => {
+      if (!userId || !slug) return undefined;
+      return findOwnedAlbumInCaches(queryClient, userId, slug);
+    },
   });
 }
 
@@ -633,15 +662,59 @@ async function fetchSharedAlbumByOwnerAndSlug(
   } as unknown as SharedWithMeAlbum;
 }
 
+function findSharedAlbumInCaches(
+  queryClient: QueryClient,
+  userId: string,
+  ownerNickname: string,
+  slug: string,
+): SharedWithMeAlbum | undefined {
+  const albums = queryClient.getQueryData<SharedWithMeAlbum[]>(['shared-with-me-albums', userId]);
+  return albums?.find(
+    (album) => album.slug === slug && album.owner_profile?.nickname === ownerNickname,
+  );
+}
+
+export function prefetchOwnedAlbum(queryClient: QueryClient, userId: string, slug: string) {
+  return queryClient.prefetchQuery({
+    queryKey: ['album', userId, slug],
+    queryFn: () => fetchAlbumBySlug(userId, slug),
+  });
+}
+
+export function prefetchSharedAlbum(
+  queryClient: QueryClient,
+  userId: string,
+  ownerNickname: string,
+  slug: string,
+) {
+  return queryClient.prefetchQuery({
+    queryKey: ['shared-album', ownerNickname, slug, userId],
+    queryFn: () => fetchSharedAlbumByOwnerAndSlug(userId, ownerNickname, slug),
+  });
+}
+
+export function prefetchAlbumPhotos(queryClient: QueryClient, albumId: string) {
+  return queryClient.prefetchQuery({
+    queryKey: ['album-photos', albumId],
+    queryFn: () => fetchAlbumPhotos(albumId),
+  });
+}
+
 export function useSharedAlbumByOwnerAndSlug(
   userId: string | undefined,
   ownerNickname: string | undefined,
   slug: string | undefined,
 ) {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ['shared-album', ownerNickname, slug, userId],
     queryFn: () => fetchSharedAlbumByOwnerAndSlug(userId!, ownerNickname!, slug!),
     enabled: !!userId && !!ownerNickname && !!slug,
+    placeholderData: () => {
+      if (!userId || !ownerNickname || !slug) return undefined;
+      return findSharedAlbumInCaches(queryClient, userId, ownerNickname, slug);
+    },
   });
 }
 

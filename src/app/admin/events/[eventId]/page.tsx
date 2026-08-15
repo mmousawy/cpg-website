@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { Suspense, useContext, useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
@@ -40,7 +40,43 @@ type RSVPWithProfile = Pick<
   profiles: Pick<Tables<'profiles'>, 'nickname'> | Pick<Tables<'profiles'>, 'nickname'>[] | null;
 };
 
+function AdminEventFormFallback() {
+  return (
+    <PageContainer>
+      <div
+        className="mb-8"
+      >
+        <div
+          className="h-8 w-48 animate-pulse rounded bg-background-light"
+        />
+        <div
+          className="mt-2 h-5 w-72 animate-pulse rounded bg-background-light"
+        />
+      </div>
+      <Container
+        className="text-center animate-pulse"
+      >
+        <p
+          className="text-foreground/50"
+        >
+          Loading event...
+        </p>
+      </Container>
+    </PageContainer>
+  );
+}
+
 export default function AdminEventFormPage() {
+  return (
+    <Suspense
+      fallback={<AdminEventFormFallback />}
+    >
+      <AdminEventForm />
+    </Suspense>
+  );
+}
+
+function AdminEventForm() {
   // Admin access is guaranteed by ProtectedRoute layout with requireAdmin
   const { user } = useAuth();
   const confirm = useConfirm();
@@ -452,30 +488,28 @@ export default function AdminEventFormPage() {
           console.warn('Failed to extract EXIF data:', err);
         }
 
-        const fileExt = coverImageFile.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `events/${fileName}`;
+        const formData = new FormData();
+        formData.append('file', coverImageFile);
+        formData.append('folder', 'events');
 
-        const { error: uploadError } = await supabase.storage
-          .from('event-covers')
-          .upload(filePath, coverImageFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+        const uploadRes = await fetch('/api/admin/upload-cover', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json() as {
+          publicUrl?: string;
+          filePath?: string;
+          error?: string;
+        };
 
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          setError('Failed to upload cover image');
+        if (!uploadRes.ok || !uploadData.publicUrl || !uploadData.filePath) {
+          console.error('Upload error:', uploadData.error);
+          setError(uploadData.error || 'Failed to upload cover image');
           setIsSaving(false);
           return;
         }
 
-        // Get public URL
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('event-covers').getPublicUrl(filePath);
-
+        const { publicUrl, filePath } = uploadData;
         coverImageUrl = publicUrl;
 
         // Store photo metadata

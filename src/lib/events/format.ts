@@ -3,16 +3,17 @@ import dayjs from 'dayjs';
 type EventDateFormatOptions = {
   includeYear?: boolean;
   style?: 'short' | 'long';
+  /** Epoch ms. When includeYear is true, omit the year if it matches this timestamp. */
+  now?: number;
 };
 
 export function formatEventDate(
   date: string,
   options: EventDateFormatOptions = {},
 ): string {
-  const { includeYear = false, style = 'short' } = options;
+  const { includeYear = false, style = 'short', now } = options;
   const eventDate = dayjs(date);
-  const currentYear = dayjs().year();
-  const showYear = includeYear && eventDate.year() !== currentYear;
+  const showYear = includeYear && (now == null || eventDate.year() !== dayjs(now).year());
 
   if (style === 'long') {
     return showYear

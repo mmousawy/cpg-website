@@ -1,0 +1,45 @@
+{
+  "description": "Apply in Cloudflare dashboard for zone creativephotography.group (proxied / orange-cloud). Expressions use starts_with/ends_with only — no matches (regex) operator (requires Business or WAF Advanced).",
+  "verification": {
+    "static": "curl -sI \"https://creativephotography.group/_next/static/chunks/webpack.js\" | grep -iE 'cache-control|cf-cache-status'",
+    "public_html": "curl -sI \"https://creativephotography.group/gallery\" | grep -iE 'cache-control|cf-cache-status'",
+    "bypass": "curl -sI \"https://creativephotography.group/account\" -H \"Cookie: sb-example-auth-token=fake\" | grep -i cf-cache-status"
+  },
+  "rules": [
+    {
+      "order": 1,
+      "name": "Bypass cache — auth, admin, API, non-GET",
+      "expression": "(http.host in {\"creativephotography.group\" \"www.creativephotography.group\"} and (http.request.method ne \"GET\" or http.cookie contains \"sb-\" or starts_with(http.request.uri.path, \"/account\") or starts_with(http.request.uri.path, \"/admin\") or starts_with(http.request.uri.path, \"/api/\") or starts_with(http.request.uri.path, \"/auth\") or starts_with(http.request.uri.path, \"/login\") or starts_with(http.request.uri.path, \"/signup\") or starts_with(http.request.uri.path, \"/onboarding\") or starts_with(http.request.uri.path, \"/forgot-password\") or starts_with(http.request.uri.path, \"/reset-password\") or starts_with(http.request.uri.path, \"/confirm/\") or starts_with(http.request.uri.path, \"/cancel/\")))",
+      "action": "set_cache_settings",
+      "settings": {
+        "cache": false
+      }
+    },
+    {
+      "order": 2,
+      "name": "Long edge cache — Next static chunks and public assets",
+      "expression": "(http.host in {\"creativephotography.group\" \"www.creativephotography.group\"} and (starts_with(http.request.uri.path, \"/_next/static/\") or starts_with(http.request.uri.path, \"/icons/\") or ends_with(http.request.uri.path, \".woff2\") or ends_with(http.request.uri.path, \".ico\") or ends_with(http.request.uri.path, \".svg\") or ends_with(http.request.uri.path, \".png\") or ends_with(http.request.uri.path, \".webp\") or ends_with(http.request.uri.path, \".jpg\") or ends_with(http.request.uri.path, \".jpeg\")))",
+      "action": "set_cache_settings",
+      "settings": {
+        "edge_ttl_seconds": 31536000,
+        "browser_ttl_respect_origin": true,
+        "cache": true
+      },
+      "notes": [
+        "ends_with covers public/ assets (e.g. /icons/*.svg). /_next/static/ covers hashed JS/CSS.",
+        "No regex — ends_with list is intentional for Free/Pro plans."
+      ]
+    },
+    {
+      "order": 3,
+      "name": "Edge cache — public search API (optional)",
+      "expression": "(http.host in {\"creativephotography.group\" \"www.creativephotography.group\"} and http.request.uri.path eq \"/api/search\" and http.request.method eq \"GET\" and not http.cookie contains \"sb-\")",
+      "action": "set_cache_settings",
+      "settings": {
+        "edge_ttl_seconds": 300,
+        "browser_ttl_respect_origin": true,
+        "cache": true
+      }
+    }
+  ]
+}

@@ -1,12 +1,10 @@
-import { cacheLife, cacheTag } from 'next/cache';
-
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
-// Cached data functions
 import { getEventAttendees, getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 
 const PAST_EVENTS_PER_PAGE = 5;
@@ -18,13 +16,14 @@ export const metadata = createMetadata({
   keywords: ['photography events', 'meetups', 'photo walks', 'Netherlands', 'photography meetups'],
 });
 
+export const instant = false;
+
 export default async function EventsPage() {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('events');
   cacheTag('event-attendees');
 
-  // Fetch events using cached data functions
   const [upcomingData, pastEventsData] = await Promise.all([
     getUpcomingEvents(),
     getPastEvents(PAST_EVENTS_PER_PAGE),
@@ -33,10 +32,9 @@ export default async function EventsPage() {
   const { events: upcomingEvents, serverNow } = upcomingData;
   const { events: initialPast, totalCount: pastEventsCount } = pastEventsData;
 
-  // Fetch attendees for all displayed events
   const displayedEventIds = [
-    ...upcomingEvents.map(e => e.id),
-    ...initialPast.map(e => e.id),
+    ...upcomingEvents.map((e) => e.id),
+    ...initialPast.map((e) => e.id),
   ];
 
   const attendeesByEvent = await getEventAttendees(displayedEventIds);
@@ -70,7 +68,6 @@ export default async function EventsPage() {
       <div
         className="space-y-6 sm:space-y-10"
       >
-        {/* Upcoming Events */}
         <section>
           <h2
             className="text-xl font-semibold mb-4 opacity-80 font-heading"
@@ -89,7 +86,6 @@ export default async function EventsPage() {
           </div>
         </section>
 
-        {/* Past Events - Paginated */}
         <section>
           <h2
             className="text-xl font-semibold mb-4 opacity-80 font-heading"
@@ -104,6 +100,7 @@ export default async function EventsPage() {
               initialAttendees={attendeesByEvent}
               totalCount={pastEventsCount}
               perPage={PAST_EVENTS_PER_PAGE}
+              serverNow={serverNow}
             />
           </div>
         </section>

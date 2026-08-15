@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/utils/supabase/admin';
+import {
+  revalidateAlbumBySlug,
+  revalidateChallenge,
+  revalidateEventBySlug,
+  revalidateGalleryData,
+  revalidateSceneEvent,
+} from '@/app/actions/revalidate';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import {
   type CommentEmailEntityType,
@@ -10,11 +15,135 @@ import {
   scheduleNotification,
 } from '@/lib/notifications/schedule';
 import type { NotificationEntityType, NotificationType } from '@/types/notifications';
-import {
-  revalidateAlbumBySlug,
-  revalidateGalleryData,
-  revalidateSceneEvent,
-} from '@/app/actions/revalidate';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type CommentEntityType = 'album' | 'photo' | 'event' | 'challenge' | 'scene_event';
+
+async function resolveCommentEntity(
+  supabase: SupabaseClient,
+  commentId: string,
+): Promise<{ entityType: CommentEntityType; entityId: string } | null> {
+  const { data: albumLink } = await supabase
+    .from('album_comments')
+    .select('album_id')
+    .eq('comment_id', commentId)
+    .maybeSingle();
+  if (albumLink?.album_id) {
+    return { entityType: 'album', entityId: albumLink.album_id };
+  }
+
+  const { data: photoLink } = await supabase
+    .from('photo_comments')
+    .select('photo_id')
+    .eq('comment_id', commentId)
+    .maybeSingle();
+  if (photoLink?.photo_id) {
+    return { entityType: 'photo', entityId: photoLink.photo_id };
+  }
+
+  const { data: eventLink } = await supabase
+    .from('event_comments')
+    .select('event_id')
+    .eq('comment_id', commentId)
+    .maybeSingle();
+  if (eventLink?.event_id != null) {
+    return { entityType: 'event', entityId: String(eventLink.event_id) };
+  }
+
+  const { data: challengeLink } = await supabase
+    .from('challenge_comments')
+    .select('challenge_id')
+    .eq('comment_id', commentId)
+    .maybeSingle();
+  if (challengeLink?.challenge_id) {
+    return { entityType: 'challenge', entityId: challengeLink.challenge_id };
+  }
+
+  const { data: sceneLink } = await supabase
+    .from('scene_event_comments')
+    .select('scene_event_id')
+    .eq('comment_id', commentId)
+    .maybeSingle();
+  if (sceneLink?.scene_event_id) {
+    return { entityType: 'scene_event', entityId: sceneLink.scene_event_id };
+  }
+
+  return null;
+}
+
+async function revalidateCommentEntity(
+  supabase: SupabaseClient,
+  entityType: CommentEntityType,
+  entityId: string,
+) {
+  if (entityType === 'photo') {
+    await revalidateGalleryData();
+    return;
+  }
+
+  if (entityType === 'event') {
+    const eventIdNum = parseInt(entityId, 10);
+    const { data: event } = await supabase
+      .from('events')
+      .select('slug')
+      .eq('id', eventIdNum)
+      .single();
+
+    if (event?.slug) {
+      await revalidateEventBySlug(event.slug);
+    }
+    return;
+  }
+
+  if (entityType === 'challenge') {
+    const { data: challenge } = await supabase
+      .from('challenges')
+      .select('id, slug')
+      .eq('id', entityId)
+      .single();
+
+    if (challenge?.slug) {
+      await revalidateChallenge(challenge.slug, challenge.id);
+    }
+    return;
+  }
+
+  if (entityType === 'scene_event') {
+    const { data: sceneEvent } = await supabase
+      .from('scene_events')
+      .select('slug')
+      .eq('id', entityId)
+      .is('deleted_at', null)
+      .single();
+
+    if (sceneEvent?.slug) {
+      await revalidateSceneEvent(sceneEvent.slug);
+    }
+    return;
+  }
+
+  if (entityType === 'album') {
+    const { data: album } = await supabase
+      .from('albums')
+      .select('slug, user_id')
+      .eq('id', entityId)
+      .single();
+
+    if (album?.user_id) {
+      const { data: owner } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('id', album.user_id)
+        .single();
+
+      if (owner?.nickname && album.slug) {
+        await revalidateAlbumBySlug(owner.nickname, album.slug);
+      }
+    }
+  }
+}
 
 export async function PATCH(request: NextRequest) {
   const supabase = await createClient();
@@ -76,6 +205,11 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ message: 'Comment could not be updated' }, { status: 500 });
   }
 
+  const entity = await resolveCommentEntity(supabase, commentId);
+  if (entity) {
+    await revalidateCommentEntity(supabase, entity.entityType, entity.entityId);
+  }
+
   return NextResponse.json({ success: true, commentId }, { status: 200 });
 }
 
@@ -133,6 +267,11 @@ export async function DELETE(request: NextRequest) {
 
   if (!data || data.length === 0) {
     return NextResponse.json({ message: 'Comment could not be deleted' }, { status: 500 });
+  }
+
+  const entity = await resolveCommentEntity(supabase, commentId);
+  if (entity) {
+    await revalidateCommentEntity(supabase, entity.entityType, entity.entityId);
   }
 
   return new NextResponse(null, { status: 204 });
@@ -506,7 +645,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Revalidate event cache so comment count is reflected
-      await revalidateGalleryData();
+      await revalidateEventBySlug(event.slug);
 
       // Return early for events since we've handled all notifications
       return NextResponse.json({ success: true, commentId }, { status: 200 });
@@ -563,7 +702,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Revalidate challenge cache so comment count is reflected
-      await revalidateGalleryData();
+      await revalidateChallenge(challenge.slug, challenge.id);
 
       // Return early for challenges since we've handled all notifications
       return NextResponse.json({ success: true, commentId }, { status: 200 });

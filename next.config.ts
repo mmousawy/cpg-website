@@ -12,9 +12,24 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
+    NEXT_PUBLIC_COPYRIGHT_YEAR: String(new Date().getFullYear()),
   },
   // Enable 'use cache' directive for data layer caching
   cacheComponents: true,
+  cacheLife: {
+    // Tag-invalidated content: no client stale window (avoids hard-refresh requirement)
+    tagged: {
+      stale: 0,
+      revalidate: 2592000,
+      expire: 2592000,
+    },
+    // Time-sensitive listings (events, challenges, most-viewed gallery sections)
+    hourly: {
+      stale: 0,
+      revalidate: 3600,
+      expire: 86400,
+    },
+  },
   // Memory optimization for Webpack builds (production)
   experimental: {
     // TypeScript 7 dropped the compiler API Next used to load; use the tsc CLI instead.
@@ -22,19 +37,21 @@ const nextConfig: NextConfig = {
     webpackMemoryOptimizations: true,
     optimizeCss: true,
     staleTimes: {
-      dynamic: 30,
-      static: 180,
+      dynamic: 0,
+      static: 0,
     },
   },
   images: {
     loader: 'custom',
     loaderFile: './src/utils/supabaseImageLoader.ts',
+    // Steps between 256 and 640 so mobile grid thumbs pick 384 instead of 750
+    imageSizes: [16, 32, 48, 64, 96, 128, 192, 256, 320, 384],
     // Cache transformed images for 31 days (reduces re-transformations)
     minimumCacheTTL: 2678400,
     // Single format reduces variants (Supabase auto-serves WebP via /render/image)
     formats: ['image/webp'],
     // 30 for blur placeholders, 60/80 for cards, 92 for heroes (passed to Supabase ?quality=)
-    qualities: [30, 60, 80, 92],
+    qualities: [30, 60, 75, 80, 92],
     remotePatterns: [
       {
         hostname: 'lpdjlhlslqtdswhnchmv.supabase.co',

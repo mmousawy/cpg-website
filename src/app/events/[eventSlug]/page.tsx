@@ -1,4 +1,6 @@
 import Avatar from '@/components/auth/Avatar';
+import { cacheLife } from 'next/cache';
+
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventCoverImage from '@/components/events/EventCoverImage';
 import EventSignupBar from '@/components/events/EventSignupBar';
@@ -13,7 +15,6 @@ import { SignUpCTASection } from '@/components/shared/SignUpCTA';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { Tables } from '@/database.types';
 import clsx from 'clsx';
-import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -128,8 +129,12 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
   );
 }
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
   'use cache';
+  cacheLife('hourly');
 
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
@@ -137,11 +142,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   if (!eventSlug) {
     notFound();
   }
-
-  cacheLife('max');
-  cacheTag('events');
-  cacheTag('event-attendees');
-  cacheTag(`event-${eventSlug}`);
 
   const eventData = await getEventBySlug(eventSlug);
   const { event, serverNow } = eventData;
@@ -158,7 +158,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   ]);
 
   const formattedDate = event.date
-    ? formatEventDate(event.date, { includeYear: true, style: 'long' })
+    ? formatEventDate(event.date, { includeYear: true, style: 'long', now: serverNow })
     : 'Date TBD';
 
   const formattedTime = event.time ? formatEventTime(event.time) : 'Time TBD';

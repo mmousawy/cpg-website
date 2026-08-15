@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import PageContainer from '@/components/layout/PageContainer';
@@ -34,7 +34,7 @@ function formatDeadline(endsAt: string | null, serverNow: number): string | null
   if (diff <= 0) return 'Ended on ' + deadline.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: deadline.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+    year: deadline.getFullYear() === now.getFullYear() ? undefined : 'numeric',
   });
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -72,8 +72,12 @@ export default function MyChallengesPage() {
   const withdrawMutation = useWithdrawSubmission();
   const confirm = useConfirm();
 
-  // Use lazy initialization to capture time only once on mount
-  const [serverNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    startTransition(() => {
+      setNow(Date.now());
+    });
+  }, []);
 
   // Group submissions by status
   const pendingSubmissions = (submissions || []).filter((s) => s.status === 'pending');
@@ -127,7 +131,7 @@ export default function MyChallengesPage() {
         {acceptedSubmissions.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold opacity-70 font-heading"
+              className="mb-4 text-xl font-semibold opacity-80 font-heading"
             >
               Accepted
             </h2>
@@ -138,7 +142,7 @@ export default function MyChallengesPage() {
                 <SubmissionCard
                   key={submission.id}
                   submission={submission}
-                  serverNow={serverNow}
+                  now={now}
                 />
               ))}
             </div>
@@ -148,7 +152,7 @@ export default function MyChallengesPage() {
         {/* Pending Submissions */}
         <section>
           <h2
-            className="mb-4 text-lg font-semibold opacity-70 font-heading"
+            className="mb-4 text-xl font-semibold opacity-80 font-heading"
           >
             Pending review
           </h2>
@@ -208,7 +212,7 @@ export default function MyChallengesPage() {
                 <SubmissionCard
                   key={submission.id}
                   submission={submission}
-                  serverNow={serverNow}
+                  now={now}
                   onWithdraw={() => handleWithdraw(submission)}
                   isWithdrawing={withdrawMutation.isPending}
                 />
@@ -232,7 +236,7 @@ export default function MyChallengesPage() {
                 <SubmissionCard
                   key={submission.id}
                   submission={submission}
-                  serverNow={serverNow}
+                  now={now}
                 />
               ))}
             </div>
@@ -245,19 +249,23 @@ export default function MyChallengesPage() {
 
 function SubmissionCard({
   submission,
-  serverNow,
+  now,
   onWithdraw,
   isWithdrawing,
 }: {
   submission: SubmissionWithDetails;
-  serverNow: number;
+  now: number | null;
   onWithdraw?: () => void;
   isWithdrawing?: boolean;
 }) {
   const photo = submission.photo;
   const challenge = submission.challenge;
-  const deadline = challenge?.ends_at ? formatDeadline(challenge.ends_at, serverNow) : null;
-  const deadlineShort = challenge?.ends_at ? formatDeadlineShort(challenge.ends_at, serverNow) : null;
+  const deadline = now != null && challenge?.ends_at
+    ? formatDeadline(challenge.ends_at, now)
+    : null;
+  const deadlineShort = now != null && challenge?.ends_at
+    ? formatDeadlineShort(challenge.ends_at, now)
+    : null;
   const isEnded = deadline?.includes('Ended') || !challenge?.is_active;
   const photoHref = submission.user?.nickname && photo?.short_id
     ? `/@${submission.user.nickname}/photo/${photo.short_id}`
@@ -472,7 +480,16 @@ function SubmissionCard({
             >
               Submitted
               {' '}
-              {(() => { const d = new Date(submission.submitted_at); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })()}
+              {(() => {
+                const d = new Date(submission.submitted_at);
+                return d.toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: now != null && d.getFullYear() === new Date(now).getFullYear()
+                    ? undefined
+                    : 'numeric',
+                });
+              })()}
             </span>
             <span
               className="sm:hidden"

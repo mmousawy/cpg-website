@@ -1,8 +1,5 @@
-import { Suspense } from 'react';
-
 import AppProviders from '@/components/layout/AppProviders';
 import AppShell from '@/components/layout/AppShell';
-import SessionFromServer from '@/components/layout/SessionFromServer';
 import { SessionProvider } from '@/context/SessionContext';
 import type { ServerAuth } from '@/utils/supabase/getServerAuth';
 
@@ -22,11 +19,6 @@ export default function AppProvidersTree({ children }: AppProvidersTreeProps) {
           {children}
         </AppShell>
       </AppProviders>
-      <Suspense
-        fallback={null}
-      >
-        <SessionFromServer />
-      </Suspense>
     </SessionProvider>
   );
 }

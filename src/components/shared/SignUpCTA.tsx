@@ -28,7 +28,7 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
   if (variant === 'banner') {
     return (
       <div
-        className="relative overflow-hidden bg-background-light mt-6 md:mt-0 mb-12"
+        className="relative overflow-hidden bg-background-light"
       >
         <BlurImage
           src={BANNER_BACKGROUND}

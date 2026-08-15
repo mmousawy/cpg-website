@@ -2,6 +2,7 @@
 
 import BlurImage from '@/components/shared/BlurImage';
 import CardBadges from '@/components/shared/CardBadges';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
@@ -14,12 +15,15 @@ interface AlbumCardProps {
   album: AlbumWithPhotos;
   isSelected?: boolean;
   isHovered?: boolean;
+  /** Show loading overlay while navigating to this album */
+  isOpening?: boolean;
 }
 
 function AlbumCard({
   album,
   isSelected = false,
   isHovered = false,
+  isOpening = false,
 }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
@@ -51,6 +55,7 @@ function AlbumCard({
     <div
       className={clsx(
         'relative cursor-pointer overflow-hidden bg-background-light transition-all border border-border-color',
+        isOpening && 'pointer-events-none ring-2 ring-primary/40',
         isSelected
           ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
           : isHovered
@@ -107,6 +112,16 @@ function AlbumCard({
       <div
         className="absolute inset-0 z-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"
       ></div>
+
+      {isOpening && (
+        <div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-background/80"
+          aria-busy="true"
+          aria-label="Opening album"
+        >
+          <LoadingSpinner />
+        </div>
+      )}
     </div>
   );
 }
@@ -121,6 +136,7 @@ export default memo(AlbumCard, (prevProps, nextProps) => {
     prevProps.album.is_shared === nextProps.album.is_shared &&
     prevProps.album.photos?.length === nextProps.album.photos?.length &&
     prevProps.isSelected === nextProps.isSelected &&
-    prevProps.isHovered === nextProps.isHovered
+    prevProps.isHovered === nextProps.isHovered &&
+    prevProps.isOpening === nextProps.isOpening
   );
 });

@@ -53,7 +53,7 @@ export async function getAllProfileNicknames() {
  */
 export async function getOrganizers(limit = 5) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('profiles');
 
   const supabase = createAdminClient();
@@ -75,7 +75,7 @@ export async function getOrganizers(limit = 5) {
  */
 export async function getRecentMembers(limit = 8) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('profiles');
 
   const supabase = createPublicClient();
@@ -101,7 +101,7 @@ export async function getRecentMembers(limit = 8) {
  */
 export async function getProfileInterests(userId: string, nickname: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -132,7 +132,7 @@ export async function getProfileInterests(userId: string, nickname: string) {
  */
 export async function getProfileByNickname(nickname: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -179,7 +179,7 @@ export async function getProfileByNickname(nickname: string) {
  */
 export async function getUserPublicPhotos(userId: string, nickname: string, limit = 50) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -207,7 +207,7 @@ export async function getUserPublicPhotos(userId: string, nickname: string, limi
  */
 export async function getUserPublicPhotoCount(userId: string, nickname: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -235,7 +235,7 @@ export async function getProfileStats(
   memberSince: string | null,
 ) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const supabase = createPublicClient();
@@ -282,7 +282,7 @@ export async function getProfileStats(
  */
 export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string, photoShortId: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
   cacheTag('albums');
   cacheTag(`photo-${photoShortId}`); // Granular invalidation for this specific photo
@@ -490,7 +490,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
  */
 export async function getPhotoByShortId(nickname: string, photoShortId: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
   cacheTag(`photo-${photoShortId}`); // Granular invalidation for this specific photo
 

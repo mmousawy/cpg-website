@@ -21,16 +21,18 @@ type SceneEventCardProps = {
   /** Interested users (for overview list) */
   interested?: SceneEventInterested[];
   className?: string;
+  /** Epoch ms used to decide whether to omit the current year. */
+  now?: number;
 };
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, nowTs?: number): string {
   const d = new Date(dateStr);
   const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
   const month = d.toLocaleDateString('en-US', { month: 'short' });
-  const isCurrentYear = d.getFullYear() === new Date().getFullYear();
-  return isCurrentYear
-    ? `${weekday} ${month} ${d.getDate()}`
-    : `${weekday} ${month} ${d.getDate()} ${d.getFullYear()}`;
+  const showYear = nowTs == null || d.getFullYear() !== new Date(nowTs).getFullYear();
+  return showYear
+    ? `${weekday} ${month} ${d.getDate()} ${d.getFullYear()}`
+    : `${weekday} ${month} ${d.getDate()}`;
 }
 
 function ordinal(n: number): string {
@@ -43,12 +45,13 @@ function ordinal(n: number): string {
 function formatDateRange(
   startDate: string,
   endDate: string | null,
+  nowTs?: number,
 ): string {
   const startD = new Date(startDate);
   const hasEndDate = endDate && endDate !== startDate;
 
   if (!hasEndDate) {
-    return formatDate(startDate);
+    return formatDate(startDate, nowTs);
   }
 
   const endD = new Date(endDate);
@@ -61,8 +64,8 @@ function formatDateRange(
     startD.getFullYear() === endD.getFullYear();
   const sameYear = startD.getFullYear() === endD.getFullYear();
 
-  const currentYear = new Date().getFullYear();
-  const yearSuffix = (y: number) => y === currentYear ? '' : `, ${y}`;
+  const currentYear = nowTs != null ? new Date(nowTs).getFullYear() : null;
+  const yearSuffix = (y: number) => currentYear != null && y === currentYear ? '' : `, ${y}`;
 
   if (sameMonth) {
     return `${weekday(startD)} ${monthName(startD, true)} ${startD.getDate()} – ${weekday(endD)} ${ordinal(endD.getDate())}${yearSuffix(endD.getFullYear())}`;
@@ -96,9 +99,10 @@ export default function SceneEventCard({
   event,
   interested = [],
   className,
+  now,
 }: SceneEventCardProps) {
   const imageSrc = event.cover_image_url;
-  const dateStr = formatDateRange(event.start_date, event.end_date);
+  const dateStr = formatDateRange(event.start_date, event.end_date, now);
   const categoryLabel = getCategoryLabel(event.category);
   const isCpgEvent = event.id.startsWith('cpg-');
   const locationStr = formatLocation(

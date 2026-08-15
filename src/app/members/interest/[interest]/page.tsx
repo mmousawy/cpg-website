@@ -1,8 +1,8 @@
-import PageContainer from '@/components/layout/PageContainer';
+import PageContainer from '@/components/layout/PageContainer';import { cacheLife } from 'next/cache';
+
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
@@ -35,12 +35,10 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
 }
 
-export default async function InterestMembersPage({ params }: { params: Params }) {
-  'use cache';
-  cacheLife('max');
-  cacheTag('interests');
-  cacheTag('profiles');
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
+export default async function InterestMembersPage({ params }: { params: Params }) {
   const resolvedParams = await params;
   const interestName = decodeURIComponent(resolvedParams?.interest || '');
 

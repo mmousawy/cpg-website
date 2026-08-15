@@ -1,9 +1,9 @@
 import Container from '@/components/layout/Container';
+import { cacheLife } from 'next/cache';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 // Cached data functions
@@ -20,20 +20,20 @@ import { stripHtml } from '@/utils/stripHtml';
 
 import ChallengeCoverImage from '@/components/challenges/ChallengeCoverImage';
 import ChallengeGallery from '@/components/challenges/ChallengeGallery';
-import SubmitButton from '@/components/challenges/SubmitButton';
 import ColorDrawSection from '@/components/challenges/ColorDraw/ColorDrawSection';
+import SubmitButton from '@/components/challenges/SubmitButton';
 import ChallengeComments from './ChallengeComments';
 
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
+import { SignUpCTASection } from '@/components/shared/SignUpCTA';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import AwardStarSVG from 'public/icons/award-star.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import PhotoStackSVG from 'public/icons/photo-stack.svg';
 import ClockSVG from 'public/icons/time.svg';
-import SignUpCTA, { SignUpCTASection } from '@/components/shared/SignUpCTA';
 
 // Pre-render all challenges at build time
 export async function generateStaticParams() {
@@ -115,12 +115,16 @@ function formatDate(dateStr: string | null, currentYear: number): string {
     : `${weekday} ${day} ${month} ${date.getFullYear()}`;
 }
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function ChallengePage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   'use cache';
+  cacheLife('hourly');
 
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
@@ -128,11 +132,6 @@ export default async function ChallengePage({
   if (!slug) {
     notFound();
   }
-
-  cacheLife('max');
-  cacheTag('challenges');
-  cacheTag(`challenge-${slug}`);
-  cacheTag('challenge-photos');
 
   const { challenge, serverNow } = await getChallengeBySlug(slug);
 
@@ -242,7 +241,7 @@ export default async function ChallengePage({
                 </span>
                 {isEnded ? (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-black/50 bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
                   >
                     <ClockMiniSVG
                       className="h-4 w-4 -ml-0.5 fill-current"

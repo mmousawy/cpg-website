@@ -60,7 +60,7 @@ export default function PhotosPage() {
   // React Query hooks
   const {
     photos,
-    isLoading: photosLoading,
+    isPending: photosPending,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -253,6 +253,8 @@ export default function PhotosPage() {
   const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
   const selectedCount = selectedPhotoIds.size;
 
+  const showEmptyState = !photosPending && photos.length === 0 && uploadingPhotos.length === 0;
+
   const handleMobileEdit = () => {
     // Only open on mobile (below md breakpoint)
     if (window.matchMedia('(max-width: 767px)').matches) {
@@ -331,7 +333,7 @@ export default function PhotosPage() {
             onDelete={handleDeletePhoto}
             onBulkDelete={handleBulkDeletePhotos}
             onAddToAlbum={handleAddToAlbum}
-            isLoading={photosLoading && photos.length === 0}
+            isLoading={photosPending && photos.length === 0}
             onDirtyChange={handleDirtyChange}
           />
         }
@@ -385,9 +387,7 @@ export default function PhotosPage() {
           className="flex flex-col"
           overlayMessage="Drop to upload"
         >
-          {photosLoading && photos.length === 0 ? (
-            <ManagePhotoGridSkeleton />
-          ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
+          {showEmptyState ? (
             <div
               className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
             >
@@ -413,6 +413,8 @@ export default function PhotosPage() {
                 Upload
               </Button>
             </div>
+          ) : photosPending && photos.length === 0 ? (
+            <ManagePhotoGridSkeleton />
           ) : (
             <>
               <PhotoGrid
@@ -462,7 +464,7 @@ export default function PhotosPage() {
           onDelete={handleDeletePhoto}
           onBulkDelete={handleBulkDeletePhotos}
           onAddToAlbum={handleAddToAlbum}
-          isLoading={photosLoading}
+          isLoading={photosPending}
           onDirtyChange={handleDirtyChange}
           hideTitle
         />

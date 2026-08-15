@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
-import { revalidateTag } from 'next/cache';
+import { expireTag } from '@/lib/cache/expireTag';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, markedIds: [], error: updateError.message }, { status: 500 });
     }
 
-    revalidateTag(`notifications-${user.id}`, 'max');
+    expireTag(`notifications-${user.id}`);
 
     return NextResponse.json({ success: true, markedIds: ids });
   } catch (error) {

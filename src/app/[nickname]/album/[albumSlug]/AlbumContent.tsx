@@ -12,7 +12,6 @@ import { getPhotosByUrls, getProfilesByUserIds } from '@/lib/data/albums';
 import type { AlbumJoinPolicy } from '@/types/albums';
 import type { Photo, SimpleTag } from '@/types/photos';
 import clsx from 'clsx';
-import { cacheLife, cacheTag } from 'next/cache';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import PhotoStackIcon from 'public/icons/photo-stack.svg';
 
@@ -25,14 +24,6 @@ type AlbumContentProps = {
 };
 
 export default async function AlbumContent({ album, nickname, albumSlug }: AlbumContentProps) {
-  'use cache';
-
-  // Apply cache settings
-  cacheLife('max');
-  cacheTag('albums');
-  cacheTag(`profile-${nickname}`);
-  cacheTag(`album-${nickname}-${albumSlug}`);
-
   // Sort photos by sort_order
   const sortedAlbumPhotos = [...(album.photos || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
@@ -211,7 +202,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 className="flex items-center gap-1.5"
               >
                 <PhotoStackIcon
-                  className="size-4 fill-foreground/60 shrink-0"
+                  className="size-4 fill-foreground/80 shrink-0"
                 />
                 <p
                   className="text-xs text-foreground/60"

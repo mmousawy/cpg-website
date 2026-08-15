@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import type { TablesInsert } from '@/database.types';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 
 async function getAdminUser(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -32,8 +33,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: 'Missing event_id or user_id' }, { status: 400 });
   }
 
-  // Fetch the member's profile to populate name/email on the RSVP
-  const { data: profile, error: profileError } = await supabase
+  // email is not granted to authenticated — use service role after admin check
+  const adminSupabase = createAdminClient();
+  const { data: profile, error: profileError } = await adminSupabase
     .from('profiles')
     .select('full_name, email')
     .eq('id', user_id)

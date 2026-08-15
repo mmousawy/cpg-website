@@ -37,7 +37,9 @@ export default function AlbumCard({
   // (the onClick prop is preferred when available for in-page navigation)
   const albumUrl = isOwner
     ? '/account/photos'
-    : `/@${album.profile?.nickname || 'unknown'}/album/${album.slug}`;
+    : album.event_slug
+      ? `/events/${album.event_slug}#photos`
+      : `/@${album.profile?.nickname || 'unknown'}/album/${album.slug}`;
 
   const cardContent = (
     <div

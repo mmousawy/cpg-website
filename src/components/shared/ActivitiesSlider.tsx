@@ -255,7 +255,7 @@ export default function ActivitiesSlider() {
 
       {/* JS-enabled: interactive slider (hidden when JS disabled via noscript style) */}
       <div
-        className="relative js-only-slider"
+        className="relative min-w-0 js-only-slider"
       >
         <noscript>
           <style>
@@ -281,9 +281,9 @@ export default function ActivitiesSlider() {
           />
         </div>
 
-        {/* Swiper - full viewport width on mobile, with fade mask on sm+ */}
+        {/* Full-bleed on mobile: cancel PageContainer px-3. Avoid w-screen/100vw (document width vs scrollbar). */}
         <div
-          className="w-screen relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-0 sm:translate-x-0 sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          className="relative -mx-3 w-[calc(100%+1.5rem)] sm:mx-0 sm:w-auto sm:[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
         >
           <Swiper
             modules={[Navigation, A11y]}

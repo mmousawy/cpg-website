@@ -3,7 +3,7 @@
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
-import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
+import { GRID_THUMBNAIL_QUALITY, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import HoverPrefetchLink from '../shared/HoverPrefetchLink';
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
@@ -13,6 +13,28 @@ import type { JustifiedPhotoGridCoreProps } from './justifiedPhotoGridTypes';
 const MOBILE_WIDTH = 400;
 const TABLET_WIDTH = 600;
 const DESKTOP_WIDTH = 960;
+
+/** Max CSS width of the grid at each breakpoint. Browser then applies DPR to sizes=. */
+const MOBILE_MAX_CSS_WIDTH = 384;
+const TABLET_MAX_CSS_WIDTH = 960;
+const DESKTOP_MAX_CSS_WIDTH = 1800;
+
+/**
+ * `displayWidth` is in layout-calculation space (400 / 600 / 960).
+ * Unconstrained rows flex-grow to the real container, so scale up to that CSS width.
+ * Constrained rows keep explicit layout pixels — those should not be scaled.
+ */
+function getThumbnailSizes(
+  displayWidth: number,
+  layoutWidth: number,
+  maxCssWidth: number,
+  isConstrained: boolean,
+): string {
+  const cssWidth = isConstrained
+    ? displayWidth
+    : displayWidth * (maxCssWidth / layoutWidth);
+  return `${Math.min(Math.ceil(cssWidth), maxCssWidth)}px`;
+}
 
 export default function JustifiedPhotoGridCore({
   photos,
@@ -85,7 +107,9 @@ export default function JustifiedPhotoGridCore({
           challengeSlug={challengeSlug}
           eventSlug={eventSlug}
           showAttribution={showAttribution}
-          maxDisplayWidth={900}
+          layoutWidth={MOBILE_WIDTH}
+          maxCssWidth={MOBILE_MAX_CSS_WIDTH}
+          quality={GRID_THUMBNAIL_QUALITY}
           header={header}
           gapClass="gap-1 mb-1"
         />
@@ -103,7 +127,9 @@ export default function JustifiedPhotoGridCore({
           challengeSlug={challengeSlug}
           eventSlug={eventSlug}
           showAttribution={showAttribution}
-          maxDisplayWidth={1350}
+          layoutWidth={TABLET_WIDTH}
+          maxCssWidth={TABLET_MAX_CSS_WIDTH}
+          quality={THUMBNAIL_IMAGE_QUALITY}
           header={header}
           gapClass="gap-2 mb-2"
         />
@@ -121,7 +147,9 @@ export default function JustifiedPhotoGridCore({
           challengeSlug={challengeSlug}
           eventSlug={eventSlug}
           showAttribution={showAttribution}
-          maxDisplayWidth={1800}
+          layoutWidth={DESKTOP_WIDTH}
+          maxCssWidth={DESKTOP_MAX_CSS_WIDTH}
+          quality={THUMBNAIL_IMAGE_QUALITY}
           header={header}
           gapClass="gap-2 mb-2"
         />
@@ -139,7 +167,9 @@ function PhotoRows({
   challengeSlug,
   eventSlug,
   showAttribution,
-  maxDisplayWidth,
+  layoutWidth,
+  maxCssWidth,
+  quality,
   header,
   gapClass = 'gap-1 mb-1',
 }: {
@@ -151,7 +181,9 @@ function PhotoRows({
   challengeSlug?: string;
   eventSlug?: string;
   showAttribution: boolean;
-  maxDisplayWidth: number;
+  layoutWidth: number;
+  maxCssWidth: number;
+  quality: number;
   header?: React.ReactNode;
   gapClass?: string;
 }) {
@@ -227,9 +259,10 @@ function PhotoRows({
                     blurhash={photo?.blurhash}
                     fill
                     className="object-cover transition-all duration-200 group-hover:brightness-110"
-                    sizes={`${Math.min(Math.ceil(item.displayWidth * 2), maxDisplayWidth)}px`}
-                    loading='lazy'
-                    quality={THUMBNAIL_IMAGE_QUALITY}
+                    sizes={getThumbnailSizes(item.displayWidth, layoutWidth, maxCssWidth, isConstrained)}
+                    loading="lazy"
+                    fetchPriority="low"
+                    quality={quality}
                   />
 
                   {photo?.id && <CardLikes

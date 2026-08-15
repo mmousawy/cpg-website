@@ -1,11 +1,9 @@
-import { cacheLife, cacheTag } from 'next/cache';
-
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
-// Cached data functions
 import { getActiveChallenges, getPastChallenges } from '@/lib/data/challenges';
 
 export const metadata = createMetadata({
@@ -15,12 +13,13 @@ export const metadata = createMetadata({
   keywords: ['photo challenges', 'photography contest', 'themed photography', 'photo submissions'],
 });
 
+export const instant = false;
+
 export default async function ChallengesPage() {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenges');
 
-  // Fetch challenges using cached data functions
   const [activeData, pastData] = await Promise.all([
     getActiveChallenges(),
     getPastChallenges(6),
@@ -58,7 +57,6 @@ export default async function ChallengesPage() {
       <div
         className="space-y-10"
       >
-        {/* Active Challenges */}
         <section>
           <h2
             className="text-xl font-semibold mb-4 font-heading opacity-80"
@@ -72,7 +70,6 @@ export default async function ChallengesPage() {
           />
         </section>
 
-        {/* Past Challenges */}
         {pastChallenges.length > 0 && (
           <section>
             <h2

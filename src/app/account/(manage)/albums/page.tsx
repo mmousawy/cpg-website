@@ -15,6 +15,7 @@ import SidebarPanel from '@/components/manage/SidebarPanel';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import {
   useBulkUpdateAlbums,
@@ -23,13 +24,23 @@ import {
   useUpdateAlbum,
 } from '@/hooks/useAlbumMutations';
 import type { PendingAlbumInvite, SharedWithMeAlbum } from '@/hooks/useAlbums';
-import { useAlbumSectionCounts, useAllEventAlbums, usePendingAlbumInvites, usePersonalAlbums, useSharedWithMeAlbums, useYourSharedAlbums } from '@/hooks/useAlbums';
+import {
+  prefetchAlbumPhotos,
+  prefetchOwnedAlbum,
+  prefetchSharedAlbum,
+  useAlbumSectionCounts,
+  useAllEventAlbums,
+  usePendingAlbumInvites,
+  usePersonalAlbums,
+  useSharedWithMeAlbums,
+  useYourSharedAlbums,
+} from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
 import { confirmDeleteAlbums, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from 'react';
 
 import Avatar from '@/components/auth/Avatar';
 import BlurImage from '@/components/shared/BlurImage';
@@ -48,6 +59,7 @@ import TrashSVG from 'public/icons/trash.svg';
 export default function AlbumsPage() {
   const { user, profile, isAdmin } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const confirm = useConfirm();
 
   const albumEditDirtyRef = useRef(false);
@@ -60,6 +72,8 @@ export default function AlbumsPage() {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     eventAlbums: true,
   });
+  const [openingAlbumId, setOpeningAlbumId] = useState<string | null>(null);
+  const [isNavigating, startTransition] = useTransition();
 
   // Track which sections have been opened at least once (for lazy loading)
   const [expandedOnce, setExpandedOnce] = useState<Record<string, boolean>>({});
@@ -67,17 +81,49 @@ export default function AlbumsPage() {
   // Lightweight counts — always fetched eagerly for accurate section headers
   const { data: sectionCounts } = useAlbumSectionCounts(user?.id);
 
+  const queryClient = useQueryClient();
+
+  const navigateToAlbum = useCallback(
+    (
+      album: { id: string; slug: string },
+      href: string,
+      ownerNickname?: string | null,
+    ) => {
+      setOpeningAlbumId(album.id);
+      if (user?.id) {
+        if (ownerNickname) {
+          void prefetchSharedAlbum(queryClient, user.id, ownerNickname, album.slug);
+        } else {
+          void prefetchOwnedAlbum(queryClient, user.id, album.slug);
+        }
+        void prefetchAlbumPhotos(queryClient, album.id);
+      }
+      router.prefetch(href);
+      startTransition(() => {
+        router.push(href);
+      });
+    },
+    [user?.id, queryClient, router],
+  );
+
+  // Clear opening state when returning to the list (browser back can restore stale state)
+  useEffect(() => {
+    if (pathname === '/account/albums') {
+      setOpeningAlbumId(null);
+    }
+  }, [pathname]);
+
   // React Query hooks — each section loads lazily when expanded
   const personalExpanded = !collapsedSections.personalAlbums || !!expandedOnce.personalAlbums;
   const sharedExpanded = !collapsedSections.yourSharedAlbums || !!expandedOnce.yourSharedAlbums;
   const sharedWithYouExpanded = !collapsedSections.sharedWithYou || !!expandedOnce.sharedWithYou;
   const eventExpanded = !!expandedOnce.eventAlbums;
 
-  const { data: personalAlbumsData = [], isLoading: personalLoading } = usePersonalAlbums(user?.id, personalExpanded);
-  const { data: yourSharedAlbumsData = [], isLoading: sharedAlbumsLoading } = useYourSharedAlbums(user?.id, sharedExpanded);
-  const { data: sharedWithMeAlbums = [], isLoading: sharedWithMeLoading } = useSharedWithMeAlbums(user?.id, sharedWithYouExpanded);
-  const { data: pendingInvites = [], isLoading: pendingInvitesLoading } = usePendingAlbumInvites(user?.id, sharedWithYouExpanded);
-  const { data: allEventAlbumsData = [], isLoading: eventAlbumsLoading } = useAllEventAlbums(user?.id, eventExpanded);
+  const { data: personalAlbumsData = [], isPending: personalPending } = usePersonalAlbums(user?.id, personalExpanded);
+  const { data: yourSharedAlbumsData = [], isPending: sharedAlbumsPending } = useYourSharedAlbums(user?.id, sharedExpanded);
+  const { data: sharedWithMeAlbums = [], isPending: sharedWithMePending } = useSharedWithMeAlbums(user?.id, sharedWithYouExpanded);
+  const { data: pendingInvites = [], isPending: pendingInvitesPending } = usePendingAlbumInvites(user?.id, sharedWithYouExpanded);
+  const { data: allEventAlbumsData = [], isPending: eventAlbumsPending } = useAllEventAlbums(user?.id, eventExpanded);
   const createAlbumMutation = useCreateAlbum(user?.id, profile?.nickname);
   const updateAlbumMutation = useUpdateAlbum(user?.id, profile?.nickname);
   const bulkUpdateAlbumsMutation = useBulkUpdateAlbums(user?.id, profile?.nickname);
@@ -119,7 +165,7 @@ export default function AlbumsPage() {
 
   const handleAlbumDoubleClick = async (album: typeof personalAlbums[0]) => {
     if (!(await handleConfirmUnsavedChanges())) return;
-    router.push(`/account/albums/${album.slug}`);
+    navigateToAlbum(album, `/account/albums/${album.slug}`);
   };
 
   const handleSelectAlbum = async (albumId: string, isMultiSelect: boolean) => {
@@ -165,7 +211,11 @@ export default function AlbumsPage() {
   const openSharedAlbum = (album: SharedWithMeAlbum) => {
     const nickname = album.owner_profile?.nickname;
     if (nickname) {
-      router.push(`/account/albums/${album.slug}?owner=${encodeURIComponent(nickname)}`);
+      navigateToAlbum(
+        album,
+        `/account/albums/${album.slug}?owner=${encodeURIComponent(nickname)}`,
+        nickname,
+      );
     }
   };
 
@@ -208,7 +258,7 @@ export default function AlbumsPage() {
     setHasUnsavedChanges(false);
     const newAlbum = await createAlbumMutation.mutateAsync(data);
     setIsNewAlbum(false);
-    router.push(`/account/albums/${newAlbum.slug}`);
+    navigateToAlbum(newAlbum, `/account/albums/${newAlbum.slug}`);
   };
 
   const handleSaveAlbum = async (albumId: string, data: AlbumFormData | SharedAlbumFormData) => {
@@ -278,7 +328,7 @@ export default function AlbumsPage() {
     [sharedWithMeAlbums, sortByDate],
   );
   const sharedWithYouCount = useMemo(() => {
-    if (!sharedWithMeLoading && !pendingInvitesLoading) {
+    if (!sharedWithMePending && !pendingInvitesPending) {
       return sharedWithMeAlbums.length + pendingInvites.length;
     }
     if (sectionCounts) {
@@ -286,8 +336,8 @@ export default function AlbumsPage() {
     }
     return undefined;
   }, [
-    sharedWithMeLoading,
-    pendingInvitesLoading,
+    sharedWithMePending,
+    pendingInvitesPending,
     sharedWithMeAlbums.length,
     pendingInvites.length,
     sectionCounts,
@@ -296,7 +346,27 @@ export default function AlbumsPage() {
 
   // All sections are always visible so users can see counts even when empty
 
-  const albumsLoading = personalLoading;
+  const isInitialAlbumsPending =
+    personalPending ||
+    sharedAlbumsPending ||
+    sharedWithMePending ||
+    pendingInvitesPending;
+
+  const hasLoadedAlbumLists =
+    personalAlbums.length > 0 ||
+    yourSharedAlbums.length > 0 ||
+    sharedWithMeAlbums.length > 0 ||
+    pendingInvites.length > 0;
+
+  const showInitialSkeleton = isInitialAlbumsPending && !hasLoadedAlbumLists;
+  const showEmptyState =
+    !isInitialAlbumsPending &&
+    personalAlbums.length === 0 &&
+    yourSharedAlbums.length === 0 &&
+    sharedWithMeAlbums.length === 0 &&
+    pendingInvites.length === 0;
+
+  const albumsPending = personalPending;
 
   const allOwnedAlbums = useMemo(
     () => [...personalAlbumsData, ...yourSharedAlbumsData, ...allEventAlbumsData],
@@ -361,6 +431,11 @@ export default function AlbumsPage() {
                 New album
               </span>
             </Button>
+            {isNavigating && (
+              <LoadingSpinner
+                size="sm"
+              />
+            )}
           </>
         }
         sidebar={
@@ -448,7 +523,7 @@ export default function AlbumsPage() {
               onDelete={handleDeleteAlbum}
               onBulkDelete={handleBulkDeleteAlbums}
               onCreate={handleCreateAlbum}
-              isLoading={albumsLoading && personalAlbums.length === 0}
+              isLoading={albumsPending && personalAlbums.length === 0}
               onDirtyChange={handleDirtyChange}
             />
         )
@@ -480,8 +555,9 @@ export default function AlbumsPage() {
                   <Button
                     onClick={() => {
                       const album = selectedAlbums[0];
-                      if (album) router.push(`/account/albums/${album.slug}`);
+                      if (album) navigateToAlbum(album, `/account/albums/${album.slug}`);
                     }}
+                    disabled={isNavigating}
                     variant="secondary"
                     size="sm"
                     icon={<FolderOpenMiniSVG
@@ -516,9 +592,9 @@ export default function AlbumsPage() {
           />
         }
       >
-        {albumsLoading && personalAlbums.length === 0 ? (
+        {showInitialSkeleton ? (
           <ManageAlbumSectionsSkeleton />
-        ) : personalAlbums.length === 0 && yourSharedAlbums.length === 0 && sharedWithMeAlbums.length === 0 ? (
+        ) : showEmptyState ? (
           <div
             className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
           >
@@ -552,7 +628,7 @@ export default function AlbumsPage() {
               title="Your albums"
               count={personalAlbums.length > 0 ? personalAlbums.length : sectionCounts?.personal}
               isCollapsed={!!collapsedSections.personalAlbums}
-              isLoading={personalLoading && personalAlbums.length === 0}
+              isLoading={personalPending && personalAlbums.length === 0}
               onToggle={() => toggleSection('personalAlbums')}
             >
               <AlbumGrid
@@ -562,6 +638,7 @@ export default function AlbumsPage() {
                 onSelectAlbum={handleSelectAlbum}
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
+                openingAlbumId={openingAlbumId}
                 reducedTopPadding
               />
             </AlbumSection>
@@ -570,7 +647,7 @@ export default function AlbumsPage() {
               title="Your shared albums"
               count={yourSharedAlbums.length > 0 ? yourSharedAlbums.length : sectionCounts?.shared}
               isCollapsed={!!collapsedSections.yourSharedAlbums}
-              isLoading={sharedAlbumsLoading && yourSharedAlbums.length === 0}
+              isLoading={sharedAlbumsPending && yourSharedAlbums.length === 0}
               onToggle={() => toggleSection('yourSharedAlbums')}
               borderTop
             >
@@ -581,6 +658,7 @@ export default function AlbumsPage() {
                 onSelectAlbum={handleSelectAlbum}
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
+                openingAlbumId={openingAlbumId}
                 reducedTopPadding
               />
             </AlbumSection>
@@ -589,7 +667,7 @@ export default function AlbumsPage() {
               title="Shared with you"
               count={sharedWithYouCount}
               isCollapsed={!!collapsedSections.sharedWithYou}
-              isLoading={(sharedWithMeLoading || pendingInvitesLoading) && (sharedWithMeAlbums.length + pendingInvites.length) === 0}
+              isLoading={(sharedWithMePending || pendingInvitesPending) && (sharedWithMeAlbums.length + pendingInvites.length) === 0}
               onToggle={() => toggleSection('sharedWithYou')}
               borderTop
             >
@@ -598,6 +676,7 @@ export default function AlbumsPage() {
                 albums={sortedSharedWithMeAlbums}
                 selectedPendingInviteId={selectedPendingInviteId}
                 selectedAlbumId={selectedSharedAlbumId}
+                openingAlbumId={openingAlbumId}
                 onSelectInvite={handleSelectPendingInvite}
                 onSelectAlbum={handleSelectSharedAlbum}
                 onDoubleClickAlbum={handleSharedAlbumDoubleClick}
@@ -608,7 +687,7 @@ export default function AlbumsPage() {
               title="Event albums"
               count={eventAlbums.length > 0 ? eventAlbums.length : sectionCounts?.allEvent}
               isCollapsed={!!collapsedSections.eventAlbums}
-              isLoading={eventAlbumsLoading && eventAlbums.length === 0}
+              isLoading={eventExpanded && eventAlbumsPending && eventAlbums.length === 0}
               onToggle={() => toggleSection('eventAlbums')}
               borderTop
               isLast
@@ -620,6 +699,7 @@ export default function AlbumsPage() {
                 onSelectAlbum={handleSelectAlbum}
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
+                openingAlbumId={openingAlbumId}
                 reducedTopPadding
               />
             </AlbumSection>
@@ -650,7 +730,7 @@ export default function AlbumsPage() {
           onDelete={handleDeleteAlbum}
           onBulkDelete={handleBulkDeleteAlbums}
           onCreate={handleCreateAlbum}
-          isLoading={albumsLoading}
+          isLoading={albumsPending}
           onDirtyChange={handleDirtyChange}
           hideTitle
         />
@@ -792,11 +872,13 @@ function CollapsibleContent({
 function SharedWithMeCard({
   album,
   isSelected,
+  isOpening = false,
   onClick,
   onDoubleClick,
 }: {
   album: SharedWithMeAlbum;
   isSelected: boolean;
+  isOpening?: boolean;
   onClick: () => void;
   onDoubleClick: () => void;
 }) {
@@ -809,10 +891,13 @@ function SharedWithMeCard({
       type="button"
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      disabled={isOpening}
       className={`relative overflow-hidden bg-background-light transition-all border block w-full text-left ${
-        isSelected
-          ? 'border-primary ring-2 ring-primary/50'
-          : 'border-border-color hover:ring-2 hover:ring-primary/50'
+        isOpening
+          ? 'pointer-events-none ring-2 ring-primary/40'
+          : isSelected
+            ? 'border-primary ring-2 ring-primary/50'
+            : 'border-border-color hover:ring-2 hover:ring-primary/50'
       }`}
     >
       <div
@@ -879,6 +964,18 @@ function SharedWithMeCard({
           )}
         </div>
       </div>
+
+      {isOpening && (
+        <div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-background/80"
+          aria-busy="true"
+          aria-label="Opening album"
+        >
+          <LoadingSpinner
+            size="sm"
+          />
+        </div>
+      )}
     </button>
   );
 }
@@ -888,6 +985,7 @@ function SharedWithYouGrid({
   albums,
   selectedPendingInviteId,
   selectedAlbumId,
+  openingAlbumId,
   onSelectInvite,
   onSelectAlbum,
   onDoubleClickAlbum,
@@ -896,6 +994,7 @@ function SharedWithYouGrid({
   albums: SharedWithMeAlbum[];
   selectedPendingInviteId: number | null;
   selectedAlbumId: string | null;
+  openingAlbumId: string | null;
   onSelectInvite: (requestId: number) => void;
   onSelectAlbum: (albumId: string) => void;
   onDoubleClickAlbum: (album: SharedWithMeAlbum) => void;
@@ -921,6 +1020,7 @@ function SharedWithYouGrid({
           key={album.id}
           album={album}
           isSelected={album.id === selectedAlbumId}
+          isOpening={album.id === openingAlbumId}
           onClick={() => onSelectAlbum(album.id)}
           onDoubleClick={() => onDoubleClickAlbum(album)}
         />

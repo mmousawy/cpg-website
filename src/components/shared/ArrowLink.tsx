@@ -16,7 +16,7 @@ export default function ArrowLink({
   direction = 'right',
   children,
   className,
-  prefetch = true,
+  prefetch,
 }: ArrowLinkProps) {
   const ArrowIcon = direction === 'left' ? ArrowLeftSVG : ArrowRightSVG;
   const hoverTransform = direction === 'left'

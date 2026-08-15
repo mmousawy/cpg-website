@@ -1,4 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
+import { cacheLife } from 'next/cache';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
@@ -56,6 +57,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 }
 
 // Page fetches album OUTSIDE cache to handle 404 properly
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');

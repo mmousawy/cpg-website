@@ -4,8 +4,7 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import type { Photo } from '@/types/photos';
 import type { Tables } from '@/database.types';
 
-async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
-
+export async function fetchAlbumPhotos(albumId: string): Promise<PhotoWithAlbums[]> {
   const { data: albumPhotosData, error } = await supabase
     .from('album_photos')
     .select(`

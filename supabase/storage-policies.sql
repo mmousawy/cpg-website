@@ -65,3 +65,40 @@ CREATE POLICY "Public banners are publicly accessible"
 ON storage.objects FOR SELECT
 TO public
 USING (bucket_id = 'user-banners');
+
+-- Storage bucket policies for event-covers (admin uploads go through
+-- /api/admin/upload-cover with the service role; these policies are for
+-- any remaining authenticated admin client access).
+
+CREATE POLICY "Admins can upload event covers"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'event-covers' AND
+  public.is_admin()
+);
+
+CREATE POLICY "Admins can update event covers"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'event-covers' AND
+  public.is_admin()
+)
+WITH CHECK (
+  bucket_id = 'event-covers' AND
+  public.is_admin()
+);
+
+CREATE POLICY "Admins can delete event covers"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'event-covers' AND
+  public.is_admin()
+);
+
+CREATE POLICY "Event covers are publicly accessible"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'event-covers');

@@ -1,6 +1,10 @@
-import PhotosPaginated from '@/components/gallery/PhotosPaginated';
+import PhotosPaginated from '@/components/gallery/PhotosPaginated';import { cacheLife } from 'next/cache';
+
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import { ProfileBackToProfileLink, ProfileHeroBanner } from '@/components/profile/ProfileHeader';
+import {
+  ProfileBackToProfileLink,
+  ProfileHeroBanner,
+} from '@/components/profile/ProfileHeader';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
@@ -9,7 +13,6 @@ import {
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
@@ -49,6 +52,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   });
 }
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function UserPhotosPage({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
@@ -82,11 +88,6 @@ async function CachedPhotosContent({
   profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>;
   nickname: string;
 }) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag(`profile-${nickname}`);
-
   const perPage = 20;
   const [allPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicPhotos(profile.id, nickname, perPage + 1),

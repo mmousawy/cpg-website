@@ -2,9 +2,8 @@
 
 import type { StreamPhoto } from '@/lib/data/gallery';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, useCallback, useEffect, useState, useTransition } from 'react';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
-import JustifiedPhotoGridSkeleton from '../photo/JustifiedPhotoGridSkeleton';
 import Button from '../shared/Button';
 
 type PhotoBatch = {
@@ -39,7 +38,61 @@ type CachedState = {
 // Cache expires after 5 minutes
 const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 
-export default function PhotosPaginated({
+export default function PhotosPaginated(props: PhotosPaginatedProps) {
+  return (
+    <Suspense
+      fallback={<PhotosPaginatedFallback {...props} />}
+    >
+      <PhotosPaginatedInner
+        {...props}
+      />
+    </Suspense>
+  );
+}
+
+function PhotosPaginatedFallback({
+  initialPhotos,
+  showSortToggle = true,
+  header,
+}: PhotosPaginatedProps) {
+  return (
+    <>
+      {showSortToggle && (
+        <div
+          className="mb-6 flex items-center gap-2"
+          aria-hidden
+        >
+          <div
+            className="h-9 w-20 animate-pulse rounded-full bg-background-medium"
+          />
+          <div
+            className="h-9 w-24 animate-pulse rounded-full bg-background-medium"
+          />
+        </div>
+      )}
+      {initialPhotos.length === 0 ? (
+        <div
+          className="rounded-lg border border-border-color bg-background-light p-12 text-center"
+        >
+          <p
+            className="text-lg opacity-70"
+          >
+            No photos found.
+          </p>
+        </div>
+      ) : (
+        <JustifiedPhotoGrid
+          photos={initialPhotos}
+          showAttribution
+          liveLikeCounts={false}
+          header={header}
+        />
+      )}
+    </>
+  );
+}
+
+function PhotosPaginatedInner({
   initialPhotos,
   perPage = 20,
   initialHasMore,
@@ -248,14 +301,10 @@ export default function PhotosPaginated({
             No photos found.
           </p>
         </div>
-      ) : isSorting ? (
-        <JustifiedPhotoGridSkeleton
-          rows={4}
-          header={header}
-        />
       ) : (
-        <div>
-          {/* Render each batch as its own grid - each has stable layout */}
+        <div
+          className={isSorting ? 'pointer-events-none opacity-50' : undefined}
+        >
           {batches.map((batch, index) => (
             <div
               key={batch.id}

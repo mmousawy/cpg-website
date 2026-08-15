@@ -7,6 +7,7 @@ import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useContext } from 'react';
 
 import AddSceneEventModal from './AddSceneEventModal';
+import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 
 import PlusSVG from 'public/icons/plus.svg';
 
@@ -25,9 +26,11 @@ export default function AddSceneEventButton() {
     modalContext.setFlushContentTop(true);
     modalContext.setTitle('Add an event');
     modalContext.setContent(
-      <AddSceneEventModal
-        key={Date.now()}
-      />,
+      <UnsavedChangesProvider>
+        <AddSceneEventModal
+          key={Date.now()}
+        />
+      </UnsavedChangesProvider>,
     );
     modalContext.setIsOpen(true);
   };

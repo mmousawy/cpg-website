@@ -13,7 +13,7 @@ export async function getPhotoLikes(photoId: string): Promise<{
   userHasLiked: boolean;
 }> {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`photo-likes-${photoId}`);
 
   const supabase = createPublicClient();
@@ -83,7 +83,7 @@ export async function getAlbumLikes(albumId: string): Promise<{
   userHasLiked: boolean;
 }> {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`album-likes-${albumId}`);
 
   const supabase = createPublicClient();

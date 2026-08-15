@@ -1,6 +1,7 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { expireTag } from '@/lib/cache/expireTag';
+import { revalidatePath, refresh } from 'next/cache';
 
 /**
  * Cache Revalidation Actions
@@ -26,9 +27,18 @@ import { revalidatePath, revalidateTag } from 'next/cache';
  * @see docs/revalidation-system.md for usage details
  */
 
+function finishRevalidation() {
+  try {
+    refresh();
+  } catch {
+    // refresh() only works inside Server Actions. Route handlers rely on
+    // expireTag() above; callers that need a client update use router.refresh().
+  }
+}
+
 /** Invalidate the homepage shell (tagged `home` in src/app/page.tsx). */
 function invalidateHomeTag() {
-  revalidateTag('home', 'max');
+  expireTag('home');
 }
 
 // ============================================================================
@@ -40,9 +50,10 @@ function invalidateHomeTag() {
  * Use when: Creating, updating, or deleting events
  */
 export async function revalidateEvents() {
-  revalidateTag('events', 'max');
-  revalidateTag('search', 'max');
+  expireTag('events');
+  expireTag('search');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -51,8 +62,9 @@ export async function revalidateEvents() {
  * More granular than revalidateEvents - doesn't refresh event details
  */
 export async function revalidateEventAttendees() {
-  revalidateTag('event-attendees', 'max');
+  expireTag('event-attendees');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -60,7 +72,8 @@ export async function revalidateEventAttendees() {
  * Use when: Only a specific event detail page needs refreshing
  */
 export async function revalidateEventBySlug(slug: string) {
-  revalidateTag(`event-${slug}`, 'max');
+  expireTag(`event-${slug}`);
+  finishRevalidation();
 }
 
 /**
@@ -68,9 +81,10 @@ export async function revalidateEventBySlug(slug: string) {
  * Use when: Photos are added to or removed from an event album
  */
 export async function revalidateEventAlbum(eventId: number) {
-  revalidateTag(`event-album-${eventId}`, 'max');
-  revalidateTag('events', 'max');
+  expireTag(`event-album-${eventId}`);
+  expireTag('events');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -78,8 +92,9 @@ export async function revalidateEventAlbum(eventId: number) {
  * Use when: User draws or swaps a color
  */
 export async function revalidateChallengeColorDraws(challengeId: string) {
-  revalidateTag('challenge-color-draws', 'max');
-  revalidateTag(`challenge-color-draws-${challengeId}`, 'max');
+  expireTag('challenge-color-draws');
+  expireTag(`challenge-color-draws-${challengeId}`);
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -91,18 +106,16 @@ export async function revalidateChallengeColorDraws(challengeId: string) {
  * Use when: Updating a specific album's content (photos, metadata)
  */
 export async function revalidateAlbum(nickname: string, albumSlug?: string) {
-  // Revalidate all albums (appears in listings)
-  revalidateTag('albums', 'max');
-  // Revalidate the specific user's profile data
-  revalidateTag(`profile-${nickname}`, 'max');
-  // Revalidate search (albums are searchable)
-  revalidateTag('search', 'max');
+  expireTag('albums');
+  expireTag(`profile-${nickname}`);
+  expireTag('search');
   invalidateHomeTag();
 
-  // Also revalidate the specific album page granular tag
   if (albumSlug) {
-    revalidateTag(`album-${nickname}-${albumSlug}`, 'max');
+    expireTag(`album-${nickname}-${albumSlug}`);
   }
+
+  finishRevalidation();
 }
 
 /**
@@ -110,8 +123,9 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
  * Use when: Only the album detail page needs refreshing (e.g., comment added)
  */
 export async function revalidateAlbumBySlug(nickname: string, slug: string) {
-  revalidateTag(`album-${nickname}-${slug}`, 'max');
-  revalidateTag(`profile-${nickname}`, 'max');
+  expireTag(`album-${nickname}-${slug}`);
+  expireTag(`profile-${nickname}`);
+  finishRevalidation();
 }
 
 /**
@@ -119,12 +133,11 @@ export async function revalidateAlbumBySlug(nickname: string, slug: string) {
  * Use when: Bulk album operations
  */
 export async function revalidateAlbums(nickname: string, _albumSlugs?: string[]) {
-  // With tag-based caching, we just need to invalidate the tags
-  revalidateTag('albums', 'max');
-  revalidateTag(`profile-${nickname}`, 'max');
-  // Revalidate search (albums are searchable)
-  revalidateTag('search', 'max');
+  expireTag('albums');
+  expireTag(`profile-${nickname}`);
+  expireTag('search');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -136,9 +149,10 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
  * Use when: Photo is created, updated, or deleted; tags are modified
  */
 export async function revalidateGalleryData() {
-  revalidateTag('gallery', 'max');
-  revalidateTag('search', 'max');
+  expireTag('gallery');
+  expireTag('search');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -146,10 +160,11 @@ export async function revalidateGalleryData() {
  * Use when: Photos are tagged/untagged
  */
 export async function revalidateTagPhotos(tagName: string) {
-  revalidateTag('gallery', 'max');
-  revalidateTag(`tag-${tagName}`, 'max');
-  // Revalidate search (tags are searchable)
-  revalidateTag('search', 'max');
+  expireTag('gallery');
+  expireTag(`tag-${tagName}`);
+  expireTag('search');
+  invalidateHomeTag();
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -161,9 +176,10 @@ export async function revalidateTagPhotos(tagName: string) {
  * Use when: Changes affect the members list on homepage
  */
 export async function revalidateProfiles() {
-  revalidateTag('profiles', 'max');
-  revalidateTag('search', 'max');
+  expireTag('profiles');
+  expireTag('search');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -171,9 +187,11 @@ export async function revalidateProfiles() {
  * Use when: User updates their profile, creates content, etc.
  */
 export async function revalidateProfile(nickname: string) {
-  revalidateTag(`profile-${nickname}`, 'max');
-  // Revalidate search (profiles are searchable)
-  revalidateTag('search', 'max');
+  expireTag(`profile-${nickname}`);
+  expireTag('profiles');
+  expireTag('search');
+  invalidateHomeTag();
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -185,7 +203,8 @@ export async function revalidateProfile(nickname: string) {
  * Use when: Interests are added/removed from profiles
  */
 export async function revalidateInterests() {
-  revalidateTag('interests', 'max');
+  expireTag('interests');
+  finishRevalidation();
 }
 
 /**
@@ -193,8 +212,9 @@ export async function revalidateInterests() {
  * Use when: Members add/remove a specific interest
  */
 export async function revalidateInterest(interestName: string) {
-  revalidateTag('interests', 'max');
-  revalidateTag(`interest-${interestName}`, 'max');
+  expireTag('interests');
+  expireTag(`interest-${interestName}`);
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -206,8 +226,11 @@ export async function revalidateInterest(interestName: string) {
  * Use when: User likes or unlikes a photo
  */
 export async function revalidatePhotoLikes(photoId: string, ownerNickname: string) {
-  revalidateTag(`photo-likes-${photoId}`, 'max');
-  revalidateTag(`profile-${ownerNickname}`, 'max');
+  expireTag(`photo-likes-${photoId}`);
+  expireTag(`profile-${ownerNickname}`);
+  expireTag('gallery');
+  invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -215,8 +238,11 @@ export async function revalidatePhotoLikes(photoId: string, ownerNickname: strin
  * Use when: User likes or unlikes an album
  */
 export async function revalidateAlbumLikes(albumId: string, ownerNickname: string) {
-  revalidateTag(`album-likes-${albumId}`, 'max');
-  revalidateTag(`profile-${ownerNickname}`, 'max');
+  expireTag(`album-likes-${albumId}`);
+  expireTag(`profile-${ownerNickname}`);
+  expireTag('gallery');
+  invalidateHomeTag();
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -228,21 +254,20 @@ export async function revalidateAlbumLikes(albumId: string, ownerNickname: strin
  * Use when: Admin operations that affect many pages (e.g., member suspension)
  */
 export async function revalidateAll() {
-  // Invalidate all cache tags
-  revalidateTag('events', 'max');
-  revalidateTag('event-attendees', 'max');
-  revalidateTag('albums', 'max');
-  revalidateTag('gallery', 'max');
-  revalidateTag('profiles', 'max');
-  revalidateTag('interests', 'max');
-  revalidateTag('challenges', 'max');
-  revalidateTag('challenge-photos', 'max');
-  revalidateTag('search', 'max');
-  revalidateTag('scene', 'max');
-  revalidateTag('home', 'max');
-  revalidateTag('changelog', 'max');
-  // Also revalidate the layout for any non-cached data
+  expireTag('events');
+  expireTag('event-attendees');
+  expireTag('albums');
+  expireTag('gallery');
+  expireTag('profiles');
+  expireTag('interests');
+  expireTag('challenges');
+  expireTag('challenge-photos');
+  expireTag('search');
+  expireTag('scene');
+  expireTag('home');
+  expireTag('changelog');
   revalidatePath('/', 'layout');
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -254,7 +279,8 @@ export async function revalidateAll() {
  * Use when: Photo metadata changes, challenge submission status changes
  */
 export async function revalidatePhoto(photoShortId: string) {
-  revalidateTag(`photo-${photoShortId}`, 'max');
+  expireTag(`photo-${photoShortId}`);
+  finishRevalidation();
 }
 
 /**
@@ -263,8 +289,9 @@ export async function revalidatePhoto(photoShortId: string) {
  */
 export async function revalidatePhotos(photoShortIds: string[]) {
   for (const shortId of photoShortIds) {
-    revalidateTag(`photo-${shortId}`, 'max');
+    expireTag(`photo-${shortId}`);
   }
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -276,9 +303,10 @@ export async function revalidatePhotos(photoShortIds: string[]) {
  * Use when: Creating, updating, or deleting challenges
  */
 export async function revalidateChallenges() {
-  revalidateTag('challenges', 'max');
-  revalidateTag('challenge-photos', 'max');
+  expireTag('challenges');
+  expireTag('challenge-photos');
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -286,16 +314,17 @@ export async function revalidateChallenges() {
  * Use when: Updating challenge details or reviewing submissions
  */
 export async function revalidateChallenge(challengeSlug: string, challengeId?: string) {
-  revalidateTag(`challenge-${challengeSlug}`, 'max');
-  revalidateTag('challenges', 'max');
+  expireTag(`challenge-${challengeSlug}`);
+  expireTag('challenges');
   if (challengeId) {
-    revalidateTag(`challenge-photos-${challengeId}`, 'max');
-    revalidateTag(`challenge-color-draws-${challengeId}`, 'max');
+    expireTag(`challenge-photos-${challengeId}`);
+    expireTag(`challenge-color-draws-${challengeId}`);
   }
-  revalidateTag('challenge-photos', 'max');
-  revalidateTag('challenge-color-draws', 'max');
+  expireTag('challenge-photos');
+  expireTag('challenge-color-draws');
   invalidateHomeTag();
   revalidatePath(`/challenges/${challengeSlug}`);
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -308,6 +337,7 @@ export async function revalidateChallenge(challengeSlug: string, challengeId?: s
  */
 export async function revalidateHome() {
   invalidateHomeTag();
+  finishRevalidation();
 }
 
 /**
@@ -315,9 +345,10 @@ export async function revalidateHome() {
  * Use when: Changelog content is updated
  */
 export async function revalidateChangelog() {
-  revalidateTag('changelog', 'max');
+  expireTag('changelog');
   revalidatePath('/changelog');
   revalidatePath('/changelog/details');
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -330,7 +361,8 @@ export async function revalidateChangelog() {
  * Note: This is automatically called by other revalidation functions
  */
 export async function revalidateSearch() {
-  revalidateTag('search', 'max');
+  expireTag('search');
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -341,21 +373,22 @@ export async function revalidateSearch() {
  * @deprecated Use revalidateEvents() or revalidateEventAttendees() instead
  */
 export async function revalidateEvent(eventSlug?: string) {
-  revalidateTag('events', 'max');
-  revalidateTag('event-attendees', 'max');
-  // Keep path revalidation for any non-cached content on the page
+  expireTag('events');
+  expireTag('event-attendees');
   if (eventSlug) {
     revalidatePath(`/events/${eventSlug}`);
   }
   revalidatePath('/events');
+  finishRevalidation();
 }
 
 /**
  * @deprecated Use revalidateAlbums() or revalidateGalleryData() instead
  */
 export async function revalidateGallery() {
-  revalidateTag('albums', 'max');
-  revalidateTag('gallery', 'max');
+  expireTag('albums');
+  expireTag('gallery');
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -367,7 +400,8 @@ export async function revalidateGallery() {
  * Use when: Resolving or dismissing reports
  */
 export async function revalidateReports() {
-  revalidateTag('reports', 'max');
+  expireTag('reports');
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -379,9 +413,10 @@ export async function revalidateReports() {
  * Use when: Creating, updating, or soft-deleting scene events
  */
 export async function revalidateScene() {
-  revalidateTag('scene', 'max');
-  revalidateTag('search', 'max');
+  expireTag('scene');
+  expireTag('search');
   revalidatePath('/scene');
+  finishRevalidation();
 }
 
 /**
@@ -389,8 +424,9 @@ export async function revalidateScene() {
  * Use when: Only a specific scene event detail page needs refreshing
  */
 export async function revalidateSceneEvent(slug: string) {
-  revalidateTag(`scene-${slug}`, 'max');
-  revalidateTag('scene', 'max');
+  expireTag(`scene-${slug}`);
+  expireTag('scene');
+  finishRevalidation();
 }
 
 // ============================================================================
@@ -402,5 +438,6 @@ export async function revalidateSceneEvent(slug: string) {
  * Use when: Updating feedback status or admin notes
  */
 export async function revalidateFeedback() {
-  revalidateTag('feedback', 'max');
+  expireTag('feedback');
+  finishRevalidation();
 }

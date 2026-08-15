@@ -4,12 +4,7 @@ import WidePageContainer from '@/components/layout/WidePageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
-import { Suspense } from 'react';
 
-import GalleryPhotosSkeleton from './GalleryPhotosSkeleton';
-
-// Cached data functions
 import { getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
@@ -23,36 +18,13 @@ type PageProps = {
   searchParams: Promise<{ sort?: string }>;
 };
 
-export default function PhotosPage(props: PageProps) {
-  return (
-    <Suspense
-      fallback={<GalleryPhotosSkeleton />}
-    >
-      <PhotosPageContent
-        {...props}
-      />
-    </Suspense>
-  );
-}
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
-async function PhotosPageContent({ searchParams }: PageProps) {
+export default async function PhotosPage({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
 
-  return (
-    <CachedPhotosContent
-      initialSort={initialSort}
-    />
-  );
-}
-
-async function CachedPhotosContent({ initialSort }: { initialSort: 'popular' | 'recent' }) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag('gallery');
-
-  // Fetch one extra to check if there are more
   const allPhotos = await getPublicPhotostream(21, initialSort);
   const photos = allPhotos.slice(0, 20);
   const hasMore = allPhotos.length > 20;

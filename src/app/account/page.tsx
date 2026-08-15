@@ -18,7 +18,7 @@ import StickyActionBar from '@/components/shared/StickyActionBar';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import { SectionScrollProvider } from '@/context/SectionScrollContext';
 import { useAccountForm } from '@/hooks/useAccountForm';
-import { useContext } from 'react';
+import { Suspense, useContext } from 'react';
 
 const ACCOUNT_SECTIONS = [
   { id: 'basic-info', title: 'Basic info' },
@@ -29,7 +29,7 @@ const ACCOUNT_SECTIONS = [
   { id: 'danger-zone', title: 'Danger zone' },
 ];
 
-export default function AccountPage() {
+function AccountPageContent() {
   const {
     // Form
     form,
@@ -341,5 +341,25 @@ export default function AccountPage() {
       )}
 
     </SectionScrollProvider>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense
+      fallback={(
+        <PageContainer>
+          <div
+            className="js-loading"
+          >
+            <LoadingSpinner
+              centered
+            />
+          </div>
+        </PageContainer>
+      )}
+    >
+      <AccountPageContent />
+    </Suspense>
   );
 }

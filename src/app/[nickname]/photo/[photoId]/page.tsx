@@ -1,4 +1,5 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import PhotoPageContent from '@/components/photo/PhotoPageContent';import { cacheLife } from 'next/cache';
+
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
@@ -50,6 +51,9 @@ export async function generateMetadata({ params }: { params: Params }) {
     keywords: ['photography', 'photo', result.photo.title || '', nickname],
   });
 }
+
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
 export default async function PhotoPage({ params }: { params: Params }) {
   const resolvedParams = await params;

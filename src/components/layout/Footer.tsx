@@ -20,13 +20,13 @@ const iconMap: Record<string, typeof DiscordSVG> = {
 };
 
 export default function Footer() {
-  // Client component - safe to use new Date() directly
-  const currentYear = new Date().getFullYear();
+  // Build-time year — `new Date()` during render blocks prerender in Client Components
+  const currentYear = process.env.NEXT_PUBLIC_COPYRIGHT_YEAR ?? '2026';
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION;
 
   return (
     <footer
-      className="mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light px-2 py-4 sm:py-6 text-foreground"
+      className="app-footer mt-auto flex justify-center border-t-[0.0625rem] border-border-color bg-background-light px-2 py-4 sm:py-6 text-foreground"
     >
       <div
         className="flex w-full max-w-screen-md flex-col items-center gap-3"

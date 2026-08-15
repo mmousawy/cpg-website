@@ -34,17 +34,17 @@ This project uses Next.js's **`use cache` directive** with **tag-based revalidat
 │                     Revalidation Actions                            │
 │                  (src/app/actions/revalidate.ts)                    │
 │                                                                     │
-│  revalidateTag('events', 'max')        → Invalidates event cache    │
-│  revalidateTag('event-[slug]', ..)     → Invalidates specific event │
-│  revalidateTag('event-attendees', ..)  → Invalidates RSVP data      │
-│  revalidateTag('albums', 'max')        → Invalidates album cache    │
-│  revalidateTag('album-[n]-[s]', ..)    → Invalidates specific album │
-│  revalidateTag('gallery', 'max')       → Invalidates photostream    │
-│  revalidateTag('profiles', 'max')      → Invalidates profiles cache │
-│  revalidateTag('profile-[nick]', ..)   → Invalidates specific user  │
-│  revalidateTag('challenges', 'max')    → Invalidates challenges     │
-│  revalidateTag('challenge-[slug]',..)  → Invalidates one challenge  │
-│  revalidateTag('photo-[id]', 'max')    → Invalidates specific photo │
+│  expireTag('events')                   → Invalidates event cache    │
+│  expireTag('event-[slug]')             → Invalidates specific event │
+│  expireTag('event-attendees')          → Invalidates RSVP data      │
+│  expireTag('albums')                   → Invalidates album cache    │
+│  expireTag('album-[n]-[s]')            → Invalidates specific album │
+│  expireTag('gallery')                  → Invalidates photostream    │
+│  expireTag('profiles')                 → Invalidates profiles cache │
+│  expireTag('profile-[nick]')             → Invalidates specific user  │
+│  expireTag('challenges')               → Invalidates challenges     │
+│  expireTag('challenge-[slug]')          → Invalidates one challenge  │
+│  expireTag('photo-[id]')               → Invalidates specific photo │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -88,9 +88,19 @@ Enable component-level caching in `next.config.ts`:
 ```typescript
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  // ...
+  cacheLife: {
+    // Tag-invalidated content: no client stale window
+    tagged: { stale: 0, revalidate: 2592000, expire: 2592000 },
+    // Time-sensitive listings (events, challenges, most-viewed gallery)
+    hourly: { stale: 0, revalidate: 3600, expire: 86400 },
+  },
+  experimental: {
+    staleTimes: { dynamic: 0, static: 0 },
+  },
 };
 ```
+
+Use `cacheLife('tagged')` for tag-invalidated data. Use `cacheLife('hourly')` for events, challenges, and the gallery homepage (most-viewed sections).
 
 > Optional on Vercel: you can use **`'use cache: remote'`** instead of **`'use cache'`** to store entries in Vercel Runtime Cache (shared across instances). That is separate from ISR and may be metered on your plan; this repo uses in-memory **`'use cache'`** only.
 
@@ -111,7 +121,7 @@ These helpers also invalidate `home` so homepage sections stay in sync:
 | `revalidateChallenges()` / `revalidateChallenge()` | Active challenges |
 | `revalidateHome()` | Direct homepage bust (also called from photo upload hooks) |
 
-The events cron (`/api/cron/revalidate-events`, twice daily) also revalidates `home` alongside `events`.
+The events cron (`/api/cron/revalidate-events`, twice daily) also revalidates `home`, `event-attendees`, and `challenges` alongside `events`.
 
 ## Changelog revalidation
 
@@ -203,18 +213,24 @@ export async function getRecentEvents(limit = 6) {
 
 ### 2. Revalidation Actions (`src/app/actions/revalidate.ts`)
 
-Call `revalidateTag` when data changes:
+Call `expireTag` when data changes:
 
 ```typescript
 'use server';
-import { revalidateTag } from 'next/cache';
+import { expireTag } from '@/lib/cache/expireTag';
+import { refresh } from 'next/cache';
 
 export async function revalidateEvents() {
-  revalidateTag('events', 'max');
+  expireTag('events');
+  expireTag('search');
+  expireTag('home');
+  refresh();
 }
 
 export async function revalidateEventAttendees() {
-  revalidateTag('event-attendees', 'max');
+  expireTag('event-attendees');
+  expireTag('home');
+  refresh();
 }
 ```
 
@@ -263,7 +279,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ nickna
   const nickname = resolvedParams.nickname;
 
   // Apply cache settings after extracting params
-  cacheLife('max');  // Cache for 30 days stale, 1 year max
+  cacheLife('tagged');
   cacheTag('profiles');
   cacheTag(`profile-${nickname}`);
 
@@ -277,10 +293,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ nickna
 - With page-level caching, the entire rendered component tree is cached
 - `generateStaticParams` is required for build-time validation when using `cacheComponents: true`
 
-**Cache durations with `cacheLife('max')`:**
-- Stale time: 30 days (served from cache, revalidates in background after this)
-- Max age: 1 year (hard expiry)
-- Manual invalidation: Call `revalidateTag('profile-nickname')` anytime
+**Cache profiles:**
+
+| Profile | Client stale | Server revalidate | Use for |
+|---------|--------------|-------------------|---------|
+| `tagged` | 0s | 30 days | Most cached data (invalidated via tags) |
+| `hourly` | 0s | 1 hour | Events, challenges, gallery most-viewed |
+
+Manual invalidation: call helpers in `src/app/actions/revalidate.ts` (they use `expireTag()` + `refresh()`).
 
 ### 4. Triggering Revalidation
 
@@ -345,7 +365,7 @@ export async function POST(request: NextRequest) {
 | `getPhotosByTag(tag, limit)` | `gallery`, `tag-[tagname]` | Photos with specific tag |
 | `getAllTagNames()` | None (build-time only) | Tag names for static generation |
 
-> **Cache Duration**: All functions use `cacheLife('max')` - data is cached indefinitely until invalidated via `revalidateTag()`.
+> **Cache Duration**: Most functions use `cacheLife('tagged')`. Events/challenges use `cacheLife('hourly')`. Data is cached on the server until `expireTag()` is called.
 
 ### Revalidation Functions (`src/app/actions/revalidate.ts`)
 
@@ -360,8 +380,8 @@ export async function POST(request: NextRequest) {
 | `revalidateAlbumBySlug(nick, slug)` | `album-[nick]-[slug]`, `profile-[nick]` | Specific album changes (comments, etc.) |
 | `revalidateAlbums(nick, slugs)` | `albums`, `profile-[nick]`, `search`, `home` | Bulk album ops |
 | `revalidateGalleryData()` | `gallery`, `search`, `home` | Photo CRUD |
-| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]`, `search` | Photo tagged/untagged |
-| `revalidateProfile(nick)` | `profile-[nick]`, `search` | Profile update |
+| `revalidateTagPhotos(tagName)` | `gallery`, `tag-[tagname]`, `search`, `home` | Photo tagged/untagged |
+| `revalidateProfile(nick)` | `profile-[nick]`, `profiles`, `search`, `home` | Profile update |
 | `revalidateProfiles()` | `profiles`, `search`, `home` | Member list changes |
 | `revalidateChallenges()` | `challenges`, `challenge-photos`, `home` | Challenge CRUD |
 | `revalidateChallenge(slug, id?)` | `challenge-[slug]`, `challenges`, `challenge-photos`, `challenge-photos-[id]`, `challenge-color-draws`, `home`, path | Challenge detail changes |
@@ -386,7 +406,7 @@ import { createPublicClient } from '@/utils/supabase/server';
 
 export async function getYourData() {
   'use cache';
-  cacheLife('max'); // Cache forever until tag is invalidated
+  cacheLife('tagged');
   cacheTag('your-tag');
 
   const supabase = createPublicClient();
@@ -406,8 +426,13 @@ export * from './yourEntity';
 
 ```typescript
 // src/app/actions/revalidate.ts
+import { expireTag } from '@/lib/cache/expireTag';
+import { refresh } from 'next/cache';
+
 export async function revalidateYourEntity() {
-  revalidateTag('your-tag', 'max');
+  expireTag('your-tag');
+  refresh();
+}
 }
 ```
 
@@ -447,19 +472,28 @@ await revalidateYourEntity();
 1. **One tag per data type**: Use broad tags like `events`, `albums`
 2. **Specific user tags**: Use `profile-[nickname]` for user-specific data
 3. **Separate attendees from events**: RSVP changes happen frequently
-4. **Use 'max' profile**: Enables stale-while-revalidate behavior
+4. **Use `tagged` / `hourly` profiles**: `stale: 0` so clients always check the server after mutations
 5. **Batch parallel fetches**: Use `Promise.all()` for multiple data sources
+6. **Expire immediately**: Use `expireTag()` from `src/lib/cache/expireTag.ts` (not `revalidateTag(tag, 'max')`, which is stale-while-revalidate)
 
 ## Troubleshooting
 
 ### Data not updating after mutation?
 - Ensure you're calling the correct revalidation function
 - Check that the tag matches between data function and revalidation
-- Verify the 'max' profile is being used
+- Helpers use `expireTag()` (`revalidateTag(tag, { expire: 0 })`), not `revalidateTag(tag, 'max')`
+- Server Actions also call `refresh()` so the mutating browser drops its router cache
 
-### Stale data on first load?
-- The 'max' profile serves stale content while revalidating
-- This is expected behavior for better UX
+### Stale data until hard refresh?
+- Avoid `cacheLife('max')` — its built-in `stale: 300` keeps client RSC for 5 minutes
+- Use `cacheLife('tagged')` or `cacheLife('hourly')` from `next.config.ts`
+- Set `experimental.staleTimes` to `{ dynamic: 0, static: 0 }`
+
+### "Blocking Route" / uncached data during prerendering?
+- The **root layout** must not call `connection()` or `getServerAuth()` — that blocks `'use cache'` pages (e.g. `/gallery`)
+- Session is **client-bootstrapped** via `AuthContext` (`supabase.auth.getSession()`); `SessionProvider` starts with empty auth
+- Auth-gated segments (`/account`, `/admin`, manage routes) own server guards with `connection()` inside segment-level `<Suspense>`
+- `useSearchParams()` in client pages needs a page-level `<Suspense>` boundary (see `/account`, `/email/changed`)
 
 ### Cache not working at all?
 - Ensure `cacheComponents: true` is in `next.config.ts`
@@ -610,7 +644,7 @@ export default async function Page({ params }) {
   const { nickname, albumSlug } = await params;
 
   // Apply cache settings after extracting params
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('albums');
   cacheTag(`profile-${nickname}`);
 

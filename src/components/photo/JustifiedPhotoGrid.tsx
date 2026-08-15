@@ -1,19 +1,10 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import JustifiedPhotoGridCore from './JustifiedPhotoGridCore';
-import JustifiedPhotoGridSkeleton from './JustifiedPhotoGridSkeleton';
+import JustifiedPhotoGridWithLiveLikes from './JustifiedPhotoGridWithLiveLikes';
 import type { JustifiedPhotoGridProps } from './justifiedPhotoGridTypes';
 
 const EMPTY_LIKES_MAP = new Map<string, number>();
-
-const JustifiedPhotoGridWithLiveLikes = dynamic(
-  () => import('./JustifiedPhotoGridWithLiveLikes'),
-  {
-    ssr: false,
-    loading: () => <JustifiedPhotoGridSkeleton />,
-  },
-);
 
 export type { JustifiedPhotoGridProps } from './justifiedPhotoGridTypes';
 

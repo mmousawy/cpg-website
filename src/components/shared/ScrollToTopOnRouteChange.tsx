@@ -1,13 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
 /**
  * Ensures a fresh page starts at the top on client navigations.
  * Skip hash URLs so deep links like #comments still work.
  */
-export default function ScrollToTopOnRouteChange() {
+function ScrollToTopOnRouteChangeInner() {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -26,4 +26,12 @@ export default function ScrollToTopOnRouteChange() {
   }, [pathname]);
 
   return null;
+}
+
+export default function ScrollToTopOnRouteChange() {
+  return (
+    <Suspense fallback={null}>
+      <ScrollToTopOnRouteChangeInner />
+    </Suspense>
+  );
 }

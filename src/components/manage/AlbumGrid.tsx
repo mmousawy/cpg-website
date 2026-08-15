@@ -1,9 +1,12 @@
 'use client';
 
+import AlbumGridSkeleton from '@/components/album/AlbumGridSkeleton';
 import type { AlbumWithPhotos } from '@/types/albums';
+import { useMounted } from '@/hooks/useMounted';
 import clsx from 'clsx';
+
 import AlbumCard from './AlbumCard';
-import LazySelectableGrid from './LazySelectableGrid';
+import SelectableGrid from './SelectableGrid';
 
 interface AlbumGridProps {
   albums: AlbumWithPhotos[];
@@ -16,7 +19,12 @@ interface AlbumGridProps {
   className?: string;
   /** Reduce top padding (e.g. when inside a collapsible section) */
   reducedTopPadding?: boolean;
+  /** Album ID currently being opened (shows loading overlay on that card) */
+  openingAlbumId?: string | null;
 }
+
+const albumGridClassName =
+  'grid gap-3 grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]';
 
 export default function AlbumGrid({
   albums,
@@ -28,9 +36,25 @@ export default function AlbumGrid({
   onSelectMultiple,
   className,
   reducedTopPadding = false,
+  openingAlbumId = null,
 }: AlbumGridProps) {
+  const mounted = useMounted();
+
+  if (!mounted) {
+    return (
+      <div
+        className={clsx('p-3 md:p-6', reducedTopPadding && 'pt-0')}
+      >
+        <AlbumGridSkeleton
+          count={albums.length > 0 ? Math.min(albums.length, 8) : 6}
+          className={clsx(albumGridClassName, className)}
+        />
+      </div>
+    );
+  }
+
   return (
-    <LazySelectableGrid
+    <SelectableGrid
       items={albums}
       selectedIds={selectedAlbumIds}
       getId={(album) => album.id}
@@ -59,6 +83,7 @@ export default function AlbumGrid({
           album={album}
           isSelected={isSelected}
           isHovered={isHovered}
+          isOpening={album.id === openingAlbumId}
         />
       )}
     />

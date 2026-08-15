@@ -7,7 +7,7 @@ import Link from 'next/link';
 import BlurImage from '@/components/shared/BlurImage';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getEventStatus, type EventStatus } from '@/lib/events/status';
-import { getCroppedThumbnailUrl, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
+import { THUMBNAIL_IMAGE_QUALITY, getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -206,7 +206,7 @@ export default function EventCard({
                 className="flex items-center gap-1"
               >
                 <CalendarSVG
-                  className="size-3.5 fill-foreground/60"
+                  className="size-3.5 fill-foreground/80"
                 />
                 {formatEventDate(event.date)}
               </span>
@@ -216,7 +216,7 @@ export default function EventCard({
                 className="flex items-center gap-1"
               >
                 <TimeSVG
-                  className="size-3.5 fill-foreground/60"
+                  className="size-3.5 fill-foreground/80"
                 />
                 {formatEventTime(event.time)}
               </span>
@@ -226,7 +226,7 @@ export default function EventCard({
                 className="flex items-center gap-1"
               >
                 <LocationSVG
-                  className="size-3.5 fill-foreground/60"
+                  className="size-3.5 fill-foreground/80"
                 />
                 <span
                   className="line-clamp-1"

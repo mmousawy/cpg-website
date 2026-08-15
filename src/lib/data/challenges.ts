@@ -31,7 +31,7 @@ export async function getAllChallengeSlugs() {
  */
 export async function getActiveChallenges(limit?: number) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenges');
 
   const supabase = createPublicClient();
@@ -66,7 +66,7 @@ export async function getActiveChallenges(limit?: number) {
  */
 export async function getPastChallenges(limit = 10) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenges');
 
   const supabase = createPublicClient();
@@ -95,7 +95,7 @@ export async function getPastChallenges(limit = 10) {
  */
 export async function getAllChallenges() {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenges');
 
   const supabase = createPublicClient();
@@ -120,7 +120,7 @@ export async function getAllChallenges() {
  */
 export async function getChallengeBySlug(slug: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenges');
   cacheTag(`challenge-${slug}`);
 
@@ -178,7 +178,7 @@ export async function getChallengeBySlug(slug: string) {
  */
 export async function getChallengeColorDraws(challengeId: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenge-color-draws');
   cacheTag(`challenge-color-draws-${challengeId}`);
 
@@ -224,7 +224,7 @@ export async function getChallengeColorDraws(challengeId: string) {
  */
 export async function getChallengePhotos(challengeId: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenge-photos');
   cacheTag(`challenge-photos-${challengeId}`);
 
@@ -257,7 +257,7 @@ export async function getChallengePhotoByShortId(
   photoShortId: string,
 ): Promise<ChallengePhotoPageResult | null> {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenge-photos');
   cacheTag(`challenge-photos-${challengeSlug}`);
   cacheTag(`photo-${photoShortId}`);
@@ -414,7 +414,7 @@ export async function getChallengePhotoByShortId(
  */
 export async function getChallengeContributors(challengeId: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('challenge-photos');
 
   const supabase = createPublicClient();

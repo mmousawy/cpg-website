@@ -79,7 +79,7 @@ async function countActiveFollows(profileId: string, type: FollowListType): Prom
  */
 export async function getProfileFollowCounts(userId: string, nickname: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const [followerCount, followingCount] = await Promise.all([

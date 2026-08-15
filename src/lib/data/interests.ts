@@ -12,7 +12,7 @@ type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar
  */
 export async function getPopularInterests(limit = 20) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('interests');
 
   const supabase = createPublicClient();
@@ -33,7 +33,7 @@ export async function getPopularInterests(limit = 20) {
  */
 export async function getMembersByInterest(interest: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('interests');
   cacheTag(`interest-${interest}`);
 

@@ -1,9 +1,10 @@
+import Link from 'next/link';
+
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { buildVersionSlugMaps, getChangelogContent, parseChangelog } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
-import Link from 'next/link';
+import { cacheLife } from 'next/cache';
 
 import ArrowRightIcon from 'public/icons/arrow-right.svg';
 
@@ -13,10 +14,12 @@ export const metadata = createMetadata({
   canonical: '/changelog',
 });
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function ChangelogPage() {
   'use cache';
-  cacheLife('max');
-  cacheTag('changelog');
+  cacheLife('hourly');
 
   const changelogContent = await getChangelogContent();
   const entries = changelogContent ? parseChangelog(changelogContent) : [];

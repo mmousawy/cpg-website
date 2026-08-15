@@ -2,8 +2,8 @@
 
 import type { Json } from '@/database.types';
 import type { CreateNotificationParams } from '@/types/notifications';
+import { expireTag } from '@/lib/cache/expireTag';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { revalidateTag } from 'next/cache';
 
 /**
  * Create a notification in the database
@@ -35,7 +35,7 @@ export async function createNotification(params: CreateNotificationParams): Prom
       return { success: false, error: error.message };
     }
 
-    revalidateTag(`notifications-${params.userId}`, 'max');
+    expireTag(`notifications-${params.userId}`);
     return { success: true, notificationId: data.id };
   } catch (err) {
     const error = err instanceof Error ? err : new Error('Unknown error');

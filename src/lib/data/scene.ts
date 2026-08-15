@@ -24,7 +24,7 @@ export async function getAllSceneEventSlugs() {
  */
 export async function getUpcomingSceneEvents() {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('scene');
 
   const supabase = createPublicClient();
@@ -53,7 +53,7 @@ export async function getUpcomingSceneEvents() {
  */
 export async function getPastSceneEvents(limit = 5) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('scene');
 
   const supabase = createPublicClient();
@@ -93,7 +93,7 @@ export type SceneEventWithSubmitter = SceneEvent & {
  */
 export async function getSceneEventBySlug(slug: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('scene');
   cacheTag(`scene-${slug}`);
 
@@ -135,7 +135,7 @@ export async function getRelatedSceneEvents(
   limit = 10,
 ) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('scene');
 
   const supabase = createPublicClient();
@@ -195,7 +195,7 @@ export async function getSceneEventInterests(
   sceneEventIds: string[],
 ): Promise<Record<string, SceneEventInterested[]>> {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('scene');
 
   if (sceneEventIds.length === 0) {

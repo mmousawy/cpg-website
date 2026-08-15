@@ -3,7 +3,7 @@
 import BlurImage from '@/components/shared/BlurImage';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import Popover from '@/components/shared/Popover';
-import { useAlbumSectionCounts, useAllEventAlbums, usePersonalAlbums, useSharedWithMeAlbums, useYourSharedAlbums, type SharedWithMeAlbum } from '@/hooks/useAlbums';
+import { useAlbumSectionCounts, useAllEventAlbums, usePersonalAlbums, useSharedWithMeAlbums, useYourSharedAlbums, prefetchAlbumPhotos, prefetchOwnedAlbum, prefetchSharedAlbum, type SharedWithMeAlbum } from '@/hooks/useAlbums';
 import { useAuth } from '@/hooks/useAuth';
 import type { AlbumWithPhotos } from '@/types/albums';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
@@ -15,6 +15,7 @@ import ArrowUpLeftSVG from 'public/icons/arrow-up-left-micro.svg';
 import ChevronDownSVG from 'public/icons/chevron-down.svg';
 import FolderSVG from 'public/icons/folder.svg';
 import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AlbumSwitcherProps {
   /** Current album title */
@@ -43,6 +44,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
 
   const albumsLoading = personalLoading;
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -56,10 +58,19 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
     const href = ownerNickname
       ? `/account/albums/${album.slug}?owner=${encodeURIComponent(ownerNickname)}`
       : `/account/albums/${album.slug}`;
+    if (user?.id) {
+      if (ownerNickname) {
+        void prefetchSharedAlbum(queryClient, user.id, ownerNickname, album.slug);
+      } else {
+        void prefetchOwnedAlbum(queryClient, user.id, album.slug);
+      }
+      void prefetchAlbumPhotos(queryClient, album.id);
+    }
+    router.prefetch(href);
     startTransition(() => {
       router.push(href);
     });
-  }, [slug, router]);
+  }, [slug, router, user?.id, queryClient]);
 
   const handleBackToAlbums = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

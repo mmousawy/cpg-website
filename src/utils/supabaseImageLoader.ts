@@ -12,6 +12,9 @@ export const DEFAULT_SUPABASE_IMAGE_QUALITY = 92;
 /** Lower quality for grid thumbnails and below-the-fold cards. */
 export const THUMBNAIL_IMAGE_QUALITY = 80;
 
+/** Justified photo grids — slightly lower quality for small mobile thumbs only. */
+export const GRID_THUMBNAIL_QUALITY = 75;
+
 /** ~414px mobile viewport at 2x DPR — matches sizes="100vw" preload width. */
 export const MOBILE_PRELOAD_WIDTH = 828;
 

@@ -254,7 +254,7 @@ export default function EventsList({
                       <CalendarSVG
                         className="shrink-0 fill-foreground"
                       />
-                      {formatEventDate(event.date!, { includeYear: true })}
+                      {formatEventDate(event.date!, { includeYear: true, now: serverNow })}
                     </span>
                     <span
                       className='flex gap-2'

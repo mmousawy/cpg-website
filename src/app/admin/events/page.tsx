@@ -3,8 +3,8 @@
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
@@ -222,7 +222,7 @@ function AdminEventCard({ event }: { event: Event }) {
                     className="flex items-center gap-1"
                   >
                     <CalendarSVG
-                      className="size-3.5 fill-foreground/60"
+                      className="size-3.5 fill-foreground/80"
                     />
                     {formatEventDate(event.date)}
                   </span>
@@ -232,7 +232,7 @@ function AdminEventCard({ event }: { event: Event }) {
                     className="flex items-center gap-1"
                   >
                     <TimeSVG
-                      className="size-3.5 fill-foreground/60"
+                      className="size-3.5 fill-foreground/80"
                     />
                     {formatEventTime(event.time)}
                   </span>
@@ -242,7 +242,7 @@ function AdminEventCard({ event }: { event: Event }) {
                     className="hidden sm:flex items-center gap-1"
                   >
                     <LocationSVG
-                      className="size-3.5 fill-foreground/60"
+                      className="size-3.5 fill-foreground/80"
                     />
                     <span
                       className="line-clamp-1"

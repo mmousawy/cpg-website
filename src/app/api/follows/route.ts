@@ -2,8 +2,8 @@ import {
   cancelPendingFollowNotification,
   scheduleFollowNotification,
 } from '@/lib/follows/scheduleFollowNotification';
+import { expireTag } from '@/lib/cache/expireTag';
 import { createClient } from '@/utils/supabase/server';
-import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 type FollowRequest = {
@@ -13,10 +13,10 @@ type FollowRequest = {
 function revalidateFollowProfiles(nicknames: Array<string | null | undefined>) {
   for (const nickname of nicknames) {
     if (nickname) {
-      revalidateTag(`profile-${nickname}`, 'max');
+      expireTag(`profile-${nickname}`);
     }
   }
-  revalidateTag('search', 'max');
+  expireTag('search');
 }
 
 export async function GET(request: NextRequest) {

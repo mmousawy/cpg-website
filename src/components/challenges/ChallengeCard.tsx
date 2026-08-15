@@ -85,7 +85,7 @@ export default function ChallengeCard({
   serverNow,
   isPast = false,
   showAdminActions = false,
-  prefetch = true,
+  prefetch,
 }: ChallengeCardProps) {
   const deadline = formatDeadline(challenge.ends_at, serverNow);
   const deadlineShort = formatDeadlineShort(challenge.ends_at, serverNow);

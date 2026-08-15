@@ -84,6 +84,7 @@ type ScenePageContentProps = {
   /** CPG past events (not from DB) — needed for correct pagination offset */
   cpgPastCount?: number;
   interestedByEvent?: Record<string, SceneEventInterested[]>;
+  now: number;
 };
 
 type TabId = 'thisWeek' | 'nextWeek' | 'thisMonth' | 'ongoing' | 'later' | 'past';
@@ -102,13 +103,14 @@ const PAST_TAB = { id: 'past' as const, label: 'Past' };
 function groupUpcomingByPeriod(
   events: SceneEvent[],
   category: string | null,
+  nowTs: number,
 ): { thisWeek: SceneEvent[]; nextWeek: SceneEvent[]; thisMonth: SceneEvent[]; ongoing: SceneEvent[]; later: SceneEvent[] } {
   const filtered =
     category && category !== 'all'
       ? events.filter((e) => e.category === category)
       : events;
 
-  const now = new Date();
+  const now = new Date(nowTs);
   const todayStr = now.toISOString().slice(0, 10);
 
   // This week: Monday – Sunday
@@ -159,6 +161,38 @@ function groupUpcomingByPeriod(
   return { thisWeek, nextWeek, thisMonth, ongoing, later };
 }
 
+export function ScenePageContentFallback() {
+  return (
+    <div
+      className="space-y-10"
+    >
+      <div
+        className="flex flex-wrap gap-2"
+      >
+        {Array.from({ length: 8 }, (_, i) => (
+          <div
+            key={i}
+            className="h-9 w-24 animate-pulse rounded-full bg-background-medium"
+          />
+        ))}
+      </div>
+      <div
+        className="h-10 w-full max-w-md animate-pulse rounded-md bg-background-medium"
+      />
+      <div
+        className="space-y-4 sm:space-y-6"
+      >
+        {Array.from({ length: 3 }, (_, i) => (
+          <div
+            key={i}
+            className="h-32 animate-pulse rounded-xl border border-border-color bg-background-light"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ScenePageContent({
   upcomingEvents,
   initialPastEvents,
@@ -166,6 +200,7 @@ export default function ScenePageContent({
   pastPerPage,
   cpgPastCount = 0,
   interestedByEvent = {},
+  now,
 }: ScenePageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -220,8 +255,8 @@ export default function ScenePageContent({
   }, [category, initialPastEvents, pastCountByCategory]);
 
   const { thisWeek, nextWeek, thisMonth, ongoing, later } = useMemo(
-    () => groupUpcomingByPeriod(upcomingEvents, category),
-    [upcomingEvents, category],
+    () => groupUpcomingByPeriod(upcomingEvents, category, now),
+    [upcomingEvents, category, now],
   );
 
   const pastCount =
@@ -453,6 +488,7 @@ export default function ScenePageContent({
               totalCount={pastTotalCount}
               perPage={pastPerPage}
               category={category}
+              now={now}
             />
           ) : activeTab ? (
             activeEvents.length > 0 ? (
@@ -465,6 +501,7 @@ export default function ScenePageContent({
                       key={event.id}
                       event={event}
                       interested={mergedInterests[event.id] ?? []}
+                      now={now}
                     />
                   ))}
                 </div>

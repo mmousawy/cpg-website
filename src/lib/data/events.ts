@@ -28,7 +28,7 @@ export async function getAllEventSlugs() {
  */
 export async function getRecentEvents(limit = 6) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('events');
 
   const supabase = createPublicClient();
@@ -61,7 +61,7 @@ export async function getRecentEvents(limit = 6) {
  */
 export async function getUpcomingEvents(limit?: number) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('events');
 
   const supabase = createPublicClient();
@@ -97,7 +97,7 @@ export async function getUpcomingEvents(limit?: number) {
  */
 export async function getPastEvents(limit = 5) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('events');
 
   const supabase = createPublicClient();
@@ -131,7 +131,7 @@ export async function getPastEvents(limit = 5) {
  */
 export async function getEventBySlug(slug: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('events');
   cacheTag(`event-${slug}`);
 
@@ -156,7 +156,7 @@ export async function getEventBySlug(slug: string) {
  */
 export async function getEventAttendeesForEvent(eventId: number) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('event-attendees');
 
   const supabase = createAdminClient();
@@ -189,7 +189,7 @@ export async function getEventAttendeesForEvent(eventId: number) {
  */
 export async function getEventAttendees(eventIds: number[]) {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('event-attendees');
 
   if (eventIds.length === 0) {

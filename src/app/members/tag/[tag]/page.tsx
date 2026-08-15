@@ -1,8 +1,8 @@
-import PageContainer from '@/components/layout/PageContainer';
+import PageContainer from '@/components/layout/PageContainer';import { cacheLife } from 'next/cache';
+
 import MemberCard from '@/components/shared/MemberCard';
 import Tag from '@/components/shared/Tag';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -37,12 +37,10 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
 }
 
-export default async function TagMembersPage({ params }: { params: Params }) {
-  'use cache';
-  cacheLife('max');
-  cacheTag('gallery');
-  cacheTag('profiles');
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
+export default async function TagMembersPage({ params }: { params: Params }) {
   const resolvedParams = await params;
   const tagName = decodeURIComponent(resolvedParams?.tag || '');
 

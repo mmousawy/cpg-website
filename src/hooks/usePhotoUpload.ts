@@ -74,16 +74,20 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 
       // Check if albums have covers (for setting first photo as manual cover)
       const albumCoverChecks: Record<string, boolean> = {};
+      const albumSlugs: string[] = [];
       if (albumIds.length > 0) {
         const { data: albumsData } = await supabase
           .from('albums')
-          .select('id, cover_image_url')
+          .select('id, slug, cover_image_url')
           .in('id', albumIds)
           .eq('user_id', userId);
 
         if (albumsData) {
           albumsData.forEach((album) => {
             albumCoverChecks[album.id] = album.cover_image_url !== null;
+            if (album.slug) {
+              albumSlugs.push(album.slug);
+            }
           });
         }
       }
@@ -99,6 +103,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           ? profileJson
           : null
       ) as {
+        nickname?: string | null;
         default_license?: string | null;
         copyright_name?: string | null;
         full_name?: string | null;
@@ -296,6 +301,13 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
       const publicPhotoIds = results.filter((photo) => photo.is_public).map((photo) => photo.id);
       if (publicPhotoIds.length > 0) {
         void notifyFollowersOfUpload(publicPhotoIds);
+      }
+
+      if (albumIds.length > 0 && results.length > 0 && profileData?.nickname && albumSlugs.length > 0) {
+        const { revalidateAlbum } = await import('@/app/actions/revalidate');
+        await Promise.all(
+          albumSlugs.map((slug) => revalidateAlbum(profileData.nickname!, slug)),
+        );
       }
 
       return results;

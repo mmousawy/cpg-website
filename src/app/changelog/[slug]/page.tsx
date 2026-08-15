@@ -1,4 +1,5 @@
-import Container from '@/components/layout/Container';
+import Container from '@/components/layout/Container';import { cacheLife } from 'next/cache';
+
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import {
@@ -9,7 +10,6 @@ import {
   getVersionForSlug,
 } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 import type { Components } from 'react-markdown';
 import ReactMarkdown from 'react-markdown';
@@ -130,13 +130,11 @@ const markdownComponents: Components = {
   hr: () => null,
 };
 
-export default async function ChangelogDetailPage({ params }: ChangelogDetailPageProps) {
-  'use cache';
-  cacheLife('max');
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
+export default async function ChangelogDetailPage({ params }: ChangelogDetailPageProps) {
   const { slug } = await params;
-  cacheTag('changelog');
-  cacheTag(`changelog-${slug}`);
 
   const [markdown, summary, version] = await Promise.all([
     getChangelogDetailMarkdown(slug),

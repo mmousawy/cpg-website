@@ -1,5 +1,3 @@
-'use client';
-
 import type { Tag as TagType } from '@/types/photos';
 import clsx from 'clsx';
 import Link from 'next/link';

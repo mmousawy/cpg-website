@@ -1,11 +1,10 @@
 'use client';
 
-import clsx from 'clsx';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
@@ -53,36 +52,39 @@ const MobileMenu = dynamic(
   { ssr: false },
 );
 
-// Navigation link component with active state
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavActiveMarker({ href }: { href: string }) {
   const pathname = usePathname();
   const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
+  if (!isActive) return null;
 
+  return (
+    <span
+      data-active=""
+      className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary"
+      aria-hidden
+    />
+  );
+}
+
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
-      className={clsx(
-        'relative py-1 font-medium transition-colors hover:text-primary rounded text-[15px]',
-        isActive ? 'text-primary dark:text-primary-alt' : 'text-foreground',
-      )}
+      className="relative py-1 font-medium transition-colors hover:text-primary rounded text-[15px] text-foreground has-data-active:text-primary dark:has-data-active:text-primary-alt"
     >
       {children}
-      {isActive && (
-        <span
-          className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary"
+      <Suspense fallback={null}>
+        <NavActiveMarker
+          href={href}
         />
-      )}
+      </Suspense>
     </Link>
   );
 }
 
-// Paths where the header should be full-width (no max-w constraint)
-const fullWidthPaths = ['/account/photos', '/account/albums'];
-
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const pathname = usePathname();
   const mounted = useMounted();
   const { profile, user } = useSession();
 
@@ -120,18 +122,12 @@ export default function Header() {
     };
   }, []);
 
-  // Check if current path should have full-width header
-  const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
-
   return (
     <header
       className="sticky top-0 z-40 flex justify-center border-b-[0.0625rem] border-b-border-color border-t-primary bg-background-light px-2 py-2 text-foreground shadow-md shadow-[#00000005]"
     >
       <div
-        className={clsx(
-          'flex w-full items-center justify-between gap-4',
-          !isFullWidth && 'max-w-screen-md',
-        )}
+        className="app-header-inner flex w-full max-w-screen-md items-center justify-between gap-4"
       >
         {/* Left: Logo + Desktop Nav */}
         <div

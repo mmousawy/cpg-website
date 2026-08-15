@@ -1,17 +1,8 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import AlbumGridSkeleton from './AlbumGridSkeleton';
 import AlbumGridStatic from './AlbumGridStatic';
+import AlbumGridWithLiveLikes from './AlbumGridWithLiveLikes';
 import type { AlbumGridProps } from './albumGridTypes';
-
-const AlbumGridWithLiveLikes = dynamic(
-  () => import('./AlbumGridWithLiveLikes'),
-  {
-    ssr: false,
-    loading: () => <AlbumGridSkeleton />,
-  },
-);
 
 export type { AlbumGridProps } from './albumGridTypes';
 

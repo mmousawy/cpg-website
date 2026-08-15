@@ -28,7 +28,7 @@ export type InterestWithMembers = {
  */
 export async function getRecentlyActiveMembers(limit = 12) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('profiles');
   cacheTag('gallery');
 
@@ -137,7 +137,7 @@ export async function getRecentlyActiveMembers(limit = 12) {
  */
 export async function getNewMembers(limit = 12) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('profiles');
 
   const supabase = createPublicClient();
@@ -160,7 +160,7 @@ export async function getNewMembers(limit = 12) {
  */
 export async function getMembersByTagUsage(limit = 12) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
 
   const supabase = createPublicClient();
@@ -330,7 +330,7 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
  */
 export async function getAllMembers() {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('profiles');
 
   const supabase = createPublicClient();
@@ -352,7 +352,7 @@ export async function getAllMembers() {
  */
 export async function getMembersByTag(tagName: string) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
   cacheTag(`tag-${tagName}`);
 

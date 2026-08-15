@@ -4,6 +4,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import EditSceneEventModal from '@/components/scene/EditSceneEventModal';
 import ReportModal from '@/components/shared/ReportModal';
+import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSession } from '@/hooks/useSession';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
@@ -70,10 +71,12 @@ function SceneActionsMenuAuthenticated({
     modalContext.setFlushContentTop(true);
     modalContext.setTitle('Edit event');
     modalContext.setContent(
-      <EditSceneEventModal
-        key={event.id}
-        event={event}
-      />,
+      <UnsavedChangesProvider>
+        <EditSceneEventModal
+          key={event.id}
+          event={event}
+        />
+      </UnsavedChangesProvider>,
     );
     modalContext.setIsOpen(true);
   };

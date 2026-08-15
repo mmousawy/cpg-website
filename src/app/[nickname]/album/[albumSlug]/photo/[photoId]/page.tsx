@@ -1,4 +1,5 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import PhotoPageContent from '@/components/photo/PhotoPageContent';import { cacheLife } from 'next/cache';
+
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -55,6 +56,9 @@ export async function generateMetadata({ params }: { params: Params }) {
     keywords: ['photography', 'photo', result.photo.title || '', result.currentAlbum.title, nickname],
   });
 }
+
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
 export default async function AlbumPhotoPage({ params }: { params: Params }) {
   const resolvedParams = await params;

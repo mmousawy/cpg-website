@@ -3,7 +3,6 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
-import { usePathname } from 'next/navigation';
 import { useCallback, useContext } from 'react';
 
 interface AuthPromptOptions {
@@ -26,11 +25,10 @@ interface AuthPromptOptions {
  */
 export function useAuthPrompt() {
   const { setIsOpen, setTitle, setContent, setFooter, setSize } = useContext(ModalContext);
-  const pathname = usePathname();
 
   const showAuthPrompt = useCallback(
     ({ feature, title, description }: AuthPromptOptions) => {
-      const redirectTo = encodeURIComponent(pathname);
+      const redirectTo = encodeURIComponent(window.location.pathname);
 
       setSize('small');
       setTitle(title || 'Join our community');
@@ -83,7 +81,7 @@ export function useAuthPrompt() {
       );
       setIsOpen(true);
     },
-    [pathname, setIsOpen, setTitle, setContent, setFooter, setSize],
+    [setIsOpen, setTitle, setContent, setFooter, setSize],
   );
 
   return showAuthPrompt;

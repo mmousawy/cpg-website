@@ -3,7 +3,7 @@
 import { createNotification } from '@/lib/notifications/create';
 import type { NotificationType } from '@/types/notifications';
 import { createClient } from '@/utils/supabase/server';
-import { revalidateTag } from 'next/cache';
+import { expireTag } from '@/lib/cache/expireTag';
 
 /**
  * Mark a notification as seen
@@ -28,7 +28,7 @@ export async function markNotificationAsSeen(notificationId: string): Promise<{ 
     return { success: false, error: error.message };
   }
 
-  revalidateTag(`notifications-${user.id}`, 'max');
+  expireTag(`notifications-${user.id}`);
   return { success: true };
 }
 
@@ -55,7 +55,7 @@ export async function markAllNotificationsAsSeen(): Promise<{ success: boolean; 
     return { success: false, error: error.message };
   }
 
-  revalidateTag(`notifications-${user.id}`, 'max');
+  expireTag(`notifications-${user.id}`);
   return { success: true };
 }
 
@@ -104,7 +104,7 @@ export async function markNotificationsSeenByLink(pathname: string): Promise<{ s
     return { success: false, markedIds: [], error: updateError.message };
   }
 
-  revalidateTag(`notifications-${user.id}`, 'max');
+  expireTag(`notifications-${user.id}`);
   return { success: true, markedIds: ids };
 }
 
@@ -134,7 +134,7 @@ export async function dismissNotification(notificationId: string): Promise<{ suc
     return { success: false, error: error.message };
   }
 
-  revalidateTag(`notifications-${user.id}`, 'max');
+  expireTag(`notifications-${user.id}`);
   return { success: true };
 }
 
@@ -246,7 +246,7 @@ export async function createMockNotifications(): Promise<{ success: boolean; err
   }
 
   // Invalidate the notifications cache so the new notifications appear
-  revalidateTag(`notifications-${user.id}`, 'max');
+  expireTag(`notifications-${user.id}`);
 
   return { success: true };
 }

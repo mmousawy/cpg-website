@@ -1,5 +1,5 @@
-import clsx from 'clsx';
-import { cacheLife, cacheTag } from 'next/cache';
+import clsx from 'clsx';import { cacheLife } from 'next/cache';
+
 import { notFound } from 'next/navigation';
 
 import Container from '@/components/layout/Container';
@@ -146,19 +146,16 @@ function getCategoryLabel(category: string): string {
   );
 }
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function SceneEventDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  'use cache';
-
   const { slug } = await params;
   if (!slug) notFound();
-
-  cacheLife('max');
-  cacheTag('scene');
-  cacheTag(`scene-${slug}`);
 
   const { event } = await getSceneEventBySlug(slug);
   if (!event) notFound();

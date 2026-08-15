@@ -6,9 +6,9 @@ import PhotoListItem from '@/components/manage/PhotoListItem';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import Input from '@/components/shared/Input';
+import { photosQueryFilterKey } from '@/hooks/photoQueryCache';
 import { useCreateAlbum } from '@/hooks/useAlbumMutations';
 import { useAuth } from '@/hooks/useAuth';
-import { photosQueryFilterKey } from '@/hooks/photoQueryCache';
 import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useSupabase } from '@/hooks/useSupabase';
 import type { Album } from '@/types/albums';
@@ -316,7 +316,7 @@ export default function AddPhotosToAlbumModal({
         <p
           className="text-sm text-foreground/80"
         >
-          Selected
+          Selected{' '}
           {photos.length}
           {' '}
           photos

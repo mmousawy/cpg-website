@@ -236,29 +236,26 @@ export default function AdminChallengeFormPage() {
         imageHeight = dimensions.height;
         imageBlurhash = await generateBlurhash(coverImageFile);
 
-        const fileExt = coverImageFile.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `challenges/${fileName}`;
+        const formData = new FormData();
+        formData.append('file', coverImageFile);
+        formData.append('folder', 'challenges');
 
-        const { error: uploadError } = await supabase.storage
-          .from('event-covers')
-          .upload(filePath, coverImageFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+        const uploadRes = await fetch('/api/admin/upload-cover', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json() as {
+          publicUrl?: string;
+          error?: string;
+        };
 
-        if (uploadError) {
-          setError('Failed to upload cover image');
+        if (!uploadRes.ok || !uploadData.publicUrl) {
+          setError(uploadData.error || 'Failed to upload cover image');
           setIsSaving(false);
           return;
         }
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('event-covers').getPublicUrl(filePath);
-
-        coverImageUrl = publicUrl;
+        coverImageUrl = uploadData.publicUrl;
       }
 
       const challengeData = {

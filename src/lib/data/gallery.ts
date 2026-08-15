@@ -21,7 +21,7 @@ export type StreamPhoto = Photo & {
  */
 export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popular' = 'recent') {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
 
   const supabase = createPublicClient();
@@ -88,7 +88,7 @@ export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popu
  */
 export async function getRecentlyLikedPhotos(limit = 10) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
 
   const supabase = createPublicClient();
@@ -203,7 +203,7 @@ export async function getRecentlyLikedPhotos(limit = 10) {
  */
 export async function getPopularTags(limit = 30) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
 
   const supabase = createPublicClient();
@@ -247,7 +247,7 @@ export async function getPopularTags(limit = 30) {
  */
 export async function getPopularTagsWithMemberCounts(limit = 20) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
 
   const supabase = createPublicClient();
@@ -316,7 +316,7 @@ export async function getPopularTagsWithMemberCounts(limit = 20) {
  */
 export async function getPhotosByTag(tagName: string, limit = 100) {
   'use cache';
-  cacheLife('max');
+  cacheLife('tagged');
   cacheTag('gallery');
   cacheTag(`tag-${tagName}`);
 
@@ -411,7 +411,7 @@ export async function getAllTagNames() {
  */
 export async function getMostViewedPhotosLastWeek(limit = 20) {
   'use cache';
-  cacheLife({ revalidate: 3600 }); // 1 hour - view counts change frequently
+  cacheLife('hourly'); // 1 hour - view counts change frequently
   cacheTag('gallery');
 
   const supabase = createPublicClient();

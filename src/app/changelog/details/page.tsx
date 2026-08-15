@@ -2,9 +2,7 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { buildVersionSlugMaps, getChangelogContent, parseChangelog } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
 import ArrowRightIcon from 'public/icons/arrow-right.svg';
 
@@ -20,74 +18,12 @@ type PageProps = {
   searchParams: Promise<{ page?: string }>;
 };
 
-export default function ChangelogDetailsPage(props: PageProps) {
-  return (
-    <Suspense
-      fallback={<ChangelogDetailsLoading />}
-    >
-      <ChangelogDetailsPageContent
-        {...props}
-      />
-    </Suspense>
-  );
-}
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
-function ChangelogDetailsLoading() {
-  return (
-    <PageContainer>
-      <Container
-        padding="md"
-        className="mx-auto max-w-3xl"
-      >
-        <div
-          className="space-y-6"
-        >
-          <div
-            className="h-4 w-32 animate-pulse rounded bg-background-medium"
-          />
-          <div
-            className="h-9 w-56 animate-pulse rounded bg-background-medium"
-          />
-          <div
-            className="h-5 w-full max-w-md animate-pulse rounded bg-background-medium"
-          />
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="space-y-3 border-b border-border-color pb-6"
-            >
-              <div
-                className="h-7 w-40 animate-pulse rounded bg-background-medium"
-              />
-              <div
-                className="h-4 w-full animate-pulse rounded bg-background-medium"
-              />
-              <div
-                className="h-4 w-5/6 animate-pulse rounded bg-background-medium"
-              />
-            </div>
-          ))}
-        </div>
-      </Container>
-    </PageContainer>
-  );
-}
-
-async function ChangelogDetailsPageContent({ searchParams }: PageProps) {
+export default async function ChangelogDetailsPage({ searchParams }: PageProps) {
   const { page } = await searchParams;
   const currentPage = Math.max(1, parseInt(page ?? '1', 10) || 1);
-
-  return (
-    <CachedDetailsContent
-      currentPage={currentPage}
-    />
-  );
-}
-
-async function CachedDetailsContent({ currentPage }: { currentPage: number }) {
-  'use cache';
-  cacheLife('max');
-  cacheTag('changelog');
 
   const changelogContent = await getChangelogContent();
   const entries = changelogContent ? parseChangelog(changelogContent) : [];

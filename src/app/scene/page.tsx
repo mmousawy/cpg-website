@@ -1,10 +1,9 @@
-import { cacheLife, cacheTag } from 'next/cache';
-
 import PageContainer from '@/components/layout/PageContainer';
 import AddSceneEventButton from '@/components/scene/AddSceneEventButton';
 import ScenePageContent from '@/components/scene/ScenePageContent';
 import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife } from 'next/cache';
 
 import {
   getCpgPastSceneEvents,
@@ -37,11 +36,12 @@ export const metadata = createMetadata({
   ],
 });
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function ScenePage() {
   'use cache';
-  cacheLife('hours');
-  cacheTag('scene');
-  cacheTag('events');
+  cacheLife('hourly');
 
   const [upcomingData, pastData, cpgUpcomingData, cpgPastData] = await Promise.all([
     getUpcomingSceneEvents(),
@@ -50,7 +50,8 @@ export default async function ScenePage() {
     getPastEvents(PAST_EVENTS_PER_PAGE),
   ]);
 
-  const nowDate = getAmsterdamDateString();
+  const serverNow = cpgUpcomingData.serverNow;
+  const nowDate = getAmsterdamDateString(serverNow);
   const cpgStaticUpcoming = getCpgUpcomingSceneEvents(nowDate);
   const cpgStaticPast = getCpgPastSceneEvents(nowDate);
 
@@ -62,10 +63,8 @@ export default async function ScenePage() {
 
   const upcomingEvents = mergeUpcomingWithCpg(upcomingData.events, allCpgUpcoming);
   const initialPast = mergePastWithCpg(pastData.events, allCpgPast);
-
   const cpgPastCount = allCpgPast.length;
-
-  const pastTotalCount = pastData.totalCount; // DB only; CPG past are prepended, not paginated
+  const pastTotalCount = pastData.totalCount;
 
   const INITIAL_VISIBLE = 20;
   const initialVisibleIds = upcomingEvents
@@ -116,6 +115,7 @@ export default async function ScenePage() {
         pastPerPage={PAST_EVENTS_PER_PAGE}
         cpgPastCount={cpgPastCount}
         interestedByEvent={initialInterests}
+        now={serverNow}
       />
     </PageContainer>
   );

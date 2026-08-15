@@ -371,7 +371,7 @@ function RsvpEventCard({
                   className="flex items-center gap-1"
                 >
                   <CalendarSVG
-                    className="size-3.5 fill-foreground/60"
+                    className="size-3.5 fill-foreground/80"
                   />
                   {formatEventDate(event.date)}
                 </span>
@@ -381,7 +381,7 @@ function RsvpEventCard({
                   className="flex items-center gap-1"
                 >
                   <TimeSVG
-                    className="size-3.5 fill-foreground/60"
+                    className="size-3.5 fill-foreground/80"
                   />
                   {formatEventTime(event.time)}
                 </span>
@@ -391,7 +391,7 @@ function RsvpEventCard({
                   className="flex items-center gap-1 shrink-0"
                 >
                   <LocationSVG
-                    className="size-3.5 fill-foreground/60"
+                    className="size-3.5 fill-foreground/80"
                   />
 
                   {event.location.split('\n')[0]}

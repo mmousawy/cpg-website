@@ -15,7 +15,7 @@ export default function ChallengesList({
   emptyMessage = 'No challenges found.',
   serverNow,
   isPast = false,
-  prefetchLinks = true,
+  prefetchLinks,
 }: ChallengesListProps) {
   if (challenges.length === 0) {
     return (

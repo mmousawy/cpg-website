@@ -16,13 +16,9 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <ConfirmProvider>
       <ModalProvider>
-        <Suspense
-          fallback={null}
-        >
-          <Layout>
-            {children}
-          </Layout>
-        </Suspense>
+        <Layout>
+          {children}
+        </Layout>
         <LazyOverlays />
         <Suspense
           fallback={null}

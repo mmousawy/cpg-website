@@ -1,5 +1,3 @@
-'use client';
-
 import ManageLayout from '@/components/manage/ManageLayout';
 import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
 import ManageSidebarSkeleton from '@/components/manage/ManageSidebarSkeleton';

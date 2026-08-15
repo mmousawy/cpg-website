@@ -11,7 +11,7 @@ import type {
   NotificationType,
 } from '@/types/notifications';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { revalidateTag } from 'next/cache';
+import { expireTag } from '@/lib/cache/expireTag';
 import { after } from 'next/server';
 
 export const NOTIFICATION_DELAY_MS = 30_000;
@@ -516,7 +516,7 @@ async function deliverFollowedUploadWithCoalesce(
       })
       .eq('id', existing.id);
 
-    revalidateTag(`notifications-${params.userId}`, 'max');
+    expireTag(`notifications-${params.userId}`);
     return existing.id;
   }
 
@@ -552,7 +552,7 @@ async function deliverEntityScopedNotification(
       .update({ data: mergedData as Json })
       .eq('id', existing.id);
 
-    revalidateTag(`notifications-${params.userId}`, 'max');
+    expireTag(`notifications-${params.userId}`);
     return existing.id;
   }
 

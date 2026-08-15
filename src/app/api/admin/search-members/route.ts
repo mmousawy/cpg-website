@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 
 /** GET — search members by name/nickname/email, excluding those already RSVP'd to an event */
@@ -25,8 +26,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ members: [] });
   }
 
-  // Fetch members matching the search query
-  let query = supabase
+  // email is not granted to authenticated — use service role after admin check
+  const adminSupabase = createAdminClient();
+
+  const { data: members, error } = await adminSupabase
     .from('profiles')
     .select('id, full_name, nickname, email, avatar_url')
     .or(`email.ilike.%${q}%,full_name.ilike.%${q}%,nickname.ilike.%${q}%`)
@@ -34,15 +37,13 @@ export async function GET(request: NextRequest) {
     .order('full_name', { ascending: true })
     .limit(20);
 
-  const { data: members, error } = await query;
-
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
   // If an event_id is provided, exclude members who already have an active RSVP
   if (eventId) {
-    const { data: existingRsvps } = await supabase
+    const { data: existingRsvps } = await adminSupabase
       .from('events_rsvps')
       .select('user_id')
       .eq('event_id', parseInt(eventId))

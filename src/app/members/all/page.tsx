@@ -7,7 +7,6 @@ import { getAllMembers } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
 import { formatJoinedDate } from '@/utils/utils';
-import { Suspense } from 'react';
 
 export const metadata = createMetadata({
   title: 'All community members',
@@ -16,17 +15,10 @@ export const metadata = createMetadata({
   keywords: ['photography community', 'photographers', 'all members', 'community members'],
 });
 
-export default function AllMembersPage() {
-  return (
-    <Suspense
-      fallback={<AllMembersSkeleton />}
-    >
-      <AllMembersContent />
-    </Suspense>
-  );
-}
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
 
-async function AllMembersContent() {
+export default async function AllMembersPage() {
   const { user } = await getServerAuth();
 
   if (!user) {
@@ -137,44 +129,5 @@ function AllMembersHeader({ count }: { count?: number }) {
           )}
       </p>
     </div>
-  );
-}
-
-function AllMembersSkeleton() {
-  return (
-    <PageContainer>
-      <div
-        className="mb-6 h-5 w-36 animate-pulse rounded bg-background-medium"
-      />
-      <AllMembersHeader />
-      <div
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
-      >
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="animate-pulse rounded-lg border border-border-color bg-background-light px-2 py-3 flex flex-col items-center gap-2"
-            style={{ animationDelay: `${i * 75}ms` }}
-          >
-            <div
-              className="size-16 rounded-full bg-background-medium"
-            />
-            <div
-              className="w-full flex flex-col items-center"
-            >
-              <div
-                className="h-4.5 bg-background-medium rounded w-3/4 mb-0.5"
-              />
-              <div
-                className="h-4 bg-background-medium rounded w-1/2"
-              />
-              <div
-                className="h-4 bg-background-medium rounded w-2/3 mt-2"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </PageContainer>
   );
 }

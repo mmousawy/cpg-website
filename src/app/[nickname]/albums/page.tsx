@@ -1,13 +1,16 @@
-import AlbumGrid from '@/components/album/AlbumGrid';
+import AlbumGrid from '@/components/album/AlbumGrid';import { cacheLife } from 'next/cache';
+
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import { ProfileBackToProfileLink, ProfileHeroBanner } from '@/components/profile/ProfileHeader';
+import {
+  ProfileBackToProfileLink,
+  ProfileHeroBanner,
+} from '@/components/profile/ProfileHeader';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
   getProfileByNickname,
 } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
@@ -47,6 +50,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   });
 }
 
+// Block until cached data resolves so SSR includes full HTML (no streaming shell)
+export const instant = false;
+
 export default async function UserAlbumsPage({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
@@ -80,11 +86,6 @@ async function CachedAlbumsContent({
   profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>;
   nickname: string;
 }) {
-  'use cache';
-
-  cacheLife('max');
-  cacheTag(`profile-${nickname}`);
-
   const [albums, followCounts] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname, 100),
     getProfileFollowCounts(profile.id, nickname),

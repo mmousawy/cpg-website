@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
         }
       } else if (album.event_id) {
         await revalidateEventAlbum(album.event_id);
-        const { revalidateTag } = await import('next/cache');
-        revalidateTag('albums', 'max');
+        const { expireTag } = await import('@/lib/cache/expireTag');
+        expireTag('albums');
       }
     }
 

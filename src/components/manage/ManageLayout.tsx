@@ -4,10 +4,9 @@ import { ManageScrollContext } from '@/context/ManageScrollContext';
 import { useAuth } from '@/hooks/useAuth';
 import { albumCountQueryKey, photoCountQueryKey, useAlbumCount, usePhotoCount } from '@/hooks/usePhotoCounts';
 import { useQueryClient } from '@tanstack/react-query';
-import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useRef, useTransition } from 'react';
+import { Suspense, useRef, useTransition } from 'react';
 
 import AlbumSwitcher from '@/components/manage/AlbumSwitcher';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -29,6 +28,26 @@ interface ManageLayoutProps {
   mobileActionBar?: React.ReactNode;
 }
 
+function ManageTabActiveMarker({
+  href,
+  prefix = false,
+}: {
+  href: string;
+  prefix?: boolean;
+}) {
+  const pathname = usePathname();
+  const isActive = prefix ? pathname.startsWith(href) : pathname === href;
+  if (!isActive) return null;
+
+  return (
+    <span
+      data-active=""
+      hidden
+      aria-hidden
+    />
+  );
+}
+
 export default function ManageLayout({
   children,
   sidebar,
@@ -36,15 +55,11 @@ export default function ManageLayout({
   albumDetail,
   mobileActionBar,
 }: ManageLayoutProps) {
-  const pathname = usePathname();
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-
-  const isPhotosActive = pathname === '/account/photos';
-  const isAlbumsActive = pathname.startsWith('/account/albums');
 
   const { data: photoCount } = usePhotoCount(user?.id);
   const { data: albumCount } = useAlbumCount(user?.id);
@@ -60,7 +75,7 @@ export default function ManageLayout({
   const displayAlbumCount = albumCount ?? cachedAlbumCount ?? 0;
 
   const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href === pathname) {
+    if (href === window.location.pathname) {
       e.preventDefault();
       return;
     }
@@ -99,12 +114,7 @@ export default function ManageLayout({
                   <Link
                     href="/account/photos"
                     onClick={(e) => handleTabClick(e, '/account/photos')}
-                    className={clsx(
-                    'flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
-                    isPhotosActive
-                      ? 'border-primary bg-primary/10 text-primary z-10'
-                      : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
-                    )}
+                    className="flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:z-10 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                   >
                     <PhotoMicroSVG
                       className="size-4"
@@ -119,16 +129,16 @@ export default function ManageLayout({
                     >
                       {displayPhotoCount}
                     </div>
+                    <Suspense fallback={null}>
+                      <ManageTabActiveMarker
+                        href="/account/photos"
+                      />
+                    </Suspense>
                   </Link>
                   <Link
                     href="/account/albums"
                     onClick={(e) => handleTabClick(e, '/account/albums')}
-                    className={clsx(
-                    '-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors',
-                    isAlbumsActive
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5',
-                    )}
+                    className="-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                   >
                     <FolderMicroSVG
                       className="size-4"
@@ -143,6 +153,12 @@ export default function ManageLayout({
                     >
                       {displayAlbumCount}
                     </div>
+                    <Suspense fallback={null}>
+                      <ManageTabActiveMarker
+                        href="/account/albums"
+                        prefix
+                      />
+                    </Suspense>
                   </Link>
                 </div>
 

@@ -4,7 +4,6 @@ import { User, Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { Database } from '@/database.types';
-import { scheduleIdleWork } from '@/utils/scheduleIdle';
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 import { useSession } from '@/context/SessionContext';
 import type { ServerAuth, ServerProfile } from '@/utils/supabase/getServerAuth';
@@ -50,7 +49,7 @@ export function AuthProvider({
   initialAuth?: ServerAuth;
 }) {
   const router = useRouter();
-  const { setSession, clearSession } = useSession();
+  const { setSession, clearSession, markSessionReady } = useSession();
   const [user, setUser] = useState<User | null>(initialAuth?.user ?? null);
   const [session, setSessionState] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(
@@ -148,6 +147,7 @@ export function AuthProvider({
         setSessionState(nextSession);
         currentUserIdRef.current = userId;
         setIsLoading(false);
+        markSessionReady();
 
         if (userId) {
           updateLastLoggedIn(userId);
@@ -156,15 +156,14 @@ export function AuthProvider({
           }
         }
       }).catch(() => {
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          markSessionReady();
+        }
       });
     };
 
-    if (hasInitialAuth) {
-      bootstrapSession();
-    } else {
-      scheduleIdleWork(bootstrapSession, 1500);
-    }
+    bootstrapSession();
 
     // Listen for auth changes immediately (login/logout in another tab, OAuth return).
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
@@ -196,7 +195,7 @@ export function AuthProvider({
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [clearSession, fetchProfile, hasInitialAuth, initialAuth?.profile, router]);
+  }, [clearSession, fetchProfile, hasInitialAuth, initialAuth?.profile, markSessionReady, router]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();

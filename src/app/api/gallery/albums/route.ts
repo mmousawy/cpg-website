@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         id,
         photo_url
       ),
-      event:events!albums_event_id_fkey(cover_image)
+      event:events!albums_event_id_fkey(slug, cover_image)
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
-    event: { cover_image: string | null } | null;
+    event: { slug: string | null; cover_image: string | null } | null;
   };
 
   const albumsWithPhotos = (albums || [])
@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
     })
     .map((album) => ({
       ...album,
+      event_slug: album.event?.slug || null,
       event_cover_image: album.event?.cover_image || null,
     }));
 

@@ -1,8 +1,11 @@
 'use client';
 
 import type { Photo, PhotoOwnerProfile } from '@/types/photos';
-import LazySelectableGrid from './LazySelectableGrid';
+import { useMounted } from '@/hooks/useMounted';
+
+import ManagePhotoGridSkeleton from './ManagePhotoGridSkeleton';
 import PhotoCard from './PhotoCard';
+import SelectableGrid from './SelectableGrid';
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -60,6 +63,8 @@ export default function PhotoGrid({
   acceptedIds,
   notOwnedProfiles,
 }: PhotoGridProps) {
+  const mounted = useMounted();
+
   // IDs that are fully non-selectable (no click, no checkbox)
   const fullyDisabledIds = new Set<string>();
   disabledIds?.forEach((id) => fullyDisabledIds.add(id));
@@ -74,8 +79,12 @@ export default function PhotoGrid({
   // Combined set for checkbox hiding (passed to grid)
   const allNoCheckboxIds = new Set<string>([...fullyDisabledIds, ...hideCheckboxIds]);
 
+  if (!mounted) {
+    return <ManagePhotoGridSkeleton />;
+  }
+
   return (
-    <LazySelectableGrid
+    <SelectableGrid
       items={photos}
       selectedIds={selectedPhotoIds}
       getId={(photo) => photo.id}

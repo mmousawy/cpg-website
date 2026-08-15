@@ -14,6 +14,7 @@ type PastSceneEventsPaginatedProps = {
   perPage: number;
   /** Active category filter */
   category?: string | null;
+  now?: number;
 };
 
 export default function PastSceneEventsPaginated({
@@ -22,6 +23,7 @@ export default function PastSceneEventsPaginated({
   totalCount,
   perPage,
   category = null,
+  now,
 }: PastSceneEventsPaginatedProps) {
   const filteredInitial = useMemo(
     () =>
@@ -134,6 +136,7 @@ export default function PastSceneEventsPaginated({
             key={event.id}
             event={event}
             interested={interestedByEvent[event.id] ?? []}
+            now={now}
           />
         ))}
       </div>

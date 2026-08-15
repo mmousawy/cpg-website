@@ -126,14 +126,14 @@ export function useJoinSharedAlbum(
       if (error) throw new Error(error.message || 'Failed to join album');
       return data as JoinResult;
     },
-    onSuccess: (result, _, context) => {
+    onSuccess: async (result) => {
       if (albumId) {
         queryClient.invalidateQueries({ queryKey: ['shared-album-members', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-requests', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
       }
       if (ownerNickname) {
-        revalidateAlbumBySlug(ownerNickname, albumSlug);
+        await revalidateAlbumBySlug(ownerNickname, albumSlug);
       }
       if (
         result?.status === 'requested'
@@ -168,13 +168,13 @@ export function useLeaveSharedAlbum(
       const { error } = await supabase.rpc('leave_shared_album', { p_album_id: albumId });
       if (error) throw new Error(error.message || 'Failed to leave album');
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (albumId) {
         queryClient.invalidateQueries({ queryKey: ['shared-album-members', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
       }
       if (ownerNickname) {
-        revalidateAlbumBySlug(ownerNickname, albumSlug);
+        await revalidateAlbumBySlug(ownerNickname, albumSlug);
       }
     },
   });
@@ -203,7 +203,7 @@ export function useInviteToSharedAlbum(
         queryClient.invalidateQueries({ queryKey: ['shared-album-requests', albumId] });
       }
       if (ownerNickname) {
-        revalidateAlbumBySlug(ownerNickname, albumSlug);
+        await revalidateAlbumBySlug(ownerNickname, albumSlug);
       }
       if (
         albumId
@@ -256,7 +256,7 @@ export function useResolveAlbumRequest(
         queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
       }
       if (ownerNickname) {
-        revalidateAlbumBySlug(ownerNickname, albumSlug);
+        await revalidateAlbumBySlug(ownerNickname, albumSlug);
       }
       if (
         albumId
@@ -305,13 +305,13 @@ export function useRemoveAlbumMember(
       });
       if (error) throw new Error(error.message || 'Failed to remove member');
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (albumId) {
         queryClient.invalidateQueries({ queryKey: ['shared-album-members', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
       }
       if (ownerNickname) {
-        revalidateAlbumBySlug(ownerNickname, albumSlug);
+        await revalidateAlbumBySlug(ownerNickname, albumSlug);
       }
     },
   });

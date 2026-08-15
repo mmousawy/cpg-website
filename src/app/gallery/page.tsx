@@ -1,12 +1,16 @@
-import { cacheLife, cacheTag } from 'next/cache';
-import { Suspense } from 'react';
-
-import GalleryHomeSections from '@/app/gallery/GalleryHomeSections';
-import GalleryHomeSkeleton from '@/app/gallery/GalleryHomeSkeleton';
+import { GalleryMostViewedPhotosSection } from '@/app/gallery/GalleryMostViewedPhotosSection';
 import GalleryPageHeader from '@/app/gallery/GalleryPageHeader';
+import { GalleryRecentAlbumsSection } from '@/app/gallery/GalleryRecentAlbumsSection';
+import { GalleryRecentPhotosSection } from '@/app/gallery/GalleryRecentPhotosSection';
+import { GalleryTagsSection } from '@/app/gallery/GalleryTagsSection';
+import { GalleryTrendingAlbumsSection } from '@/app/gallery/GalleryTrendingAlbumsSection';
 import PageContainer from '@/components/layout/PageContainer';
-import { getGalleryHomeData } from '@/lib/data/gallery';
+import WidePageContainer from '@/components/layout/WidePageContainer';
+import SignUpCTA from '@/components/shared/SignUpCTA';
+import { getMostViewedAlbumsLastWeek, getPublicAlbums } from '@/lib/data/albums';
+import { getMostViewedPhotosLastWeek, getPopularTags, getPublicPhotostream } from '@/lib/data/gallery';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
 export const metadata = createMetadata({
   title: 'Community gallery',
@@ -16,33 +20,62 @@ export const metadata = createMetadata({
   keywords: ['photography gallery', 'photo albums', 'photography portfolio', 'community photos'],
 });
 
-export default function GalleryPage() {
-  return (
-    <Suspense
-      fallback={<GalleryHomeSkeleton />}
-    >
-      <GalleryPageContent />
-    </Suspense>
-  );
-}
+export const instant = false;
 
-async function GalleryPageContent() {
+export default async function GalleryPage() {
   'use cache';
-  cacheLife('max');
+  cacheLife('hourly');
   cacheTag('gallery');
   cacheTag('albums');
 
-  const data = await getGalleryHomeData();
+  const [popularTags, mostViewedPhotos, mostViewedAlbums, recentPhotos, recentAlbums] = await Promise.all([
+    getPopularTags(30),
+    getMostViewedPhotosLastWeek(10),
+    getMostViewedAlbumsLastWeek(10),
+    getPublicPhotostream(10),
+    getPublicAlbums(10),
+  ]);
 
   return (
     <>
-      <PageContainer>
+      <PageContainer
+        className="pb-0!"
+      >
         <GalleryPageHeader />
       </PageContainer>
 
-      <GalleryHomeSections
-        data={data}
-      />
+      <div
+        className="grid min-w-0 gap-10 md:gap-12 pb-10 md:pb-12 [&>*]:min-w-0"
+      >
+        <GalleryTagsSection
+          tags={popularTags}
+        />
+
+        <WidePageContainer
+          className="py-0!"
+        >
+          <div
+            className="grid min-w-0 gap-10 md:gap-12 [&>*]:min-w-0"
+          >
+            <GalleryMostViewedPhotosSection
+              photos={mostViewedPhotos}
+            />
+            <GalleryTrendingAlbumsSection
+              albums={mostViewedAlbums}
+            />
+            <GalleryRecentPhotosSection
+              photos={recentPhotos}
+            />
+            <GalleryRecentAlbumsSection
+              albums={recentAlbums}
+            />
+            <SignUpCTA
+              variant="inline"
+              className="max-w-screen-md mx-auto"
+            />
+          </div>
+        </WidePageContainer>
+      </div>
     </>
   );
 }

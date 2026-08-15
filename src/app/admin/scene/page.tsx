@@ -12,10 +12,10 @@ import Button from '@/components/shared/Button';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import { useSupabase } from '@/hooks/useSupabase';
 import {
-  getSceneCategoryStyle,
-  SCENE_EVENT_CATEGORIES,
-  type SceneEvent,
-  type SceneEventCategory,
+    getSceneCategoryStyle,
+    SCENE_EVENT_CATEGORIES,
+    type SceneEvent,
+    type SceneEventCategory,
 } from '@/types/scene';
 import { formatPrice } from '@/utils/formatPrice';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -337,7 +337,7 @@ function AdminSceneEventCard({
                     className="flex items-center gap-1 text-xs text-foreground/60"
                   >
                     <TicketCardSVG
-                      className="size-3.5 shrink-0 fill-foreground/60"
+                      className="size-3.5 shrink-0 fill-foreground/80"
                     />
                     {formatPrice(event.price_info)}
                   </span>
@@ -355,7 +355,7 @@ function AdminSceneEventCard({
                   className="flex items-center gap-1"
                 >
                   <CalendarSVG
-                    className="size-3.5 fill-foreground/60"
+                    className="size-3.5 fill-foreground/80"
                   />
                   {dateStr}
                 </span>
@@ -364,7 +364,7 @@ function AdminSceneEventCard({
                     className="flex items-center gap-1"
                   >
                     <TimeSVG
-                      className="size-3.5 fill-foreground/60"
+                      className="size-3.5 fill-foreground/80"
                     />
                     {timeStr}
                   </span>
@@ -373,7 +373,7 @@ function AdminSceneEventCard({
                   className="flex items-center gap-1"
                 >
                   <LocationSVG
-                    className="size-3.5 fill-foreground/60"
+                    className="size-3.5 fill-foreground/80"
                   />
                   <span
                     className="line-clamp-1"

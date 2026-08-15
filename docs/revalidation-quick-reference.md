@@ -47,10 +47,10 @@
 | Photo created/updated/deleted | `revalidateGalleryData()` |
 | Photo metadata changed | `revalidatePhoto(shortId)` |
 | Bulk photo changes | `revalidatePhotos(shortIds)` |
-| Photo tagged/untagged | `revalidateTagPhotos(tagName)` |
-| Photo liked/unliked | `revalidatePhotoLikes(photoId, nickname)` |
-| Album liked/unliked | `revalidateAlbumLikes(albumId, nickname)` |
-| User profile updated | `revalidateProfile(nickname)` |
+| Photo tagged/untagged | `revalidateTagPhotos(tagName)` (also busts `home`) |
+| Photo liked/unliked | `revalidatePhotoLikes(photoId, nickname)` (also busts `gallery`, `home`) |
+| Album liked/unliked | `revalidateAlbumLikes(albumId, nickname)` (also busts `gallery`, `home`) |
+| User profile updated | `revalidateProfile(nickname)` (also busts `profiles`, `home`) |
 | User onboarding complete | `revalidateProfile(nickname)` |
 | New user signed up | `revalidateProfiles()` |
 | Photo added to album | `revalidateAlbum(nickname, slug)` |
@@ -76,7 +76,7 @@
 
 | Endpoint | When |
 |----------|------|
-| `GET /api/cron/revalidate-events` | Vercel Cron (2×/day) — `events`, `home` |
+| `GET /api/cron/revalidate-events` | Vercel Cron (2×/day) — `events`, `event-attendees`, `challenges`, `home` |
 | `GET /api/revalidate-changelog?secret=…` | After changelog filesystem updates |
 | `GET /api/revalidate-all?secret=…` | Full public cache bust (scraper, manual) |
 
@@ -112,7 +112,7 @@ import {
 
 ## Cached Data Functions
 
-All functions use `cacheLife('max')` — cached indefinitely until tags are invalidated.
+Most functions use `cacheLife('tagged')` (no client stale window). Events, challenges, and the gallery homepage use `cacheLife('hourly')` (1-hour server revalidate). All are busted immediately via `expireTag()` when tags are invalidated.
 
 ```typescript
 // Events
@@ -161,7 +161,7 @@ import {
 ```typescript
 export async function getYourData() {
   'use cache';
-  cacheLife('max'); // Cache forever until tag is invalidated
+  cacheLife('tagged');
   cacheTag('your-tag');
   // fetch data...
 }
@@ -171,8 +171,12 @@ export async function getYourData() {
 
 3. Add revalidation in `src/app/actions/revalidate.ts`:
 ```typescript
+import { expireTag } from '@/lib/cache/expireTag';
+import { refresh } from 'next/cache';
+
 export async function revalidateYourData() {
-  revalidateTag('your-tag', 'max');
+  expireTag('your-tag');
+  refresh();
 }
 ```
 
@@ -194,6 +198,7 @@ export async function revalidateYourData() {
 ## Files
 
 - **Data layer**: `src/lib/data/*.ts`
+- **Cache helpers**: `src/lib/cache/expireTag.ts`
 - **Revalidation actions**: `src/app/actions/revalidate.ts`
 - **Secret endpoints**: `src/app/api/revalidate-all/route.ts`, `src/app/api/revalidate-changelog/route.ts`
-- **Config**: `next.config.ts` (`cacheComponents: true`)
+- **Config**: `next.config.ts` (`cacheComponents`, `cacheLife.tagged`, `cacheLife.hourly`, `staleTimes`)
