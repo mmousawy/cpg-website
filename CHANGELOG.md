@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.38.0](https://github.com/mmousawy/cpg-website/compare/v1.37.5...v1.38.0) (2026-08-15)
+
+
+### ✨ Features
+
+* Enhance caching and revalidation system ([12ea2fa](https://github.com/mmousawy/cpg-website/commit/12ea2fad5c1a54ec350cd47ae596388c95900deb))
+
+
+### 🐛 Bug Fixes
+
+* Enhance event location handling and caching ([19743c6](https://github.com/mmousawy/cpg-website/commit/19743c6585fa6bd821a7882e3702c94d6960c15c))
+* Improve activity and event pages with loading states and notification handling ([cae116f](https://github.com/mmousawy/cpg-website/commit/cae116fef6d51add412113171af26d8f92bc9a33))
+
 ## [1.37.5](https://github.com/mmousawy/cpg-website/compare/v1.37.4...v1.37.5) (2026-08-08)
 
 
