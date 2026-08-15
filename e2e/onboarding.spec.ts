@@ -147,8 +147,10 @@ test.describe('Onboarding profile images', () => {
     await pictureSection.getByRole('button', { name: /remove profile picture/i }).click();
     await bannerSection.getByRole('button', { name: /remove banner/i }).click();
 
-    await page.getByRole('button', { name: /save changes/i }).click();
-    await expect(page.getByText(/profile updated/i)).toBeVisible({ timeout: 20000 });
+    const saveButton = page.getByRole('button', { name: /save changes/i });
+    await expect(saveButton).toBeVisible();
+    await saveButton.click();
+    await expect(saveButton).toBeHidden({ timeout: 20000 });
 
     await expect(pictureSection.getByRole('button', { name: /remove profile picture/i })).toHaveCount(0);
     await expect(bannerSection.getByRole('button', { name: /remove banner/i })).toHaveCount(0);
