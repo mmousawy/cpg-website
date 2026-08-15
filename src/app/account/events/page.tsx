@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
@@ -38,9 +38,15 @@ export default function MyEventsPage() {
 
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [now, setNow] = useState<number | null>(null);
 
-  // Compute once on mount to avoid React Compiler purity warning
-  const [sevenDaysAgo] = useState(() => Date.now() - 7 * 24 * 60 * 60 * 1000);
+  useEffect(() => {
+    startTransition(() => {
+      setNow(Date.now());
+    });
+  }, []);
+
+  const sevenDaysAgo = now != null ? now - 7 * 24 * 60 * 60 * 1000 : undefined;
 
   useEffect(() => {
     // User is guaranteed by ProtectedRoute layout
@@ -88,10 +94,10 @@ export default function MyEventsPage() {
 
   // Sort: upcoming (soonest first), past (most recent first)
   const upcomingRSVPs = rsvps
-    .filter(r => !r.canceled_at && r.events && !isEventPast(r.events.date, undefined, r.events.time))
+    .filter(r => now != null && !r.canceled_at && r.events && !isEventPast(r.events.date, now, r.events.time))
     .sort((a, b) => getDateSortValue(a.events.date) - getDateSortValue(b.events.date));
   const pastRSVPs = rsvps
-    .filter(r => !r.canceled_at && r.events && isEventPast(r.events.date, undefined, r.events.time))
+    .filter(r => now != null && !r.canceled_at && r.events && isEventPast(r.events.date, now, r.events.time))
     .sort((a, b) => getDateSortValue(b.events.date) - getDateSortValue(a.events.date));
   const canceledRSVPs = rsvps.filter(r => r.canceled_at);
 

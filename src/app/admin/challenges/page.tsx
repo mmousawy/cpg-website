@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import PageContainer from '@/components/layout/PageContainer';
@@ -12,7 +12,13 @@ import SadSVG from 'public/icons/sad.svg';
 
 export default function AdminChallengesPage() {
   const { data: challenges, isLoading } = useAllChallenges();
-  const [serverNow] = useState(() => Date.now());
+  const [serverNow, setServerNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    startTransition(() => {
+      setServerNow(Date.now());
+    });
+  }, []);
 
   // Sort: active first, then by created date
   const activeChallenges = (challenges || []).filter((c) => c.is_active);
@@ -46,7 +52,7 @@ export default function AdminChallengesPage() {
         </Button>
       </div>
 
-      {isLoading ? (
+      {isLoading || serverNow == null ? (
         <div
           className="text-center animate-pulse py-12"
         >

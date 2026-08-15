@@ -26,6 +26,10 @@ function groupNotificationsByDate(notifications: NotificationWithActor[]) {
     earlier: [],
   };
 
+  if (notifications.length === 0) {
+    return groups;
+  }
+
   const now = dayjs();
   const today = now.startOf('day');
   const yesterday = today.subtract(1, 'day');
