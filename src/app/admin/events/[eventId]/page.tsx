@@ -252,13 +252,6 @@ function AdminEventForm() {
             .order('created_at', { ascending: false });
 
           setRsvps(rsvpsData || []);
-
-          // Check if announcement already sent
-          const { data: announcement } = await supabase
-            .from('event_announcements')
-            .select('id')
-            .eq('event_id', data.id)
-            .single();
         }
       } catch (err) {
         console.error('Unexpected error:', err);

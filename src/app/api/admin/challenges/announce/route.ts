@@ -6,6 +6,7 @@ import { revalidateChallenges } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createNotification } from '@/lib/notifications/create';
 
@@ -51,8 +52,9 @@ export async function POST(request: NextRequest) {
   // Build challenge link
   const challengeLink = `${process.env.NEXT_PUBLIC_SITE_URL}/challenges/${challenge.slug}`;
 
-  // Fetch all active profiles
-  const { data: allProfiles, error: profilesError } = await supabase
+  // Fetch all active profiles. email is not granted to authenticated.
+  const adminSupabase = createAdminClient();
+  const { data: allProfiles, error: profilesError } = await adminSupabase
     .from('profiles')
     .select('id, email, full_name')
     .is('suspended_at', null)

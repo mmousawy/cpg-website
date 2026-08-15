@@ -678,6 +678,42 @@ export type Database = {
         }
         Relationships: []
       }
+      event_announcement_recipients: {
+        Row: {
+          email: string
+          event_id: number
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          email: string
+          event_id: number
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          email?: string
+          event_id?: number
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'event_announcement_recipients_event_id_fkey'
+            columns: ['event_id']
+            isOneToOne: false
+            referencedRelation: 'events'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'event_announcement_recipients_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       event_announcements: {
         Row: {
           announced_at: string

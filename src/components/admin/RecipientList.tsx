@@ -11,11 +11,43 @@ export type Recipient = {
   nickname: string | null;
   selected: boolean;
   disabled?: boolean;
+  previouslySent?: boolean;
+  sentAt?: string | null;
   sendStatus?: 'success' | 'error' | null;
   errorMessage?: string | null;
   // Allow additional properties for extensibility
   [key: string]: string | number | boolean | null | undefined;
 };
+
+export function recipientsFromProfiles(
+  profiles: Array<{
+    email: string;
+    full_name: string | null;
+    nickname: string | null;
+    optedOut: boolean;
+    previouslySent?: boolean;
+    sentAt?: string | null;
+  }>,
+): Recipient[] {
+  return profiles.map((profile) => ({
+    email: profile.email,
+    name: profile.full_name || profile.email.split('@')[0] || 'Friend',
+    nickname: profile.nickname,
+    selected: !profile.optedOut && !profile.previouslySent,
+    disabled: profile.optedOut,
+    previouslySent: profile.previouslySent ?? false,
+    sentAt: profile.sentAt ?? null,
+  }));
+}
+
+function formatSentDate(sentAt: string): string {
+  const date = new Date(sentAt);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+  });
+}
 
 type RecipientListProps = {
   recipients: Recipient[];
@@ -41,6 +73,11 @@ export default function RecipientList({
 
   const selectedCount = useMemo(
     () => recipients.filter(r => r.selected).length,
+    [recipients],
+  );
+
+  const alreadySentCount = useMemo(
+    () => recipients.filter(r => r.previouslySent && !r.disabled).length,
     [recipients],
   );
 
@@ -88,6 +125,15 @@ export default function RecipientList({
             {recipients.length - selectableRecipients.length}
             {' '}
             opted out
+          </>
+        )}
+        {alreadySentCount > 0 && (
+          <>
+            ,
+            {' '}
+            {alreadySentCount}
+            {' '}
+            already sent
           </>
         )}
         )
@@ -184,6 +230,15 @@ export default function RecipientList({
                       <CloseSVG
                         className="size-4 fill-red-600"
                       />
+                    ) : recipient.previouslySent && typeof recipient.sentAt === 'string' ? (
+                      <span
+                        className="text-xs text-foreground/60"
+                        title={new Date(recipient.sentAt).toLocaleString()}
+                      >
+                        Sent
+                        {' '}
+                        {formatSentDate(recipient.sentAt)}
+                      </span>
                     ) : (
                       <span
                         className="text-xs text-foreground/40"

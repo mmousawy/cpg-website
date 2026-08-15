@@ -6,6 +6,7 @@ import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -109,8 +110,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Full send mode: fetch subscribers and send to selected recipients
-  const { data: allProfiles, error: profilesError } = await supabase
+  // Full send mode: fetch subscribers and send to selected recipients.
+  // email is not granted to authenticated — use service role after admin check.
+  const adminSupabase = createAdminClient();
+  const { data: allProfiles, error: profilesError } = await adminSupabase
     .from('profiles')
     .select('id, email, full_name, newsletter_opt_in')
     .is('suspended_at', null)

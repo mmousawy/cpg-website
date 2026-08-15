@@ -3262,6 +3262,17 @@ ALTER SEQUENCE "public"."email_types_id_seq" OWNED BY "public"."email_types"."id
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."event_announcement_recipients" (
+    "event_id" integer NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "email" "text" NOT NULL,
+    "sent_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."event_announcement_recipients" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."event_announcements" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "event_id" integer NOT NULL,
@@ -3807,6 +3818,11 @@ ALTER TABLE ONLY "public"."email_types"
 
 
 
+ALTER TABLE ONLY "public"."event_announcement_recipients"
+    ADD CONSTRAINT "event_announcement_recipients_pkey" PRIMARY KEY ("event_id", "user_id");
+
+
+
 ALTER TABLE ONLY "public"."event_announcements"
     ADD CONSTRAINT "event_announcements_event_id_key" UNIQUE ("event_id");
 
@@ -4212,6 +4228,14 @@ CREATE INDEX "idx_email_preferences_opted_out" ON "public"."email_preferences" U
 
 
 CREATE INDEX "idx_email_preferences_user_id" ON "public"."email_preferences" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_event_announcement_recipients_event_id" ON "public"."event_announcement_recipients" USING "btree" ("event_id");
+
+
+
+CREATE INDEX "idx_event_announcement_recipients_user_id" ON "public"."event_announcement_recipients" USING "btree" ("user_id");
 
 
 
@@ -4715,6 +4739,16 @@ ALTER TABLE ONLY "public"."email_preferences"
 
 
 
+ALTER TABLE ONLY "public"."event_announcement_recipients"
+    ADD CONSTRAINT "event_announcement_recipients_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."event_announcement_recipients"
+    ADD CONSTRAINT "event_announcement_recipients_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."event_announcements"
     ADD CONSTRAINT "event_announcements_announced_by_fkey" FOREIGN KEY ("announced_by") REFERENCES "public"."profiles"("id");
 
@@ -4906,11 +4940,19 @@ CREATE POLICY "Admins can delete challenges" ON "public"."challenges" FOR DELETE
 
 
 
+CREATE POLICY "Admins can insert event announcement recipients" ON "public"."event_announcement_recipients" FOR INSERT WITH CHECK ("public"."is_admin"());
+
+
+
 CREATE POLICY "Admins can review submissions" ON "public"."challenge_submissions" FOR UPDATE TO "authenticated" USING ("public"."is_admin"());
 
 
 
 CREATE POLICY "Admins can update challenges" ON "public"."challenges" FOR UPDATE TO "authenticated" USING ("public"."is_admin"());
+
+
+
+CREATE POLICY "Admins can update event announcement recipients" ON "public"."event_announcement_recipients" FOR UPDATE USING ("public"."is_admin"());
 
 
 
@@ -4926,15 +4968,7 @@ CREATE POLICY "Admins can view all event announcements" ON "public"."event_annou
 
 
 
-CREATE POLICY "Admins can view all events" ON "public"."events" FOR SELECT USING ("public"."is_admin"());
-
-
-
 CREATE POLICY "Admins can view all feedback" ON "public"."feedback" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
-
-
-
-CREATE POLICY "Admins can view all profiles" ON "public"."profiles" FOR SELECT USING ("public"."is_admin"());
 
 
 
@@ -4942,9 +4976,13 @@ CREATE POLICY "Admins can view announcements" ON "public"."challenge_announcemen
 
 
 
+CREATE POLICY "Admins can view event announcement recipients" ON "public"."event_announcement_recipients" FOR SELECT USING ("public"."is_admin"());
+
+
+
 CREATE POLICY "Album likes are publicly readable" ON "public"."album_likes" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_likes"."album_id") AND (("albums"."is_public" = true) OR ("albums"."user_id" = "auth"."uid"()) OR "public"."is_admin"()) AND ("albums"."deleted_at" IS NULL)))));
+  WHERE (("albums"."id" = "album_likes"."album_id") AND (("albums"."is_public" = true) OR ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()) AND ("albums"."deleted_at" IS NULL)))));
 
 
 
@@ -4972,7 +5010,7 @@ CREATE POLICY "Authenticated select challenges" ON "public"."challenges" FOR SEL
 
 
 
-CREATE POLICY "Authenticated select submissions" ON "public"."challenge_submissions" FOR SELECT TO "authenticated" USING ((("status" = 'accepted'::"text") OR ("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Authenticated select submissions" ON "public"."challenge_submissions" FOR SELECT TO "authenticated" USING ((("status" = 'accepted'::"text") OR ("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -4984,7 +5022,7 @@ CREATE POLICY "Authenticated users can add scene events" ON "public"."scene_even
 
 
 
-CREATE POLICY "Authenticated users can create RSVPs" ON "public"."events_rsvps" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Authenticated users can create RSVPs" ON "public"."events_rsvps" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5030,7 +5068,7 @@ CREATE POLICY "Delete album comment links" ON "public"."album_comments" FOR DELE
 
 
 
-CREATE POLICY "Delete albums policy" ON "public"."albums" FOR DELETE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Delete albums policy" ON "public"."albums" FOR DELETE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5118,7 +5156,7 @@ CREATE POLICY "Only admins can update events" ON "public"."events" FOR UPDATE US
 
 CREATE POLICY "Photo likes are publicly readable" ON "public"."photo_likes" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."photos"
-  WHERE (("photos"."id" = "photo_likes"."photo_id") AND (("photos"."is_public" = true) OR ("photos"."user_id" = "auth"."uid"()) OR "public"."is_admin"())))));
+  WHERE (("photos"."id" = "photo_likes"."photo_id") AND (("photos"."is_public" = true) OR ("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())))));
 
 
 
@@ -5130,23 +5168,15 @@ CREATE POLICY "Profile interests are viewable by everyone" ON "public"."profile_
 
 
 
-CREATE POLICY "Profiles are viewable by active members" ON "public"."profiles" FOR SELECT USING ((("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL)));
-
-
-
-CREATE POLICY "Published events are viewable by everyone" ON "public"."events" FOR SELECT USING (("is_draft" = false));
-
-
-
-CREATE POLICY "Read own or managed members" ON "public"."shared_album_members" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR (EXISTS ( SELECT 1
+CREATE POLICY "Read own or managed members" ON "public"."shared_album_members" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."albums" "a"
-  WHERE (("a"."id" = "shared_album_members"."album_id") AND (("a"."user_id" = "auth"."uid"()) OR "public"."is_admin"()))))));
+  WHERE (("a"."id" = "shared_album_members"."album_id") AND (("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()))))));
 
 
 
-CREATE POLICY "Read own requests or owner-managed requests" ON "public"."shared_album_requests" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR ("initiated_by" = "auth"."uid"()) OR (EXISTS ( SELECT 1
+CREATE POLICY "Read own requests or owner-managed requests" ON "public"."shared_album_requests" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR ("initiated_by" = ( SELECT "auth"."uid"() AS "uid")) OR (EXISTS ( SELECT 1
    FROM "public"."albums" "a"
-  WHERE (("a"."id" = "shared_album_requests"."album_id") AND (("a"."user_id" = "auth"."uid"()) OR "public"."is_admin"()))))));
+  WHERE (("a"."id" = "shared_album_requests"."album_id") AND (("a"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()))))));
 
 
 
@@ -5164,13 +5194,13 @@ CREATE POLICY "Select RSVPs policy" ON "public"."events_rsvps" FOR SELECT USING 
 
 CREATE POLICY "Select album photos policy" ON "public"."album_photos" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_photos"."album_id") AND (("albums"."user_id" = "auth"."uid"()) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", "auth"."uid"()) OR "public"."is_admin"())))));
+  WHERE (("albums"."id" = "album_photos"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())))));
 
 
 
 CREATE POLICY "Select album tags policy" ON "public"."album_tags" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_tags"."album_id") AND (("albums"."user_id" = "auth"."uid"()) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", "auth"."uid"()) OR "public"."is_admin"())))));
+  WHERE (("albums"."id" = "album_tags"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_shared_album_member"("albums"."id", ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"())))));
 
 
 
@@ -5178,7 +5208,7 @@ CREATE POLICY "Select albums policy" ON "public"."albums" FOR SELECT USING ((("u
 
 
 
-CREATE POLICY "Select email preferences policy" ON "public"."email_preferences" FOR SELECT USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Select email preferences policy" ON "public"."email_preferences" FOR SELECT USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5198,15 +5228,15 @@ CREATE POLICY "Tags are viewable by everyone" ON "public"."tags" FOR SELECT USIN
 
 
 
-CREATE POLICY "Update RSVPs policy" ON "public"."events_rsvps" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Update RSVPs policy" ON "public"."events_rsvps" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Update albums policy" ON "public"."albums" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Update albums policy" ON "public"."albums" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Update email preferences policy" ON "public"."email_preferences" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Update email preferences policy" ON "public"."email_preferences" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5248,7 +5278,7 @@ CREATE POLICY "Users can delete own comments" ON "public"."comments" FOR DELETE 
 
 
 
-CREATE POLICY "Users can delete own photos" ON "public"."photos" FOR DELETE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Users can delete own photos" ON "public"."photos" FOR DELETE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5320,7 +5350,7 @@ CREATE POLICY "Users can update own comments" ON "public"."comments" FOR UPDATE 
 
 
 
-CREATE POLICY "Users can update own photos" ON "public"."photos" FOR UPDATE USING ((("user_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Users can update own photos" ON "public"."photos" FOR UPDATE USING ((("user_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5330,15 +5360,11 @@ CREATE POLICY "Users can update own profile" ON "public"."profiles" FOR UPDATE U
 
 CREATE POLICY "Users can update photos in their own albums" ON "public"."album_photos" FOR UPDATE USING (((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_photos"."album_id") AND ("albums"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
+  WHERE (("albums"."id" = "album_photos"."album_id") AND ("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "public"."is_admin"()));
 
 
 
-CREATE POLICY "Users can view own profile" ON "public"."profiles" FOR SELECT USING (("id" = "auth"."uid"()));
-
-
-
-CREATE POLICY "Users can view own reports or admins view all" ON "public"."reports" FOR SELECT TO "authenticated" USING ((("reporter_id" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "Users can view own reports or admins view all" ON "public"."reports" FOR SELECT TO "authenticated" USING ((("reporter_id" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5350,31 +5376,39 @@ CREATE POLICY "Users can view tags from public photos or their own photos" ON "p
 
 CREATE POLICY "Users or admins can delete challenge comments" ON "public"."challenge_comments" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
    FROM "public"."comments"
-  WHERE (("comments"."id" = "challenge_comments"."comment_id") AND ("comments"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
+  WHERE (("comments"."id" = "challenge_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "Users or admins can delete event comments" ON "public"."event_comments" FOR DELETE USING (((EXISTS ( SELECT 1
    FROM "public"."comments"
-  WHERE (("comments"."id" = "event_comments"."comment_id") AND ("comments"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
+  WHERE (("comments"."id" = "event_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "Users or admins can delete scene event comments" ON "public"."scene_event_comments" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
    FROM "public"."comments"
-  WHERE (("comments"."id" = "scene_event_comments"."comment_id") AND ("comments"."user_id" = "auth"."uid"())))) OR "public"."is_admin"()));
+  WHERE (("comments"."id" = "scene_event_comments"."comment_id") AND ("comments"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) OR "public"."is_admin"()));
 
 
 
 CREATE POLICY "View album comment links" ON "public"."album_comments" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."albums"
-  WHERE (("albums"."id" = "album_comments"."album_id") AND (("albums"."user_id" = "auth"."uid"()) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_admin"())))));
+  WHERE (("albums"."id" = "album_comments"."album_id") AND (("albums"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR (("albums"."is_public" = true) AND (("albums"."is_suspended" IS NULL) OR ("albums"."is_suspended" = false))) OR "public"."is_admin"())))));
+
+
+
+CREATE POLICY "View events" ON "public"."events" FOR SELECT USING (("public"."is_admin"() OR ("is_draft" = false)));
 
 
 
 CREATE POLICY "View photo comment links" ON "public"."photo_comments" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."photos"
-  WHERE (("photos"."id" = "photo_comments"."photo_id") AND (("photos"."user_id" = "auth"."uid"()) OR ("photos"."is_public" = true) OR "public"."is_admin"())))));
+  WHERE (("photos"."id" = "photo_comments"."photo_id") AND (("photos"."user_id" = ( SELECT "auth"."uid"() AS "uid")) OR ("photos"."is_public" = true) OR "public"."is_admin"())))));
+
+
+
+CREATE POLICY "View profiles" ON "public"."profiles" FOR SELECT USING (("public"."is_admin"() OR ("id" = ( SELECT "auth"."uid"() AS "uid")) OR (("suspended_at" IS NULL) AND ("deletion_scheduled_at" IS NULL))));
 
 
 
@@ -5382,7 +5416,7 @@ CREATE POLICY "View public or own photos" ON "public"."photos" FOR SELECT USING 
 
 
 
-CREATE POLICY "Withdraw pending or admin delete" ON "public"."challenge_submissions" FOR DELETE TO "authenticated" USING (((("user_id" = "auth"."uid"()) AND ("status" = 'pending'::"text")) OR "public"."is_admin"()));
+CREATE POLICY "Withdraw pending or admin delete" ON "public"."challenge_submissions" FOR DELETE TO "authenticated" USING (((("user_id" = ( SELECT "auth"."uid"() AS "uid")) AND ("status" = 'pending'::"text")) OR "public"."is_admin"()));
 
 
 
@@ -5411,7 +5445,7 @@ CREATE POLICY "anon_select_live_scene_events" ON "public"."scene_events" FOR SEL
 ALTER TABLE "public"."auth_tokens" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "authenticated_delete_scene_events" ON "public"."scene_events" FOR DELETE TO "authenticated" USING ((("submitted_by" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "authenticated_delete_scene_events" ON "public"."scene_events" FOR DELETE TO "authenticated" USING ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5419,7 +5453,7 @@ CREATE POLICY "authenticated_select_scene_events" ON "public"."scene_events" FOR
 
 
 
-CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR UPDATE TO "authenticated" USING (((("submitted_by" = "auth"."uid"()) AND ("deleted_at" IS NULL)) OR "public"."is_admin"())) WITH CHECK ((("submitted_by" = "auth"."uid"()) OR "public"."is_admin"()));
+CREATE POLICY "authenticated_update_scene_events" ON "public"."scene_events" FOR UPDATE TO "authenticated" USING (((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) AND ("deleted_at" IS NULL)) OR "public"."is_admin"())) WITH CHECK ((("submitted_by" = ( SELECT "auth"."uid"() AS "uid")) OR "public"."is_admin"()));
 
 
 
@@ -5445,6 +5479,9 @@ ALTER TABLE "public"."email_preferences" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."email_types" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."event_announcement_recipients" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."event_announcements" ENABLE ROW LEVEL SECURITY;
@@ -6493,6 +6530,13 @@ GRANT ALL ON SEQUENCE "public"."email_types_id_seq" TO "postgres";
 GRANT ALL ON SEQUENCE "public"."email_types_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."email_types_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."email_types_id_seq" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcement_recipients" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcement_recipients" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcement_recipients" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."event_announcement_recipients" TO "service_role";
 
 
 

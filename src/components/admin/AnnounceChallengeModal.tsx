@@ -1,11 +1,10 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import RecipientList, { Recipient } from '@/components/admin/RecipientList';
+import RecipientList, { Recipient, recipientsFromProfiles } from '@/components/admin/RecipientList';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import { useSupabase } from '@/hooks/useSupabase';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 interface AnnounceChallengeModalProps {
@@ -21,7 +20,6 @@ export default function AnnounceChallengeModal({
   onClose,
   onSuccess,
 }: AnnounceChallengeModalProps) {
-  const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(true);
@@ -49,60 +47,14 @@ export default function AnnounceChallengeModal({
       setError(null);
 
       try {
-        // Fetch all active profiles
-        const { data: allProfiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, nickname, created_at')
-          .is('suspended_at', null)
-          .is('deletion_scheduled_at', null)
-          .not('email', 'is', null)
-          .order('created_at', { ascending: true });
+        const response = await fetch('/api/admin/email-recipients?emailType=photo_challenges');
+        const data = await response.json();
 
-        if (profilesError) {
-          throw new Error('Failed to load profiles');
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to load profiles');
         }
 
-        if (!allProfiles || allProfiles.length === 0) {
-          setSubscribers([]);
-          setIsLoadingSubscribers(false);
-          return;
-        }
-
-        // Get the photo_challenges email type ID
-        const { data: challengesEmailType } = await supabase
-          .from('email_types')
-          .select('id')
-          .eq('type_key', 'photo_challenges')
-          .single();
-
-        if (!challengesEmailType) {
-          throw new Error('Photo challenges email type not found');
-        }
-
-        // Get all users who have opted out
-        const { data: optedOutUsers } = await supabase
-          .from('email_preferences')
-          .select('user_id')
-          .eq('email_type_id', challengesEmailType.id)
-          .eq('opted_out', true);
-
-        const optedOutUserIds = new Set(
-          (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
-        );
-
-        // Include all users; mark opted-out users as disabled (visible but not selectable)
-        const subscribersList = allProfiles.map((profile) => {
-          const optedOut = optedOutUserIds.has(profile.id);
-          return {
-            email: profile.email!,
-            name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
-            nickname: profile.nickname,
-            selected: !optedOut,
-            disabled: optedOut,
-          };
-        });
-
-        setSubscribers(subscribersList);
+        setSubscribers(recipientsFromProfiles(data.recipients ?? []));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load subscribers');
       } finally {
@@ -111,7 +63,7 @@ export default function AnnounceChallengeModal({
     };
 
     loadSubscribers();
-  }, [challengeId, supabase]);
+  }, [challengeId]);
 
   const handleSend = useCallback(async () => {
     const selectedSubscribers = subscribers.filter((s) => s.selected);

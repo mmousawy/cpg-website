@@ -1,11 +1,10 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import RecipientList, { Recipient } from '@/components/admin/RecipientList';
+import RecipientList, { Recipient, recipientsFromProfiles } from '@/components/admin/RecipientList';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import SuccessMessage from '@/components/shared/SuccessMessage';
-import { useSupabase } from '@/hooks/useSupabase';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 interface AnnounceEventModalProps {
@@ -21,7 +20,6 @@ export default function AnnounceEventModal({
   onClose,
   onSuccess,
 }: AnnounceEventModalProps) {
-  const supabase = useSupabase();
   const modalContext = useContext(ModalContext);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoadingSubscribers, setIsLoadingSubscribers] = useState(true);
@@ -44,66 +42,14 @@ export default function AnnounceEventModal({
       setError(null);
 
       try {
-        // Fetch all active profiles (not suspended, with email), sorted by joined date
-        const { data: allProfiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, nickname, created_at')
-          .is('suspended_at', null)
-          .is('deletion_scheduled_at', null)
-          .not('email', 'is', null)
-          .order('created_at', { ascending: true }); // Oldest first
+        const response = await fetch(`/api/admin/email-recipients?emailType=events&eventId=${eventId}`);
+        const data = await response.json();
 
-        if (profilesError) {
-          throw new Error('Failed to load profiles');
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to load profiles');
         }
 
-        if (!allProfiles || allProfiles.length === 0) {
-          setSubscribers([]);
-          setIsLoadingSubscribers(false);
-          return;
-        }
-
-        // Get the events email type ID
-        const { data: eventsEmailType } = await supabase
-          .from('email_types')
-          .select('id')
-          .eq('type_key', 'events')
-          .single();
-
-        if (!eventsEmailType) {
-          throw new Error('Events email type not found');
-        }
-
-        const eventsEmailTypeId = eventsEmailType.id;
-
-        // Get all users who have opted out of "events" email type
-        const { data: optedOutUsers, error: optedOutError } = await supabase
-          .from('email_preferences')
-          .select('user_id')
-          .eq('email_type_id', eventsEmailTypeId)
-          .eq('opted_out', true);
-
-        if (optedOutError) {
-          console.error('Error fetching opted-out users:', optedOutError);
-        }
-
-        const optedOutUserIds = new Set(
-          (optedOutUsers || []).map((u: { user_id: string }) => u.user_id),
-        );
-
-        // Include all users; mark opted-out users as disabled (visible but not selectable)
-        const subscribersList = allProfiles.map(profile => {
-          const optedOut = optedOutUserIds.has(profile.id);
-          return {
-            email: profile.email!,
-            name: profile.full_name || profile.email!.split('@')[0] || 'Friend',
-            nickname: profile.nickname,
-            selected: !optedOut,
-            disabled: optedOut,
-          };
-        });
-
-        setSubscribers(subscribersList);
+        setSubscribers(recipientsFromProfiles(data.recipients ?? []));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load subscribers');
       } finally {
@@ -112,7 +58,7 @@ export default function AnnounceEventModal({
     };
 
     loadSubscribers();
-  }, [eventId, supabase]);
+  }, [eventId]);
 
   const handleSend = useCallback(async () => {
     const selectedSubscribers = subscribers.filter(s => s.selected);

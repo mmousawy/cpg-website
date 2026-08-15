@@ -6,6 +6,7 @@ import { revalidateEvents } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createNotification } from '@/lib/notifications/create';
 
@@ -51,8 +52,10 @@ export async function POST(request: NextRequest) {
   // Build event link
   const eventLink = `${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.slug || event.id}`;
 
-  // Fetch all active profiles (not suspended, with email)
-  const { data: allProfiles, error: profilesError } = await supabase
+  // Fetch all active profiles (not suspended, with email).
+  // email is not granted to authenticated — use service role after admin check.
+  const adminSupabase = createAdminClient();
+  const { data: allProfiles, error: profilesError } = await adminSupabase
     .from('profiles')
     .select('id, email, full_name')
     .is('suspended_at', null)
@@ -141,7 +144,7 @@ export async function POST(request: NextRequest) {
   let errorCount = 0;
   const sendStatus: Record<string, 'success' | 'error'> = {};
   const errorDetails: Record<string, string> = {};
-  const successfulSubscribers: Array<{ id: string }> = [];
+  const successfulSubscribers: Array<{ id: string; email: string }> = [];
 
   for (let i = 0; i < subscribers.length; i += batchSize) {
     const batch = subscribers.slice(i, i + batchSize);
@@ -239,7 +242,7 @@ export async function POST(request: NextRequest) {
                 sendStatus[subscriber.email!] = 'success';
                 successCount++;
                 // Track successful subscribers for notification creation
-                successfulSubscribers.push({ id: subscriber.id });
+                successfulSubscribers.push({ id: subscriber.id, email: subscriber.email! });
               } else {
                 // Unknown format - log and treat as error
                 const errorMessage = `Unexpected response format: ${JSON.stringify(result)}`;
@@ -307,6 +310,23 @@ export async function POST(request: NextRequest) {
 
     await Promise.all(notificationPromises);
     console.log(`📬 Created ${successfulSubscribers.length} notifications for event announcement`);
+
+    const sentAt = new Date().toISOString();
+    const { error: recipientsError } = await adminSupabase
+      .from('event_announcement_recipients')
+      .upsert(
+        successfulSubscribers.map((subscriber) => ({
+          event_id: eventId,
+          user_id: subscriber.id,
+          email: subscriber.email,
+          sent_at: sentAt,
+        })),
+        { onConflict: 'event_id,user_id' },
+      );
+
+    if (recipientsError) {
+      console.error('Error recording announcement recipients:', recipientsError);
+    }
   }
 
   // Record announcement in tracking table
