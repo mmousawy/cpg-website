@@ -2,7 +2,7 @@
 
 import NotificationToast from '@/components/notifications/NotificationToast';
 import { useAuth } from '@/hooks/useAuth';
-import type { NotificationWithActor } from '@/types/notifications';
+import { isAdminNotificationType, type NotificationWithActor } from '@/types/notifications';
 import { supabase } from '@/utils/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useEffect, useRef } from 'react';
@@ -45,7 +45,7 @@ function handleNotificationSound(): void {
  * and displays toast notifications when they arrive.
  */
 export function useRealtimeNotifications() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
@@ -64,6 +64,10 @@ export function useRealtimeNotifications() {
         },
         async (payload) => {
           const newNotification = payload.new as NotificationWithActor;
+
+          if (!isAdmin && isAdminNotificationType(newNotification.type)) {
+            return;
+          }
 
           // Skip if already shown
           if (shownToastIds.has(newNotification.id)) {
@@ -117,5 +121,5 @@ export function useRealtimeNotifications() {
         channelRef.current = null;
       }
     };
-  }, [user?.id]);
+  }, [user?.id, isAdmin]);
 }

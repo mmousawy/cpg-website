@@ -111,14 +111,23 @@ export interface TestUser {
   userId: string;
 }
 
+export type CreateTestUserOptions = {
+  /** When false, the profile is left incomplete so login lands on onboarding. */
+  completeOnboarding?: boolean;
+};
+
 /**
  * Create a fully verified test user via the test setup API.
  * Uses Playwright's request context so Vercel bypass headers match browser tests.
  */
-export async function createTestUser(apiRequest: APIRequestContext): Promise<TestUser> {
+export async function createTestUser(
+  apiRequest: APIRequestContext,
+  options: CreateTestUserOptions = {},
+): Promise<TestUser> {
   const email = generateTestEmail();
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
+  const completeOnboarding = options.completeOnboarding !== false;
 
   if (!getInternalApiSecret()) {
     throw new Error(
@@ -129,7 +138,7 @@ export async function createTestUser(apiRequest: APIRequestContext): Promise<Tes
   const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = await apiRequest.post('/api/test/setup', {
-      data: { email, password, nickname, fullName: 'Test User' },
+      data: { email, password, nickname, fullName: 'Test User', completeOnboarding },
       headers: withInternalApiHeaders(),
     });
 

@@ -46,6 +46,25 @@ export function isEventNotificationType(type: string): type is EventNotification
   return (EVENT_NOTIFICATION_TYPES as readonly string[]).includes(type);
 }
 
+/** In-app/email notification types that must only be delivered to admins */
+export const ADMIN_NOTIFICATION_TYPES = [
+  'new_submission',
+  'report_submitted',
+  'feedback_submitted',
+  'member_signed_up',
+  'member_joined',
+  'member_deleted',
+] as const satisfies readonly NotificationType[];
+
+export type AdminNotificationType = (typeof ADMIN_NOTIFICATION_TYPES)[number];
+
+export function isAdminNotificationType(type: string): type is AdminNotificationType {
+  return (ADMIN_NOTIFICATION_TYPES as readonly string[]).includes(type);
+}
+
+/** PostgREST `not.in` value that excludes admin-only notification types */
+export const ADMIN_NOTIFICATION_TYPES_NOT_IN = `(${ADMIN_NOTIFICATION_TYPES.join(',')})`;
+
 export type NotificationEntityType =
   | 'photo'
   | 'album'

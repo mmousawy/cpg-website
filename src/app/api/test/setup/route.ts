@@ -1,9 +1,61 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/database.types';
 import type { NextRequest } from 'next/server';
 
 import { isTestApiEnvironmentAllowed, verifyInternalApiRequest } from '@/lib/auth/verifyInternalApi';
+
+type AdminClient = SupabaseClient<Database>;
+
+function buildTestProfileRow({
+  userId,
+  email,
+  nickname,
+  fullName,
+  completeOnboarding,
+}: {
+  userId: string;
+  email: string;
+  nickname: string;
+  fullName: string;
+  completeOnboarding: boolean;
+}) {
+  if (completeOnboarding) {
+    return {
+      id: userId,
+      email: email.toLowerCase(),
+      nickname,
+      full_name: fullName,
+      terms_accepted_at: new Date().toISOString(),
+    };
+  }
+
+  return {
+    id: userId,
+    email: email.toLowerCase(),
+    nickname: null,
+    full_name: null,
+    terms_accepted_at: null,
+    avatar_url: null,
+    banner_url: null,
+    banner_blurhash: null,
+  };
+}
+
+async function upsertTestProfile(
+  adminClient: AdminClient,
+  params: {
+    userId: string;
+    email: string;
+    nickname: string;
+    fullName: string;
+    completeOnboarding: boolean;
+  },
+) {
+  return adminClient.from('profiles').upsert(buildTestProfileRow(params), {
+    onConflict: 'id',
+  });
+}
 
 /**
  * Test Setup API - Creates a fully verified test user for E2E tests
@@ -22,7 +74,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, password, nickname, fullName } = await request.json();
+    const {
+      email,
+      password,
+      nickname,
+      fullName,
+      completeOnboarding = true,
+    }: {
+      email?: string;
+      password?: string;
+      nickname?: string;
+      fullName?: string;
+      completeOnboarding?: boolean;
+    } = await request.json();
 
     // Validate email is a test email (safety check)
     if (!email || (!email.includes('test-e2e-') && !email.includes('@test.local'))) {
@@ -51,21 +115,19 @@ export async function POST(request: NextRequest) {
 
     const testNickname = nickname || `test-${Date.now()}`;
     const testFullName = fullName || 'Test User';
+    const shouldCompleteOnboarding = completeOnboarding !== false;
 
     // Check if user already exists
     const { data: existingUsers } = await adminClient.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(u => u.email === email);
 
     if (existingUser) {
-      // Ensure existing users are fully onboarded according to current completeness rules
-      const { error: existingProfileError } = await adminClient.from('profiles').upsert({
-        id: existingUser.id,
-        email: email.toLowerCase(),
+      const { error: existingProfileError } = await upsertTestProfile(adminClient, {
+        userId: existingUser.id,
+        email,
         nickname: testNickname,
-        full_name: testFullName,
-        terms_accepted_at: new Date().toISOString(),
-      }, {
-        onConflict: 'id',
+        fullName: testFullName,
+        completeOnboarding: shouldCompleteOnboarding,
       });
 
       if (existingProfileError) {
@@ -99,16 +161,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create/update profile with all required completeness fields
-
-    const { error: profileError } = await adminClient.from('profiles').upsert({
-      id: userData.user.id,
-      email: email.toLowerCase(),
+    const { error: profileError } = await upsertTestProfile(adminClient, {
+      userId: userData.user.id,
+      email,
       nickname: testNickname,
-      full_name: testFullName,
-      terms_accepted_at: new Date().toISOString(),
-    }, {
-      onConflict: 'id',
+      fullName: testFullName,
+      completeOnboarding: shouldCompleteOnboarding,
     });
 
     if (profileError) {
@@ -121,7 +179,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Test user created: ${email} (verified, onboarded)`);
+    console.log(
+      `✅ Test user created: ${email} (verified, ${shouldCompleteOnboarding ? 'onboarded' : 'needs onboarding'})`,
+    );
 
     return NextResponse.json({
       success: true,

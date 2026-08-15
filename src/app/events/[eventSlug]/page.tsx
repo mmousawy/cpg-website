@@ -154,6 +154,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     notFound();
   }
 
+  cacheTag('albums');
+  cacheTag(`event-album-${event.id}`);
+
   // Fetch hosts, attendees, event album
   const [hosts, attendees, eventAlbum] = await Promise.all([
     getOrganizers(5),

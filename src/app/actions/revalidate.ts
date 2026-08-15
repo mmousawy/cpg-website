@@ -140,6 +140,53 @@ export async function revalidateAlbums(nickname: string, _albumSlugs?: string[])
   finishRevalidation();
 }
 
+/**
+ * One-shot invalidation after a photo upload batch.
+ * Covers gallery, profile, albums, event albums, and the homepage shell.
+ */
+export async function revalidateAfterPhotoUpload({
+  nickname,
+  albumSlugs = [],
+  eventIds = [],
+  isPublic = false,
+}: {
+  nickname?: string | null;
+  albumSlugs?: string[];
+  eventIds?: number[];
+  isPublic?: boolean;
+}) {
+  if (isPublic) {
+    expireTag('gallery');
+    expireTag('profiles');
+    expireTag('search');
+    invalidateHomeTag();
+  }
+
+  if (nickname && (isPublic || albumSlugs.length > 0 || eventIds.length > 0)) {
+    expireTag(`profile-${nickname}`);
+    expireTag('profiles');
+  }
+
+  if (albumSlugs.length > 0 || eventIds.length > 0) {
+    expireTag('albums');
+    expireTag('search');
+    invalidateHomeTag();
+  }
+
+  if (nickname) {
+    for (const slug of albumSlugs) {
+      expireTag(`album-${nickname}-${slug}`);
+    }
+  }
+
+  for (const eventId of eventIds) {
+    expireTag(`event-album-${eventId}`);
+    expireTag('events');
+  }
+
+  finishRevalidation();
+}
+
 // ============================================================================
 // Gallery Revalidation
 // ============================================================================

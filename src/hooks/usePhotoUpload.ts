@@ -75,10 +75,11 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
       // Check if albums have covers (for setting first photo as manual cover)
       const albumCoverChecks: Record<string, boolean> = {};
       const albumSlugs: string[] = [];
+      const eventIds: number[] = [];
       if (albumIds.length > 0) {
         const { data: albumsData } = await supabase
           .from('albums')
-          .select('id, slug, cover_image_url')
+          .select('id, slug, cover_image_url, event_id')
           .in('id', albumIds)
           .eq('user_id', userId);
 
@@ -87,6 +88,9 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
             albumCoverChecks[album.id] = album.cover_image_url !== null;
             if (album.slug) {
               albumSlugs.push(album.slug);
+            }
+            if (album.event_id != null) {
+              eventIds.push(album.event_id);
             }
           });
         }
@@ -271,23 +275,6 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           });
 
           results.push(photoData as Photo);
-
-          // Revalidate cache for members page (recently active)
-          // Note: This is called per photo, but revalidation is idempotent
-          if (photoData.is_public) {
-            const { revalidateGalleryData, revalidateHome, revalidateProfile } = await import('@/app/actions/revalidate');
-            const { data: userProfile } = await supabase
-              .from('profiles')
-              .select('nickname')
-              .eq('id', userId)
-              .maybeSingle();
-
-            await Promise.all([
-              revalidateGalleryData(),
-              revalidateHome(),
-              ...(userProfile?.nickname ? [revalidateProfile(userProfile.nickname)] : []),
-            ]);
-          }
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Upload failed';
           console.error('Upload error:', err);
@@ -303,11 +290,14 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
         void notifyFollowersOfUpload(publicPhotoIds);
       }
 
-      if (albumIds.length > 0 && results.length > 0 && profileData?.nickname && albumSlugs.length > 0) {
-        const { revalidateAlbum } = await import('@/app/actions/revalidate');
-        await Promise.all(
-          albumSlugs.map((slug) => revalidateAlbum(profileData.nickname!, slug)),
-        );
+      if (results.length > 0) {
+        const { revalidateAfterPhotoUpload } = await import('@/app/actions/revalidate');
+        await revalidateAfterPhotoUpload({
+          nickname: profileData?.nickname,
+          albumSlugs,
+          eventIds,
+          isPublic: results.some((photo) => photo.is_public),
+        });
       }
 
       return results;

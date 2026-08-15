@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createClient } from '@/utils/supabase/server';
-import type { NotificationWithActor } from '@/types/notifications';
+import { ADMIN_NOTIFICATION_TYPES_NOT_IN, type NotificationWithActor } from '@/types/notifications';
 
 type NotificationUpdate = {
   id: string;
@@ -24,8 +25,10 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '20', 10);
   const offset = parseInt(searchParams.get('offset') || '0', 10);
 
+  const isAdmin = await checkIsAdmin(supabase);
+
   // Get unseen count (only non-dismissed)
-  const { count: unseenCount } = await supabase
+  let unseenQuery = supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
@@ -33,14 +36,14 @@ export async function GET(request: NextRequest) {
     .is('dismissed_at', null);
 
   // Get total count of active notifications (for "more" indicator)
-  const { count: totalCount } = await supabase
+  let totalQuery = supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .is('dismissed_at', null);
 
   // Get notifications with pagination (only non-dismissed)
-  const { data, error } = await supabase
+  let listQuery = supabase
     .from('notifications')
     .select(`
       *,
@@ -50,6 +53,16 @@ export async function GET(request: NextRequest) {
     .is('dismissed_at', null)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (!isAdmin) {
+    unseenQuery = unseenQuery.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+    totalQuery = totalQuery.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+    listQuery = listQuery.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+  }
+
+  const { count: unseenCount } = await unseenQuery;
+  const { count: totalCount } = await totalQuery;
+  const { data, error } = await listQuery;
 
   if (error) {
     console.error('Error fetching notifications:', error);

@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
-import type { NotificationWithActor } from '@/types/notifications';
+import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { ADMIN_NOTIFICATION_TYPES_NOT_IN, type NotificationWithActor } from '@/types/notifications';
 
 /**
  * Get unseen notifications count for a user
@@ -7,13 +8,20 @@ import type { NotificationWithActor } from '@/types/notifications';
  */
 export async function getUnseenNotificationsCount(userId: string): Promise<number> {
   const supabase = await createClient();
+  const isAdmin = await checkIsAdmin(supabase);
 
-  const { count, error } = await supabase
+  let query = supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .is('seen_at', null)
     .is('dismissed_at', null);
+
+  if (!isAdmin) {
+    query = query.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     console.error('Error fetching unseen notifications count:', error);
@@ -29,8 +37,9 @@ export async function getUnseenNotificationsCount(userId: string): Promise<numbe
  */
 export async function getRecentNotifications(userId: string, limit = 10): Promise<NotificationWithActor[]> {
   const supabase = await createClient();
+  const isAdmin = await checkIsAdmin(supabase);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('notifications')
     .select(`
       *,
@@ -40,6 +49,12 @@ export async function getRecentNotifications(userId: string, limit = 10): Promis
     .is('dismissed_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
+
+  if (!isAdmin) {
+    query = query.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching recent notifications:', error);
@@ -58,12 +73,19 @@ export async function getRecentNotifications(userId: string, limit = 10): Promis
  */
 export async function getTotalNotificationsCount(userId: string): Promise<number> {
   const supabase = await createClient();
+  const isAdmin = await checkIsAdmin(supabase);
 
-  const { count, error } = await supabase
+  let query = supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .is('dismissed_at', null);
+
+  if (!isAdmin) {
+    query = query.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+  }
+
+  const { count, error } = await query;
 
   if (error) {
     console.error('Error fetching total notifications count:', error);
@@ -79,8 +101,9 @@ export async function getTotalNotificationsCount(userId: string): Promise<number
  */
 export async function getAllNotifications(userId: string, limit = 50): Promise<NotificationWithActor[]> {
   const supabase = await createClient();
+  const isAdmin = await checkIsAdmin(supabase);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('notifications')
     .select(`
       *,
@@ -90,6 +113,12 @@ export async function getAllNotifications(userId: string, limit = 50): Promise<N
     .is('dismissed_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
+
+  if (!isAdmin) {
+    query = query.not('type', 'in', ADMIN_NOTIFICATION_TYPES_NOT_IN);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching all notifications:', error);

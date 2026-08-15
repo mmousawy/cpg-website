@@ -5,7 +5,7 @@ import { getWeeklyDigestSubject, WeeklyDigestEmail } from '@/emails/weekly-diges
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { isEventNotificationType, type NotificationWithActor } from '@/types/notifications';
+import { isAdminNotificationType, isEventNotificationType, type NotificationWithActor } from '@/types/notifications';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 const BATCH_SIZE = 100;
@@ -144,7 +144,9 @@ export async function GET(request: NextRequest) {
 
     // Event notifications are covered by the events email preference
     const digestNotifications = notifications.filter(
-      (notification) => !isEventNotificationType(notification.type),
+      (notification) =>
+        !isEventNotificationType(notification.type)
+        && !isAdminNotificationType(notification.type),
     );
 
     if (digestNotifications.length === 0) {

@@ -139,13 +139,15 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Delete user's entire storage folder (catches any missed files)
-          const { data: remainingFiles } = await adminClient.storage
-            .from('user-photos')
-            .list(user.id);
-          if (remainingFiles && remainingFiles.length > 0) {
-            const paths = remainingFiles.map(f => `${user.id}/${f.name}`);
-            await adminClient.storage.from('user-photos').remove(paths);
+          // Delete user's storage folders (photos plus leftover avatars/banners)
+          for (const bucket of ['user-photos', 'user-avatars', 'user-banners'] as const) {
+            const { data: remainingFiles } = await adminClient.storage
+              .from(bucket)
+              .list(user.id);
+            if (remainingFiles && remainingFiles.length > 0) {
+              const paths = remainingFiles.map(f => `${user.id}/${f.name}`);
+              await adminClient.storage.from(bucket).remove(paths);
+            }
           }
 
           // Delete notifications (sent to and from)

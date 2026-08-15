@@ -44,7 +44,8 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
   const { data: admins, error: adminsError } = await adminSupabase
     .from('profiles')
     .select('id, full_name, email')
-    .eq('is_admin', true);
+    .eq('is_admin', true)
+    .is('deletion_scheduled_at', null);
 
   if (adminsError || !admins?.length) {
     if (adminsError) console.error('Error fetching admins:', adminsError);

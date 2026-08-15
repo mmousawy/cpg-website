@@ -127,6 +127,7 @@ export default function ProfileImageUploadSections({
       >
         {/* Profile picture */}
         <section
+          data-testid="profile-picture-section"
           className={clsx(
             'rounded-xl border p-3 transition-colors bg-background/30',
             pendingAvatarFile ? 'border-primary' : 'border-border-color',
@@ -228,6 +229,7 @@ export default function ProfileImageUploadSections({
 
         {/* Banner */}
         <section
+          data-testid="banner-image-section"
           className={clsx(
             'rounded-xl border p-3 transition-colors bg-background/30',
             pendingBannerFile ? 'border-primary' : 'border-border-color',
