@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.38.1](https://github.com/mmousawy/cpg-website/compare/v1.38.0...v1.38.1) (2026-08-15)
+
+
+### 🐛 Bug Fixes
+
+* Add event announcement recipients tracking and improve email recipient handling ([4a871d7](https://github.com/mmousawy/cpg-website/commit/4a871d70eaaa6f05c03ab0c183c2a31e84f5d2b0))
+* Enhance notifications and onboarding processes ([c5ee20a](https://github.com/mmousawy/cpg-website/commit/c5ee20ad0bfae295823e8cd8af43d07841f3862f))
+* Enhance onboarding flow with profile image upload and management ([6e1f866](https://github.com/mmousawy/cpg-website/commit/6e1f866ecbfe537d3cebea16d5444d9de4052c5a))
+* Improve onboarding test for profile image management ([2bc2598](https://github.com/mmousawy/cpg-website/commit/2bc2598a88d7a2960b84a2072a94a4cff4cb9450))
+* Update type definitions for test profile row ([3df64c9](https://github.com/mmousawy/cpg-website/commit/3df64c9ea7f16177fff06b5cc2c8135a4f1d23f0))
+
 ## [1.38.0](https://github.com/mmousawy/cpg-website/compare/v1.37.5...v1.38.0) (2026-08-15)
 
 
