@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { getEventStatus, isEventPast } from '@/lib/events/status';
+import { formatEventLocation } from '@/utils/formatLocation';
 import { getCroppedThumbnailUrl, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -265,22 +266,20 @@ export default function EventsList({
                       {event.time ? formatEventTime(event.time) : ''}
                     </span>
                   </span>
-                  <span
-                    className='mb-6 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold leading-6 max-sm:hidden'
-                  >
-                    <LocationSVG
-                      className="shrink-0 fill-foreground"
-                    />
-                    {event.location?.split('\n')[0] ?? ''}
-                  </span>
-                  <span
-                    className='mb-5 flex items-start gap-2 whitespace-pre-wrap text-[15px] font-semibold sm:hidden'
-                  >
-                    <LocationSVG
-                      className="shrink-0 fill-foreground"
-                    />
-                    {event.location}
-                  </span>
+                  {event.location && (
+                    <span
+                      className="mb-5 sm:mb-6 flex items-start gap-2 text-[15px] font-semibold leading-6"
+                    >
+                      <LocationSVG
+                        className="shrink-0 fill-foreground"
+                      />
+                      <span
+                        className="line-clamp-1"
+                      >
+                        {formatEventLocation(event.location)}
+                      </span>
+                    </span>
+                  )}
                   <RichDescription
                     html={event.description ?? ''}
                     className="whitespace-pre-line line-clamp-5 text-[15px]"

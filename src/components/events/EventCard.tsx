@@ -7,6 +7,7 @@ import Link from 'next/link';
 import BlurImage from '@/components/shared/BlurImage';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getEventStatus, type EventStatus } from '@/lib/events/status';
+import { formatEventLocation } from '@/utils/formatLocation';
 import { THUMBNAIL_IMAGE_QUALITY, getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -34,27 +35,6 @@ function transformAttendeesToAvatarPeople(attendees: EventAttendee[]): AvatarPer
       nickname: attendee.profiles?.nickname || null,
     };
   });
-}
-
-function formatLocationDisplay(location: string): string {
-  const lines = location
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (lines.length === 0) {
-    return location.trim();
-  }
-
-  const venue = lines[0];
-  const lastLine = lines[lines.length - 1] || '';
-  const city = lastLine.replace(/^\d{4}\s?[A-Za-z]{2}\s+/i, '').trim();
-
-  if (!city || venue.toLocaleLowerCase().includes(city.toLocaleLowerCase())) {
-    return venue;
-  }
-
-  return `${venue}, ${city}`;
 }
 
 type EventCardVariant = 'compact' | 'detailed';
@@ -231,7 +211,7 @@ export default function EventCard({
                 <span
                   className="line-clamp-1"
                 >
-                  {formatLocationDisplay(event.location)}
+                  {formatEventLocation(event.location)}
                 </span>
               </span>
             )}

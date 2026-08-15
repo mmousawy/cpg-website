@@ -8,18 +8,32 @@ import {
 } from '@react-email/components';
 
 import Button from '@/components/shared/Button';
+import { EVENT_TIMEZONE } from '@/lib/events/status';
 import { stripHtml } from '@/utils/stripHtml';
 import CalendarAddSVG from 'public/icons/calendar-add-16.svg';
 
+function normalizeEventTime(time: string | null) {
+  if (!time) return '00:00:00';
+  if (time.length === 5) return `${time}:00`;
+
+  return time;
+}
+
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
-  const calendarDate = dayjs(`${event.date}T${event.time}`);
+  const calendarDate = dayjs.tz(
+    `${event.date} ${normalizeEventTime(event.time)}`,
+    'YYYY-MM-DD HH:mm:ss',
+    EVENT_TIMEZONE,
+  );
+  const calendarEndDate = calendarDate.add(3, 'hour');
 
   const calendarDetails = {
     title: `${event.title} - Creative Photography Group`,
-    startDate: calendarDate.format('YYYYMMDDTHHmmssZ'),
-    endDate: calendarDate.add(3, 'hour').format('YYYYMMDDTHHmmssZ'),
+    // Google/Apple: compact floating datetime (no offset) — mobile GCal rejects +02:00 offsets
+    startDate: calendarDate.format('YYYYMMDDTHHmmss'),
+    endDate: calendarEndDate.format('YYYYMMDDTHHmmss'),
     outlookStartDate: calendarDate.format('YYYY-MM-DDTHH:mm:ssZ'),
-    outlookEndDate: calendarDate.add(3, 'hour').format('YYYY-MM-DDTHH:mm:ssZ'),
+    outlookEndDate: calendarEndDate.format('YYYY-MM-DDTHH:mm:ssZ'),
     description: stripHtml(event.description ?? ''),
     location: event.location?.replace(/\n/gm, ', '),
   };
@@ -32,7 +46,7 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
   }
 
   const calendarLinks = {
-    google: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encDetails.title}&dates=${encDetails.startDate}/${encDetails.endDate}&details=${encDetails.description}&location=${encDetails.location}`,
+    google: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encDetails.title}&dates=${encDetails.startDate}/${encDetails.endDate}&ctz=${encodeURIComponent(EVENT_TIMEZONE)}&details=${encDetails.description}&location=${encDetails.location}`,
     outlook: `https://outlook.live.com/calendar/action/compose/?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${encDetails.title}&startdt=${encDetails.outlookStartDate}&enddt=${encDetails.outlookEndDate}&body=${encDetails.description}&location=${encDetails.location}`,
     apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${encDetails.title}%0D%0ADTSTART:${encDetails.startDate}%0D%0ADTEND:${encDetails.endDate}%0D%0ADESCRIPTION:${encDetails.description}%0D%0ALOCATION:${encDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
   };

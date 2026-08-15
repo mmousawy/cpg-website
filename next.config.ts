@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
     staleTimes: {
       dynamic: 0,
-      static: 0,
+      static: 30,
     },
   },
   images: {

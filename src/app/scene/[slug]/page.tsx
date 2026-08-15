@@ -1,4 +1,5 @@
-import clsx from 'clsx';import { cacheLife } from 'next/cache';
+import clsx from 'clsx';
+import { cacheLife } from 'next/cache';
 
 import { notFound } from 'next/navigation';
 
@@ -23,6 +24,7 @@ import {
   SCENE_EVENT_CATEGORIES,
   type SceneEventCategory,
 } from '@/types/scene';
+import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { formatPrice } from '@/utils/formatPrice';
 import { createMetadata, getSocialImageUrl } from '@/utils/metadata';
 
@@ -324,25 +326,35 @@ export default async function SceneEventDetailPage({
                   {timeStr}
                 </div>
               )}
-              <div
-                className="flex items-start gap-2 text-[15px] font-semibold"
+              <a
+                href={getGoogleMapsSearchUrl(
+                  [event.location_name, event.location_address, event.location_city]
+                    .filter(Boolean)
+                    .join(', '),
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open location in Google Maps"
+                className="group flex items-start gap-2 text-[15px] font-semibold hover:text-primary"
               >
                 <HeroMapPinSVG
-                  className="size-5 shrink-0 fill-foreground mt-0.5"
+                  className="size-5 shrink-0 fill-current mt-0.5"
                 />
                 <div>
-                  <p>
+                  <p
+                    className="group-hover:underline underline-offset-4"
+                  >
                     {event.location_name}
                   </p>
                   <p
-                    className="text-foreground/70 font-normal"
+                    className="text-foreground/70 font-normal group-hover:text-primary/70"
                   >
                     {event.location_address
                       ? `${event.location_address} · ${event.location_city}`
                       : event.location_city}
                   </p>
                 </div>
-              </div>
+              </a>
               <div
                 className="flex items-start gap-2 text-[15px] font-semibold"
               >

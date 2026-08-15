@@ -9,7 +9,7 @@ import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import { socialLinks } from '@/config/socials';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
@@ -38,6 +38,13 @@ export const instant = false;
 export default async function Home() {
   'use cache';
   cacheLife('hourly');
+  cacheTag('home');
+  cacheTag('events');
+  cacheTag('event-attendees');
+  cacheTag('challenges');
+  cacheTag('albums');
+  cacheTag('gallery');
+  cacheTag('profiles');
 
   return (
     <>

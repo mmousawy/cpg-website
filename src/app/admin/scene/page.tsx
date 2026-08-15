@@ -17,6 +17,7 @@ import {
     type SceneEvent,
     type SceneEventCategory,
 } from '@/types/scene';
+import { formatLocation } from '@/utils/formatLocation';
 import { formatPrice } from '@/utils/formatPrice';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -378,7 +379,7 @@ function AdminSceneEventCard({
                   <span
                     className="line-clamp-1"
                   >
-                    {event.location_city}
+                    {formatLocation(event.location_name, event.location_city)}
                   </span>
                 </span>
               </div>

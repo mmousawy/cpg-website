@@ -15,6 +15,7 @@ import { isEventPast } from '@/lib/events/status';
 import Link from 'next/link';
 
 import { routes } from '@/config/routes';
+import { formatEventLocation } from '@/utils/formatLocation';
 import { stripHtml } from '@/utils/stripHtml';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -394,13 +395,16 @@ function RsvpEventCard({
               )}
               {event.location && (
                 <span
-                  className="flex items-center gap-1 shrink-0"
+                  className="flex items-center gap-1"
                 >
                   <LocationSVG
                     className="size-3.5 fill-foreground/80"
                   />
-
-                  {event.location.split('\n')[0]}
+                  <span
+                    className="line-clamp-1"
+                  >
+                    {formatEventLocation(event.location)}
+                  </span>
                 </span>
               )}
             </div>

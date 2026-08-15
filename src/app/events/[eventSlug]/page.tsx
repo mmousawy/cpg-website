@@ -1,5 +1,5 @@
 import Avatar from '@/components/auth/Avatar';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventCoverImage from '@/components/events/EventCoverImage';
@@ -28,6 +28,7 @@ import {
 } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
+import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
@@ -138,6 +139,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
+  cacheTag('events');
+  cacheTag('event-attendees');
+  if (eventSlug) cacheTag(`event-${eventSlug}`);
 
   if (!eventSlug) {
     notFound();
@@ -373,18 +377,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
               {/* Location */}
               {event.location && (
-                <div
-                  className="flex items-start gap-2 text-[15px] font-semibold"
+                <a
+                  href={getGoogleMapsSearchUrl(event.location)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open location in Google Maps"
+                  className="group flex items-start gap-2 text-[15px] font-semibold hover:text-primary"
                 >
                   <LocationSVG
-                    className="size-5 shrink-0 fill-foreground mt-0.5"
+                    className="size-5 shrink-0 fill-current mt-0.5"
                   />
                   <span
-                    className="whitespace-pre-wrap"
+                    className="whitespace-pre-wrap group-hover:underline underline-offset-4"
                   >
                     {event.location}
                   </span>
-                </div>
+                </a>
               )}
 
               {/* Capacity info */}

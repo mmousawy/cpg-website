@@ -1,7 +1,7 @@
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent, SceneEventCategory } from '@/types/scene';
 import { SCENE_EVENT_CATEGORIES, getSceneCategoryStyle } from '@/types/scene';
-import { formatLocation } from '@/utils/formatLocation';
+import { formatEventLocation, formatLocation } from '@/utils/formatLocation';
 import { formatPrice } from '@/utils/formatPrice';
 import clsx from 'clsx';
 import Image from 'next/image';
@@ -105,11 +105,9 @@ export default function SceneEventCard({
   const dateStr = formatDateRange(event.start_date, event.end_date, now);
   const categoryLabel = getCategoryLabel(event.category);
   const isCpgEvent = event.id.startsWith('cpg-');
-  const locationStr = formatLocation(
-    event.location_name,
-    event.location_city,
-    isCpgEvent,
-  );
+  const locationStr = isCpgEvent
+    ? formatEventLocation(event.location_name)
+    : formatLocation(event.location_name, event.location_city);
   const interestedPeople = transformInterestedToAvatarPeople(interested);
   const interestCount = event.interest_count ?? 0;
   const showInterestRow = interested.length > 0;

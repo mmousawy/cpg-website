@@ -12,6 +12,7 @@ import type { Tables } from '@/database.types';
 import { useSupabase } from '@/hooks/useSupabase';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { isEventPast } from '@/lib/events/status';
+import { formatEventLocation } from '@/utils/formatLocation';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import EyeSVG from 'public/icons/eye.svg';
 import LocationSVG from 'public/icons/location.svg';
@@ -239,7 +240,7 @@ function AdminEventCard({ event }: { event: Event }) {
                 )}
                 {event.location && (
                   <span
-                    className="hidden sm:flex items-center gap-1"
+                    className="flex items-center gap-1"
                   >
                     <LocationSVG
                       className="size-3.5 fill-foreground/80"
@@ -247,7 +248,7 @@ function AdminEventCard({ event }: { event: Event }) {
                     <span
                       className="line-clamp-1"
                     >
-                      {event.location.split('\n')[0]}
+                      {formatEventLocation(event.location)}
                     </span>
                   </span>
                 )}
