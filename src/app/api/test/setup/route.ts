@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/database.types';
+import type { Database, TablesInsert } from '@/database.types';
 import type { NextRequest } from 'next/server';
 
 import { isTestApiEnvironmentAllowed, verifyInternalApiRequest } from '@/lib/auth/verifyInternalApi';
@@ -19,7 +19,7 @@ function buildTestProfileRow({
   nickname: string;
   fullName: string;
   completeOnboarding: boolean;
-}) {
+}): TablesInsert<'profiles'> {
   if (completeOnboarding) {
     return {
       id: userId,
