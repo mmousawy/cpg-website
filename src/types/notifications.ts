@@ -28,7 +28,10 @@ export type NotificationType =
   | 'shared_album_request_accepted'
   | 'shared_album_request_declined'
   | 'shared_album_invite_accepted'
-  | 'feedback_submitted';
+  | 'feedback_submitted'
+  | 'member_signed_up'
+  | 'member_joined'
+  | 'member_deleted';
 
 /** Notification types covered by the events email preference, not the weekly digest */
 export const EVENT_NOTIFICATION_TYPES = [

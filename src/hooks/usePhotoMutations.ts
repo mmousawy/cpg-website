@@ -13,6 +13,7 @@ import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import { supabase } from '@/utils/supabase/client';
+import { deleteUserStorageFiles } from '@/utils/supabaseStorage';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 function markPhotosExiting(
@@ -65,7 +66,7 @@ export function useDeletePhotos(
       removePhotosFromCache(queryClient, userId, photoIds, filter);
 
       if (storagePaths.length > 0) {
-        await supabase.storage.from('user-photos').remove(storagePaths);
+        await deleteUserStorageFiles('user-photos', storagePaths);
       }
 
       const { error } = await supabase.rpc('bulk_delete_photos', {

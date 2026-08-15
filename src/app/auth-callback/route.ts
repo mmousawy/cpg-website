@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, after, type NextRequest } from 'next/server';
 
+import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 
 export async function GET(request: NextRequest) {
@@ -54,6 +55,12 @@ export async function GET(request: NextRequest) {
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
           });
+
+          after(() => {
+            void notifyAdminsOfMemberSignedUp(user.id).catch((err) => {
+              console.error('Error notifying admins of signup:', err);
+            });
+          });
         } else if (profile.deletion_scheduled_at) {
           // Account is scheduled for deletion — sign out and redirect to notice page
           await supabase.auth.signOut();
@@ -75,6 +82,14 @@ export async function GET(request: NextRequest) {
             .from('profiles')
             .update(updateData)
             .eq('id', user.id);
+
+          if (!profile.terms_accepted_at) {
+            after(() => {
+              void notifyAdminsOfMemberSignedUp(user.id).catch((err) => {
+                console.error('Error notifying admins of signup:', err);
+              });
+            });
+          }
         }
       }
 

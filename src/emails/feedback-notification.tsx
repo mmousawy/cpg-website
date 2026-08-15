@@ -24,7 +24,6 @@ export const FeedbackNotificationEmail = ({
   message,
   screenshots,
   reviewLink,
-  optOutLink,
 }: {
   preview?: boolean;
   adminName: string;
@@ -34,7 +33,6 @@ export const FeedbackNotificationEmail = ({
   message: string;
   screenshots?: string[] | null;
   reviewLink: string;
-  optOutLink?: string;
 }) => {
   if (preview) {
     adminName = 'Admin User';
@@ -43,7 +41,6 @@ export const FeedbackNotificationEmail = ({
     subject = 'general';
     message = 'I really love the new gallery feature! It would be great if you could add dark mode support as well.';
     reviewLink = 'https://example.com/admin/feedback';
-    optOutLink = 'https://example.com/unsubscribe/preview-token';
   }
 
   const subjectLabel = FEEDBACK_SUBJECTS.find((s) => s.value === subject)?.label ?? subject;
@@ -170,8 +167,6 @@ export const FeedbackNotificationEmail = ({
 
             <Footer
               fullName={adminName}
-              optOutLink={optOutLink}
-              emailType="admin_notifications"
             />
           </Container>
         </Body>

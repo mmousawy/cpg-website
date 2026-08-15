@@ -1418,6 +1418,7 @@ export type Database = {
           last_logged_in: string | null
           newsletter_opt_in: boolean
           nickname: string | null
+          onboarding_reminder_sent_at: string | null
           search_vector: unknown
           social_links: Json | null
           suspended_at: string | null
@@ -1449,6 +1450,7 @@ export type Database = {
           last_logged_in?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
+          onboarding_reminder_sent_at?: string | null
           search_vector?: unknown
           social_links?: Json | null
           suspended_at?: string | null
@@ -1480,6 +1482,7 @@ export type Database = {
           last_logged_in?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
+          onboarding_reminder_sent_at?: string | null
           search_vector?: unknown
           social_links?: Json | null
           suspended_at?: string | null

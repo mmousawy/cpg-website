@@ -18,6 +18,7 @@ import CommentSVG from 'public/icons/notification-comment.svg';
 import HeartSVG from 'public/icons/notification-heart.svg';
 import MegaphoneSVG from 'public/icons/notification-megaphone.svg';
 import PhotoStackSVG from 'public/icons/photo-stack-mini.svg';
+import UsersMicroSVG from 'public/icons/users-micro.svg';
 
 dayjs.extend(relativeTime);
 
@@ -87,6 +88,9 @@ export const notificationIcons: Record<NotificationType, React.FC<{ className?: 
   shared_album_request_declined: CancelSVG,
   shared_album_invite_accepted: CheckSVG,
   feedback_submitted: CommentSVG,
+  member_signed_up: UsersMicroSVG,
+  member_joined: UsersMicroSVG,
+  member_deleted: CancelSVG,
 };
 
 export const notificationMessages: Record<NotificationType, (actor: string | null, data: NotificationData | null) => string> = {
@@ -161,6 +165,20 @@ export const notificationMessages: Record<NotificationType, (actor: string | nul
       : `${actor || 'Someone'} accepted your invite`;
   },
   feedback_submitted: (actor) => `New feedback from ${actor || 'someone'}`,
+  member_signed_up: (actor, data) => {
+    const email = data?.title as string | undefined;
+    if (email && actor && email !== actor) {
+      return `${actor} signed up`;
+    }
+    return `${actor || email || 'Someone'} signed up`;
+  },
+  member_joined: (actor) => `${actor || 'Someone'} joined the community`,
+  member_deleted: (actor, data) => {
+    if (data?.initiatedByAdmin) {
+      return `${actor || 'A member'}'s account was scheduled for deletion`;
+    }
+    return `${actor || 'Someone'} scheduled their account for deletion`;
+  },
 };
 
 type NotificationContentProps = {
@@ -183,7 +201,10 @@ export default function NotificationContent({
   isUnseen = false,
   alwaysShowDot = false,
 }: NotificationContentProps) {
-  const actorName = notification.actor?.full_name || notification.actor?.nickname || null;
+  const actorName = notification.actor?.full_name
+    || notification.actor?.nickname
+    || (notification.data?.actorName as string | undefined)
+    || null;
   const notificationType = notification.type as NotificationType;
   const message = notificationMessages[notificationType]?.(actorName, notification.data) || 'New notification';
   const IconComponent = notificationIcons[notificationType] || MegaphoneSVG;

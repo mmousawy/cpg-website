@@ -4,7 +4,6 @@ import { render } from '@react-email/render';
 import { FeedbackNotificationEmail } from '@/emails/feedback-notification';
 import { createNotification } from '@/lib/notifications/create';
 import { FEEDBACK_SUBJECTS } from '@/types/feedback';
-import { encrypt } from '@/utils/encrypt';
 import { adminSupabase } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -70,24 +69,7 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
     ),
   );
 
-  const { data: adminNotificationType } = await adminSupabase
-    .from('email_types')
-    .select('id')
-    .eq('type_key', 'admin_notifications')
-    .single();
-
-  const { data: emailPreferences } = adminNotificationType
-    ? await adminSupabase
-      .from('email_preferences')
-      .select('user_id')
-      .eq('email_type_id', adminNotificationType.id)
-      .eq('opted_out', true)
-    : { data: [] as Array<{ user_id: string }> };
-
-  const optedOutUserIds = new Set((emailPreferences || []).map((p) => p.user_id));
-  const adminsToEmail = admins.filter(
-    (admin) => admin.email && !optedOutUserIds.has(admin.id),
-  );
+  const adminsToEmail = admins.filter((admin) => Boolean(admin.email));
 
   if (adminsToEmail.length === 0) {
     return;
@@ -96,12 +78,6 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
   try {
     const emails = await Promise.all(
       adminsToEmail.map(async (admin) => {
-        const optOutToken = encrypt(JSON.stringify({
-          userId: admin.id,
-          emailType: 'admin_notifications',
-        }));
-        const optOutLink = `${baseUrl}/unsubscribe/${encodeURIComponent(optOutToken)}`;
-
         const html = await render(
           FeedbackNotificationEmail({
             adminName: admin.full_name || 'Admin',
@@ -111,7 +87,6 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
             message: feedback.message,
             screenshots: feedback.screenshots ?? null,
             reviewLink: reviewLinkFull,
-            optOutLink,
           }),
         );
 

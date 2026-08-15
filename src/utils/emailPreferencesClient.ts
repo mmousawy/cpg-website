@@ -28,7 +28,7 @@ export type EmailPreference = {
  * | challenge_comment  | Comments on challenges you participated in |
  * | weekly_digest      | Weekly activity summary |
  * | newsletter         | General announcements |
- * | admin_notifications| Admin-only (filtered from user UI) |
+ * | admin_notifications| Required admin emails (not shown in preferences) |
  */
 export const EMAIL_TYPE_OVERVIEW = {
   events: 'Event announcements and RSVP reminders',
@@ -37,7 +37,7 @@ export const EMAIL_TYPE_OVERVIEW = {
   challenge_comment: 'Comments on challenges you joined',
   weekly_digest: 'Weekly activity digest',
   newsletter: 'General announcements',
-  admin_notifications: 'Admin-only (internal)',
+  admin_notifications: 'Required admin emails',
 } as const;
 
 /**

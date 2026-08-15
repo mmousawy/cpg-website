@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { revalidateAll } from '@/app/actions/revalidate';
+import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -96,6 +97,12 @@ export async function POST() {
         console.error('Failed to send account deletion email:', emailError);
       }
     }
+
+    after(() => {
+      void notifyAdminsOfAccountDeletion(user.id).catch((err) => {
+        console.error('Error notifying admins of account deletion:', err);
+      });
+    });
 
     // Sign out the user
     await supabase.auth.signOut();

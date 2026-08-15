@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (emailTypeKey === 'admin_notifications') {
+      return NextResponse.json(
+        { message: 'Admin emails are required and cannot be unsubscribed from' },
+        { status: 400 },
+      );
+    }
+
     // Validate email type
     const validEmailTypes = ['events', 'newsletter', 'notifications'];
     if (!validEmailTypes.includes(emailTypeKey)) {

@@ -2127,6 +2127,10 @@ BEGIN
     RAISE EXCEPTION 'Cannot modify deletion_scheduled_at';
   END IF;
 
+  IF NEW.onboarding_reminder_sent_at IS DISTINCT FROM OLD.onboarding_reminder_sent_at THEN
+    RAISE EXCEPTION 'Cannot modify onboarding_reminder_sent_at';
+  END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -2154,6 +2158,10 @@ BEGIN
 
   IF NEW.deletion_scheduled_at IS NOT NULL THEN
     RAISE EXCEPTION 'Cannot set deletion_scheduled_at';
+  END IF;
+
+  IF NEW.onboarding_reminder_sent_at IS NOT NULL THEN
+    RAISE EXCEPTION 'Cannot set onboarding_reminder_sent_at';
   END IF;
 
   RETURN NEW;
@@ -3119,6 +3127,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "deletion_scheduled_at" timestamp with time zone,
     "banner_url" "text",
     "banner_blurhash" "text",
+    "onboarding_reminder_sent_at" timestamp with time zone,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
     CONSTRAINT "profiles_nickname_format" CHECK ((("nickname" IS NULL) OR ("nickname" ~ '^[a-z0-9-]+$'::"text"))),
@@ -3136,6 +3145,10 @@ COMMENT ON COLUMN "public"."profiles"."social_links" IS 'Array of social links (
 
 
 COMMENT ON COLUMN "public"."profiles"."terms_accepted_at" IS 'Timestamp when the user accepted the Terms of Service during onboarding';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."onboarding_reminder_sent_at" IS 'When the incomplete-onboarding reminder email was sent.';
 
 
 
@@ -4500,6 +4513,10 @@ CREATE INDEX "profiles_email_idx" ON "public"."profiles" USING "btree" ("email")
 
 
 CREATE INDEX "profiles_nickname_idx" ON "public"."profiles" USING "btree" ("nickname");
+
+
+
+CREATE INDEX "profiles_pending_onboarding_reminder_idx" ON "public"."profiles" USING "btree" ("created_at") WHERE (("terms_accepted_at" IS NULL) AND ("onboarding_reminder_sent_at" IS NULL) AND ("deletion_scheduled_at" IS NULL) AND ("suspended_at" IS NULL) AND ("email" IS NOT NULL));
 
 
 

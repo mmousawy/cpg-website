@@ -32,7 +32,6 @@ export const SubmissionNotificationEmail = ({
   challengeThumbnail,
   challengeLink,
   reviewLink,
-  optOutLink,
 }: {
   preview?: boolean;
   adminName: string;
@@ -46,7 +45,6 @@ export const SubmissionNotificationEmail = ({
   challengeThumbnail: string | null;
   challengeLink: string;
   reviewLink: string;
-  optOutLink?: string;
 }) => {
   if (preview) {
     adminName = 'Admin User';
@@ -64,7 +62,6 @@ export const SubmissionNotificationEmail = ({
     challengeThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
     challengeLink = `${baseUrl}/challenges/urban-photography`;
     reviewLink = `${baseUrl}/admin/challenges/urban-photography/submissions`;
-    optOutLink = `${baseUrl}/unsubscribe/preview-token`;
   }
 
   // Display up to 6 photos in the email
@@ -348,8 +345,6 @@ export const SubmissionNotificationEmail = ({
 
             <Footer
               fullName={adminName}
-              optOutLink={optOutLink}
-              emailType="admin_notifications"
             />
           </Container>
         </Body>

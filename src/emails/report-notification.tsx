@@ -34,7 +34,6 @@ export const ReportNotificationEmail = ({
   reason,
   details,
   reviewLink,
-  optOutLink,
   isAnonymous,
 }: {
   preview?: boolean;
@@ -51,7 +50,6 @@ export const ReportNotificationEmail = ({
   reason: string;
   details: string | null;
   reviewLink: string;
-  optOutLink?: string;
   isAnonymous: boolean;
 }) => {
   if (preview) {
@@ -68,7 +66,6 @@ export const ReportNotificationEmail = ({
     reason = 'Inappropriate or explicit content';
     details = 'This photo contains inappropriate content that violates community guidelines.';
     reviewLink = `${baseUrl}/admin/reports`;
-    optOutLink = `${baseUrl}/unsubscribe/preview-token`;
     isAnonymous = false;
   }
 
@@ -358,8 +355,6 @@ export const ReportNotificationEmail = ({
 
             <Footer
               fullName={adminName}
-              optOutLink={optOutLink}
-              emailType="admin_notifications"
             />
           </Container>
         </Body>

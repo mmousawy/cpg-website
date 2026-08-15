@@ -5,6 +5,7 @@ import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { flushPendingNotifications } from '@/lib/notifications/schedule';
+import { sendOnboardingReminders } from '@/lib/onboarding/sendOnboardingReminders';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
@@ -49,9 +50,17 @@ export async function GET(request: NextRequest) {
     timestamp: now.toISOString(),
     rsvpReminders: { sent: 0, failed: 0, events: [] as number[] },
     attendeeReminders: { sent: 0, failed: 0, events: [] as number[] },
+    onboardingReminders: { sent: 0, failed: 0, skipped: 0 },
   };
 
   try {
+    try {
+      results.onboardingReminders = await sendOnboardingReminders();
+      console.log('Onboarding reminders:', results.onboardingReminders);
+    } catch (onboardingError) {
+      console.error('Error sending onboarding reminders:', onboardingError);
+    }
+
     // Get the events email type ID for filtering
     const { data: eventsEmailType } = await supabase
       .from('email_types')

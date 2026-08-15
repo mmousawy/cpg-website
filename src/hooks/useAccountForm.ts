@@ -16,7 +16,7 @@ import { useFormChanges } from '@/hooks/useFormChanges';
 import { useSupabase } from '@/hooks/useSupabase';
 import { validateImage } from '@/utils/imageValidation';
 import { generateBlurhash } from '@/utils/generateBlurhash';
-import { deleteSupabaseStorageObject } from '@/utils/supabaseStorage';
+import { deleteSupabaseStorageObject, uploadUserStorageFile } from '@/utils/supabaseStorage';
 import {
   getEmailTypes,
   getUserEmailPreferences,
@@ -538,12 +538,10 @@ export function useAccountForm() {
         const types = await getEmailTypes();
 
         // Only load profile after email types are loaded
-        const isAdmin = await loadProfile(types);
+        await loadProfile(types);
 
-        // Filter out admin-only email types for non-admins
-        const filteredTypes = isAdmin
-          ? types
-          : types.filter((t) => t.type_key !== 'admin_notifications');
+        // Filter out required admin emails from preference toggles
+        const filteredTypes = types.filter((t) => t.type_key !== 'admin_notifications');
         setEmailTypes(filteredTypes);
 
         // Load stats after profile is loaded (don't await - let it run in background)
@@ -745,58 +743,42 @@ export function useAccountForm() {
       let newBannerBlurhash: string | null = savedBannerBlurhash;
 
       if (pendingAvatarFile) {
-        // Upload new avatar
         const fileExt = pendingAvatarFile.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('user-avatars')
-          .upload(filePath, pendingAvatarFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadError) {
-          setSubmitError(`Failed to upload avatar: ${uploadError.message}`);
+        try {
+          newAvatarUrl = await uploadUserStorageFile(
+            'user-avatars',
+            filePath,
+            pendingAvatarFile,
+          );
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : 'Upload failed';
+          setSubmitError(`Failed to upload avatar: ${message}`);
           setIsSaving(false);
           return;
         }
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
-
-        newAvatarUrl = publicUrl;
       } else if (pendingAvatarRemove) {
         newAvatarUrl = null;
       }
 
       if (pendingBannerFile) {
         const fileExt = pendingBannerFile.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('user-banners')
-          .upload(filePath, pendingBannerFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadError) {
-          setSubmitError(`Failed to upload banner: ${uploadError.message}`);
+        try {
+          newBannerUrl = await uploadUserStorageFile(
+            'user-banners',
+            filePath,
+            pendingBannerFile,
+          );
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : 'Upload failed';
+          setSubmitError(`Failed to upload banner: ${message}`);
           setIsSaving(false);
           return;
         }
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('user-banners').getPublicUrl(filePath);
-
-        newBannerUrl = publicUrl;
         newBannerBlurhash = pendingBannerBlurhash
           ?? await generateBlurhash(pendingBannerFile, 4, 3);
       } else if (pendingBannerRemove) {
@@ -923,11 +905,11 @@ export function useAccountForm() {
         setSubmitError(saveError.message);
       } else {
         if (previousAvatarUrl && previousAvatarUrl !== newAvatarUrl) {
-          await deleteSupabaseStorageObject(supabase, 'user-avatars', previousAvatarUrl);
+          await deleteSupabaseStorageObject('user-avatars', previousAvatarUrl);
         }
 
         if (previousBannerUrl && previousBannerUrl !== newBannerUrl) {
-          await deleteSupabaseStorageObject(supabase, 'user-banners', previousBannerUrl);
+          await deleteSupabaseStorageObject('user-banners', previousBannerUrl);
         }
 
         // Apply theme change

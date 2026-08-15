@@ -4,6 +4,7 @@ import exifr from 'exifr';
 import { customAlphabet } from 'nanoid';
 import { generateBlurhash } from './generateBlurhash';
 import { validateImage } from './imageValidation';
+import { uploadUserStorageFile, type UserStorageBucket } from './supabaseStorage';
 
 // Lowercase alphanumeric without vowels to avoid profanity
 const nanoid = customAlphabet('bcdfghjklmnpqrstvwxyz0123456789', 5);
@@ -13,7 +14,7 @@ export interface UploadPhotoOptions {
   isPublic?: boolean; // Default: true
   title?: string; // Optional caption
   description?: string; // Optional description
-  bucketName?: string; // Default: 'user-photos'
+  bucketName?: UserStorageBucket; // Default: 'user-photos'
   pathPrefix?: string; // Custom path prefix (default: userId/)
   sortOrder?: number; // Sort order for the photo in the library
   albumSortOrder?: number; // Starting sort order for album_photos inserts
@@ -59,22 +60,8 @@ export async function uploadPhoto(
   const fileName = `${randomId}.${fileExt}`;
   const filePath = `${prefix}${fileName}`;
 
-  // 4. Upload to Supabase Storage
-  const { error: uploadError } = await supabase.storage
-    .from(bucketName)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw new Error(`Upload failed: ${file.name} - ${uploadError.message}`);
-  }
-
-  // 5. Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucketName)
-    .getPublicUrl(filePath);
+  // 4. Upload to Supabase Storage via service-role API
+  const publicUrl = await uploadUserStorageFile(bucketName, filePath, file);
 
   // 6. Get image dimensions
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {

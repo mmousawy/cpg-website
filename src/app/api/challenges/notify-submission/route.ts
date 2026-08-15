@@ -3,7 +3,6 @@ import { Resend } from 'resend';
 
 import { SubmissionNotificationEmail } from '@/emails/submission-notification';
 import { createNotification } from '@/lib/notifications/create';
-import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { adminSupabase } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
@@ -135,28 +134,7 @@ export async function POST(request: NextRequest) {
 
   await Promise.all(notificationPromises);
 
-  // Check email preferences and send emails
-  // Get admin email preferences for admin notifications (use admin client)
-  const { data: adminNotificationType } = await adminSupabase
-    .from('email_types')
-    .select('id')
-    .eq('type_key', 'admin_notifications')
-    .single();
-
-  const { data: emailPreferences } = adminNotificationType
-    ? await adminSupabase
-      .from('email_preferences')
-      .select('user_id')
-      .eq('email_type_id', adminNotificationType.id)
-      .eq('opted_out', true)
-    : { data: [] as Array<{ user_id: string }> };
-
-  const optedOutUserIds = new Set((emailPreferences || []).map((p) => p.user_id));
-
-  // Filter admins who haven't opted out of admin notification emails
-  const adminsToEmail = adminsToNotify.filter(
-    (admin) => admin.email && !optedOutUserIds.has(admin.id),
-  );
+  const adminsToEmail = adminsToNotify.filter((admin) => Boolean(admin.email));
 
   if (adminsToEmail.length === 0) {
     return NextResponse.json({ success: true, notifiedCount: adminsToNotify.length });
@@ -165,12 +143,6 @@ export async function POST(request: NextRequest) {
   // Send emails in batch
   try {
     const emailPromises = adminsToEmail.map(async (admin) => {
-      const optOutToken = encrypt(JSON.stringify({
-        userId: admin.id,
-        emailType: 'admin_notifications',
-      }));
-      const optOutLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${encodeURIComponent(optOutToken)}`;
-
       const html = await render(
         SubmissionNotificationEmail({
           adminName: admin.full_name || 'Admin',
@@ -184,7 +156,6 @@ export async function POST(request: NextRequest) {
           challengeThumbnail: challenge.cover_image_url,
           challengeLink,
           reviewLink: reviewLinkFull,
-          optOutLink,
         }),
       );
 

@@ -1,5 +1,6 @@
 import { useSupabase } from '@/hooks/useSupabase';
 import { validateImage } from '@/utils/imageValidation';
+import { uploadUserStorageFile } from '@/utils/supabaseStorage';
 import { useCallback } from 'react';
 
 const BUCKET = 'email-assets';
@@ -14,23 +15,22 @@ export function useEmailImageUpload() {
       return null;
     }
 
-    const ext = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(fileName, file, { cacheControl: '31536000', upsert: false });
-
-    if (error) {
-      alert(`Upload failed: ${error.message}`);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert('Upload failed: not signed in');
       return null;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(fileName);
+    const ext = file.name.split('.').pop();
+    const filePath = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
-    return publicUrl;
+    try {
+      return await uploadUserStorageFile(BUCKET, filePath, file);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Upload failed';
+      alert(`Upload failed: ${message}`);
+      return null;
+    }
   }, [supabase]);
 
   return uploadImage;

@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { validateImageFile } from '@/utils/imageValidation';
+import { isSafeUserStoragePath, USER_STORAGE_BUCKETS } from '@/utils/supabaseStorage';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-const ALLOWED_BUCKETS = new Set(['user-photos', 'user-banners']);
-
-function isSafeUserStoragePath(userId: string, filePath: string): boolean {
-  if (!filePath || filePath.includes('..') || filePath.includes('\\')) {
-    return false;
-  }
-  const normalized = filePath.replace(/^\/+/, '');
-  return normalized.startsWith(`${userId}/`);
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    if (!filePath || !ALLOWED_BUCKETS.has(bucketName)) {
+    if (!filePath || !USER_STORAGE_BUCKETS.has(bucketName)) {
       return NextResponse.json({ error: 'Invalid upload target' }, { status: 400 });
     }
 

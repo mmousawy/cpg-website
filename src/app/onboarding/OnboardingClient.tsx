@@ -1,6 +1,5 @@
 'use client';
 
-import { revalidateProfile } from '@/app/actions/revalidate';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
@@ -17,6 +16,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { generateBlurhash } from '@/utils/generateBlurhash';
 import { validateImage } from '@/utils/imageValidation';
+import { uploadUserStorageFile } from '@/utils/supabaseStorage';
 import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -437,28 +437,20 @@ export default function OnboardingClient() {
         avatarUrl = null;
       } else if (pendingAvatarFile) {
         const fileExt = pendingAvatarFile.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('user-avatars')
-          .upload(filePath, pendingAvatarFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadError) {
-          setSubmitError(`Failed to upload avatar: ${uploadError.message}`);
+        try {
+          avatarUrl = await uploadUserStorageFile(
+            'user-avatars',
+            filePath,
+            pendingAvatarFile,
+          );
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : 'Upload failed';
+          setSubmitError(`Failed to upload avatar: ${message}`);
           setIsSaving(false);
           return;
         }
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
-
-        avatarUrl = publicUrl;
       }
 
       if (pendingBannerRemove) {
@@ -466,28 +458,21 @@ export default function OnboardingClient() {
         bannerBlurhash = null;
       } else if (pendingBannerFile) {
         const fileExt = pendingBannerFile.name.split('.').pop();
-        const randomId = crypto.randomUUID();
-        const fileName = `${randomId}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('user-banners')
-          .upload(filePath, pendingBannerFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-
-        if (uploadError) {
-          setSubmitError(`Failed to upload banner: ${uploadError.message}`);
+        try {
+          bannerUrl = await uploadUserStorageFile(
+            'user-banners',
+            filePath,
+            pendingBannerFile,
+          );
+        } catch (uploadError) {
+          const message = uploadError instanceof Error ? uploadError.message : 'Upload failed';
+          setSubmitError(`Failed to upload banner: ${message}`);
           setIsSaving(false);
           return;
         }
 
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from('user-banners').getPublicUrl(filePath);
-
-        bannerUrl = publicUrl;
         bannerBlurhash = pendingBannerBlurhash
           ?? await generateBlurhash(pendingBannerFile, 4, 3);
       }
@@ -587,13 +572,27 @@ export default function OnboardingClient() {
         }
       }
 
+      // Notify admins of the new member (fire-and-forget; keepalive survives navigation)
+      void fetch('/api/onboarding/notify', {
+        method: 'POST',
+        keepalive: true,
+      }).catch((err) => {
+        console.error('Error notifying admins of new member:', err);
+      });
+
       // Refresh profile in auth context
       await refreshProfile();
 
-      // Revalidate profile pages (homepage shows new members)
-      // Fire-and-forget: don't await server action because revalidateTag
-      // triggers an internal router refresh that conflicts with router.push
-      void revalidateProfile(data.nickname);
+      // Expire homepage/members caches before navigating. A server action
+      // revalidateTag() would also call refresh() and fight router.push.
+      try {
+        await fetch('/api/onboarding/revalidate', {
+          method: 'POST',
+          keepalive: true,
+        });
+      } catch (err) {
+        console.error('Error revalidating after onboarding:', err);
+      }
 
       router.push(postOnboardingRedirect);
     } catch (err) {

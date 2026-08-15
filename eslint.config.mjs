@@ -31,6 +31,16 @@ const eslintConfig = [
       'react/jsx-one-expression-per-line': 'off',
     },
   },
+  {
+    files: ['src/**/*.{js,jsx,ts,tsx}'],
+    ignores: ['src/app/api/**', 'src/lib/og.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', {
+        selector: "CallExpression[callee.property.name=/^(upload|update|remove|move|copy)$/][callee.object.callee.property.name='from'][callee.object.callee.object.property.name='storage']",
+        message: 'Do not mutate Supabase Storage from the browser. Use a service-role API route such as /api/photos/upload or /api/photos/delete.',
+      }],
+    },
+  },
 ];
 
 export default eslintConfig;

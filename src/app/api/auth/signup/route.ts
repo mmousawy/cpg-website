@@ -1,9 +1,10 @@
 import crypto from 'crypto';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { Resend } from 'resend';
 
 import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
+import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
 import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
 
@@ -177,6 +178,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ User created: ${email} (pending verification)`);
+
+    if (!isTestEnv) {
+      after(() => {
+        void notifyAdminsOfMemberSignedUp(userData.user.id).catch((err) => {
+          console.error('Error notifying admins of signup:', err);
+        });
+      });
+    }
 
     return NextResponse.json(
       {

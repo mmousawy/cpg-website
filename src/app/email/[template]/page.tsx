@@ -20,6 +20,16 @@ const templates: Record<string, () => Promise<EmailModule>> = {
   'newsletter': () => import('../../../emails/newsletter') as unknown as Promise<EmailModule>,
   'comment-notification': () => import('../../../emails/comment-notification') as unknown as Promise<EmailModule>,
   'weekly-digest': () => import('../../../emails/weekly-digest') as unknown as Promise<EmailModule>,
+  'member-joined': () => import('../../../emails/member-notification').then((mod) => ({
+    default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'joined' }),
+  })) as unknown as Promise<EmailModule>,
+  'member-signed-up': () => import('../../../emails/member-notification').then((mod) => ({
+    default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'signed_up' }),
+  })) as unknown as Promise<EmailModule>,
+  'member-deleted': () => import('../../../emails/member-notification').then((mod) => ({
+    default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'deleted' }),
+  })) as unknown as Promise<EmailModule>,
+  'onboarding-reminder': () => import('../../../emails/onboarding-reminder') as unknown as Promise<EmailModule>,
 };
 
 export default function Email({

@@ -61,6 +61,9 @@ const notificationIcons: Record<string, string> = {
   event_reminder: '📅',
   event_announcement: '📢',
   admin_message: '⚙️',
+  member_signed_up: '👋',
+  member_joined: '👋',
+  member_deleted: '🚪',
 };
 
 const notificationMessages: Record<string, (actor: string | null, data?: NotificationWithActor['data']) => string> = {
@@ -77,6 +80,9 @@ const notificationMessages: Record<string, (actor: string | null, data?: Notific
   event_reminder: () => 'Event reminder',
   event_announcement: () => 'New event announcement',
   admin_message: () => 'Admin message',
+  member_signed_up: (actor) => `${actor || 'Someone'} signed up`,
+  member_joined: (actor) => `${actor || 'Someone'} joined the community`,
+  member_deleted: (actor) => `${actor || 'Someone'} scheduled their account for deletion`,
 };
 
 // Supabase storage domains for image transformation
@@ -241,7 +247,10 @@ export const WeeklyDigestEmail = ({
               className="my-[20px]"
             >
               {notifications.map((notification, index) => {
-                const actorName = notification.actor?.full_name || notification.actor?.nickname || null;
+                const actorName = notification.actor?.full_name
+                  || notification.actor?.nickname
+                  || (notification.data?.actorName as string | undefined)
+                  || null;
                 const message = notificationMessages[notification.type]?.(actorName, notification.data) || 'New notification';
                 const icon = notificationIcons[notification.type] || '🔔';
                 const title = notification.data?.title as string | undefined;

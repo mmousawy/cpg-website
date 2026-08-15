@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     // 4. Purge accounts scheduled for deletion past retention period
     const { data: scheduledProfiles, error: profilesQueryError } = await supabase
       .from('profiles')
-      .select('id, email, avatar_url')
+      .select('id, email, avatar_url, banner_url')
       .not('deletion_scheduled_at', 'is', null)
       .lt('deletion_scheduled_at', cutoffISO);
 
@@ -206,19 +206,23 @@ export async function GET(request: NextRequest) {
             .update({ suspended_by: null } as never)
             .eq('suspended_by', profile.id);
 
-          // d) Delete avatar files from storage
-          if (profile.avatar_url) {
+          // d) Delete avatar and banner files from storage
+          for (const bucket of ['user-avatars', 'user-banners'] as const) {
+            const hasFile = bucket === 'user-avatars' ? profile.avatar_url : profile.banner_url;
+            if (!hasFile) continue;
+
             try {
-              const { data: avatarFiles } = await supabase.storage
-                .from('avatars')
+              const { data: files } = await supabase.storage
+                .from(bucket)
                 .list(profile.id);
 
-              if (avatarFiles && avatarFiles.length > 0) {
-                const avatarPaths = avatarFiles.map((f) => `${profile.id}/${f.name}`);
-                await supabase.storage.from('avatars').remove(avatarPaths);
+              if (files && files.length > 0) {
+                await supabase.storage
+                  .from(bucket)
+                  .remove(files.map((f) => `${profile.id}/${f.name}`));
               }
             } catch {
-              results.errors.push(`Failed to delete avatar files for ${profile.id}`);
+              results.errors.push(`Failed to delete ${bucket} files for ${profile.id}`);
             }
           }
 

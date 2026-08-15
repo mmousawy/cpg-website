@@ -1,12 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import type { Tables } from '@/database.types';
 import { revalidateAll } from '@/app/actions/revalidate';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
+import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -282,6 +283,12 @@ export async function DELETE(request: NextRequest) {
 
     // Revalidate all caches
     await revalidateAll();
+
+    after(() => {
+      void notifyAdminsOfAccountDeletion(userId, { initiatedByAdminId: user.id }).catch((err) => {
+        console.error('Error notifying admins of account deletion:', err);
+      });
+    });
 
     return NextResponse.json({ success: true, message: 'Account scheduled for deletion' });
   } catch (error) {

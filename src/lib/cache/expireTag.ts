@@ -11,3 +11,15 @@ export function expireTags(tags: string[]): void {
     expireTag(tag);
   }
 }
+
+/** Expire caches that include the homepage / members listings. */
+export function expireMemberListCaches(nickname?: string | null): void {
+  expireTag('profiles');
+  expireTag('search');
+  expireTag('home');
+  expireTag('interests');
+  if (nickname) {
+    expireTag(`profile-${nickname}`);
+  }
+}
+
