@@ -1,4 +1,5 @@
-import Container from '@/components/layout/Container';import { cacheLife } from 'next/cache';
+import Container from '@/components/layout/Container';
+import { cacheLife } from 'next/cache';
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';

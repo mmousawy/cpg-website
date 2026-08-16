@@ -276,6 +276,12 @@ export default function AlbumDetailClient() {
       queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', user?.id] });
       setSelectedPhotoIds(new Set());
 
+      const albumOwnerNickname = isSharedWithMe
+        ? ownerNickname
+        : profile?.nickname;
+      if (albumOwnerNickname && album.slug) {
+        await revalidateAlbum(albumOwnerNickname, album.slug);
+      }
       if (album.event_id) {
         await revalidateEventAlbum(album.event_id);
       }

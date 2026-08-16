@@ -1,4 +1,5 @@
-import PhotosPaginated from '@/components/gallery/PhotosPaginated';import { cacheLife } from 'next/cache';
+import PhotosPaginated from '@/components/gallery/PhotosPaginated';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import {
@@ -56,6 +57,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function UserPhotosPage({ params }: { params: Promise<{ nickname: string }> }) {
+  'use cache';
+  cacheLife('tagged');
+
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
@@ -67,6 +71,8 @@ export default async function UserPhotosPage({ params }: { params: Promise<{ nic
   if (!nickname) {
     notFound();
   }
+
+  cacheTag(`profile-${nickname}`);
 
   const profile = await getProfileByNickname(nickname);
   if (!profile) {

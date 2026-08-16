@@ -2,7 +2,7 @@ import { getProfileByNickname } from '@/lib/data/profiles';
 import { CHERIA_HEADING_FONT_NAME, loadOgFonts } from '@/lib/og/loadOgFonts';
 import { getSocialImageUrl } from '@/utils/metadata';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
 
@@ -64,7 +64,7 @@ function getInitials(fullName: string | null, nickname: string | null): string {
 
 export default async function Image({ params }: { params: Promise<{ nickname: string }> }) {
   'use cache';
-  cacheLife('hours');
+  cacheLife('tagged');
 
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
@@ -77,6 +77,8 @@ export default async function Image({ params }: { params: Promise<{ nickname: st
   if (!nickname) {
     notFound();
   }
+
+  cacheTag(`profile-${nickname}`);
 
   const profile = await getProfileByNickname(nickname);
   if (!profile) {

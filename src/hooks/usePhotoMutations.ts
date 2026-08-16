@@ -102,16 +102,32 @@ export function useDeletePhotos(
         queryClient.invalidateQueries({ queryKey: photoCountQueryKey(userId) });
       }
 
+      const deletedPhotos = data.previousPhotos?.filter((p) => data.photoIds.includes(p.id)) ?? [];
+      const affectedTags = new Set<string>();
+      for (const photo of deletedPhotos) {
+        photo.tags?.forEach((t) => {
+          const tag = typeof t === 'string' ? t : t.tag;
+          if (tag) affectedTags.add(tag.toLowerCase());
+        });
+      }
+      if (affectedTags.size > 0) {
+        const { revalidateTagPhotos } = await import('@/app/actions/revalidate');
+        await Promise.all([...affectedTags].map((tag) => revalidateTagPhotos(tag)));
+      }
+
       if (nickname) {
+        const { revalidatePhoto } = await import('@/app/actions/revalidate');
+        const shortIds = deletedPhotos
+          .map((p) => p.short_id)
+          .filter((id): id is string => !!id);
+        await Promise.all(shortIds.map((shortId) => revalidatePhoto(shortId, nickname)));
         await revalidateProfile(nickname);
         if (data.affectedAlbums.length > 0) {
           await Promise.all(data.affectedAlbums.map((slug) => revalidateAlbum(nickname, slug)));
         }
       }
 
-      const hadPublicPhotos = data.previousPhotos?.some(
-        (p) => data.photoIds.includes(p.id) && p.is_public,
-      );
+      const hadPublicPhotos = deletedPhotos.some((p) => p.is_public);
       if (hadPublicPhotos) {
         await Promise.all([revalidateGalleryData(), revalidateHome()]);
       }
@@ -372,6 +388,10 @@ export function useBulkUpdatePhotos(
         }
 
         queryClient.invalidateQueries({ queryKey: ['global-tags'] });
+
+        const { revalidateTagPhotos } = await import('@/app/actions/revalidate');
+        const allAffectedTags = new Set([...desiredTags, ...explicitlyRemovedTags]);
+        await Promise.all([...allAffectedTags].map((tag) => revalidateTagPhotos(tag)));
       }
 
       const affectedAlbums = new Set<string>();

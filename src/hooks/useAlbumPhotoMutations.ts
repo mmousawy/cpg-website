@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData, revalidateHome } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData, revalidateHome, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -244,6 +244,10 @@ export function useUpdateAlbumPhoto(
         await revalidateAlbum(nickname, albumSlug);
       }
 
+      if (nickname) {
+        await revalidateProfile(nickname);
+      }
+
       // Revalidate gallery and home when visibility changed (affects public listings)
       const previousPhoto = previousPhotos?.find((p) => p.id === photoId);
       if (previousPhoto && previousPhoto.is_public !== data.is_public) {
@@ -487,6 +491,10 @@ export function useBulkUpdateAlbumPhotos(
 
         // Invalidate global tags cache
         queryClient.invalidateQueries({ queryKey: ['global-tags'] });
+
+        const { revalidateTagPhotos } = await import('@/app/actions/revalidate');
+        const allAffectedTags = new Set([...desiredTags, ...explicitlyRemovedTags]);
+        await Promise.all([...allAffectedTags].map((tag) => revalidateTagPhotos(tag)));
       }
 
       // Invalidate main photos queries to ensure tags show up when navigating to photos page
@@ -612,9 +620,9 @@ export function useSetAlbumCover(
       queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'public') });
       queryClient.invalidateQueries({ queryKey: photosQueryFilterKey(userId, 'private') });
 
-      // Revalidate album page (set cover only affects album page, not listings)
+      // Revalidate album page (cover affects album detail and public album listings)
       if (nickname && albumSlug) {
-        await revalidateAlbumBySlug(nickname, albumSlug);
+        await revalidateAlbum(nickname, albumSlug);
       }
 
       return { albumId, photoUrl };

@@ -41,6 +41,18 @@ function invalidateHomeTag() {
   expireTag('home');
 }
 
+/** Bust prerendered profile routes (/@nickname and nested pages). */
+function invalidateProfileRoutes(nickname: string) {
+  revalidatePath(`/@${nickname}`, 'layout');
+}
+
+/** Bust prerendered gallery/members tag listing pages. */
+function invalidateTagListingRoutes(tagName: string) {
+  const encodedTag = encodeURIComponent(tagName);
+  revalidatePath(`/gallery/tag/${encodedTag}`);
+  revalidatePath(`/members/tag/${encodedTag}`);
+}
+
 // ============================================================================
 // Event Revalidation
 // ============================================================================
@@ -115,6 +127,7 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
     expireTag(`album-${nickname}-${albumSlug}`);
   }
 
+  invalidateProfileRoutes(nickname);
   finishRevalidation();
 }
 
@@ -125,6 +138,7 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
 export async function revalidateAlbumBySlug(nickname: string, slug: string) {
   expireTag(`album-${nickname}-${slug}`);
   expireTag(`profile-${nickname}`);
+  invalidateProfileRoutes(nickname);
   finishRevalidation();
 }
 
@@ -132,11 +146,19 @@ export async function revalidateAlbumBySlug(nickname: string, slug: string) {
  * Revalidate multiple albums for a user (batch operation)
  * Use when: Bulk album operations
  */
-export async function revalidateAlbums(nickname: string, _albumSlugs?: string[]) {
+export async function revalidateAlbums(nickname: string, albumSlugs?: string[]) {
   expireTag('albums');
   expireTag(`profile-${nickname}`);
   expireTag('search');
   invalidateHomeTag();
+
+  if (albumSlugs) {
+    for (const slug of albumSlugs) {
+      expireTag(`album-${nickname}-${slug}`);
+    }
+  }
+
+  invalidateProfileRoutes(nickname);
   finishRevalidation();
 }
 
@@ -184,6 +206,10 @@ export async function revalidateAfterPhotoUpload({
     expireTag('events');
   }
 
+  if (nickname) {
+    invalidateProfileRoutes(nickname);
+  }
+
   finishRevalidation();
 }
 
@@ -211,6 +237,7 @@ export async function revalidateTagPhotos(tagName: string) {
   expireTag(`tag-${tagName}`);
   expireTag('search');
   invalidateHomeTag();
+  invalidateTagListingRoutes(tagName);
   finishRevalidation();
 }
 
@@ -238,6 +265,9 @@ export async function revalidateProfile(nickname: string) {
   expireTag('profiles');
   expireTag('search');
   invalidateHomeTag();
+  // Profile pages are prerendered via generateStaticParams; tag expiry alone
+  // does not bust that route payload (unlike nested data-function caches).
+  invalidateProfileRoutes(nickname);
   finishRevalidation();
 }
 
@@ -261,6 +291,7 @@ export async function revalidateInterests() {
 export async function revalidateInterest(interestName: string) {
   expireTag('interests');
   expireTag(`interest-${interestName}`);
+  revalidatePath(`/members/interest/${encodeURIComponent(interestName)}`);
   finishRevalidation();
 }
 
@@ -277,6 +308,7 @@ export async function revalidatePhotoLikes(photoId: string, ownerNickname: strin
   expireTag(`profile-${ownerNickname}`);
   expireTag('gallery');
   invalidateHomeTag();
+  invalidateProfileRoutes(ownerNickname);
   finishRevalidation();
 }
 
@@ -289,6 +321,7 @@ export async function revalidateAlbumLikes(albumId: string, ownerNickname: strin
   expireTag(`profile-${ownerNickname}`);
   expireTag('gallery');
   invalidateHomeTag();
+  invalidateProfileRoutes(ownerNickname);
   finishRevalidation();
 }
 
@@ -325,8 +358,12 @@ export async function revalidateAll() {
  * Revalidate a specific photo's cached data
  * Use when: Photo metadata changes, challenge submission status changes
  */
-export async function revalidatePhoto(photoShortId: string) {
+export async function revalidatePhoto(photoShortId: string, nickname?: string | null) {
   expireTag(`photo-${photoShortId}`);
+  if (nickname) {
+    revalidatePath(`/@${nickname}/photo/${photoShortId}`);
+    invalidateProfileRoutes(nickname);
+  }
   finishRevalidation();
 }
 
@@ -334,9 +371,15 @@ export async function revalidatePhoto(photoShortId: string) {
  * Revalidate multiple photos (batch operation)
  * Use when: Bulk reviewing challenge submissions
  */
-export async function revalidatePhotos(photoShortIds: string[]) {
+export async function revalidatePhotos(photoShortIds: string[], nickname?: string | null) {
   for (const shortId of photoShortIds) {
     expireTag(`photo-${shortId}`);
+    if (nickname) {
+      revalidatePath(`/@${nickname}/photo/${shortId}`);
+    }
+  }
+  if (nickname) {
+    invalidateProfileRoutes(nickname);
   }
   finishRevalidation();
 }

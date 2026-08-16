@@ -1,5 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
@@ -61,6 +61,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
+  'use cache';
+  cacheLife('tagged');
+
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
@@ -70,7 +73,9 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     notFound();
   }
 
-  // Fetch album outside cache to handle 404
+  cacheTag(`profile-${nickname}`);
+  cacheTag(`album-${nickname}-${albumSlug}`);
+
   const album = await getAlbumBySlug(nickname, albumSlug);
 
   if (!album) {

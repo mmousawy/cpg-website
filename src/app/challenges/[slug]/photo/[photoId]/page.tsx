@@ -1,4 +1,5 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';import { cacheLife } from 'next/cache';
+import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import { cacheLife } from 'next/cache';
 
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';

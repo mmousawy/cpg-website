@@ -1,4 +1,4 @@
-import { revalidateTag, updateTag } from 'next/cache';
+import { revalidatePath, revalidateTag, updateTag } from 'next/cache';
 
 /**
  * Immediately expire a cache tag.
@@ -29,6 +29,7 @@ export function expireMemberListCaches(nickname?: string | null): void {
   expireTag('interests');
   if (nickname) {
     expireTag(`profile-${nickname}`);
+    revalidatePath(`/@${nickname}`, 'layout');
   }
 }
 

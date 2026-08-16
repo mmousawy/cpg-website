@@ -1,4 +1,5 @@
-import AlbumGrid from '@/components/album/AlbumGrid';import { cacheLife } from 'next/cache';
+import AlbumGrid from '@/components/album/AlbumGrid';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
@@ -78,6 +79,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
+  'use cache';
+  cacheLife('tagged');
+
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
@@ -92,7 +96,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  // Fetch profile first (outside cache) to handle 404 properly
+  cacheTag(`profile-${nickname}`);
+
   const profile = await getProfileByNickname(nickname);
 
   if (!profile) {

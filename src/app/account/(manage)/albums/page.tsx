@@ -1,5 +1,6 @@
 'use client';
 
+import { revalidateAlbumBySlug } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import {
   AlbumEditSidebar,
@@ -1131,10 +1132,14 @@ function PendingInviteSidebar({
       if (error) throw new Error(error.message || 'Failed to resolve invite');
       return action;
     },
-    onSuccess: () => {
+    onSuccess: async (action) => {
       queryClient.invalidateQueries({ queryKey: ['pending-album-invites', userId] });
       queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', userId] });
       onResolved();
+      const ownerNickname = album.owner_profile?.nickname;
+      if (action === 'accept' && ownerNickname && album.slug) {
+        await revalidateAlbumBySlug(ownerNickname, album.slug);
+      }
     },
   });
 

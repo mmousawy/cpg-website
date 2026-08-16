@@ -852,7 +852,7 @@ export function useAccountForm() {
       // For backward compatibility, also update newsletter_opt_in
       const newsletterOptIn = data.emailPreferences['newsletter'] ?? true;
 
-      const { error } = await supabase
+      const { data: savedRow, error } = await supabase
         .from('profiles')
         .update({
           full_name: data.fullName || null,
@@ -873,8 +873,11 @@ export function useAccountForm() {
           embed_copyright_exif: data.embedCopyrightExif,
           exif_copyright_text: data.exifCopyrightText || null,
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select('avatar_url, banner_url')
+        .maybeSingle();
 
+      let savedProfile = savedRow;
       let saveError = error;
       if (saveError?.message?.includes('banner_blurhash')) {
         const retry = await supabase
@@ -897,12 +900,17 @@ export function useAccountForm() {
             embed_copyright_exif: data.embedCopyrightExif,
             exif_copyright_text: data.exifCopyrightText || null,
           })
-          .eq('id', user.id);
+          .eq('id', user.id)
+          .select('avatar_url, banner_url')
+          .maybeSingle();
+        savedProfile = retry.data;
         saveError = retry.error;
       }
 
       if (saveError) {
         setSubmitError(saveError.message);
+      } else if (!savedProfile) {
+        setSubmitError('Failed to save profile. Please try again.');
       } else {
         if (previousAvatarUrl && previousAvatarUrl !== newAvatarUrl) {
           await deleteSupabaseStorageObject('user-avatars', previousAvatarUrl);
