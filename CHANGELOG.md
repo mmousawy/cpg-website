@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.2](https://github.com/mmousawy/cpg-website/compare/v1.38.1...v1.38.2) (2026-08-16)
+
+
+### 🐛 Bug Fixes
+
+* Enhance caching mechanisms across profile and album pages ([b3c8d99](https://github.com/mmousawy/cpg-website/commit/b3c8d9920eacbb5578765082ed744d8bbfa85fe6))
+
 ## [1.38.1](https://github.com/mmousawy/cpg-website/compare/v1.38.0...v1.38.1) (2026-08-15)
 
 
