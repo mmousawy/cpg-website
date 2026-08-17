@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.5](https://github.com/mmousawy/cpg-website/compare/v1.38.4...v1.38.5) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* Enhance styling and functionality across components ([90089aa](https://github.com/mmousawy/cpg-website/commit/90089aaba35cf16e99379010c4bded3415df390f))
+* Update noise assets and enhance button styles ([8b8e431](https://github.com/mmousawy/cpg-website/commit/8b8e431d9db8e818d3159e097b360cd72737fcb0))
+
 ## [1.38.4](https://github.com/mmousawy/cpg-website/compare/v1.38.3...v1.38.4) (2026-08-17)
 
 
