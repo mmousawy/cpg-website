@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.3](https://github.com/mmousawy/cpg-website/compare/v1.38.2...v1.38.3) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* Remove modal prop from Select component ([cde4fd4](https://github.com/mmousawy/cpg-website/commit/cde4fd43f84b77329568f476abeda9e0351e7c51))
+* Update layout and caching strategies for manage pages ([5978f73](https://github.com/mmousawy/cpg-website/commit/5978f732f305d794ab20370d503e75b434c953ee))
+
 ## [1.38.2](https://github.com/mmousawy/cpg-website/compare/v1.38.1...v1.38.2) (2026-08-16)
 
 
