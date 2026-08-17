@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.4](https://github.com/mmousawy/cpg-website/compare/v1.38.3...v1.38.4) (2026-08-17)
+
+
+### 🐛 Bug Fixes
+
+* Refactor caching and layout for improved performance and consistency ([29843f3](https://github.com/mmousawy/cpg-website/commit/29843f3879615a6f3d16ed1808e32fc8f5705644))
+
 ## [1.38.3](https://github.com/mmousawy/cpg-website/compare/v1.38.2...v1.38.3) (2026-08-17)
 
 
