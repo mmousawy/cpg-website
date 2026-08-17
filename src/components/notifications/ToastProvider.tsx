@@ -4,14 +4,11 @@ import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 
-// Paths where the header is full-width (must match Header.tsx)
-const fullWidthPaths = ['/account/photos', '/account/albums'];
+import { isManagePagePath } from '@/utils/managePage';
 
 export default function ToastProvider() {
   const pathname = usePathname();
-
-  // Check if current path has full-width header
-  const isFullWidth = fullWidthPaths.some((path) => pathname.startsWith(path));
+  const isFullWidth = isManagePagePath(pathname);
 
   return (
     <Toaster

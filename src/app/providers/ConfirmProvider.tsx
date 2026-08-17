@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useRef, useState } from 'react';
+
+import { subscribeRouteChange } from '@/lib/routeChange';
 
 export interface ConfirmOptions {
   title: string;
@@ -44,27 +46,39 @@ export function useConfirmState() {
 export default function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
-  const [resolveRef, setResolveRef] = useState<((value: boolean) => void) | null>(null);
+  const pendingResolveRef = useRef<((value: boolean) => void) | null>(null);
+
+  useLayoutEffect(() => {
+    return subscribeRouteChange(() => {
+      if (pendingResolveRef.current) {
+        pendingResolveRef.current(false);
+        pendingResolveRef.current = null;
+      }
+      setIsOpen(false);
+      setOptions(null);
+    });
+  }, []);
 
   const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
+      pendingResolveRef.current = resolve;
       setOptions(opts);
-      setResolveRef(() => resolve);
       setIsOpen(true);
     });
   }, []);
 
   const handleResolve = useCallback((value: boolean) => {
-    if (resolveRef) {
-      resolveRef(value);
+    const resolve = pendingResolveRef.current;
+    pendingResolveRef.current = null;
+    if (resolve) {
+      resolve(value);
     }
     setIsOpen(false);
     // Clear state after animation
     setTimeout(() => {
       setOptions(null);
-      setResolveRef(null);
     }, 300);
-  }, [resolveRef]);
+  }, []);
 
   return (
     <ConfirmContext.Provider

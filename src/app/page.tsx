@@ -9,7 +9,6 @@ import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import { socialLinks } from '@/config/socials';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
@@ -35,17 +34,7 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
 // Block until cached data resolves so SSR includes full HTML (no streaming shell)
 export const instant = false;
 
-export default async function Home() {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('home');
-  cacheTag('events');
-  cacheTag('event-attendees');
-  cacheTag('challenges');
-  cacheTag('albums');
-  cacheTag('gallery');
-  cacheTag('profiles');
-
+export default function Home() {
   return (
     <>
       <HomeHeroSection />

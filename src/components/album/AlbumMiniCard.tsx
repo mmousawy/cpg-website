@@ -56,7 +56,7 @@ export default function AlbumMiniCard({
         'group relative inline-flex w-fit min-w-32 max-w-54 border',
         'text-sm transition-colors',
         'border-border-color-strong hover:border-primary hover:text-primary',
-        highlighted ? 'bg-background-light' : 'bg-background-medium',
+        highlighted ? 'bg-background-medium border-primary' : 'bg-background-medium',
         className,
       )}
     >

@@ -27,9 +27,12 @@ export function expireMemberListCaches(nickname?: string | null): void {
   expireTag('search');
   expireTag('home');
   expireTag('interests');
+  revalidatePath('/');
   if (nickname) {
     expireTag(`profile-${nickname}`);
-    revalidatePath(`/@${nickname}`, 'layout');
+    revalidatePath(`/@${nickname}`);
+    revalidatePath(`/@${nickname}/albums`);
+    revalidatePath(`/@${nickname}/photos`);
   }
 }
 

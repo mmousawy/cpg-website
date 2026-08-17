@@ -57,9 +57,6 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function UserPhotosPage({ params }: { params: Promise<{ nickname: string }> }) {
-  'use cache';
-  cacheLife('tagged');
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
@@ -72,6 +69,16 @@ export default async function UserPhotosPage({ params }: { params: Promise<{ nic
     notFound();
   }
 
+  return (
+    <CachedPhotosContent
+      nickname={nickname}
+    />
+  );
+}
+
+async function CachedPhotosContent({ nickname }: { nickname: string }) {
+  'use cache';
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
 
   const profile = await getProfileByNickname(nickname);
@@ -79,21 +86,6 @@ export default async function UserPhotosPage({ params }: { params: Promise<{ nic
     notFound();
   }
 
-  return (
-    <CachedPhotosContent
-      profile={profile}
-      nickname={nickname}
-    />
-  );
-}
-
-async function CachedPhotosContent({
-  profile,
-  nickname,
-}: {
-  profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>;
-  nickname: string;
-}) {
   const perPage = 20;
   const [allPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicPhotos(profile.id, nickname, perPage + 1),

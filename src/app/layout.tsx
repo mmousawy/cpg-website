@@ -10,6 +10,7 @@ import NavigationProgress from '@/components/layout/NavigationProgress';
 import ThemeProviderShell from '@/app/providers/ThemeProvider';
 import JsonLd from '@/components/shared/JsonLd';
 import { socialLinks } from '@/config/socials';
+import { MANAGE_PAGE_BOOT_SCRIPT } from '@/utils/managePage';
 import { defaultOgImage, defaultTwitterImage, getAbsoluteUrl, siteConfig, truncateDescription } from '@/utils/metadata';
 
 import './globals.css';
@@ -98,6 +99,11 @@ export default function RootLayout({
       className="h-full overflow-x-clip"
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: MANAGE_PAGE_BOOT_SCRIPT,
+          }}
+        />
         <link
           rel="preconnect"
           href="https://db.creativephotography.group"

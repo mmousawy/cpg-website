@@ -25,10 +25,10 @@ const publicApiPaths = [
 ];
 
 const KNOWN_ROUTES = new Set([
-  'account', 'actions', 'admin', 'api', 'auth', 'auth-callback', 'auth-error',
+  'account', 'account-deleted', 'actions', 'admin', 'api', 'auth', 'auth-callback', 'auth-error',
   'cancel', 'challenges', 'changelog', 'confirm', 'contact', 'email', 'events',
   'forgot-password', 'gallery', 'help', 'login', 'members', 'onboarding',
-  'privacy', 'providers', 'reset-password', 'signup', 'terms', 'unsubscribe',
+  'privacy', 'providers', 'reset-password', 'scene', 'signup', 'terms', 'unsubscribe',
   '_next',
 ]);
 

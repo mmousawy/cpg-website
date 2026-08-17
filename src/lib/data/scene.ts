@@ -4,10 +4,15 @@ import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
 /**
- * Get all scene event slugs for static generation
- * Used in generateStaticParams to pre-render scene event pages
+ * Get all scene event slugs for static generation.
+ * Cached because Next.js Cache Components also runs generateStaticParams
+ * at request time (not only at build).
  */
 export async function getAllSceneEventSlugs() {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('scene');
+
   const supabase = createPublicClient();
 
   const { data } = await supabase

@@ -36,14 +36,17 @@ function finishRevalidation() {
   }
 }
 
-/** Invalidate the homepage shell (tagged `home` in src/app/page.tsx). */
+/** Invalidate the homepage shell. */
 function invalidateHomeTag() {
   expireTag('home');
+  revalidatePath('/');
 }
 
 /** Bust prerendered profile routes (/@nickname and nested pages). */
 function invalidateProfileRoutes(nickname: string) {
-  revalidatePath(`/@${nickname}`, 'layout');
+  revalidatePath(`/@${nickname}`);
+  revalidatePath(`/@${nickname}/albums`);
+  revalidatePath(`/@${nickname}/photos`);
 }
 
 /** Bust prerendered gallery/members tag listing pages. */
@@ -125,6 +128,7 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
 
   if (albumSlug) {
     expireTag(`album-${nickname}-${albumSlug}`);
+    revalidatePath(`/@${nickname}/album/${albumSlug}`);
   }
 
   invalidateProfileRoutes(nickname);
@@ -155,6 +159,7 @@ export async function revalidateAlbums(nickname: string, albumSlugs?: string[]) 
   if (albumSlugs) {
     for (const slug of albumSlugs) {
       expireTag(`album-${nickname}-${slug}`);
+      revalidatePath(`/@${nickname}/album/${slug}`);
     }
   }
 
@@ -191,6 +196,7 @@ export async function revalidateAfterPhotoUpload({
 
   if (albumSlugs.length > 0 || eventIds.length > 0) {
     expireTag('albums');
+    expireTag('gallery');
     expireTag('search');
     invalidateHomeTag();
   }
@@ -198,6 +204,7 @@ export async function revalidateAfterPhotoUpload({
   if (nickname) {
     for (const slug of albumSlugs) {
       expireTag(`album-${nickname}-${slug}`);
+      revalidatePath(`/@${nickname}/album/${slug}`);
     }
   }
 

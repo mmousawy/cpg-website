@@ -8,6 +8,7 @@ import type { FollowListType } from '@/types/follows';
 import type { SearchResult } from '@/types/search';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import CloseSVG from 'public/icons/close.svg';
@@ -70,6 +71,7 @@ export default function FollowListModal({
   const isSearching = query.trim().length >= 2;
 
   useBodyScrollLock(isOpen);
+  useCloseOnRouteChange(isOpen, onClose);
 
   useEffect(() => {
     if (!isOpen) {

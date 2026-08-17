@@ -1,13 +1,14 @@
 'use client';
 
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { useNotifications } from '@/hooks/useNotifications';
 import { createMockNotifications } from '@/lib/actions/notifications';
+import { subscribeRouteChange } from '@/lib/routeChange';
 import BottomSheet from '../shared/BottomSheet';
 import Button from '../shared/Button';
 import NotificationItem from './NotificationItem';
@@ -20,6 +21,12 @@ export default function MobileNotificationButton() {
   const [isCreatingMocks, setIsCreatingMocks] = useState(false);
 
   const { notifications, unseenCount, totalCount, hasMore, isLoading, isLoadingMore, markAsSeen, loadMore } = useNotifications(user?.id || null);
+
+  useLayoutEffect(() => {
+    return subscribeRouteChange(() => {
+      setIsOpen(false);
+    });
+  }, []);
 
   // Handle notification click (view)
   const handleView = async (notificationId: string) => {

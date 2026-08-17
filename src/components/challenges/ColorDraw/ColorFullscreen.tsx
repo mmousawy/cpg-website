@@ -6,6 +6,7 @@ import clsx from 'clsx';
 
 import CloseSVG from 'public/icons/close.svg';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { getColorLabel, getColorSwatchStyle, isLightColor } from '@/lib/colorDraw';
 
 function useIsMounted() {
@@ -31,6 +32,7 @@ export default function ColorFullscreen({ color, isOpen, onClose }: ColorFullscr
   );
 
   useBodyScrollLock(isOpen);
+  useCloseOnRouteChange(isOpen, onClose);
 
   useEffect(() => {
     if (!isOpen) return;

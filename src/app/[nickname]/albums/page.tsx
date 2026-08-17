@@ -55,9 +55,6 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function UserAlbumsPage({ params }: { params: Promise<{ nickname: string }> }) {
-  'use cache';
-  cacheLife('tagged');
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
@@ -70,28 +67,24 @@ export default async function UserAlbumsPage({ params }: { params: Promise<{ nic
     notFound();
   }
 
+  return (
+    <CachedAlbumsContent
+      nickname={nickname}
+    />
+  );
+}
+
+async function CachedAlbumsContent({ nickname }: { nickname: string }) {
+  'use cache';
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
 
   const profile = await getProfileByNickname(nickname);
   if (!profile) {
     notFound();
   }
 
-  return (
-    <CachedAlbumsContent
-      profile={profile}
-      nickname={nickname}
-    />
-  );
-}
-
-async function CachedAlbumsContent({
-  profile,
-  nickname,
-}: {
-  profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>;
-  nickname: string;
-}) {
   const [albums, followCounts] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname, 100),
     getProfileFollowCounts(profile.id, nickname),

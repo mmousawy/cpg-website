@@ -127,6 +127,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
 
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content
+            modal={false}
             className={clsx(
               'z-50 min-w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border-color',
               'bg-background-light shadow-lg font-sans',

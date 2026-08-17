@@ -3,6 +3,8 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { subscribeRouteChange } from '@/lib/routeChange';
+
 type PopoverAlign = 'left' | 'right' | 'center' | 'auto';
 type ResolvedPopoverAlign = 'left' | 'right' | 'center';
 type PopoverSide = 'top' | 'bottom';
@@ -83,6 +85,8 @@ export default function Popover({
   const panelRef = useRef<HTMLDivElement>(null);
   const [internalOpen, setInternalOpen] = useState(false);
   const [autoResolvedAlign, setAutoResolvedAlign] = useState<ResolvedPopoverAlign>('left');
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
 
   const isOpen = open ?? internalOpen;
   const resolvedAlign: ResolvedPopoverAlign = align === 'auto' ? autoResolvedAlign : align;
@@ -115,6 +119,15 @@ export default function Popover({
       window.removeEventListener('scroll', updateAutoAlign, true);
     };
   }, [align, isOpen, updateAutoAlign]);
+
+  useLayoutEffect(() => {
+    return subscribeRouteChange(() => {
+      if (!detailsRef.current?.open) return;
+      detailsRef.current.open = false;
+      setInternalOpen(false);
+      onOpenChangeRef.current?.(false);
+    });
+  }, []);
 
   // Close on click outside
   useEffect(() => {

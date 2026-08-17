@@ -79,13 +79,9 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ nickname: string }> }) {
-  'use cache';
-  cacheLife('tagged');
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
 
-  // Only @-prefixed paths are profile routes
   if (!rawNickname.startsWith('@')) {
     notFound();
   }
@@ -96,7 +92,16 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  return <ProfileContent
+    nickname={nickname}
+  />;
+}
+
+async function ProfileContent({ nickname }: { nickname: string }) {
+  'use cache';
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
 
   const profile = await getProfileByNickname(nickname);
 
@@ -104,16 +109,6 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  // Now render the cached content
-  return <ProfileContent
-    profile={profile}
-    nickname={nickname}
-  />;
-}
-
-// Cached profile content
-async function ProfileContent({ profile, nickname }: { profile: NonNullable<Awaited<ReturnType<typeof getProfileByNickname>>>; nickname: string }) {
-  // Fetch user's albums and photos using cached data functions
   const [albums, publicPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname, 50),
     getUserPublicPhotos(profile.id, nickname, 20),

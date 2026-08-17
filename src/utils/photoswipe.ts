@@ -30,3 +30,20 @@ export async function initPhotoSwipe() {
  * Type helper for PhotoSwipeLightbox instance
  */
 export type PhotoSwipeLightboxInstance = InstanceType<Awaited<ReturnType<typeof initPhotoSwipe>>>;
+
+/**
+ * Close any PhotoSwipe instance still attached to the document.
+ * Used on client navigations so a lightbox from a previous route cannot cover the next page.
+ */
+export function closeOpenPhotoSwipes() {
+  if (typeof document === 'undefined') return;
+
+  document.querySelectorAll('.pswp').forEach((root) => {
+    const closeButton = root.querySelector<HTMLButtonElement>('.pswp__button--close');
+    if (closeButton) {
+      closeButton.click();
+      return;
+    }
+    root.remove();
+  });
+}

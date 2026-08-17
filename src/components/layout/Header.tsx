@@ -4,11 +4,12 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { routes } from '@/config/routes';
-import { useSession } from '@/hooks/useSession';
 import { useMounted } from '@/hooks/useMounted';
+import { useSession } from '@/hooks/useSession';
+import { subscribeRouteChange } from '@/lib/routeChange';
 import Avatar from '../auth/Avatar';
 
 const SearchModal = dynamic(
@@ -93,6 +94,13 @@ export default function Header() {
     if (!mounted) return true; // Default to Mac symbol for SSR
     return navigator.platform.toLowerCase().includes('mac');
   }, [mounted]);
+
+  useLayoutEffect(() => {
+    return subscribeRouteChange(() => {
+      setMobileMenuOpen(false);
+      setSearchOpen(false);
+    });
+  }, []);
 
   // Close mobile menu when notification sheet opens
   useEffect(() => {

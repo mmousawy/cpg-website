@@ -59,12 +59,7 @@ export function lockBodyScroll() {
   }
 }
 
-export function unlockBodyScroll() {
-  if (!isBrowser() || lockState.lockCount === 0) return;
-
-  lockState.lockCount -= 1;
-  if (lockState.lockCount > 0) return;
-
+function restoreBodyStyle() {
   const { body } = document;
   const snapshot = lockState.bodyStyle;
 
@@ -88,7 +83,47 @@ export function unlockBodyScroll() {
     body.style.height = '';
   }
 
-  window.scrollTo(0, lockState.scrollY);
   lockState.bodyStyle = null;
+}
+
+function clearForeignScrollLocks() {
+  const { body, documentElement } = document;
+
+  // Radix Select / react-remove-scroll: `body[data-scroll-locked] { overflow: hidden !important }`
+  body.removeAttribute('data-scroll-locked');
+  documentElement.removeAttribute('data-scroll-locked');
+  body.style.removeProperty('--removed-body-scroll-bar-size');
+  documentElement.style.removeProperty('--removed-body-scroll-bar-size');
+  body.classList.remove('with-scroll-bars-hidden');
+  documentElement.classList.remove('with-scroll-bars-hidden');
+  for (const cls of [...body.classList]) {
+    if (cls.startsWith('block-interactivity-')) {
+      body.classList.remove(cls);
+    }
+  }
+}
+
+export function unlockBodyScroll() {
+  if (!isBrowser() || lockState.lockCount === 0) return;
+
+  lockState.lockCount -= 1;
+  if (lockState.lockCount > 0) return;
+
+  restoreBodyStyle();
+  window.scrollTo(0, lockState.scrollY);
   lockState.scrollY = 0;
+}
+
+/**
+ * Drop every outstanding lock and restore inline body styles.
+ * Used on client navigations so a lock from a previous route cannot stick.
+ * Does not restore scrollY — the new route owns scroll position.
+ */
+export function resetBodyScrollLock() {
+  if (!isBrowser()) return;
+
+  lockState.lockCount = 0;
+  lockState.scrollY = 0;
+  restoreBodyStyle();
+  clearForeignScrollLocks();
 }

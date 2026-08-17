@@ -5,6 +5,7 @@ import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useMounted } from '@/hooks/useMounted';
 
 import CloseSVG from 'public/icons/close.svg';
@@ -69,6 +70,7 @@ export default function BottomSheet({
 
   // Handle body scroll lock
   useBodyScrollLock(isOpen);
+  useCloseOnRouteChange(isOpen, onClose);
 
   useEffect(() => {
     if (!isOpen) {

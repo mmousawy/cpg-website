@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useCallback, useRef, useState } from 'react';
+import { createContext, useCallback, useLayoutEffect, useRef, useState } from 'react';
+
+import { subscribeRouteChange } from '@/lib/routeChange';
 
 export type ModalSize = 'small' | 'default' | 'medium' | 'large' | 'fullscreen';
 
@@ -34,6 +36,13 @@ export default function ModalProvider({ children }: { children: React.ReactNode 
   const [flushContentTop, setFlushContentTop] = useState(false);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const beforeCloseCheckRef = useRef<BeforeCloseCheck | null>(null);
+
+  useLayoutEffect(() => {
+    return subscribeRouteChange(() => {
+      beforeCloseCheckRef.current = null;
+      setIsOpen(false);
+    });
+  }, []);
 
   const setBeforeCloseCheck = useCallback((fn: BeforeCloseCheck | null) => {
     beforeCloseCheckRef.current = fn;

@@ -10,7 +10,6 @@ import SignUpCTA from '@/components/shared/SignUpCTA';
 import { getMostViewedAlbumsLastWeek, getPublicAlbums } from '@/lib/data/albums';
 import { getMostViewedPhotosLastWeek, getPopularTags, getPublicPhotostream } from '@/lib/data/gallery';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 
 export const metadata = createMetadata({
   title: 'Community gallery',
@@ -23,11 +22,6 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function GalleryPage() {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('gallery');
-  cacheTag('albums');
-
   const [popularTags, mostViewedPhotos, mostViewedAlbums, recentPhotos, recentAlbums] = await Promise.all([
     getPopularTags(30),
     getMostViewedPhotosLastWeek(10),

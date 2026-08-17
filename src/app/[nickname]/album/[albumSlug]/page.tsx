@@ -61,9 +61,6 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
 export const instant = false;
 
 export default async function PublicAlbumPage({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
-  'use cache';
-  cacheLife('tagged');
-
   const resolvedParams = await params;
   const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
   const nickname = rawNickname.startsWith('@') ? rawNickname.slice(1) : rawNickname;
@@ -73,13 +70,23 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
     notFound();
   }
 
+  return (
+    <CachedAlbumPage
+      nickname={nickname}
+      albumSlug={albumSlug}
+    />
+  );
+}
+
+async function CachedAlbumPage({ nickname, albumSlug }: { nickname: string; albumSlug: string }) {
+  'use cache';
+  cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
   cacheTag(`album-${nickname}-${albumSlug}`);
 
   const album = await getAlbumBySlug(nickname, albumSlug);
 
   if (!album) {
-    // Log for debugging
     console.error(`Album not found: nickname=${nickname}, albumSlug=${albumSlug}`);
     notFound();
   }

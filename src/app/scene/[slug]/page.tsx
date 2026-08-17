@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import { notFound } from 'next/navigation';
 
@@ -156,7 +156,12 @@ export default async function SceneEventDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  'use cache';
+  cacheLife('hourly');
+
   const { slug } = await params;
+  cacheTag('scene');
+  if (slug) cacheTag(`scene-${slug}`);
   if (!slug) notFound();
 
   const { event } = await getSceneEventBySlug(slug);

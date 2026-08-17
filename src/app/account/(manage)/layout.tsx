@@ -17,11 +17,6 @@ export default function ManageLayout({
 }) {
   return (
     <>
-      <div
-        className="manage-page"
-        hidden
-        aria-hidden
-      />
       <Suspense
         fallback={null}
       >
