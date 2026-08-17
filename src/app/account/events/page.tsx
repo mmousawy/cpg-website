@@ -6,6 +6,7 @@ import { startTransition, useEffect, useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
@@ -170,29 +171,24 @@ export default function MyEventsPage() {
               </p>
             </div>
           ) : upcomingRSVPs.length === 0 ? (
-            <div
-              className="text-center py-8 rounded-xl border border-dashed border-border-color"
-            >
-              <p
-                className="text-foreground/80"
-              >
-                <SadSVG
-                  className="inline align-top h-6 w-6 mr-2 fill-foreground/80"
-                />
-                {' '}
-                No upcoming events
-              </p>
-              <Button
-                href={routes.events.url}
-                size='sm'
-                iconRight={<ArrowRightSVG
-                  className="-mr-1.5"
-                />}
-                className="mt-4 rounded-full"
-              >
-                Browse events
-              </Button>
-            </div>
+            <EmptyState
+              icon={<SadSVG
+                className="size-10 fill-foreground/80 inline-block"
+              />}
+              title="No upcoming events"
+              action={(
+                <Button
+                  href={routes.events.url}
+                  size='sm'
+                  iconRight={<ArrowRightSVG
+                    className="-mr-1.5"
+                  />}
+                  className="rounded-full"
+                >
+                  Browse events
+                </Button>
+              )}
+            />
           ) : (
             <div
               className="space-y-3"

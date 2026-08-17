@@ -52,6 +52,10 @@ export default function SmoothScrollProvider() {
           e.preventDefault();
           scrollToIdWithStickyHeaderOffset(id);
           window.history.replaceState(null, '', hash);
+          if (!target.hasAttribute('tabindex')) {
+            target.tabIndex = -1;
+          }
+          target.focus({ preventScroll: true });
         }
       } catch {
         // Invalid URL, ignore

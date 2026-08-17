@@ -19,6 +19,7 @@ export default function UserMenu() {
   const { isAdmin } = useAdmin();
   const { resolvedTheme, setTheme } = useAppTheme();
   const mounted = useMounted();
+  const showSkeleton = !mounted || isLoading;
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
   const confirm = useConfirm();
@@ -77,16 +78,16 @@ export default function UserMenu() {
   return (
     <details
       ref={detailsRef}
-      className="relative group"
+      className="relative group shrink-0"
     >
       <summary
         className="list-none cursor-pointer block rounded-full hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2 outline-transparent group-open:outline-primary group-open:outline-2 [&::-webkit-details-marker]:hidden"
         aria-label="User menu"
       >
-        {/* Show skeleton while loading, then actual avatar */}
-        {!mounted || isLoading ? (
+        {showSkeleton ? (
           <div
-            className="h-12 w-12 animate-pulse rounded-full bg-border-color"
+            className="size-12 shrink-0 animate-pulse rounded-full bg-border-color"
+            aria-hidden
           />
         ) : (
           <Avatar

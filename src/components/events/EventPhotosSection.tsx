@@ -2,9 +2,11 @@
 
 import SubmitToSharedAlbumButton from '@/components/albums/SubmitToSharedAlbumButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import EmptyState from '@/components/shared/EmptyState';
 import { useSession } from '@/hooks/useSession';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { EventAlbum } from '@/lib/eventAlbums';
+import ImageSVG from 'public/icons/image.svg';
 
 type EventPhotosSectionProps = {
   eventId: number;
@@ -174,15 +176,13 @@ export default function EventPhotosSection({
             ownerNickname={ownerNickname}
             eventId={eventId}
           />
-          <div
-            className="rounded-lg border border-border-color bg-background-light p-8 text-center"
-          >
-            <p
-              className="text-foreground/80"
-            >
-              No photos yet. Be the first to add yours!
-            </p>
-          </div>
+          <EmptyState
+            icon={<ImageSVG
+              className="size-10 inline-block"
+            />}
+            title="No photos yet"
+            description="Be the first to add yours!"
+          />
         </>
       )}
     </div>

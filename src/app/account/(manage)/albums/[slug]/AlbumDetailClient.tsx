@@ -21,6 +21,7 @@ import ManageSidebarSkeleton from '@/components/manage/ManageSidebarSkeleton';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
+import EmptyState from '@/components/shared/EmptyState';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { useDeleteAlbums, useUpdateAlbum } from '@/hooks/useAlbumMutations';
 import {
@@ -684,18 +685,13 @@ export default function AlbumDetailClient() {
           photosLoading && photos.length === 0 ? (
             <ManagePhotoGridSkeleton />
           ) : photos.length === 0 ? (
-            <div
-              className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
-            >
-              <FolderSVG
-                className="size-10 mb-2 inline-block"
-              />
-              <p
-                className="mb-2 text-lg opacity-70"
-              >
-                No photos in this album yet
-              </p>
-            </div>
+            <EmptyState
+              className="m-4 h-full"
+              icon={<FolderSVG
+                className="size-10 inline-block"
+              />}
+              title="No photos in this album yet"
+            />
           ) : (
             <PhotoGrid
               photos={photos}
@@ -721,23 +717,14 @@ export default function AlbumDetailClient() {
             {photosLoading && photos.length === 0 ? (
               <ManagePhotoGridSkeleton />
             ) : photos.length === 0 && uploadingPhotos.length === 0 ? (
-              <div
-                className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
-              >
-                <FolderSVG
-                  className="size-10 mb-2 inline-block"
-                />
-                <p
-                  className="mb-2 text-lg opacity-70"
-                >
-                  No photos in this album
-                </p>
-                <p
-                  className="text-sm text-foreground/50"
-                >
-                  Drag and drop photos here, or use the buttons above
-                </p>
-              </div>
+              <EmptyState
+                className="m-4 h-full"
+                icon={<FolderSVG
+                  className="size-10 inline-block"
+                />}
+                title="No photos in this album"
+                description="Drag and drop photos here, or use the buttons above"
+              />
             ) : (
               <PhotoGrid
                 photos={photos}

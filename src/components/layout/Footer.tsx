@@ -3,7 +3,6 @@
 import Link from 'next/link';
 
 import FeedbackButton from '@/components/shared/FeedbackButton';
-import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import { socialLinks } from '@/config/socials';
 
@@ -37,24 +36,27 @@ export default function Footer() {
           {socialLinks.map(({ name, url }) => {
             const Icon = iconMap[name];
             return (
-              <Button
+              <a
                 key={name}
                 href={url}
-                variant="secondary"
-                icon={<Icon
-                  className="inline-block size-4"
-                />}
-                className="p-2! sm:px-3! sm:py-1!"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={name}
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-1.5 text-sm font-medium font-[family-name:var(--font-geist-mono)] text-foreground whitespace-nowrap transition-colors hover:border-primary hover:bg-primary/5 focus-visible:border-primary focus-visible:bg-primary/5 dark:bg-[#2e3032] p-2! sm:px-3! sm:py-1!"
               >
+                <span
+                  className="inline-flex shrink-0 [&_svg:not([data-no-inherit])]:fill-current [&_svg[fill=none]]:fill-none [&_svg[stroke]]:stroke-current"
+                >
+                  <Icon
+                    className="inline-block size-4"
+                  />
+                </span>
                 <span
                   className="hidden sm:inline-block text-sm"
                 >
                   {name}
                 </span>
-              </Button>
+              </a>
             );
           })}
         </div>

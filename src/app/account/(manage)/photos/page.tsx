@@ -17,6 +17,7 @@ import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
+import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import Select from '@/components/shared/Select';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
@@ -388,31 +389,24 @@ export default function PhotosPage() {
           overlayMessage="Drop to upload"
         >
           {showEmptyState ? (
-            <div
-              className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
-            >
-              <ImageSVG
-                className="size-10 mb-2 inline-block"
-              />
-              <p
-                className="mb-2 text-lg opacity-70"
-              >
-                You don&apos;t have any photos yet
-              </p>
-              <p
-                className="text-sm text-foreground/50 mb-4"
-              >
-                Drag and drop photos here, or use the &quot;Upload&quot; button to upload photos
-              </p>
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                icon={<PlusMiniSVG
-                  className="size-5 -ml-0.5"
-                />}
-              >
-                Upload
-              </Button>
-            </div>
+            <EmptyState
+              className="m-4 h-full"
+              icon={<ImageSVG
+                className="size-10 inline-block"
+              />}
+              title="You don't have any photos yet"
+              description='Drag and drop photos here, or use the "Upload" button to upload photos'
+              action={(
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  icon={<PlusMiniSVG
+                    className="size-5 -ml-0.5"
+                  />}
+                >
+                  Upload
+                </Button>
+              )}
+            />
           ) : photosPending && photos.length === 0 ? (
             <ManagePhotoGridSkeleton />
           ) : (

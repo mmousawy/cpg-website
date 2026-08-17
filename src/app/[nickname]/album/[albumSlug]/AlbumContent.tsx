@@ -4,6 +4,7 @@ import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
+import EmptyState from '@/components/shared/EmptyState';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewTracker from '@/components/shared/ViewTracker';
@@ -13,6 +14,7 @@ import type { AlbumJoinPolicy } from '@/types/albums';
 import type { Photo, SimpleTag } from '@/types/photos';
 import clsx from 'clsx';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
+import ImageSVG from 'public/icons/image.svg';
 import PhotoStackIcon from 'public/icons/photo-stack.svg';
 
 import type { AlbumBySlugResult } from '@/lib/data/albums';
@@ -92,15 +94,12 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             className="w-full"
           >
             {photos.length === 0 ? (
-              <div
-                className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-              >
-                <p
-                  className="opacity-70"
-                >
-                  This album doesn&apos;t have any photos yet.
-                </p>
-              </div>
+              <EmptyState
+                icon={<ImageSVG
+                  className="size-10 inline-block"
+                />}
+                title="This album doesn't have any photos yet."
+              />
             ) : (
               <JustifiedPhotoGrid
                 photos={photos}

@@ -1,7 +1,7 @@
 import type { ChallengeWithStats } from '@/types/challenges';
+import EmptyState from '@/components/shared/EmptyState';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import ChallengeCard from './ChallengeCard';
-
 type ChallengesListProps = {
   challenges: ChallengeWithStats[];
   emptyMessage?: string;
@@ -19,18 +19,12 @@ export default function ChallengesList({
 }: ChallengesListProps) {
   if (challenges.length === 0) {
     return (
-      <div
-        className="text-center py-12 rounded-2xl border border-dashed border-border-color bg-background-light/50"
-      >
-        <AwardStarMiniSVG
-          className="h-12 w-12 fill-foreground/20 mx-auto mb-3"
-        />
-        <p
-          className="text-foreground/80"
-        >
-          {emptyMessage}
-        </p>
-      </div>
+      <EmptyState
+        icon={<AwardStarMiniSVG
+          className="size-10 fill-foreground/20 inline-block"
+        />}
+        title={emptyMessage}
+      />
     );
   }
 

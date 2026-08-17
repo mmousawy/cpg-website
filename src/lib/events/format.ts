@@ -30,6 +30,27 @@ export function formatEventTime(time: string): string {
   return dayjs(`2000-01-01T${time.length === 5 ? `${time}:00` : time}`).format('HH:mm');
 }
 
+type EventPageTitleOptions = {
+  title?: string | null;
+  date?: string | null;
+  time?: string | null;
+  now?: number;
+};
+
+/**
+ * Build an event page title: "{title} — {date} at {time}".
+ * Omits time or date when they are missing. Untitled events fall back to "Event".
+ */
+export function formatEventPageTitle(options: EventPageTitleOptions): string {
+  const name = options.title?.trim() || 'Event';
+  if (!options.date) return name;
+
+  const date = formatEventDate(options.date, { includeYear: true, now: options.now });
+  if (!options.time) return `${name} — ${date}`;
+
+  return `${name} — ${date} at ${formatEventTime(options.time)}`;
+}
+
 export function getDateSortValue(date: string | null | undefined): number {
   return date ? dayjs(date).valueOf() : 0;
 }

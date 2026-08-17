@@ -15,6 +15,7 @@ import type { SharedAlbumFormData } from '@/components/manage/SharedAlbumEditFor
 import SidebarPanel from '@/components/manage/SidebarPanel';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
@@ -596,31 +597,24 @@ export default function AlbumsPage() {
         {showInitialSkeleton ? (
           <ManageAlbumSectionsSkeleton />
         ) : showEmptyState ? (
-          <div
-            className="border-2 border-dashed border-border-color p-12 text-center m-4 h-full flex flex-col items-center justify-center"
-          >
-            <FolderSVG
-              className="size-10 mb-2 inline-block"
-            />
-            <p
-              className="mb-2 text-lg opacity-70"
-            >
-              You don&apos;t have any albums yet
-            </p>
-            <p
-              className="text-sm text-foreground/50 mb-4"
-            >
-              Use the &quot;New album&quot; button to create a new album
-            </p>
-            <Button
-              onClick={handleCreateNewAlbum}
-              icon={<FolderAddMiniSVG
-                className="size-5 -ml-0.5"
-              />}
-            >
-              New album
-            </Button>
-          </div>
+          <EmptyState
+            className="m-4 h-full"
+            icon={<FolderSVG
+              className="size-10 inline-block"
+            />}
+            title="You don't have any albums yet"
+            description='Use the "New album" button to create a new album'
+            action={(
+              <Button
+                onClick={handleCreateNewAlbum}
+                icon={<FolderAddMiniSVG
+                  className="size-5 -ml-0.5"
+                />}
+              >
+                New album
+              </Button>
+            )}
+          />
         ) : (
           <div
             className="flex flex-col min-h-0 flex-1 overflow-y-auto"

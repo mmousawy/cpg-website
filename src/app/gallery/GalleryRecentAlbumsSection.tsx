@@ -2,8 +2,10 @@ import Link from 'next/link';
 
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import { routes } from '@/config/routes';
 import type { AlbumWithPhotos } from '@/types/albums';
+import FolderSVG from 'public/icons/folder.svg';
 
 export function GalleryRecentAlbumsSection({ albums }: { albums: AlbumWithPhotos[] }) {
   return (
@@ -29,15 +31,12 @@ export function GalleryRecentAlbumsSection({ albums }: { albums: AlbumWithPhotos
       </div>
 
       {albums.length === 0 ? (
-        <div
-          className="border-border-color bg-background-light rounded-lg border p-12 text-center"
-        >
-          <p
-            className="text-lg opacity-70"
-          >
-            No albums yet. Be the first to create one!
-          </p>
-        </div>
+        <EmptyState
+          icon={<FolderSVG
+            className="size-10 inline-block"
+          />}
+          title="No albums yet. Be the first to create one!"
+        />
       ) : (
         <>
           <AlbumGrid

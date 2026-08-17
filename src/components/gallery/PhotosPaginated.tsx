@@ -5,6 +5,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState, useTransition } from 'react';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
 import Button from '../shared/Button';
+import EmptyState from '../shared/EmptyState';
+import ImageSVG from 'public/icons/image.svg';
 
 type PhotoBatch = {
   id: string;
@@ -71,15 +73,12 @@ function PhotosPaginatedFallback({
         </div>
       )}
       {initialPhotos.length === 0 ? (
-        <div
-          className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-        >
-          <p
-            className="text-lg opacity-70"
-          >
-            No photos found.
-          </p>
-        </div>
+        <EmptyState
+          icon={<ImageSVG
+            className="size-10 inline-block"
+          />}
+          title="No photos found."
+        />
       ) : (
         <JustifiedPhotoGrid
           photos={initialPhotos}
@@ -292,15 +291,12 @@ function PhotosPaginatedInner({
       )}
 
       {totalPhotoCount === 0 && !isPending ? (
-        <div
-          className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-        >
-          <p
-            className="text-lg opacity-70"
-          >
-            No photos found.
-          </p>
-        </div>
+        <EmptyState
+          icon={<ImageSVG
+            className="size-10 inline-block"
+          />}
+          title="No photos found."
+        />
       ) : (
         <div
           className={isSorting ? 'pointer-events-none opacity-50' : undefined}

@@ -1,9 +1,12 @@
-import PageContainer from '@/components/layout/PageContainer';import { cacheLife } from 'next/cache';
+import PageContainer from '@/components/layout/PageContainer';
+import { cacheLife } from 'next/cache';
 
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
+import EmptyState from '@/components/shared/EmptyState';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
+import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 
 // Cached data functions
 import { getMembersByInterest, getPopularInterests } from '@/lib/data/interests';
@@ -97,15 +100,12 @@ export default async function InterestMembersPage({ params }: { params: Params }
         )}
 
         {members.length === 0 ? (
-          <div
-            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-          >
-            <p
-              className="text-lg opacity-70"
-            >
-              No members found with this interest yet.
-            </p>
-          </div>
+          <EmptyState
+            icon={<HeroCommunitiesSVG
+              className="size-10 inline-block"
+            />}
+            title="No members found with this interest yet."
+          />
         ) : (
           <div
             className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"

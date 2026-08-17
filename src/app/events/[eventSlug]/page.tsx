@@ -25,7 +25,7 @@ import {
   getEventBySlug,
 } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
-import { formatEventDate, formatEventTime } from '@/lib/events/format';
+import { formatEventDate, formatEventPageTitle, formatEventTime } from '@/lib/events/format';
 import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   }
 
   // Use cached function for metadata
-  const { event } = await getEventBySlug(eventSlug);
+  const { event, serverNow } = await getEventBySlug(eventSlug);
 
   if (!event) {
     return createMetadata({
@@ -76,7 +76,12 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   const eventImage = getSocialImageUrl(event.cover_image);
 
   return createMetadata({
-    title: `Event: ${event.title || 'Event'}`,
+    title: formatEventPageTitle({
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      now: serverNow,
+    }),
     description: event.description || `Join us for ${event.title || 'this event'}`,
     image: eventImage,
     canonical: `/events/${eventSlug}`,

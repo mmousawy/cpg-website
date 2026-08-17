@@ -5,6 +5,7 @@ import { startTransition, useEffect, useState } from 'react';
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import { useAllChallenges } from '@/hooks/useChallenges';
 
 import PlusSVG from 'public/icons/plus.svg';
@@ -63,18 +64,12 @@ export default function AdminChallengesPage() {
           </p>
         </div>
       ) : (challenges || []).length === 0 ? (
-        <div
-          className="text-center py-12"
-        >
-          <SadSVG
-            className="mb-4 inline-block h-12 w-12 fill-foreground/50"
-          />
-          <p
-            className="mb-4 text-foreground/80"
-          >
-            No challenges yet
-          </p>
-        </div>
+        <EmptyState
+          icon={<SadSVG
+            className="size-10 fill-foreground/50 inline-block"
+          />}
+          title="No challenges yet"
+        />
       ) : (
         <div
           className="space-y-10"

@@ -1,5 +1,6 @@
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import { RichDescription } from '@/components/shared/RichDescription';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { CPGEvent, EventAttendee } from '@/types/events';
@@ -101,18 +102,12 @@ export default function EventsList({
 }: EventsListProps) {
   if (!events || events.length === 0) {
     return (
-      <div
-        className="text-center py-8 rounded-xl border border-dashed border-border-color"
-      >
-        <p
-          className="text-foreground/80"
-        >
-          <SadSVG
-            className="inline align-top h-6 w-6 mr-2 fill-foreground/80"
-          />
-          {emptyMessage || 'No events found'}
-        </p>
-      </div>
+      <EmptyState
+        icon={<SadSVG
+          className="size-10 fill-foreground/80 inline-block"
+        />}
+        title={emptyMessage || 'No events found'}
+      />
     );
   }
 

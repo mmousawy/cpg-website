@@ -1,10 +1,13 @@
-import PageContainer from '@/components/layout/PageContainer';import { cacheLife } from 'next/cache';
+import PageContainer from '@/components/layout/PageContainer';
+import { cacheLife } from 'next/cache';
 
 import MemberCard from '@/components/shared/MemberCard';
+import EmptyState from '@/components/shared/EmptyState';
 import Tag from '@/components/shared/Tag';
 import { createMetadata } from '@/utils/metadata';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 
 // Cached data functions
 import { getPopularTagsWithMemberCounts } from '@/lib/data/gallery';
@@ -132,15 +135,12 @@ export default async function TagMembersPage({ params }: { params: Params }) {
         )}
 
         {members.length === 0 ? (
-          <div
-            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-          >
-            <p
-              className="text-lg opacity-70"
-            >
-              No members found using this tag yet.
-            </p>
-          </div>
+          <EmptyState
+            icon={<HeroCommunitiesSVG
+              className="size-10 inline-block"
+            />}
+            title="No members found using this tag yet."
+          />
         ) : (
           <div
             className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"

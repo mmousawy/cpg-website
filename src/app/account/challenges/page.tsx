@@ -8,6 +8,7 @@ import { useConfirm } from '@/app/providers/ConfirmProvider';
 import PageContainer from '@/components/layout/PageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useAllMySubmissions, useWithdrawSubmission } from '@/hooks/useChallengeSubmissions';
@@ -182,28 +183,24 @@ export default function MyChallengesPage() {
               ))}
             </div>
           ) : pendingSubmissions.length === 0 ? (
-            <div
-              className="text-center py-12 rounded-2xl border border-dashed border-border-color bg-background-light/50"
-            >
-              <AwardStarMiniSVG
-                className="h-12 w-12 fill-foreground/20 mx-auto mb-3"
-              />
-              <p
-                className="text-foreground/80 mb-4"
-              >
-                No pending submissions
-              </p>
-              <Button
-                href="/challenges"
-                size="sm"
-                iconRight={<ArrowRightSVG
-                  className="-mr-1.5"
-                />}
-                className="rounded-full"
-              >
-                Browse challenges
-              </Button>
-            </div>
+            <EmptyState
+              icon={<AwardStarMiniSVG
+                className="size-10 fill-foreground/20 inline-block"
+              />}
+              title="No pending submissions"
+              action={(
+                <Button
+                  href="/challenges"
+                  size="sm"
+                  iconRight={<ArrowRightSVG
+                    className="-mr-1.5"
+                  />}
+                  className="rounded-full"
+                >
+                  Browse challenges
+                </Button>
+              )}
+            />
           ) : (
             <div
               className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"

@@ -4,13 +4,14 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { Suspense, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useMounted } from '@/hooks/useMounted';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
 import Avatar from '../auth/Avatar';
+import UserMenu from './UserMenu';
 
 const SearchModal = dynamic(
   () => import('../search/SearchModal'),
@@ -33,19 +34,6 @@ const NotificationButton = dynamic(
 const MobileNotificationButton = dynamic(
   () => import('../notifications/MobileNotificationButton'),
   { ssr: false },
-);
-
-const UserMenu = dynamic(
-  () => import('./UserMenu'),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="size-12 animate-pulse rounded-full bg-background-medium"
-        aria-hidden
-      />
-    ),
-  },
 );
 
 const MobileMenu = dynamic(
@@ -88,12 +76,6 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const mounted = useMounted();
   const { profile, user } = useSession();
-
-  // Detect Mac vs other OS for keyboard shortcut display (only after mount)
-  const isMac = useMemo(() => {
-    if (!mounted) return true; // Default to Mac symbol for SSR
-    return navigator.platform.toLowerCase().includes('mac');
-  }, [mounted]);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
@@ -218,13 +200,14 @@ export default function Header() {
               <kbd
                 className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50 [word-spacing:-0.25em]"
               >
-                {isMac ? '⌘' : 'Ctrl'}
+                <span className="hidden [[data-platform=mac]_&]:inline">⌘</span>
+                <span className="inline [[data-platform=mac]_&]:hidden">Ctrl</span>
                 {' + '}
                 K
               </kbd>
             </button>
             {user ? <NotificationButton /> : null}
-            {user ? <UserMenu /> : null}
+            <UserMenu />
           </div>
 
           {/* Mobile Only: Search + Notifications + Avatar + Menu Button */}

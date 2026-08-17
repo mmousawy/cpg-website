@@ -3,8 +3,10 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useState, useTransition, useEffect, useCallback } from 'react';
 import Button from '../shared/Button';
+import EmptyState from '../shared/EmptyState';
 import AlbumGrid from '../album/AlbumGrid';
 import type { AlbumWithPhotos } from '@/types/albums';
+import FolderSVG from 'public/icons/folder.svg';
 
 type AlbumsPaginatedProps = {
   initialAlbums: AlbumWithPhotos[];
@@ -206,15 +208,12 @@ export default function AlbumsPaginated({
       </div>
 
       {albums.length === 0 && !isPending ? (
-        <div
-          className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-        >
-          <p
-            className="text-lg opacity-70"
-          >
-            No albums found.
-          </p>
-        </div>
+        <EmptyState
+          icon={<FolderSVG
+            className="size-10 inline-block"
+          />}
+          title="No albums found."
+        />
       ) : (
         <div
           className={isPending ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'}

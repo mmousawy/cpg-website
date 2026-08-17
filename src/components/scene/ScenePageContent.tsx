@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import EmptyState from '@/components/shared/EmptyState';
 
 const EMPTY_STATE_EMOTES = [
   '(っ °Д °;)',
@@ -432,22 +433,12 @@ export default function ScenePageContent({
 
       {/* Empty state */}
       {!shouldShowCategoryLoadingState && !hasAnyEvents && (
-        <div
+        <EmptyState
           key={category ?? 'all'}
-          className="text-center py-16 rounded-xl border-2 border-dashed border-border-color bg-background/50"
-        >
-          <RandomEmptyEmote />
-          <p
-            className="text-lg font-medium text-foreground/90 mb-2"
-          >
-            This category is empty
-          </p>
-          <p
-            className="text-foreground/80 max-w-md mx-auto"
-          >
-            Be the first to add an event.
-          </p>
-        </div>
+          icon={<RandomEmptyEmote />}
+          title="This category is empty"
+          description="Be the first to add an event."
+        />
       )}
 
       {/* Tabs + content */}
@@ -512,15 +503,9 @@ export default function ScenePageContent({
                 )}
               </>
             ) : (
-              <div
-                className="text-center py-8 rounded-xl border border-dashed border-border-color"
-              >
-                <p
-                  className="text-foreground/80"
-                >
-                  No events in this tab. Check back soon or add one!
-                </p>
-              </div>
+              <EmptyState
+                title="No events in this tab. Check back soon or add one!"
+              />
             )
           ) : null}
         </section>

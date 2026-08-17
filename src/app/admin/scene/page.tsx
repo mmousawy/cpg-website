@@ -9,6 +9,7 @@ import { useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import { useSupabase } from '@/hooks/useSupabase';
 import {
@@ -234,15 +235,12 @@ export default function AdminScenePage() {
           </Link>
         </div>
       ) : filtered.length === 0 ? (
-        <div
-          className="text-center py-12"
-        >
-          <p
-            className="text-foreground/80"
-          >
-            No events match your filters
-          </p>
-        </div>
+        <EmptyState
+          icon={<SadSVG
+            className="size-10 fill-foreground/80 inline-block"
+          />}
+          title="No events match your filters"
+        />
       ) : (
         <div
           className="space-y-3"

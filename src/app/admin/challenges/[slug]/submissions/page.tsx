@@ -11,6 +11,7 @@ import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import GridCheckbox from '@/components/shared/GridCheckbox';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useChallengeBySlug } from '@/hooks/useChallenges';
@@ -26,6 +27,7 @@ import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
 import LinkSVG from 'public/icons/link.svg';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
+import PhotoStackSVG from 'public/icons/photo-stack.svg';
 
 type TabStatus = 'pending' | 'accepted' | 'rejected';
 
@@ -252,19 +254,12 @@ export default function ReviewQueuePage() {
             </p>
           </div>
         ) : (submissions || []).length === 0 ? (
-          <div
-            className="text-center py-12"
-          >
-            <p
-              className="text-foreground/60 mb-4"
-            >
-              No
-              {' '}
-              {activeTab}
-              {' '}
-              submissions
-            </p>
-            {activeTab === 'pending' && acceptedCount > 0 && (
+          <EmptyState
+            icon={<PhotoStackSVG
+              className="size-10 inline-block"
+            />}
+            title={`No ${activeTab} submissions`}
+            action={activeTab === 'pending' && acceptedCount > 0 ? (
               <Button
                 variant="secondary"
                 onClick={() => handleTabChange('accepted')}
@@ -276,8 +271,8 @@ export default function ReviewQueuePage() {
                 accepted submission
                 {acceptedCount !== 1 ? 's' : ''}
               </Button>
-            )}
-          </div>
+            ) : undefined}
+          />
         ) : (
           <div
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"

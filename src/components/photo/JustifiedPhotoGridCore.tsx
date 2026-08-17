@@ -8,7 +8,9 @@ import HoverPrefetchLink from '../shared/HoverPrefetchLink';
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
 import CardLikes from '../shared/CardLikes';
+import EmptyState from '../shared/EmptyState';
 import type { JustifiedPhotoGridCoreProps } from './justifiedPhotoGridTypes';
+import ImageSVG from 'public/icons/image.svg';
 
 const MOBILE_WIDTH = 400;
 const TABLET_WIDTH = 600;
@@ -77,15 +79,12 @@ export default function JustifiedPhotoGridCore({
 
   if (photos.length === 0) {
     return (
-      <div
-        className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-      >
-        <p
-          className="text-lg opacity-70"
-        >
-          No photos yet.
-        </p>
-      </div>
+      <EmptyState
+        icon={<ImageSVG
+          className="size-10 inline-block"
+        />}
+        title="No photos yet."
+      />
     );
   }
 

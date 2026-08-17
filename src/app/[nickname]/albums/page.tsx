@@ -5,6 +5,7 @@ import {
   ProfileBackToProfileLink,
   ProfileHeroBanner,
 } from '@/components/profile/ProfileHeader';
+import EmptyState from '@/components/shared/EmptyState';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
@@ -12,6 +13,7 @@ import {
 } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
+import FolderSVG from 'public/icons/folder.svg';
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
   const resolvedParams = await params;
@@ -124,15 +126,12 @@ async function CachedAlbumsContent({ nickname }: { nickname: string }) {
             albums={albums}
           />
         ) : (
-          <div
-            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-          >
-            <p
-              className="text-lg opacity-70"
-            >
-              No albums yet.
-            </p>
-          </div>
+          <EmptyState
+            icon={<FolderSVG
+              className="size-10 inline-block"
+            />}
+            title="No albums yet."
+          />
         )}
       </WidePageContainer>
     </>

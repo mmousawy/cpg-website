@@ -157,7 +157,7 @@ function InterestCardsSkeleton() {
           style={{ animationDelay: `${i * 100}ms` }}
         >
           <div
-            className="flex items-center gap-3 mb-3 h-6"
+            className="flex items-center gap-3 mb-3 h-5"
           >
             <div
               className="h-5 rounded bg-background-medium"

@@ -14,6 +14,7 @@ import ResolveReportModal from '@/components/admin/ResolveReportModal';
 import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import GridCheckbox from '@/components/shared/GridCheckbox';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import {
@@ -686,22 +687,16 @@ export default function ReportsPage() {
             </p>
           </div>
         ) : (reports || []).length === 0 ? (
-          <div
-            className="text-center py-12"
-          >
-            <ContentSVG
-              className="mb-4 inline-block h-12 w-12 fill-foreground/50"
-            />
-            <p
-              className="mb-4 text-foreground/80"
-            >
-              {activeTab === 'pending'
-                ? 'No pending reports'
-                : activeTab === 'resolved'
-                  ? 'No resolved reports'
-                  : 'No dismissed reports'}
-            </p>
-          </div>
+          <EmptyState
+            icon={<ContentSVG
+              className="size-10 fill-foreground/50 inline-block"
+            />}
+            title={activeTab === 'pending'
+              ? 'No pending reports'
+              : activeTab === 'resolved'
+                ? 'No resolved reports'
+                : 'No dismissed reports'}
+          />
         ) : (
           <>
             {/* Reports grid */}

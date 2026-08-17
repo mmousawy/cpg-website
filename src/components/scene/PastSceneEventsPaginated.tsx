@@ -1,6 +1,7 @@
 'use client';
 
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import EmptyState from '@/components/shared/EmptyState';
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
@@ -141,15 +142,9 @@ export default function PastSceneEventsPaginated({
         ))}
       </div>
       {allEvents.length === 0 && !isBootstrappingCategory && (
-        <div
-          className="text-center py-8 rounded-xl border border-dashed border-border-color"
-        >
-          <p
-            className="text-foreground/80"
-          >
-            No past events yet
-          </p>
-        </div>
+        <EmptyState
+          title="No past events yet"
+        />
       )}
       {isBootstrappingCategory && (
         <div

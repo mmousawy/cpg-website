@@ -1,10 +1,13 @@
-import PageContainer from '@/components/layout/PageContainer';import { cacheLife } from 'next/cache';
+import PageContainer from '@/components/layout/PageContainer';
+import { cacheLife } from 'next/cache';
 
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import EmptyState from '@/components/shared/EmptyState';
 import PopularTagsSection from '@/components/shared/PopularTagsSection';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
+import ImageSVG from 'public/icons/image.svg';
 
 // Cached data functions
 import { getAllTagNames, getPhotosByTag } from '@/lib/data/gallery';
@@ -82,15 +85,12 @@ export default async function TagPage({ params }: { params: Params }) {
         className="pt-0!"
       >
         {photos.length === 0 ? (
-          <div
-            className="rounded-lg border border-border-color bg-background-light p-12 text-center"
-          >
-            <p
-              className="text-lg opacity-70"
-            >
-              No photos found with this tag.
-            </p>
-          </div>
+          <EmptyState
+            icon={<ImageSVG
+              className="size-10 inline-block"
+            />}
+            title="No photos found with this tag."
+          />
         ) : (
           <JustifiedPhotoGrid
             photos={photos}

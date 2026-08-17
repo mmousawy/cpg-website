@@ -24,6 +24,7 @@ import SubmitButton from '@/components/challenges/SubmitButton';
 import ChallengeComments from './ChallengeComments';
 
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
 import { SignUpCTASection } from '@/components/shared/SignUpCTA';
@@ -504,28 +505,15 @@ export default async function ChallengePage({
  */
 function ChallengeEmptyState({ isEnded }: { isEnded: boolean }) {
   return (
-    <div
-      className="flex flex-col items-center justify-center px-4 max-w-md mx-auto text-center"
-    >
-      <div
-        className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10"
-      >
-        <AwardStarSVG
-          className="h-10 w-10 fill-primary"
-        />
-      </div>
-      <h3
-        className="text-xl font-semibold mb-2 font-heading"
-      >
-        {isEnded ? 'No submissions' : 'No photos yet!'}
-      </h3>
-      <p
-        className="text-foreground/60 leading-relaxed"
-      >
-        {isEnded
-          ? 'This challenge ended without any accepted submissions.'
-          : 'Be the first to share your creativity! Submit your photos and inspire others to join.'}
-      </p>
-    </div>
+    <EmptyState
+      className="max-w-md mx-auto"
+      icon={<AwardStarSVG
+        className="size-10 fill-primary inline-block"
+      />}
+      title={isEnded ? 'No submissions' : 'No photos yet!'}
+      description={isEnded
+        ? 'This challenge ended without any accepted submissions.'
+        : 'Be the first to share your creativity! Submit your photos and inspire others to join.'}
+    />
   );
 }

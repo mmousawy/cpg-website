@@ -11,6 +11,7 @@ import ThemeProviderShell from '@/app/providers/ThemeProvider';
 import JsonLd from '@/components/shared/JsonLd';
 import { socialLinks } from '@/config/socials';
 import { MANAGE_PAGE_BOOT_SCRIPT } from '@/utils/managePage';
+import { PLATFORM_BOOT_SCRIPT } from '@/utils/platform';
 import { defaultOgImage, defaultTwitterImage, getAbsoluteUrl, siteConfig, truncateDescription } from '@/utils/metadata';
 
 import './globals.css';
@@ -101,7 +102,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: MANAGE_PAGE_BOOT_SCRIPT,
+            __html: `${MANAGE_PAGE_BOOT_SCRIPT}${PLATFORM_BOOT_SCRIPT}`,
           }}
         />
         <link

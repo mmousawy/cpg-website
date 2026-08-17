@@ -80,20 +80,20 @@ type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary-alt focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt',
+    'btn-skeuo btn-skeuo-primary bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary-alt focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt',
   secondary:
-    'bg-background dark:bg-[#2e3032] border-border-color-strong text-foreground hover:border-primary hover:bg-primary/5 focus-visible:border-primary focus-visible:bg-primary/5',
+    'btn-skeuo btn-skeuo-secondary bg-background dark:bg-[#2e3032] border-border-color-strong text-foreground hover:border-primary hover:bg-primary/5 focus-visible:border-primary focus-visible:bg-primary/5',
   danger:
-    'bg-background border-red-500/50 dark:border-red-500/70 text-red-500 hover:border-red-500 hover:bg-red-500/10 focus-visible:border-red-500 focus-visible:bg-red-500/10',
+    'btn-skeuo btn-skeuo-danger bg-background border-red-500/50 dark:border-red-500/70 text-red-500 hover:border-red-500 hover:bg-red-500/10 focus-visible:border-red-500 focus-visible:bg-red-500/10',
   ghost:
-    'bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background',
+    'btn-skeuo btn-skeuo-ghost bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background',
   custom:
     '',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-4 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-3 py-2 text-sm',
 };
 
 export default function Button({
@@ -111,7 +111,7 @@ export default function Button({
 
   const classes = clsx(
     // Base styles
-    'group inline-flex items-center justify-center gap-2 rounded-full border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
+    'group inline-flex items-center justify-center gap-2 rounded-md border font-[family-name:var(--font-geist-mono)] font-medium transition-colors whitespace-nowrap',
     // Variant styles
     variantStyles[variant],
     // Size styles
@@ -125,7 +125,7 @@ export default function Button({
   );
 
   const content = (
-    <>
+    <span className="relative z-10 flex min-w-0 max-w-full items-center justify-center gap-[inherit]">
       {loading ? (
         <LoadingSpinner />
       ) : (
@@ -141,21 +141,23 @@ export default function Button({
       >
         {iconRight}
       </span>}
-    </>
+    </span>
   );
 
   if ('href' in props && props.href) {
     const { href, prefetch, ...linkProps } = props as ButtonAsLink;
-    // Use regular <a> tag for external links or when target/download attributes are present
+    // Use a native <a> for external, hash, and download/target links
     const isExternalLink = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('tel:');
+    const isHashLink = href.startsWith('#');
     const hasExternalAttrs = 'target' in linkProps || 'download' in linkProps;
 
-    if (isExternalLink || hasExternalAttrs) {
+    if (isExternalLink || isHashLink || hasExternalAttrs) {
       return (
         <a
           href={href}
           className={classes}
           {...linkProps}
+          data-disabled={isDisabled ? 'true' : 'false'}
         >
           {content}
         </a>
@@ -169,6 +171,7 @@ export default function Button({
         className={classes}
         {...linkProps}
         scroll
+        data-disabled={isDisabled ? 'true' : 'false'}
       >
         {content}
       </Link>
@@ -181,6 +184,7 @@ export default function Button({
       className={classes}
       disabled={isDisabled}
       {...buttonProps}
+      data-disabled={isDisabled ? 'true' : 'false'}
     >
       {content}
     </button>

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import {
   useFeedbackCounts,
   useFeedbackForReview,
@@ -108,22 +109,16 @@ export default function AdminFeedbackPage() {
           </p>
         </div>
       ) : (feedbackList || []).length === 0 ? (
-        <div
-          className="text-center py-12"
-        >
-          <ContentSVG
-            className="mb-4 inline-block h-12 w-12 fill-foreground/50"
-          />
-          <p
-            className="mb-4 text-foreground/80"
-          >
-            {activeTab === 'new'
-              ? 'No new feedback'
-              : activeTab === 'read'
-                ? 'No read feedback'
-                : 'No archived feedback'}
-          </p>
-        </div>
+        <EmptyState
+          icon={<ContentSVG
+            className="size-10 fill-foreground/50 inline-block"
+          />}
+          title={activeTab === 'new'
+            ? 'No new feedback'
+            : activeTab === 'read'
+              ? 'No read feedback'
+              : 'No archived feedback'}
+        />
       ) : (
         <div
           className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4"

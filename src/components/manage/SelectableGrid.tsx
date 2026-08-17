@@ -27,6 +27,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import clsx from 'clsx';
+import EmptyState from '@/components/shared/EmptyState';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SortableGridItem from './SortableGridItem';
 
@@ -420,15 +421,9 @@ export default function SelectableGrid<T>({
   if (items.length === 0 && !leadingContent && !trailingContent) {
     if (!emptyMessage) return null;
     return (
-      <div
-        className="rounded-lg border-2 border-dashed border-border-color p-12 text-center"
-      >
-        <p
-          className="opacity-70"
-        >
-          {emptyMessage}
-        </p>
-      </div>
+      <EmptyState
+        title={emptyMessage}
+      />
     );
   }
 
@@ -507,15 +502,10 @@ export default function SelectableGrid<T>({
 
         {items.length === 0 && !leadingContent && !trailingContent ? (
           emptyMessage ? (
-            <div
-              className="col-span-full rounded-lg border-2 border-dashed border-border-color p-12 text-center"
-            >
-              <p
-                className="opacity-70"
-              >
-                {emptyMessage}
-              </p>
-            </div>
+            <EmptyState
+              className="col-span-full"
+              title={emptyMessage}
+            />
           ) : null
         ) : (
           items.map((item) => {

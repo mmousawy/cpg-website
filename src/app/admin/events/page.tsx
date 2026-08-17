@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import EmptyState from '@/components/shared/EmptyState';
 import type { Tables } from '@/database.types';
 import { useSupabase } from '@/hooks/useSupabase';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
@@ -90,26 +91,22 @@ export default function AdminEventsPage() {
           </p>
         </div>
       ) : events.length === 0 ? (
-        <div
-          className="text-center py-12"
-        >
-          <SadSVG
-            className="mb-4 inline-block h-12 w-12 fill-foreground/50"
-          />
-          <p
-            className="mb-4 text-foreground/80"
-          >
-            No events yet
-          </p>
-          <Button
-            href="/admin/events/new"
-            icon={<PlusSVG
-              className="h-5 w-5"
-            />}
-          >
-            Create your first event
-          </Button>
-        </div>
+        <EmptyState
+          icon={<SadSVG
+            className="size-10 fill-foreground/50 inline-block"
+          />}
+          title="No events yet"
+          action={(
+            <Button
+              href="/admin/events/new"
+              icon={<PlusSVG
+                className="h-5 w-5"
+              />}
+            >
+              Create your first event
+            </Button>
+          )}
+        />
       ) : (
         <div
           className="space-y-10"
