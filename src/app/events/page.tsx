@@ -39,7 +39,7 @@ export default async function EventsPage() {
         className="mb-8"
       >
         <div
-          className="flex items-center gap-2 mb-2"
+          className="flex items-center gap-2 mb-1"
         >
           <h1
             className="text-2xl sm:text-3xl font-bold font-heading"
@@ -66,7 +66,7 @@ export default async function EventsPage() {
           <h2
             className="text-xl font-semibold mb-4 opacity-80 font-heading"
           >
-            Upcoming events ({upcomingEvents.length})
+            Upcoming events &mdash; {upcomingEvents.length}
           </h2>
           <div
             className="grid gap-4 sm:gap-6"
@@ -84,7 +84,7 @@ export default async function EventsPage() {
           <h2
             className="text-xl font-semibold mb-4 opacity-80 font-heading"
           >
-            Past events ({pastEventsCount})
+            Past events &mdash; {pastEventsCount}
           </h2>
           <div
             className="grid gap-4 sm:gap-6"

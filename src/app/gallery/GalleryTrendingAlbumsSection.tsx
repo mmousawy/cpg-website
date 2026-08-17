@@ -26,7 +26,7 @@ export function GalleryTrendingAlbumsSection({ albums }: { albums: AlbumWithPhot
           </h2>
         </Link>
         <p
-          className="text-foreground/80 mt-1 text-sm"
+          className="text-sm text-foreground/80 leading-snug"
         >
           Most viewed albums from the last 7 days
         </p>

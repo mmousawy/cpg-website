@@ -2,14 +2,14 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import {
-  ProfileBackToProfileLink,
-  ProfileHeroBanner,
+    ProfileBackToProfileLink,
+    ProfileHeroBanner,
 } from '@/components/profile/ProfileHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
-  getProfileByNickname,
+    getProfileByNickname,
 } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -114,7 +114,7 @@ async function CachedAlbumsContent({ nickname }: { nickname: string }) {
             {profile.full_name || `@${profile.nickname}`}
           </h2>
           <p
-            className="mt-1 text-sm text-foreground/60"
+            className="text-sm text-foreground/80 leading-snug"
           >
             {albums.length}
             {' '}

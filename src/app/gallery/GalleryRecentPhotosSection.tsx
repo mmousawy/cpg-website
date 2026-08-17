@@ -31,7 +31,7 @@ export function GalleryRecentPhotosSection({ photos }: { photos: StreamPhoto[] }
               </h2>
             </Link>
             <p
-              className="text-foreground/80 mt-1 text-sm"
+              className="text-sm text-foreground/80 leading-snug"
             >
               Latest uploads from the community
             </p>

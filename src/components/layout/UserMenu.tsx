@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
 
+/** Must stay inside `<Suspense>` — `usePathname()` is a blocking client hook. */
 export default function UserMenu() {
   const { user, profile, isLoading, signOut, updateProfileTheme } = useAuth();
   const { isAdmin } = useAdmin();

@@ -149,7 +149,7 @@ export default function EventCard({
       >
         {/* Content */}
         <div
-          className="flex-1 min-w-0 p-4 sm:p-5"
+          className="flex-1 min-w-0 p-4 sm:p-6"
         >
           {/* Mobile: badge inline when no image */}
           {!imageSrc && showBadge && (

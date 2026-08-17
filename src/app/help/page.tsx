@@ -28,7 +28,7 @@ export default function HelpPage() {
           className="mb-6 sm:mb-8"
         >
           <div
-            className="flex items-center gap-2 mb-2"
+            className="flex items-center gap-2 mb-1"
           >
             <h1
               className="text-2xl sm:text-3xl font-bold font-heading"

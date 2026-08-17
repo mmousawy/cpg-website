@@ -24,7 +24,7 @@ export function GalleryRecentAlbumsSection({ albums }: { albums: AlbumWithPhotos
           </h2>
         </Link>
         <p
-          className="text-foreground/80 mt-1 text-sm"
+          className="text-sm text-foreground/80 leading-snug"
         >
           Photo collections from community members
         </p>

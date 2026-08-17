@@ -135,7 +135,7 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
                 {profile.full_name || `@${profile.nickname}`}
               </h2>
               <p
-                className="mt-1 text-sm text-foreground/60"
+                className="text-sm text-foreground/80 leading-snug"
               >
                 {totalPhotos}
                 {' '}

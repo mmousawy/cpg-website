@@ -47,7 +47,7 @@ export default async function PhotosPage({ searchParams }: PageProps) {
       <PageContainer>
         <div>
           <div
-            className="flex items-center gap-2 mb-2"
+            className="flex items-center gap-2 mb-1"
           >
             <h1
               className="text-3xl font-bold font-heading"

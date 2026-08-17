@@ -1,8 +1,8 @@
 import AlbumGridSkeleton from '@/components/album/AlbumGridSkeleton';
+import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGridSkeleton from '@/components/photo/JustifiedPhotoGridSkeleton';
-import Container from '@/components/layout/Container';
 import TagCloudSkeleton from '@/components/shared/TagCloudSkeleton';
 
 import GalleryPageHeader from './GalleryPageHeader';

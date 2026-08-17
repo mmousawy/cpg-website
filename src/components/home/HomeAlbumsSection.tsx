@@ -5,7 +5,7 @@ import { routes } from '@/config/routes';
 import { getRecentAlbums } from '@/lib/data/albums';
 
 export async function HomeAlbumsSection() {
-  const albums = await getRecentAlbums(3);
+  const albums = await getRecentAlbums(4);
 
   if (albums.length === 0) {
     return null;
@@ -34,7 +34,7 @@ export async function HomeAlbumsSection() {
         albums={albums}
         liveLikeCounts={false}
         prefetchLinks={false}
-        className="grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))]"
+        className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:[&>:nth-child(n+4)]:hidden"
       />
     </PageContainer>
   );

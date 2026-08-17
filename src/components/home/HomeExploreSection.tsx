@@ -10,7 +10,7 @@ export async function HomeExploreSection() {
   const upcomingEventsData = await getUpcomingEvents(3);
   const { events, serverNow } = upcomingEventsData;
   const attendeesByEvent = await getEventAttendees(events.map((event) => event.id));
-  const { challenges } = await getActiveChallenges(3);
+  const { challenges } = await getActiveChallenges(4);
 
   return (
     <PageContainer
@@ -66,6 +66,7 @@ export async function HomeExploreSection() {
             challenges={challenges}
             serverNow={serverNow}
             prefetchLinks={false}
+            className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] sm:[&>:nth-child(n+4)]:hidden"
           />
         </div>
       )}

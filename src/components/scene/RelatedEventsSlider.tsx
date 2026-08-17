@@ -24,7 +24,7 @@ function NavButton({
     <button
       onClick={() => onNavigate(direction)}
       disabled={disabled}
-      className="flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-sm transition-all duration-200 hover:border-primary text-primary disabled:opacity-30 disabled:cursor-default disabled:hover:border-border-color-strong"
+      className="flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-[0_2px_5px_rgba(0,0,0,0.15)] transition-all duration-200 hover:border-primary text-primary disabled:opacity-30 disabled:cursor-default disabled:hover:border-border-color-strong"
       aria-label={direction === 'prev' ? 'Previous slide' : 'Next slide'}
     >
       <svg

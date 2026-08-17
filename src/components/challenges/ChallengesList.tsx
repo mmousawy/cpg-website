@@ -8,6 +8,7 @@ type ChallengesListProps = {
   serverNow: number;
   isPast?: boolean;
   prefetchLinks?: boolean;
+  className?: string;
 };
 
 export default function ChallengesList({
@@ -16,6 +17,7 @@ export default function ChallengesList({
   serverNow,
   isPast = false,
   prefetchLinks,
+  className = 'grid gap-3 sm:gap-5 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]',
 }: ChallengesListProps) {
   if (challenges.length === 0) {
     return (
@@ -30,7 +32,7 @@ export default function ChallengesList({
 
   return (
     <div
-      className="grid gap-3 sm:gap-5 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]"
+      className={className}
     >
       {challenges.map((challenge) => (
         <ChallengeCard

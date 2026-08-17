@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { getEventStatus, isEventPast } from '@/lib/events/status';
 import { formatEventLocation } from '@/utils/formatLocation';
-import { getCroppedThumbnailUrl, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
+import { THUMBNAIL_IMAGE_QUALITY, getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
@@ -177,7 +177,7 @@ export default function EventsList({
           <div
             key={event.id}
             className={clsx(
-              'rounded-xl border bg-background-light border-border-color overflow-hidden',
+              'rounded-xl border bg-background-light border-border-color',
             )}
           >
             {/* Mobile image - flush to top edges with status tag overlay */}

@@ -13,6 +13,7 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
 import { getUserPublicAlbums } from '@/lib/data/albums';
+import { getProfileFollowCounts } from '@/lib/data/follows';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import {
   getAllProfileNicknames,
@@ -21,7 +22,6 @@ import {
   getUserPublicPhotoCount,
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
-import { getProfileFollowCounts } from '@/lib/data/follows';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
 
 // Pre-render all public profiles at build time for optimal caching
@@ -204,7 +204,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
                     Photostream
                   </h2>
                   <p
-                    className="mt-1 text-sm text-foreground/60"
+                    className="text-sm text-foreground/80 leading-snug"
                   >
                     Latest photos by @
                     {profile.nickname}
@@ -247,7 +247,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
                 Albums
               </h2>
               <p
-                className="mt-1 text-sm text-foreground/60"
+                className="text-sm text-foreground/80 leading-snug"
               >
                 Photo collections by @
                 {profile.nickname}

@@ -43,7 +43,7 @@ export default async function AllMembersPage() {
           className="rounded-xl border border-border-color bg-background-light p-8 text-center"
         >
           <h2
-            className="mb-2 text-xl font-semibold font-heading"
+            className="mb-4 text-2xl font-semibold font-heading"
           >
             Join our community
           </h2>

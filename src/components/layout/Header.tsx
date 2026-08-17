@@ -207,7 +207,16 @@ export default function Header() {
               </kbd>
             </button>
             {user ? <NotificationButton /> : null}
-            <UserMenu />
+            <Suspense
+              fallback={
+                <div
+                  className="size-12 shrink-0 animate-pulse rounded-full bg-border-color"
+                  aria-hidden
+                />
+              }
+            >
+              <UserMenu />
+            </Suspense>
           </div>
 
           {/* Mobile Only: Search + Notifications + Avatar + Menu Button */}

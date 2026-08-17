@@ -1,8 +1,8 @@
 import AlbumsPaginated from '@/components/gallery/AlbumsPaginated';
-import JsonLd from '@/components/shared/JsonLd';
 import PageContainer from '@/components/layout/PageContainer';
-import HelpLink from '@/components/shared/HelpLink';
 import WidePageContainer from '@/components/layout/WidePageContainer';
+import HelpLink from '@/components/shared/HelpLink';
+import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
 import { getPublicAlbums } from '@/lib/data/albums';
@@ -47,7 +47,7 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
       <PageContainer>
         <div>
           <div
-            className="flex items-center gap-2 mb-2"
+            className="flex items-center gap-2 mb-1"
           >
             <h1
               className="text-3xl font-bold font-heading"

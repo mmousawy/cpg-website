@@ -20,7 +20,7 @@ function NavButton({
   return (
     <button
       onClick={() => onNavigate(direction)}
-      className={`flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-sm transition-all hover:border-primary hover:border-primary text-primary ${className || ''}`}
+      className={`flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-[0_2px_5px_rgba(0,0,0,0.15)] transition-all hover:border-primary text-primary ${className || ''}`}
       aria-label={direction === 'prev' ? 'Previous slide' : 'Next slide'}
     >
       <svg

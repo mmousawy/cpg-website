@@ -200,7 +200,7 @@ export default function Popover({
           width,
           alignmentClasses[resolvedAlign],
           'overflow-hidden rounded-md',
-          'border border-border-color bg-background-light shadow-lg',
+          'border border-border-color bg-background-light bg-no-noise shadow-lg',
           className,
         )}
       >

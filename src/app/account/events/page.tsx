@@ -109,7 +109,7 @@ export default function MyEventsPage() {
         className="mb-8"
       >
         <div
-          className="flex items-center gap-2 mb-2"
+          className="flex items-center gap-2 mb-1"
         >
           <h1
             className="text-3xl font-bold font-heading"
@@ -158,7 +158,7 @@ export default function MyEventsPage() {
           <h2
             className="mb-4 text-lg font-semibold font-heading opacity-80"
           >
-            Your upcoming events ({upcomingRSVPs.length})
+            Your upcoming events &mdash; {upcomingRSVPs.length}
           </h2>
           {isLoading ? (
             <div
@@ -209,7 +209,7 @@ export default function MyEventsPage() {
             <h2
               className="mb-4 text-lg font-semibold font-heading opacity-80"
             >
-              Past events ({pastRSVPs.length})
+              Past events &mdash; {pastRSVPs.length}
             </h2>
             <div
               className="space-y-3"
@@ -307,10 +307,10 @@ function RsvpEventCard({
     )
   ) : (
     <span
-      className="flex items-center gap-1 w-fit rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600 whitespace-nowrap"
+      className="flex items-center gap-1 w-fit rounded-full bg-green-600/10 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-500 whitespace-nowrap"
     >
       <CheckSVG
-        className="h-3 w-3 fill-green-600"
+        className="h-3 w-3 fill-green-700 dark:fill-green-500"
       />
       You&apos;re going!
     </span>

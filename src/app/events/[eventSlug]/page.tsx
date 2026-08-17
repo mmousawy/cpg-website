@@ -260,9 +260,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     <span
                       className={clsx(
                         'inline-block rounded-full px-3 py-1 text-xs font-medium backdrop-blur-sm',
-                        status === 'past' && 'bg-white/20 text-foreground',
+                        status === 'past' && 'bg-black/50 text-white dark:bg-white/20',
                         status === 'now' && 'bg-green-600/90 text-white',
-                        status === 'upcoming' && 'bg-primary/60 text-white',
+                        status === 'upcoming' && 'bg-primary/80 dark:bg-primary/60 text-white',
                       )}
                     >
                       {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming event'}
@@ -437,6 +437,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             )}
           </div>
 
+          {/* Add to Calendar */}
+          {!isPastEvent && (
+            <div
+              className="mb-8"
+            >
+              <AddToCalendar
+                event={event}
+              />
+            </div>
+          )}
+
           {/* Hosts Section */}
           {hosts && hosts.length > 0 && (
             <div
@@ -480,17 +491,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                   </Link>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Add to Calendar */}
-          {!isPastEvent && (
-            <div
-              className="mb-8"
-            >
-              <AddToCalendar
-                event={event}
-              />
             </div>
           )}
 

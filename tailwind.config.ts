@@ -24,6 +24,7 @@ export default {
         primary: 'var(--primary)',
         'primary-light': 'var(--primary-light)',
         'primary-alt': 'var(--primary-alt)',
+        'special': 'var(--background-special)',
         background: 'var(--background)',
         'background-medium': 'var(--background-medium)',
         'background-light': 'var(--background-light)',

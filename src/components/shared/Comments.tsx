@@ -2,8 +2,8 @@
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import type { Tables } from '@/database.types';
-import { useSession } from '@/hooks/useSession';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
+import { useSession } from '@/hooks/useSession';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
 import type { User } from '@supabase/supabase-js';
@@ -16,6 +16,7 @@ import Textarea from './Textarea';
 
 import SendSVG from 'public/icons/arrow-right.svg';
 import ChevronDownSVG from 'public/icons/chevron-down.svg';
+import ReplySVG from 'public/icons/reply.svg';
 
 const URL_REGEX = /https?:\/\/[^\s<]+/g;
 
@@ -80,9 +81,9 @@ function scrollToComment(commentId: string) {
   target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   const card = target.querySelector(':scope > div');
   if (card) {
-    card.classList.add('!border-primary', '!bg-primary/5');
+    card.classList.add('!border-primary', '!bg-primary/20');
     setTimeout(() => {
-      card.classList.remove('!border-primary', '!bg-primary/5');
+      card.classList.remove('!border-primary', '!bg-primary/20');
     }, 2000);
   }
 }
@@ -173,7 +174,7 @@ function ComposerCard({
         </p>
         {profile?.nickname && (
           <p
-            className="text-xs text-foreground/50 group-hover:text-primary transition-colors leading-tight"
+            className="text-xs text-foreground/60 group-hover:text-primary transition-colors leading-tight"
           >
             @
             {profile.nickname}
@@ -190,20 +191,20 @@ function ComposerCard({
       {profile?.nickname ? (
         <Link
           href={`/@${profile.nickname}`}
-          className="flex items-start gap-2.5 mb-2 group rounded-lg"
+          className="inline-flex items-center gap-2.5 mb-2 group rounded-lg"
         >
           {profileHeader}
         </Link>
       ) : (
         <div
-          className="flex items-start gap-2.5 mb-2"
+          className="flex gap-2.5 mb-2"
         >
           {profileHeader}
         </div>
       )}
       {meta && (
         <p
-          className="text-xs text-foreground/50 mb-3"
+          className="text-xs text-foreground/60 mb-3"
         >
           {meta}
         </p>
@@ -237,7 +238,7 @@ const ReplyComposer = memo(function ReplyComposer({
             className="hover:text-primary transition-colors"
             onClick={() => scrollToComment(commentId)}
           >
-            replying to @
+            Replying to @
             {repliedToNickname}
           </button>
         )}
@@ -483,8 +484,9 @@ const CommentItem = memo(function CommentItem({
           </div>
         </div>
         <p
-          className="text-xs text-foreground/50 mb-3"
+          className="text-xs text-foreground/60 mb-3"
         >
+          Posted on{' '}
           {formatDateFn(comment.created_at)}
           {comment.edited_at && (
             <>
@@ -550,19 +552,22 @@ const CommentItem = memo(function CommentItem({
           </form>
         ) : (
           <p
-            className="text-sm text-foreground/90 max-w-[60ch] whitespace-pre-wrap"
+            className="text-sm text-foreground/90 max-w-[60ch] whitespace-pre-wrap leading-normal"
           >
             {renderCommentText(comment.comment_text)}
           </p>
         )}
         {currentUser && !isEditing && !isCurrentlyReplying && (
           <div
-            className="mt-4"
+            className="mt-4 sm:mt-6"
           >
             <Button
               onClick={handleReplyClickLocal}
               variant="secondary"
               size="sm"
+              icon={<ReplySVG
+                className="size-5"
+              />}
             >
               Reply
             </Button>

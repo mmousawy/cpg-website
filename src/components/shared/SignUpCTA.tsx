@@ -80,7 +80,7 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
 
   return (
     <Container
-      className={clsx('bg-background-special', className)}
+      className={clsx('bg-background-special border-special', className)}
     >
       <div
         className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"

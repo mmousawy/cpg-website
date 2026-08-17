@@ -319,7 +319,7 @@ export default function StackedAvatarsPopover({
                     </p>
                     {person.nickname && (
                       <p
-                        className="text-xs text-foreground/60 truncate"
+                        className="text-xs text-foreground/60 truncate leading-tight"
                       >
                         @
                         {person.nickname}

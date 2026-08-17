@@ -75,7 +75,7 @@ function ProfileHeaderRow({
       className="mb-0 flex items-center gap-[clamp(0.5rem,2svw,1rem)]"
     >
       <div
-        className="relative shrink-0 rounded-full outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none"
+        className="relative shrink-0 rounded-full outline-2 outline-transparent outline-offset-2 focus-within:outline-primary transition-none self-start"
       >
         <div
           className={clsx(

@@ -57,10 +57,10 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
   if (render === 'email') {
     return (
       <Section
-        className="mt-[30px]"
+        className="mt-7.5"
       >
         <Text
-          className="!mt-0 text-[14px] leading-[24px] text-[#171717]"
+          className="mt-0! text-[14px] leading-6 text-[#171717]"
         >
           Add this event to your calendar:
         </Text>

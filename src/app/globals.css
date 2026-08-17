@@ -1010,3 +1010,11 @@ html.manage-page .app-header-inner {
     background-image: url('/noise-dark.svg');
   }
 }
+
+/* Small pill/circle controls — grain reads as dirt at this size */
+.rounded-full.bg-background-light,
+:root.light .rounded-full.bg-background-light,
+.bg-background-light.bg-no-noise,
+:root.light .bg-background-light.bg-no-noise {
+  background-image: none;
+}

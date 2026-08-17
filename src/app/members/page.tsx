@@ -96,7 +96,7 @@ function UnauthenticatedMembersPage() {
         className="mb-8"
       >
         <div
-          className="flex items-center gap-2 mb-2"
+          className="flex items-center gap-2 mb-1"
         >
           <h1
             className="text-2xl sm:text-3xl font-bold font-heading"
@@ -117,7 +117,7 @@ function UnauthenticatedMembersPage() {
       </div>
 
       <div
-        className="rounded-xl border border-border-color bg-background-light p-8 text-center"
+        className="rounded-xl border border-border-color bg-background-light p-4 sm:p-8 text-center"
       >
         <div
           className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10"
@@ -137,7 +137,7 @@ function UnauthenticatedMembersPage() {
           </svg>
         </div>
         <h2
-          className="mb-2 text-xl font-semibold font-heading"
+          className="mb-4 text-2xl font-semibold font-heading"
         >
           Join our community
         </h2>

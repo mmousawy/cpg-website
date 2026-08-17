@@ -18,7 +18,7 @@ export async function HomeMembersSection() {
       className="py-0!"
     >
       <Container
-        className="grid gap-10 md:gap-12"
+        className="grid gap-6 md:gap-8"
       >
         <div>
           <h2
