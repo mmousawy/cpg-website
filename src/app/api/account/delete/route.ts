@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { revalidateAll } from '@/app/actions/revalidate';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -73,7 +74,7 @@ export async function POST() {
 
     // Send confirmation email
     const email = profile.email || user.email;
-    if (email) {
+    if (email && !shouldSkipNotificationsAndEmails(email)) {
       try {
         const html = await render(
           AccountDeletionEmail({

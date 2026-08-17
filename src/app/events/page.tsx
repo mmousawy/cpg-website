@@ -3,7 +3,6 @@ import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import { getEventAttendees, getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 
@@ -19,11 +18,6 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function EventsPage() {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('events');
-  cacheTag('event-attendees');
-
   const [upcomingData, pastEventsData] = await Promise.all([
     getUpcomingEvents(),
     getPastEvents(PAST_EVENTS_PER_PAGE),

@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import WelcomeTemplate from '@/emails/auth/welcome';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -80,18 +81,19 @@ export async function GET(request: NextRequest) {
   const userEmail = authToken.email;
   const fullName = profile?.full_name || userEmail.split('@')[0];
 
-  // Send welcome email
-  const emailResult = await resend.emails.send({
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-    to: userEmail,
-    replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-    subject: 'Welcome to Creative Photography Group! 📸',
-    html: await render(WelcomeTemplate({ fullName })),
-  });
+  if (!shouldSkipNotificationsAndEmails(userEmail)) {
+    const emailResult = await resend.emails.send({
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+      to: userEmail,
+      replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+      subject: 'Welcome to Creative Photography Group! 📸',
+      html: await render(WelcomeTemplate({ fullName })),
+    });
 
-  if (emailResult.error) {
-    console.error('Welcome email error:', emailResult.error);
-    // Don't fail - verification was successful
+    if (emailResult.error) {
+      console.error('Welcome email error:', emailResult.error);
+      // Don't fail - verification was successful
+    }
   }
 
   console.log(`✅ Email verified for user: ${userEmail}`);

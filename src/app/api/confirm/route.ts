@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import { ConfirmEmail } from '../../../emails/confirm';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 
@@ -55,17 +56,19 @@ export async function POST(request: NextRequest) {
   const cancellationLink = `${process.env.NEXT_PUBLIC_SITE_URL}/cancel/${uuid}`;
 
   // Send the confirmation email
-  const emailResult = await resend.emails.send({
-    from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-    to: recipientEmail,
-    replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-    subject: `Confirmed RSVP: ${event.title as string}`,
-    html: await render(ConfirmEmail({ fullName: recipientName, event: event as never, cancellationLink })),
-  });
+  if (!shouldSkipNotificationsAndEmails(recipientEmail)) {
+    const emailResult = await resend.emails.send({
+      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+      to: recipientEmail,
+      replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+      subject: `Confirmed RSVP: ${event.title as string}`,
+      html: await render(ConfirmEmail({ fullName: recipientName, event: event as never, cancellationLink })),
+    });
 
-  if (emailResult.error) {
-    console.error('Email error:', emailResult.error);
-    // Don't fail - RSVP is already confirmed
+    if (emailResult.error) {
+      console.error('Email error:', emailResult.error);
+      // Don't fail - RSVP is already confirmed
+    }
   }
 
   // Log the email sending

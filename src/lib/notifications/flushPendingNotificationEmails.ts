@@ -3,6 +3,7 @@ import { render } from '@react-email/render';
 
 import { CommentNotificationEmail, getCommentNotificationSubject } from '@/emails/comment-notification';
 import { getEmailSiteUrl, toAbsoluteEmailUrl } from '@/emails/utils/siteUrl';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import type { QueuedCommentEmailItem } from '@/lib/notifications/emailQueue';
 import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -130,7 +131,7 @@ export async function flushPendingNotificationEmails(): Promise<FlushPendingNoti
       .eq('id', batch.recipient_user_id)
       .single();
 
-    if (!profile?.email || profile.suspended_at) {
+    if (!profile?.email || profile.suspended_at || isTestEmail(profile.email)) {
       await supabase
         .from('notification_email_batches')
         .update({ status: 'cancelled', updated_at: now.toISOString() })

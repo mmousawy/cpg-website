@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/database.types';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 
 export const EMAIL_TYPE_KEYS = ['events', 'photo_challenges', 'newsletter'] as const;
 export type EmailTypeKey = (typeof EMAIL_TYPE_KEYS)[number];
@@ -93,7 +94,7 @@ export async function getEmailRecipients(
   }
 
   const recipients = allProfiles.flatMap((profile) => {
-    if (!profile.email) return [];
+    if (!profile.email || isTestEmail(profile.email)) return [];
     const optedOut = optedOutUserIds.has(profile.id)
       || (emailType === 'newsletter' && profile.newsletter_opt_in === false);
     const sentAt = sentAtByUserId.get(profile.id) ?? null;

@@ -1,6 +1,4 @@
 import Avatar from '@/components/auth/Avatar';
-import { cacheLife, cacheTag } from 'next/cache';
-
 import AddToCalendar from '@/components/events/AddToCalendar';
 import EventCoverImage from '@/components/events/EventCoverImage';
 import EventSignupBar from '@/components/events/EventSignupBar';
@@ -134,14 +132,8 @@ function AttendeesDisplay({ attendees, isPastEvent }: {
 export const instant = false;
 
 export default async function EventDetailPage({ params }: { params: Promise<{ eventSlug: string }> }) {
-  'use cache';
-  cacheLife('hourly');
-
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
-  cacheTag('events');
-  cacheTag('event-attendees');
-  if (eventSlug) cacheTag(`event-${eventSlug}`);
 
   if (!eventSlug) {
     notFound();
@@ -153,9 +145,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   if (!event) {
     notFound();
   }
-
-  cacheTag('albums');
-  cacheTag(`event-album-${event.id}`);
 
   // Fetch hosts, attendees, event album
   const [hosts, attendees, eventAlbum] = await Promise.all([
@@ -222,18 +211,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       {/* Hero Section with Cover Image */}
       {event.cover_image && (
         <div
-          className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden"
+          className="relative h-[clamp(14rem,25svw,20rem)] w-full"
         >
-          <BlurImage
-            src={event.cover_image}
-            alt={event.title || 'Event cover'}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            preload
-            loading="eager"
-            blurhash={event.image_blurhash}
-          />
+          <div
+            className="absolute inset-0 overflow-hidden"
+          >
+            <BlurImage
+              src={event.cover_image}
+              alt={event.title || 'Event cover'}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              preload
+              loading="eager"
+              blurhash={event.image_blurhash}
+            />
+          </div>
 
           {/* Frosted glass blur layer with eased gradient mask */}
           <div

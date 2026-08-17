@@ -7,6 +7,7 @@ import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
   // Add RSVPs
   if (rsvps) {
     rsvps.forEach((rsvp) => {
-      if (rsvp.email) {
+      if (rsvp.email && !isTestEmail(rsvp.email)) {
         recipientMap.set(rsvp.email.toLowerCase(), {
           email: rsvp.email,
           name: rsvp.name || rsvp.email.split('@')[0] || 'Friend',
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
   // Add admins (will overwrite if already in map, which is fine)
   if (admins) {
     admins.forEach((admin) => {
-      if (admin.email) {
+      if (admin.email && !isTestEmail(admin.email)) {
         recipientMap.set(admin.email.toLowerCase(), {
           email: admin.email,
           name: admin.full_name || admin.email.split('@')[0] || 'Friend',

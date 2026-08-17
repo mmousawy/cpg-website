@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { CancelEmail } from '../../../emails/cancel';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
   const recipientEmail = (rsvp.email as string | null) || user?.email;
   const recipientName = (rsvp.name as string | null) || user?.user_metadata?.full_name || 'Guest';
 
-  if (recipientEmail) {
+  if (recipientEmail && !shouldSkipNotificationsAndEmails(recipientEmail)) {
     // Send the cancellation confirmation email
     const emailResult = await resend.emails.send({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import ChangeEmailTemplate from '@/emails/auth/change-email';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
@@ -127,13 +128,7 @@ export async function POST(request: NextRequest) {
     // Send confirmation email to the CURRENT (old) email address for security
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email-change?token=${token}&email=${encodeURIComponent(newEmail)}`;
 
-    // Skip email in test environment
-    const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') ||
-                      process.env.NODE_ENV === 'test' ||
-                      currentEmail?.endsWith('@test.example.com') ||
-                      currentEmail?.endsWith('@test.local');
-
-    if (!isTestEnv && currentEmail) {
+    if (!shouldSkipNotificationsAndEmails(currentEmail) && currentEmail) {
       const emailResult = await resend.emails.send({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: currentEmail,

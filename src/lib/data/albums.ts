@@ -213,6 +213,7 @@ export async function getAlbumBySlug(
   cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
   cacheTag(`album-${nickname}-${albumSlug}`);
+  cacheTag('albums');
 
   const supabase = createPublicClient();
 
@@ -349,10 +350,11 @@ export async function getPhotosByUrls(photoUrls: string[]) {
  * Tagged with both 'albums' and 'profile-[nickname]' for granular invalidation
  * Note: likes_count is now a column on the albums table (updated via triggers)
  */
-export async function getUserPublicAlbums(userId: string, nickname: string, limit = 50) {
+export async function getUserPublicAlbums(userId: string, nickname: string, limit = 100) {
   'use cache';
   cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
 
   const supabase = createPublicClient();
 

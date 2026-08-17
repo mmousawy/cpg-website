@@ -1,5 +1,6 @@
 import type { Json } from '@/database.types';
 import { toAbsoluteEmailUrl } from '@/emails/utils/siteUrl';
+import { userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { scheduleNotificationEmailFlush } from '@/lib/notifications/scheduleNotificationEmailFlush';
 import { createAdminClient } from '@/utils/supabase/admin';
 
@@ -36,6 +37,10 @@ export async function enqueueCommentNotificationEmail(params: {
   batchEntityType?: string;
   debounceMinutes?: number;
 }): Promise<void> {
+  if (await userIdsIncludeTestUser(params.recipientUserId)) {
+    return;
+  }
+
   const supabase = createAdminClient();
   const batchEntityType = params.batchEntityType ?? params.item.entityType;
   const batchKey = buildNotificationEmailBatchKey(batchEntityType, params.entityId);

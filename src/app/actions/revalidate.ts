@@ -42,11 +42,22 @@ function invalidateHomeTag() {
   revalidatePath('/');
 }
 
+/** Bust public album listings (home, gallery, gallery/albums). */
+function invalidateAlbumListingRoutes() {
+  expireTag('albums');
+  invalidateHomeTag();
+  revalidatePath('/gallery');
+  revalidatePath('/gallery/albums');
+}
+
 /** Bust prerendered profile routes (/@nickname and nested pages). */
 function invalidateProfileRoutes(nickname: string) {
+  expireTag(`profile-${nickname}`);
+  expireTag('albums');
   revalidatePath(`/@${nickname}`);
   revalidatePath(`/@${nickname}/albums`);
   revalidatePath(`/@${nickname}/photos`);
+  revalidatePath('/[nickname]', 'layout');
 }
 
 /** Bust prerendered gallery/members tag listing pages. */
@@ -98,7 +109,7 @@ export async function revalidateEventBySlug(slug: string) {
 export async function revalidateEventAlbum(eventId: number) {
   expireTag(`event-album-${eventId}`);
   expireTag('events');
-  invalidateHomeTag();
+  invalidateAlbumListingRoutes();
   finishRevalidation();
 }
 
@@ -121,10 +132,9 @@ export async function revalidateChallengeColorDraws(challengeId: string) {
  * Use when: Updating a specific album's content (photos, metadata)
  */
 export async function revalidateAlbum(nickname: string, albumSlug?: string) {
-  expireTag('albums');
   expireTag(`profile-${nickname}`);
   expireTag('search');
-  invalidateHomeTag();
+  invalidateAlbumListingRoutes();
 
   if (albumSlug) {
     expireTag(`album-${nickname}-${albumSlug}`);
@@ -151,10 +161,9 @@ export async function revalidateAlbumBySlug(nickname: string, slug: string) {
  * Use when: Bulk album operations
  */
 export async function revalidateAlbums(nickname: string, albumSlugs?: string[]) {
-  expireTag('albums');
   expireTag(`profile-${nickname}`);
   expireTag('search');
-  invalidateHomeTag();
+  invalidateAlbumListingRoutes();
 
   if (albumSlugs) {
     for (const slug of albumSlugs) {
@@ -195,10 +204,8 @@ export async function revalidateAfterPhotoUpload({
   }
 
   if (albumSlugs.length > 0 || eventIds.length > 0) {
-    expireTag('albums');
-    expireTag('gallery');
     expireTag('search');
-    invalidateHomeTag();
+    invalidateAlbumListingRoutes();
   }
 
   if (nickname) {

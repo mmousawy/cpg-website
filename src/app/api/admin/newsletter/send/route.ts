@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { NewsletterEmail } from '@/emails/newsletter';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
 
   // Exclude users who opted out via email_preferences OR legacy newsletter_opt_in
   const allSubscribers = allProfiles
-    .filter(p => !optedOutUserIds.has(p.id) && (p.newsletter_opt_in !== false))
+    .filter(p => !optedOutUserIds.has(p.id) && (p.newsletter_opt_in !== false) && !isTestEmail(p.email))
     .map(p => ({
       id: p.id,
       email: p.email!,

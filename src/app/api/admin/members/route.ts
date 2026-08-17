@@ -7,6 +7,7 @@ import { render } from '@react-email/render';
 import type { Tables } from '@/database.types';
 import { revalidateAll } from '@/app/actions/revalidate';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -257,7 +258,7 @@ export async function DELETE(request: NextRequest) {
     deletionDate.setDate(deletionDate.getDate() + 30);
     const email = targetProfile.email;
 
-    if (email) {
+    if (email && !shouldSkipNotificationsAndEmails(email)) {
       try {
         const html = await render(
           AccountDeletionEmail({

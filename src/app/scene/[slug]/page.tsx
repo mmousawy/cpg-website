@@ -1,6 +1,4 @@
 import clsx from 'clsx';
-import { cacheLife, cacheTag } from 'next/cache';
-
 import { notFound } from 'next/navigation';
 
 import Container from '@/components/layout/Container';
@@ -156,12 +154,7 @@ export default async function SceneEventDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  'use cache';
-  cacheLife('hourly');
-
   const { slug } = await params;
-  cacheTag('scene');
-  if (slug) cacheTag(`scene-${slug}`);
   if (!slug) notFound();
 
   const { event } = await getSceneEventBySlug(slug);
@@ -193,19 +186,23 @@ export default async function SceneEventDetailPage({
       {/* Hero Section with Cover Image */}
       {event.cover_image_url && (
         <div
-          className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden"
+          className="relative h-[clamp(14rem,25svw,20rem)] w-full"
         >
-          <BlurImage
-            src={event.cover_image_url}
-            alt={event.title}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            preload
-            loading="eager"
-            blurhash={event.image_blurhash}
-            noBlur={/\.png(\?|$)/i.test(event.cover_image_url)}
-          />
+          <div
+            className="absolute inset-0 overflow-hidden"
+          >
+            <BlurImage
+              src={event.cover_image_url}
+              alt={event.title}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              preload
+              loading="eager"
+              blurhash={event.image_blurhash}
+              noBlur={/\.png(\?|$)/i.test(event.cover_image_url)}
+            />
+          </div>
 
           <div
             className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"

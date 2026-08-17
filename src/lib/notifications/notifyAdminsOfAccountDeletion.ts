@@ -1,6 +1,7 @@
 import { render } from '@react-email/render';
 
 import { MemberNotificationEmail } from '@/emails/member-notification';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { notifyAdmins } from '@/lib/notifications/notifyAdmins';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -16,6 +17,10 @@ export async function notifyAdminsOfAccountDeletion(
 
   if (profileError || !profile) {
     console.error('Error fetching profile for account deletion notify:', profileError);
+    return;
+  }
+
+  if (isTestEmail(profile.email)) {
     return;
   }
 

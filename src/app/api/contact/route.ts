@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import ContactEmail from '@/emails/contact';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -50,6 +51,10 @@ export async function POST(request: NextRequest) {
         { message: 'Message is too long (max 5000 characters)' },
         { status: 400 },
       );
+    }
+
+    if (shouldSkipNotificationsAndEmails(email)) {
+      return NextResponse.json({ success: true, skipped: true });
     }
 
     // Send the email

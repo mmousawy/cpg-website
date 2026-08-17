@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse, after, type NextRequest } from 'next/server';
 
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 
 export async function GET(request: NextRequest) {
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
           });
 
           after(() => {
+            if (shouldSkipNotificationsAndEmails(user.email)) return;
             void notifyAdminsOfMemberSignedUp(user.id).catch((err) => {
               console.error('Error notifying admins of signup:', err);
             });
@@ -85,6 +87,7 @@ export async function GET(request: NextRequest) {
 
           if (!profile.terms_accepted_at) {
             after(() => {
+              if (shouldSkipNotificationsAndEmails(user.email)) return;
               void notifyAdminsOfMemberSignedUp(user.id).catch((err) => {
                 console.error('Error notifying admins of signup:', err);
               });

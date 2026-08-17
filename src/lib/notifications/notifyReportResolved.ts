@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 
 import { ReportResolvedEmail } from '@/emails/report-resolved';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -148,43 +149,47 @@ export async function notifyReportResolved(
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
+  let emailSent = false;
 
-  try {
-    const html = await render(
-      ReportResolvedEmail({
-        reporterName: reporterName || 'User',
-        reporterNickname,
-        reporterAvatarUrl,
-        entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
-        entityTitle,
-        entityThumbnail,
-        entityLink: entityLinkFull,
-        entityOwnerNickname,
-        entityShortId,
-        entityCreatedAt,
-        entityPhotoCount,
-        reason: report.reason,
-        resolutionType: resolutionType || 'Resolved',
-        message,
-        isAnonymous: !reporterId,
-      }),
-    );
+  if (reporterEmail && !isTestEmail(reporterEmail)) {
+    try {
+      const html = await render(
+        ReportResolvedEmail({
+          reporterName: reporterName || 'User',
+          reporterNickname,
+          reporterAvatarUrl,
+          entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
+          entityTitle,
+          entityThumbnail,
+          entityLink: entityLinkFull,
+          entityOwnerNickname,
+          entityShortId,
+          entityCreatedAt,
+          entityPhotoCount,
+          reason: report.reason,
+          resolutionType: resolutionType || 'Resolved',
+          message,
+          isAnonymous: !reporterId,
+        }),
+      );
 
-    await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-      replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-      to: reporterEmail,
-      subject: 'Your report has been resolved',
-      html,
-    });
-  } catch (emailError) {
-    console.error('Error sending report resolved email:', emailError);
+      await resend.emails.send({
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+        replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+        to: reporterEmail,
+        subject: 'Your report has been resolved',
+        html,
+      });
+      emailSent = true;
+    } catch (emailError) {
+      console.error('Error sending report resolved email:', emailError);
+    }
   }
 
   return {
     success: true,
     notified: true,
     inAppNotification: !!reporterId,
-    emailSent: !!reporterEmail,
+    emailSent,
   };
 }

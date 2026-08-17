@@ -1,6 +1,7 @@
 import { render } from '@react-email/render';
 
 import { MemberNotificationEmail } from '@/emails/member-notification';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { notifyAdmins } from '@/lib/notifications/notifyAdmins';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -13,6 +14,10 @@ export async function notifyAdminsOfMemberJoined(userId: string): Promise<void> 
 
   if (profileError || !profile) {
     console.error('Error fetching profile for member joined notify:', profileError);
+    return;
+  }
+
+  if (isTestEmail(profile.email)) {
     return;
   }
 

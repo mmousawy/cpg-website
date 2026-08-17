@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import ResetPasswordTemplate from '@/emails/auth/reset-password';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -86,24 +87,26 @@ export async function POST(request: NextRequest) {
     // Send reset email
     const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
-    const emailResult = await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to: email,
-      replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-      subject: 'Reset your password - Creative Photography Group',
-      html: await render(
-        ResetPasswordTemplate({
-          fullName: profile?.full_name || email.split('@')[0],
-          resetLink,
-        }),
-      ),
-    });
+    if (!shouldSkipNotificationsAndEmails(email)) {
+      const emailResult = await resend.emails.send({
+        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
+        to: email,
+        replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
+        subject: 'Reset your password - Creative Photography Group',
+        html: await render(
+          ResetPasswordTemplate({
+            fullName: profile?.full_name || email.split('@')[0],
+            resetLink,
+          }),
+        ),
+      });
 
-    if (emailResult.error) {
-      console.error('Email error:', emailResult.error);
+      if (emailResult.error) {
+        console.error('Email error:', emailResult.error);
+      }
+
+      console.log(`✅ Password reset email sent to: ${email}`);
     }
-
-    console.log(`✅ Password reset email sent to: ${email}`);
 
     return NextResponse.json(
       { success: true, message: 'If an account exists, you will receive an email' },

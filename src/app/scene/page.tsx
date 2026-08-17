@@ -3,7 +3,6 @@ import AddSceneEventButton from '@/components/scene/AddSceneEventButton';
 import ScenePageContent from '@/components/scene/ScenePageContent';
 import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife } from 'next/cache';
 
 import {
   getCpgPastSceneEvents,
@@ -40,9 +39,6 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function ScenePage() {
-  'use cache';
-  cacheLife('hourly');
-
   const [upcomingData, pastData, cpgUpcomingData, cpgPastData] = await Promise.all([
     getUpcomingSceneEvents(),
     getPastSceneEvents(PAST_EVENTS_PER_PAGE),

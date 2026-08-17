@@ -283,6 +283,16 @@ a, button, input, textarea, select, [tabindex] {
   outline-offset: 2px;
 }
 
+/* Extra 1px below the hero so subpixel scroll rounding cannot
+   reveal a sliver of the background image under the scrim. */
+.scrim-gradient-mask,
+.scrim-gradient-overlay,
+.scrim-gradient-mask-strong,
+.scrim-gradient-overlay-strong {
+  bottom: -1px;
+  height: calc(100% + 1px);
+}
+
 /* Eased gradient scrim - smoother fade with interpolated stops */
 .scrim-gradient-mask {
   -webkit-mask-image: linear-gradient(

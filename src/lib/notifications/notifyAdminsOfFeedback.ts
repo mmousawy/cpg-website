@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 
 import { FeedbackNotificationEmail } from '@/emails/feedback-notification';
+import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import { FEEDBACK_SUBJECTS } from '@/types/feedback';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -17,6 +18,10 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
 
   if (feedbackError || !feedback) {
     console.error('Error fetching feedback for notify:', feedbackError);
+    return;
+  }
+
+  if (isTestEmail(feedback.email) || await userIdsIncludeTestUser(feedback.user_id)) {
     return;
   }
 

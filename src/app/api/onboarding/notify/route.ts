@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { expireMemberListCaches } from '@/lib/cache/expireTag';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfMemberJoined } from '@/lib/notifications/notifyAdminsOfMemberJoined';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { createClient } from '@/utils/supabase/server';
@@ -30,6 +31,10 @@ export async function POST() {
   }
 
   expireMemberListCaches(profile.nickname);
+
+  if (shouldSkipNotificationsAndEmails(profile.email ?? user.email)) {
+    return NextResponse.json({ success: true, skipped: true });
+  }
 
   const { data: existing } = await adminSupabase
     .from('notifications')

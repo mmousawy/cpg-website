@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 
+import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import type { CreateNotificationParams } from '@/types/notifications';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -26,6 +27,10 @@ export async function notifyAdmins({
   excludeUserIds,
   buildEmail,
 }: NotifyAdminsOptions): Promise<void> {
+  if (await userIdsIncludeTestUser(notification.actorId)) {
+    return;
+  }
+
   const { data: admins, error: adminsError } = await adminSupabase
     .from('profiles')
     .select('id, full_name, email')
@@ -54,7 +59,7 @@ export async function notifyAdmins({
   );
 
   const adminsToEmail = recipients.filter(
-    (admin): admin is AdminRecipient => Boolean(admin.email),
+    (admin): admin is AdminRecipient => Boolean(admin.email) && !isTestEmail(admin.email),
   );
 
   if (adminsToEmail.length === 0) {

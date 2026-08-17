@@ -2,6 +2,7 @@
 
 import type { Json } from '@/database.types';
 import type { CreateNotificationParams } from '@/types/notifications';
+import { userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { expireTag } from '@/lib/cache/expireTag';
 import { createAdminClient } from '@/utils/supabase/admin';
 
@@ -14,6 +15,10 @@ export async function createNotification(params: CreateNotificationParams): Prom
   notificationId?: string;
   error?: string;
 }> {
+  if (await userIdsIncludeTestUser(params.userId, params.actorId)) {
+    return { success: true };
+  }
+
   const supabase = createAdminClient();
 
   try {

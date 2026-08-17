@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { getWeeklyDigestSubject, WeeklyDigestEmail } from '@/emails/weekly-digest';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
   for (const [userId, notifications] of userNotificationsMap.entries()) {
     const userProfile = userProfilesMap.get(userId);
 
-    if (!userProfile?.email) {
+    if (!userProfile?.email || isTestEmail(userProfile.email)) {
       continue;
     }
 

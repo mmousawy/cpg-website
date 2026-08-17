@@ -23,7 +23,11 @@ export async function HomeHeroSection() {
           src={heroImage.src}
           blurhash={heroImage.blurhash}
         />
+      </div>
 
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+5rem)]"
+      >
         <div
           className="absolute inset-0 scrim-gradient-mask-strong"
         />

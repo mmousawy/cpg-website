@@ -1,5 +1,4 @@
 import Container from '@/components/layout/Container';
-import { cacheLife } from 'next/cache';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
@@ -123,9 +122,6 @@ export default async function ChallengePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  'use cache';
-  cacheLife('hourly');
-
   const resolvedParams = await params;
   const slug = resolvedParams?.slug;
 
@@ -197,18 +193,22 @@ export default async function ChallengePage({
       {/* Hero Section with Cover Image */}
       {challenge.cover_image_url && (
         <div
-          className="relative h-[clamp(14rem,25svw,20rem)] w-full overflow-hidden"
+          className="relative h-[clamp(14rem,25svw,20rem)] w-full"
         >
-          <BlurImage
-            src={challenge.cover_image_url}
-            alt={challenge.title}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            preload
-            loading="eager"
-            blurhash={challenge.image_blurhash}
-          />
+          <div
+            className="absolute inset-0 overflow-hidden"
+          >
+            <BlurImage
+              src={challenge.cover_image_url}
+              alt={challenge.title}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              preload
+              loading="eager"
+              blurhash={challenge.image_blurhash}
+            />
+          </div>
 
           {/* Frosted glass blur layer with eased gradient mask */}
           <div

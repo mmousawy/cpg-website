@@ -1,4 +1,5 @@
 import type { Json } from '@/database.types';
+import { userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import {
   enqueueCommentNotificationEmail,
@@ -698,6 +699,10 @@ export async function flushPendingNotifications(): Promise<FlushPendingNotificat
 export async function scheduleNotification(
   params: ScheduleNotificationParams,
 ): Promise<void> {
+  if (await userIdsIncludeTestUser(params.userId, params.actorId)) {
+    return;
+  }
+
   const supabase = createAdminClient();
   const dedupeKey = params.dedupeKey ?? buildNotificationDedupeKey({
     type: params.type,

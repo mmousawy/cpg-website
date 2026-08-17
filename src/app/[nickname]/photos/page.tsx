@@ -1,5 +1,4 @@
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import {
@@ -77,10 +76,6 @@ export default async function UserPhotosPage({ params }: { params: Promise<{ nic
 }
 
 async function CachedPhotosContent({ nickname }: { nickname: string }) {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag(`profile-${nickname}`);
-
   const profile = await getProfileByNickname(nickname);
   if (!profile) {
     notFound();

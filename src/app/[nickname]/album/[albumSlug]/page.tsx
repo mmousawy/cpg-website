@@ -1,5 +1,4 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
-import { cacheLife, cacheTag } from 'next/cache';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
@@ -79,11 +78,6 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
 }
 
 async function CachedAlbumPage({ nickname, albumSlug }: { nickname: string; albumSlug: string }) {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag(`profile-${nickname}`);
-  cacheTag(`album-${nickname}-${albumSlug}`);
-
   const album = await getAlbumBySlug(nickname, albumSlug);
 
   if (!album) {

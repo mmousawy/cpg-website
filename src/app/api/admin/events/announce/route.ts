@@ -8,6 +8,7 @@ import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
   // Filter out users who have opted out
   // Note: Users without a preference record are considered opted IN (default behavior)
   let allSubscribers = allProfiles
-    .filter(profile => !optedOutUserIds.has(profile.id))
+    .filter(profile => !optedOutUserIds.has(profile.id) && !isTestEmail(profile.email))
     .map(profile => ({
       id: profile.id,
       email: profile.email!,

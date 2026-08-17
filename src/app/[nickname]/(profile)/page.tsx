@@ -1,5 +1,4 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
@@ -98,11 +97,6 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 }
 
 async function ProfileContent({ nickname }: { nickname: string }) {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag(`profile-${nickname}`);
-  cacheTag('albums');
-
   const profile = await getProfileByNickname(nickname);
 
   if (!profile) {
@@ -110,7 +104,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
   }
 
   const [albums, publicPhotos, totalPhotos, followCounts] = await Promise.all([
-    getUserPublicAlbums(profile.id, nickname, 50),
+    getUserPublicAlbums(profile.id, nickname),
     getUserPublicPhotos(profile.id, nickname, 20),
     getUserPublicPhotoCount(profile.id, nickname),
     getProfileFollowCounts(profile.id, nickname),

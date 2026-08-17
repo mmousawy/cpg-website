@@ -4,7 +4,6 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import { buildVersionSlugMaps, getChangelogContent, parseChangelog } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife } from 'next/cache';
 
 import ArrowRightIcon from 'public/icons/arrow-right.svg';
 
@@ -18,9 +17,6 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function ChangelogPage() {
-  'use cache';
-  cacheLife('hourly');
-
   const changelogContent = await getChangelogContent();
   const entries = changelogContent ? parseChangelog(changelogContent) : [];
   const { versionToSlug } = await buildVersionSlugMaps();

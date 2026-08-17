@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { OnboardingReminderEmail } from '@/emails/onboarding-reminder';
 import { getEmailSiteUrl } from '@/emails/utils/siteUrl';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -8,15 +9,6 @@ import { adminSupabase } from '@/utils/supabase/admin';
 const resend = new Resend(process.env.RESEND_API_KEY!);
 const ONBOARDING_REMINDER_DAYS = 7;
 const BATCH_SIZE = 100;
-
-function isTestEmail(email: string): boolean {
-  return (
-    process.env.RESEND_API_KEY?.startsWith('re_test') === true
-    || process.env.NODE_ENV === 'test'
-    || email.endsWith('@test.example.com')
-    || email.endsWith('@test.local')
-  );
-}
 
 export type OnboardingReminderResult = {
   sent: number;
@@ -59,7 +51,7 @@ export async function sendOnboardingReminders(): Promise<OnboardingReminderResul
   const prepared = await Promise.all(
     profiles.map(async (profile) => {
       const email = profile.email;
-      if (!email || isTestEmail(email)) {
+      if (!email || shouldSkipNotificationsAndEmails(email)) {
         result.skipped += 1;
         skippedIds.push(profile.id);
         return null;

@@ -6,6 +6,7 @@ import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { flushPendingNotifications } from '@/lib/notifications/schedule';
 import { sendOnboardingReminders } from '@/lib/onboarding/sendOnboardingReminders';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
@@ -141,6 +142,7 @@ export async function GET(request: NextRequest) {
               !optedOutUserIds.has(profile.id) &&
               !existingRsvpUserIds.has(profile.id) &&
               profile.email &&
+              !isTestEmail(profile.email) &&
               !existingRsvpEmails.has(profile.email.toLowerCase()),
             )
             .map(profile => ({
@@ -320,15 +322,24 @@ export async function GET(request: NextRequest) {
             continue;
           }
 
-          console.log(`📧 Sending attendee reminders to ${rsvps.length} recipients for event: ${event.title}`);
+          const deliverableRsvps = rsvps.filter((rsvp) => !isTestEmail(rsvp.email));
+          if (deliverableRsvps.length === 0) {
+            await supabase
+              .from('events')
+              .update({ attendee_reminder_sent_at: now.toISOString() })
+              .eq('id', event.id);
+            continue;
+          }
+
+          console.log(`📧 Sending attendee reminders to ${deliverableRsvps.length} recipients for event: ${event.title}`);
 
           const batchSize = 100;
           let successCount = 0;
           let errorCount = 0;
           const successfulRecipients: Array<{ user_id: string | null }> = [];
 
-          for (let i = 0; i < rsvps.length; i += batchSize) {
-            const batch = rsvps.slice(i, i + batchSize);
+          for (let i = 0; i < deliverableRsvps.length; i += batchSize) {
+            const batch = deliverableRsvps.slice(i, i + batchSize);
 
             const batchEmails = await Promise.all(
               batch.map(async (rsvp) => {
@@ -389,7 +400,7 @@ export async function GET(request: NextRequest) {
             }
 
             // Rate limiting delay
-            if (i + batchSize < rsvps.length) {
+            if (i + batchSize < deliverableRsvps.length) {
               await new Promise(resolve => setTimeout(resolve, 500));
             }
           }

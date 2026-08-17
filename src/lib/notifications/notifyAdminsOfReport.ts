@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 
 import { ReportNotificationEmail } from '@/emails/report-notification';
+import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -16,6 +17,10 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
 
   if (reportError || !report) {
     console.error('Error fetching report for notify:', reportError);
+    return;
+  }
+
+  if (isTestEmail(report.reporter_email) || await userIdsIncludeTestUser(report.reporter_id)) {
     return;
   }
 

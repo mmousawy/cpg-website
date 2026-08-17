@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { SubmissionNotificationEmail } from '@/emails/submission-notification';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
 import { render } from '@react-email/render';
 import { adminSupabase } from '@/utils/supabase/admin';
@@ -17,6 +18,10 @@ export async function POST(request: NextRequest) {
 
   if (authError || !user) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (shouldSkipNotificationsAndEmails(user.email)) {
+    return NextResponse.json({ success: true, notifiedCount: 0, skipped: true });
   }
 
   const body = await request.json();

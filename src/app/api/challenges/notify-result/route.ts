@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 
 import SubmissionResultEmail from '@/emails/submission-result';
 import { createNotification } from '@/lib/notifications/create';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
@@ -195,6 +196,7 @@ export async function POST(request: NextRequest) {
       // Send email if user hasn't opted out and has an email
       if (
         submissionUser.email &&
+        !isTestEmail(submissionUser.email) &&
         !optedOutUserIds.has(submissionUser.id)
       ) {
         try {

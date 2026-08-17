@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 
 import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
 import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -153,12 +154,9 @@ export async function POST(request: NextRequest) {
 
     // Send verification email (skip in test environment)
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email?token=${token}`;
-    const isTestEnv = process.env.RESEND_API_KEY?.startsWith('re_test') ||
-                      process.env.NODE_ENV === 'test' ||
-                      email.endsWith('@test.example.com') ||
-                      email.endsWith('@test.local');
+    const skipNotificationsAndEmails = shouldSkipNotificationsAndEmails(email);
 
-    if (!isTestEnv) {
+    if (!skipNotificationsAndEmails) {
       const emailResult = await resend.emails.send({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: email,
@@ -179,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ User created: ${email} (pending verification)`);
 
-    if (!isTestEnv) {
+    if (!skipNotificationsAndEmails) {
       after(() => {
         void notifyAdminsOfMemberSignedUp(userData.user.id).catch((err) => {
           console.error('Error notifying admins of signup:', err);

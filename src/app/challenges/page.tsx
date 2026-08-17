@@ -2,7 +2,6 @@ import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import { getActiveChallenges, getPastChallenges } from '@/lib/data/challenges';
 
@@ -16,10 +15,6 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function ChallengesPage() {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('challenges');
-
   const [activeData, pastData] = await Promise.all([
     getActiveChallenges(),
     getPastChallenges(6),
