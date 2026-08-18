@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.6](https://github.com/mmousawy/cpg-website/compare/v1.38.5...v1.38.6) (2026-08-18)
+
+
+### 🐛 Bug Fixes
+
+* Enhance caching and revalidation logic for events and challenges ([a674d9f](https://github.com/mmousawy/cpg-website/commit/a674d9feb76e7aafc3f7e3601ec05b12eb1229ea))
+* Refactor date handling to utilize server timestamps across components ([1ba879e](https://github.com/mmousawy/cpg-website/commit/1ba879ebf78c559f7e0c6308468cb0bd06011bca))
+
 ## [1.38.5](https://github.com/mmousawy/cpg-website/compare/v1.38.4...v1.38.5) (2026-08-17)
 
 
