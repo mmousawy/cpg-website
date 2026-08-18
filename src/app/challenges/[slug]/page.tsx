@@ -14,6 +14,7 @@ import {
   getChallengeContributors,
   getChallengePhotos,
 } from '@/lib/data/challenges';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
@@ -136,7 +137,7 @@ export default async function ChallengePage({
     notFound();
   }
 
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
 
   const [photos, contributors, colorDraws] = await Promise.all([
     getChallengePhotos(challenge.id),

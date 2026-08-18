@@ -9,6 +9,7 @@ import SceneCoverImage from '@/components/scene/SceneCoverImage';
 import ArrowLink from '@/components/shared/ArrowLink';
 import AuthorRow from '@/components/shared/AuthorRow';
 import BlurImage from '@/components/shared/BlurImage';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { routes } from '@/config/routes';
 import {
   getAllSceneEventSlugs,
@@ -172,7 +173,8 @@ export default async function SceneEventDetailPage({
     ? await getSceneEventInterests(relatedIds)
     : {};
 
-  const currentYear = new Date().getFullYear();
+  const serverNow = await getServerNow();
+  const currentYear = new Date(serverNow).getFullYear();
   const dateStr = formatDateRange(event.start_date, event.end_date, currentYear);
   const timeStr = formatTimeRange(
     event.start_time,

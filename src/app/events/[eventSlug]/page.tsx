@@ -37,6 +37,7 @@ import TimeSVG from 'public/icons/time.svg';
 import EventAdminActionsDropdown from '@/components/events/EventAdminActionsDropdown';
 import EventPhotosSection from '@/components/events/EventPhotosSection';
 import { hasEventPhotos } from '@/lib/eventAlbums';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { getEventStatus } from '@/lib/events/status';
 import EventComments from './EventComments';
 
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
 
   // Use cached function for metadata
   const { event } = await getEventBySlug(eventSlug);
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
 
   if (!event) {
     return createMetadata({
@@ -147,7 +148,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
   const eventData = await getEventBySlug(eventSlug);
   const { event } = eventData;
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
 
   if (!event) {
     notFound();

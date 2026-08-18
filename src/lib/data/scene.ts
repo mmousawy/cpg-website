@@ -1,4 +1,5 @@
 import type { SceneEvent } from '@/types/scene';
+import { getServerNow } from '@/lib/cache/serverNow';
 import {
   filterPastSceneEvents,
   filterRelatedSceneEvents,
@@ -54,7 +55,7 @@ export async function getPublishedSceneEvents() {
  * Tagged with 'scene' for granular cache invalidation
  */
 export async function getUpcomingSceneEvents() {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const events = filterUpcomingSceneEvents(await getPublishedSceneEvents(), serverNow);
 
   return {
@@ -69,7 +70,7 @@ export async function getUpcomingSceneEvents() {
  * Tagged with 'scene' for granular cache invalidation
  */
 export async function getPastSceneEvents(limit = 5) {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const past = filterPastSceneEvents(await getPublishedSceneEvents(), serverNow);
 
   return {
@@ -132,13 +133,17 @@ export async function getRelatedSceneEvents(
   category: string,
   limit = 10,
 ) {
-  const allEvents = await getPublishedSceneEvents();
+  const [allEvents, serverNow] = await Promise.all([
+    getPublishedSceneEvents(),
+    getServerNow(),
+  ]);
   return filterRelatedSceneEvents(
     allEvents as Array<SceneEvent & { id: string; location_city: string; category: string }>,
     excludeId,
     city,
     category,
     limit,
+    serverNow,
   ) as Pick<
     SceneEvent,
     | 'id'

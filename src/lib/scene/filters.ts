@@ -18,7 +18,7 @@ function isSceneEventPast(event: SceneDateFields, nowDate: string): boolean {
 /** Upcoming scene events, soonest first. */
 export function filterUpcomingSceneEvents<T extends SceneEvent>(
   events: T[],
-  serverNow = Date.now(),
+  serverNow: number,
 ): T[] {
   const nowDate = getAmsterdamDateString(serverNow);
   return events
@@ -29,7 +29,7 @@ export function filterUpcomingSceneEvents<T extends SceneEvent>(
 /** Past scene events, newest first. */
 export function filterPastSceneEvents<T extends SceneEvent>(
   events: T[],
-  serverNow = Date.now(),
+  serverNow: number,
 ): T[] {
   const nowDate = getAmsterdamDateString(serverNow);
   return events
@@ -44,7 +44,7 @@ export function filterRelatedSceneEvents<T extends SceneEvent & { id: string; lo
   city: string,
   category: string,
   limit: number,
-  serverNow = Date.now(),
+  serverNow: number,
 ): T[] {
   const nowDate = getAmsterdamDateString(serverNow);
   return events

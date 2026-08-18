@@ -17,6 +17,7 @@ import {
   getSceneEventInterests,
   getUpcomingSceneEvents,
 } from '@/lib/data/scene';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { getAmsterdamDateString } from '@/lib/events/status';
 
 const PAST_EVENTS_PER_PAGE = 20;
@@ -46,7 +47,7 @@ export default async function ScenePage() {
     getPastEvents(PAST_EVENTS_PER_PAGE),
   ]);
 
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const nowDate = getAmsterdamDateString(serverNow);
   const cpgStaticUpcoming = getCpgUpcomingSceneEvents(nowDate);
   const cpgStaticPast = getCpgPastSceneEvents(nowDate);

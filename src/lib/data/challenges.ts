@@ -5,6 +5,7 @@ import type {
   SubmissionForReview,
 } from '@/types/challenges';
 import type { Photo } from '@/types/photos';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { filterActiveChallenges, filterPastChallenges } from '@/lib/challenges/filters';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -50,7 +51,7 @@ export async function getPublishedChallengesWithStats() {
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getActiveChallenges(limit?: number) {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const active = filterActiveChallenges(await getPublishedChallengesWithStats(), serverNow);
   const challenges = limit ? active.slice(0, limit) : active;
 
@@ -65,7 +66,7 @@ export async function getActiveChallenges(limit?: number) {
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getPastChallenges(limit = 10) {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const past = filterPastChallenges(await getPublishedChallengesWithStats(), serverNow)
     .sort((a, b) => {
       const aEnd = a.ends_at ?? '';
@@ -85,7 +86,7 @@ export async function getPastChallenges(limit = 10) {
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getAllChallenges() {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const supabase = createPublicClient();
 
   const { data } = await supabase

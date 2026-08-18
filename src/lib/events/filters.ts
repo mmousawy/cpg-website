@@ -2,7 +2,7 @@ import type { CPGEvent } from '@/types/events';
 import { getEventQueryContext, isEventPast } from '@/lib/events/status';
 
 /** Upcoming CPG events (not yet past in Amsterdam timezone). */
-export function filterUpcomingEvents(events: CPGEvent[], serverNow = Date.now()): CPGEvent[] {
+export function filterUpcomingEvents(events: CPGEvent[], serverNow: number): CPGEvent[] {
   const { nowDate, hasEventDayEnded } = getEventQueryContext(serverNow);
 
   return events.filter((event) => {
@@ -17,7 +17,7 @@ export function filterUpcomingEvents(events: CPGEvent[], serverNow = Date.now())
 }
 
 /** Past CPG events, newest first. */
-export function filterPastEvents(events: CPGEvent[], serverNow = Date.now()): CPGEvent[] {
+export function filterPastEvents(events: CPGEvent[], serverNow: number): CPGEvent[] {
   const past = events.filter((event) => isEventPast(event.date, serverNow, event.time));
   return [...past].sort((a, b) => {
     const aDate = a.date ?? '';

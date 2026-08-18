@@ -1,10 +1,11 @@
 import HeroImage from '@/components/shared/HeroImage';
 import { HERO_IMAGES } from '@/config/heroImages';
+import { getServerNow } from '@/lib/cache/serverNow';
 
 const heroImages = HERO_IMAGES;
 
 export async function HomeHeroSection() {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
 
   const serverDate = new Date(serverNow);
   const yearStart = new Date(serverDate.getFullYear(), 0, 0);

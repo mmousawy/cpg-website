@@ -1,4 +1,5 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { filterPastEvents, filterUpcomingEvents } from '@/lib/events/filters';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createPublicClient } from '@/utils/supabase/server';
@@ -69,7 +70,7 @@ export async function getRecentEvents(limit = 6) {
  * Tagged with 'events' for granular cache invalidation
  */
 export async function getUpcomingEvents(limit?: number) {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const upcoming = filterUpcomingEvents(await getPublishedEvents(), serverNow);
   const events = limit ? upcoming.slice(0, limit) : upcoming;
 
@@ -84,7 +85,7 @@ export async function getUpcomingEvents(limit?: number) {
  * Tagged with 'events' for granular cache invalidation
  */
 export async function getPastEvents(limit = 5) {
-  const serverNow = Date.now();
+  const serverNow = await getServerNow();
   const past = filterPastEvents(await getPublishedEvents(), serverNow);
 
   return {
