@@ -63,7 +63,8 @@ export async function generateMetadata({ params }: { params: Promise<{ eventSlug
   }
 
   // Use cached function for metadata
-  const { event, serverNow } = await getEventBySlug(eventSlug);
+  const { event } = await getEventBySlug(eventSlug);
+  const serverNow = Date.now();
 
   if (!event) {
     return createMetadata({
@@ -145,7 +146,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   }
 
   const eventData = await getEventBySlug(eventSlug);
-  const { event, serverNow } = eventData;
+  const { event } = eventData;
+  const serverNow = Date.now();
 
   if (!event) {
     notFound();

@@ -74,8 +74,7 @@ export async function POST(request: NextRequest) {
   // Log the email sending
   console.log(`📨 Email "confirm" sent with UUID: ${uuid}`);
 
-  // Revalidate event attendee cache
-  await revalidateEventAttendees();
+  await revalidateEventAttendees(typeof event.slug === 'string' ? event.slug : null);
 
   return NextResponse.json({}, { status: 200 });
 }

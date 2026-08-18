@@ -65,6 +65,7 @@ export default function AccountDeletedPage() {
             </Link>
             <Link
               href="/"
+              prefetch={false}
               className="text-sm text-foreground/60 hover:text-foreground/80 transition-colors"
             >
               Return to homepage

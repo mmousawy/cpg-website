@@ -65,8 +65,7 @@ export async function POST(request: NextRequest) {
   // Log the cancellation
   console.log(`❌ RSVP canceled with UUID: ${uuid}`);
 
-  // Revalidate event attendee cache
-  await revalidateEventAttendees();
+  await revalidateEventAttendees(typeof event.slug === 'string' ? event.slug : null);
 
   return NextResponse.json({}, { status: 200 });
 }

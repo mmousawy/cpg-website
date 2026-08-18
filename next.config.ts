@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
       revalidate: 3600,
       expire: 86400,
     },
+    // Search results — short TTL, no client stale window
+    search: {
+      stale: 0,
+      revalidate: 300,
+      expire: 3600,
+    },
   },
   // Memory optimization for Webpack builds (production)
   experimental: {

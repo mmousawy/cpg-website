@@ -120,6 +120,7 @@ function EmailChangedContent() {
           </Link>
           <Link
             href="/"
+            prefetch={false}
           >
             <Button
               variant="secondary"

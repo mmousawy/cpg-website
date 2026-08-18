@@ -19,7 +19,8 @@ export async function searchEntities(
   'use cache';
   // Cache search results for 5 minutes
   // Shorter than content cache since search queries vary widely
-  cacheLife({ revalidate: 300 });
+  // 5-minute TTL; stale: 0 matches next.config search profile
+  cacheLife({ stale: 0, revalidate: 300, expire: 3600 });
   cacheTag('search');
 
   // Don't search if query is too short

@@ -65,6 +65,7 @@ export default function JavaScriptRequired({ contentClass = 'js-content' }: Java
           </p>
           <ArrowLink
             href={routes.home.url}
+            prefetch={false}
             direction="left"
             className="mt-6"
           >

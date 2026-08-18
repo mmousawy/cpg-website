@@ -1,8 +1,11 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
-import { getEventQueryContext } from '@/lib/events/status';
+import { filterPastEvents, filterUpcomingEvents } from '@/lib/events/filters';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+
+const EVENT_LIST_COLUMNS =
+  'id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug';
 
 /**
  * Get all event slugs for static generation
@@ -22,70 +25,56 @@ export async function getAllEventSlugs() {
 }
 
 /**
- * Get recent events for homepage
- * Tagged with 'events' for granular cache invalidation
- * Returns events with a server timestamp for date comparisons
+ * All published events, ordered by date ascending.
+ * Date filtering happens in callers using fresh server time.
  */
-export async function getRecentEvents(limit = 6) {
+export async function getPublishedEvents() {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('events');
 
   const supabase = createPublicClient();
   const { data } = await supabase
     .from('events')
-    .select('id, title, date, location, time, cover_image, image_blurhash, image_height, image_width, slug, description')
+    .select(EVENT_LIST_COLUMNS)
     .eq('is_draft', false)
-    .order('date', { ascending: false })
-    .limit(limit);
+    .order('date', { ascending: true });
 
-  const events = (data || []) as CPGEvent[];
-  const eventIds = events.map(e => e.id);
+  return (data || []) as CPGEvent[];
+}
 
-  // Fetch attendees for recent events
+/**
+ * Get recent events for homepage
+ * Tagged with 'events' for granular cache invalidation
+ */
+export async function getRecentEvents(limit = 6) {
+  const events = await getPublishedEvents();
+  const recent = [...events]
+    .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
+    .slice(0, limit);
+
+  const eventIds = recent.map((e) => e.id);
   const attendeesByEvent = eventIds.length > 0
     ? await getEventAttendees(eventIds)
     : {} as Record<number, EventAttendee[]>;
 
   return {
-    events,
+    events: recent,
     attendeesByEvent,
-    serverNow: Date.now(),
   };
 }
 
 /**
  * Get upcoming events (date >= today)
  * Tagged with 'events' for granular cache invalidation
- * Returns events with a server timestamp for date comparisons
  */
 export async function getUpcomingEvents(limit?: number) {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('events');
-
-  const supabase = createPublicClient();
   const serverNow = Date.now();
-  const { nowDate, hasEventDayEnded } = getEventQueryContext(serverNow);
-
-  let query = supabase
-    .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
-    .eq('is_draft', false)
-    .order('date', { ascending: true });
-
-  query = hasEventDayEnded
-    ? query.gt('date', nowDate)
-    : query.gte('date', nowDate);
-
-  if (limit) {
-    query = query.limit(limit);
-  }
-
-  const { data } = await query;
+  const upcoming = filterUpcomingEvents(await getPublishedEvents(), serverNow);
+  const events = limit ? upcoming.slice(0, limit) : upcoming;
 
   return {
-    events: (data || []) as CPGEvent[],
+    events,
     serverNow,
   };
 }
@@ -93,33 +82,14 @@ export async function getUpcomingEvents(limit?: number) {
 /**
  * Get past events with pagination
  * Tagged with 'events' for granular cache invalidation
- * Returns events with a server timestamp for date comparisons
  */
 export async function getPastEvents(limit = 5) {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('events');
-
-  const supabase = createPublicClient();
   const serverNow = Date.now();
-  const { nowDate, hasEventDayEnded } = getEventQueryContext(serverNow);
-
-  let query = supabase
-    .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug', { count: 'exact' })
-    .eq('is_draft', false)
-    .order('date', { ascending: false })
-    .limit(limit);
-
-  query = hasEventDayEnded
-    ? query.lte('date', nowDate)
-    : query.lt('date', nowDate);
-
-  const { data, count } = await query;
+  const past = filterPastEvents(await getPublishedEvents(), serverNow);
 
   return {
-    events: (data || []) as CPGEvent[],
-    totalCount: count || 0,
+    events: past.slice(0, limit),
+    totalCount: past.length,
     serverNow,
   };
 }
@@ -127,11 +97,10 @@ export async function getPastEvents(limit = 5) {
 /**
  * Get a single event by slug
  * Tagged with 'events' for granular cache invalidation
- * Returns event with a server timestamp for date comparisons
  */
 export async function getEventBySlug(slug: string) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('events');
   cacheTag(`event-${slug}`);
 
@@ -139,14 +108,13 @@ export async function getEventBySlug(slug: string) {
 
   const { data: event } = await supabase
     .from('events')
-    .select('id, title, description, date, location, time, cover_image, created_at, image_blurhash, image_height, image_width, max_attendees, rsvp_count, slug')
+    .select(EVENT_LIST_COLUMNS)
     .eq('is_draft', false)
     .eq('slug', slug)
     .single();
 
   return {
     event: event as CPGEvent | null,
-    serverNow: Date.now(),
   };
 }
 
@@ -156,7 +124,7 @@ export async function getEventBySlug(slug: string) {
  */
 export async function getEventAttendeesForEvent(eventId: number) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('event-attendees');
 
   const supabase = createAdminClient();
@@ -189,7 +157,7 @@ export async function getEventAttendeesForEvent(eventId: number) {
  */
 export async function getEventAttendees(eventIds: number[]) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('event-attendees');
 
   if (eventIds.length === 0) {

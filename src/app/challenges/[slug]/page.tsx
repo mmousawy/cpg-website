@@ -130,11 +130,13 @@ export default async function ChallengePage({
     notFound();
   }
 
-  const { challenge, serverNow } = await getChallengeBySlug(slug);
+  const { challenge } = await getChallengeBySlug(slug);
 
   if (!challenge) {
     notFound();
   }
+
+  const serverNow = Date.now();
 
   const [photos, contributors, colorDraws] = await Promise.all([
     getChallengePhotos(challenge.id),

@@ -50,6 +50,19 @@ function invalidateAlbumListingRoutes() {
   revalidatePath('/gallery/albums');
 }
 
+/** Bust prerendered event listings and optional event detail. */
+function invalidateEventListingRoutes(eventSlug?: string | null) {
+  expireTag('events');
+  expireTag('event-attendees');
+  invalidateHomeTag();
+  revalidatePath('/events');
+  revalidatePath('/events/[eventSlug]', 'page');
+  if (eventSlug) {
+    expireTag(`event-${eventSlug}`);
+    revalidatePath(`/events/${eventSlug}`);
+  }
+}
+
 /** Bust prerendered profile routes (/@nickname and nested pages). */
 function invalidateProfileRoutes(nickname: string) {
   expireTag(`profile-${nickname}`);
@@ -76,20 +89,17 @@ function invalidateTagListingRoutes(tagName: string) {
  * Use when: Creating, updating, or deleting events
  */
 export async function revalidateEvents() {
-  expireTag('events');
   expireTag('search');
-  invalidateHomeTag();
+  invalidateEventListingRoutes();
   finishRevalidation();
 }
 
 /**
- * Revalidate event attendee data only
+ * Revalidate event attendee data and prerendered event pages
  * Use when: RSVP signup, confirmation, or cancellation
- * More granular than revalidateEvents - doesn't refresh event details
  */
-export async function revalidateEventAttendees() {
-  expireTag('event-attendees');
-  invalidateHomeTag();
+export async function revalidateEventAttendees(eventSlug?: string | null) {
+  invalidateEventListingRoutes(eventSlug);
   finishRevalidation();
 }
 
@@ -99,6 +109,9 @@ export async function revalidateEventAttendees() {
  */
 export async function revalidateEventBySlug(slug: string) {
   expireTag(`event-${slug}`);
+  expireTag('events');
+  revalidatePath(`/events/${slug}`);
+  revalidatePath('/events');
   finishRevalidation();
 }
 
@@ -120,6 +133,7 @@ export async function revalidateEventAlbum(eventId: number) {
 export async function revalidateChallengeColorDraws(challengeId: string) {
   expireTag('challenge-color-draws');
   expireTag(`challenge-color-draws-${challengeId}`);
+  revalidatePath('/challenges/[slug]', 'page');
   finishRevalidation();
 }
 
@@ -410,6 +424,8 @@ export async function revalidateChallenges() {
   expireTag('challenges');
   expireTag('challenge-photos');
   invalidateHomeTag();
+  revalidatePath('/challenges');
+  revalidatePath('/challenges/[slug]', 'page');
   finishRevalidation();
 }
 
@@ -530,6 +546,8 @@ export async function revalidateScene() {
 export async function revalidateSceneEvent(slug: string) {
   expireTag(`scene-${slug}`);
   expireTag('scene');
+  revalidatePath(`/scene/${slug}`);
+  revalidatePath('/scene/[slug]', 'page');
   finishRevalidation();
 }
 

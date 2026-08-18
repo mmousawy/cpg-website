@@ -49,6 +49,7 @@ export default function AuthErrorPage() {
           </Link>
           <Link
             href={routes.home.url}
+            prefetch={false}
             className="text-primary hover:text-primary-alt"
           >
             Go to homepage

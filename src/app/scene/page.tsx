@@ -46,7 +46,7 @@ export default async function ScenePage() {
     getPastEvents(PAST_EVENTS_PER_PAGE),
   ]);
 
-  const serverNow = cpgUpcomingData.serverNow;
+  const serverNow = Date.now();
   const nowDate = getAmsterdamDateString(serverNow);
   const cpgStaticUpcoming = getCpgUpcomingSceneEvents(nowDate);
   const cpgStaticPast = getCpgPastSceneEvents(nowDate);

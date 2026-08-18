@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
@@ -29,6 +30,7 @@ type Props = {
 
 export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, onRSVPChange }: Props) {
   const modalContext = useContext(ModalContext);
+  const router = useRouter();
   const { user, profile, isLoading: authLoading } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +69,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       if (result.status === 200) {
         onRSVPChange?.(false);
         setSuccess(true);
+        router.refresh();
         return;
       }
 
@@ -76,7 +79,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       setIsCanceling(false);
       setError('An error occurred while canceling your RSVP');
     }
-  }, [event, user, rsvpUuid, onRSVPChange]);
+  }, [event, user, rsvpUuid, onRSVPChange, router]);
 
   const submitForm = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -106,6 +109,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
       setError(null);
       setSuccess(true);
       onRSVPChange?.(true);
+      router.refresh();
       return;
     }
 
@@ -114,7 +118,7 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
     if (data.message) {
       setError(data.message);
     }
-  }, [event, user, onRSVPChange]);
+  }, [event, user, onRSVPChange, router]);
 
   if (!event) {
     return null;

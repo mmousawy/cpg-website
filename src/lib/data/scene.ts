@@ -1,7 +1,14 @@
 import type { SceneEvent } from '@/types/scene';
-import { getAmsterdamDateString } from '@/lib/events/status';
+import {
+  filterPastSceneEvents,
+  filterRelatedSceneEvents,
+  filterUpcomingSceneEvents,
+} from '@/lib/scene/filters';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+
+const SCENE_LIST_COLUMNS =
+  'id, slug, title, description, category, start_date, end_date, start_time, end_time, location_name, location_city, location_address, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, submitted_by, interest_count, created_at';
 
 /**
  * Get all scene event slugs for static generation.
@@ -24,29 +31,34 @@ export async function getAllSceneEventSlugs() {
 }
 
 /**
- * Get upcoming scene events (start_date >= today or end_date >= today for multi-day)
- * Tagged with 'scene' for granular cache invalidation
+ * All non-deleted scene events. Date filtering uses fresh server time in callers.
  */
-export async function getUpcomingSceneEvents() {
+export async function getPublishedSceneEvents() {
   'use cache';
   cacheLife('tagged');
   cacheTag('scene');
 
   const supabase = createPublicClient();
-  const serverNow = Date.now();
-  const nowDate = getAmsterdamDateString(serverNow);
 
   const { data } = await supabase
     .from('scene_events')
-    .select(
-      'id, slug, title, description, category, start_date, end_date, start_time, end_time, location_name, location_city, location_address, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, submitted_by, interest_count, created_at',
-    )
+    .select(SCENE_LIST_COLUMNS)
     .is('deleted_at', null)
-    .or(`start_date.gte.${nowDate},end_date.gte.${nowDate}`)
     .order('start_date', { ascending: true });
 
+  return (data || []) as SceneEvent[];
+}
+
+/**
+ * Get upcoming scene events (start_date >= today or end_date >= today for multi-day)
+ * Tagged with 'scene' for granular cache invalidation
+ */
+export async function getUpcomingSceneEvents() {
+  const serverNow = Date.now();
+  const events = filterUpcomingSceneEvents(await getPublishedSceneEvents(), serverNow);
+
   return {
-    events: (data || []) as SceneEvent[],
+    events,
     serverNow,
   };
 }
@@ -57,30 +69,12 @@ export async function getUpcomingSceneEvents() {
  * Tagged with 'scene' for granular cache invalidation
  */
 export async function getPastSceneEvents(limit = 5) {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag('scene');
-
-  const supabase = createPublicClient();
   const serverNow = Date.now();
-  const nowDate = getAmsterdamDateString(serverNow);
-
-  const { data, count } = await supabase
-    .from('scene_events')
-    .select(
-      'id, slug, title, description, category, start_date, end_date, start_time, end_time, location_name, location_city, location_address, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, submitted_by, interest_count, created_at',
-      { count: 'exact' },
-    )
-    .is('deleted_at', null)
-    .or(
-      `end_date.lt.${nowDate},and(end_date.is.null,start_date.lt.${nowDate})`,
-    )
-    .order('start_date', { ascending: false })
-    .limit(limit);
+  const past = filterPastSceneEvents(await getPublishedSceneEvents(), serverNow);
 
   return {
-    events: (data || []) as SceneEvent[],
-    totalCount: count || 0,
+    events: past.slice(0, limit),
+    totalCount: past.length,
     serverNow,
   };
 }
@@ -120,13 +114,12 @@ export async function getSceneEventBySlug(slug: string) {
     .single();
 
   if (!row) {
-    return { event: null, serverNow: Date.now() };
+    return { event: null };
   }
 
   const { submitter, ...event } = row as unknown as SceneEventWithSubmitter;
   return {
     event: { ...event, submitter } as SceneEventWithSubmitter | null,
-    serverNow: Date.now(),
   };
 }
 
@@ -139,27 +132,14 @@ export async function getRelatedSceneEvents(
   category: string,
   limit = 10,
 ) {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag('scene');
-
-  const supabase = createPublicClient();
-  const serverNow = Date.now();
-  const nowDate = getAmsterdamDateString(serverNow);
-
-  const { data } = await supabase
-    .from('scene_events')
-    .select(
-      'id, slug, title, category, start_date, end_date, start_time, end_time, location_name, location_city, url, cover_image_url, image_blurhash, image_width, image_height, organizer, price_info, interest_count',
-    )
-    .is('deleted_at', null)
-    .neq('id', excludeId)
-    .gte('start_date', nowDate)
-    .or(`location_city.eq.${city},category.eq.${category}`)
-    .order('start_date', { ascending: true })
-    .limit(limit);
-
-  return (data || []) as Pick<
+  const allEvents = await getPublishedSceneEvents();
+  return filterRelatedSceneEvents(
+    allEvents as Array<SceneEvent & { id: string; location_city: string; category: string }>,
+    excludeId,
+    city,
+    category,
+    limit,
+  ) as Pick<
     SceneEvent,
     | 'id'
     | 'slug'

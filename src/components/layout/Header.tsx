@@ -125,6 +125,7 @@ export default function Header() {
         >
           <Link
             href="/"
+            prefetch={false}
             className="rounded-full"
             aria-label="Creative Photography Group Home"
           >

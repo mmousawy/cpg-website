@@ -87,7 +87,13 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  await revalidateEventAttendees();
+  const { data: event } = await supabase
+    .from('events')
+    .select('slug')
+    .eq('id', event_id)
+    .maybeSingle();
+
+  await revalidateEventAttendees(event?.slug);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }
@@ -109,16 +115,21 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: 'Missing rsvp_id' }, { status: 400 });
   }
 
-  const { error } = await supabase
+  const { data: canceledRsvp, error } = await supabase
     .from('events_rsvps')
     .update({ canceled_at: new Date().toISOString() })
-    .eq('id', rsvp_id);
+    .eq('id', rsvp_id)
+    .select('events(slug)')
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  await revalidateEventAttendees();
+  const canceledEvent = canceledRsvp?.events as { slug?: string | null } | { slug?: string | null }[] | null;
+  const canceledSlug = Array.isArray(canceledEvent) ? canceledEvent[0]?.slug : canceledEvent?.slug;
+
+  await revalidateEventAttendees(canceledSlug);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

@@ -106,8 +106,7 @@ export async function POST(request: NextRequest) {
   // Log the signup
   console.log(`✅ RSVP confirmed for user ${user.id} to event ${event_id}`);
 
-  // Revalidate event attendee cache
-  await revalidateEventAttendees();
+  await revalidateEventAttendees(event.slug);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

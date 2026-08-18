@@ -5,6 +5,7 @@ import type {
   SubmissionForReview,
 } from '@/types/challenges';
 import type { Photo } from '@/types/photos';
+import { filterActiveChallenges, filterPastChallenges } from '@/lib/challenges/filters';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 import { CHALLENGE_LIST_COLUMNS } from './columns';
@@ -26,37 +27,36 @@ export async function getAllChallengeSlugs() {
 }
 
 /**
+ * All challenges with submission stats. Active/past filtering uses fresh server time in callers.
+ */
+export async function getPublishedChallengesWithStats() {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('challenges');
+
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('challenges')
+    .select(CHALLENGE_LIST_COLUMNS)
+    .order('starts_at', { ascending: false });
+
+  const challenges = (data ?? []) as unknown as Challenge[];
+  return addSubmissionCounts(challenges);
+}
+
+/**
  * Get active challenges (accepting submissions)
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getActiveChallenges(limit?: number) {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('challenges');
-
-  const supabase = createPublicClient();
-  const now = new Date().toISOString();
-
-  let query = supabase
-    .from('challenges')
-    .select(CHALLENGE_LIST_COLUMNS)
-    .eq('is_active', true)
-    .or(`ends_at.is.null,ends_at.gt.${now}`)
-    .order('starts_at', { ascending: false });
-
-  if (limit) {
-    query = query.limit(limit);
-  }
-
-  const { data } = await query;
-
-  // Get submission counts for each challenge
-  const challenges = (data ?? []) as unknown as Challenge[];
-  const challengesWithStats = await addSubmissionCounts(challenges);
+  const serverNow = Date.now();
+  const active = filterActiveChallenges(await getPublishedChallengesWithStats(), serverNow);
+  const challenges = limit ? active.slice(0, limit) : active;
 
   return {
-    challenges: challengesWithStats,
-    serverNow: Date.now(),
+    challenges,
+    serverNow,
   };
 }
 
@@ -65,27 +65,18 @@ export async function getActiveChallenges(limit?: number) {
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getPastChallenges(limit = 10) {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('challenges');
-
-  const supabase = createPublicClient();
-  const now = new Date().toISOString();
-
-  const { data, count } = await supabase
-    .from('challenges')
-    .select(CHALLENGE_LIST_COLUMNS, { count: 'exact' })
-    .or(`is_active.eq.false,ends_at.lt.${now}`)
-    .order('ends_at', { ascending: false, nullsFirst: false })
-    .limit(limit);
-
-  const challenges = (data ?? []) as unknown as Challenge[];
-  const challengesWithStats = await addSubmissionCounts(challenges);
+  const serverNow = Date.now();
+  const past = filterPastChallenges(await getPublishedChallengesWithStats(), serverNow)
+    .sort((a, b) => {
+      const aEnd = a.ends_at ?? '';
+      const bEnd = b.ends_at ?? '';
+      return bEnd.localeCompare(aEnd);
+    });
 
   return {
-    challenges: challengesWithStats,
-    totalCount: count || 0,
-    serverNow: Date.now(),
+    challenges: past.slice(0, limit),
+    totalCount: past.length,
+    serverNow,
   };
 }
 
@@ -94,10 +85,7 @@ export async function getPastChallenges(limit = 10) {
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getAllChallenges() {
-  'use cache';
-  cacheLife('hourly');
-  cacheTag('challenges');
-
+  const serverNow = Date.now();
   const supabase = createPublicClient();
 
   const { data } = await supabase
@@ -110,7 +98,7 @@ export async function getAllChallenges() {
 
   return {
     challenges: challengesWithStats,
-    serverNow: Date.now(),
+    serverNow,
   };
 }
 
@@ -120,7 +108,7 @@ export async function getAllChallenges() {
  */
 export async function getChallengeBySlug(slug: string) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('challenges');
   cacheTag(`challenge-${slug}`);
 
@@ -133,7 +121,7 @@ export async function getChallengeBySlug(slug: string) {
     .single();
 
   if (!challenge) {
-    return { challenge: null, serverNow: Date.now() };
+    return { challenge: null };
   }
 
   // Get submission counts
@@ -169,7 +157,6 @@ export async function getChallengeBySlug(slug: string) {
       rejected_count: submissionCounts.rejected,
       creator: creator || undefined,
     } as ChallengeWithStats,
-    serverNow: Date.now(),
   };
 }
 
@@ -178,7 +165,7 @@ export async function getChallengeBySlug(slug: string) {
  */
 export async function getChallengeColorDraws(challengeId: string) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('challenge-color-draws');
   cacheTag(`challenge-color-draws-${challengeId}`);
 
@@ -224,7 +211,7 @@ export async function getChallengeColorDraws(challengeId: string) {
  */
 export async function getChallengePhotos(challengeId: string) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('challenge-photos');
   cacheTag(`challenge-photos-${challengeId}`);
 
@@ -257,7 +244,7 @@ export async function getChallengePhotoByShortId(
   photoShortId: string,
 ): Promise<ChallengePhotoPageResult | null> {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('challenge-photos');
   cacheTag(`challenge-photos-${challengeSlug}`);
   cacheTag(`photo-${photoShortId}`);
@@ -414,8 +401,9 @@ export async function getChallengePhotoByShortId(
  */
 export async function getChallengeContributors(challengeId: string) {
   'use cache';
-  cacheLife('hourly');
+  cacheLife('tagged');
   cacheTag('challenge-photos');
+  cacheTag(`challenge-photos-${challengeId}`);
 
   const supabase = createPublicClient();
 
