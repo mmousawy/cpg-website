@@ -73,6 +73,18 @@ function invalidateProfileRoutes(nickname: string) {
   revalidatePath('/[nickname]', 'layout');
 }
 
+/** Bust cached photo detail pages across all four [photoId] route patterns. */
+function invalidatePhotoRoutes(photoShortId: string, nickname?: string | null) {
+  expireTag(`photo-${photoShortId}`);
+  revalidatePath('/[nickname]/photo/[photoId]', 'page');
+  revalidatePath('/[nickname]/album/[albumSlug]/photo/[photoId]', 'page');
+  revalidatePath('/events/[eventSlug]/photo/[photoId]', 'page');
+  revalidatePath('/challenges/[slug]/photo/[photoId]', 'page');
+  if (nickname) {
+    revalidatePath(`/@${nickname}/photo/${photoShortId}`);
+  }
+}
+
 /** Bust prerendered gallery/members tag listing pages. */
 function invalidateTagListingRoutes(tagName: string) {
   const encodedTag = encodeURIComponent(tagName);
@@ -387,9 +399,8 @@ export async function revalidateAll() {
  * Use when: Photo metadata changes, challenge submission status changes
  */
 export async function revalidatePhoto(photoShortId: string, nickname?: string | null) {
-  expireTag(`photo-${photoShortId}`);
+  invalidatePhotoRoutes(photoShortId, nickname);
   if (nickname) {
-    revalidatePath(`/@${nickname}/photo/${photoShortId}`);
     invalidateProfileRoutes(nickname);
   }
   finishRevalidation();
@@ -401,10 +412,7 @@ export async function revalidatePhoto(photoShortId: string, nickname?: string | 
  */
 export async function revalidatePhotos(photoShortIds: string[], nickname?: string | null) {
   for (const shortId of photoShortIds) {
-    expireTag(`photo-${shortId}`);
-    if (nickname) {
-      revalidatePath(`/@${nickname}/photo/${shortId}`);
-    }
+    invalidatePhotoRoutes(shortId, nickname);
   }
   if (nickname) {
     invalidateProfileRoutes(nickname);

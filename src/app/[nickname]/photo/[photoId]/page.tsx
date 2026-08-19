@@ -1,4 +1,5 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';import { cacheLife } from 'next/cache';
+import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import JsonLd from '@/components/shared/JsonLd';
 import { getPhotoByShortId } from '@/lib/data/profiles';
@@ -9,6 +10,8 @@ type Params = Promise<{
   nickname: string;
   photoId: string;
 }>;
+
+type PhotoPageResult = NonNullable<Awaited<ReturnType<typeof getPhotoByShortId>>>;
 
 // Required for build-time validation with cacheComponents
 export async function generateStaticParams() {
@@ -70,6 +73,29 @@ export default async function PhotoPage({ params }: { params: Params }) {
   if (!result) {
     notFound();
   }
+
+  return (
+    <CachedPhotoPage
+      nickname={nickname}
+      photoId={photoId}
+      result={result}
+    />
+  );
+}
+
+async function CachedPhotoPage({
+  nickname,
+  photoId,
+  result,
+}: {
+  nickname: string;
+  photoId: string;
+  result: PhotoPageResult;
+}) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+  cacheTag(`photo-${photoId}`);
 
   const photoUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}/photo/${encodeURIComponent(result.photo.short_id || '')}`);
   const profileUrl = getAbsoluteUrl(`/@${encodeURIComponent(nickname)}`);

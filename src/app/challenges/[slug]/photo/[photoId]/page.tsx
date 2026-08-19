@@ -1,5 +1,5 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
@@ -9,6 +9,8 @@ type Params = Promise<{
   slug: string;
   photoId: string;
 }>;
+
+type ChallengePhotoPageResult = NonNullable<Awaited<ReturnType<typeof getChallengePhotoByShortId>>>;
 
 // Required for build-time validation with cacheComponents
 export async function generateStaticParams() {
@@ -72,6 +74,30 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
   if (!result) {
     notFound();
   }
+
+  return (
+    <CachedChallengePhotoPage
+      slug={slug}
+      photoId={photoId}
+      result={result}
+    />
+  );
+}
+
+async function CachedChallengePhotoPage({
+  slug,
+  photoId,
+  result,
+}: {
+  slug: string;
+  photoId: string;
+  result: ChallengePhotoPageResult;
+}) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('challenge-photos');
+  cacheTag(`challenge-photos-${slug}`);
+  cacheTag(`photo-${photoId}`);
 
   return (
     <PhotoPageContent

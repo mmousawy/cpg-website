@@ -1,5 +1,5 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
@@ -10,6 +10,8 @@ type Params = Promise<{
   albumSlug: string;
   photoId: string;
 }>;
+
+type AlbumPhotoPageResult = NonNullable<Awaited<ReturnType<typeof getAlbumPhotoByShortId>>>;
 
 // Required for build-time validation with cacheComponents
 export async function generateStaticParams() {
@@ -77,6 +79,30 @@ export default async function AlbumPhotoPage({ params }: { params: Params }) {
   if (!result) {
     notFound();
   }
+
+  return (
+    <CachedAlbumPhotoPage
+      nickname={nickname}
+      photoId={photoId}
+      result={result}
+    />
+  );
+}
+
+async function CachedAlbumPhotoPage({
+  nickname,
+  photoId,
+  result,
+}: {
+  nickname: string;
+  photoId: string;
+  result: AlbumPhotoPageResult;
+}) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
+  cacheTag(`photo-${photoId}`);
 
   return (
     <PhotoPageContent

@@ -1,5 +1,5 @@
 import PhotoPageContent from '@/components/photo/PhotoPageContent';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 
 import { getEventPhotoByShortId } from '@/lib/data/albums';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
@@ -9,6 +9,8 @@ type Params = Promise<{
   eventSlug: string;
   photoId: string;
 }>;
+
+type EventPhotoPageResult = NonNullable<Awaited<ReturnType<typeof getEventPhotoByShortId>>>;
 
 // Required for build-time validation with cacheComponents
 export async function generateStaticParams() {
@@ -72,6 +74,27 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
   if (!result) {
     notFound();
   }
+
+  return (
+    <CachedEventPhotoPage
+      photoId={photoId}
+      result={result}
+    />
+  );
+}
+
+async function CachedEventPhotoPage({
+  photoId,
+  result,
+}: {
+  photoId: string;
+  result: EventPhotoPageResult;
+}) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('albums');
+  cacheTag('events');
+  cacheTag(`photo-${photoId}`);
 
   return (
     <PhotoPageContent
