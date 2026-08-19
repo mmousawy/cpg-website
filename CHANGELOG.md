@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.7](https://github.com/mmousawy/cpg-website/compare/v1.38.6...v1.38.7) (2026-08-19)
+
+
+### 🐛 Bug Fixes
+
+* Remove PhotoPageSkeleton and enhance caching in photo pages ([70240a1](https://github.com/mmousawy/cpg-website/commit/70240a1a83323dfc442f1ed03a324e52a591e003))
+
 ## [1.38.6](https://github.com/mmousawy/cpg-website/compare/v1.38.5...v1.38.6) (2026-08-18)
 
 
