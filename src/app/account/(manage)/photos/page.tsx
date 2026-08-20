@@ -12,8 +12,8 @@ import {
 } from '@/components/manage';
 import ManageLayout from '@/components/manage/ManageLayout';
 import ManageLoadMoreSentinel from '@/components/manage/ManageLoadMoreSentinel';
-import MobileActionBar from '@/components/manage/MobileActionBar';
 import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
+import MobileActionBar from '@/components/manage/MobileActionBar';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
 import DropZone from '@/components/shared/DropZone';
@@ -22,8 +22,8 @@ import HelpLink from '@/components/shared/HelpLink';
 import Select from '@/components/shared/Select';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import { photosQueryFilterKey, setAllPhotosQueriesFromFlat } from '@/hooks/photoQueryCache';
-import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import { useAuth } from '@/hooks/useAuth';
+import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
 import {
   useBulkUpdatePhotos,
   useDeletePhotos,
@@ -300,7 +300,7 @@ export default function PhotosPage() {
               ]}
               fullWidth={false}
               mono
-              className="min-w-[80px] md:min-w-[100px]"
+              className="min-w-20 md:min-w-25"
             />
             <Button
               onClick={() => fileInputRef.current?.click()}

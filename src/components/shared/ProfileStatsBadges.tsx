@@ -70,7 +70,7 @@ function NavButton({
       type="button"
       onClick={() => onNavigate(direction)}
       disabled={disabled}
-      className={`flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-sm transition-all hover:border-primary text-primary disabled:opacity-30 disabled:cursor-not-allowed ${className || ''}`}
+      className={`flex size-10 items-center justify-center rounded-full border border-border-color-strong bg-background-light shadow-sm transition-all hover:border-primary text-primary disabled:opacity-30 disabled:cursor-not-allowed ${className || ''} ${disabled ? 'pointer-events-none' : ''}`}
       aria-label={direction === 'prev' ? 'Scroll achievements left' : 'Scroll achievements right'}
     >
       <svg
@@ -310,8 +310,9 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
       return;
     }
 
-    setCanScrollLeft(!swiper.isBeginning);
-    setCanScrollRight(!swiper.isEnd);
+    const canScroll = !swiper.isLocked;
+    setCanScrollLeft(canScroll && !swiper.isBeginning);
+    setCanScrollRight(canScroll && !swiper.isEnd);
   };
 
   useEffect(() => {
@@ -320,9 +321,10 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
       return;
     }
 
-    setCanScrollLeft(!swiper.isBeginning);
-    setCanScrollRight(!swiper.isEnd);
+    syncEdges(swiper);
   }, [isMounted, badges.length]);
+
+  const isPaneScrollable = canScrollLeft || canScrollRight;
 
   const handleNavigate = (direction: 'prev' | 'next') => {
     if (direction === 'prev') {
@@ -349,22 +351,17 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
       <div
         className="relative"
       >
-        <div
-          className="hidden sm:block absolute -left-12 top-1/2 z-20 -translate-y-1/2"
-        >
-          {isMounted ? (
+        {isMounted && isPaneScrollable && (
+          <div
+            className="hidden sm:block absolute -left-12 top-1/2 z-20 -translate-y-1/2"
+          >
             <NavButton
               direction="prev"
               onNavigate={handleNavigate}
               disabled={!canScrollLeft}
             />
-          ) : (
-            <span
-              className="block size-10"
-              aria-hidden="true"
-            />
-          )}
-        </div>
+          </div>
+        )}
 
         <div
           className="w-screen relative left-1/2 -translate-x-1/2 sm:w-auto sm:left-0 sm:translate-x-0"
@@ -380,6 +377,9 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
             }}
             onSlideChange={syncEdges}
             onResize={syncEdges}
+            onLock={syncEdges}
+            onUnlock={syncEdges}
+            watchOverflow
             slidesPerView="auto"
             spaceBetween={8}
             slidesOffsetBefore={12}
@@ -435,22 +435,17 @@ export default function ProfileStatsBadges({ stats }: ProfileStatsBadgesProps) {
           />
         </div>
 
-        <div
-          className="hidden sm:block absolute -right-12 top-1/2 z-20 -translate-y-1/2"
-        >
-          {isMounted ? (
+        {isMounted && isPaneScrollable && (
+          <div
+            className="hidden sm:block absolute -right-12 top-1/2 z-20 -translate-y-1/2"
+          >
             <NavButton
               direction="next"
               onNavigate={handleNavigate}
               disabled={!canScrollRight}
             />
-          ) : (
-            <span
-              className="block size-10"
-              aria-hidden="true"
-            />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

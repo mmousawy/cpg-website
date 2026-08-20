@@ -19,7 +19,7 @@ function ProfileStatsBadgesPlaceholder() {
         {Array.from({ length: 6 }, (_, index) => (
           <div
             key={index}
-            className="h-[134px] w-24 sm:w-30 shrink-0 animate-pulse rounded-md border border-border-color bg-background-light"
+            className="h-[80.5px] sm:h-[119px] w-24 sm:w-30 shrink-0 animate-pulse rounded-md border border-border-color bg-background-light"
           />
         ))}
       </div>
