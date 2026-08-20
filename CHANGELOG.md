@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.8](https://github.com/mmousawy/cpg-website/compare/v1.38.7...v1.38.8) (2026-08-20)
+
+
+### 🐛 Bug Fixes
+
+* Replace PhotoPageContent with PhotoLightboxColumn in photo layouts ([1dc9361](https://github.com/mmousawy/cpg-website/commit/1dc9361958ac52fdb15ecc8601ae8c8b418327d7))
+
 ## [1.38.7](https://github.com/mmousawy/cpg-website/compare/v1.38.6...v1.38.7) (2026-08-19)
 
 
