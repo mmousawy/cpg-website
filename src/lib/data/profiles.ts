@@ -277,6 +277,71 @@ export async function getProfileStats(
 }
 
 /**
+ * Sibling photos for album filmstrip navigation (album context layout)
+ */
+export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+  cacheTag('albums');
+
+  const supabase = createPublicClient();
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('nickname', nickname)
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
+    .single();
+
+  if (!profile) {
+    return null;
+  }
+
+  const { data: albumData } = await supabase
+    .from('albums')
+    .select('id')
+    .eq('user_id', profile.id)
+    .eq('slug', albumSlug)
+    .eq('is_public', true)
+    .is('deleted_at', null)
+    .single();
+
+  if (!albumData) {
+    return null;
+  }
+
+  const { data: siblingPhotosData } = await supabase
+    .from('album_photos_active')
+    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash)')
+    .eq('album_id', albumData.id)
+    .order('sort_order', { ascending: true });
+
+  type SiblingPhotoData = {
+    photo_url: string | null;
+    sort_order: number | null;
+    photo: {
+      short_id: string;
+      url: string;
+      blurhash: string | null;
+    } | null;
+  };
+
+  return (siblingPhotosData || [])
+    .map((sp: SiblingPhotoData) => {
+      if (!sp.photo) return null;
+      return {
+        shortId: sp.photo.short_id,
+        url: sp.photo.url,
+        blurhash: sp.photo.blurhash,
+        sortOrder: sp.sort_order ?? 0,
+      };
+    })
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
+}
+
+/**
  * Get a photo within an album context by short_id
  * Tagged with profile and albums tags for granular invalidation
  */

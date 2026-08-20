@@ -1,4 +1,4 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getEventPhotoByShortId } from '@/lib/data/albums';
@@ -97,13 +97,9 @@ async function CachedEventPhotoPage({
   cacheTag(`photo-${photoId}`);
 
   return (
-    <PhotoPageContent
+    <PhotoLightboxColumn
       photo={result.photo}
-      profile={result.profile}
-      albums={result.albums}
-      challenges={result.challenges}
-      currentEvent={result.currentEvent}
-      siblingPhotos={result.siblingPhotos}
+      isInAlbum
     />
   );
 }

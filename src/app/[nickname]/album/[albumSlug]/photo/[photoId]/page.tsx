@@ -1,4 +1,4 @@
-import PhotoPageContent from '@/components/photo/PhotoPageContent';
+import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
@@ -105,14 +105,9 @@ async function CachedAlbumPhotoPage({
   cacheTag(`photo-${photoId}`);
 
   return (
-    <PhotoPageContent
+    <PhotoLightboxColumn
       photo={result.photo}
-      profile={result.profile}
-      albumOwnerNickname={result.albumOwnerNickname}
-      currentAlbum={result.currentAlbum}
-      albums={result.albums}
-      challenges={result.challenges}
-      siblingPhotos={result.siblingPhotos}
+      isInAlbum
     />
   );
 }

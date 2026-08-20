@@ -478,6 +478,66 @@ export type EventPhotoPageResult = {
 };
 
 /**
+ * Sibling photos for event filmstrip navigation (event photo layout)
+ */
+export async function getEventSiblingPhotos(eventSlug: string) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('albums');
+  cacheTag('events');
+
+  const supabase = createPublicClient();
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('id')
+    .eq('slug', eventSlug)
+    .single();
+
+  if (!event) {
+    return null;
+  }
+
+  cacheTag(`event-album-${event.id}`);
+
+  const { data: album } = await supabase
+    .from('albums')
+    .select('id')
+    .eq('event_id', event.id)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (!album) {
+    return null;
+  }
+
+  const { data: siblingData } = await supabase
+    .from('album_photos')
+    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, deleted_at)')
+    .eq('album_id', album.id)
+    .order('sort_order', { ascending: true });
+
+  type AlbumPhotoRow = {
+    sort_order: number | null;
+    photo: { short_id: string | null; url: string | null; blurhash: string | null; deleted_at: string | null } | null;
+  };
+
+  return (siblingData || [])
+    .filter((ap: AlbumPhotoRow) => !ap.photo?.deleted_at)
+    .map((ap: AlbumPhotoRow, index) => {
+      const p = ap.photo;
+      if (!p?.short_id || !p?.url) return null;
+      return {
+        shortId: p.short_id,
+        url: p.url,
+        blurhash: p.blurhash ?? null,
+        sortOrder: index,
+      };
+    })
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
+}
+
+/**
  * Get a photo within an event context by short_id
  * Verifies the photo is in the event's album, returns sibling photos for filmstrip
  * Tagged with 'albums', 'events' for granular cache invalidation

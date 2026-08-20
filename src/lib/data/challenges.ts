@@ -237,6 +237,43 @@ export type ChallengePhotoPageResult = {
 };
 
 /**
+ * Sibling photos for challenge filmstrip navigation (challenge photo layout)
+ */
+export async function getChallengeSiblingPhotos(challengeSlug: string) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('challenge-photos');
+  cacheTag(`challenge-photos-${challengeSlug}`);
+
+  const supabase = createPublicClient();
+
+  const { data: challenge } = await supabase
+    .from('challenges')
+    .select('id')
+    .eq('slug', challengeSlug)
+    .single();
+
+  if (!challenge) {
+    return null;
+  }
+
+  const { data: siblingData } = await supabase
+    .from('challenge_photos')
+    .select('short_id, url, blurhash, reviewed_at')
+    .eq('challenge_id', challenge.id)
+    .order('reviewed_at', { ascending: false });
+
+  return (siblingData || [])
+    .map((sp, index) => ({
+      shortId: sp.short_id ?? '',
+      url: sp.url ?? '',
+      blurhash: sp.blurhash,
+      sortOrder: index,
+    }))
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => !!p.shortId && !!p.url);
+}
+
+/**
  * Get a photo within a challenge context by short_id
  * Tagged with challenge-photos for granular cache invalidation
  */
