@@ -77,6 +77,7 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
 
   return (
     <CachedEventPhotoPage
+      eventSlug={eventSlug}
       photoId={photoId}
       result={result}
     />
@@ -84,9 +85,11 @@ export default async function EventPhotoPage({ params }: { params: Params }) {
 }
 
 async function CachedEventPhotoPage({
+  eventSlug,
   photoId,
   result,
 }: {
+  eventSlug: string;
   photoId: string;
   result: EventPhotoPageResult;
 }) {
@@ -100,6 +103,8 @@ async function CachedEventPhotoPage({
     <PhotoLightboxColumn
       photo={result.photo}
       isInAlbum
+      siblingPhotos={result.siblingPhotos}
+      basePath={`/events/${eventSlug}`}
     />
   );
 }

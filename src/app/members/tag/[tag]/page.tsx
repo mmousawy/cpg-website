@@ -1,5 +1,4 @@
 import PageContainer from '@/components/layout/PageContainer';
-import { cacheLife } from 'next/cache';
 
 import MemberCard from '@/components/shared/MemberCard';
 import EmptyState from '@/components/shared/EmptyState';
@@ -51,10 +50,10 @@ export default async function TagMembersPage({ params }: { params: Params }) {
     notFound();
   }
 
-  const { members } = await getMembersByTag(tagName);
-
-  // Get popular tags with member counts (same as members page)
-  const popularTags = await getPopularTagsWithMemberCounts(20);
+  const [{ members }, popularTags] = await Promise.all([
+    getMembersByTag(tagName),
+    getPopularTagsWithMemberCounts(20),
+  ]);
 
   // Calculate size based on memberCount relative to max (same logic as members page)
   const maxCount = Math.max(...popularTags.map((t) => t.memberCount || 0));

@@ -1,5 +1,4 @@
 import PageContainer from '@/components/layout/PageContainer';
-import { cacheLife } from 'next/cache';
 
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
@@ -49,14 +48,14 @@ export default async function InterestMembersPage({ params }: { params: Params }
     notFound();
   }
 
-  const { interest, members } = await getMembersByInterest(interestName);
+  const [{ interest, members }, popularInterests] = await Promise.all([
+    getMembersByInterest(interestName),
+    getPopularInterests(20),
+  ]);
 
   if (!interest) {
     notFound();
   }
-
-  // Get popular interests for sidebar
-  const popularInterests = await getPopularInterests(20);
 
   return (
     <>

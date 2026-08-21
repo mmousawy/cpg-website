@@ -54,6 +54,8 @@ export interface SiblingPhoto {
   url: string;
   blurhash: string | null;
   sortOrder: number;
+  width: number;
+  height: number;
 }
 
 export interface PhotoMetadataColumnProps {
@@ -72,6 +74,13 @@ export interface PhotoMetadataColumnProps {
 export interface PhotoLightboxColumnProps {
   photo: Photo;
   isInAlbum?: boolean;
+  siblingPhotos?: SiblingPhoto[];
+  /** Album context: owner nickname */
+  nickname?: string;
+  /** Album context: album slug */
+  albumSlug?: string;
+  /** Event/challenge context: base path (e.g. /events/my-event) */
+  basePath?: string;
 }
 
 export interface PhotoPageContentProps extends PhotoMetadataColumnProps {
@@ -81,7 +90,21 @@ export interface PhotoPageContentProps extends PhotoMetadataColumnProps {
   showFilmstrip?: boolean;
 }
 
-export function PhotoLightboxColumn({ photo, isInAlbum = false }: PhotoLightboxColumnProps) {
+export function PhotoLightboxColumn({
+  photo,
+  isInAlbum = false,
+  siblingPhotos,
+  nickname,
+  albumSlug,
+  basePath,
+}: PhotoLightboxColumnProps) {
+  const galleryPhotos = siblingPhotos?.map((sp) => ({
+    shortId: sp.shortId,
+    url: sp.url,
+    width: sp.width,
+    height: sp.height,
+  }));
+
   return (
     <PhotoWithLightbox
       url={photo.url}
@@ -90,6 +113,11 @@ export function PhotoLightboxColumn({ photo, isInAlbum = false }: PhotoLightboxC
       height={photo.height || 800}
       blurhash={photo.blurhash || ''}
       isInAlbum={isInAlbum}
+      galleryPhotos={galleryPhotos}
+      currentShortId={photo.short_id}
+      nickname={nickname}
+      albumSlug={albumSlug}
+      basePath={basePath}
     />
   );
 }

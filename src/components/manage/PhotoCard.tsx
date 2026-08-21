@@ -17,8 +17,6 @@ import { memo, useMemo } from 'react';
 
 interface PhotoCardProps {
   photo: (Photo | PhotoWithAlbums) & { isExiting?: boolean };
-  isSelected: boolean;
-  isHovered?: boolean;
   isDragging?: boolean;
   /** Whether drag-to-reorder is enabled */
   sortable?: boolean;
@@ -42,8 +40,6 @@ interface PhotoCardProps {
 
 function PhotoCard({
   photo,
-  isSelected,
-  isHovered = false,
   isDragging = false,
   sortable = false,
   albumCoverUrl,
@@ -170,13 +166,6 @@ function PhotoCard({
           ? 'cursor-not-allowed'
           : 'cursor-pointer',
         sortable && !disabled && 'active:cursor-grabbing',
-        disabled
-          ? '' // No ring effects when disabled
-          : isSelected
-            ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
-            : isHovered
-              ? 'ring-2 ring-primary/50 ring-offset-0 [&>div>div]:opacity-80'
-              : 'hover:ring-2 hover:ring-primary/50',
         isDragging && 'opacity-50',
         photo.isExiting && 'opacity-0 scale-95',
       )}
@@ -203,16 +192,16 @@ function PhotoCard({
           badges={badges}
         />
 
-        {/* Hover overlay */}
+        {/* Hover overlay — above badges during marquee preview; opacity from SortableGridItem */}
         <div
-          className="absolute inset-0 bg-primary/50 opacity-0 transition-opacity pointer-events-none"
+          className="photo-card-hover-overlay absolute inset-0 z-20 bg-primary/50 opacity-0 transition-opacity pointer-events-none"
         ></div>
       </div>
 
       {/* Title overlay on hover */}
       {photo.title && (
         <div
-          className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 via-black/35 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100"
+          className="photo-card-title-overlay absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 via-black/35 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100"
         >
           <p
             className="truncate text-sm text-white"
@@ -226,7 +215,6 @@ function PhotoCard({
 }
 
 export default memo(PhotoCard, (prevProps, nextProps) => {
-  // Only re-render if photo data, selection, hover, dragging, sortable, exit state, album cover, albums, challenges, current album title, disabled, or rejected state change
   const prevPhoto = prevProps.photo as PhotoWithAlbums;
   const nextPhoto = nextProps.photo as PhotoWithAlbums;
   const prevAlbumsLength = prevPhoto.albums?.length || 0;
@@ -241,8 +229,6 @@ export default memo(PhotoCard, (prevProps, nextProps) => {
     prevProps.photo.is_public === nextProps.photo.is_public &&
     prevAlbumsLength === nextAlbumsLength &&
     prevChallengesLength === nextChallengesLength &&
-    prevProps.isSelected === nextProps.isSelected &&
-    prevProps.isHovered === nextProps.isHovered &&
     prevProps.isDragging === nextProps.isDragging &&
     prevProps.sortable === nextProps.sortable &&
     prevProps.photo.isExiting === nextProps.photo.isExiting &&

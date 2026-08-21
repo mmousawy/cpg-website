@@ -2,6 +2,7 @@
 
 import type { Photo, PhotoOwnerProfile } from '@/types/photos';
 import { useMounted } from '@/hooks/useMounted';
+import { memo, useCallback, useMemo } from 'react';
 
 import ManagePhotoGridSkeleton from './ManagePhotoGridSkeleton';
 import PhotoCard from './PhotoCard';
@@ -41,7 +42,7 @@ interface PhotoGridProps {
   notOwnedProfiles?: Map<string, PhotoOwnerProfile | null>;
 }
 
-export default function PhotoGrid({
+function PhotoGrid({
   photos,
   selectedPhotoIds,
   onSelectPhoto,
@@ -65,19 +66,76 @@ export default function PhotoGrid({
 }: PhotoGridProps) {
   const mounted = useMounted();
 
-  // IDs that are fully non-selectable (no click, no checkbox)
-  const fullyDisabledIds = new Set<string>();
-  disabledIds?.forEach((id) => fullyDisabledIds.add(id));
-  rejectedIds?.forEach((id) => fullyDisabledIds.add(id));
-  pendingIds?.forEach((id) => fullyDisabledIds.add(id));
-  acceptedIds?.forEach((id) => fullyDisabledIds.add(id));
+  const fullyDisabledIds = useMemo(() => {
+    const set = new Set<string>();
+    disabledIds?.forEach((id) => set.add(id));
+    rejectedIds?.forEach((id) => set.add(id));
+    pendingIds?.forEach((id) => set.add(id));
+    acceptedIds?.forEach((id) => set.add(id));
+    return set;
+  }, [disabledIds, rejectedIds, pendingIds, acceptedIds]);
 
-  // IDs where checkbox is hidden but selection via click/drag is still allowed
-  const hideCheckboxIds = new Set<string>();
-  notOwnedProfiles?.forEach((_, id) => hideCheckboxIds.add(id));
+  const allNoCheckboxIds = useMemo(() => {
+    const set = new Set<string>(fullyDisabledIds);
+    notOwnedProfiles?.forEach((_, id) => set.add(id));
+    return set;
+  }, [fullyDisabledIds, notOwnedProfiles]);
 
-  // Combined set for checkbox hiding (passed to grid)
-  const allNoCheckboxIds = new Set<string>([...fullyDisabledIds, ...hideCheckboxIds]);
+  const getId = useCallback((photo: Photo) => photo.id, []);
+
+  const handleSelect = useCallback(
+    (id: string, isMulti: boolean) => {
+      if (fullyDisabledIds.has(id)) return;
+
+      if (isMulti) {
+        onSelectPhoto(id, true);
+      } else {
+        const photo = photos.find((p) => p.id === id);
+        if (photo && onPhotoClick) {
+          onPhotoClick(photo);
+        } else {
+          onSelectPhoto(id, false);
+        }
+      }
+    },
+    [fullyDisabledIds, onSelectPhoto, onPhotoClick, photos],
+  );
+
+  const renderItem = useCallback(
+    (photo: Photo, _isSelected: boolean, isDragging: boolean, _isHovered: boolean) => {
+      const isDisabled = disabledIds?.has(photo.id) ?? false;
+      const isRejected = rejectedIds?.has(photo.id) ?? false;
+      const isPending = pendingIds?.has(photo.id) ?? false;
+      const isAccepted = acceptedIds?.has(photo.id) ?? false;
+      const isNonSelectable = isDisabled || isRejected || isPending || isAccepted;
+      return (
+        <PhotoCard
+          photo={photo}
+          isDragging={isDragging}
+          sortable={sortable}
+          albumCoverUrl={albumCoverUrl}
+          currentAlbumTitle={currentAlbumTitle}
+          disabled={isNonSelectable}
+          disabledMessage={isDisabled ? disabledMessage : undefined}
+          rejected={isRejected}
+          pending={isPending}
+          accepted={isAccepted}
+          notOwnedProfile={notOwnedProfiles?.has(photo.id) ? (notOwnedProfiles.get(photo.id) ?? null) : undefined}
+        />
+      );
+    },
+    [
+      disabledIds,
+      rejectedIds,
+      pendingIds,
+      acceptedIds,
+      sortable,
+      albumCoverUrl,
+      currentAlbumTitle,
+      disabledMessage,
+      notOwnedProfiles,
+    ],
+  );
 
   if (!mounted) {
     return <ManagePhotoGridSkeleton />;
@@ -87,22 +145,8 @@ export default function PhotoGrid({
     <SelectableGrid
       items={photos}
       selectedIds={selectedPhotoIds}
-      getId={(photo) => photo.id}
-      onSelect={(id, isMulti) => {
-        // Skip if fully disabled (rejected, pending, accepted, etc.)
-        if (fullyDisabledIds.has(id)) return;
-
-        if (isMulti) {
-          onSelectPhoto(id, true);
-        } else {
-          const photo = photos.find((p) => p.id === id);
-          if (photo && onPhotoClick) {
-            onPhotoClick(photo);
-          } else {
-            onSelectPhoto(id, false);
-          }
-        }
-      }}
+      getId={getId}
+      onSelect={handleSelect}
       onClearSelection={onClearSelection}
       onSelectMultiple={onSelectMultiple}
       onReorder={onReorder}
@@ -113,30 +157,9 @@ export default function PhotoGrid({
       leadingContent={leadingContent}
       trailingContent={trailingContent}
       disabledIds={allNoCheckboxIds}
-      renderItem={(photo, isSelected, isDragging, isHovered) => {
-        const isDisabled = disabledIds?.has(photo.id) ?? false;
-        const isRejected = rejectedIds?.has(photo.id) ?? false;
-        const isPending = pendingIds?.has(photo.id) ?? false;
-        const isAccepted = acceptedIds?.has(photo.id) ?? false;
-        const isNonSelectable = isDisabled || isRejected || isPending || isAccepted;
-        return (
-          <PhotoCard
-            photo={photo}
-            isSelected={isSelected}
-            isHovered={isHovered}
-            isDragging={isDragging}
-            sortable={sortable}
-            albumCoverUrl={albumCoverUrl}
-            currentAlbumTitle={currentAlbumTitle}
-            disabled={isNonSelectable}
-            disabledMessage={isDisabled ? disabledMessage : undefined}
-            rejected={isRejected}
-            pending={isPending}
-            accepted={isAccepted}
-            notOwnedProfile={notOwnedProfiles?.has(photo.id) ? (notOwnedProfiles.get(photo.id) ?? null) : undefined}
-          />
-        );
-      }}
+      renderItem={renderItem}
     />
   );
 }
+
+export default memo(PhotoGrid);

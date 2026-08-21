@@ -4,7 +4,8 @@ import GridCheckbox from '@/components/shared/GridCheckbox';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useSortable, type AnimateLayoutChanges } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useLayoutEffect, useRef } from 'react';
+import clsx from 'clsx';
+import { memo, useLayoutEffect, useRef } from 'react';
 
 const animateLayoutChanges: AnimateLayoutChanges = () => false;
 
@@ -25,9 +26,11 @@ export interface SortableItemProps<T> {
   onEnterMultiSelectMode: () => void; // Callback to enter multi-select mode
   disabled?: boolean; // If true, item is non-selectable and checkbox is hidden
   isActiveDrag?: boolean; // True if this item is the one currently being dragged (from parent state, survives dnd-kit cleanup)
+  /** True while box-select drag (or preview) is active — disables CSS hover styling */
+  isBoxSelecting?: boolean;
 }
 
-export default function SortableGridItem<T>({
+function SortableGridItemInner<T>({
   item,
   id,
   isSelected,
@@ -44,6 +47,7 @@ export default function SortableGridItem<T>({
   onEnterMultiSelectMode,
   disabled = false,
   isActiveDrag = false,
+  isBoxSelecting = false,
 }: SortableItemProps<T>) {
   const isMobile = useIsMobile();
 
@@ -103,8 +107,8 @@ export default function SortableGridItem<T>({
     opacity: computedOpacity,
   };
 
-  // On mobile, always show checkbox; on desktop, show on hover or when selected
-  const showCheckbox = isMobile || isSelected || isHovered;
+  // On mobile, always show checkbox; on desktop, only when committed (not during box-select preview).
+  const showCheckbox = isMobile || isSelected;
 
   const handleContextMenu = (e: React.MouseEvent) => {
     // Prevent iOS callout / context menu from fighting long-press drag on sortable items
@@ -151,7 +155,18 @@ export default function SortableGridItem<T>({
       {...sortableProps}
       role="button"
       tabIndex={0}
-      className={`relative group outline-none focus-visible:ring-2 focus-visible:ring-primary ${isDragging && !isMultiDragActive ? 'z-50' : ''}`}
+      className={clsx(
+        'relative group outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        isDragging && !isMultiDragActive && 'z-50',
+        !disabled && (
+          isSelected
+            ? 'ring-2 ring-primary ring-offset-1 light:ring-offset-white dark:ring-offset-white/50'
+            : isHovered
+              ? 'ring-2 ring-primary/50 ring-offset-0 [&_.photo-card-hover-overlay]:opacity-80'
+              : !isBoxSelecting && 'hover:ring-2 hover:ring-primary/50'
+        ),
+        isBoxSelecting && 'pointer-events-none',
+      )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
@@ -175,3 +190,7 @@ export default function SortableGridItem<T>({
     </div>
   );
 }
+
+const SortableGridItem = memo(SortableGridItemInner) as typeof SortableGridItemInner;
+
+export default SortableGridItem;

@@ -7,8 +7,7 @@ import { GalleryTrendingAlbumsSection } from '@/app/gallery/GalleryTrendingAlbum
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import SignUpCTA from '@/components/shared/SignUpCTA';
-import { getMostViewedAlbumsLastWeek, getPublicAlbums } from '@/lib/data/albums';
-import { getMostViewedPhotosLastWeek, getPopularTags, getPublicPhotostream } from '@/lib/data/gallery';
+import { getGalleryPageData } from '@/lib/data/galleryPage';
 import { createMetadata } from '@/utils/metadata';
 
 export const metadata = createMetadata({
@@ -22,13 +21,13 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function GalleryPage() {
-  const [popularTags, mostViewedPhotos, mostViewedAlbums, recentPhotos, recentAlbums] = await Promise.all([
-    getPopularTags(30),
-    getMostViewedPhotosLastWeek(10),
-    getMostViewedAlbumsLastWeek(10),
-    getPublicPhotostream(10),
-    getPublicAlbums(10),
-  ]);
+  const {
+    popularTags,
+    mostViewedPhotos,
+    mostViewedAlbums,
+    recentPhotos,
+    recentAlbums,
+  } = await getGalleryPageData();
 
   return (
     <>

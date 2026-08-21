@@ -2,9 +2,8 @@ import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
+import { getEventsPageData } from '@/lib/data/eventsPage';
 import { createMetadata } from '@/utils/metadata';
-
-import { getEventAttendees, getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 
 const PAST_EVENTS_PER_PAGE = 5;
 
@@ -18,20 +17,13 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function EventsPage() {
-  const [upcomingData, pastEventsData] = await Promise.all([
-    getUpcomingEvents(),
-    getPastEvents(PAST_EVENTS_PER_PAGE),
-  ]);
-
-  const { events: upcomingEvents, serverNow } = upcomingData;
-  const { events: initialPast, totalCount: pastEventsCount } = pastEventsData;
-
-  const displayedEventIds = [
-    ...upcomingEvents.map((e) => e.id),
-    ...initialPast.map((e) => e.id),
-  ];
-
-  const attendeesByEvent = await getEventAttendees(displayedEventIds);
+  const {
+    upcomingEvents,
+    initialPast,
+    pastEventsCount,
+    serverNow,
+    attendeesByEvent,
+  } = await getEventsPageData();
 
   return (
     <PageContainer>

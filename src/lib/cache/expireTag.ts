@@ -21,18 +21,38 @@ export function expireTags(tags: string[]): void {
   }
 }
 
+/** Mark the homepage cache stale; next visit serves cached HTML while revalidating in the background. */
+export function revalidateHomeCache(): void {
+  revalidateTag('home', 'home');
+}
+
+/** Mark the events listing page cache stale (SWR). */
+export function revalidateEventsPageCache(): void {
+  revalidateTag('events-page', 'eventsPage');
+}
+
+/** Mark the gallery listing page cache stale (SWR). */
+export function revalidateGalleryPageCache(): void {
+  revalidateTag('gallery-page', 'galleryPage');
+}
+
+/** Mark the challenges listing page cache stale (SWR). */
+export function revalidateChallengesPageCache(): void {
+  revalidateTag('challenges-page', 'challengesPage');
+}
+
+/** Mark changelog caches stale (SWR). */
+export function revalidateChangelogCache(): void {
+  revalidateTag('changelog', 'changelog');
+}
+
 /** Expire caches that include the homepage / members listings. */
 export function expireMemberListCaches(nickname?: string | null): void {
   expireTag('profiles');
   expireTag('search');
-  expireTag('home');
+  revalidateHomeCache();
   expireTag('interests');
-  revalidatePath('/');
   if (nickname) {
     expireTag(`profile-${nickname}`);
-    revalidatePath(`/@${nickname}`);
-    revalidatePath(`/@${nickname}/albums`);
-    revalidatePath(`/@${nickname}/photos`);
   }
 }
-

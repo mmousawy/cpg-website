@@ -8,6 +8,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import { socialLinks } from '@/config/socials';
+import { getHomePageData } from '@/lib/data/home';
 import { createMetadata } from '@/utils/metadata';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
@@ -34,16 +35,36 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
 // Block until cached data resolves so SSR includes full HTML (no streaming shell)
 export const instant = false;
 
-export default function Home() {
+export default async function Home() {
+  const {
+    serverNow,
+    events,
+    attendeesByEvent,
+    challenges,
+    albums,
+    photos,
+    organizers,
+    recentMembers,
+  } = await getHomePageData();
+
   return (
     <>
       <HomeHeroSection />
       <div
         className="grid min-w-0 gap-10 md:gap-12 py-10 md:py-12 [&>*]:min-w-0"
       >
-        <HomeExploreSection />
-        <HomeAlbumsSection />
-        <HomeRecentPhotosSection />
+        <HomeExploreSection
+          events={events}
+          attendeesByEvent={attendeesByEvent}
+          challenges={challenges}
+          serverNow={serverNow}
+        />
+        <HomeAlbumsSection
+          albums={albums}
+        />
+        <HomeRecentPhotosSection
+          photos={photos}
+        />
 
         <PageContainer
           className="py-0!"
@@ -121,7 +142,10 @@ export default function Home() {
           <ActivitiesSliderWrapper />
         </PageContainer>
 
-        <HomeMembersSection />
+        <HomeMembersSection
+          organizers={organizers}
+          recentMembers={recentMembers}
+        />
       </div>
     </>
   );

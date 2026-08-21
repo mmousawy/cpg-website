@@ -1,9 +1,8 @@
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
+import { getChallengesPageData } from '@/lib/data/challengesPage';
 import { createMetadata } from '@/utils/metadata';
-
-import { getActiveChallenges, getPastChallenges } from '@/lib/data/challenges';
 
 export const metadata = createMetadata({
   title: 'Photo challenges',
@@ -15,13 +14,7 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function ChallengesPage() {
-  const [activeData, pastData] = await Promise.all([
-    getActiveChallenges(),
-    getPastChallenges(6),
-  ]);
-
-  const { challenges: activeChallenges, serverNow } = activeData;
-  const { challenges: pastChallenges } = pastData;
+  const { activeChallenges, pastChallenges, serverNow } = await getChallengesPageData();
 
   return (
     <PageContainer>

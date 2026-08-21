@@ -1,14 +1,11 @@
 import Container from '@/components/layout/Container';
-import { cacheLife } from 'next/cache';
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import {
-  getChangelogCommitSummary,
-  getChangelogDetailMarkdown,
-  getChangelogSlugs,
+  getCachedChangelogDetailData,
+  getCachedChangelogSlugs,
   getDateFromChangelogSlug,
-  getVersionForSlug,
 } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -22,13 +19,13 @@ interface ChangelogDetailPageProps {
 }
 
 export async function generateStaticParams() {
-  const slugs = await getChangelogSlugs();
+  const slugs = await getCachedChangelogSlugs();
   return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: ChangelogDetailPageProps) {
   const { slug } = await params;
-  const summary = await getChangelogCommitSummary(slug);
+  const summary = (await getCachedChangelogDetailData(slug)).summary;
   const date = getDateFromChangelogSlug(slug);
   const title = summary ?? `Changelog ${slug}`;
   const pageTitle = date ? `Changelog: ${date} - ${title}` : `Changelog: ${title}`;
@@ -137,11 +134,7 @@ export const instant = false;
 export default async function ChangelogDetailPage({ params }: ChangelogDetailPageProps) {
   const { slug } = await params;
 
-  const [markdown, summary, version] = await Promise.all([
-    getChangelogDetailMarkdown(slug),
-    getChangelogCommitSummary(slug),
-    getVersionForSlug(slug),
-  ]);
+  const { markdown, summary, version } = await getCachedChangelogDetailData(slug);
 
   if (!markdown) {
     notFound();

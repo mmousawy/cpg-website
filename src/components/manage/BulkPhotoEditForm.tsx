@@ -14,10 +14,10 @@ import HelpLink from '@/components/shared/HelpLink';
 import { routes } from '@/config/routes';
 import { confirmDeletePhotos } from '@/utils/confirmHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
-import PhotoListItem from './PhotoListItem';
+import BulkPhotoListWindow from './BulkPhotoListWindow';
 import SidebarPanel from './SidebarPanel';
 
 import CheckMiniSVG from 'public/icons/check-mini.svg';
@@ -48,6 +48,40 @@ export type BulkPhotoFormData = z.infer<typeof bulkPhotoFormSchema>;
 
 // Re-export schema for use in other files if needed
 export { bulkPhotoFormSchema };
+
+function getCommonLicense(photos: PhotoWithAlbums[]) {
+  if (photos.length === 0) return null;
+  const first = photos[0].license;
+  return photos.every((p) => p.license === first) ? first : null;
+}
+
+function getCommonTags(photos: PhotoWithAlbums[]): string[] {
+  if (photos.length === 0) return [];
+
+  const tagSets = photos.map((p) => {
+    const tags = p.tags?.map((t) => t.tag.toLowerCase()) || [];
+    return new Set(tags);
+  });
+
+  if (tagSets.length === 0) return [];
+
+  const commonTags = Array.from(tagSets[0]).filter((tag) =>
+    tagSets.every((tagSet) => tagSet.has(tag)),
+  );
+
+  return commonTags.sort();
+}
+
+function getTagCounts(photos: PhotoWithAlbums[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  photos.forEach((photo) => {
+    const tags = photo.tags?.map((t) => t.tag.toLowerCase()) || [];
+    tags.forEach((tag) => {
+      counts[tag] = (counts[tag] || 0) + 1;
+    });
+  });
+  return counts;
+}
 
 interface BulkPhotoEditFormProps {
   selectedPhotos: PhotoWithAlbums[];
@@ -94,58 +128,46 @@ export default function BulkPhotoEditForm({
   const [localSuccess, setLocalSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Check if all photos have the same is_public value
-  const allPublic = selectedPhotos.every((p) => p.is_public);
-  const allPrivate = selectedPhotos.every((p) => !p.is_public);
-  const mixedVisibility = !allPublic && !allPrivate;
+  const visibilityState = useMemo(() => {
+    const allPublic = selectedPhotos.every((p) => p.is_public);
+    const allPrivate = selectedPhotos.every((p) => !p.is_public);
+    return {
+      allPublic,
+      allPrivate,
+      mixedVisibility: !allPublic && !allPrivate,
+    };
+  }, [selectedPhotos]);
 
-  // Check if all photos have the same license
-  const getCommonLicense = (photos: PhotoWithAlbums[]) => {
-    if (photos.length === 0) return null;
-    const first = photos[0].license;
-    return photos.every((p) => p.license === first) ? first : null;
-  };
-  const commonLicense = getCommonLicense(selectedPhotos);
+  const { allPublic, allPrivate, mixedVisibility } = visibilityState;
 
-  // Find tags that are common across ALL selected photos
-  const getCommonTags = (photos: PhotoWithAlbums[]): string[] => {
-    if (photos.length === 0) return [];
+  const commonLicense = useMemo(
+    () => getCommonLicense(selectedPhotos),
+    [selectedPhotos],
+  );
 
-    const tagSets = photos.map((p) => {
-      const tags = p.tags?.map((t) => t.tag.toLowerCase()) || [];
-      return new Set(tags);
-    });
+  const commonTags = useMemo(
+    () => getCommonTags(selectedPhotos),
+    [selectedPhotos],
+  );
 
-    if (tagSets.length === 0) return [];
+  const tagCounts = useMemo(
+    () => getTagCounts(selectedPhotos),
+    [selectedPhotos],
+  );
 
-    // Start with tags from first photo, then intersect with others
-    const commonTags = Array.from(tagSets[0]).filter((tag) =>
-      tagSets.every((tagSet) => tagSet.has(tag)),
-    );
+  const allTags = useMemo(
+    () => Object.keys(tagCounts).sort((a, b) => {
+      const countDiff = tagCounts[b] - tagCounts[a];
+      if (countDiff !== 0) return countDiff;
+      return a.localeCompare(b);
+    }),
+    [tagCounts],
+  );
 
-    return commonTags.sort();
-  };
-
-  // Calculate tag counts across all selected photos
-  const getTagCounts = (photos: PhotoWithAlbums[]): Record<string, number> => {
-    const counts: Record<string, number> = {};
-    photos.forEach((photo) => {
-      const tags = photo.tags?.map((t) => t.tag.toLowerCase()) || [];
-      tags.forEach((tag) => {
-        counts[tag] = (counts[tag] || 0) + 1;
-      });
-    });
-    return counts;
-  };
-
-  const commonTags = getCommonTags(selectedPhotos);
-  const tagCounts = getTagCounts(selectedPhotos);
-  // Get all unique tags sorted by count (descending), then alphabetically (for display only)
-  const allTags = Object.keys(tagCounts).sort((a, b) => {
-    const countDiff = tagCounts[b] - tagCounts[a];
-    if (countDiff !== 0) return countDiff;
-    return a.localeCompare(b);
-  });
+  const readOnlyTags = useMemo(
+    () => allTags.filter((tag) => !commonTags.includes(tag)),
+    [allTags, commonTags],
+  );
 
   const {
     register,
@@ -211,21 +233,55 @@ export default function BulkPhotoEditForm({
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
   // Handle Delete key for bulk deletion
+  const handleBulkDelete = useCallback(async () => {
+    const confirmed = await confirm(confirmDeletePhotos(selectedPhotos));
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setLocalError(null);
+
+    try {
+      if (onBulkDelete) {
+        const photoIds = selectedPhotos.map((p) => p.id);
+        await onBulkDelete(photoIds);
+      } else {
+        for (const photo of selectedPhotos) {
+          await onDelete(photo.id);
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete photos';
+      setLocalError(message);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [confirm, onBulkDelete, onDelete, selectedPhotos]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if in an input or textarea
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
       if (e.key === 'Delete' && !isSaving && !isLoading && !isDeleting) {
         e.preventDefault();
-        handleBulkDelete();
+        void handleBulkDelete();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [handleBulkDelete, isDeleting, isLoading, isSaving]);
+
+  const getPhotoPageUrl = useCallback((photo: PhotoWithAlbums) => {
+    const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
+    if (!nickname) return undefined;
+    if (currentAlbum?.eventSlug) {
+      return `/events/${currentAlbum.eventSlug}#photos`;
+    }
+    return currentAlbum
+      ? `/@${nickname}/album/${currentAlbum.slug}/photo/${photo.short_id}`
+      : `/@${nickname}/photo/${photo.short_id}`;
+  }, [currentAlbum, currentProfile?.nickname]);
 
   const onSubmit = async (data: BulkPhotoFormData) => {
     if (!onBulkSave) {
@@ -247,32 +303,6 @@ export default function BulkPhotoEditForm({
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save photos';
       setLocalError(message);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    const confirmed = await confirm(confirmDeletePhotos(selectedPhotos));
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    setLocalError(null);
-
-    try {
-      if (onBulkDelete) {
-        // Use optimized bulk delete RPC
-        const photoIds = selectedPhotos.map((p) => p.id);
-        await onBulkDelete(photoIds);
-      } else {
-        // Fallback: delete photos one by one
-        for (const photo of selectedPhotos) {
-          await onDelete(photo.id);
-        }
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete photos';
-      setLocalError(message);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -346,27 +376,10 @@ export default function BulkPhotoEditForm({
       }
     >
       {/* Selected photos list */}
-      <div
-        className="mb-6 max-h-48 space-y-1 overflow-y-auto"
-      >
-        {selectedPhotos.map((photo) => (
-          <PhotoListItem
-            key={photo.id}
-            photo={photo}
-            variant="detailed"
-            photoPageUrl={(() => {
-              const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
-              if (!nickname) return undefined;
-              if (currentAlbum?.eventSlug) {
-                return `/events/${currentAlbum.eventSlug}#photos`;
-              }
-              return currentAlbum
-                ? `/@${nickname}/album/${currentAlbum.slug}/photo/${photo.short_id}`
-                : `/@${nickname}/photo/${photo.short_id}`;
-            })()}
-          />
-        ))}
-      </div>
+      <BulkPhotoListWindow
+        photos={selectedPhotos}
+        getPhotoPageUrl={getPhotoPageUrl}
+      />
 
       {readOnly && (
         <p
@@ -461,7 +474,7 @@ export default function BulkPhotoEditForm({
               onRemoveTag={handleRemoveTag}
               tagCounts={tagCounts}
               totalCount={selectedPhotos.length}
-              readOnlyTags={allTags.filter((tag) => !commonTags.includes(tag))}
+              readOnlyTags={readOnlyTags}
               helperText="Partially shared tags are visible but are not editable and won't be added to other items."
             />
           </div>

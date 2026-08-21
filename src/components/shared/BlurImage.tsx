@@ -11,6 +11,22 @@ import { getBlurPlaceholderUrl, getRawObjectUrl, isSupabaseUrl } from '@/utils/s
 // can skip the fade because the browser will serve it from memory/disk cache.
 const loadedImages = typeof window !== 'undefined' ? new Set<string>() : null;
 
+type BlurImageCacheOptions = {
+  sizes?: string;
+  width?: number | string;
+  quality?: number | string;
+  unoptimized?: boolean;
+};
+
+/** Cache key for a BlurImage fetch — must match the key used inside the component. */
+export function getBlurImageCacheKey(src: string, options: BlurImageCacheOptions = {}): string {
+  return `${src}|s=${options.sizes || ''}|w=${options.width || ''}|q=${options.quality || ''}|u=${options.unoptimized ? 1 : 0}`;
+}
+
+export function isBlurImageCached(cacheKey: string): boolean {
+  return loadedImages?.has(cacheKey) ?? false;
+}
+
 // Safe useLayoutEffect that falls back to useEffect during SSR
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -61,7 +77,12 @@ export default function BlurImage({
   // Without this, a 72px thumbnail would "poison" the cache for a 2400px hero.
   const isUnoptimized = !!props.unoptimized;
   const cacheKey = srcString
-    ? `${srcString}|s=${props.sizes || ''}|w=${props.width || ''}|q=${props.quality || ''}|u=${isUnoptimized ? 1 : 0}`
+    ? getBlurImageCacheKey(srcString, {
+      sizes: props.sizes,
+      width: props.width,
+      quality: props.quality,
+      unoptimized: isUnoptimized,
+    })
     : null;
 
   // Fallback: if the transformed image fails, serve the raw object URL unoptimized

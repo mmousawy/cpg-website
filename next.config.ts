@@ -35,6 +35,33 @@ const nextConfig: NextConfig = {
       revalidate: 300,
       expire: 3600,
     },
+    // Homepage composite — serve stale while revalidating after tag invalidation
+    home: {
+      stale: 300,
+      revalidate: 3600,
+      expire: 2592000,
+    },
+    // High-traffic listing pages — SWR after tag invalidation
+    eventsPage: {
+      stale: 300,
+      revalidate: 3600,
+      expire: 2592000,
+    },
+    galleryPage: {
+      stale: 300,
+      revalidate: 3600,
+      expire: 2592000,
+    },
+    challengesPage: {
+      stale: 300,
+      revalidate: 3600,
+      expire: 2592000,
+    },
+    changelog: {
+      stale: 300,
+      revalidate: 3600,
+      expire: 2592000,
+    },
   },
   // Memory optimization for Webpack builds (production)
   experimental: {

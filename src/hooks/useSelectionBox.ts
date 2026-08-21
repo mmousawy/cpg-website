@@ -129,6 +129,11 @@ export function useSelectionBox({
     [containerRef],
   );
 
+  const clearHoverPreview = useCallback(() => {
+    hoveredIdsRef.current = [];
+    setHoveredIds([]);
+  }, []);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container || isDisabled) return;
@@ -211,15 +216,16 @@ export function useSelectionBox({
         setJustFinishedSelecting(true);
         // Reset the flag after a short delay (after click event has fired)
         setTimeout(() => setJustFinishedSelecting(false), 0);
+      } else {
+        hoveredIdsRef.current = [];
+        setHoveredIds([]);
       }
 
       startPointRef.current = null;
       isSelectingRef.current = false;
-      hoveredIdsRef.current = [];
       modifierKeyRef.current = false;
       setIsSelecting(false);
       setSelectionBox(null);
-      setHoveredIds([]);
     };
 
     container.addEventListener('mousedown', handleMouseDown);
@@ -239,5 +245,6 @@ export function useSelectionBox({
     boxStyle: getBoxStyle(),
     hoveredIds,
     justFinishedSelecting,
+    clearHoverPreview,
   };
 }

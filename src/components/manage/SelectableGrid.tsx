@@ -28,7 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import clsx from 'clsx';
 import EmptyState from '@/components/shared/EmptyState';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SortableGridItem from './SortableGridItem';
 
 interface SelectableGridProps<T> {
@@ -150,7 +150,7 @@ export default function SelectableGrid<T>({
     [onSelectMultiple, selectedIds],
   );
 
-  const { isSelecting, boxStyle, hoveredIds, justFinishedSelecting } = useSelectionBox({
+  const { isSelecting, boxStyle, hoveredIds, justFinishedSelecting, clearHoverPreview } = useSelectionBox({
     containerRef,
     itemSelector: '[data-item-id]',
     onSelectionChange: handleSelectionChange,
@@ -158,7 +158,21 @@ export default function SelectableGrid<T>({
     disabled: !onSelectMultiple,
   });
 
-  const hoveredIdSet = new Set(hoveredIds);
+  const hoveredIdSet = useMemo(() => new Set(hoveredIds), [hoveredIds]);
+  const isBoxSelecting = isSelecting || hoveredIds.length > 0;
+
+  // Keep box-select preview until parent selection state catches up (avoids checkbox flicker)
+  useEffect(() => {
+    if (hoveredIds.length === 0) return;
+    if (hoveredIds.every((id) => selectedIds.has(id))) {
+      clearHoverPreview();
+    }
+  }, [clearHoverPreview, hoveredIds, selectedIds]);
+
+  const sortableItemIds = useMemo(
+    () => items.map((item) => getId(item)),
+    [items, getId],
+  );
 
   // Handle Ctrl+A / Cmd+A to select all items
   useEffect(() => {
@@ -418,6 +432,51 @@ export default function SelectableGrid<T>({
     isMultiDragRef.current = false;
   };
 
+  const handleGridClick = useCallback((e: React.MouseEvent) => {
+    const hasModifier = e.shiftKey || e.metaKey || e.ctrlKey;
+    const clickedItem = (e.target as HTMLElement).closest('[data-item-id]');
+    const isClickOnItem = clickedItem !== null;
+    const clickedCheckbox = (e.target as HTMLElement).closest('[data-no-select]');
+    const isClickOnCheckbox = clickedCheckbox !== null;
+
+    if (!isClickOnItem && !isClickOnCheckbox && onClearSelection && !isSelecting && !justFinishedSelecting && !hasModifier) {
+      onClearSelection();
+      setIsMultiSelectModeActive(false);
+    }
+  }, [isSelecting, justFinishedSelecting, onClearSelection]);
+
+  const handleItemClick = useCallback((item: T, e: React.MouseEvent) => {
+    const clickedId = getId(item);
+    const clickedIndex = items.findIndex((i) => getId(i) === clickedId);
+
+    if (e.shiftKey && anchorId && onSelectMultiple) {
+      const anchorIndex = items.findIndex((i) => getId(i) === anchorId);
+      if (anchorIndex !== -1) {
+        const startIndex = Math.min(anchorIndex, clickedIndex);
+        const endIndex = Math.max(anchorIndex, clickedIndex);
+        const rangeIds = items.slice(startIndex, endIndex + 1).map(getId);
+        onSelectMultiple(rangeIds);
+      }
+    } else if ((e.metaKey || e.ctrlKey) && onSelect) {
+      onSelect(clickedId, true);
+      setAnchorId(clickedId);
+    } else if (onSelect) {
+      onSelect(clickedId, false);
+      setAnchorId(clickedId);
+    }
+  }, [anchorId, getId, items, onSelect, onSelectMultiple]);
+
+  const handleCheckboxClick = useCallback((id: string) => {
+    if (onSelect) {
+      onSelect(id, true);
+      setAnchorId(id);
+    }
+  }, [onSelect]);
+
+  const handleEnterMultiSelectMode = useCallback(() => {
+    setIsMultiSelectModeActive(true);
+  }, []);
+
   if (items.length === 0 && !leadingContent && !trailingContent) {
     if (!emptyMessage) return null;
     return (
@@ -426,61 +485,6 @@ export default function SelectableGrid<T>({
       />
     );
   }
-
-  const handleGridClick = (e: React.MouseEvent) => {
-    // Only clear selection if clicking on empty space (not on an item)
-    // and not currently doing a drag-select or just finished one
-    // and not holding a modifier key
-    const hasModifier = e.shiftKey || e.metaKey || e.ctrlKey;
-
-    // Check if the click target is on or inside an item
-    const clickedItem = (e.target as HTMLElement).closest('[data-item-id]');
-    const isClickOnItem = clickedItem !== null;
-
-    // Also check if clicking on a checkbox (which has data-no-select attribute)
-    const clickedCheckbox = (e.target as HTMLElement).closest('[data-no-select]');
-    const isClickOnCheckbox = clickedCheckbox !== null;
-
-    if (!isClickOnItem && !isClickOnCheckbox && onClearSelection && !isSelecting && !justFinishedSelecting && !hasModifier) {
-      onClearSelection();
-      setIsMultiSelectModeActive(false); // Exit multi-select mode when clearing
-    }
-  };
-
-  const handleItemClick = (item: T, e: React.MouseEvent) => {
-    const clickedId = getId(item);
-    const clickedIndex = items.findIndex((i) => getId(i) === clickedId);
-
-    if (e.shiftKey && anchorId && onSelectMultiple) {
-      // Shift-click: select range from anchor to clicked item
-      const anchorIndex = items.findIndex((i) => getId(i) === anchorId);
-      if (anchorIndex !== -1) {
-        const startIndex = Math.min(anchorIndex, clickedIndex);
-        const endIndex = Math.max(anchorIndex, clickedIndex);
-        const rangeIds = items.slice(startIndex, endIndex + 1).map(getId);
-        onSelectMultiple(rangeIds);
-      }
-      // Don't update anchor on shift-click
-    } else if ((e.metaKey || e.ctrlKey) && onSelect) {
-      // Ctrl/Cmd-click: toggle item in selection
-      onSelect(clickedId, true);
-      // Update anchor to the clicked item
-      setAnchorId(clickedId);
-    } else if (onSelect) {
-      // Regular click: select only this item
-      onSelect(clickedId, false);
-      // Set anchor to this item
-      setAnchorId(clickedId);
-    }
-  };
-
-  const handleCheckboxClick = (id: string) => {
-    // Checkbox click behaves like ctrl-click: toggle without clearing others
-    if (onSelect) {
-      onSelect(id, true);
-      setAnchorId(id);
-    }
-  };
 
   const gridContent = (
     <div
@@ -545,9 +549,10 @@ export default function SelectableGrid<T>({
                 onCheckboxClick={handleCheckboxClick}
                 sortable={sortable}
                 isMultiSelectMode={isMultiSelectMode}
-                onEnterMultiSelectMode={() => setIsMultiSelectModeActive(true)}
+                onEnterMultiSelectMode={handleEnterMultiSelectMode}
                 disabled={disabledIds?.has(id)}
                 isActiveDrag={activeDragId === id}
+                isBoxSelecting={isBoxSelecting}
               />
             );
           })
@@ -628,7 +633,7 @@ export default function SelectableGrid<T>({
         onDragCancel={handleDragCancel}
       >
         <SortableContext
-          items={items.map((item) => getId(item))}
+          items={sortableItemIds}
           strategy={rectSortingStrategy}
         >
           {gridContent}

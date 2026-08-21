@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData, revalidateHome, revalidateProfile } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateAlbumBySlug, revalidateEventAlbum, revalidateGalleryData, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { PhotoWithAlbums } from '@/types/photos';
@@ -251,7 +251,7 @@ export function useUpdateAlbumPhoto(
       // Revalidate gallery and home when visibility changed (affects public listings)
       const previousPhoto = previousPhotos?.find((p) => p.id === photoId);
       if (previousPhoto && previousPhoto.is_public !== data.is_public) {
-        await Promise.all([revalidateGalleryData(), revalidateHome()]);
+        await revalidateGalleryData();
       }
 
       if (previousPhoto && !previousPhoto.is_public && data.is_public) {
@@ -528,7 +528,7 @@ export function useBulkUpdateAlbumPhotos(
           (p) => photoIds.includes(p.id) && p.is_public !== data.is_public,
         );
         if (anyVisibilityChanged) {
-          await Promise.all([revalidateGalleryData(), revalidateHome()]);
+          await revalidateGalleryData();
         }
       }
 

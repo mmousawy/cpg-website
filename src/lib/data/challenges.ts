@@ -233,7 +233,7 @@ export type ChallengePhotoPageResult = {
   currentChallenge: { id: string; title: string; slug: string; cover_image_url: string | null };
   albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null }>;
   challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
-  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number }>;
+  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
 };
 
 /**
@@ -259,7 +259,7 @@ export async function getChallengeSiblingPhotos(challengeSlug: string) {
 
   const { data: siblingData } = await supabase
     .from('challenge_photos')
-    .select('short_id, url, blurhash, reviewed_at')
+    .select('short_id, url, blurhash, width, height, reviewed_at')
     .eq('challenge_id', challenge.id)
     .order('reviewed_at', { ascending: false });
 
@@ -269,8 +269,10 @@ export async function getChallengeSiblingPhotos(challengeSlug: string) {
       url: sp.url ?? '',
       blurhash: sp.blurhash,
       sortOrder: index,
+      width: sp.width ?? 1200,
+      height: sp.height ?? 800,
     }))
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => !!p.shortId && !!p.url);
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.shortId && !!p.url);
 }
 
 /**
@@ -328,7 +330,7 @@ export async function getChallengePhotoByShortId(
   // Get sibling photos (all accepted photos in this challenge, ordered by reviewed_at)
   const { data: siblingData } = await supabase
     .from('challenge_photos')
-    .select('short_id, url, blurhash, reviewed_at')
+    .select('short_id, url, blurhash, width, height, reviewed_at')
     .eq('challenge_id', challenge.id)
     .order('reviewed_at', { ascending: false });
 
@@ -338,8 +340,10 @@ export async function getChallengePhotoByShortId(
       url: sp.url ?? '',
       blurhash: sp.blurhash,
       sortOrder: index,
+      width: sp.width ?? 1200,
+      height: sp.height ?? 800,
     }))
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => !!p.shortId && !!p.url);
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => !!p.shortId && !!p.url);
 
   // Get photo owner profile
   if (!photo.user_id) {

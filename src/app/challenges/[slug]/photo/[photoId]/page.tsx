@@ -103,6 +103,8 @@ async function CachedChallengePhotoPage({
     <PhotoLightboxColumn
       photo={result.photo}
       isInAlbum
+      siblingPhotos={result.siblingPhotos}
+      basePath={`/challenges/${slug}`}
     />
   );
 }

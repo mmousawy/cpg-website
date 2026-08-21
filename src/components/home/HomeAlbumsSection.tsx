@@ -2,11 +2,11 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
 import { routes } from '@/config/routes';
-import { getRecentAlbums } from '@/lib/data/albums';
+import type { HomePageData } from '@/lib/data/home';
 
-export async function HomeAlbumsSection() {
-  const albums = await getRecentAlbums(4);
+type HomeAlbumsSectionProps = Pick<HomePageData, 'albums'>;
 
+export function HomeAlbumsSection({ albums }: HomeAlbumsSectionProps) {
   if (albums.length === 0) {
     return null;
   }

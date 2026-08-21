@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
+import { cacheLife, cacheTag } from 'next/cache';
 
 const CHANGELOG_DIR = join(process.cwd(), 'changelog');
 const CHANGELOG_MD = join(process.cwd(), 'CHANGELOG.md');
@@ -255,4 +256,49 @@ export function getDateFromChangelogSlug(slug: string): string | null {
     month: 'short',
     day: 'numeric',
   });
+}
+
+export async function getCachedChangelogIndexData(): Promise<{
+  entries: ChangelogEntry[];
+  versionToSlug: Map<string, string>;
+}> {
+  'use cache';
+  cacheLife('changelog');
+  cacheTag('changelog');
+
+  const [changelogContent, maps] = await Promise.all([
+    getChangelogContent(),
+    buildVersionSlugMaps(),
+  ]);
+
+  return {
+    entries: changelogContent ? parseChangelog(changelogContent) : [],
+    versionToSlug: maps.versionToSlug,
+  };
+}
+
+export async function getCachedChangelogDetailData(slug: string): Promise<{
+  markdown: string | null;
+  summary: string | null;
+  version: string | null;
+}> {
+  'use cache';
+  cacheLife('changelog');
+  cacheTag('changelog');
+  cacheTag(`changelog-${slug}`);
+
+  const [markdown, summary, version] = await Promise.all([
+    getChangelogDetailMarkdown(slug),
+    getChangelogCommitSummary(slug),
+    getVersionForSlug(slug),
+  ]);
+
+  return { markdown, summary, version };
+}
+
+export async function getCachedChangelogSlugs(): Promise<string[]> {
+  'use cache';
+  cacheLife('changelog');
+  cacheTag('changelog');
+  return getChangelogSlugs();
 }

@@ -5,11 +5,11 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
-import { getOrganizers, getRecentMembers } from '@/lib/data/profiles';
+import type { HomePageData } from '@/lib/data/home';
 
-export async function HomeMembersSection() {
-  const organizers = await getOrganizers(5);
-  const recentMembers = await getRecentMembers(8);
+type HomeMembersSectionProps = Pick<HomePageData, 'organizers' | 'recentMembers'>;
+
+export function HomeMembersSection({ organizers, recentMembers }: HomeMembersSectionProps) {
   const { members, total: memberTotal } = recentMembers;
   const otherMembersCount = Math.max(0, memberTotal - members.length);
 

@@ -129,7 +129,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
           <SelectPrimitive.Content
             className={clsx(
               'z-50 min-w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border-color',
-              'bg-background-light shadow-lg font-sans',
+              'bg-background-light bg-no-noise shadow-lg font-sans',
             )}
             position="popper"
             sideOffset={4}
@@ -144,8 +144,10 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                   className={clsx(
                     'relative flex cursor-pointer select-none items-center gap-2 rounded-xs px-2 py-1.5 text-sm',
                     'outline-none transition-colors',
-                    'hover:bg-foreground/5 data-highlighted:bg-foreground/5',
-                    'data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary',
+                    'hover:bg-background data-highlighted:bg-background',
+                    'data-[state=checked]:bg-primary/10 data-[state=checked]:dark:bg-foreground/5 data-[state=checked]:text-primary',
+                    'data-[state=checked]:shadow-[inset_0_0_0_1px_#38786052] data-[state=checked]:dark:shadow-[inset_0_0_0_1px_#ededed1c]',
+                    'data-[state=checked]:hover:bg-primary/10 data-[state=checked]:data-highlighted:bg-primary/10 data-[state=checked]:data-highlighted:dark:bg-foreground/5',
                     'data-disabled:pointer-events-none data-disabled:opacity-50',
                   )}
                 >

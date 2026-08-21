@@ -1,11 +1,11 @@
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import ArrowLink from '@/components/shared/ArrowLink';
-import { getPublicPhotostream } from '@/lib/data/gallery';
+import type { HomePageData } from '@/lib/data/home';
 
-export async function HomeRecentPhotosSection() {
-  const photos = await getPublicPhotostream(10);
+type HomeRecentPhotosSectionProps = Pick<HomePageData, 'photos'>;
 
+export function HomeRecentPhotosSection({ photos }: HomeRecentPhotosSectionProps) {
   if (photos.length === 0) {
     return null;
   }

@@ -108,6 +108,9 @@ async function CachedAlbumPhotoPage({
     <PhotoLightboxColumn
       photo={result.photo}
       isInAlbum
+      siblingPhotos={result.siblingPhotos}
+      nickname={nickname}
+      albumSlug={result.currentAlbum.slug}
     />
   );
 }

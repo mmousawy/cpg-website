@@ -3,15 +3,19 @@ import EventsList from '@/components/events/EventsList';
 import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
 import { routes } from '@/config/routes';
-import { getActiveChallenges } from '@/lib/data/challenges';
-import { getEventAttendees, getUpcomingEvents } from '@/lib/data/events';
+import type { HomePageData } from '@/lib/data/home';
 
-export async function HomeExploreSection() {
-  const upcomingEventsData = await getUpcomingEvents(3);
-  const { events, serverNow } = upcomingEventsData;
-  const attendeesByEvent = await getEventAttendees(events.map((event) => event.id));
-  const { challenges } = await getActiveChallenges(4);
+type HomeExploreSectionProps = Pick<
+  HomePageData,
+  'events' | 'attendeesByEvent' | 'challenges' | 'serverNow'
+>;
 
+export function HomeExploreSection({
+  events,
+  attendeesByEvent,
+  challenges,
+  serverNow,
+}: HomeExploreSectionProps) {
   return (
     <PageContainer
       className="relative z-10 py-0!"

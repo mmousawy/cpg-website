@@ -23,8 +23,12 @@
 
 export * from './albums';
 export * from './challenges';
+export * from './challengesPage';
 export * from './events';
+export * from './eventsPage';
 export * from './gallery';
+export * from './galleryPage';
+export * from './home';
 export * from './interests';
 export * from './likes';
 export * from './members';

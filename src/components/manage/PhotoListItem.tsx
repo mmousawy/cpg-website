@@ -128,6 +128,8 @@ interface PhotoListItemProps {
   /** URL to the public photo page (shown as "Open page" link in detailed view) */
   photoPageUrl?: string;
   className?: string;
+  /** Skip blurhash decode for list thumbnails (performance) */
+  noBlur?: boolean;
 }
 
 /**
@@ -141,6 +143,7 @@ export default function PhotoListItem({
   variant = 'compact',
   photoPageUrl,
   className = '',
+  noBlur = false,
 }: PhotoListItemProps) {
   const displayName = getPhotoDisplayName(photo);
   const isDetailed = variant === 'detailed';
@@ -321,6 +324,7 @@ export default function PhotoListItem({
           src={getSquareThumbnailUrl(photo.url, variant === 'compact' ? 48 : 72, 85) || photo.url}
           alt={displayName}
           blurhash={photo.blurhash}
+          noBlur={noBlur}
           fill
           className="object-cover transition-transform group-hover/thumb:scale-105"
           sizes="128px"
@@ -344,7 +348,7 @@ export default function PhotoListItem({
                 href={photoPageUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
+                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/70 hover:text-foreground"
                 title="Open photo page"
                 aria-label="Open photo page"
                 onClick={(e) => e.stopPropagation()}
@@ -411,7 +415,7 @@ export default function PhotoListItem({
                     setShowExif(false);
                   }
                 }}
-                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"
+                className="p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/70 hover:text-foreground"
                 title="View EXIF data"
                 aria-label="View EXIF data"
               >
@@ -450,7 +454,7 @@ export default function PhotoListItem({
                             key={key}
                           >
                             <span
-                              className="table-cell text-foreground/60 font-medium pr-1 pt-0.5 whitespace-nowrap"
+                              className="table-cell text-foreground/70 font-medium pr-1 pt-0.5 whitespace-nowrap"
                             >
                               {getExifLabel(key)}
                               :
@@ -483,7 +487,7 @@ export default function PhotoListItem({
         </p>
 
         <div
-          className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/60"
+          className="grid grid-cols-2 gap-x-2 gap-y-0 text-[11px] leading-tight text-foreground/70"
         >
           {photo.created_at && formatDate(photo.created_at) && (
             <div
@@ -500,6 +504,7 @@ export default function PhotoListItem({
                 {photo.width}
                 {' '}
                 ×
+                {' '}
                 {photo.height}
               </div>
               {formatFileSize(photo.file_size) && (
@@ -513,7 +518,7 @@ export default function PhotoListItem({
                 className="truncate"
               >
                 <span
-                  className="text-foreground/60"
+                  className="text-foreground/70"
                 >
                   ID:
                 </span>

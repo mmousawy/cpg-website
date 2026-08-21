@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateGalleryData, revalidateHome, revalidateProfile } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateGalleryData, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import {
   getFlatPhotosFromCache,
@@ -129,7 +129,7 @@ export function useDeletePhotos(
 
       const hadPublicPhotos = deletedPhotos.some((p) => p.is_public);
       if (hadPublicPhotos) {
-        await Promise.all([revalidateGalleryData(), revalidateHome()]);
+        await revalidateGalleryData();
       }
     },
   });
@@ -238,7 +238,7 @@ export function useUpdatePhoto(
 
       const previousPhoto = data.previousPhotos?.find((p) => p.id === data.photoId);
       if (previousPhoto && previousPhoto.is_public !== data.data.is_public) {
-        await Promise.all([revalidateGalleryData(), revalidateHome()]);
+        await revalidateGalleryData();
       }
 
       if (previousPhoto && !previousPhoto.is_public && data.data.is_public) {
@@ -432,7 +432,7 @@ export function useBulkUpdatePhotos(
           (p) => data.photoIds.includes(p.id) && p.is_public !== data.data.is_public,
         );
         if (anyVisibilityChanged) {
-          await Promise.all([revalidateGalleryData(), revalidateHome()]);
+          await revalidateGalleryData();
         }
       }
 

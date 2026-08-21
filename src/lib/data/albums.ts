@@ -474,7 +474,7 @@ export type EventPhotoPageResult = {
   currentEvent: { id: number; title: string | null; slug: string; cover_image: string | null };
   albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null }>;
   challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
-  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number }>;
+  siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
 };
 
 /**
@@ -513,13 +513,20 @@ export async function getEventSiblingPhotos(eventSlug: string) {
 
   const { data: siblingData } = await supabase
     .from('album_photos')
-    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, deleted_at)')
+    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height, deleted_at)')
     .eq('album_id', album.id)
     .order('sort_order', { ascending: true });
 
   type AlbumPhotoRow = {
     sort_order: number | null;
-    photo: { short_id: string | null; url: string | null; blurhash: string | null; deleted_at: string | null } | null;
+    photo: {
+      short_id: string | null;
+      url: string | null;
+      blurhash: string | null;
+      width: number | null;
+      height: number | null;
+      deleted_at: string | null;
+    } | null;
   };
 
   return (siblingData || [])
@@ -532,9 +539,11 @@ export async function getEventSiblingPhotos(eventSlug: string) {
         url: p.url,
         blurhash: p.blurhash ?? null,
         sortOrder: index,
+        width: p.width ?? 1200,
+        height: p.height ?? 800,
       };
     })
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
 }
 
 /**
@@ -606,13 +615,20 @@ export async function getEventPhotoByShortId(
   // Get sibling photos from event album, ordered by sort_order
   const { data: siblingData } = await supabase
     .from('album_photos')
-    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, deleted_at)')
+    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height, deleted_at)')
     .eq('album_id', album.id)
     .order('sort_order', { ascending: true });
 
   type AlbumPhotoRow = {
     sort_order: number | null;
-    photo: { short_id: string | null; url: string | null; blurhash: string | null; deleted_at: string | null } | null;
+    photo: {
+      short_id: string | null;
+      url: string | null;
+      blurhash: string | null;
+      width: number | null;
+      height: number | null;
+      deleted_at: string | null;
+    } | null;
   };
 
   const siblingPhotos = (siblingData || [])
@@ -625,9 +641,11 @@ export async function getEventPhotoByShortId(
         url: p.url,
         blurhash: p.blurhash ?? null,
         sortOrder: index,
+        width: p.width ?? 1200,
+        height: p.height ?? 800,
       };
     })
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number } => p !== null);
+    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
 
   // Get photo owner profile
   if (!photo.user_id) {

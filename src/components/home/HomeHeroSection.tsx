@@ -1,15 +1,19 @@
 import HeroImage from '@/components/shared/HeroImage';
 import { HERO_IMAGES } from '@/config/heroImages';
-import { getServerNow } from '@/lib/cache/serverNow';
+import { cacheLife } from 'next/cache';
 
 const heroImages = HERO_IMAGES;
 
-export async function HomeHeroSection() {
-  const serverNow = await getServerNow();
+async function getHeroDayOfYear() {
+  'use cache';
+  cacheLife({ stale: 0, revalidate: 86400, expire: 86400 });
+  const now = Date.now();
+  const yearStart = new Date(new Date(now).getFullYear(), 0, 0).getTime();
+  return Math.floor((now - yearStart) / (1000 * 60 * 60 * 24));
+}
 
-  const serverDate = new Date(serverNow);
-  const yearStart = new Date(serverDate.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((serverNow - yearStart.getTime()) / (1000 * 60 * 60 * 24));
+export async function HomeHeroSection() {
+  const dayOfYear = await getHeroDayOfYear();
   const heroImage = heroImages[dayOfYear % heroImages.length];
 
   return (

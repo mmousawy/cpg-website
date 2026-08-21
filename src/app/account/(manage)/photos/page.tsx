@@ -37,7 +37,16 @@ import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useContext,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+} from 'react';
 
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
 import ImageSVG from 'public/icons/image.svg';
@@ -101,7 +110,7 @@ export default function PhotosPage() {
     return confirmed;
   }, [confirm, setHasUnsavedChanges]);
 
-  const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
+  const handleSelectPhoto = useCallback(async (photoId: string, isMultiSelect: boolean) => {
     if (!isMultiSelect && photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
@@ -116,17 +125,26 @@ export default function PhotosPage() {
       }
       return newSet;
     });
-  };
+  }, [handleConfirmUnsavedChanges]);
 
-  const handleClearSelection = async () => {
+  const handleClearSelection = useCallback(async () => {
     if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set());
-  };
+  }, [handleConfirmUnsavedChanges]);
 
-  const handleSelectMultiple = async (ids: string[]) => {
+  const handleSelectMultiple = useCallback(async (ids: string[]) => {
     if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
-    setSelectedPhotoIds(new Set(ids));
-  };
+    startTransition(() => {
+      setSelectedPhotoIds(new Set(ids));
+    });
+  }, [handleConfirmUnsavedChanges]);
+
+  const handlePhotoClick = useCallback(
+    (photo: PhotoWithAlbums) => {
+      void handleSelectPhoto(photo.id, false);
+    },
+    [handleSelectPhoto],
+  );
 
   const handleSavePhoto = async (photoId: string, data: PhotoFormData) => {
     photoEditDirtyRef.current = false;
@@ -251,7 +269,11 @@ export default function PhotosPage() {
     }
   };
 
-  const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
+  const selectedPhotos = useMemo(
+    () => photos.filter((p) => selectedPhotoIds.has(p.id)),
+    [photos, selectedPhotoIds],
+  );
+  const deferredSelectedPhotos = useDeferredValue(selectedPhotos);
   const selectedCount = selectedPhotoIds.size;
 
   const showEmptyState = !photosPending && photos.length === 0 && uploadingPhotos.length === 0;
@@ -328,7 +350,7 @@ export default function PhotosPage() {
         }
         sidebar={
           <PhotoEditSidebar
-            selectedPhotos={selectedPhotos}
+            selectedPhotos={deferredSelectedPhotos}
             onSave={handleSavePhoto}
             onBulkSave={handleBulkSavePhotos}
             onDelete={handleDeletePhoto}
@@ -415,7 +437,7 @@ export default function PhotosPage() {
                 photos={photos}
                 selectedPhotoIds={selectedPhotoIds}
                 onSelectPhoto={handleSelectPhoto}
-                onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+                onPhotoClick={handlePhotoClick}
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
                 onReorder={handleReorderPhotos}
@@ -449,10 +471,10 @@ export default function PhotosPage() {
       <BottomSheet
         isOpen={isMobileEditSheetOpen}
         onClose={handleMobileEditClose}
-        title={selectedPhotos.length === 0 ? undefined : selectedPhotos.length === 1 ? 'Edit photo' : `Edit ${selectedPhotos.length} photos`}
+        title={deferredSelectedPhotos.length === 0 ? undefined : deferredSelectedPhotos.length === 1 ? 'Edit photo' : `Edit ${deferredSelectedPhotos.length} photos`}
       >
         <PhotoEditSidebar
-          selectedPhotos={selectedPhotos}
+          selectedPhotos={deferredSelectedPhotos}
           onSave={handleSavePhoto}
           onBulkSave={handleBulkSavePhotos}
           onDelete={handleDeletePhoto}

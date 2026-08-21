@@ -1,6 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import { buildVersionSlugMaps, getChangelogContent, parseChangelog } from '@/lib/changelog';
+import { getCachedChangelogIndexData } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
 import Link from 'next/link';
 
@@ -25,9 +25,7 @@ export default async function ChangelogDetailsPage({ searchParams }: PageProps) 
   const { page } = await searchParams;
   const currentPage = Math.max(1, parseInt(page ?? '1', 10) || 1);
 
-  const changelogContent = await getChangelogContent();
-  const entries = changelogContent ? parseChangelog(changelogContent) : [];
-  const { versionToSlug } = await buildVersionSlugMaps();
+  const { entries, versionToSlug } = await getCachedChangelogIndexData();
 
   const totalPages = Math.max(1, Math.ceil(entries.length / ENTRIES_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);

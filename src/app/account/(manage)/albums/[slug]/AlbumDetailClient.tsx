@@ -46,7 +46,16 @@ import { preloadImages } from '@/utils/preloadImages';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import FolderSVG from 'public/icons/folder.svg';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useContext,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+} from 'react';
 
 import Avatar from '@/components/auth/Avatar';
 import SharedAlbumMemberList from '@/components/albums/SharedAlbumMemberList';
@@ -160,7 +169,7 @@ export default function AlbumDetailClient() {
     return confirmed;
   }, [confirm, setHasUnsavedChanges]);
 
-  const handleSelectPhoto = async (photoId: string, isMultiSelect: boolean) => {
+  const handleSelectPhoto = useCallback(async (photoId: string, isMultiSelect: boolean) => {
     if (!isMultiSelect && photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) {
       return;
     }
@@ -175,17 +184,26 @@ export default function AlbumDetailClient() {
       }
       return newSet;
     });
-  };
+  }, [handleConfirmUnsavedChanges]);
 
-  const handleClearSelection = async () => {
+  const handleClearSelection = useCallback(async () => {
     if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
     setSelectedPhotoIds(new Set());
-  };
+  }, [handleConfirmUnsavedChanges]);
 
-  const handleSelectMultiple = async (ids: string[]) => {
+  const handleSelectMultiple = useCallback(async (ids: string[]) => {
     if (photoEditDirtyRef.current && !(await handleConfirmUnsavedChanges())) return;
-    setSelectedPhotoIds(new Set(ids));
-  };
+    startTransition(() => {
+      setSelectedPhotoIds(new Set(ids));
+    });
+  }, [handleConfirmUnsavedChanges]);
+
+  const handlePhotoClick = useCallback(
+    (photo: PhotoWithAlbums) => {
+      void handleSelectPhoto(photo.id, false);
+    },
+    [handleSelectPhoto],
+  );
 
   const handleSavePhoto = async (photoId: string, data: PhotoFormData) => {
     if (!album) return;
@@ -442,9 +460,14 @@ export default function AlbumDetailClient() {
   };
 
   const canReorderPhotos = !isSharedWithMe && (album?.event_id == null || isAdmin);
-  const selectedPhotos = photos.filter((p) => selectedPhotoIds.has(p.id));
+  const selectedPhotos = useMemo(
+    () => photos.filter((p) => selectedPhotoIds.has(p.id)),
+    [photos, selectedPhotoIds],
+  );
+  const deferredSelectedPhotos = useDeferredValue(selectedPhotos);
   const selectedCount = selectedPhotoIds.size;
   const hasNonOwnedSelected = selectedPhotos.some((p) => p.user_id !== user?.id);
+  const deferredHasNonOwnedSelected = deferredSelectedPhotos.some((p) => p.user_id !== user?.id);
 
   // Build a map of photo ID → owner profile for photos not owned by the current user
   const notOwnedProfiles = new Map<string, PhotoOwnerProfile | null>(
@@ -608,9 +631,9 @@ export default function AlbumDetailClient() {
           </>
         }
         sidebar={
-          selectedPhotos.length > 0 ? (
+          selectedCount > 0 ? (
             <PhotoEditSidebar
-              selectedPhotos={selectedPhotos}
+              selectedPhotos={deferredSelectedPhotos}
               onSave={handleSavePhoto}
               onBulkSave={handleBulkSavePhotos}
               onDelete={handleDeletePhoto}
@@ -624,7 +647,7 @@ export default function AlbumDetailClient() {
               } : null}
               isLoading={photosLoading && photos.length === 0}
               onDirtyChange={handlePhotoDirtyChange}
-              readOnly={hasNonOwnedSelected}
+              readOnly={deferredHasNonOwnedSelected}
             />
           ) : isSharedWithMe ? (
             sharedAlbumSidebar
@@ -697,7 +720,7 @@ export default function AlbumDetailClient() {
               photos={photos}
               selectedPhotoIds={selectedPhotoIds}
               onSelectPhoto={handleSelectPhoto}
-              onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+              onPhotoClick={handlePhotoClick}
               onClearSelection={handleClearSelection}
               onSelectMultiple={handleSelectMultiple}
               sortable={false}
@@ -730,7 +753,7 @@ export default function AlbumDetailClient() {
                 photos={photos}
                 selectedPhotoIds={selectedPhotoIds}
                 onSelectPhoto={handleSelectPhoto}
-                onPhotoClick={(photo) => handleSelectPhoto(photo.id, false)}
+                onPhotoClick={handlePhotoClick}
                 onReorder={handleReorderPhotos}
                 onClearSelection={handleClearSelection}
                 onSelectMultiple={handleSelectMultiple}
@@ -763,14 +786,14 @@ export default function AlbumDetailClient() {
         <BottomSheet
           isOpen={isMobileEditSheetOpen}
           onClose={handleMobileEditClose}
-          title={selectedPhotos.length > 0
-            ? (selectedPhotos.length === 1 ? 'Edit photo' : `Edit ${selectedPhotos.length} photos`)
+          title={deferredSelectedPhotos.length > 0
+            ? (deferredSelectedPhotos.length === 1 ? 'Edit photo' : `Edit ${deferredSelectedPhotos.length} photos`)
             : 'Edit album'
           }
         >
-          {selectedPhotos.length > 0 ? (
+          {selectedCount > 0 ? (
             <PhotoEditSidebar
-              selectedPhotos={selectedPhotos}
+              selectedPhotos={deferredSelectedPhotos}
               onSave={handleSavePhoto}
               onBulkSave={handleBulkSavePhotos}
               onDelete={handleDeletePhoto}
