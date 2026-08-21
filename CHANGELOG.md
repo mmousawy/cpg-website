@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.38.9](https://github.com/mmousawy/cpg-website/compare/v1.38.8...v1.38.9) (2026-08-21)
+
+
+### 🐛 Bug Fixes
+
+* Enhance badge gradient and profile stats components ([edeca0e](https://github.com/mmousawy/cpg-website/commit/edeca0e265700a07a67e4f367d9ac7a5a931dea5))
+* Enhance caching and data fetching across various pages ([a71dc92](https://github.com/mmousawy/cpg-website/commit/a71dc9271666975cf995547e69ef1efebbdbe1d0))
+
 ## [1.38.8](https://github.com/mmousawy/cpg-website/compare/v1.38.7...v1.38.8) (2026-08-20)
 
 
