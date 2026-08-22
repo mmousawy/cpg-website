@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.10](https://github.com/mmousawy/cpg-website/compare/v1.38.9...v1.38.10) (2026-08-22)
+
+
+### 🐛 Bug Fixes
+
+* Add social share buttons and enhance sharing functionality ([b3c44bf](https://github.com/mmousawy/cpg-website/commit/b3c44bfeeec5f19ad857c6b4796974faf03abaaa))
+
 ## [1.38.9](https://github.com/mmousawy/cpg-website/compare/v1.38.8...v1.38.9) (2026-08-21)
 
 
