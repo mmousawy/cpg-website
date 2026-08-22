@@ -18,6 +18,7 @@ import ImageSVG from 'public/icons/image.svg';
 import PhotoStackIcon from 'public/icons/photo-stack.svg';
 
 import type { AlbumBySlugResult } from '@/lib/data/albums';
+import { formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 
 type AlbumContentProps = {
   album: AlbumBySlugResult;
@@ -65,6 +66,14 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
       };
     })
     .filter((p): p is PhotoWithContributor => p !== null);
+
+  const firstPhotoUrl = sortedAlbumPhotos[0]?.photo_url ?? null;
+  const ownerName = formatProfileDisplayName(album.profile?.full_name, album.profile?.nickname ?? nickname);
+  const shareData = {
+    url: getAbsoluteUrl(`/@${nickname}/album/${albumSlug}`),
+    title: `Album: ${album.title} by ${ownerName}`,
+    image: getSocialImageUrl(firstPhotoUrl),
+  };
 
   return (
     <>
@@ -265,6 +274,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
               entityType="album"
               entityId={album.id}
               initialLikesCount={album.likes_count ?? 0}
+              share={shareData}
             />
 
             {/* Comments */}

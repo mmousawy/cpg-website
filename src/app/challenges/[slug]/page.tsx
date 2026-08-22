@@ -28,6 +28,7 @@ import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
+import ShareButton from '@/components/shared/ShareButton';
 import { SignUpCTASection } from '@/components/shared/SignUpCTA';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import AwardStarSVG from 'public/icons/award-star.svg';
@@ -164,6 +165,8 @@ export default async function ChallengePage({
   }));
 
   const challengeUrl = getAbsoluteUrl(`/challenges/${slug}`);
+  const challengeShareTitle = `Challenge: ${challenge.title}`;
+  const challengeShareImage = getSocialImageUrl(challenge.cover_image_url);
   const creativeWorkJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
@@ -233,8 +236,11 @@ export default async function ChallengePage({
             >
               {/* Challenge badge */}
               <div
-                className="mb-2 flex items-center gap-2"
+                className="mb-2 flex items-center justify-between gap-2"
               >
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                >
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
                 >
@@ -268,6 +274,13 @@ export default async function ChallengePage({
                     Open
                   </span>
                 )}
+                </div>
+                <ShareButton
+                  url={challengeUrl}
+                  title={challengeShareTitle}
+                  image={challengeShareImage}
+                  size="compact"
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
@@ -290,8 +303,11 @@ export default async function ChallengePage({
             >
               {/* Challenge badge */}
               <div
-                className="mb-3 flex items-center gap-2"
+                className="mb-3 flex items-center justify-between gap-2"
               >
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                >
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge px-2 py-1 text-xs font-medium text-white"
                 >
@@ -325,6 +341,13 @@ export default async function ChallengePage({
                     Open
                   </span>
                 )}
+                </div>
+                <ShareButton
+                  url={challengeUrl}
+                  title={challengeShareTitle}
+                  image={challengeShareImage}
+                  size="compact"
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl font-heading"

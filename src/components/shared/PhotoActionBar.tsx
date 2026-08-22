@@ -1,6 +1,13 @@
 import DetailLikesSection from '@/components/shared/DetailLikesSection';
+import ShareButton from '@/components/shared/ShareButton';
 import ViewCount from '@/components/shared/ViewCount';
 import clsx from 'clsx';
+
+export type ShareData = {
+  url: string;
+  title: string;
+  image?: string | null;
+};
 
 interface PhotoActionBarProps {
   /** Entity type for likes */
@@ -11,6 +18,8 @@ interface PhotoActionBarProps {
   initialLikesCount?: number;
   /** View count */
   viewCount?: number;
+  /** Share data for the share button */
+  share?: ShareData;
   /** Additional className */
   className?: string;
 }
@@ -24,6 +33,7 @@ export default function PhotoActionBar({
   entityId,
   initialLikesCount = 0,
   viewCount = 0,
+  share,
   className,
 }: PhotoActionBarProps) {
   return (
@@ -35,6 +45,13 @@ export default function PhotoActionBar({
         entityId={entityId}
         initialCount={initialLikesCount}
       />
+      {share && (
+        <ShareButton
+          url={share.url}
+          title={share.title}
+          image={share.image}
+        />
+      )}
       {viewCount > 0 && (
         <ViewCount
           count={viewCount}

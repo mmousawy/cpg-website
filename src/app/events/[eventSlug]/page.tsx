@@ -9,6 +9,7 @@ import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
+import ShareButton from '@/components/shared/ShareButton';
 import { SignUpCTASection } from '@/components/shared/SignUpCTA';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { Tables } from '@/database.types';
@@ -178,6 +179,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     : null;
 
   const eventUrl = getAbsoluteUrl(`/events/${event.slug}`);
+  const eventShareTitle = formatEventPageTitle({
+    title: event.title,
+    date: event.date,
+    time: event.time,
+    now: serverNow,
+  });
   const eventJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -278,9 +285,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     />
                   )}
                 </div>
-                <EventAdminActionsDropdown
-                  eventSlug={event.slug || ''}
-                />
+                <div
+                  className="flex items-center gap-2"
+                >
+                  <ShareButton
+                    url={eventUrl}
+                    title={eventShareTitle}
+                    image={getSocialImageUrl(event.cover_image)}
+                    size="compact"
+                  />
+                  <EventAdminActionsDropdown
+                    eventSlug={event.slug || ''}
+                  />
+                </div>
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
@@ -329,9 +346,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     />
                   )}
                 </div>
-                <EventAdminActionsDropdown
-                  eventSlug={event.slug || ''}
-                />
+                <div
+                  className="flex items-center gap-2"
+                >
+                  <ShareButton
+                    url={eventUrl}
+                    title={eventShareTitle}
+                    image={getSocialImageUrl(event.cover_image)}
+                    size="compact"
+                  />
+                  <EventAdminActionsDropdown
+                    eventSlug={event.slug || ''}
+                  />
+                </div>
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl font-heading"

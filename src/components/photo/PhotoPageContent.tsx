@@ -11,6 +11,8 @@ import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
 import { getLicenseInfo } from '@/utils/licenses';
+import { getPhotoSharePath } from '@/utils/share';
+import { formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 import clsx from 'clsx';
 import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
@@ -147,6 +149,24 @@ export function PhotoMetadataColumn({
     : currentEvent
       ? albums.filter((a) => a.event_slug !== currentEvent.slug)
       : albums;
+
+  const sharePath = getPhotoSharePath({
+    nickname,
+    shortId: photo.short_id,
+    albumSlug: currentAlbum?.slug,
+    challengeSlug: currentChallenge?.slug,
+    eventSlug: currentEvent?.slug,
+  });
+  const shareTitle = formatPhotoPageTitle({
+    ownerName: formatProfileDisplayName(profile.full_name, profile.nickname),
+    photoTitle: photo.title,
+    contextTitle: currentAlbum?.title ?? currentChallenge?.title ?? currentEvent?.title ?? null,
+  });
+  const shareData = {
+    url: getAbsoluteUrl(sharePath),
+    title: shareTitle,
+    image: getSocialImageUrl(photo.url),
+  };
 
   return (
     <div
@@ -351,6 +371,7 @@ export function PhotoMetadataColumn({
           entityType="photo"
           entityId={photo.id}
           initialLikesCount={photo.likes_count ?? 0}
+          share={shareData}
         />
 
         <Comments

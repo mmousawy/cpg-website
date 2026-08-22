@@ -27,6 +27,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Attendee list with avatars
 - Attendance tracking for admins
 - "You went!" badge on past events you attended
+- Social share buttons on event pages
 - reCAPTCHA protection
 
 ### Photo Galleries
@@ -39,6 +40,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Full-size viewing (PhotoSwipe)
 - Masonry grid layout
 - Likes on photos and albums
+- Social share buttons on photos and albums (native share on mobile; copy link, Facebook, X, WhatsApp, Instagram, and Pinterest on desktop)
 - View tracking with "Most viewed this week" sections
 - Bulk photo and album editing (multi-select, batch operations)
 - Add photos to albums modal
@@ -59,6 +61,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Notifications for submission results
 - Profile badges for challenge participation
 - "Featured in" section on photo detail pages shows accepted challenges
+- Social share buttons on challenge pages
 
 ### User Profiles
 - Public profile pages (`/@username`)
@@ -434,7 +437,7 @@ Deploy to Vercel:
 
 ### Sharing
 
-- [ ] Social share buttons
+- [x] Social share buttons
 
 ### Community
 
