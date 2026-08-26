@@ -104,9 +104,12 @@ test.describe('Photo Management Flow', () => {
     await saveButton.click();
     await expect(page.getByRole('button', { name: /saved!/i })).toBeVisible({ timeout: 10000 });
 
-    // Public profile shows the uploaded photo
+    // Public profile shows the uploaded photo (role locator skips CSS-hidden
+    // mobile/tablet grid copies that stay opacity-0 because they never load)
     await page.goto(`/@${testUser.nickname}`);
-    await expect(page.locator('img').first()).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole('link', { name: new RegExp(`View photo.*@${testUser.nickname}`) }),
+    ).toBeVisible({ timeout: 15000 });
 
     // Homepage Recent photos includes the test user's upload (reload once for SWR shell)
     await page.goto('/');
