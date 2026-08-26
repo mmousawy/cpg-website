@@ -1,6 +1,7 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import { getServerNow } from '@/lib/cache/serverNow';
 import { filterPastEvents, filterUpcomingEvents } from '@/lib/events/filters';
+import { withSanitizedDescriptions } from '@/utils/sanitizeRichHtml';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -41,7 +42,7 @@ export async function getPublishedEvents() {
     .eq('is_draft', false)
     .order('date', { ascending: true });
 
-  return (data || []) as CPGEvent[];
+  return withSanitizedDescriptions((data || []) as CPGEvent[]);
 }
 
 /**

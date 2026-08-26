@@ -7,6 +7,7 @@ import LogoSVG from 'public/cpg-logo.svg';
 import { Suspense, useEffect, useLayoutEffect, useState } from 'react';
 
 import { routes } from '@/config/routes';
+import { useKeepMounted } from '@/hooks/useKeepMounted';
 import { useMounted } from '@/hooks/useMounted';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
@@ -74,8 +75,11 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchIntent, setSearchIntent] = useState(false);
   const mounted = useMounted();
   const { profile, user } = useSession();
+  const searchReady = useKeepMounted(searchOpen || searchIntent);
+  const mobileMenuReady = useKeepMounted(mobileMenuOpen);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
@@ -176,6 +180,8 @@ export default function Header() {
             {/* Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
+              onMouseEnter={() => setSearchIntent(true)}
+              onFocus={() => setSearchIntent(true)}
               className="flex items-center justify-center gap-2 rounded-full p-2 text-foreground/80 transition-colors hover:text-foreground lg:rounded-lg lg:border lg:border-border-color lg:bg-background-medium lg:px-2 lg:py-1.5 lg:text-sm lg:hover:border-primary"
               aria-label="Search"
             >
@@ -227,6 +233,8 @@ export default function Header() {
             {/* Mobile Search Button */}
             <button
               onClick={() => setSearchOpen(true)}
+              onMouseEnter={() => setSearchIntent(true)}
+              onFocus={() => setSearchIntent(true)}
               className="flex items-center justify-center rounded-full p-2 text-foreground/80 transition-colors hover:text-foreground"
               aria-label="Search"
             >
@@ -287,18 +295,19 @@ export default function Header() {
                 </svg>
               </button>
 
-              <MobileMenu
-                isOpen={mobileMenuOpen}
-                onClose={() => setMobileMenuOpen(false)}
-                mounted={mounted}
-              />
+              {mobileMenuReady && (
+                <MobileMenu
+                  isOpen={mobileMenuOpen}
+                  onClose={() => setMobileMenuOpen(false)}
+                  mounted={mounted}
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search modal — stay mounted so open/close CSS transitions run */}
-      {mounted && (
+      {searchReady && (
         <SearchModal
           isOpen={searchOpen}
           onClose={() => setSearchOpen(false)}

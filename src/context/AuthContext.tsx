@@ -1,11 +1,11 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, useMemo } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase/client';
-import { Database } from '@/database.types';
+import type { Database } from '@/database.types';
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
 import { useSession } from '@/context/SessionContext';
+import { loadBrowserSupabase, shouldLoadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 import type { ServerAuth, ServerProfile } from '@/utils/supabase/getServerAuth';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -80,6 +80,7 @@ export function AuthProvider({
     fetchingProfileRef.current = userId;
 
     try {
+      const supabase = await loadBrowserSupabase();
       const { data, error } = await supabase.rpc('get_own_profile');
 
       const nextProfile = error ? null : (data as Profile | null);
@@ -113,6 +114,7 @@ export function AuthProvider({
       return { error: new Error('Not authenticated') };
     }
 
+    const supabase = await loadBrowserSupabase();
     const { error } = await supabase
       .from('profiles')
       .update({ theme })
@@ -128,17 +130,26 @@ export function AuthProvider({
 
   useEffect(() => {
     let mounted = true;
+    let unsubscribe: (() => void) | undefined;
 
-    const updateLastLoggedIn = (userId: string): void => {
-      if (lastLoggedInUpdatedRef.current === userId) return;
-      lastLoggedInUpdatedRef.current = userId;
-      // Fire and forget - don't block auth flow if this fails
-      supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => {});
-    };
+    const start = async () => {
+      if (!shouldLoadBrowserSupabase()) {
+        setIsLoading(false);
+        markSessionReady();
+        return;
+      }
 
-    const forceProfileRefresh = !initialAuth?.profile;
+      const supabase = await loadBrowserSupabase();
+      if (!mounted) return;
 
-    const bootstrapSession = () => {
+      const updateLastLoggedIn = (userId: string): void => {
+        if (lastLoggedInUpdatedRef.current === userId) return;
+        lastLoggedInUpdatedRef.current = userId;
+        supabase.from('profiles').update({ last_logged_in: new Date().toISOString() }).eq('id', userId).then(() => {});
+      };
+
+      const forceProfileRefresh = !initialAuth?.profile;
+
       supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
         if (!mounted) return;
 
@@ -161,49 +172,52 @@ export function AuthProvider({
           markSessionReady();
         }
       });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+        if (!mounted || event === 'INITIAL_SESSION') return;
+
+        const userId = nextSession?.user?.id ?? null;
+        const userChanged = userId !== currentUserIdRef.current;
+
+        setUser(nextSession?.user ?? null);
+        setSessionState(nextSession);
+        currentUserIdRef.current = userId;
+
+        if (userChanged) {
+          if (userId) {
+            if (event === 'SIGNED_IN') {
+              updateLastLoggedIn(userId);
+            }
+            fetchProfile(userId);
+          } else {
+            setProfile(null);
+            lastLoggedInUpdatedRef.current = null;
+            clearSession();
+            router.refresh();
+          }
+        }
+      });
+
+      unsubscribe = () => subscription.unsubscribe();
     };
 
-    bootstrapSession();
-
-    // Listen for auth changes immediately (login/logout in another tab, OAuth return).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      if (!mounted || event === 'INITIAL_SESSION') return;
-
-      const userId = nextSession?.user?.id ?? null;
-      const userChanged = userId !== currentUserIdRef.current;
-
-      setUser(nextSession?.user ?? null);
-      setSessionState(nextSession);
-      currentUserIdRef.current = userId;
-
-      if (userChanged) {
-        if (userId) {
-          if (event === 'SIGNED_IN') {
-            updateLastLoggedIn(userId);
-          }
-          fetchProfile(userId);
-        } else {
-          setProfile(null);
-          lastLoggedInUpdatedRef.current = null;
-          clearSession();
-          router.refresh();
-        }
-      }
-    });
+    void start();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, [clearSession, fetchProfile, hasInitialAuth, initialAuth?.profile, markSessionReady, router]);
 
   const signOut = useCallback(async () => {
+    const supabase = await loadBrowserSupabase();
     await supabase.auth.signOut();
     clearSession();
     router.refresh();
   }, [clearSession, router]);
 
   const signInWithGoogle = useCallback(async (redirectTo?: string) => {
+    const supabase = await loadBrowserSupabase();
     const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
     const query = safePath ? `?redirectTo=${encodeURIComponent(safePath)}` : '';
     const { error } = await supabase.auth.signInWithOAuth({
@@ -214,6 +228,7 @@ export function AuthProvider({
   }, []);
 
   const signInWithDiscord = useCallback(async (redirectTo?: string) => {
+    const supabase = await loadBrowserSupabase();
     const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
     const query = safePath ? `?redirectTo=${encodeURIComponent(safePath)}` : '';
     const { error } = await supabase.auth.signInWithOAuth({
@@ -224,6 +239,7 @@ export function AuthProvider({
   }, []);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
+    const supabase = await loadBrowserSupabase();
     const { error, data } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error };
 
@@ -293,6 +309,7 @@ export function AuthProvider({
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {
+    const supabase = await loadBrowserSupabase();
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error: error || null };
   }, []);

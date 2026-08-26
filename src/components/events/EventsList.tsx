@@ -1,7 +1,7 @@
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
-import { RichDescription } from '@/components/shared/RichDescription';
+import { RichDescriptionView } from '@/components/shared/RichDescriptionView';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import clsx from 'clsx';
@@ -275,7 +275,7 @@ export default function EventsList({
                       </span>
                     </span>
                   )}
-                  <RichDescription
+                  <RichDescriptionView
                     html={event.description ?? ''}
                     className="whitespace-pre-line line-clamp-5 text-[15px]"
                   />

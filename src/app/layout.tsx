@@ -35,7 +35,7 @@ const cheriaHeading = localFont({
   variable: '--font-cheria-heading',
   weight: '400 700',
   display: 'swap',
-  preload: false,
+  preload: true,
 });
 
 export const metadata: Metadata = {

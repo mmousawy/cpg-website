@@ -1,8 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useContext } from 'react';
 
-import { useMounted } from '@/hooks/useMounted';
+import { ModalContext } from '@/app/providers/ModalProvider';
+import { useConfirmState } from '@/app/providers/ConfirmProvider';
+import { useKeepMounted } from '@/hooks/useKeepMounted';
+
 const Modal = dynamic(
   () => import('@/components/shared/Modal'),
   { ssr: false },
@@ -14,17 +18,19 @@ const ConfirmModal = dynamic(
 );
 
 /**
- * Loads modal UI after hydration. Modals stay mounted so open/close CSS transitions
- * can run (mounting only when isOpen is already true skips the enter animation).
+ * Loads modal UI the first time one opens, then keeps it mounted so close
+ * transitions can run.
  */
 export default function LazyOverlays() {
-  const mounted = useMounted();
+  const { isOpen: modalOpen } = useContext(ModalContext);
+  const { isOpen: confirmOpen } = useConfirmState();
+  const modalReady = useKeepMounted(modalOpen);
+  const confirmReady = useKeepMounted(confirmOpen);
 
-  if (!mounted) return null;
   return (
     <>
-      <Modal />
-      <ConfirmModal />
+      {modalReady ? <Modal /> : null}
+      {confirmReady ? <ConfirmModal /> : null}
     </>
   );
 }

@@ -198,12 +198,15 @@ export default function BlurImage({
   const imgWidth = typeof props.width === 'number' ? props.width : parseInt(String(props.width), 10);
   const imgHeight = typeof props.height === 'number' ? props.height : parseInt(String(props.height), 10);
 
-  // Decode blurhash with correct aspect ratio - works on both server (SSR) and client
+  // Decode blurhash with correct aspect ratio - works on both server (SSR) and client.
+  // Explicit decode dims (heroes, banners) keep their requested size; grids use 32px
+  // so inline BMP placeholders stay small in HTML.
   const blurhashDataUrl = useMemo(() => {
     if (blurhash && !noBlur) {
-      const sourceWidth = blurhashWidth ?? (imgWidth || 0);
-      const sourceHeight = blurhashHeight ?? (imgHeight || 0);
-      const dims = getBlurhashDimensions(sourceWidth, sourceHeight, 64);
+      if (blurhashWidth && blurhashHeight) {
+        return blurhashToDataURL(blurhash, blurhashWidth, blurhashHeight);
+      }
+      const dims = getBlurhashDimensions(imgWidth || 0, imgHeight || 0, 32);
       return blurhashToDataURL(blurhash, dims.width, dims.height);
     }
     return null;

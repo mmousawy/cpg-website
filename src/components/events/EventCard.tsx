@@ -1,4 +1,4 @@
-import { RichDescription } from '@/components/shared/RichDescription';
+import { RichDescriptionView } from '@/components/shared/RichDescriptionView';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { EventAttendee } from '@/types/events';
 import clsx from 'clsx';
@@ -218,7 +218,7 @@ export default function EventCard({
           </div>
 
           {event.description && (
-            <RichDescription
+            <RichDescriptionView
               html={event.description}
               className="text-foreground/90 text-sm line-clamp-3"
               disableLinks

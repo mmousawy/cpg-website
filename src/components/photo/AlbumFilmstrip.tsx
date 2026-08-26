@@ -254,7 +254,7 @@ export default function AlbumFilmstrip({
                   blurhash={photo.blurhash}
                   fill
                   sizes="48px"
-                  loading="eager"
+                  loading="lazy"
                   fetchPriority="low"
                   className="object-cover"
                 />

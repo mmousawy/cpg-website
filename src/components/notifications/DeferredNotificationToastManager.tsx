@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { scheduleIdleWork } from '@/utils/scheduleIdle';
-import { supabase } from '@/utils/supabase/client';
+import { hasSupabaseAuthCookie, loadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 
 const NotificationToastManager = dynamic(
   () => import('./NotificationToastManager'),
@@ -15,14 +15,18 @@ export default function DeferredNotificationToastManager() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    if (!hasSupabaseAuthCookie()) return;
+
     let cancelled = false;
 
     scheduleIdleWork(() => {
-      void supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!cancelled && session?.user) {
-          setReady(true);
-        }
-      });
+      void loadBrowserSupabase().then((supabase) => (
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!cancelled && session?.user) {
+            setReady(true);
+          }
+        })
+      ));
     }, 3000);
 
     return () => {

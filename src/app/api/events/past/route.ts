@@ -1,5 +1,6 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
 import { getEventQueryContext } from '@/lib/events/status';
+import { withSanitizedDescriptions } from '@/utils/sanitizeRichHtml';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const pastEvents = (events || []) as CPGEvent[];
+  const pastEvents = withSanitizedDescriptions((events || []) as CPGEvent[]);
 
   // Fetch attendees for these events
   const eventIds = pastEvents.map(e => e.id);

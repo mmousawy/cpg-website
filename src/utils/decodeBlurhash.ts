@@ -6,7 +6,7 @@ import { decode } from 'blurhash';
  *
  * @param width - Original image width
  * @param height - Original image height
- * @param maxSize - Maximum dimension (default: 32 for encoding, 64 for decoding)
+ * @param maxSize - Maximum dimension (default: 32)
  * @returns { width, height } dimensions preserving aspect ratio
  */
 export function getBlurhashDimensions(
@@ -101,6 +101,8 @@ function rgbaPixelsToDataURL(
   return `data:image/bmp;base64,${btoa(binary)}`;
 }
 
+const blurhashDataUrlCache = new Map<string, string | null>();
+
 /**
  * Decode a blurhash string to a base64 data URL.
  * Works on both server (SSR) and client - no canvas needed.
@@ -117,11 +119,19 @@ export function blurhashToDataURL(
 ): string | null {
   if (!blurhash) return null;
 
+  const cacheKey = `${blurhash}:${width}:${height}`;
+  if (blurhashDataUrlCache.has(cacheKey)) {
+    return blurhashDataUrlCache.get(cacheKey) ?? null;
+  }
+
   try {
     const pixels = decode(blurhash, width, height);
-    return rgbaPixelsToDataURL(pixels, width, height);
+    const dataUrl = rgbaPixelsToDataURL(pixels, width, height);
+    blurhashDataUrlCache.set(cacheKey, dataUrl);
+    return dataUrl;
   } catch (error) {
     console.warn('Failed to decode blurhash:', error);
+    blurhashDataUrlCache.set(cacheKey, null);
     return null;
   }
 }

@@ -1,5 +1,6 @@
-import clsx from 'clsx';
 import { prepareRichDescription } from '@/utils/sanitizeRichHtml';
+
+import { RichDescriptionView } from './RichDescriptionView';
 
 export interface RichDescriptionProps {
   html: string;
@@ -9,29 +10,17 @@ export interface RichDescriptionProps {
 }
 
 /**
- * Safely renders rich HTML descriptions on the web.
- * Sanitization runs on the server to keep sanitize-html out of the client bundle.
+ * Sanitizes rich HTML on the server, then renders it.
+ * Client components should use {@link RichDescriptionView} with pre-sanitized HTML.
  */
 export function RichDescription({ html, className, disableLinks = false }: RichDescriptionProps) {
   const prepared = prepareRichDescription(html, disableLinks);
   if (!prepared) return null;
 
-  const { content, isPlain } = prepared;
-  const classes = clsx('rich-description', className);
-
-  if (isPlain) {
-    return (
-      <div
-        className={classes}
-      >
-        {content}
-      </div>
-    );
-  }
-
-  return <div
-    className={classes}
-    suppressHydrationWarning
-    dangerouslySetInnerHTML={{ __html: content }}
-  />;
+  return (
+    <RichDescriptionView
+      html={prepared.content}
+      className={className}
+    />
+  );
 }

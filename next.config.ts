@@ -79,6 +79,9 @@ const nextConfig: NextConfig = {
     loaderFile: './src/utils/supabaseImageLoader.ts',
     // Steps between 256 and 640 so mobile grid thumbs pick 384 instead of 750
     imageSizes: [16, 32, 48, 64, 96, 128, 192, 256, 320, 384],
+    // Cap at the custom loader's max (2400). Default 3840 would only produce a
+    // duplicate 2400 URL in srcset.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2400],
     // Cache transformed images for 31 days (reduces re-transformations)
     minimumCacheTTL: 2678400,
     // Single format reduces variants (Supabase auto-serves WebP via /render/image)
