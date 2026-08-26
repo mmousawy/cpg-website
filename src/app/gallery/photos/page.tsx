@@ -5,6 +5,7 @@ import HelpLink from '@/components/shared/HelpLink';
 import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPublicPhotostream } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
@@ -25,7 +26,8 @@ export default async function PhotosPage({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
 
-  const allPhotos = await getPublicPhotostream(21, initialSort);
+  const includeTestContent = await getIncludeTestContent();
+  const allPhotos = await getPublicPhotostream(21, initialSort, includeTestContent);
   const photos = allPhotos.slice(0, 20);
   const hasMore = allPhotos.length > 20;
 

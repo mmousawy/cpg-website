@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import { searchEntities } from '@/lib/data/search';
 import type { SearchEntityType } from '@/types/search';
 
 export async function GET(request: NextRequest) {
+  const includeTestContent = getIncludeTestContentFromRequest(request);
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q') || '';
   const typesParam = searchParams.get('types');
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const results = await searchEntities(query.trim(), types, limit);
+    const results = await searchEntities(query.trim(), types, limit, includeTestContent);
 
     // Add cache headers for client-side caching (5 minutes)
     return NextResponse.json(

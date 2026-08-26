@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { cacheLife, cacheTag } from 'next/cache';
 import { HomeAlbumsSection } from '@/components/home/HomeAlbumsSection';
 import { HomeExploreSection } from '@/components/home/HomeExploreSection';
 import { HomeHeroSection } from '@/components/home/HomeHeroSection';
@@ -8,6 +10,7 @@ import PageContainer from '@/components/layout/PageContainer';
 import ActivitiesSliderWrapper from '@/components/shared/ActivitiesSliderWrapper';
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import { socialLinks } from '@/config/socials';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getHomePageData } from '@/lib/data/home';
 import { createMetadata } from '@/utils/metadata';
 import DiscordSVG from 'public/icons/discord.svg';
@@ -32,10 +35,24 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
   WhatsApp: WhatsAppSVG,
 };
 
-// Block until cached data resolves so SSR includes full HTML (no streaming shell)
-export const instant = false;
+export default function Home() {
+  return (
+    <Suspense fallback={<CachedHomePage includeTestContent={false} />}>
+      <HomePageWithE2EFlag />
+    </Suspense>
+  );
+}
 
-export default async function Home() {
+async function HomePageWithE2EFlag() {
+  const includeTestContent = await getIncludeTestContent();
+  return <CachedHomePage includeTestContent={includeTestContent} />;
+}
+
+async function CachedHomePage({ includeTestContent }: { includeTestContent: boolean }) {
+  'use cache';
+  cacheLife('home');
+  cacheTag('home');
+
   const {
     serverNow,
     events,
@@ -45,7 +62,7 @@ export default async function Home() {
     photos,
     organizers,
     recentMembers,
-  } = await getHomePageData();
+  } = await getHomePageData(includeTestContent);
 
   return (
     <>

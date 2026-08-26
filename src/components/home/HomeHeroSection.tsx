@@ -6,7 +6,7 @@ const heroImages = HERO_IMAGES;
 
 async function getHeroDayOfYear() {
   'use cache';
-  cacheLife({ stale: 0, revalidate: 86400, expire: 86400 });
+  cacheLife({ stale: 300, revalidate: 86400, expire: 86400 });
   const now = Date.now();
   const yearStart = new Date(new Date(now).getFullYear(), 0, 0).getTime();
   return Math.floor((now - yearStart) / (1000 * 60 * 60 * 24));

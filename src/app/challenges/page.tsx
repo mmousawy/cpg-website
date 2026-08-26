@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
 import HelpLink from '@/components/shared/HelpLink';
@@ -11,9 +12,11 @@ export const metadata = createMetadata({
   keywords: ['photo challenges', 'photography contest', 'themed photography', 'photo submissions'],
 });
 
-export const instant = false;
-
 export default async function ChallengesPage() {
+  'use cache';
+  cacheLife('challengesPage');
+  cacheTag('challenges-page');
+
   const { activeChallenges, pastChallenges, serverNow } = await getChallengesPageData();
 
   return (

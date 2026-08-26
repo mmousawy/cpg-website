@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation';
 
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import type { StreamPhoto } from '@/lib/data/gallery';
@@ -52,7 +53,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   }
 
   // Use cached function for metadata (same cache as page)
-  const profile = await getProfileByNickname(nickname);
+  const includeTestContent = await getIncludeTestContent();
+  const profile = await getProfileByNickname(nickname, includeTestContent);
 
   if (!profile) {
     return createMetadata({
@@ -97,7 +99,8 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 }
 
 async function ProfileContent({ nickname }: { nickname: string }) {
-  const profile = await getProfileByNickname(nickname);
+  const includeTestContent = await getIncludeTestContent();
+  const profile = await getProfileByNickname(nickname, includeTestContent);
 
   if (!profile) {
     notFound();

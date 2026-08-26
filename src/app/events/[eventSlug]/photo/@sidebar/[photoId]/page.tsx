@@ -1,6 +1,7 @@
 import { PhotoMetadataColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
 import { notFound } from 'next/navigation';
 
@@ -26,7 +27,8 @@ export default async function EventPhotoSidebar({ params }: { params: Params }) 
     notFound();
   }
 
-  const result = await getEventPhotoByShortId(eventSlug, photoId);
+  const includeTestContent = await getIncludeTestContent();
+  const result = await getEventPhotoByShortId(eventSlug, photoId, includeTestContent);
 
   if (!result) {
     notFound();

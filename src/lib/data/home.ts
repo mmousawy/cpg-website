@@ -4,7 +4,6 @@ import type { AlbumWithPhotos } from '@/types/albums';
 import { filterActiveChallenges } from '@/lib/challenges/filters';
 import { filterUpcomingEvents } from '@/lib/events/filters';
 import { getServerNow } from '@/lib/cache/serverNow';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import { getRecentAlbums } from './albums';
 import { getPublishedChallengesWithStats } from './challenges';
@@ -27,12 +26,10 @@ export type HomePageData = {
  * Homepage data in two parallel waves:
  * 1. All independent cached queries at once
  * 2. Attendees after upcoming events are known
+ *
+ * The `home` cache tag lives on the page so the prerendered RSC is what SWR serves.
  */
-export async function getHomePageData(): Promise<HomePageData> {
-  'use cache';
-  cacheLife('home');
-  cacheTag('home');
-
+export async function getHomePageData(includeTestContent = false): Promise<HomePageData> {
   const [
     serverNow,
     publishedEvents,
@@ -45,10 +42,10 @@ export async function getHomePageData(): Promise<HomePageData> {
     getServerNow(),
     getPublishedEvents(),
     getPublishedChallengesWithStats(),
-    getRecentAlbums(4),
-    getPublicPhotostream(10),
+    getRecentAlbums(4, includeTestContent),
+    getPublicPhotostream(10, 'recent', includeTestContent),
     getOrganizers(5),
-    getRecentMembers(8),
+    getRecentMembers(8, includeTestContent),
   ]);
 
   const events = filterUpcomingEvents(publishedEvents, serverNow).slice(0, 3);

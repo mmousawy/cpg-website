@@ -21,22 +21,22 @@ export function expireTags(tags: string[]): void {
   }
 }
 
-/** Mark the homepage cache stale; next visit serves cached HTML while revalidating in the background. */
+/** Mark the prerendered homepage stale; next visit serves cached HTML while revalidating in the background. */
 export function revalidateHomeCache(): void {
   revalidateTag('home', 'home');
 }
 
-/** Mark the events listing page cache stale (SWR). */
+/** Mark the prerendered events listing stale (SWR). */
 export function revalidateEventsPageCache(): void {
   revalidateTag('events-page', 'eventsPage');
 }
 
-/** Mark the gallery listing page cache stale (SWR). */
+/** Mark the prerendered gallery listing stale (SWR). */
 export function revalidateGalleryPageCache(): void {
   revalidateTag('gallery-page', 'galleryPage');
 }
 
-/** Mark the challenges listing page cache stale (SWR). */
+/** Mark the prerendered challenges listing stale (SWR). */
 export function revalidateChallengesPageCache(): void {
   revalidateTag('challenges-page', 'challengesPage');
 }
@@ -54,5 +54,9 @@ export function expireMemberListCaches(nickname?: string | null): void {
   expireTag('interests');
   if (nickname) {
     expireTag(`profile-${nickname}`);
+    revalidatePath(`/@${nickname}`);
+    revalidatePath(`/@${nickname}/albums`);
+    revalidatePath(`/@${nickname}/photos`);
+    revalidatePath('/[nickname]', 'layout');
   }
 }

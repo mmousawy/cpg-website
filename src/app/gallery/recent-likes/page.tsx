@@ -1,9 +1,11 @@
-import PageContainer from '@/components/layout/PageContainer';import { cacheLife } from 'next/cache';
+import PageContainer from '@/components/layout/PageContainer';
+import { cacheLife } from 'next/cache';
 
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import { createMetadata } from '@/utils/metadata';
 
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getRecentlyLikedPhotos } from '@/lib/data/gallery';
 
 export const metadata = createMetadata({
@@ -17,7 +19,8 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function RecentlyLikedPage() {
-  const allPhotos = await getRecentlyLikedPhotos(21);
+  const includeTestContent = await getIncludeTestContent();
+  const allPhotos = await getRecentlyLikedPhotos(21, includeTestContent);
   const photos = allPhotos.slice(0, 20);
   const hasMore = allPhotos.length > 20;
 

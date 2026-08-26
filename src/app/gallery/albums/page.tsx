@@ -5,6 +5,7 @@ import HelpLink from '@/components/shared/HelpLink';
 import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPublicAlbums } from '@/lib/data/albums';
 
 export const metadata = createMetadata({
@@ -25,7 +26,8 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
   const { sort } = await searchParams;
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
 
-  const allAlbums = await getPublicAlbums(21, initialSort);
+  const includeTestContent = await getIncludeTestContent();
+  const allAlbums = await getPublicAlbums(21, initialSort, includeTestContent);
   const albums = allAlbums.slice(0, 20);
   const hasMore = allAlbums.length > 20;
 

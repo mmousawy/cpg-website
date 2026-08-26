@@ -1,5 +1,6 @@
 import PhotoFilmstripShell from '@/components/photo/PhotoFilmstripShell';
 import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getEventSiblingPhotos } from '@/lib/data/albums';
 
 type LayoutParams = Promise<{
@@ -18,8 +19,9 @@ export default async function EventPhotoCollectionLayout({
   const resolvedParams = await params;
   const eventSlug = resolvedParams?.eventSlug || '';
 
+  const includeTestContent = await getIncludeTestContent();
   const siblingPhotos = eventSlug
-    ? await getEventSiblingPhotos(eventSlug)
+    ? await getEventSiblingPhotos(eventSlug, includeTestContent)
     : null;
 
   return (

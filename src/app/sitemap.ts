@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { getAllProfileNicknames } from '@/lib/data/profiles';
 import { getAllAlbumPaths } from '@/lib/data/albums';
@@ -122,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const photoPages: MetadataRoute.Sitemap = (photos || [])
     .filter((photo: PhotoQueryResult) => {
       const profile = Array.isArray(photo.profiles) ? photo.profiles[0] : photo.profiles;
-      return !!profile?.nickname;
+      return !!profile?.nickname && isPublicProfileAllowed(profile.nickname, false);
     })
     .map((photo: PhotoQueryResult) => {
       const profile = Array.isArray(photo.profiles) ? photo.profiles[0] : photo.profiles;

@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache';
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
@@ -14,9 +15,11 @@ export const metadata = createMetadata({
   keywords: ['photography events', 'meetups', 'photo walks', 'Netherlands', 'photography meetups'],
 });
 
-export const instant = false;
-
 export default async function EventsPage() {
+  'use cache';
+  cacheLife('eventsPage');
+  cacheTag('events-page');
+
   const {
     upcomingEvents,
     initialPast,

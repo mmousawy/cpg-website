@@ -1,6 +1,7 @@
 import type { Tables } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
+import { filterAlbumProfiles, filterEventAlbumPhotos, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 import { PHOTO_LIST_COLUMNS } from './columns';
@@ -40,7 +41,7 @@ export async function getAllAlbumPaths() {
 
   return (data || [])
     .filter((a: AlbumPathQueryResult): a is AlbumPathQueryResult & { profile: ProfileRow } => {
-      return !!a.slug && !!a.profile?.nickname;
+      return !!a.slug && !!a.profile?.nickname && isPublicProfileAllowed(a.profile.nickname, false);
     })
     .map((a) => ({
       nickname: `@${a.profile.nickname}`,
@@ -53,7 +54,7 @@ export async function getAllAlbumPaths() {
  * Tagged with 'albums' for granular cache invalidation
  * Note: likes_count is now a column on the albums table (updated via triggers)
  */
-export async function getRecentAlbums(limit = 6) {
+export async function getRecentAlbums(limit = 6, includeTestContent = false) {
   'use cache';
   cacheLife('tagged'); // Cache forever until 'albums' tag is invalidated
   cacheTag('albums');
@@ -108,7 +109,7 @@ export async function getRecentAlbums(limit = 6) {
       event_cover_image: album.event?.cover_image || null,
     }));
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  return filterAlbumProfiles(albumsWithPhotos as unknown as AlbumWithPhotos[], includeTestContent);
 }
 
 /**
@@ -116,7 +117,11 @@ export async function getRecentAlbums(limit = 6) {
  * Tagged with 'albums' for granular cache invalidation
  * Note: likes_count is now a column on the albums table (updated via triggers)
  */
-export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' = 'recent') {
+export async function getPublicAlbums(
+  limit = 50,
+  sortBy: 'recent' | 'popular' = 'recent',
+  includeTestContent = false,
+) {
   'use cache';
   cacheLife('tagged');
   cacheTag('albums');
@@ -173,7 +178,7 @@ export async function getPublicAlbums(limit = 50, sortBy: 'recent' | 'popular' =
       event_cover_image: album.event?.cover_image || null,
     }));
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  return filterAlbumProfiles(albumsWithPhotos as unknown as AlbumWithPhotos[], includeTestContent);
 }
 
 /** Album returned by getAlbumBySlug (uses album_photos_active for photos) */
@@ -208,12 +213,17 @@ export type AlbumBySlugResult = Pick<
 export async function getAlbumBySlug(
   nickname: string,
   albumSlug: string,
+  includeTestContent = false,
 ): Promise<AlbumBySlugResult | null> {
   'use cache';
   cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
   cacheTag(`album-${nickname}-${albumSlug}`);
   cacheTag('albums');
+
+  if (!isPublicProfileAllowed(nickname, includeTestContent)) {
+    return null;
+  }
 
   const supabase = createPublicClient();
 
@@ -413,7 +423,7 @@ export async function getUserPublicAlbums(userId: string, nickname: string, limi
  * Get event album for an event (auto-created by trigger)
  * Tagged with 'albums' and 'events' for cache invalidation
  */
-export async function getEventAlbum(eventId: number) {
+export async function getEventAlbum(eventId: number, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('albums');
@@ -464,7 +474,7 @@ export async function getEventAlbum(eventId: number) {
 
   return {
     ...album,
-    photos: activePhotos,
+    photos: filterEventAlbumPhotos(activePhotos, includeTestContent),
   };
 }
 
@@ -480,7 +490,7 @@ export type EventPhotoPageResult = {
 /**
  * Sibling photos for event filmstrip navigation (event photo layout)
  */
-export async function getEventSiblingPhotos(eventSlug: string) {
+export async function getEventSiblingPhotos(eventSlug: string, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('albums');
@@ -513,12 +523,13 @@ export async function getEventSiblingPhotos(eventSlug: string) {
 
   const { data: siblingData } = await supabase
     .from('album_photos')
-    .select('sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height, deleted_at)')
+    .select('sort_order, contributor:profiles!album_photos_added_by_fkey(nickname), photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height, deleted_at)')
     .eq('album_id', album.id)
     .order('sort_order', { ascending: true });
 
   type AlbumPhotoRow = {
     sort_order: number | null;
+    contributor: { nickname: string | null } | null;
     photo: {
       short_id: string | null;
       url: string | null;
@@ -529,7 +540,7 @@ export async function getEventSiblingPhotos(eventSlug: string) {
     } | null;
   };
 
-  return (siblingData || [])
+  return filterEventAlbumPhotos(siblingData || [], includeTestContent)
     .filter((ap: AlbumPhotoRow) => !ap.photo?.deleted_at)
     .map((ap: AlbumPhotoRow, index) => {
       const p = ap.photo;
@@ -554,6 +565,7 @@ export async function getEventSiblingPhotos(eventSlug: string) {
 export async function getEventPhotoByShortId(
   eventSlug: string,
   photoShortId: string,
+  includeTestContent = false,
 ): Promise<EventPhotoPageResult | null> {
   'use cache';
   cacheLife('tagged');
@@ -664,6 +676,10 @@ export async function getEventPhotoByShortId(
     return null;
   }
 
+  if (!isPublicProfileAllowed(ownerProfile.nickname, includeTestContent)) {
+    return null;
+  }
+
   const profile = {
     id: ownerProfile.id,
     full_name: ownerProfile.full_name,
@@ -744,7 +760,7 @@ export async function getEventPhotoByShortId(
  * Tagged with 'albums' for granular cache invalidation
  * Uses shorter cache time (1 hour) since view counts change frequently
  */
-export async function getMostViewedAlbumsLastWeek(limit = 20) {
+export async function getMostViewedAlbumsLastWeek(limit = 20, includeTestContent = false) {
   'use cache';
   cacheLife('hourly'); // 1 hour - view counts change frequently
   cacheTag('albums');
@@ -852,5 +868,5 @@ export async function getMostViewedAlbumsLastWeek(limit = 20) {
       event_cover_image: album.event?.cover_image || null,
     }));
 
-  return albumsWithPhotos as unknown as AlbumWithPhotos[];
+  return filterAlbumProfiles(albumsWithPhotos as unknown as AlbumWithPhotos[], includeTestContent);
 }

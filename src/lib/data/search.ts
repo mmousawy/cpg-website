@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache';
+import { filterSearchResults } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { SearchResult, SearchEntityType } from '@/types/search';
 
@@ -15,6 +16,7 @@ export async function searchEntities(
   query: string,
   types: SearchEntityType[] = ['albums', 'photos', 'members', 'events', 'tags', 'scene-events', 'challenges'],
   limit = 20,
+  includeTestContent = false,
 ): Promise<SearchResult[]> {
   'use cache';
   // Cache search results for 5 minutes
@@ -41,5 +43,5 @@ export async function searchEntities(
     return [];
   }
 
-  return (data || []) as SearchResult[];
+  return filterSearchResults((data || []) as SearchResult[], includeTestContent);
 }

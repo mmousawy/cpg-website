@@ -36,7 +36,7 @@ function finishRevalidation() {
   }
 }
 
-/** Mark homepage cache stale (SWR — see cacheLife('home') in getHomePageData). */
+/** Mark homepage cache stale (SWR — see cacheLife('home') on the home page). */
 function invalidateHomeTag() {
   revalidateHomeCache();
 }
@@ -59,10 +59,14 @@ function invalidateEventListingRoutes(eventSlug?: string | null) {
   }
 }
 
-/** Bust cached profile data (data tags cover prerendered profile pages). */
+/** Bust prerendered profile routes (/@nickname and nested pages). */
 function invalidateProfileRoutes(nickname: string) {
   expireTag(`profile-${nickname}`);
   expireTag('albums');
+  revalidatePath(`/@${nickname}`);
+  revalidatePath(`/@${nickname}/albums`);
+  revalidatePath(`/@${nickname}/photos`);
+  revalidatePath('/[nickname]', 'layout');
 }
 
 /** Bust cached photo detail pages across all four [photoId] route patterns. */

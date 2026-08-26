@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation';
 import ImageSVG from 'public/icons/image.svg';
 
 // Cached data functions
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getAllTagNames, getPhotosByTag } from '@/lib/data/gallery';
 
 type Params = Promise<{ tag: string }>;
@@ -50,7 +51,8 @@ export default async function TagPage({ params }: { params: Params }) {
     notFound();
   }
 
-  const photos = await getPhotosByTag(tagName, 100);
+  const includeTestContent = await getIncludeTestContent();
+  const photos = await getPhotosByTag(tagName, 100, includeTestContent);
 
   return (
     <>

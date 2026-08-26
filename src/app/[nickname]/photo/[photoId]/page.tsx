@@ -2,6 +2,7 @@ import PhotoPageContent from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import JsonLd from '@/components/shared/JsonLd';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPhotoByShortId } from '@/lib/data/profiles';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -31,7 +32,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const result = await getPhotoByShortId(nickname, photoId);
+  const includeTestContent = await getIncludeTestContent();
+  const result = await getPhotoByShortId(nickname, photoId, includeTestContent);
 
   if (!result) {
     return createMetadata({
@@ -68,7 +70,8 @@ export default async function PhotoPage({ params }: { params: Params }) {
     notFound();
   }
 
-  const result = await getPhotoByShortId(nickname, photoId);
+  const includeTestContent = await getIncludeTestContent();
+  const result = await getPhotoByShortId(nickname, photoId, includeTestContent);
 
   if (!result) {
     notFound();

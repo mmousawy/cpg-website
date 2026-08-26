@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/utils/supabase/server';
+import { filterStreamPhotos } from '@/lib/auth/isTestProfile';
+import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import { createPublicClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
+  const includeTestContent = getIncludeTestContentFromRequest(request);
   const searchParams = request.nextUrl.searchParams;
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const limit = parseInt(searchParams.get('limit') || '20', 10);
@@ -121,10 +124,12 @@ export async function GET(request: NextRequest) {
     })
     .map(({ _likeTime, ...photo }) => photo as StreamPhoto); // Remove temporary sorting field
 
+  const filteredPhotos = filterStreamPhotos(validPhotos, includeTestContent);
+
   // Check if there are more by seeing if we have more unique IDs than requested
   const requestedEndIndex = offset + limit;
   const hasMore = uniquePhotoIds.length > requestedEndIndex;
-  const photosToReturn = validPhotos.slice(0, limit);
+  const photosToReturn = filteredPhotos.slice(0, limit);
 
   return NextResponse.json({
     photos: photosToReturn,

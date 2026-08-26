@@ -1,5 +1,6 @@
 import PhotoFilmstripShell from '@/components/photo/PhotoFilmstripShell';
 import ScrollToTopOnRouteChange from '@/components/shared/ScrollToTopOnRouteChange';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getChallengeSiblingPhotos } from '@/lib/data/challenges';
 
 type LayoutParams = Promise<{
@@ -18,8 +19,9 @@ export default async function ChallengePhotoCollectionLayout({
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || '';
 
+  const includeTestContent = await getIncludeTestContent();
   const siblingPhotos = slug
-    ? await getChallengeSiblingPhotos(slug)
+    ? await getChallengeSiblingPhotos(slug, includeTestContent)
     : null;
 
   return (

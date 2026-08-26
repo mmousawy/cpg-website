@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import {
   getAllChallengeSlugs,
   getChallengeBySlug,
@@ -140,8 +141,9 @@ export default async function ChallengePage({
 
   const serverNow = await getServerNow();
 
+  const includeTestContent = await getIncludeTestContent();
   const [photos, contributors, colorDraws] = await Promise.all([
-    getChallengePhotos(challenge.id),
+    getChallengePhotos(challenge.id, includeTestContent),
     getChallengeContributors(challenge.id),
     challenge.has_color_draw ? getChallengeColorDraws(challenge.id) : Promise.resolve([]),
   ]);

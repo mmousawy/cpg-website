@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/utils/supabase/server';
+import { filterAlbumProfiles } from '@/lib/auth/isTestProfile';
+import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Tables } from '@/database.types';
+import { createPublicClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
+  const includeTestContent = getIncludeTestContentFromRequest(request);
   const searchParams = request.nextUrl.searchParams;
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const limit = parseInt(searchParams.get('limit') || '20', 10);
@@ -82,9 +85,14 @@ export async function GET(request: NextRequest) {
       event_cover_image: album.event?.cover_image || null,
     }));
 
+  const filteredAlbums = filterAlbumProfiles(
+    albumsWithPhotos as unknown as AlbumWithPhotos[],
+    includeTestContent,
+  );
+
   // Check if there are more by seeing if we got more than requested
-  const hasMore = albumsWithPhotos.length > limit;
-  const albumsToReturn = hasMore ? albumsWithPhotos.slice(0, limit) : albumsWithPhotos;
+  const hasMore = filteredAlbums.length > limit;
+  const albumsToReturn = hasMore ? filteredAlbums.slice(0, limit) : filteredAlbums;
 
   return NextResponse.json({
     albums: albumsToReturn as unknown as AlbumWithPhotos[],

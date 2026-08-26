@@ -56,6 +56,20 @@ export function withVercelBypassQuery(url: string, bypassToken?: string): string
   return parsed.toString();
 }
 
+/** Same header Playwright sends so e2e users appear on public pages. */
+export const E2E_INCLUDE_TEST_HEADER = 'x-cpg-e2e-include-test';
+
+export function withE2EIncludeTestHeaders(
+  headers: Record<string, string> = {},
+): Record<string, string> {
+  const secret = getInternalApiSecret();
+  if (!secret) return headers;
+  return {
+    ...headers,
+    [E2E_INCLUDE_TEST_HEADER]: secret,
+  };
+}
+
 /** Shared Playwright request context options (mirrors playwright.config.ts). */
 export function getPlaywrightApiContextOptions(): {
   baseURL: string;
@@ -63,7 +77,7 @@ export function getPlaywrightApiContextOptions(): {
   } {
   const baseUrlWithToken = process.env.BASE_URL || 'http://localhost:3000';
   const [baseUrl] = baseUrlWithToken.split('?');
-  const bypassHeaders = withVercelBypassHeaders({});
+  const bypassHeaders = withE2EIncludeTestHeaders(withVercelBypassHeaders({}));
 
   return {
     baseURL: baseUrl,

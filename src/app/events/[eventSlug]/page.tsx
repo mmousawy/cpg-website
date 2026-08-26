@@ -20,6 +20,7 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
 import { getEventAlbum } from '@/lib/data/albums';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import {
   getAllEventSlugs,
   getEventAttendeesForEvent,
@@ -156,10 +157,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   }
 
   // Fetch hosts, attendees, event album
+  const includeTestContent = await getIncludeTestContent();
   const [hosts, attendees, eventAlbum] = await Promise.all([
     getOrganizers(5),
     getEventAttendeesForEvent(event.id),
-    getEventAlbum(event.id),
+    getEventAlbum(event.id, includeTestContent),
   ]);
 
   const formattedDate = event.date

@@ -3,6 +3,7 @@ import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import MemberCard from '@/components/shared/MemberCard';
 import { routes } from '@/config/routes';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getAllMembers } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
@@ -72,7 +73,8 @@ export default async function AllMembersPage() {
     );
   }
 
-  const members = await getAllMembers();
+  const includeTestContent = await getIncludeTestContent();
+  const members = await getAllMembers(includeTestContent);
 
   return (
     <PageContainer>

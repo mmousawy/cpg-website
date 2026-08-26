@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getMembersDiscoveryData } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
 import { createClient } from '@/utils/supabase/server';
@@ -52,7 +53,8 @@ async function MembersPageContent() {
     return <UnauthenticatedMembersPage />;
   }
 
-  const data = await getMembersDiscoveryData();
+  const includeTestContent = await getIncludeTestContent();
+  const data = await getMembersDiscoveryData(includeTestContent);
 
   return (
     <PageContainer>

@@ -1,4 +1,5 @@
 import { getProfileByNickname } from '@/lib/data/profiles';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { CHERIA_HEADING_FONT_NAME, loadOgFonts } from '@/lib/og/loadOgFonts';
 import { getSocialImageUrl } from '@/utils/metadata';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
@@ -63,6 +64,17 @@ function getInitials(fullName: string | null, nickname: string | null): string {
 }
 
 export default async function Image({ params }: { params: Promise<{ nickname: string }> }) {
+  const includeTestContent = await getIncludeTestContent();
+  return CachedProfileOgImage({ params, includeTestContent });
+}
+
+async function CachedProfileOgImage({
+  params,
+  includeTestContent,
+}: {
+  params: Promise<{ nickname: string }>;
+  includeTestContent: boolean;
+}) {
   'use cache';
   cacheLife('tagged');
 
@@ -80,7 +92,7 @@ export default async function Image({ params }: { params: Promise<{ nickname: st
 
   cacheTag(`profile-${nickname}`);
 
-  const profile = await getProfileByNickname(nickname);
+  const profile = await getProfileByNickname(nickname, includeTestContent);
   if (!profile) {
     notFound();
   }

@@ -1,4 +1,5 @@
 import { cacheTag, cacheLife } from 'next/cache';
+import { filterMemberNicknames } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
@@ -26,7 +27,7 @@ export type InterestWithMembers = {
  * Get recently active members (uploaded photos/albums recently)
  * Tagged with 'profiles' and 'gallery' for cache invalidation
  */
-export async function getRecentlyActiveMembers(limit = 12) {
+export async function getRecentlyActiveMembers(limit = 12, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('profiles');
@@ -116,7 +117,7 @@ export async function getRecentlyActiveMembers(limit = 12) {
   }
 
   // Map back to include activity data
-  return members.map((member) => {
+  return filterMemberNicknames(members.map((member) => {
     const activity = userActivity.get(member.id);
     return {
       ...member,
@@ -128,14 +129,14 @@ export async function getRecentlyActiveMembers(limit = 12) {
     const aIndex = activeUserIds.indexOf(a.id);
     const bIndex = activeUserIds.indexOf(b.id);
     return aIndex - bIndex;
-  });
+  }), includeTestContent);
 }
 
 /**
  * Get new members (recently joined)
  * Tagged with 'profiles' for cache invalidation
  */
-export async function getNewMembers(limit = 12) {
+export async function getNewMembers(limit = 12, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('profiles');
@@ -151,14 +152,14 @@ export async function getNewMembers(limit = 12) {
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  return (data || []) as MemberWithCreatedAt[];
+  return filterMemberNicknames((data || []) as MemberWithCreatedAt[], includeTestContent);
 }
 
 /**
  * Get members by tag usage (top uploaders for popular tags)
  * Tagged with 'gallery' for cache invalidation
  */
-export async function getMembersByTagUsage(limit = 12) {
+export async function getMembersByTagUsage(limit = 12, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('gallery');
@@ -224,7 +225,7 @@ export async function getMembersByTagUsage(limit = 12) {
     .is('suspended_at', null)
     .is('deletion_scheduled_at', null);
 
-  return (members || []) as Member[];
+  return filterMemberNicknames((members || []) as Member[], includeTestContent);
 }
 
 /**
@@ -232,7 +233,11 @@ export async function getMembersByTagUsage(limit = 12) {
  * Truly randomized on every request — not cached so each page load shows different interests
  * Optimized: Uses 3 bulk queries instead of 2*N queries
  */
-export async function getRandomInterestsWithMembers(interestLimit = 6, membersPerInterest = 3) {
+export async function getRandomInterestsWithMembers(
+  interestLimit = 6,
+  membersPerInterest = 3,
+  includeTestContent = false,
+) {
   const supabase = createPublicClient();
 
   const { data: allInterests } = await supabase
@@ -308,10 +313,13 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
 
   for (const interest of selectedInterests) {
     const profileIds = profileIdsByInterest.get(interest.name) || [];
-    const members = profileIds
-      .slice(0, membersPerInterest)
-      .map((id) => profileMap.get(id))
-      .filter((p): p is NonNullable<typeof p> => p !== undefined) as Member[];
+    const members = filterMemberNicknames(
+      profileIds
+        .slice(0, membersPerInterest)
+        .map((id) => profileMap.get(id))
+        .filter((p): p is NonNullable<typeof p> => p !== undefined) as Member[],
+      includeTestContent,
+    );
 
     if (members.length > 0) {
       results.push({
@@ -328,7 +336,7 @@ export async function getRandomInterestsWithMembers(interestLimit = 6, membersPe
  * Get all members, sorted by join date (newest first)
  * Tagged with 'profiles' for cache invalidation
  */
-export async function getAllMembers() {
+export async function getAllMembers(includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('profiles');
@@ -343,14 +351,14 @@ export async function getAllMembers() {
     .is('deletion_scheduled_at', null)
     .order('created_at', { ascending: false });
 
-  return (data || []) as MemberWithCreatedAt[];
+  return filterMemberNicknames((data || []) as MemberWithCreatedAt[], includeTestContent);
 }
 
 /**
  * Get members who frequently use a specific tag
  * Tagged with 'gallery' for cache invalidation
  */
-export async function getMembersByTag(tagName: string) {
+export async function getMembersByTag(tagName: string, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('gallery');
@@ -423,7 +431,7 @@ export async function getMembersByTag(tagName: string) {
   });
 
   return {
-    members: sortedMembers as Member[],
+    members: filterMemberNicknames(sortedMembers as Member[], includeTestContent),
   };
 }
 
@@ -438,13 +446,13 @@ export type MembersDiscoveryData = {
 /**
  * Aggregated discovery data for the /members page.
  */
-export async function getMembersDiscoveryData(): Promise<MembersDiscoveryData> {
+export async function getMembersDiscoveryData(includeTestContent = false): Promise<MembersDiscoveryData> {
   const [popularInterestsResult, randomInterestsResult, recentlyActiveResult, popularTagsResult, newMembersResult] = await Promise.allSettled([
     getPopularInterests(20),
-    getRandomInterestsWithMembers(6, 10),
-    getRecentlyActiveMembers(12),
+    getRandomInterestsWithMembers(6, 10, includeTestContent),
+    getRecentlyActiveMembers(12, includeTestContent),
     getPopularTagsWithMemberCounts(20),
-    getNewMembers(12),
+    getNewMembers(12, includeTestContent),
   ]);
 
   const popularInterests = popularInterestsResult.status === 'fulfilled' ? popularInterestsResult.value : [];

@@ -1,5 +1,4 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import { getEventAttendees, getPastEvents, getUpcomingEvents } from './events';
 
@@ -14,10 +13,6 @@ export type EventsPageData = {
 };
 
 export async function getEventsPageData(): Promise<EventsPageData> {
-  'use cache';
-  cacheLife('eventsPage');
-  cacheTag('events-page');
-
   const [upcomingData, pastEventsData] = await Promise.all([
     getUpcomingEvents(),
     getPastEvents(PAST_EVENTS_PER_PAGE),

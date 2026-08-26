@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { flushPendingNotifications } from '@/lib/notifications/schedule';
-import { expireTags, revalidateHomeCache } from '@/lib/cache/expireTag';
+import { expireTags, revalidateChallengesPageCache, revalidateEventsPageCache, revalidateHomeCache } from '@/lib/cache/expireTag';
 import { safeEqualSecret } from '@/utils/security';
 
 export async function GET(request: NextRequest) {
@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
 
   expireTags(['events', 'event-attendees', 'challenges']);
   revalidateHomeCache();
+  revalidateEventsPageCache();
+  revalidateChallengesPageCache();
 
   let notificationEmails = { sent: 0, cancelled: 0, failed: 0, processed: 0 };
   let pendingNotifications = { delivered: 0, failed: 0, processed: 0 };

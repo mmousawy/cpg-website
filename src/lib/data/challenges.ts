@@ -5,6 +5,7 @@ import type {
   SubmissionForReview,
 } from '@/types/challenges';
 import type { Photo } from '@/types/photos';
+import { filterChallengePhotos, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { getServerNow } from '@/lib/cache/serverNow';
 import { filterActiveChallenges, filterPastChallenges } from '@/lib/challenges/filters';
 import { createPublicClient } from '@/utils/supabase/server';
@@ -210,7 +211,7 @@ export async function getChallengeColorDraws(challengeId: string) {
  * Get accepted photos for a challenge (for gallery display)
  * Tagged with 'challenge-photos' for granular cache invalidation
  */
-export async function getChallengePhotos(challengeId: string) {
+export async function getChallengePhotos(challengeId: string, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('challenge-photos');
@@ -224,7 +225,7 @@ export async function getChallengePhotos(challengeId: string) {
     .eq('challenge_id', challengeId)
     .order('reviewed_at', { ascending: false });
 
-  return (data || []) as ChallengePhoto[];
+  return filterChallengePhotos((data || []) as ChallengePhoto[], includeTestContent);
 }
 
 export type ChallengePhotoPageResult = {
@@ -239,7 +240,7 @@ export type ChallengePhotoPageResult = {
 /**
  * Sibling photos for challenge filmstrip navigation (challenge photo layout)
  */
-export async function getChallengeSiblingPhotos(challengeSlug: string) {
+export async function getChallengeSiblingPhotos(challengeSlug: string, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('challenge-photos');
@@ -259,11 +260,11 @@ export async function getChallengeSiblingPhotos(challengeSlug: string) {
 
   const { data: siblingData } = await supabase
     .from('challenge_photos')
-    .select('short_id, url, blurhash, width, height, reviewed_at')
+    .select('short_id, url, blurhash, width, height, reviewed_at, profile_nickname')
     .eq('challenge_id', challenge.id)
     .order('reviewed_at', { ascending: false });
 
-  return (siblingData || [])
+  return filterChallengePhotos(siblingData || [], includeTestContent)
     .map((sp, index) => ({
       shortId: sp.short_id ?? '',
       url: sp.url ?? '',
@@ -282,6 +283,7 @@ export async function getChallengeSiblingPhotos(challengeSlug: string) {
 export async function getChallengePhotoByShortId(
   challengeSlug: string,
   photoShortId: string,
+  includeTestContent = false,
 ): Promise<ChallengePhotoPageResult | null> {
   'use cache';
   cacheLife('tagged');
@@ -359,6 +361,10 @@ export async function getChallengePhotoByShortId(
     .single();
 
   if (!ownerProfile?.nickname) {
+    return null;
+  }
+
+  if (!isPublicProfileAllowed(ownerProfile.nickname, includeTestContent)) {
     return null;
   }
 

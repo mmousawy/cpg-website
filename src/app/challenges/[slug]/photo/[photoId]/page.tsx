@@ -1,6 +1,7 @@
 import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -29,7 +30,8 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
-  const result = await getChallengePhotoByShortId(slug, photoId);
+  const includeTestContent = await getIncludeTestContent();
+  const result = await getChallengePhotoByShortId(slug, photoId, includeTestContent);
 
   if (!result) {
     return createMetadata({
@@ -69,7 +71,8 @@ export default async function ChallengePhotoPage({ params }: { params: Params })
     notFound();
   }
 
-  const result = await getChallengePhotoByShortId(slug, photoId);
+  const includeTestContent = await getIncludeTestContent();
+  const result = await getChallengePhotoByShortId(slug, photoId, includeTestContent);
 
   if (!result) {
     notFound();

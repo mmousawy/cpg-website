@@ -1,6 +1,7 @@
 import { PhotoMetadataColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getChallengePhotoByShortId } from '@/lib/data/challenges';
 import { notFound } from 'next/navigation';
 
@@ -26,7 +27,8 @@ export default async function ChallengePhotoSidebar({ params }: { params: Params
     notFound();
   }
 
-  const result = await getChallengePhotoByShortId(slug, photoId);
+  const includeTestContent = await getIncludeTestContent();
+  const result = await getChallengePhotoByShortId(slug, photoId, includeTestContent);
 
   if (!result) {
     notFound();

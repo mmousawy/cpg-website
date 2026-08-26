@@ -6,6 +6,7 @@ import {
     ProfileHeroBanner,
 } from '@/components/profile/ProfileHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
@@ -34,7 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     });
   }
 
-  const profile = await getProfileByNickname(nickname);
+  const includeTestContent = await getIncludeTestContent();
+  const profile = await getProfileByNickname(nickname, includeTestContent);
   if (!profile) {
     return createMetadata({
       title: 'Page not found',
@@ -76,7 +78,8 @@ export default async function UserAlbumsPage({ params }: { params: Promise<{ nic
 }
 
 async function CachedAlbumsContent({ nickname }: { nickname: string }) {
-  const profile = await getProfileByNickname(nickname);
+  const includeTestContent = await getIncludeTestContent();
+  const profile = await getProfileByNickname(nickname, includeTestContent);
   if (!profile) {
     notFound();
   }

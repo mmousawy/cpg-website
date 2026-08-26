@@ -1,4 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
@@ -22,7 +23,8 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
     });
   }
 
-  const album = await getAlbumBySlug(nickname, albumSlug);
+  const includeTestContent = await getIncludeTestContent();
+  const album = await getAlbumBySlug(nickname, albumSlug, includeTestContent);
 
   if (!album) {
     return createMetadata({
@@ -78,7 +80,8 @@ export default async function PublicAlbumPage({ params }: { params: Promise<{ ni
 }
 
 async function CachedAlbumPage({ nickname, albumSlug }: { nickname: string; albumSlug: string }) {
-  const album = await getAlbumBySlug(nickname, albumSlug);
+  const includeTestContent = await getIncludeTestContent();
+  const album = await getAlbumBySlug(nickname, albumSlug, includeTestContent);
 
   if (!album) {
     console.error(`Album not found: nickname=${nickname}, albumSlug=${albumSlug}`);

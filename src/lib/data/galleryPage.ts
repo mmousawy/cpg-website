@@ -1,5 +1,4 @@
 import type { AlbumWithPhotos } from '@/types/albums';
-import { cacheLife, cacheTag } from 'next/cache';
 
 import { getGalleryHomeData, type StreamPhoto } from './gallery';
 
@@ -11,12 +10,8 @@ export type GalleryPageData = {
   recentAlbums: AlbumWithPhotos[];
 };
 
-export async function getGalleryPageData(): Promise<GalleryPageData> {
-  'use cache';
-  cacheLife('galleryPage');
-  cacheTag('gallery-page');
-
-  const data = await getGalleryHomeData();
+export async function getGalleryPageData(includeTestContent = false): Promise<GalleryPageData> {
+  const data = await getGalleryHomeData(includeTestContent);
 
   return {
     popularTags: data.popularTags,

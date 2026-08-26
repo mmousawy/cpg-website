@@ -1,6 +1,7 @@
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import type { Photo } from '@/types/photos';
+import { filterMemberNicknames, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -41,7 +42,9 @@ export async function getAllProfileNicknames() {
     .is('suspended_at', null)
     .is('deletion_scheduled_at', null);
 
-  const nicknames = (data || []).map((p) => p.nickname).filter((n): n is string => n !== null);
+  const nicknames = (data || [])
+    .map((p) => p.nickname)
+    .filter((n): n is string => n !== null && isPublicProfileAllowed(n, false));
 
   // Return with @ prefix (canonical URL format)
   return nicknames.map((n) => `@${n}`);
@@ -73,7 +76,7 @@ export async function getOrganizers(limit = 5) {
  * Get recent members for homepage, plus total active member count
  * Tagged with 'profiles' for granular cache invalidation
  */
-export async function getRecentMembers(limit = 8) {
+export async function getRecentMembers(limit = 8, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('profiles');
@@ -90,7 +93,7 @@ export async function getRecentMembers(limit = 8) {
     .limit(limit);
 
   return {
-    members: (data || []) as Member[],
+    members: filterMemberNicknames((data || []) as Member[], includeTestContent),
     total: count ?? 0,
   };
 }
@@ -130,10 +133,14 @@ export async function getProfileInterests(userId: string, nickname: string) {
  * Get a public profile by nickname
  * Tagged with specific profile tag for granular invalidation
  */
-export async function getProfileByNickname(nickname: string) {
+export async function getProfileByNickname(nickname: string, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
+
+  if (!isPublicProfileAllowed(nickname, includeTestContent)) {
+    return null;
+  }
 
   const supabase = createPublicClient();
 
@@ -561,11 +568,19 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
  * Get a single public photo by short_id and nickname
  * Tagged with profile tag for granular invalidation
  */
-export async function getPhotoByShortId(nickname: string, photoShortId: string) {
+export async function getPhotoByShortId(
+  nickname: string,
+  photoShortId: string,
+  includeTestContent = false,
+) {
   'use cache';
   cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
   cacheTag(`photo-${photoShortId}`); // Granular invalidation for this specific photo
+
+  if (!isPublicProfileAllowed(nickname, includeTestContent)) {
+    return null;
+  }
 
   const supabase = createPublicClient();
 

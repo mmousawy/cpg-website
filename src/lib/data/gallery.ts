@@ -1,5 +1,6 @@
 import type { Photo, Tag } from '@/types/photos';
 import type { Tables } from '@/database.types';
+import { filterStreamPhotos } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 import { getMostViewedAlbumsLastWeek, getPublicAlbums } from './albums';
@@ -19,7 +20,11 @@ export type StreamPhoto = Photo & {
  * Shows photos from all users, ordered by creation date or view count
  * Tagged with 'gallery' for cache invalidation
  */
-export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popular' = 'recent') {
+export async function getPublicPhotostream(
+  limit = 100,
+  sortBy: 'recent' | 'popular' = 'recent',
+  includeTestContent = false,
+) {
   'use cache';
   cacheLife('tagged');
   cacheTag('gallery');
@@ -78,7 +83,7 @@ export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popu
       } as StreamPhoto;
     });
 
-  return validPhotos;
+  return filterStreamPhotos(validPhotos, includeTestContent);
 }
 
 /**
@@ -86,7 +91,7 @@ export async function getPublicPhotostream(limit = 100, sortBy: 'recent' | 'popu
  * Shows photos ordered by most recent like timestamp
  * Tagged with 'gallery' for cache invalidation
  */
-export async function getRecentlyLikedPhotos(limit = 10) {
+export async function getRecentlyLikedPhotos(limit = 10, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('gallery');
@@ -193,7 +198,7 @@ export async function getRecentlyLikedPhotos(limit = 10) {
     .slice(0, limit)
     .map(({ _likeTime, ...photo }) => photo as StreamPhoto); // Remove temporary sorting field
 
-  return validPhotos;
+  return filterStreamPhotos(validPhotos, includeTestContent);
 }
 
 /**
@@ -314,7 +319,7 @@ export async function getPopularTagsWithMemberCounts(limit = 20) {
  * Get public photos with a specific tag
  * Tagged with 'gallery' for cache invalidation
  */
-export async function getPhotosByTag(tagName: string, limit = 100) {
+export async function getPhotosByTag(tagName: string, limit = 100, includeTestContent = false) {
   'use cache';
   cacheLife('tagged');
   cacheTag('gallery');
@@ -385,7 +390,7 @@ export async function getPhotosByTag(tagName: string, limit = 100) {
       } as StreamPhoto;
     });
 
-  return validPhotos;
+  return filterStreamPhotos(validPhotos, includeTestContent);
 }
 
 /**
@@ -409,7 +414,7 @@ export async function getAllTagNames() {
  * Tagged with 'gallery' for cache invalidation
  * Uses shorter cache time (1 hour) since view counts change frequently
  */
-export async function getMostViewedPhotosLastWeek(limit = 20) {
+export async function getMostViewedPhotosLastWeek(limit = 20, includeTestContent = false) {
   'use cache';
   cacheLife('hourly'); // 1 hour - view counts change frequently
   cacheTag('gallery');
@@ -509,7 +514,7 @@ export async function getMostViewedPhotosLastWeek(limit = 20) {
       } as StreamPhoto;
     });
 
-  return validPhotos;
+  return filterStreamPhotos(validPhotos, includeTestContent);
 }
 
 export type GalleryHomeData = {
@@ -523,12 +528,12 @@ export type GalleryHomeData = {
 /**
  * Aggregated data for the /gallery home page.
  */
-export async function getGalleryHomeData(): Promise<GalleryHomeData> {
+export async function getGalleryHomeData(includeTestContent = false): Promise<GalleryHomeData> {
   const [albums, photos, mostViewedPhotos, mostViewedAlbums, popularTags] = await Promise.all([
-    getPublicAlbums(10),
-    getPublicPhotostream(10),
-    getMostViewedPhotosLastWeek(10),
-    getMostViewedAlbumsLastWeek(10),
+    getPublicAlbums(10, 'recent', includeTestContent),
+    getPublicPhotostream(10, 'recent', includeTestContent),
+    getMostViewedPhotosLastWeek(10, includeTestContent),
+    getMostViewedAlbumsLastWeek(10, includeTestContent),
     getPopularTags(30),
   ]);
 

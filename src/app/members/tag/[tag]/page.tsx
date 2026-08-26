@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 
 // Cached data functions
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPopularTagsWithMemberCounts } from '@/lib/data/gallery';
 import { getMembersByTag } from '@/lib/data/members';
 
@@ -50,8 +51,9 @@ export default async function TagMembersPage({ params }: { params: Params }) {
     notFound();
   }
 
+  const includeTestContent = await getIncludeTestContent();
   const [{ members }, popularTags] = await Promise.all([
-    getMembersByTag(tagName),
+    getMembersByTag(tagName, includeTestContent),
     getPopularTagsWithMemberCounts(20),
   ]);
 

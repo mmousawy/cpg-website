@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/utils/supabase/server';
+import { filterStreamPhotos } from '@/lib/auth/isTestProfile';
+import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import { createPublicClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
+  const includeTestContent = getIncludeTestContentFromRequest(request);
   const searchParams = request.nextUrl.searchParams;
   const offset = parseInt(searchParams.get('offset') || '0', 10);
   const limit = parseInt(searchParams.get('limit') || '20', 10);
@@ -80,8 +83,9 @@ export async function GET(request: NextRequest) {
     });
 
   // Check if there are more by seeing if we got more than requested
-  const hasMore = validPhotos.length > limit;
-  const photosToReturn = hasMore ? validPhotos.slice(0, limit) : validPhotos;
+  const filteredPhotos = filterStreamPhotos(validPhotos, includeTestContent);
+  const hasMore = filteredPhotos.length > limit;
+  const photosToReturn = hasMore ? filteredPhotos.slice(0, limit) : filteredPhotos;
 
   return NextResponse.json({
     photos: photosToReturn,

@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { cacheLife, cacheTag } from 'next/cache';
 import { GalleryMostViewedPhotosSection } from '@/app/gallery/GalleryMostViewedPhotosSection';
 import GalleryPageHeader from '@/app/gallery/GalleryPageHeader';
 import { GalleryRecentAlbumsSection } from '@/app/gallery/GalleryRecentAlbumsSection';
@@ -7,6 +9,7 @@ import { GalleryTrendingAlbumsSection } from '@/app/gallery/GalleryTrendingAlbum
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import SignUpCTA from '@/components/shared/SignUpCTA';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getGalleryPageData } from '@/lib/data/galleryPage';
 import { createMetadata } from '@/utils/metadata';
 
@@ -18,16 +21,31 @@ export const metadata = createMetadata({
   keywords: ['photography gallery', 'photo albums', 'photography portfolio', 'community photos'],
 });
 
-export const instant = false;
+export default function GalleryPage() {
+  return (
+    <Suspense fallback={<CachedGalleryPage includeTestContent={false} />}>
+      <GalleryPageWithE2EFlag />
+    </Suspense>
+  );
+}
 
-export default async function GalleryPage() {
+async function GalleryPageWithE2EFlag() {
+  const includeTestContent = await getIncludeTestContent();
+  return <CachedGalleryPage includeTestContent={includeTestContent} />;
+}
+
+async function CachedGalleryPage({ includeTestContent }: { includeTestContent: boolean }) {
+  'use cache';
+  cacheLife('galleryPage');
+  cacheTag('gallery-page');
+
   const {
     popularTags,
     mostViewedPhotos,
     mostViewedAlbums,
     recentPhotos,
     recentAlbums,
-  } = await getGalleryPageData();
+  } = await getGalleryPageData(includeTestContent);
 
   return (
     <>

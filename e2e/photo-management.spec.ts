@@ -90,6 +90,36 @@ test.describe('Photo Management Flow', () => {
     await photoCard.click();
     await expect(page.getByText(/in albums/i)).toBeVisible({ timeout: 5000 });
 
+    // Make photo public so it appears on profile and homepage Recent photos
+    const visibilityToggle = page.getByLabel('Toggle Private and Public');
+    if (!(await visibilityToggle.isChecked())) {
+      await page.getByRole('button', { name: 'Public' }).click();
+    }
+    await expect(visibilityToggle).toBeChecked();
+
+    const saveButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /^save$/i });
+    await expect(saveButton).toBeEnabled({ timeout: 5000 });
+    await saveButton.click();
+    await expect(page.getByRole('button', { name: /saved!/i })).toBeVisible({ timeout: 10000 });
+
+    // Public profile shows the uploaded photo
+    await page.goto(`/@${testUser.nickname}`);
+    await expect(page.locator('img').first()).toBeVisible({ timeout: 15000 });
+
+    // Homepage Recent photos includes the test user's upload (reload once for SWR shell)
+    await page.goto('/');
+    const recentPhotosSection = page.getByRole('heading', { name: 'Recent photos' }).locator('..');
+    await expect(recentPhotosSection.getByText(`@${testUser.nickname}`)).toBeVisible({ timeout: 15000 }).catch(async () => {
+      await page.reload();
+      await expect(recentPhotosSection.getByText(`@${testUser.nickname}`)).toBeVisible({ timeout: 15000 });
+    });
+
+    // Return to account photos to clean up
+    await page.goto('/account/photos');
+    await page.waitForLoadState('networkidle');
+    await photoCard.click();
+    await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
+
     // Clean up: Delete the photo
     const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
     await deleteButton.click();
