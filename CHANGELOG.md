@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.39.1](https://github.com/mmousawy/cpg-website/compare/v1.39.0...v1.39.1) (2026-08-26)
+
+
+### 🐛 Bug Fixes
+
+* Enhance image loading and event description sanitization ([59dc7b9](https://github.com/mmousawy/cpg-website/commit/59dc7b9f00b1af80c23bef3e62d78777b778caa1))
+* Improve photo visibility assertions in tests ([b25f8ba](https://github.com/mmousawy/cpg-website/commit/b25f8ba45e69c4617bf730efcb520dbbfd9f3915))
+* Increase timeout and improve photo loading assertions in tests ([aaa430d](https://github.com/mmousawy/cpg-website/commit/aaa430dc6b033eac631b91fc8b02624904162b89))
+
 ## [1.39.0](https://github.com/mmousawy/cpg-website/compare/v1.38.10...v1.39.0) (2026-08-26)
 
 
