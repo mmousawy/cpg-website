@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.39.0](https://github.com/mmousawy/cpg-website/compare/v1.38.10...v1.39.0) (2026-08-26)
+
+
+### ✨ Features
+
+* Enhance photo management and data fetching across components ([d7b9f38](https://github.com/mmousawy/cpg-website/commit/d7b9f38461c639bf1a0310f0aa9632298defff16))
+
+
+### 🐛 Bug Fixes
+
+* Refactor photo visibility toggle in photo management tests ([ed534d5](https://github.com/mmousawy/cpg-website/commit/ed534d5059abf3ad8edadaa5630c54deed888f81))
+* Update photo visibility toggle interaction in tests ([fdbc73f](https://github.com/mmousawy/cpg-website/commit/fdbc73fd8600f5b90aaaf492373cd8bee33c6a97))
+
 ## [1.38.10](https://github.com/mmousawy/cpg-website/compare/v1.38.9...v1.38.10) (2026-08-22)
 
 
