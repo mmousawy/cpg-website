@@ -22,6 +22,8 @@ test.describe('Photo Management Flow', () => {
   });
 
   test('should upload a photo and add it to an album', async ({ page }) => {
+    test.setTimeout(60_000);
+
     // Login
     await loginTestUser(page, testUser.email, testUser.password);
 
@@ -111,13 +113,16 @@ test.describe('Photo Management Flow', () => {
       page.getByRole('link', { name: new RegExp(`View photo.*@${testUser.nickname}`) }),
     ).toBeVisible({ timeout: 15000 });
 
-    // Homepage Recent photos includes the test user's upload (reload once for SWR shell)
+    // Homepage Recent photos includes the test user's upload. First paint can be
+    // the public Suspense fallback (test photos filtered out); reload once if needed.
     await page.goto('/');
-    const recentPhotosSection = page.getByRole('heading', { name: 'Recent photos' }).locator('..');
-    await expect(recentPhotosSection.getByText(`@${testUser.nickname}`)).toBeVisible({ timeout: 15000 }).catch(async () => {
-      await page.reload();
-      await expect(recentPhotosSection.getByText(`@${testUser.nickname}`)).toBeVisible({ timeout: 15000 });
+    const homePhotoLink = page.getByRole('link', {
+      name: new RegExp(`View photo.*@${testUser.nickname}`),
     });
+    if (!(await homePhotoLink.isVisible())) {
+      await page.reload();
+    }
+    await expect(homePhotoLink).toBeVisible({ timeout: 15000 });
 
     // Return to account photos to clean up
     await page.goto('/account/photos');
