@@ -1,5 +1,6 @@
 'use client';
 
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
@@ -15,6 +16,14 @@ import ImageSVG from 'public/icons/image.svg';
 const MOBILE_WIDTH = 400;
 const TABLET_WIDTH = 600;
 const DESKTOP_WIDTH = 960;
+
+type GridBreakpoint = 'mobile' | 'tablet' | 'desktop';
+
+function widthToBreakpoint(width: number): GridBreakpoint {
+  if (width >= DESKTOP_WIDTH) return 'desktop';
+  if (width >= TABLET_WIDTH) return 'tablet';
+  return 'mobile';
+}
 
 /** Max CSS width of the grid at each breakpoint. Browser then applies DPR to sizes=. */
 const MOBILE_MAX_CSS_WIDTH = 384;
@@ -89,70 +98,68 @@ export default function JustifiedPhotoGridCore({
   }
 
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [breakpoint, setBreakpoint] = useState<GridBreakpoint>('mobile');
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const next = widthToBreakpoint(el.clientWidth);
+      setBreakpoint((current) => (current === next ? current : next));
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const activeLayout = {
+    mobile: {
+      rows: mobileRows,
+      layoutWidth: MOBILE_WIDTH,
+      maxCssWidth: MOBILE_MAX_CSS_WIDTH,
+      quality: GRID_THUMBNAIL_QUALITY,
+      gapClass: 'gap-1 mb-1',
+    },
+    tablet: {
+      rows: tabletRows,
+      layoutWidth: TABLET_WIDTH,
+      maxCssWidth: TABLET_MAX_CSS_WIDTH,
+      quality: THUMBNAIL_IMAGE_QUALITY,
+      gapClass: 'gap-2 mb-2',
+    },
+    desktop: {
+      rows: desktopRows,
+      layoutWidth: DESKTOP_WIDTH,
+      maxCssWidth: DESKTOP_MAX_CSS_WIDTH,
+      quality: THUMBNAIL_IMAGE_QUALITY,
+      gapClass: 'gap-2 mb-2',
+    },
+  }[breakpoint];
 
   return (
     <div
+      ref={containerRef}
       className="@container w-full"
     >
-      <div
-        className="block @[600px]:hidden"
-      >
-        <PhotoRows
-          rows={mobileRows}
-          photoMap={photoMap}
-          batchLikesMap={batchLikesMap}
-          profileNickname={profileNickname}
-          albumSlug={albumSlug}
-          challengeSlug={challengeSlug}
-          eventSlug={eventSlug}
-          showAttribution={showAttribution}
-          layoutWidth={MOBILE_WIDTH}
-          maxCssWidth={MOBILE_MAX_CSS_WIDTH}
-          quality={GRID_THUMBNAIL_QUALITY}
-          header={header}
-          gapClass="gap-1 mb-1"
-        />
-      </div>
-
-      <div
-        className="hidden @[600px]:block @[960px]:hidden"
-      >
-        <PhotoRows
-          rows={tabletRows}
-          photoMap={photoMap}
-          batchLikesMap={batchLikesMap}
-          profileNickname={profileNickname}
-          albumSlug={albumSlug}
-          challengeSlug={challengeSlug}
-          eventSlug={eventSlug}
-          showAttribution={showAttribution}
-          layoutWidth={TABLET_WIDTH}
-          maxCssWidth={TABLET_MAX_CSS_WIDTH}
-          quality={THUMBNAIL_IMAGE_QUALITY}
-          header={header}
-          gapClass="gap-2 mb-2"
-        />
-      </div>
-
-      <div
-        className="hidden @[960px]:block"
-      >
-        <PhotoRows
-          rows={desktopRows}
-          photoMap={photoMap}
-          batchLikesMap={batchLikesMap}
-          profileNickname={profileNickname}
-          albumSlug={albumSlug}
-          challengeSlug={challengeSlug}
-          eventSlug={eventSlug}
-          showAttribution={showAttribution}
-          layoutWidth={DESKTOP_WIDTH}
-          maxCssWidth={DESKTOP_MAX_CSS_WIDTH}
-          quality={THUMBNAIL_IMAGE_QUALITY}
-          header={header}
-          gapClass="gap-2 mb-2"
-        />
-      </div>
+      <PhotoRows
+        rows={activeLayout.rows}
+        photoMap={photoMap}
+        batchLikesMap={batchLikesMap}
+        profileNickname={profileNickname}
+        albumSlug={albumSlug}
+        challengeSlug={challengeSlug}
+        eventSlug={eventSlug}
+        showAttribution={showAttribution}
+        layoutWidth={activeLayout.layoutWidth}
+        maxCssWidth={activeLayout.maxCssWidth}
+        quality={activeLayout.quality}
+        header={header}
+        gapClass={activeLayout.gapClass}
+      />
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={name}
-                className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-1.5 text-sm font-medium font-[family-name:var(--font-geist-mono)] text-foreground whitespace-nowrap transition-colors hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:bg-[#2e3032] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] p-2! sm:px-3! sm:py-1!"
+                className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-color-strong bg-background px-4 py-1.5 text-sm font-medium font-(family-name:--font-geist-mono) text-foreground whitespace-nowrap transition-colors hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:bg-[#2e3032] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] p-2! sm:px-3! sm:py-1!"
               >
                 <span
                   className="inline-flex shrink-0 [&_svg:not([data-no-inherit])]:fill-current [&_svg[fill=none]]:fill-none [&_svg[stroke]]:stroke-current"
