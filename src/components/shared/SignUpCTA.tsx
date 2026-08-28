@@ -2,12 +2,11 @@
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
-import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
+import { getPreloadImageUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
-
 const BANNER_BACKGROUND =
   'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero1.jpg';
 
@@ -26,19 +25,17 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
   }
 
   if (variant === 'banner') {
+    const bannerBackground = getPreloadImageUrl(BANNER_BACKGROUND, 1200, 60);
+
     return (
       <div
         className="relative overflow-hidden bg-background-light"
       >
-        <BlurImage
-          src={BANNER_BACKGROUND}
-          alt=""
-          fill
-          className="object-cover object-[center_25%] brightness-75"
-          sizes="100vw"
-          quality={60}
-        />
         <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-cover bg-[center_25%] brightness-75"
+          style={{ backgroundImage: `url(${bannerBackground})` }}
+        />        <div
           className="absolute inset-0 bg-[#bba5fa] mix-blend-overlay"
         />
         <div

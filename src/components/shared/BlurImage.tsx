@@ -43,6 +43,8 @@ type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   contain?: boolean;
   /** Callback when image finishes loading */
   onLoad?: () => void;
+  /** When false, SSR and first paint use opacity-100 (LCP heroes). Default true. */
+  fadeIn?: boolean;
 };
 
 /**
@@ -64,8 +66,10 @@ export default function BlurImage({
   fill,
   contain = false,
   onLoad: onLoadProp,
+  fadeIn = true,
   preload,
   fetchPriority,
+  loading,
   ...props
 }: BlurImageProps) {
   const srcString = typeof src === 'string' ? src : (src as any)?.src;
@@ -94,6 +98,7 @@ export default function BlurImage({
   // - visible: fully visible, no animation (cached or animation done)
   const [currentSrc, setCurrentSrc] = useState(srcString);
   const [loadState, setLoadState] = useState<'loading' | 'fade-in' | 'visible'>(() => {
+    if (!fadeIn) return 'visible';
     if (cacheKey && loadedImages?.has(cacheKey)) return 'visible';
     return 'loading';
   });
@@ -105,7 +110,11 @@ export default function BlurImage({
   // Reset state when src changes (during render, not in effect)
   if (srcString !== currentSrc) {
     setCurrentSrc(srcString);
-    setLoadState(loadedImages?.has(cacheKey ?? '') ? 'visible' : 'loading');
+    setLoadState(
+      !fadeIn || loadedImages?.has(cacheKey ?? '')
+        ? 'visible'
+        : 'loading',
+    );
     setUseRawFallback(false);
   }
 
@@ -129,6 +138,12 @@ export default function BlurImage({
   // 2. img.complete (SSR-preloaded, already decoded) → 'fade-in'
   // 3. Otherwise → stay 'loading', wait for onLoad
   useIsomorphicLayoutEffect(() => {
+    if (!fadeIn) {
+      hasCalledOnLoad.current = true;
+      setLoadState('visible');
+      return;
+    }
+
     const known = !!(cacheKey && loadedImages?.has(cacheKey));
     if (known) {
       hasCalledOnLoad.current = true;
@@ -149,7 +164,7 @@ export default function BlurImage({
 
     // Image not ready yet — reset and wait for onLoad handler.
     hasCalledOnLoad.current = false;
-  }, [currentSrc, cacheKey]);
+  }, [currentSrc, cacheKey, fadeIn]);
 
   // Handler for image load - fires when the <img> element actually finishes loading.
   const handleImageLoad = useCallback(() => {
@@ -163,11 +178,11 @@ export default function BlurImage({
     // Remember this image for future navigations
     if (cacheKey) loadedImages?.add(cacheKey);
 
-    setLoadState('fade-in');
+    setLoadState(fadeIn ? 'fade-in' : 'visible');
 
     // Call external onLoad callback
     onLoadProp?.();
-  }, [cacheKey, onLoadProp]);
+  }, [cacheKey, fadeIn, onLoadProp]);
 
   // Transition to 'visible' once the fade-in animation completes.
   // This lets us safely remove the blurhash background after the fade finishes,
@@ -228,6 +243,7 @@ export default function BlurImage({
         onError={handleImageError}
         preload={preload}
         fetchPriority={fetchPriority}
+        loading={loading}
         {...props}
         unoptimized={effectiveUnoptimized}
       />
@@ -279,6 +295,7 @@ export default function BlurImage({
           onAnimationEnd={handleAnimationEnd}
           preload={preload}
           fetchPriority={fetchPriority}
+          loading={loading}
           {...props}
           unoptimized={effectiveUnoptimized}
         />
@@ -321,6 +338,7 @@ export default function BlurImage({
           onAnimationEnd={handleAnimationEnd}
           preload={preload}
           fetchPriority={fetchPriority}
+          loading={loading}
           {...props}
           unoptimized={effectiveUnoptimized}
         />
@@ -382,6 +400,7 @@ export default function BlurImage({
         onError={handleImageError}
         preload={preload}
         fetchPriority={fetchPriority}
+        loading={loading}
         {...props}
         unoptimized={effectiveUnoptimized}
       />

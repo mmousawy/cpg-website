@@ -37,18 +37,21 @@ const socialIconMap: Record<string, typeof DiscordSVG> = {
 
 export default function Home() {
   return (
-    <Suspense fallback={<CachedHomePage includeTestContent={false} />}>
-      <HomePageWithE2EFlag />
-    </Suspense>
+    <>
+      <HomeHeroSection />
+      <Suspense fallback={<CachedHomeBelowFold includeTestContent={false} />}>
+        <HomePageWithE2EFlag />
+      </Suspense>
+    </>
   );
 }
 
 async function HomePageWithE2EFlag() {
   const includeTestContent = await getIncludeTestContent();
-  return <CachedHomePage includeTestContent={includeTestContent} />;
+  return <CachedHomeBelowFold includeTestContent={includeTestContent} />;
 }
 
-async function CachedHomePage({ includeTestContent }: { includeTestContent: boolean }) {
+async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent: boolean }) {
   'use cache';
   cacheLife('home');
   cacheTag('home');
@@ -65,11 +68,9 @@ async function CachedHomePage({ includeTestContent }: { includeTestContent: bool
   } = await getHomePageData(includeTestContent);
 
   return (
-    <>
-      <HomeHeroSection />
-      <div
-        className="grid min-w-0 gap-10 md:gap-12 py-10 md:py-12 [&>*]:min-w-0"
-      >
+    <div
+      className="grid min-w-0 gap-10 md:gap-12 py-10 md:py-12 [&>*]:min-w-0"
+    >
         <HomeExploreSection
           events={events}
           attendeesByEvent={attendeesByEvent}
@@ -159,11 +160,10 @@ async function CachedHomePage({ includeTestContent }: { includeTestContent: bool
           <ActivitiesSliderWrapper />
         </PageContainer>
 
-        <HomeMembersSection
-          organizers={organizers}
-          recentMembers={recentMembers}
-        />
-      </div>
-    </>
+      <HomeMembersSection
+        organizers={organizers}
+        recentMembers={recentMembers}
+      />
+    </div>
   );
 }

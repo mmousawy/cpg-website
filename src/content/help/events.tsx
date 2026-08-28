@@ -43,7 +43,7 @@ export const eventsFAQ: FAQSection = {
       title: 'Adding events to your calendar',
       content: (
         <p>
-          After RSVPing, you can add the event to your calendar. On the event page, use the &quot;Add this event to your calendar&quot; section to download or open the event in Google Calendar, Outlook, or Apple Calendar.
+          After RSVPing, you can add the event to your calendar. On the event page, use the &quot;Add to calendar&quot; button and choose Google Calendar, Outlook, or Apple Calendar.
         </p>
       ),
     },

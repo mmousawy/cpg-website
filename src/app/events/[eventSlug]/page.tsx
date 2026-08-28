@@ -19,8 +19,8 @@ import { notFound } from 'next/navigation';
 
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
-import { getEventAlbum } from '@/lib/data/albums';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
+import { getEventAlbum } from '@/lib/data/albums';
 import {
   getAllEventSlugs,
   getEventAttendeesForEvent,
@@ -38,8 +38,8 @@ import TimeSVG from 'public/icons/time.svg';
 
 import EventAdminActionsDropdown from '@/components/events/EventAdminActionsDropdown';
 import EventPhotosSection from '@/components/events/EventPhotosSection';
-import { hasEventPhotos } from '@/lib/eventAlbums';
 import { getServerNow } from '@/lib/cache/serverNow';
+import { hasEventPhotos } from '@/lib/eventAlbums';
 import { getEventStatus } from '@/lib/events/status';
 import EventComments from './EventComments';
 
@@ -287,19 +287,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     />
                   )}
                 </div>
-                <div
-                  className="flex items-center gap-2"
-                >
-                  <ShareButton
-                    url={eventUrl}
-                    title={eventShareTitle}
-                    image={getSocialImageUrl(event.cover_image)}
-                    size="compact"
-                  />
-                  <EventAdminActionsDropdown
-                    eventSlug={event.slug || ''}
-                  />
-                </div>
+                <EventAdminActionsDropdown
+                  eventSlug={event.slug || ''}
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
@@ -348,19 +338,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     />
                   )}
                 </div>
-                <div
-                  className="flex items-center gap-2"
-                >
-                  <ShareButton
-                    url={eventUrl}
-                    title={eventShareTitle}
-                    image={getSocialImageUrl(event.cover_image)}
-                    size="compact"
-                  />
-                  <EventAdminActionsDropdown
-                    eventSlug={event.slug || ''}
-                  />
-                </div>
+                <EventAdminActionsDropdown
+                  eventSlug={event.slug || ''}
+                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl font-heading"
@@ -469,17 +449,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             )}
           </div>
 
-          {/* Add to Calendar */}
-          {!isPastEvent && (
-            <div
-              className="mb-8"
-            >
-              <AddToCalendar
-                event={event}
-              />
-            </div>
-          )}
-
           {/* Hosts Section */}
           {hosts && hosts.length > 0 && (
             <div
@@ -536,6 +505,25 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             <AttendeesDisplay
               attendees={attendees || []}
               isPastEvent={isPastEvent}
+            />
+          </div>
+
+          <div
+            className="flex items-center gap-4 mt-8"
+          >
+            {/* Add to Calendar */}
+            {!isPastEvent && (
+              <AddToCalendar
+                event={event}
+              />
+            )}
+            
+            <ShareButton
+              url={eventUrl}
+              title={eventShareTitle}
+              image={getSocialImageUrl(event.cover_image)}
+              label="Share this event"
+              labelSmall="Share"
             />
           </div>
         </Container>

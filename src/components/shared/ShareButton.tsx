@@ -1,12 +1,13 @@
 'use client';
 
+import Button from '@/components/shared/Button';
 import Popover from '@/components/shared/Popover';
 import { formatShareTitle, getShareLinks } from '@/utils/share';
 import clsx from 'clsx';
 import FacebookSVG from 'public/icons/facebook.svg';
 import LinkSVG from 'public/icons/link.svg';
 import PinterestSVG from 'public/icons/pinterest.svg';
-import ShareSVG from 'public/icons/share.svg';
+import ShareSVG from 'public/icons/share2.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
 import XSVG from 'public/icons/x.svg';
 import { useCallback, useState, type MouseEvent } from 'react';
@@ -16,13 +17,17 @@ type ShareButtonProps = {
   title: string;
   image?: string | null;
   size?: 'default' | 'compact';
+  /** When set, renders a labeled secondary Button instead of the circular icon trigger */
+  label?: string;
+  /** Shorter label shown below the `md` breakpoint. Falls back to `label`. */
+  labelSmall?: string;
   className?: string;
 };
 
 type CopiedAction = 'link' | 'instagram' | null;
 
 const menuItemClass =
-  'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background';
+  'flex w-full items-center whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm hover:bg-background';
 
 function canUseNativeShare(): boolean {
   return typeof navigator !== 'undefined' && typeof navigator.share === 'function';
@@ -33,6 +38,8 @@ export default function ShareButton({
   title,
   image,
   size = 'default',
+  label,
+  labelSmall,
   className,
 }: ShareButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,7 +74,35 @@ export default function ShareButton({
     }
   }, [shareTitle, url]);
 
-  const triggerButton = (
+  const triggerButton = label ? (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      className={clsx('inline-flex!', className)}
+      icon={(
+        <ShareSVG
+          className="size-4 shrink-0 fill-current"
+        />
+      )}
+      onClick={hasNativeShare ? handleNativeShareClick : undefined}
+    >
+      {labelSmall ? (
+        <>
+          <span
+            className="md:hidden"
+          >
+            {labelSmall}
+          </span>
+          <span
+            className="hidden md:inline"
+          >
+            {label}
+          </span>
+        </>
+      ) : label}
+    </Button>
+  ) : (
     <button
       type="button"
       onClick={hasNativeShare ? handleNativeShareClick : undefined}
@@ -75,13 +110,16 @@ export default function ShareButton({
         'group relative z-10 inline-flex! items-center justify-center rounded-full border border-border-color-strong text-sm font-medium text-foreground transition-colors overflow-visible',
         'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
         'bg-background-light hover:bg-background-medium focus-visible:bg-background-medium',
-        isCompact ? 'size-6' : 'size-9',
+        isCompact ? 'size-6.5' : 'size-9',
         className,
       )}
       aria-label="Share"
     >
       <ShareSVG
-        className="size-4 fill-foreground/80 transition-colors group-hover:fill-primary"
+        className={clsx(
+          'fill-foreground/80 transition-colors group-hover:fill-primary',
+          isCompact ? 'size-4' : 'size-5',
+        )}
       />
     </button>
   );
@@ -179,8 +217,9 @@ export default function ShareButton({
 
   return (
     <Popover
-      align="left"
-      width="w-64"
+      align="auto"
+      side="auto"
+      width="trigger"
       className="rounded-xl border-border-color-strong"
       open={isOpen}
       onOpenChange={setIsOpen}

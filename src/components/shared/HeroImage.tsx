@@ -25,6 +25,7 @@ export default function HeroImage({ src, blurhash }: HeroImageProps) {
       blurhash={blurhash}
       blurhashWidth={HERO_BLURHASH_WIDTH}
       blurhashHeight={HERO_BLURHASH_HEIGHT}
+      fadeIn={false}
     />
   );
 }

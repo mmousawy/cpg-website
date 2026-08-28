@@ -38,7 +38,7 @@ export default function PhotoActionBar({
 }: PhotoActionBarProps) {
   return (
     <div
-      className={clsx('flex items-center gap-4', className)}
+      className={clsx('flex items-center gap-3 mb-4', className)}
     >
       <DetailLikesSection
         entityType={entityType}

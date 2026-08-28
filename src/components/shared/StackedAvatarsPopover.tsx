@@ -92,101 +92,99 @@ export default function StackedAvatarsPopover({
   // Shared content for avatars + count
   const avatarsContent = (
     <>
-      <div
-        className="flex items-center"
-      >
-        {showSkeletonAvatars ? (
-          // Loading skeleton avatars
-          [...Array(Math.min(3, 3))].map((_, i) => (
-            <div
-              key={i}
-              className={clsx(
-                'size-6 rounded-full bg-border-color',
-                'ring-2 ring-background',
-                i > 0 && '-ml-2',
-                'animate-pulse',
-              )}
-            />
-          ))
-        ) : (
-          <>
-            {/* Desktop: show up to 5 avatars + count badge */}
-            <div
-              className="max-sm:hidden flex items-center"
-            >
-              {visiblePeople.map((person, index) => (
-                <div
-                  key={person.id}
-                  className={clsx(
-                    'relative rounded-full ring-2 ring-background bg-border-color',
-                    index > 0 && '-ml-2',
-                  )}
-                  style={{ zIndex: index + 1 }}
-                >
-                  <Avatar
-                    avatarUrl={person.avatarUrl}
-                    fullName={person.fullName}
-                    nickname={person.nickname}
-                    size={avatarSize}
-                  />
-                </div>
-              ))}
-              {hiddenCount > 0 && (
-                <span
-                  className={clsx(
-                    'relative -ml-1.5 flex items-center justify-center rounded-full',
-                    'bg-background-medium ring-2 ring-background',
-                    'text-[10px] font-semibold text-foreground/80',
-                    SIZE_MAP[avatarSize].wrapper,
-                  )}
-                  style={{ zIndex: maxVisibleAvatars + 1 }}
-                >
-                  +
-                  {hiddenCount}
-                </span>
-              )}
-            </div>
-            {/* Mobile: show up to 3 avatars + count badge */}
-            <div
-              className="sm:hidden flex items-center"
-            >
-              {visiblePeopleMobile.map((person, index) => (
-                <div
-                  key={person.id}
-                  className={clsx(
-                    'relative rounded-full ring-2 ring-background bg-border-color',
-                    index > 0 && '-ml-2',
-                  )}
-                  style={{ zIndex: index + 1 }}
-                >
-                  <Avatar
-                    avatarUrl={person.avatarUrl}
-                    fullName={person.fullName}
-                    nickname={person.nickname}
-                    size={avatarSize}
-                  />
-                </div>
-              ))}
-              {hiddenCountMobile > 0 && (
-                <span
-                  className={clsx(
-                    'relative -ml-1.5 flex items-center justify-center rounded-full',
-                    'bg-background-medium ring-2 ring-background',
-                    'text-[10px] font-semibold text-foreground/80',
-                    SIZE_MAP[avatarSize].wrapper,
-                  )}
-                  style={{ zIndex: maxVisibleAvatarsMobile + 1 }}
-                >
-                  +
-                  {hiddenCountMobile}
-                </span>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+      {(hasPeople || showSkeletonAvatars) && (
+        <div
+          className="flex items-center"
+        >
+          {showSkeletonAvatars ? (
+            [...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className={clsx(
+                  'size-6 rounded-full bg-border-color',
+                  'ring-2 ring-background',
+                  i > 0 && '-ml-2',
+                  'animate-pulse',
+                )}
+              />
+            ))
+          ) : (
+            <>
+              <div
+                className="max-sm:hidden flex items-center"
+              >
+                {visiblePeople.map((person, index) => (
+                  <div
+                    key={person.id}
+                    className={clsx(
+                      'relative rounded-full ring-2 ring-background bg-border-color',
+                      index > 0 && '-ml-2',
+                    )}
+                    style={{ zIndex: index + 1 }}
+                  >
+                    <Avatar
+                      avatarUrl={person.avatarUrl}
+                      fullName={person.fullName}
+                      nickname={person.nickname}
+                      size={avatarSize}
+                    />
+                  </div>
+                ))}
+                {hiddenCount > 0 && (
+                  <span
+                    className={clsx(
+                      'relative -ml-1.5 flex items-center justify-center rounded-full',
+                      'bg-background-medium ring-2 ring-background',
+                      'text-[10px] font-semibold text-foreground/80',
+                      SIZE_MAP[avatarSize].wrapper,
+                    )}
+                    style={{ zIndex: maxVisibleAvatars + 1 }}
+                  >
+                    +
+                    {hiddenCount}
+                  </span>
+                )}
+              </div>
+              <div
+                className="sm:hidden flex items-center"
+              >
+                {visiblePeopleMobile.map((person, index) => (
+                  <div
+                    key={person.id}
+                    className={clsx(
+                      'relative rounded-full ring-2 ring-background bg-border-color',
+                      index > 0 && '-ml-2',
+                    )}
+                    style={{ zIndex: index + 1 }}
+                  >
+                    <Avatar
+                      avatarUrl={person.avatarUrl}
+                      fullName={person.fullName}
+                      nickname={person.nickname}
+                      size={avatarSize}
+                    />
+                  </div>
+                ))}
+                {hiddenCountMobile > 0 && (
+                  <span
+                    className={clsx(
+                      'relative -ml-1.5 flex items-center justify-center rounded-full',
+                      'bg-background-medium ring-2 ring-background',
+                      'text-[10px] font-semibold text-foreground/80',
+                      SIZE_MAP[avatarSize].wrapper,
+                    )}
+                    style={{ zIndex: maxVisibleAvatarsMobile + 1 }}
+                  >
+                    +
+                    {hiddenCountMobile}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
-      {/* Count and label */}
       {showInlineCount && (
         <span
           className={clsx(
@@ -199,6 +197,10 @@ export default function StackedAvatarsPopover({
       )}
     </>
   );
+
+  if (!hasPeople && !showSkeletonAvatars && !showInlineCount) {
+    return null;
+  }
 
   // If popover is disabled, just render the content as a div
   if (disablePopover) {

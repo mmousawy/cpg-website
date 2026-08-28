@@ -238,7 +238,7 @@ export default async function ChallengePage({
             >
               {/* Challenge badge */}
               <div
-                className="mb-2 flex items-center justify-between gap-2"
+                className="mb-2 flex flex-wrap items-center gap-2"
               >
                 <div
                   className="flex flex-wrap items-center gap-2"
@@ -277,12 +277,6 @@ export default async function ChallengePage({
                   </span>
                 )}
                 </div>
-                <ShareButton
-                  url={challengeUrl}
-                  title={challengeShareTitle}
-                  image={challengeShareImage}
-                  size="compact"
-                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl md:text-5xl font-heading"
@@ -305,7 +299,7 @@ export default async function ChallengePage({
             >
               {/* Challenge badge */}
               <div
-                className="mb-3 flex items-center justify-between gap-2"
+                className="mb-3 flex flex-wrap items-center gap-2"
               >
                 <div
                   className="flex flex-wrap items-center gap-2"
@@ -344,12 +338,6 @@ export default async function ChallengePage({
                   </span>
                 )}
                 </div>
-                <ShareButton
-                  url={challengeUrl}
-                  title={challengeShareTitle}
-                  image={challengeShareImage}
-                  size="compact"
-                />
               </div>
               <h1
                 className="text-3xl font-bold sm:text-4xl font-heading"
@@ -477,6 +465,17 @@ export default async function ChallengePage({
                 Submissions closed
               </Button>
             )}
+          </div>
+
+          <div
+            className="mt-6"
+          >
+            <ShareButton
+              url={challengeUrl}
+              title={challengeShareTitle}
+              image={challengeShareImage}
+              label="Share this challenge"
+            />
           </div>
         </Container>
 

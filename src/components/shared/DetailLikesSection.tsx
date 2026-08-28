@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
 import { useAlbumLikes, usePhotoLikes } from '@/hooks/useLikes';
+import { useSession } from '@/hooks/useSession';
 import { queueLike } from '@/lib/sync';
 import { useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
@@ -61,15 +61,13 @@ function DetailLikesSectionReadOnly({
         </div>
       </button>
 
-      <span
-        className={clsx(
-          'text-xs font-medium text-foreground/80',
-          'transition-opacity duration-300',
-          initialCount > 0 ? 'opacity-100' : 'opacity-0',
-        )}
-      >
-        {initialCount > 0 ? initialCount : ''}
-      </span>
+      {initialCount > 0 && (
+        <span
+          className="text-xs font-medium text-foreground/80"
+        >
+          {initialCount}
+        </span>
+      )}
     </div>
   );
 }
@@ -202,15 +200,13 @@ function DetailLikesSectionInteractive({
         showInlineCount={false}
       />
 
-      <span
-        className={clsx(
-          'text-xs font-medium text-foreground/80',
-          'transition-opacity duration-300',
-          count > 0 ? 'opacity-100' : 'opacity-0',
-        )}
-      >
-        {count > 0 ? count : ''}
-      </span>
+      {count > 0 && (
+        <span
+          className="text-xs font-medium text-foreground/80"
+        >
+          {count}
+        </span>
+      )}
     </div>
   );
 }

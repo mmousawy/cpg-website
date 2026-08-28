@@ -7,10 +7,9 @@ import {
   Text,
 } from '@react-email/components';
 
-import Button from '@/components/shared/Button';
+import AddToCalendarDropdown from '@/components/events/AddToCalendarDropdown';
 import { EVENT_TIMEZONE } from '@/lib/events/status';
 import { stripHtml } from '@/utils/stripHtml';
-import CalendarAddSVG from 'public/icons/calendar-add-16.svg';
 
 function normalizeEventTime(time: string | null) {
   if (!time) return '00:00:00';
@@ -18,6 +17,22 @@ function normalizeEventTime(time: string | null) {
 
   return time;
 }
+
+type CalendarLinkKey = 'google' | 'outlook' | 'apple';
+
+const calendarOptions: Array<{
+  id: CalendarLinkKey;
+  label: string;
+  external?: boolean;
+  download?: boolean;
+}> = [
+  { id: 'google', label: 'Google Calendar', external: true },
+  { id: 'outlook', label: 'Outlook Calendar', external: true },
+  { id: 'apple', label: 'Apple Calendar', download: true },
+];
+
+const emailButtonStyle =
+  'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-1 font-mono text-[14px] font-semibold no-underline';
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = dayjs.tz(
@@ -45,14 +60,13 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
     encDetails[key as keyof typeof calendarDetails] = encodeURIComponent(value!);
   }
 
-  const calendarLinks = {
+  const calendarLinks: Record<CalendarLinkKey, string> = {
     google: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encDetails.title}&dates=${encDetails.startDate}/${encDetails.endDate}&ctz=${encodeURIComponent(EVENT_TIMEZONE)}&details=${encDetails.description}&location=${encDetails.location}`,
     outlook: `https://outlook.live.com/calendar/action/compose/?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject=${encDetails.title}&startdt=${encDetails.outlookStartDate}&enddt=${encDetails.outlookEndDate}&body=${encDetails.description}&location=${encDetails.location}`,
     apple: `data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0ABEGIN:VEVENT%0D%0ASUMMARY:${encDetails.title}%0D%0ADTSTART:${encDetails.startDate}%0D%0ADTEND:${encDetails.endDate}%0D%0ADESCRIPTION:${encDetails.description}%0D%0ALOCATION:${encDetails.location}%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR%0D%0A`,
   };
 
-  const buttonStyle = 'flex gap-2 whitespace-nowrap items-center rounded-full bg-background text-foreground border-[0.0625rem] border-border-color px-3 py-1 font-mono text-[14px] font-semibold fill-foreground no-underline hover:border-primary-alt hover:bg-primary-alt hover:fill-slate-950 hover:text-slate-950';
-  const emailButtonStyle = 'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-1 font-mono text-[14px] font-semibold no-underline';
+  const appleDownloadName = `${event.title}.ics`;
 
   if (render === 'email') {
     return (
@@ -68,89 +82,26 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
         <div
           className="flex flex-col items-start gap-2"
         >
-          {/* Google */}
-          <EmailButton
-            href={calendarLinks.google}
-            className={emailButtonStyle}
-          >
-            Google Calendar
-          </EmailButton>
-
-          {/* Outlook */}
-          <EmailButton
-            href={calendarLinks.outlook}
-            className={emailButtonStyle}
-          >
-            Outlook Calendar
-          </EmailButton>
-
-          {/* Apple */}
-          <EmailButton
-            href={calendarLinks.apple}
-            download={`${event.title}.ics`}
-            className={emailButtonStyle}
-          >
-            Apple Calendar
-          </EmailButton>
+          {calendarOptions.map(({ id, label, download }) => (
+            <EmailButton
+              key={id}
+              href={calendarLinks[id]}
+              className={emailButtonStyle}
+              {...(download && { download: appleDownloadName })}
+            >
+              {label}
+            </EmailButton>
+          ))}
         </div>
       </Section>
     );
   }
 
   return (
-    <div
-      className="flex flex-col gap-2 max-sm:gap-4"
-    >
-      <span
-        className="text-sm text-foreground font-medium"
-      >
-        Add this event to your calendar:
-      </span>
-
-      <div
-        className="flex items-start gap-2 max-sm:flex-col max-sm:gap-4"
-      >
-        {/* Google */}
-        <Button
-          href={calendarLinks.google}
-          variant="secondary"
-          size="sm"
-          icon={<CalendarAddSVG
-            className="shrink-0"
-          />}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Google Calendar
-        </Button>
-
-        {/* Outlook */}
-        <Button
-          href={calendarLinks.outlook}
-          variant="secondary"
-          size="sm"
-          icon={<CalendarAddSVG
-            className="shrink-0"
-          />}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Outlook Calendar
-        </Button>
-
-        {/* Apple */}
-        <Button
-          href={calendarLinks.apple}
-          variant="secondary"
-          size="sm"
-          icon={<CalendarAddSVG
-            className="shrink-0"
-          />}
-          download={`${event.title}.ics`}
-        >
-          Apple Calendar
-        </Button>
-      </div>
-    </div>
+    <AddToCalendarDropdown
+      options={calendarOptions}
+      links={calendarLinks}
+      appleDownloadName={appleDownloadName}
+    />
   );
 }
