@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.39.3](https://github.com/mmousawy/cpg-website/compare/v1.39.2...v1.39.3) (2026-08-28)
+
+
+### 🐛 Bug Fixes
+
+* Enhance JustifiedPhotoGridCore for responsive layout and improve Footer styling ([5b200ee](https://github.com/mmousawy/cpg-website/commit/5b200eedb0bcaa089f32d00772bc682667b07ead))
+* Enhance QueryProvider and layout components for improved functionality ([93608c5](https://github.com/mmousawy/cpg-website/commit/93608c531890020817aafce96e5dcd3da0460f1a))
+
+
+### ♻️ Refactoring
+
+* Improve JustifiedPhotoGridCore for enhanced responsive layout and code organization ([fae6066](https://github.com/mmousawy/cpg-website/commit/fae6066e8db826e09b18a4c6d9c63b32972c0450))
+
 ## [1.39.2](https://github.com/mmousawy/cpg-website/compare/v1.39.1...v1.39.2) (2026-08-28)
 
 
