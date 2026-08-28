@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.2](https://github.com/mmousawy/cpg-website/compare/v1.39.1...v1.39.2) (2026-08-28)
+
+
+### 🐛 Bug Fixes
+
+* Update home and challenge pages for improved structure and functionality ([2feae16](https://github.com/mmousawy/cpg-website/commit/2feae160fe6915bfe3e83730ac9f4883e56a30b5))
+
 ## [1.39.1](https://github.com/mmousawy/cpg-website/compare/v1.39.0...v1.39.1) (2026-08-26)
 
 
