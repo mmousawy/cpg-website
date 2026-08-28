@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
@@ -19,10 +19,49 @@ const DESKTOP_WIDTH = 960;
 
 type GridBreakpoint = 'mobile' | 'tablet' | 'desktop';
 
-function widthToBreakpoint(width: number): GridBreakpoint {
+function widthToBreakpoint(width: number): GridBreakpoint | null {
+  if (width <= 0) return null;
   if (width >= DESKTOP_WIDTH) return 'desktop';
   if (width >= TABLET_WIDTH) return 'tablet';
   return 'mobile';
+}
+
+type GridLayoutConfig = {
+  rows: PhotoRow[];
+  layoutWidth: number;
+  maxCssWidth: number;
+  quality: number;
+  gapClass: string;
+};
+
+function getLayoutConfigs(
+  mobileRows: PhotoRow[],
+  tabletRows: PhotoRow[],
+  desktopRows: PhotoRow[],
+): Record<GridBreakpoint, GridLayoutConfig> {
+  return {
+    mobile: {
+      rows: mobileRows,
+      layoutWidth: MOBILE_WIDTH,
+      maxCssWidth: MOBILE_MAX_CSS_WIDTH,
+      quality: GRID_THUMBNAIL_QUALITY,
+      gapClass: 'gap-1 mb-1',
+    },
+    tablet: {
+      rows: tabletRows,
+      layoutWidth: TABLET_WIDTH,
+      maxCssWidth: TABLET_MAX_CSS_WIDTH,
+      quality: THUMBNAIL_IMAGE_QUALITY,
+      gapClass: 'gap-2 mb-2',
+    },
+    desktop: {
+      rows: desktopRows,
+      layoutWidth: DESKTOP_WIDTH,
+      maxCssWidth: DESKTOP_MAX_CSS_WIDTH,
+      quality: THUMBNAIL_IMAGE_QUALITY,
+      gapClass: 'gap-2 mb-2',
+    },
+  };
 }
 
 /** Max CSS width of the grid at each breakpoint. Browser then applies DPR to sizes=. */
@@ -99,67 +138,108 @@ export default function JustifiedPhotoGridCore({
 
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));
   const containerRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<'css' | 'js'>('css');
   const [breakpoint, setBreakpoint] = useState<GridBreakpoint>('mobile');
+
+  const layouts = getLayoutConfigs(mobileRows, tabletRows, desktopRows);
+
+  const measureBreakpoint = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const next = widthToBreakpoint(el.clientWidth);
+    if (!next) return;
+    setBreakpoint((current) => (current === next ? current : next));
+  }, []);
+
+  const setContainerRef = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node;
+    if (node) {
+      const next = widthToBreakpoint(node.clientWidth);
+      if (next) {
+        setBreakpoint((current) => (current === next ? current : next));
+      }
+    }
+  }, []);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const update = () => {
-      const next = widthToBreakpoint(el.clientWidth);
-      setBreakpoint((current) => (current === next ? current : next));
-    };
+    measureBreakpoint();
+    setPhase('js');
 
-    update();
-    const observer = new ResizeObserver(update);
+    const observer = new ResizeObserver(measureBreakpoint);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [measureBreakpoint]);
 
-  const activeLayout = {
-    mobile: {
-      rows: mobileRows,
-      layoutWidth: MOBILE_WIDTH,
-      maxCssWidth: MOBILE_MAX_CSS_WIDTH,
-      quality: GRID_THUMBNAIL_QUALITY,
-      gapClass: 'gap-1 mb-1',
-    },
-    tablet: {
-      rows: tabletRows,
-      layoutWidth: TABLET_WIDTH,
-      maxCssWidth: TABLET_MAX_CSS_WIDTH,
-      quality: THUMBNAIL_IMAGE_QUALITY,
-      gapClass: 'gap-2 mb-2',
-    },
-    desktop: {
-      rows: desktopRows,
-      layoutWidth: DESKTOP_WIDTH,
-      maxCssWidth: DESKTOP_MAX_CSS_WIDTH,
-      quality: THUMBNAIL_IMAGE_QUALITY,
-      gapClass: 'gap-2 mb-2',
-    },
-  }[breakpoint];
+  const sharedPhotoRowsProps = {
+    photoMap,
+    batchLikesMap,
+    profileNickname,
+    albumSlug,
+    challengeSlug,
+    eventSlug,
+    showAttribution,
+    header,
+  };
+
+  const activeLayout = layouts[breakpoint];
 
   return (
     <div
-      ref={containerRef}
+      ref={setContainerRef}
       className="@container w-full"
     >
-      <PhotoRows
-        rows={activeLayout.rows}
-        photoMap={photoMap}
-        batchLikesMap={batchLikesMap}
-        profileNickname={profileNickname}
-        albumSlug={albumSlug}
-        challengeSlug={challengeSlug}
-        eventSlug={eventSlug}
-        showAttribution={showAttribution}
-        layoutWidth={activeLayout.layoutWidth}
-        maxCssWidth={activeLayout.maxCssWidth}
-        quality={activeLayout.quality}
-        header={header}
-        gapClass={activeLayout.gapClass}
-      />
+      {phase === 'css' ? (
+        <>
+          <div
+            className="block @[600px]:hidden"
+          >
+            <PhotoRows
+              {...sharedPhotoRowsProps}
+              rows={layouts.mobile.rows}
+              layoutWidth={layouts.mobile.layoutWidth}
+              maxCssWidth={layouts.mobile.maxCssWidth}
+              quality={layouts.mobile.quality}
+              gapClass={layouts.mobile.gapClass}
+            />
+          </div>
+          <div
+            className="hidden @[600px]:block @[960px]:hidden"
+          >
+            <PhotoRows
+              {...sharedPhotoRowsProps}
+              rows={layouts.tablet.rows}
+              layoutWidth={layouts.tablet.layoutWidth}
+              maxCssWidth={layouts.tablet.maxCssWidth}
+              quality={layouts.tablet.quality}
+              gapClass={layouts.tablet.gapClass}
+            />
+          </div>
+          <div
+            className="hidden @[960px]:block"
+          >
+            <PhotoRows
+              {...sharedPhotoRowsProps}
+              rows={layouts.desktop.rows}
+              layoutWidth={layouts.desktop.layoutWidth}
+              maxCssWidth={layouts.desktop.maxCssWidth}
+              quality={layouts.desktop.quality}
+              gapClass={layouts.desktop.gapClass}
+            />
+          </div>
+        </>
+      ) : (
+        <PhotoRows
+          {...sharedPhotoRowsProps}
+          rows={activeLayout.rows}
+          layoutWidth={activeLayout.layoutWidth}
+          maxCssWidth={activeLayout.maxCssWidth}
+          quality={activeLayout.quality}
+          gapClass={activeLayout.gapClass}
+        />
+      )}
     </div>
   );
 }
