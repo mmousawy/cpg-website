@@ -1,11 +1,11 @@
-'use client';
+import type { ReactNode } from 'react';
 
 import Header from './Header';
 import Footer from './Footer';
 import SkipToContent from './SkipToContent';
 
 type LayoutProps = {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export default function Layout({ children }: LayoutProps) {

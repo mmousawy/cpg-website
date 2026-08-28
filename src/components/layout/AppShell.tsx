@@ -1,5 +1,4 @@
-'use client';
-
+import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 
 import ConfirmProvider from '@/app/providers/ConfirmProvider';
@@ -9,7 +8,7 @@ import Layout from '@/components/layout/Layout';
 import DeferredNotificationToastManager from '@/components/notifications/DeferredNotificationToastManager';
 
 type AppShellProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export default function AppShell({ children }: AppShellProps) {

@@ -16,11 +16,11 @@ export default function HeroImage({ src, blurhash }: HeroImageProps) {
       src={src}
       alt="Creative Photography Group meetup"
       fill
-      className="object-cover object-[center_30%] brightness-75"
+      className="object-cover object-[center_30%]"
       fetchPriority="high"
       loading="eager"
       preload
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px"
+      sizes="100vw"
       quality={80}
       blurhash={blurhash}
       blurhashWidth={HERO_BLURHASH_WIDTH}

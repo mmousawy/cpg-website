@@ -1,9 +1,15 @@
 'use client';
 
-import QueryProvider from '@/app/providers/QueryProvider';
+import dynamic from 'next/dynamic';
+
 import SupabaseProvider from '@/app/providers/SupabaseProvider';
 import { AuthProvider } from '@/context/AuthContext';
 import { useSession } from '@/context/SessionContext';
+
+const QueryProvider = dynamic(
+  () => import('@/app/providers/QueryProvider'),
+  { ssr: true },
+);
 
 type AuthenticatedProvidersProps = {
   children: React.ReactNode;

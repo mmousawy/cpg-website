@@ -1,19 +1,21 @@
 'use client';
 
 import { getQueryClient } from '@/lib/queryClient';
-import { initializeSyncHandlers } from '@/lib/sync';
+import { hasSupabaseAuthCookie } from '@/utils/supabase/loadBrowserClient';
 import { scheduleIdleWork } from '@/utils/scheduleIdle';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 export default function QueryProvider({ children }: { children: React.ReactNode }) {
-  // Use singleton QueryClient so it's accessible from non-React code
   const queryClient = getQueryClient();
 
-  // Initialize sync handlers after first paint
   useEffect(() => {
+    if (!hasSupabaseAuthCookie()) return;
+
     scheduleIdleWork(() => {
-      initializeSyncHandlers();
+      void import('@/lib/sync').then((mod) => {
+        mod.initializeSyncHandlers();
+      });
     }, 2000);
   }, []);
 

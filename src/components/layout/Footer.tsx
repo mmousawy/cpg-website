@@ -1,5 +1,3 @@
-'use client';
-
 import Link from 'next/link';
 
 import FeedbackButton from '@/components/shared/FeedbackButton';
@@ -19,7 +17,6 @@ const iconMap: Record<string, typeof DiscordSVG> = {
 };
 
 export default function Footer() {
-  // Build-time year — `new Date()` during render blocks prerender in Client Components
   const currentYear = process.env.NEXT_PUBLIC_COPYRIGHT_YEAR ?? '2026';
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION;
 
