@@ -6,7 +6,7 @@ import HelpLink from '@/components/shared/HelpLink';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getMembersDiscoveryData } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
-import { createClient } from '@/utils/supabase/server';
+import { getServerUser } from '@/utils/supabase/getServerAuth';
 
 import MembersDiscoverySections from '@/app/members/MembersDiscoverySections';
 import MembersDiscoverySkeleton from '@/app/members/MembersDiscoverySkeleton';
@@ -78,14 +78,7 @@ async function MembersPageContent() {
 
 async function getMembersPageUser() {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      return null;
-    }
-
-    return user;
+    return await getServerUser();
   } catch {
     return null;
   }

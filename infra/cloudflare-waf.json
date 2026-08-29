@@ -1,0 +1,29 @@
+{
+  "description": "Apply in Cloudflare dashboard → Security → WAF → Custom rules for zone creativephotography.group. Expressions use contains/eq only (no matches/regex — Free/Pro). Block at the edge so scrapers never reach origin.",
+  "verification": {
+    "ip": "After the rule is live, Cloudflare Security Events should show action=block for 92.254.97.120.",
+    "ua": "Requests with User-Agent containing SM-G892A and NRD90M should be blocked at the edge (Chrome version may vary)."
+  },
+  "rules": [
+    {
+      "order": 1,
+      "name": "Block NL scraper IP 92.254.97.120",
+      "expression": "(ip.src eq 92.254.97.120)",
+      "action": "block",
+      "notes": [
+        "Observed 2026-08-28: ~70k HTML requests in 24h across many paths.",
+        "Origin proxy also blocks this IP; the WAF rule stops it before Vercel."
+      ]
+    },
+    {
+      "order": 2,
+      "name": "Block Galaxy S8 Active NRD90M scraper fingerprint",
+      "expression": "(http.user_agent contains \"SM-G892A\" and http.user_agent contains \"NRD90M\")",
+      "action": "block",
+      "notes": [
+        "Matches model+build tokens from src/config/scraperUserAgents.ts (galaxy-s8-active-nrd90m).",
+        "Survives Chrome version rotation (e.g. Chrome/109 vs Chrome/60 in copy-paste lists)."
+      ]
+    }
+  ]
+}

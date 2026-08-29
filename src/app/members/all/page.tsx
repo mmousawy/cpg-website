@@ -6,7 +6,7 @@ import { routes } from '@/config/routes';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getAllMembers } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
-import { getServerAuth } from '@/utils/supabase/getServerAuth';
+import { getServerUser } from '@/utils/supabase/getServerAuth';
 import { formatJoinedDate } from '@/utils/utils';
 
 export const metadata = createMetadata({
@@ -20,7 +20,7 @@ export const metadata = createMetadata({
 export const instant = false;
 
 export default async function AllMembersPage() {
-  const { user } = await getServerAuth();
+  const user = await getServerUser();
 
   if (!user) {
     return (

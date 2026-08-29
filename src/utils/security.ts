@@ -43,13 +43,23 @@ export function safeEqualSecret(a: string | undefined, b: string | undefined): b
 }
 
 /**
- * Extract the left-most client IP from forwarded headers.
- * Only the first address is used; callers should ensure the edge strips spoofed values.
+ * Client IP from trusted edge headers.
+ * Prefer CF-Connecting-IP (Cloudflare overwrites it); then X-Real-IP;
+ * then the first X-Forwarded-For hop.
  */
-export function getClientIp(
-  xRealIp: string | null,
-  xForwardedFor: string | null,
-): string | null {
+export function getClientIp({
+  cfConnectingIp = null,
+  xRealIp = null,
+  xForwardedFor = null,
+}: {
+  cfConnectingIp?: string | null
+  xRealIp?: string | null
+  xForwardedFor?: string | null
+} = {}): string | null {
+  if (cfConnectingIp?.trim()) {
+    return cfConnectingIp.trim();
+  }
+
   if (xRealIp?.trim()) {
     return xRealIp.trim();
   }

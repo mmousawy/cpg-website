@@ -23,6 +23,10 @@
 
 - **[view-tracking-caching.md](./view-tracking-caching.md)** - View count tracking and caching strategy
 
+### Supabase & auth
+
+- **[supabase-auth-traffic.md](./supabase-auth-traffic.md)** - Auth/proxy traffic reductions, JWKS status on self-hosted Supabase, and future asymmetric JWT setup
+
 ### Shared Albums
 
 - **[shared-albums.md](./shared-albums.md)** - Community photo albums, membership model, user flows

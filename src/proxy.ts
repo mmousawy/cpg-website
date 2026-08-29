@@ -1,12 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 import { isProfileComplete } from '@/utils/profileCompletion';
+import {
+  matchesPath,
+  needsProxyAuthSession,
+  needsProxyOwnProfile,
+} from '@/utils/proxyAuth';
+import { parseIpList, shouldBlockClient } from '@/utils/requestGuard';
 import { getClientIp } from '@/utils/security';
+import { hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
 
-const blacklist = process.env.BLACKLIST_IPS?.split(',').map((ip) => ip.trim()).filter(Boolean) || [];
+const extraBlockedIps = parseIpList(process.env.BLACKLIST_IPS);
 
-// Public API routes that don't need auth check
-// This avoids the 160-250ms overhead of supabase.auth.getUser() for each request
+// Public API routes skip session/profile checks in this proxy.
 const publicApiPaths = [
   '/api/auth/',           // Auth endpoints (login, signup, reset)
   '/api/contact',         // Contact form
@@ -33,12 +39,13 @@ const KNOWN_ROUTES = new Set([
 ]);
 
 export default async function proxy(request: NextRequest) {
-  const ipAddress = getClientIp(
-    request.headers.get('x-real-ip'),
-    request.headers.get('x-forwarded-for'),
-  );
+  const ipAddress = getClientIp({
+    cfConnectingIp: request.headers.get('cf-connecting-ip'),
+    xRealIp: request.headers.get('x-real-ip'),
+    xForwardedFor: request.headers.get('x-forwarded-for'),
+  });
 
-  if (ipAddress && blacklist.includes(ipAddress)) {
+  if (shouldBlockClient(ipAddress, request.headers.get('user-agent'), extraBlockedIps)) {
     return NextResponse.json({ message: 'Blacklisted' }, { status: 403 });
   }
 
@@ -80,12 +87,29 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  // Match exact path or subpaths (e.g. '/account' matches '/account' and '/account/events' but not '/account-deleted')
-  const matchesRoute = (path: string) => pathname === path || pathname.startsWith(path + '/');
+  const matchesRoute = (path: string) => matchesPath(pathname, path);
 
   // Skip auth check for public API routes
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
   if (isPublicApiRoute) {
+    return NextResponse.next();
+  }
+
+  // Public pages (gallery, photos, albums, etc.) skip Auth + get_own_profile.
+  // Those two calls were ~210k requests/day because this proxy also runs on
+  // Next.js Link prefetches. Session refresh still happens on gated routes
+  // and in the browser client for logged-in users.
+  const isProtectedPath = ['/account', '/admin'].some((path) => matchesRoute(path));
+  const isAuthPath = ['/login', '/signup'].some((path) => matchesRoute(path));
+  const hasAuthCookie = hasSupabaseAuthCookies(request.cookies.getAll());
+
+  if (!needsProxyAuthSession(pathname) || !hasAuthCookie) {
+    if (isProtectedPath && !hasAuthCookie) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(url);
+    }
     return NextResponse.next();
   }
 
@@ -110,9 +134,13 @@ export default async function proxy(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: This refreshes the session and syncs cookies
-  // Do not remove this - it ensures auth cookies are properly set
-  const { data: { user } } = await supabase.auth.getUser();
+  // Verifies the JWT locally (asymmetric keys) and refreshes it when expired.
+  // Do not remove this — Server Components cannot write refreshed auth cookies.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const user = typeof claims?.sub === 'string'
+    ? { id: claims.sub, email: typeof claims.email === 'string' ? claims.email : null }
+    : null;
 
   let profile: {
     deletion_scheduled_at: string | null;
@@ -123,7 +151,7 @@ export default async function proxy(request: NextRequest) {
     terms_accepted_at: string | null;
   } | null = null;
 
-  if (user) {
+  if (user && needsProxyOwnProfile(pathname)) {
     const { data } = await supabase.rpc('get_own_profile');
     if (data && typeof data === 'object' && !Array.isArray(data)) {
       const ownProfile = data as Record<string, unknown>;
@@ -162,10 +190,11 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Once logged in, force profile completion before browsing any page.
-  // Exempt onboarding/auth-callback/api/account-deleted routes to avoid redirect loops.
+  // Force profile completion on gated routes. Public pages skip this so
+  // gallery/photo prefetches do not call get_own_profile.
   if (
     user
+    && needsProxyOwnProfile(pathname)
     && !matchesRoute('/onboarding')
     && !matchesRoute('/auth-callback')
     && !matchesRoute('/api')
@@ -178,20 +207,12 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/account', '/admin'];
-  const isProtectedPath = protectedPaths.some(path => matchesRoute(path));
-
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(url);
   }
-
-  // Auth routes - redirect to dashboard if already authenticated
-  const authPaths = ['/login', '/signup'];
-  const isAuthPath = authPaths.some(path => matchesRoute(path));
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();

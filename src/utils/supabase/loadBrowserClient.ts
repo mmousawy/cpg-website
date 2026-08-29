@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/database.types';
+import { isSupabaseAuthCookieName } from '@/utils/supabase/authCookie';
 
 type BrowserSupabase = SupabaseClient<Database>;
 
@@ -10,7 +11,7 @@ export function hasSupabaseAuthCookie(): boolean {
   if (typeof document === 'undefined') return false;
   return document.cookie.split(';').some((part) => {
     const name = part.trim().split('=')[0];
-    return name.startsWith('sb-') && name.includes('auth-token');
+    return isSupabaseAuthCookieName(name);
   });
 }
 

@@ -1,3 +1,5 @@
+import { isBotUserAgent } from '@/utils/requestGuard';
+import { getUserFromClaims } from '@/utils/supabase/claimsUser';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient, createPublicClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,40 +19,6 @@ import { NextRequest, NextResponse } from 'next/server';
  * This approach balances performance (no cache invalidation overhead) with
  * acceptable freshness (view counts don't need to be real-time).
  */
-
-// Bot detection patterns (case-insensitive)
-const BOT_PATTERNS = [
-  'bot',
-  'crawl',
-  'spider',
-  'slurp',
-  'mediapartners',
-  'googlebot',
-  'bingbot',
-  'yandex',
-  'baidu',
-  'duckduck',
-  'facebookexternalhit',
-  'twitterbot',
-  'linkedinbot',
-  'embedly',
-  'quora',
-  'pinterest',
-  'redditbot',
-  'slackbot',
-  'whatsapp',
-  'telegram',
-  'discordbot',
-  'applebot',
-  'msnbot',
-  'ia_archiver',
-];
-
-function isBot(userAgent: string | null): boolean {
-  if (!userAgent) return false;
-  const ua = userAgent.toLowerCase();
-  return BOT_PATTERNS.some((pattern) => ua.includes(pattern));
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -79,7 +47,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check User-Agent for bots
     const userAgent = request.headers.get('user-agent');
-    if (isBot(userAgent)) {
+    if (isBotUserAgent(userAgent)) {
       // Silently ignore bot requests
       return NextResponse.json({ ok: true, skipped: 'bot' }, { status: 200 });
     }
@@ -116,8 +84,8 @@ export async function POST(request: NextRequest) {
     // Skip self-views: don't count when a logged-in user views their own content
     try {
       const authClient = await createClient();
-      const { data: { user } } = await authClient.auth.getUser();
-      if (user) {
+      const viewer = await getUserFromClaims(authClient);
+      if (viewer) {
         const table = type === 'photo' ? 'photos' : 'albums';
         const { data: entity } = await supabase
           .from(table)
@@ -125,7 +93,7 @@ export async function POST(request: NextRequest) {
           .eq('id', id)
           .single();
 
-        if (entity?.user_id === user.id) {
+        if (entity?.user_id === viewer.id) {
           return NextResponse.json(
             { ok: true, skipped: 'self', view_count: entity.view_count ?? null },
             { status: 200 },
