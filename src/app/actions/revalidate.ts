@@ -90,6 +90,7 @@ function invalidateProfileRoutes(nickname: string) {
   revalidatePath(`/@${nickname}/albums`);
   revalidatePath(`/@${nickname}/photos`);
   revalidatePath('/[nickname]', 'layout');
+  revalidatePath('/[nickname]', 'page');
 }
 
 /** Bust cached photo detail pages across all four [photoId] route patterns. */

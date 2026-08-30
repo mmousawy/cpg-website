@@ -1,6 +1,5 @@
 import type { FollowListMember, FollowListType } from '@/types/follows';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { cacheLife, cacheTag } from 'next/cache';
 
 type FollowProfileRow = {
   id: string;
@@ -75,13 +74,13 @@ async function countActiveFollows(profileId: string, type: FollowListType): Prom
 }
 
 /**
- * Get follower and following counts for a profile (active members only).
+ * Live follower/following counts for a profile (active members only).
+ *
+ * Not wrapped in `'use cache'`: that cache is in-memory per instance, so
+ * `expireTag` on the follow API instance does not refresh counts on the
+ * instance that serves the next profile GET (Vercel preview/production).
  */
-export async function getProfileFollowCounts(userId: string, nickname: string) {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag(`profile-${nickname}`);
-
+export async function getProfileFollowCounts(userId: string) {
   const [followerCount, followingCount] = await Promise.all([
     countActiveFollows(userId, 'followers'),
     countActiveFollows(userId, 'following'),

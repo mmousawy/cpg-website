@@ -40,9 +40,7 @@ export default function ProfileFollowStats({
             className="opacity-65 transition-opacity hover:opacity-100 hover:underline"
             data-testid="profile-follower-count"
           >
-            {formatCount(followerCount)}
-            {' '}
-            {followerCount === 1 ? 'follower' : 'followers'}
+            {`${formatCount(followerCount)} ${followerCount === 1 ? 'follower' : 'followers'}`}
           </button>
         )}
         {followingCount > 0 && (
@@ -52,9 +50,7 @@ export default function ProfileFollowStats({
             className="opacity-65 transition-opacity hover:opacity-100 hover:underline"
             data-testid="profile-following-count"
           >
-            {formatCount(followingCount)}
-            {' '}
-            following
+            {`${formatCount(followingCount)} following`}
           </button>
         )}
       </div>

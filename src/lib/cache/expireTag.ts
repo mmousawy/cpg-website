@@ -34,5 +34,6 @@ export function expireMemberListCaches(nickname?: string | null): void {
     revalidatePath(`/@${nickname}/albums`);
     revalidatePath(`/@${nickname}/photos`);
     revalidatePath('/[nickname]', 'layout');
+    revalidatePath('/[nickname]', 'page');
   }
 }

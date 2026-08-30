@@ -88,7 +88,7 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
   const [allPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicPhotos(profile.id, nickname, perPage + 1),
     getUserPublicPhotoCount(profile.id, nickname),
-    getProfileFollowCounts(profile.id, nickname),
+    getProfileFollowCounts(profile.id),
   ]);
 
   const initialPhotos = allPhotos.slice(0, perPage);

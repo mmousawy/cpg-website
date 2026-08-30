@@ -110,7 +110,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
     getUserPublicAlbums(profile.id, nickname),
     getUserPublicPhotos(profile.id, nickname, 20),
     getUserPublicPhotoCount(profile.id, nickname),
-    getProfileFollowCounts(profile.id, nickname),
+    getProfileFollowCounts(profile.id),
   ]);
 
   // Fetch stats using cached data function

@@ -86,7 +86,7 @@ async function CachedAlbumsContent({ nickname }: { nickname: string }) {
 
   const [albums, followCounts] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname),
-    getProfileFollowCounts(profile.id, nickname),
+    getProfileFollowCounts(profile.id),
   ]);
 
   const profileNickname = profile.nickname || nickname;

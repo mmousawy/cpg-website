@@ -213,8 +213,8 @@ test.describe('Revalidation smoke', () => {
     });
     expect(follow.ok()).toBeTruthy();
 
-    const followerInHtml = /data-testid="profile-follower-count"[^>]*>\s*1\s+follower/;
-    const followingInHtml = /data-testid="profile-following-count"[^>]*>\s*1\s+following/;
+    const followerInHtml = /data-follower-count="1"/;
+    const followingInHtml = /data-following-count="1"/;
 
     await expect.poll(async () => {
       const targetProfile = await page.request.get(`/@${memberUser.nickname}`);
