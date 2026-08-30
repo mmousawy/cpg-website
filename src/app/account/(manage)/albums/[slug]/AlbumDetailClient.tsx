@@ -120,6 +120,7 @@ export default function AlbumDetailClient() {
     isSharedWithMe ? ownerNickname : null,
     album?.slug ?? '',
     album?.event_id ?? null,
+    album?.event_slug ?? null,
   );
 
   // Upload hook with progress tracking
@@ -302,7 +303,7 @@ export default function AlbumDetailClient() {
         await revalidateAlbum(albumOwnerNickname, album.slug);
       }
       if (album.event_id) {
-        await revalidateEventAlbum(album.event_id);
+        await revalidateEventAlbum(album.event_id, album.event_slug);
       }
     }
   };
@@ -378,7 +379,7 @@ export default function AlbumDetailClient() {
           }
           // Revalidate event page when photos are added to an event album
           if (album.event_id) {
-            await revalidateEventAlbum(album.event_id);
+            await revalidateEventAlbum(album.event_id, album.event_slug);
           }
           modalContext.setIsOpen(false);
         }}
@@ -437,7 +438,7 @@ export default function AlbumDetailClient() {
 
       // Revalidate event page when photos are added to an event album
       if (album.event_id) {
-        await revalidateEventAlbum(album.event_id);
+        await revalidateEventAlbum(album.event_id, album.event_slug);
       }
 
       // Clear completed uploads after query has refetched and images are preloaded

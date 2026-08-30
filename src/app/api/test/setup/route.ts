@@ -13,12 +13,14 @@ function buildTestProfileRow({
   nickname,
   fullName,
   completeOnboarding,
+  isAdmin = false,
 }: {
   userId: string;
   email: string;
   nickname: string;
   fullName: string;
   completeOnboarding: boolean;
+  isAdmin?: boolean;
 }): TablesInsert<'profiles'> {
   if (completeOnboarding) {
     return {
@@ -27,6 +29,7 @@ function buildTestProfileRow({
       nickname,
       full_name: fullName,
       terms_accepted_at: new Date().toISOString(),
+      is_admin: isAdmin ? true : undefined,
     };
   }
 
@@ -50,6 +53,7 @@ async function upsertTestProfile(
     nickname: string;
     fullName: string;
     completeOnboarding: boolean;
+    isAdmin?: boolean;
   },
 ) {
   return adminClient.from('profiles').upsert(buildTestProfileRow(params), {
@@ -80,12 +84,14 @@ export async function POST(request: NextRequest) {
       nickname,
       fullName,
       completeOnboarding = true,
+      asAdmin = false,
     }: {
       email?: string;
       password?: string;
       nickname?: string;
       fullName?: string;
       completeOnboarding?: boolean;
+      asAdmin?: boolean;
     } = await request.json();
 
     // Validate email is a test email (safety check)
@@ -128,6 +134,7 @@ export async function POST(request: NextRequest) {
         nickname: testNickname,
         fullName: testFullName,
         completeOnboarding: shouldCompleteOnboarding,
+        isAdmin: asAdmin,
       });
 
       if (existingProfileError) {
@@ -167,6 +174,7 @@ export async function POST(request: NextRequest) {
       nickname: testNickname,
       fullName: testFullName,
       completeOnboarding: shouldCompleteOnboarding,
+      isAdmin: asAdmin,
     });
 
     if (profileError) {

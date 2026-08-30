@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Get album info for logging
     const { data: album } = await supabase
       .from('albums')
-      .select('id, title, user_id, slug, event_id')
+      .select('id, title, user_id, slug, event_id, event:events!albums_event_id_fkey(slug)')
       .eq('id', albumId)
       .single();
 
@@ -69,9 +69,8 @@ export async function POST(request: NextRequest) {
         await revalidateAlbums(owner.nickname);
       }
     } else if (album.event_id) {
-      await revalidateEventAlbum(album.event_id);
-      const { expireTag } = await import('@/lib/cache/expireTag');
-      expireTag('albums');
+      const event = album.event as { slug?: string | null } | null;
+      await revalidateEventAlbum(album.event_id, event?.slug);
     }
 
     // TODO: Send notification email to album owner about deletion

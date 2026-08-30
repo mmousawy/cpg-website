@@ -128,6 +128,7 @@ export async function getEventAttendeesForEvent(eventId: number) {
   'use cache';
   cacheLife('tagged');
   cacheTag('event-attendees');
+  cacheTag(`event-attendees-${eventId}`);
 
   const supabase = createAdminClient();
 
@@ -164,6 +165,10 @@ export async function getEventAttendees(eventIds: number[]) {
 
   if (eventIds.length === 0) {
     return {} as Record<number, EventAttendee[]>;
+  }
+
+  for (const id of eventIds) {
+    cacheTag(`event-attendees-${id}`);
   }
 
   const supabase = createAdminClient();

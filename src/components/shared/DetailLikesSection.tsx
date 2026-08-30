@@ -203,6 +203,7 @@ function DetailLikesSectionInteractive({
       {count > 0 && (
         <span
           className="text-xs font-medium text-foreground/80"
+          data-testid={`${entityType}-like-count`}
         >
           {count}
         </span>

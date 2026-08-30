@@ -129,7 +129,7 @@ export function useDeletePhotos(
 
       const hadPublicPhotos = deletedPhotos.some((p) => p.is_public);
       if (hadPublicPhotos) {
-        await revalidateGalleryData();
+        await revalidateGalleryData(nickname);
       }
     },
   });
@@ -238,7 +238,7 @@ export function useUpdatePhoto(
 
       const previousPhoto = data.previousPhotos?.find((p) => p.id === data.photoId);
       if (previousPhoto && previousPhoto.is_public !== data.data.is_public) {
-        await revalidateGalleryData();
+        await revalidateGalleryData(nickname);
       }
 
       if (previousPhoto && !previousPhoto.is_public && data.data.is_public) {
@@ -432,7 +432,7 @@ export function useBulkUpdatePhotos(
           (p) => data.photoIds.includes(p.id) && p.is_public !== data.data.is_public,
         );
         if (anyVisibilityChanged) {
-          await revalidateGalleryData();
+          await revalidateGalleryData(nickname);
         }
       }
 

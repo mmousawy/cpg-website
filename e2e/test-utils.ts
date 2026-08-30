@@ -128,6 +128,8 @@ export interface TestUser {
 export type CreateTestUserOptions = {
   /** When false, the profile is left incomplete so login lands on onboarding. */
   completeOnboarding?: boolean;
+  /** When true, the profile is created with is_admin = true. */
+  asAdmin?: boolean;
 };
 
 /**
@@ -142,6 +144,7 @@ export async function createTestUser(
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
   const completeOnboarding = options.completeOnboarding !== false;
+  const asAdmin = options.asAdmin === true;
 
   if (!getInternalApiSecret()) {
     throw new Error(
@@ -152,7 +155,7 @@ export async function createTestUser(
   const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const response = await apiRequest.post('/api/test/setup', {
-      data: { email, password, nickname, fullName: 'Test User', completeOnboarding },
+      data: { email, password, nickname, fullName: 'Test User', completeOnboarding, asAdmin },
       headers: withInternalApiHeaders(),
     });
 
@@ -229,4 +232,50 @@ export async function loginTestUser(page: Page, email: string, password: string)
 
   // Wait for redirect to the authenticated area, including onboarding if the profile is incomplete.
   await page.waitForURL(/\/(account|onboarding|$)/, { timeout: 15000 });
+}
+
+export type TestEvent = {
+  id: number;
+  slug: string;
+  title: string;
+};
+
+/** Create a published event via the admin API (requires an authenticated admin request context). */
+export async function createTestEventAsAdmin(
+  adminRequest: APIRequestContext,
+  options: {
+    title: string;
+    date?: string;
+    description?: string;
+  },
+): Promise<TestEvent> {
+  const response = await adminRequest.post('/api/admin/events', {
+    data: {
+      title: options.title,
+      date: options.date ?? '2030-06-01',
+      description: options.description ?? 'Revalidation smoke test event',
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`Failed to create test event: ${await response.text()}`);
+  }
+
+  const data = await response.json();
+  return {
+    id: data.id,
+    slug: data.slug,
+    title: data.title,
+  };
+}
+
+/** Delete a test event via the admin API (best-effort cleanup). */
+export async function deleteTestEvent(
+  adminRequest: APIRequestContext,
+  event: Pick<TestEvent, 'id' | 'slug'>,
+): Promise<void> {
+  await adminRequest.fetch('/api/admin/events', {
+    method: 'DELETE',
+    data: { id: event.id, slug: event.slug },
+  });
 }

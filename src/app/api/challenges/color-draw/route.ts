@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
   const { data: challenge } = await adminClient
     .from('challenges')
-    .select('is_active, ends_at, color_draw_guest_key')
+    .select('is_active, ends_at, color_draw_guest_key, slug')
     .eq('id', challenge_id)
     .single();
 
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
           console.error('Error swapping color:', updateError);
           return NextResponse.json({ error: 'Failed to swap color' }, { status: 500 });
         }
-        await revalidateChallengeColorDraws(challenge_id);
+        await revalidateChallengeColorDraws(challenge_id, challenge?.slug ?? challenge_id);
         return NextResponse.json({ draw: updated, swapped: true });
       }
       return NextResponse.json({ error: 'You have already drawn a color for this challenge' }, { status: 400 });
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       console.error('Error creating color draw:', insertError);
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
-    await revalidateChallengeColorDraws(challenge_id);
+    await revalidateChallengeColorDraws(challenge_id, challenge?.slug ?? challenge_id);
     return NextResponse.json({ draw: inserted });
   }
 
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
       console.error('Error swapping color:', updateError);
       return NextResponse.json({ error: 'Failed to swap color' }, { status: 500 });
     }
-    await revalidateChallengeColorDraws(challenge_id);
+    await revalidateChallengeColorDraws(challenge_id, challenge?.slug ?? challenge_id);
     return NextResponse.json({ draw: updated, swapped: true });
   }
 
@@ -256,6 +256,6 @@ export async function POST(request: NextRequest) {
     console.error('Error creating guest color draw:', insertError);
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
-  await revalidateChallengeColorDraws(challenge_id);
+  await revalidateChallengeColorDraws(challenge_id, challenge?.slug ?? challenge_id);
   return NextResponse.json({ draw: inserted });
 }

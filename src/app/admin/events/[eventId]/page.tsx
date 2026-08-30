@@ -565,7 +565,7 @@ function AdminEventForm() {
 
         setIsDraft(asDraft);
 
-        await revalidateEvents();
+        await revalidateEvents(finalSlug);
         await revalidateEventBySlug(finalSlug);
 
         setSuccess(true);
@@ -592,14 +592,28 @@ function AdminEventForm() {
             : {}),
         } satisfies TablesUpdate<'events'>;
 
-        const { error: updateError } = await supabase
+        if (!event?.id) {
+          setError('Event not loaded');
+          setIsSaving(false);
+          return;
+        }
+
+        const { data: updatedEvent, error: updateError } = await supabase
           .from('events')
           .update(updateData)
-          .eq('slug', eventSlug);
+          .eq('id', event.id)
+          .select('id')
+          .maybeSingle();
 
         if (updateError) {
           console.error('Error updating event:', updateError);
           setError(updateError.message || 'Failed to update event');
+          setIsSaving(false);
+          return;
+        }
+
+        if (!updatedEvent) {
+          setError('Failed to update event');
           setIsSaving(false);
           return;
         }
@@ -621,9 +635,10 @@ function AdminEventForm() {
           coverImage: coverImageUrl,
         });
 
-        await revalidateEvents();
-        if (eventSlug !== finalSlug) {
-          await revalidateEventBySlug(eventSlug);
+        await revalidateEvents(finalSlug);
+        const oldSlug = event.slug;
+        if (oldSlug && oldSlug !== finalSlug) {
+          await revalidateEventBySlug(oldSlug);
         }
         await revalidateEventBySlug(finalSlug);
 

@@ -76,10 +76,11 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
       const albumCoverChecks: Record<string, boolean> = {};
       const albumSlugs: string[] = [];
       const eventIds: number[] = [];
+      const eventSlugs: Array<string | null> = [];
       if (albumIds.length > 0) {
         const { data: albumsData } = await supabase
           .from('albums')
-          .select('id, slug, cover_image_url, event_id')
+          .select('id, slug, cover_image_url, event_id, event:events!albums_event_id_fkey(slug)')
           .in('id', albumIds)
           .eq('user_id', userId);
 
@@ -91,6 +92,8 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
             }
             if (album.event_id != null) {
               eventIds.push(album.event_id);
+              const event = album.event as { slug?: string | null } | null;
+              eventSlugs.push(event?.slug ?? null);
             }
           });
         }
@@ -296,6 +299,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
           nickname: profileData?.nickname,
           albumSlugs,
           eventIds,
+          eventSlugs,
           isPublic: results.some((photo) => photo.is_public),
         });
       }

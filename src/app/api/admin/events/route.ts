@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Revalidate event cache
-  await revalidateEvents();
-  await revalidateEventAttendees();
+  await revalidateEvents(data.slug);
+  await revalidateEventAttendees(data.id, data.slug);
 
   return NextResponse.json(data, { status: 201 });
 }
@@ -133,7 +133,7 @@ export async function PUT(request: NextRequest) {
   }
 
   // Revalidate event cache
-  await revalidateEvents();
+  await revalidateEvents(data.slug);
 
   return NextResponse.json(data, { status: 200 });
 }
@@ -177,8 +177,8 @@ export async function DELETE(request: NextRequest) {
   }
 
   // Revalidate event cache
-  await revalidateEvents();
-  await revalidateEventAttendees();
+  await revalidateEvents(slug ?? null);
+  await revalidateEventAttendees(id ?? null, slug ?? null);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

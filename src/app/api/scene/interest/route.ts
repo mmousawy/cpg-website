@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { revalidateScene } from '@/app/actions/revalidate';
+import { revalidateSceneEvent } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   // Verify scene event exists and is not deleted
   const { data: sceneEvent, error: fetchError } = await supabase
     .from('scene_events')
-    .select('id')
+    .select('id, slug')
     .eq('id', sceneEventId)
     .is('deleted_at', null)
     .maybeSingle();
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     .eq('id', sceneEventId)
     .single();
 
-  await revalidateScene();
+  await revalidateSceneEvent(sceneEvent.slug);
 
   return NextResponse.json({
     interested: !isCurrentlyInterested,

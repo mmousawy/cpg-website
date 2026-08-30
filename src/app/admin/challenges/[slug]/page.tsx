@@ -304,7 +304,7 @@ export default function AdminChallengeFormPage() {
         }
 
         // Revalidate this specific challenge
-        await revalidateChallenge(slug);
+        await revalidateChallenge(slug, existingChallenge?.id);
 
         setSavedFormValues({ ...currentFormValues, coverImage: coverImageUrl });
         setCoverImage(coverImageUrl);

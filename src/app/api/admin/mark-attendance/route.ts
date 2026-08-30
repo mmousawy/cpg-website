@@ -35,17 +35,22 @@ export async function POST(request: NextRequest) {
         ? { attended_at: null }
         : { attended_at: now, no_show_at: null })) satisfies TablesUpdate<'events_rsvps'>;
 
-  const { error } = await supabase
+  const { data: updatedRsvp, error } = await supabase
     .from('events_rsvps')
     .update(updateData)
-    .eq('id', rsvp_id);
+    .eq('id', rsvp_id)
+    .select('event_id, events(slug)')
+    .maybeSingle();
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
+  const updatedEvent = updatedRsvp?.events as { slug?: string | null } | { slug?: string | null }[] | null;
+  const eventSlug = Array.isArray(updatedEvent) ? updatedEvent[0]?.slug : updatedEvent?.slug;
+
   // Revalidate attendee cache so attendance status is reflected
-  await revalidateEventAttendees();
+  await revalidateEventAttendees(updatedRsvp?.event_id, eventSlug);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

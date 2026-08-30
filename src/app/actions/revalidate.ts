@@ -1,28 +1,13 @@
 'use server';
 
-import { expireTag, revalidateChallengesPageCache, revalidateChangelogCache, revalidateEventsPageCache, revalidateGalleryPageCache, revalidateHomeCache } from '@/lib/cache/expireTag';
+import { expireTag } from '@/lib/cache/expireTag';
 import { revalidatePath, refresh } from 'next/cache';
 
 /**
  * Cache Revalidation Actions
  *
- * This module provides granular cache invalidation using Next.js revalidateTag.
- * Each function invalidates specific cached data, not entire pages.
- *
- * Available cache tags (defined in src/lib/data/):
- * - 'events' - All event data
- * - 'event-attendees' - RSVP/attendee data
- * - 'albums' - All album data
- * - 'gallery' - Community photostream and tag data
- * - 'profiles' - All profile data (organizers, members list)
- * - 'profile-[nickname]' - Specific user profile data
- * - 'tag-[tagname]' - Photos with a specific tag
- * - 'interests' - All interests data
- * - 'interest-[name]' - Members with a specific interest
- * - 'challenges' - All challenge data
- * - 'challenge-photos' - Accepted photos in challenges
- * - 'search' - Search results cache
- * - 'reports' - Reports data
+ * Granular cache invalidation via expireTag + revalidatePath.
+ * Tags are defined in src/lib/data/* and src/lib/changelog.ts.
  *
  * @see docs/revalidation-system.md for usage details
  */
@@ -36,26 +21,64 @@ function finishRevalidation() {
   }
 }
 
-/** Mark homepage cache stale (SWR — see cacheLife('home') on the home page). */
-function invalidateHomeTag() {
-  revalidateHomeCache();
-}
-
-/** Bust public album listings (home, gallery, gallery/albums). */
+/** Bust public album listings (home, gallery hub and sub-pages). */
 function invalidateAlbumListingRoutes() {
   expireTag('albums');
-  invalidateHomeTag();
-  revalidateGalleryPageCache();
+  expireTag('search');
+  expireTag('home');
+  expireTag('gallery-page');
+  expireTag('gallery');
+  revalidatePath('/');
+  revalidatePath('/gallery');
+  revalidatePath('/gallery/albums');
+  revalidatePath('/gallery/photos');
+  revalidatePath('/gallery/recent-likes');
+}
+
+/** Bust prerendered member listing pages. */
+function invalidateMemberListingRoutes() {
+  revalidatePath('/members');
+  revalidatePath('/members/all');
+}
+
+/** Bust prerendered challenge listings and optional challenge detail. */
+function invalidateChallengeListingRoutes(challengeSlug?: string | null) {
+  expireTag('challenges');
+  expireTag('challenge-photos');
+  expireTag('search');
+  expireTag('home');
+  expireTag('challenges-page');
+  revalidatePath('/');
+  revalidatePath('/challenges');
+  if (challengeSlug) {
+    expireTag(`challenge-${challengeSlug}`);
+    revalidatePath(`/challenges/${challengeSlug}`);
+  }
+}
+
+/** Bust prerendered scene listings and optional scene detail. */
+function invalidateSceneListingRoutes(sceneSlug?: string | null) {
+  expireTag('scene');
+  expireTag('search');
+  revalidatePath('/scene');
+  if (sceneSlug) {
+    expireTag(`scene-${sceneSlug}`);
+    revalidatePath(`/scene/${sceneSlug}`);
+  }
 }
 
 /** Bust prerendered event listings and optional event detail. */
 function invalidateEventListingRoutes(eventSlug?: string | null) {
   expireTag('events');
   expireTag('event-attendees');
-  invalidateHomeTag();
-  revalidateEventsPageCache();
+  expireTag('search');
+  expireTag('home');
+  expireTag('events-page');
+  revalidatePath('/');
+  revalidatePath('/events');
   if (eventSlug) {
     expireTag(`event-${eventSlug}`);
+    revalidatePath(`/events/${eventSlug}`);
   }
 }
 
@@ -89,18 +112,27 @@ function invalidatePhotoRoutes(photoShortId: string, nickname?: string | null) {
  * Revalidate all event-related cached data
  * Use when: Creating, updating, or deleting events
  */
-export async function revalidateEvents() {
-  expireTag('search');
-  invalidateEventListingRoutes();
+export async function revalidateEvents(eventSlug?: string | null) {
+  invalidateEventListingRoutes(eventSlug);
   finishRevalidation();
 }
 
 /**
- * Revalidate event attendee data and prerendered event pages
+ * Revalidate event attendee data for a specific event
  * Use when: RSVP signup, confirmation, or cancellation
  */
-export async function revalidateEventAttendees(eventSlug?: string | null) {
-  invalidateEventListingRoutes(eventSlug);
+export async function revalidateEventAttendees(
+  eventId?: number | null,
+  eventSlug?: string | null,
+) {
+  if (eventId != null) {
+    expireTag(`event-attendees-${eventId}`);
+  } else {
+    expireTag('event-attendees');
+  }
+  if (eventSlug) {
+    revalidatePath(`/events/${eventSlug}`);
+  }
   finishRevalidation();
 }
 
@@ -109,8 +141,7 @@ export async function revalidateEventAttendees(eventSlug?: string | null) {
  * Use when: Only a specific event detail page needs refreshing
  */
 export async function revalidateEventBySlug(slug: string) {
-  expireTag(`event-${slug}`);
-  expireTag('events');
+  invalidateEventListingRoutes(slug);
   finishRevalidation();
 }
 
@@ -118,10 +149,14 @@ export async function revalidateEventBySlug(slug: string) {
  * Revalidate an event album's cached data and its parent event page
  * Use when: Photos are added to or removed from an event album
  */
-export async function revalidateEventAlbum(eventId: number) {
+export async function revalidateEventAlbum(eventId: number, eventSlug?: string | null) {
   expireTag(`event-album-${eventId}`);
   expireTag('events');
   invalidateAlbumListingRoutes();
+  if (eventSlug) {
+    expireTag(`event-${eventSlug}`);
+    revalidatePath(`/events/${eventSlug}`);
+  }
   finishRevalidation();
 }
 
@@ -129,9 +164,14 @@ export async function revalidateEventAlbum(eventId: number) {
  * Revalidate challenge color draws
  * Use when: User draws or swaps a color
  */
-export async function revalidateChallengeColorDraws(challengeId: string) {
+export async function revalidateChallengeColorDraws(
+  challengeId: string,
+  challengeSlug: string,
+) {
   expireTag('challenge-color-draws');
   expireTag(`challenge-color-draws-${challengeId}`);
+  expireTag(`challenge-${challengeSlug}`);
+  revalidatePath(`/challenges/${challengeSlug}`);
   finishRevalidation();
 }
 
@@ -164,6 +204,7 @@ export async function revalidateAlbum(nickname: string, albumSlug?: string) {
 export async function revalidateAlbumBySlug(nickname: string, slug: string) {
   expireTag(`album-${nickname}-${slug}`);
   expireTag(`profile-${nickname}`);
+  revalidatePath(`/@${nickname}/album/${slug}`);
   invalidateProfileRoutes(nickname);
   finishRevalidation();
 }
@@ -196,44 +237,43 @@ export async function revalidateAfterPhotoUpload({
   nickname,
   albumSlugs = [],
   eventIds = [],
+  eventSlugs = [],
   isPublic = false,
 }: {
   nickname?: string | null;
   albumSlugs?: string[];
   eventIds?: number[];
+  eventSlugs?: Array<string | null | undefined>;
   isPublic?: boolean;
 }) {
-  if (isPublic) {
-    expireTag('gallery');
-    expireTag('profiles');
-    expireTag('search');
-    invalidateHomeTag();
-  }
+  expireTag('search');
 
-  if (nickname && (isPublic || albumSlugs.length > 0 || eventIds.length > 0)) {
-    expireTag(`profile-${nickname}`);
-    expireTag('profiles');
-  }
-
-  if (albumSlugs.length > 0 || eventIds.length > 0) {
-    expireTag('search');
+  if (isPublic || albumSlugs.length > 0 || eventIds.length > 0) {
+    if (isPublic) {
+      expireTag('gallery');
+      expireTag('profiles');
+    }
     invalidateAlbumListingRoutes();
   }
 
   if (nickname) {
+    expireTag(`profile-${nickname}`);
+    expireTag('profiles');
+    invalidateProfileRoutes(nickname);
     for (const slug of albumSlugs) {
       expireTag(`album-${nickname}-${slug}`);
       revalidatePath(`/@${nickname}/album/${slug}`);
     }
   }
 
-  for (const eventId of eventIds) {
+  for (const [index, eventId] of eventIds.entries()) {
     expireTag(`event-album-${eventId}`);
     expireTag('events');
-  }
-
-  if (nickname) {
-    invalidateProfileRoutes(nickname);
+    const eventSlug = eventSlugs[index];
+    if (eventSlug) {
+      expireTag(`event-${eventSlug}`);
+      revalidatePath(`/events/${eventSlug}`);
+    }
   }
 
   finishRevalidation();
@@ -247,11 +287,16 @@ export async function revalidateAfterPhotoUpload({
  * Revalidate gallery page data (photostream and tags)
  * Use when: Photo is created, updated, or deleted; tags are modified
  */
-export async function revalidateGalleryData() {
+export async function revalidateGalleryData(nickname?: string | null) {
   expireTag('gallery');
   expireTag('search');
-  invalidateHomeTag();
-  revalidateGalleryPageCache();
+  invalidateAlbumListingRoutes();
+  invalidateMemberListingRoutes();
+  if (nickname) {
+    expireTag(`profile-${nickname}`);
+    expireTag('profiles');
+    invalidateProfileRoutes(nickname);
+  }
   finishRevalidation();
 }
 
@@ -263,6 +308,9 @@ export async function revalidateTagPhotos(tagName: string) {
   expireTag('gallery');
   expireTag(`tag-${tagName}`);
   expireTag('search');
+  revalidatePath(`/members/tag/${tagName}`);
+  revalidatePath(`/gallery/tag/${tagName}`);
+  invalidateMemberListingRoutes();
   finishRevalidation();
 }
 
@@ -277,7 +325,9 @@ export async function revalidateTagPhotos(tagName: string) {
 export async function revalidateProfiles() {
   expireTag('profiles');
   expireTag('search');
-  invalidateHomeTag();
+  expireTag('home');
+  revalidatePath('/');
+  invalidateMemberListingRoutes();
   finishRevalidation();
 }
 
@@ -289,7 +339,9 @@ export async function revalidateProfile(nickname: string) {
   expireTag(`profile-${nickname}`);
   expireTag('profiles');
   expireTag('search');
-  invalidateHomeTag();
+  expireTag('home');
+  revalidatePath('/');
+  invalidateMemberListingRoutes();
   invalidateProfileRoutes(nickname);
   finishRevalidation();
 }
@@ -304,6 +356,7 @@ export async function revalidateProfile(nickname: string) {
  */
 export async function revalidateInterests() {
   expireTag('interests');
+  invalidateMemberListingRoutes();
   finishRevalidation();
 }
 
@@ -314,6 +367,8 @@ export async function revalidateInterests() {
 export async function revalidateInterest(interestName: string) {
   expireTag('interests');
   expireTag(`interest-${interestName}`);
+  revalidatePath(`/members/interest/${interestName}`);
+  invalidateMemberListingRoutes();
   finishRevalidation();
 }
 
@@ -325,10 +380,17 @@ export async function revalidateInterest(interestName: string) {
  * Revalidate after a like/unlike on a photo
  * Use when: User likes or unlikes a photo
  */
-export async function revalidatePhotoLikes(photoId: string, ownerNickname: string) {
+export async function revalidatePhotoLikes(
+  photoId: string,
+  ownerNickname: string,
+  photoShortId: string,
+) {
   expireTag(`photo-likes-${photoId}`);
+  expireTag(`photo-${photoShortId}`);
   expireTag(`profile-${ownerNickname}`);
   expireTag('gallery');
+  invalidatePhotoRoutes(photoShortId, ownerNickname);
+  invalidateAlbumListingRoutes();
   invalidateProfileRoutes(ownerNickname);
   finishRevalidation();
 }
@@ -337,10 +399,18 @@ export async function revalidatePhotoLikes(photoId: string, ownerNickname: strin
  * Revalidate after a like/unlike on an album
  * Use when: User likes or unlikes an album
  */
-export async function revalidateAlbumLikes(albumId: string, ownerNickname: string) {
+export async function revalidateAlbumLikes(
+  albumId: string,
+  ownerNickname: string,
+  albumSlug: string,
+) {
   expireTag(`album-likes-${albumId}`);
+  expireTag(`album-${ownerNickname}-${albumSlug}`);
   expireTag(`profile-${ownerNickname}`);
   expireTag('gallery');
+  expireTag('albums');
+  revalidatePath(`/@${ownerNickname}/album/${albumSlug}`);
+  invalidateAlbumListingRoutes();
   invalidateProfileRoutes(ownerNickname);
   finishRevalidation();
 }
@@ -412,10 +482,7 @@ export async function revalidatePhotos(photoShortIds: string[], nickname?: strin
  * Use when: Creating, updating, or deleting challenges
  */
 export async function revalidateChallenges() {
-  expireTag('challenges');
-  expireTag('challenge-photos');
-  invalidateHomeTag();
-  revalidateChallengesPageCache();
+  invalidateChallengeListingRoutes();
   finishRevalidation();
 }
 
@@ -424,16 +491,12 @@ export async function revalidateChallenges() {
  * Use when: Updating challenge details or reviewing submissions
  */
 export async function revalidateChallenge(challengeSlug: string, challengeId?: string) {
-  expireTag(`challenge-${challengeSlug}`);
-  expireTag('challenges');
   if (challengeId) {
     expireTag(`challenge-photos-${challengeId}`);
     expireTag(`challenge-color-draws-${challengeId}`);
   }
-  expireTag('challenge-photos');
   expireTag('challenge-color-draws');
-  invalidateHomeTag();
-  revalidateChallengesPageCache();
+  invalidateChallengeListingRoutes(challengeSlug);
   finishRevalidation();
 }
 
@@ -446,7 +509,8 @@ export async function revalidateChallenge(challengeSlug: string, challengeId?: s
  * Use when: Content changes affect the homepage
  */
 export async function revalidateHome() {
-  invalidateHomeTag();
+  expireTag('home');
+  revalidatePath('/');
   finishRevalidation();
 }
 
@@ -455,7 +519,9 @@ export async function revalidateHome() {
  * Use when: Changelog content is updated
  */
 export async function revalidateChangelog() {
-  revalidateChangelogCache();
+  expireTag('changelog');
+  revalidatePath('/changelog');
+  revalidatePath('/changelog/[slug]', 'page');
   finishRevalidation();
 }
 
@@ -473,25 +539,23 @@ export async function revalidateSearch() {
   finishRevalidation();
 }
 
-// ============================================================================
-// Legacy Compatibility (deprecated - use specific functions above)
-// ============================================================================
-
 /**
- * @deprecated Use revalidateEvents() or revalidateEventAttendees() instead
+ * Revalidate profile pages after a follow/unfollow
+ * Use when: User follows or unfollows another member
  */
-export async function revalidateEvent(eventSlug?: string) {
-  expireTag('events');
-  expireTag('event-attendees');
-  finishRevalidation();
-}
-
-/**
- * @deprecated Use revalidateAlbums() or revalidateGalleryData() instead
- */
-export async function revalidateGallery() {
-  expireTag('albums');
-  expireTag('gallery');
+export async function revalidateFollow(
+  nicknameA?: string | null,
+  nicknameB?: string | null,
+) {
+  expireTag('search');
+  if (nicknameA) {
+    expireTag(`profile-${nicknameA}`);
+    invalidateProfileRoutes(nicknameA);
+  }
+  if (nicknameB) {
+    expireTag(`profile-${nicknameB}`);
+    invalidateProfileRoutes(nicknameB);
+  }
   finishRevalidation();
 }
 
@@ -517,8 +581,7 @@ export async function revalidateReports() {
  * Use when: Creating, updating, or soft-deleting scene events
  */
 export async function revalidateScene() {
-  expireTag('scene');
-  expireTag('search');
+  invalidateSceneListingRoutes();
   finishRevalidation();
 }
 
@@ -527,8 +590,7 @@ export async function revalidateScene() {
  * Use when: Only a specific scene event detail page needs refreshing
  */
 export async function revalidateSceneEvent(slug: string) {
-  expireTag(`scene-${slug}`);
-  expireTag('scene');
+  invalidateSceneListingRoutes(slug);
   finishRevalidation();
 }
 

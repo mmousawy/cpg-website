@@ -44,11 +44,12 @@ export async function POST(request: NextRequest) {
     // Get album info for revalidation
     const { data: album } = await supabase
       .from('albums')
-      .select('slug, user_id, event_id')
+      .select('slug, user_id, event_id, event:events!albums_event_id_fkey(slug)')
       .eq('id', albumId)
       .single();
 
     if (album) {
+      const eventSlug = (album.event as { slug?: string | null } | null)?.slug;
       if (album.user_id) {
         const { data: owner } = await supabase
           .from('profiles')
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
           await revalidateAlbum(owner.nickname, album.slug);
         }
       } else if (album.event_id) {
-        await revalidateEventAlbum(album.event_id);
+        await revalidateEventAlbum(album.event_id, eventSlug);
         const { expireTag } = await import('@/lib/cache/expireTag');
         expireTag('albums');
       }

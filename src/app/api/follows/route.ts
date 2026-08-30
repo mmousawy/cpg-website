@@ -2,22 +2,13 @@ import {
   cancelPendingFollowNotification,
   scheduleFollowNotification,
 } from '@/lib/follows/scheduleFollowNotification';
-import { expireTag } from '@/lib/cache/expireTag';
+import { revalidateFollow } from '@/app/actions/revalidate';
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 type FollowRequest = {
   profileId: string;
 };
-
-function revalidateFollowProfiles(nicknames: Array<string | null | undefined>) {
-  for (const nickname of nicknames) {
-    if (nickname) {
-      expireTag(`profile-${nickname}`);
-    }
-  }
-  expireTag('search');
-}
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -101,7 +92,7 @@ export async function POST(request: NextRequest) {
 
   if (insertError) {
     if (insertError.code === '23505') {
-      revalidateFollowProfiles([actorProfile?.nickname, targetProfile.nickname]);
+      await revalidateFollow(actorProfile?.nickname, targetProfile.nickname);
       return NextResponse.json({ success: true, isFollowing: true });
     }
     return NextResponse.json({ error: insertError.message }, { status: 500 });
@@ -120,7 +111,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  revalidateFollowProfiles([actorProfile?.nickname, targetProfile.nickname]);
+  await revalidateFollow(actorProfile?.nickname, targetProfile.nickname);
 
   return NextResponse.json({ success: true, isFollowing: true });
 }
@@ -164,7 +155,7 @@ export async function DELETE(request: NextRequest) {
 
   await cancelPendingFollowNotification(user.id, profileId);
 
-  revalidateFollowProfiles([actorProfile?.nickname, targetProfile?.nickname]);
+  await revalidateFollow(actorProfile?.nickname, targetProfile?.nickname);
 
   return NextResponse.json({ success: true, isFollowing: false });
 }

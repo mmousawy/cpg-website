@@ -5,6 +5,7 @@ import {
   revalidateChallenge,
   revalidateEventBySlug,
   revalidateGalleryData,
+  revalidatePhoto,
   revalidateSceneEvent,
 } from '@/app/actions/revalidate';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
@@ -79,7 +80,28 @@ async function revalidateCommentEntity(
   entityId: string,
 ) {
   if (entityType === 'photo') {
-    await revalidateGalleryData();
+    const { data: photo } = await supabase
+      .from('photos')
+      .select('short_id, profiles!photos_user_id_fkey(nickname)')
+      .eq('id', entityId)
+      .maybeSingle();
+
+    type PhotoWithProfile = {
+      short_id: string;
+      profiles: { nickname: string } | null;
+    };
+
+    const typedPhoto = photo as PhotoWithProfile | null;
+    const nickname = typedPhoto?.profiles?.nickname;
+    const shortId = typedPhoto?.short_id;
+
+    if (shortId && nickname) {
+      await revalidatePhoto(shortId, nickname);
+      await revalidateGalleryData(nickname);
+    } else if (shortId) {
+      await revalidatePhoto(shortId);
+      await revalidateGalleryData();
+    }
     return;
   }
 

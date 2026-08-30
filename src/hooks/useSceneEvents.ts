@@ -1,4 +1,4 @@
-import { revalidateScene } from '@/app/actions/revalidate';
+import { revalidateScene, revalidateSceneEvent } from '@/app/actions/revalidate';
 import type { SceneEventFormData } from '@/types/scene';
 import { supabase } from '@/utils/supabase/client';
 import {
@@ -134,8 +134,9 @@ export function useUpdateSceneEvent() {
 
       return json as { event: { id: string; slug: string; title: string } };
     },
-    onSuccess: async (_data, variables) => {
+    onSuccess: async (data, variables) => {
       await revalidateScene();
+      await revalidateSceneEvent(data.event.slug);
       queryClient.invalidateQueries({ queryKey: ['scene'] });
       queryClient.invalidateQueries({
         queryKey: ['scene-event-interest', variables.eventId],
@@ -152,6 +153,17 @@ export function useDeleteSceneEvent() {
 
   return useMutation({
     mutationFn: async (eventId: string) => {
+      const { data: sceneEvent, error: fetchError } = await supabase
+        .from('scene_events')
+        .select('slug')
+        .eq('id', eventId)
+        .is('deleted_at', null)
+        .maybeSingle();
+
+      if (fetchError || !sceneEvent?.slug) {
+        throw new Error(fetchError?.message || 'Scene event not found');
+      }
+
       const { error } = await supabase
         .from('scene_events')
         .update({ deleted_at: new Date().toISOString() })
@@ -160,9 +172,12 @@ export function useDeleteSceneEvent() {
       if (error) {
         throw new Error(error.message || 'Failed to delete event');
       }
+
+      return sceneEvent.slug;
     },
-    onSuccess: async () => {
+    onSuccess: async (slug) => {
       await revalidateScene();
+      await revalidateSceneEvent(slug);
       queryClient.invalidateQueries({ queryKey: ['scene'] });
     },
   });

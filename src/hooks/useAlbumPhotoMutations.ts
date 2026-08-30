@@ -127,7 +127,7 @@ export function useReorderAlbumPhotos(
         const album = userId ? findAlbumInCache(queryClient, userId, albumId) : undefined;
 
         if (album?.event_id) {
-          await revalidateEventAlbum(album.event_id);
+          await revalidateEventAlbum(album.event_id, album.event_slug);
         } else if (nickname && album?.slug) {
           await revalidateAlbumBySlug(nickname, album.slug);
         }
@@ -251,7 +251,7 @@ export function useUpdateAlbumPhoto(
       // Revalidate gallery and home when visibility changed (affects public listings)
       const previousPhoto = previousPhotos?.find((p) => p.id === photoId);
       if (previousPhoto && previousPhoto.is_public !== data.is_public) {
-        await revalidateGalleryData();
+        await revalidateGalleryData(nickname);
       }
 
       if (previousPhoto && !previousPhoto.is_public && data.is_public) {
@@ -528,7 +528,7 @@ export function useBulkUpdateAlbumPhotos(
           (p) => photoIds.includes(p.id) && p.is_public !== data.is_public,
         );
         if (anyVisibilityChanged) {
-          await revalidateGalleryData();
+          await revalidateGalleryData(nickname);
         }
       }
 

@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     .eq('id', event_id)
     .maybeSingle();
 
-  await revalidateEventAttendees(event?.slug);
+  await revalidateEventAttendees(event_id, event?.slug);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
     .from('events_rsvps')
     .update({ canceled_at: new Date().toISOString() })
     .eq('id', rsvp_id)
-    .select('events(slug)')
+    .select('event_id, events(slug)')
     .maybeSingle();
 
   if (error) {
@@ -129,7 +129,7 @@ export async function DELETE(request: NextRequest) {
   const canceledEvent = canceledRsvp?.events as { slug?: string | null } | { slug?: string | null }[] | null;
   const canceledSlug = Array.isArray(canceledEvent) ? canceledEvent[0]?.slug : canceledEvent?.slug;
 
-  await revalidateEventAttendees(canceledSlug);
+  await revalidateEventAttendees(canceledRsvp?.event_id, canceledSlug);
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

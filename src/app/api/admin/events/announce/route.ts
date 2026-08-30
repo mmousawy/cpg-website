@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Revalidate events cache so announcement tracking is reflected
-  await revalidateEvents();
+  await revalidateEvents(event.slug ?? null);
 
   console.log(`📧 Email sending complete: ${successCount} sent, ${errorCount} failed, ${subscribers.length} total`);
 

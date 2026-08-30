@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { ChallengeAnnouncementEmail } from '@/emails/challenge-announcement';
-import { revalidateChallenges } from '@/app/actions/revalidate';
+import { revalidateChallenge } from '@/app/actions/revalidate';
 import { encrypt } from '@/utils/encrypt';
 import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
     .eq('id', challengeId);
 
   // Revalidate challenges cache so announced_at is reflected
-  await revalidateChallenges();
+  await revalidateChallenge(challenge.slug, challenge.id);
 
   return NextResponse.json(
     {

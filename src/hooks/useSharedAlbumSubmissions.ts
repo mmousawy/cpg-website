@@ -50,6 +50,7 @@ export function useAddPhotosToSharedAlbum(
   ownerNickname: string | null,
   albumSlug: string,
   eventId?: number | null,
+  eventSlug?: string | null,
 ) {
   const queryClient = useQueryClient();
 
@@ -72,11 +73,11 @@ export function useAddPhotosToSharedAlbum(
         await Promise.all([
           revalidateAlbumBySlug(ownerNickname, albumSlug),
           revalidateAlbum(ownerNickname, albumSlug),
-          revalidateGalleryData(),
+          revalidateGalleryData(ownerNickname),
         ]);
       }
       if (eventId) {
-        await revalidateEventAlbum(eventId);
+        await revalidateEventAlbum(eventId, eventSlug);
       }
     },
   });

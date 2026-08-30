@@ -27,8 +27,10 @@ export async function toggleLike(
     return { liked: false, count: 0, error: 'Not authenticated' };
   }
 
-  // Get owner nickname for cache invalidation
+  // Get owner nickname and entity identifiers for cache invalidation
   let ownerNickname: string | null = null;
+  let photoShortId: string | null = null;
+  let albumSlug: string | null = null;
 
   if (entityType === 'photo') {
     // Check if already liked (use maybeSingle to avoid error when no like exists)
@@ -48,11 +50,12 @@ export async function toggleLike(
     // Photos don't have direct FK to profiles, so query separately
     const { data: photo } = await supabase
       .from('photos')
-      .select('user_id')
+      .select('user_id, short_id')
       .eq('id', entityId)
       .maybeSingle();
 
     if (photo?.user_id) {
+      photoShortId = photo.short_id ?? null;
       const { data: profile } = await supabase
         .from('profiles')
         .select('nickname')
@@ -165,8 +168,8 @@ export async function toggleLike(
       .eq('photo_id', entityId);
 
     // Revalidate cache
-    if (ownerNickname) {
-      await revalidatePhotoLikes(entityId, ownerNickname);
+    if (ownerNickname && photoShortId) {
+      await revalidatePhotoLikes(entityId, ownerNickname, photoShortId);
     }
 
     return {
@@ -192,17 +195,19 @@ export async function toggleLike(
     // Use left join (no !inner) so event albums with null user_id are included
     const { data: album } = await supabase
       .from('albums')
-      .select('user_id, profile:profiles!albums_user_id_fkey(nickname)')
+      .select('user_id, slug, profile:profiles!albums_user_id_fkey(nickname)')
       .eq('id', entityId)
       .maybeSingle();
 
     type AlbumWithProfile = {
       user_id: string | null;
+      slug: string;
       profile: { nickname: string } | null;
     };
 
     if (album) {
       const typedAlbum = album as AlbumWithProfile;
+      albumSlug = typedAlbum.slug;
       ownerNickname = typedAlbum.profile?.nickname || null;
     }
 
@@ -299,8 +304,8 @@ export async function toggleLike(
       .eq('album_id', entityId);
 
     // Revalidate cache
-    if (ownerNickname) {
-      await revalidateAlbumLikes(entityId, ownerNickname);
+    if (ownerNickname && albumSlug) {
+      await revalidateAlbumLikes(entityId, ownerNickname, albumSlug);
     }
 
     return {

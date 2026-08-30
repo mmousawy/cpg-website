@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
 
   let ownerNickname: string | null = null;
   let ownerId: string | null = null;
+  let photoShortId: string | null = null;
+  let albumSlug: string | null = null;
 
   const { data: actorProfile } = await supabase
     .from('profiles')
@@ -77,6 +79,7 @@ export async function POST(request: NextRequest) {
 
         if (photo?.user_id && photo.user_id !== user.id) {
           ownerId = photo.user_id;
+          photoShortId = photo.short_id ?? null;
 
           const { data: ownerProfile } = await supabase
             .from('profiles')
@@ -118,12 +121,13 @@ export async function POST(request: NextRequest) {
 
         const { data: photo } = await supabase
           .from('photos')
-          .select('user_id')
+          .select('user_id, short_id')
           .eq('id', entityId)
           .maybeSingle();
 
         if (photo?.user_id) {
           ownerId = photo.user_id;
+          photoShortId = photo.short_id ?? null;
 
           const { data: ownerProfile } = await supabase
             .from('profiles')
@@ -143,8 +147,28 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (ownerNickname) {
-        await revalidatePhotoLikes(entityId, ownerNickname);
+      if (!photoShortId || !ownerNickname) {
+        const { data: photo } = await supabase
+          .from('photos')
+          .select('short_id, user_id')
+          .eq('id', entityId)
+          .maybeSingle();
+
+        if (photo) {
+          photoShortId = photo.short_id ?? photoShortId;
+          if (!ownerNickname && photo.user_id) {
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('nickname')
+              .eq('id', photo.user_id)
+              .maybeSingle();
+            ownerNickname = ownerProfile?.nickname || null;
+          }
+        }
+      }
+
+      if (ownerNickname && photoShortId) {
+        await revalidatePhotoLikes(entityId, ownerNickname, photoShortId);
       }
     } else {
       const { data: existingLike } = await supabase
@@ -173,6 +197,7 @@ export async function POST(request: NextRequest) {
 
         if (album?.user_id && album.user_id !== user.id) {
           ownerId = album.user_id;
+          albumSlug = album.slug ?? null;
 
           const { data: ownerProfile } = await supabase
             .from('profiles')
@@ -214,12 +239,13 @@ export async function POST(request: NextRequest) {
 
         const { data: album } = await supabase
           .from('albums')
-          .select('user_id')
+          .select('user_id, slug')
           .eq('id', entityId)
           .maybeSingle();
 
         if (album?.user_id) {
           ownerId = album.user_id;
+          albumSlug = album.slug ?? null;
 
           const { data: ownerProfile } = await supabase
             .from('profiles')
@@ -239,8 +265,28 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (ownerNickname) {
-        await revalidateAlbumLikes(entityId, ownerNickname);
+      if (!albumSlug || !ownerNickname) {
+        const { data: album } = await supabase
+          .from('albums')
+          .select('slug, user_id')
+          .eq('id', entityId)
+          .maybeSingle();
+
+        if (album) {
+          albumSlug = album.slug ?? albumSlug;
+          if (!ownerNickname && album.user_id) {
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('nickname')
+              .eq('id', album.user_id)
+              .maybeSingle();
+            ownerNickname = ownerProfile?.nickname || null;
+          }
+        }
+      }
+
+      if (ownerNickname && albumSlug) {
+        await revalidateAlbumLikes(entityId, ownerNickname, albumSlug);
       }
     }
 
