@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.39.4](https://github.com/mmousawy/cpg-website/compare/v1.39.3...v1.39.4) (2026-08-30)
+
+
+### 🐛 Bug Fixes
+
+* Enhance event and album management with new revalidation features ([f3641c0](https://github.com/mmousawy/cpg-website/commit/f3641c0a1bba9b7053dd31471b02ca23f17c2133))
+* Enhance like functionality and error handling in likes API and UI components ([c7f6093](https://github.com/mmousawy/cpg-website/commit/c7f609337c36b1c7c0f0736fce4fe1dd5c243e78))
+* Enhance proxy and authentication handling with new features and improvements ([248b484](https://github.com/mmousawy/cpg-website/commit/248b4848c20a6bd9730444253532f2e963dc0cea))
+* Enhance revalidation tests and profile follow stats for improved accuracy ([5812b00](https://github.com/mmousawy/cpg-website/commit/5812b00e01f90aedeffcc7a1d136f09ba0f316f3))
+* Improve like button interaction and state management in revalidation tests and detail likes section ([727736e](https://github.com/mmousawy/cpg-website/commit/727736ee7c8e4deb50457d76a32aca223ffe976e))
+* Increase timeout and enhance album creation and like validation in revalidation tests ([c17c03a](https://github.com/mmousawy/cpg-website/commit/c17c03a5d87c920fdff8e37259b745049de0f99b))
+* Refine WAF rules and request handling for improved security ([1ea4a7b](https://github.com/mmousawy/cpg-website/commit/1ea4a7b737e299b1f2f926229445dddce2e2f182))
+* Update profile follow counts and revalidation logic for improved accuracy ([e3b45a6](https://github.com/mmousawy/cpg-website/commit/e3b45a60f093f24ffb37bafde6c4e62a67934ad4))
+* Update proxy and request handling to improve scraper management and performance ([0572797](https://github.com/mmousawy/cpg-website/commit/05727973f65164a3fd4887a2bc5a4eaa166ae379))
+
 ## [1.39.3](https://github.com/mmousawy/cpg-website/compare/v1.39.2...v1.39.3) (2026-08-28)
 
 
