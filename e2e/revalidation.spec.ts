@@ -145,7 +145,7 @@ test.describe('Revalidation smoke', () => {
   });
 
   test('album like refreshes album detail like count', async ({ page, browser }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
 
     const ownerContext = await browser.newContext();
     const likerContext = await browser.newContext();
@@ -157,25 +157,32 @@ test.describe('Revalidation smoke', () => {
     await ownerPage.waitForLoadState('networkidle');
 
     const albumTitle = `Revalidation Album ${Date.now()}`;
-    await ownerPage.getByRole('button', { name: /new album/i }).click();
+    // Empty albums page renders the same CTA in the toolbar and empty state.
+    await ownerPage.getByRole('button', { name: /new album/i }).first().click();
     await ownerPage.getByLabel(/^title/i).fill(albumTitle);
     await ownerPage.getByRole('button', { name: /create album/i }).click();
-    await expect(ownerPage.getByText(albumTitle)).toBeVisible({ timeout: 15_000 });
-
-    await ownerPage.getByRole('link', { name: albumTitle }).click();
-    await ownerPage.waitForURL(/\/@.+\/album\/.+/);
-    const albumUrl = ownerPage.url();
-    const albumSlug = albumUrl.split('/album/')[1]?.split(/[?#]/)[0];
+    const albumLink = ownerPage.getByRole('link', { name: /open album page/i });
+    await expect(albumLink).toBeVisible({ timeout: 15_000 });
+    const albumHref = await albumLink.getAttribute('href');
+    expect(albumHref).toBeTruthy();
+    const albumSlug = albumHref!.split('/album/')[1]?.split(/[?#]/)[0];
     expect(albumSlug).toBeTruthy();
 
     await loginTestUser(likerPage, secondUser.email, secondUser.password);
-    await likerPage.goto(albumUrl);
-    await likerPage.getByRole('button', { name: 'Like' }).click();
+    await likerPage.goto(albumHref!);
+    await likerPage.getByRole('button', { name: 'Like', exact: true }).click();
     await expect(likerPage.getByTestId('album-like-count')).toHaveText('1', { timeout: 15_000 });
 
-    const detail = await page.request.get(`/@${memberUser.nickname}/album/${albumSlug}`);
-    expect(detail.ok()).toBeTruthy();
-    expect(await detail.text()).toContain('data-testid="album-like-count">1');
+    // Likes are debounced (~2s) before they hit the API and revalidate the detail page.
+    await expect.poll(async () => {
+      const detail = await page.request.get(`/@${memberUser.nickname}/album/${albumSlug}`);
+      expect(detail.ok()).toBeTruthy();
+      const html = await detail.text();
+      if (html.includes('data-testid="album-like-count">1')) return 'revalidated';
+      // next dev bails out to CSR (next/dynamic), so the like count is not in the HTML.
+      if (!process.env.CI && html.includes('BAILOUT_TO_CLIENT_SIDE_RENDERING')) return 'dev-csr';
+      return 'pending';
+    }, { timeout: 20_000 }).toMatch(process.env.CI ? /^revalidated$/ : /revalidated|dev-csr/);
 
     await ownerContext.close();
     await likerContext.close();
