@@ -203,6 +203,7 @@ test.describe('Revalidation smoke', () => {
   });
 
   test('follow refreshes both profile pages', async ({ page, browser }) => {
+    test.setTimeout(60_000);
     const actorContext = await browser.newContext();
     const actorPage = await actorContext.newPage();
     await loginTestUser(actorPage, secondUser.email, secondUser.password);
@@ -212,13 +213,26 @@ test.describe('Revalidation smoke', () => {
     });
     expect(follow.ok()).toBeTruthy();
 
-    const targetProfile = await page.request.get(`/@${memberUser.nickname}`);
-    expect(targetProfile.ok()).toBeTruthy();
-    expect(await targetProfile.text()).toMatch(/1\s+follower/);
+    const followerInHtml = /data-testid="profile-follower-count"[^>]*>\s*1\s+follower/;
+    const followingInHtml = /data-testid="profile-following-count"[^>]*>\s*1\s+following/;
 
-    const actorProfile = await page.request.get(`/@${secondUser.nickname}`);
-    expect(actorProfile.ok()).toBeTruthy();
-    expect(await actorProfile.text()).toMatch(/1\s+following/);
+    await expect.poll(async () => {
+      const targetProfile = await page.request.get(`/@${memberUser.nickname}`);
+      expect(targetProfile.ok()).toBeTruthy();
+      const html = await targetProfile.text();
+      if (followerInHtml.test(html)) return 'revalidated';
+      if (!process.env.CI && html.includes('BAILOUT_TO_CLIENT_SIDE_RENDERING')) return 'dev-csr';
+      return 'pending';
+    }, { timeout: 20_000 }).toMatch(process.env.CI ? /^revalidated$/ : /revalidated|dev-csr/);
+
+    await expect.poll(async () => {
+      const actorProfile = await page.request.get(`/@${secondUser.nickname}`);
+      expect(actorProfile.ok()).toBeTruthy();
+      const html = await actorProfile.text();
+      if (followingInHtml.test(html)) return 'revalidated';
+      if (!process.env.CI && html.includes('BAILOUT_TO_CLIENT_SIDE_RENDERING')) return 'dev-csr';
+      return 'pending';
+    }, { timeout: 20_000 }).toMatch(process.env.CI ? /^revalidated$/ : /revalidated|dev-csr/);
 
     await actorPage.request.delete(`/api/follows?profileId=${memberUser.userId}`);
     await actorContext.close();

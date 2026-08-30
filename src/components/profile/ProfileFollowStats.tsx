@@ -38,10 +38,9 @@ export default function ProfileFollowStats({
             type="button"
             onClick={() => setOpenType('followers')}
             className="opacity-65 transition-opacity hover:opacity-100 hover:underline"
+            data-testid="profile-follower-count"
           >
-            <span>
-              {formatCount(followerCount)}
-            </span>
+            {formatCount(followerCount)}
             {' '}
             {followerCount === 1 ? 'follower' : 'followers'}
           </button>
@@ -51,10 +50,9 @@ export default function ProfileFollowStats({
             type="button"
             onClick={() => setOpenType('following')}
             className="opacity-65 transition-opacity hover:opacity-100 hover:underline"
+            data-testid="profile-following-count"
           >
-            <span>
-              {formatCount(followingCount)}
-            </span>
+            {formatCount(followingCount)}
             {' '}
             following
           </button>
