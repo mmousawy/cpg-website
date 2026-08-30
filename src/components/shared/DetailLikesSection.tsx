@@ -64,9 +64,8 @@ function DetailLikesSectionReadOnly({
       {initialCount > 0 && (
         <span
           className="text-xs font-medium text-foreground/80"
-        >
-          {initialCount}
-        </span>
+          data-testid={`${entityType}-like-count`}
+        >{initialCount}</span>
       )}
     </div>
   );
@@ -215,9 +214,7 @@ function DetailLikesSectionInteractive({
         <span
           className="text-xs font-medium text-foreground/80"
           data-testid={`${entityType}-like-count`}
-        >
-          {count}
-        </span>
+        >{count}</span>
       )}
     </div>
   );

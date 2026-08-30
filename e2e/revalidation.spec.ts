@@ -174,18 +174,25 @@ test.describe('Revalidation smoke', () => {
     const likeButton = likerPage.getByTestId('album-like-button');
     await expect(likeButton).toBeVisible({ timeout: 15_000 });
     await expect(likerPage.getByPlaceholder(/write a comment/i)).toBeVisible({ timeout: 15_000 });
+    const likesPosted = likerPage.waitForResponse((res) => (
+      res.url().includes('/api/likes')
+      && res.request().method() === 'POST'
+    ), { timeout: 15_000 });
     await likeButton.click();
     await expect(likerPage.getByRole('button', { name: 'Unlike', exact: true })).toBeVisible({
       timeout: 15_000,
     });
     await expect(likerPage.getByTestId('album-like-count')).toHaveText('1', { timeout: 15_000 });
+    const likesResponse = await likesPosted;
+    expect(likesResponse.ok(), await likesResponse.text()).toBeTruthy();
 
-    // Likes are debounced (~2s) before they hit the API and revalidate the detail page.
+    // Anonymous SSR uses the read-only likes UI; poll until cache reflects likes_count=1.
+    const likeCountInHtml = /data-testid="album-like-count"[^>]*>\s*1\s*</;
     await expect.poll(async () => {
       const detail = await page.request.get(`/@${memberUser.nickname}/album/${albumSlug}`);
       expect(detail.ok()).toBeTruthy();
       const html = await detail.text();
-      if (html.includes('data-testid="album-like-count">1')) return 'revalidated';
+      if (likeCountInHtml.test(html)) return 'revalidated';
       // next dev bails out to CSR (next/dynamic), so the like count is not in the HTML.
       if (!process.env.CI && html.includes('BAILOUT_TO_CLIENT_SIDE_RENDERING')) return 'dev-csr';
       return 'pending';

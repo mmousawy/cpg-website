@@ -53,5 +53,6 @@ export function queueLike(
   entityId: string,
   liked: boolean,
 ): void {
+  registerLikesHandler();
   syncRegistry.queue<LikePayload>('likes', { entityType, entityId, liked });
 }

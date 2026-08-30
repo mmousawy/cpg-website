@@ -208,22 +208,26 @@ export async function POST(request: NextRequest) {
           if (ownerProfile?.nickname) {
             ownerNickname = ownerProfile.nickname;
 
-            await scheduleNotification({
-              userId: album.user_id,
-              actorId: user.id,
-              type: 'like_album',
-              entityType: 'album',
-              entityId,
-              validateAction: 'like_album',
-              data: {
-                title: album.title,
-                thumbnail: album.cover_image_url,
-                link: `/@${ownerProfile.nickname}/album/${album.slug}`,
-                actorName: actorProfile?.full_name || null,
-                actorNickname: actorProfile?.nickname || null,
-                actorAvatar: actorProfile?.avatar_url || null,
-              },
-            });
+            try {
+              await scheduleNotification({
+                userId: album.user_id,
+                actorId: user.id,
+                type: 'like_album',
+                entityType: 'album',
+                entityId,
+                validateAction: 'like_album',
+                data: {
+                  title: album.title,
+                  thumbnail: album.cover_image_url,
+                  link: `/@${ownerProfile.nickname}/album/${album.slug}`,
+                  actorName: actorProfile?.full_name || null,
+                  actorNickname: actorProfile?.nickname || null,
+                  actorAvatar: actorProfile?.avatar_url || null,
+                },
+              });
+            } catch (error) {
+              console.error('Failed to schedule album like notification:', error);
+            }
           }
         }
       } else if (!liked && isCurrentlyLiked) {
