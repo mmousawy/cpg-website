@@ -20,16 +20,14 @@ There is **no cloud-dashboard “Migrate JWT signing keys”** on self-hosted. T
 | --- | --- | --- |
 | Skip Auth + `get_own_profile` on public pages and Link prefetches | [`src/proxy.ts`](../src/proxy.ts), [`src/utils/proxyAuth.ts`](../src/utils/proxyAuth.ts) | **No** |
 | Use `getClaims()` instead of `getUser()` on gated routes | `proxy.ts`, [`getServerAuth.ts`](../src/utils/supabase/getServerAuth.ts), [`/api/views`](../src/app/api/views/route.ts), members pages | **Yes** — falls back to `getUser()` when JWKS is empty |
-| Scraper IP + UA blocking | [`src/utils/requestGuard.ts`](../src/utils/requestGuard.ts), [`infra/cloudflare-waf.json`](../infra/cloudflare-waf.json) | **No** |
+| Scraper UA blocking (edge) + skip view writes for bots | [`infra/cloudflare-waf.json`](../infra/cloudflare-waf.json), [`src/utils/requestGuard.ts`](../src/utils/requestGuard.ts) (`isBotUserAgent` on `/api/views`) | **No** |
 | Verify JWKS before deploy | [`scripts/verify-jwt-signing.mjs`](../scripts/verify-jwt-signing.mjs) (`pnpm verify:jwt`) | N/A |
 
 ### Proxy decision flow (simplified)
 
 ```mermaid
 flowchart TD
-  req[Incoming request] --> block{Blocked IP or scraper UA?}
-  block -->|yes| r403[403]
-  block -->|no| publicApi{Public API path?}
+  req[Incoming request] --> publicApi{Public API path?}
   publicApi -->|yes| next[NextResponse.next]
   publicApi -->|no| session{Auth cookie and gated path?}
   session -->|no| next
@@ -50,7 +48,7 @@ flowchart TD
    Previously, every page load and Next.js Link prefetch on gallery/photo/album pages called `getUser()` + `get_own_profile` in the proxy. That path is now skipped.
 
 2. **Scraper load reduced**  
-   Dutch scraper IP and DeviceAtlas-style UAs are blocked at origin; Cloudflare WAF rules in [`infra/cloudflare-waf.json`](../infra/cloudflare-waf.json) should be applied at the edge.
+   DeviceAtlas-style UAs are blocked at the Cloudflare edge ([`infra/cloudflare-waf.json`](../infra/cloudflare-waf.json)). View tracking skips bot UAs via `isBotUserAgent` in [`/api/views`](../src/app/api/views/route.ts). The proxy does **not** return 403 for scrapers (that broke CI health checks and Playwright).
 
 3. **Code is ready for JWT migration**  
    When JWKS is populated, `getClaims()` starts verifying locally with no app code changes.

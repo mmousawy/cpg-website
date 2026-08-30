@@ -6,12 +6,7 @@ import {
   needsProxyAuthSession,
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
-import { parseIpList, shouldBlockClient } from '@/utils/requestGuard';
-import { getClientIp } from '@/utils/security';
-import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import { hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
-
-const extraBlockedIps = parseIpList(process.env.BLACKLIST_IPS);
 
 // Public API routes skip session/profile checks in this proxy.
 const publicApiPaths = [
@@ -40,20 +35,6 @@ const KNOWN_ROUTES = new Set([
 ]);
 
 export default async function proxy(request: NextRequest) {
-  const ipAddress = getClientIp({
-    cfConnectingIp: request.headers.get('cf-connecting-ip'),
-    xRealIp: request.headers.get('x-real-ip'),
-    xForwardedFor: request.headers.get('x-forwarded-for'),
-  });
-
-  const isE2ERequest = getIncludeTestContentFromRequest(request);
-  if (
-    !isE2ERequest &&
-    shouldBlockClient(ipAddress, request.headers.get('user-agent'), extraBlockedIps)
-  ) {
-    return NextResponse.json({ message: 'Blacklisted' }, { status: 403 });
-  }
-
   const pathname = request.nextUrl.pathname;
 
   // Redirect bare nickname URLs to @-prefixed versions (e.g. /johndoe → /@johndoe)

@@ -69,6 +69,11 @@ describe('isKnownScraperUserAgent', () => {
       'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
     )).toBe(false);
     expect(isKnownScraperUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')).toBe(false);
+    expect(isKnownScraperUserAgent('curl/8.5.0')).toBe(true);
+    expect(isKnownScraperUserAgent('Playwright/1.62.1 (x64; windows 10.0) node/24.11')).toBe(false);
+    expect(isKnownScraperUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36',
+    )).toBe(false);
   });
 });
 
