@@ -7,6 +7,8 @@ const MAX_RETRIES = 3;
 const handlers = new Map<string, SyncHandler<unknown, unknown>>();
 const pendingActions = new Map<string, SyncAction<unknown>>();
 const successCallbacks = new Map<string, Set<SyncCallback>>();
+/** Actions queued before their handler was registered (likes init is idle-deferred). */
+const queuedBeforeRegister: Array<{ handlerId: string; payload: unknown; priority?: number }> = [];
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let isSyncing = false;
 let isInitialized = false;
@@ -157,6 +159,48 @@ function scheduleSync(debounceMs: number = DEFAULT_DEBOUNCE_MS): void {
   }, debounceMs);
 }
 
+function enqueueAction(handlerId: string, payload: unknown, priority?: number): void {
+  const handler = handlers.get(handlerId);
+  if (!handler) {
+    queuedBeforeRegister.push({ handlerId, payload, priority });
+    return;
+  }
+
+  const payloadKey = handler.getKey(payload);
+  const key = getActionKey(handlerId, payloadKey);
+  const actionPriority = priority ?? handler.priority ?? 0;
+
+  const existing = pendingActions.get(key);
+  if (existing && existing.priority > actionPriority) {
+    return;
+  }
+
+  pendingActions.set(key, {
+    handlerId,
+    key,
+    payload,
+    timestamp: Date.now(),
+    priority: actionPriority,
+    retryCount: existing?.retryCount ?? 0,
+  });
+
+  scheduleSync(handler.debounceMs ?? DEFAULT_DEBOUNCE_MS);
+}
+
+function flushQueuedBeforeRegister(handlerId: string): void {
+  if (queuedBeforeRegister.length === 0) return;
+  const early = queuedBeforeRegister.filter((action) => action.handlerId === handlerId);
+  if (early.length === 0) return;
+  for (let i = queuedBeforeRegister.length - 1; i >= 0; i--) {
+    if (queuedBeforeRegister[i]?.handlerId === handlerId) {
+      queuedBeforeRegister.splice(i, 1);
+    }
+  }
+  for (const action of early) {
+    enqueueAction(action.handlerId, action.payload, action.priority);
+  }
+}
+
 /**
  * Flush all pending actions using sendBeacon (for page unload)
  */
@@ -230,6 +274,7 @@ export const syncRegistry: SyncRegistry = {
     handlers.set(handler.id, handler as SyncHandler<unknown, unknown>);
     // Initialize listeners on first registration
     initGlobalListeners();
+    flushQueuedBeforeRegister(handler.id);
   },
 
   unregister(handlerId: string): void {
@@ -237,33 +282,7 @@ export const syncRegistry: SyncRegistry = {
   },
 
   queue<TPayload>(handlerId: string, payload: TPayload, priority?: number): void {
-    const handler = handlers.get(handlerId);
-    if (!handler) {
-      console.warn(`No handler registered for: ${handlerId}. Did you forget to register it?`);
-      return;
-    }
-
-    const payloadKey = handler.getKey(payload);
-    const key = getActionKey(handlerId, payloadKey);
-    const actionPriority = priority ?? handler.priority ?? 0;
-
-    // Check if there's an existing action with higher priority
-    const existing = pendingActions.get(key);
-    if (existing && existing.priority > actionPriority) {
-      // Higher priority action already queued, skip this one
-      return;
-    }
-
-    pendingActions.set(key, {
-      handlerId,
-      key,
-      payload,
-      timestamp: Date.now(),
-      priority: actionPriority,
-      retryCount: existing?.retryCount ?? 0,
-    });
-
-    scheduleSync(handler.debounceMs ?? DEFAULT_DEBOUNCE_MS);
+    enqueueAction(handlerId, payload, priority);
   },
 
   hasPending(handlerId: string): boolean {

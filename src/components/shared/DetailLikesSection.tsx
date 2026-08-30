@@ -89,6 +89,7 @@ function DetailLikesSectionInteractive({
   const [count, setCount] = useState(cachedData?.count ?? initialCount);
   const [isAnimating, setIsAnimating] = useState(false);
   const previousLikedRef = useRef(cachedData?.userHasLiked ?? false);
+  const pendingOptimisticRef = useRef(false);
 
   const photoLikesQuery = usePhotoLikes(
     entityType === 'photo' ? entityId : undefined,
@@ -101,12 +102,20 @@ function DetailLikesSectionInteractive({
   const likesQuery = entityType === 'photo' ? photoLikesQuery : albumLikesQuery;
 
   useEffect(() => {
-    if (likesQuery.data) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLiked(likesQuery.data.userHasLiked);
-      setCount(likesQuery.data.count);
+    if (!likesQuery.data) return;
+    if (pendingOptimisticRef.current) {
+      if (
+        likesQuery.data.userHasLiked === liked
+        && likesQuery.data.count === count
+      ) {
+        pendingOptimisticRef.current = false;
+      }
+      return;
     }
-  }, [likesQuery.data]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLiked(likesQuery.data.userHasLiked);
+    setCount(likesQuery.data.count);
+  }, [likesQuery.data, liked, count]);
 
   useEffect(() => {
     if (liked && !previousLikedRef.current) {
@@ -127,6 +136,7 @@ function DetailLikesSectionInteractive({
 
     const newLiked = !liked;
     const newCount = newLiked ? count + 1 : count - 1;
+    pendingOptimisticRef.current = true;
     setLiked(newLiked);
     setCount(newCount);
     queueLike(entityType, entityId, newLiked);
@@ -174,6 +184,7 @@ function DetailLikesSectionInteractive({
           'bg-background-light hover:bg-background-medium focus-visible:bg-background-medium',
         )}
         aria-label={liked ? 'Unlike' : 'Like'}
+        data-testid={`${entityType}-like-button`}
       >
         <div
           className={`${styles.likeWrapper} ${isAnimating ? styles.animating : ''}`}

@@ -170,7 +170,14 @@ test.describe('Revalidation smoke', () => {
 
     await loginTestUser(likerPage, secondUser.email, secondUser.password);
     await likerPage.goto(albumHref!);
-    await likerPage.getByRole('button', { name: 'Like', exact: true }).click();
+    // Public album HTML is cached anonymously; wait until the logged-in like control hydrates.
+    const likeButton = likerPage.getByTestId('album-like-button');
+    await expect(likeButton).toBeVisible({ timeout: 15_000 });
+    await expect(likerPage.getByPlaceholder(/write a comment/i)).toBeVisible({ timeout: 15_000 });
+    await likeButton.click();
+    await expect(likerPage.getByRole('button', { name: 'Unlike', exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(likerPage.getByTestId('album-like-count')).toHaveText('1', { timeout: 15_000 });
 
     // Likes are debounced (~2s) before they hit the API and revalidate the detail page.
