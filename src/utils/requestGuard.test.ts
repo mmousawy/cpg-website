@@ -35,8 +35,7 @@ describe('parseFingerprintList', () => {
 });
 
 describe('isBlockedIp', () => {
-  it('blocks the known Dutch scraper IP', () => {
-    expect(isBlockedIp('92.254.97.120')).toBe(true);
+  it('blocks only when the IP is in the extra list', () => {
     expect(isBlockedIp('1.1.1.1')).toBe(false);
     expect(isBlockedIp('1.1.1.1', ['1.1.1.1'])).toBe(true);
     expect(isBlockedIp(null)).toBe(false);
@@ -87,7 +86,7 @@ describe('isBotUserAgent', () => {
 
 describe('shouldBlockClient', () => {
   it('blocks on IP or scraper UA, not on Googlebot', () => {
-    expect(shouldBlockClient('92.254.97.120', 'Mozilla/5.0')).toBe(true);
+    expect(shouldBlockClient('1.1.1.1', 'Mozilla/5.0', ['1.1.1.1'])).toBe(true);
     expect(shouldBlockClient('8.8.8.8', SCRAPER_UA_CHROME_109)).toBe(true);
     expect(shouldBlockClient('8.8.8.8', 'Mozilla/5.0 (compatible; Googlebot/2.1)')).toBe(false);
     expect(shouldBlockClient('8.8.8.8', 'Mozilla/5.0 Chrome/128')).toBe(false);

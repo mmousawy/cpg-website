@@ -5,14 +5,6 @@ import {
   type ScraperUaFingerprint,
 } from '@/config/scraperUserAgents';
 
-/**
- * Known abusive clients observed in Cloudflare logs (2026-08-28).
- * Keep this list small; use BLACKLIST_IPS for one-off blocks.
- */
-const BLOCKED_IPS = new Set([
-  '92.254.97.120',
-]);
-
 export function parseIpList(value: string | undefined): string[] {
   return value?.split(',').map((ip) => ip.trim()).filter(Boolean) ?? [];
 }
@@ -43,7 +35,7 @@ export function isBlockedIp(
   extraBlockedIps: readonly string[] = [],
 ): boolean {
   if (!ip) return false;
-  return BLOCKED_IPS.has(ip) || extraBlockedIps.includes(ip);
+  return extraBlockedIps.includes(ip);
 }
 
 function matchesTokens(userAgent: string, tokens: readonly string[]): boolean {

@@ -8,6 +8,7 @@ import {
 } from '@/utils/proxyAuth';
 import { parseIpList, shouldBlockClient } from '@/utils/requestGuard';
 import { getClientIp } from '@/utils/security';
+import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import { hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
 
 const extraBlockedIps = parseIpList(process.env.BLACKLIST_IPS);
@@ -45,7 +46,11 @@ export default async function proxy(request: NextRequest) {
     xForwardedFor: request.headers.get('x-forwarded-for'),
   });
 
-  if (shouldBlockClient(ipAddress, request.headers.get('user-agent'), extraBlockedIps)) {
+  const isE2ERequest = getIncludeTestContentFromRequest(request);
+  if (
+    !isE2ERequest &&
+    shouldBlockClient(ipAddress, request.headers.get('user-agent'), extraBlockedIps)
+  ) {
     return NextResponse.json({ message: 'Blacklisted' }, { status: 403 });
   }
 

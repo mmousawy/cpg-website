@@ -44,10 +44,10 @@ describe('safePixelWidth', () => {
 describe('getClientIp', () => {
   it('prefers Cloudflare connecting IP over spoofable forwards', () => {
     expect(getClientIp({
-      cfConnectingIp: '92.254.97.120',
+      cfConnectingIp: '203.0.113.50',
       xRealIp: '1.1.1.1',
       xForwardedFor: '8.8.8.8, 1.1.1.1',
-    })).toBe('92.254.97.120');
+    })).toBe('203.0.113.50');
   });
 
   it('falls back to X-Real-IP then the first X-Forwarded-For hop', () => {
