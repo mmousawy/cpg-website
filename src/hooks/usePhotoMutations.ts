@@ -242,7 +242,7 @@ export function useUpdatePhoto(
       }
 
       if (previousPhoto && !previousPhoto.is_public && data.data.is_public) {
-        void notifyFollowersOfUpload([data.photoId]);
+        await notifyFollowersOfUpload([data.photoId]);
       }
     },
   });
@@ -441,7 +441,7 @@ export function useBulkUpdatePhotos(
           ?.filter((p) => data.photoIds.includes(p.id) && !p.is_public)
           .map((p) => p.id) ?? [];
         if (newlyPublicIds.length > 0) {
-          void notifyFollowersOfUpload(newlyPublicIds);
+          await notifyFollowersOfUpload(newlyPublicIds);
         }
       }
     },

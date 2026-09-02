@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { adminSupabase } from '@/utils/supabase/admin';
 import { notifyAdminsOfFeedback } from '@/lib/notifications/notifyAdminsOfFeedback';
@@ -119,8 +119,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      void notifyAdminsOfFeedback(feedback.id).catch((err) => {
-        console.error('Error notifying admins:', err);
+      after(() => {
+        void notifyAdminsOfFeedback(feedback.id).catch((err) => {
+          console.error('Error notifying admins:', err);
+        });
       });
 
       return NextResponse.json(
@@ -161,8 +163,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    void notifyAdminsOfFeedback(feedback.id).catch((err) => {
-      console.error('Error notifying admins:', err);
+    after(() => {
+      void notifyAdminsOfFeedback(feedback.id).catch((err) => {
+        console.error('Error notifying admins:', err);
+      });
     });
 
     return NextResponse.json(

@@ -6,12 +6,11 @@ import { Suspense } from 'react';
 
 import AppProvidersTree from '@/components/layout/AppProvidersTree';
 import ClientShellExtras from '@/components/layout/ClientShellExtras';
+import DocumentBootScripts from '@/components/layout/DocumentBootScripts';
 import NavigationProgress from '@/components/layout/NavigationProgress';
 import ThemeProviderShell from '@/app/providers/ThemeProvider';
 import JsonLd from '@/components/shared/JsonLd';
 import { socialLinks } from '@/config/socials';
-import { MANAGE_PAGE_BOOT_SCRIPT } from '@/utils/managePage';
-import { PLATFORM_BOOT_SCRIPT } from '@/utils/platform';
 import { defaultOgImage, defaultTwitterImage, getAbsoluteUrl, siteConfig, truncateDescription } from '@/utils/metadata';
 
 import './globals.css';
@@ -100,11 +99,6 @@ export default function RootLayout({
       className="h-full overflow-x-clip"
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `${MANAGE_PAGE_BOOT_SCRIPT}${PLATFORM_BOOT_SCRIPT}`,
-          }}
-        />
         <link
           rel="preconnect"
           href="https://db.creativephotography.group"
@@ -118,6 +112,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cheriaHeading.variable} h-full overflow-x-clip bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
       >
+        <DocumentBootScripts />
         <JsonLd
           data={[
             {

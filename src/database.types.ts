@@ -2002,6 +2002,29 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: number
       }
+      get_admin_member_stats: {
+        Args: {
+          p_filter?: string
+          p_limit?: number
+          p_page?: number
+          p_search?: string
+          p_sort_by?: string
+          p_sort_order?: string
+        }
+        Returns: Json
+      }
+      get_admin_stats_overview: { Args: never; Returns: Json }
+      get_member_stats_detail: { Args: { p_user_id: string }; Returns: Json }
+      get_stats_time_series: {
+        Args: {
+          p_bucket?: string
+          p_end: string
+          p_metric: string
+          p_start: string
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       get_user_stats: { Args: { p_user_id: string }; Returns: Json }
       global_search: {
         Args: {

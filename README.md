@@ -381,7 +381,7 @@ Deploy to Vercel:
 ### Admin
 
 - [x] Member management
-- [ ] Statistics/analytics dashboard
+- [x] Statistics/analytics dashboard
 - [x] Admin tools
 
 ### Photos

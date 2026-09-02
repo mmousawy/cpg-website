@@ -255,7 +255,7 @@ export function useUpdateAlbumPhoto(
       }
 
       if (previousPhoto && !previousPhoto.is_public && data.is_public) {
-        void notifyFollowersOfUpload([photoId]);
+        await notifyFollowersOfUpload([photoId]);
       }
 
       return { photoId, data, previousPhotos };
@@ -537,7 +537,7 @@ export function useBulkUpdateAlbumPhotos(
           ?.filter((p) => photoIds.includes(p.id) && !p.is_public)
           .map((p) => p.id) ?? [];
         if (newlyPublicIds.length > 0) {
-          void notifyFollowersOfUpload(newlyPublicIds);
+          await notifyFollowersOfUpload(newlyPublicIds);
         }
       }
 

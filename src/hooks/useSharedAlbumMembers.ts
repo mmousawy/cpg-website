@@ -92,7 +92,7 @@ export function useMySharedAlbumMembership(albumId: string | undefined, userId: 
   });
 }
 
-async function notifyAlbumRequest(params: {
+export async function notifyAlbumRequest(params: {
   type: string;
   albumId: string;
   albumTitle: string;
@@ -142,7 +142,7 @@ export function useJoinSharedAlbum(
         && options?.ownerId
         && ownerNickname
       ) {
-        notifyAlbumRequest({
+        await notifyAlbumRequest({
           type: 'shared_album_request_received',
           albumId,
           albumTitle: options.albumTitle,

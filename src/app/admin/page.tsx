@@ -119,8 +119,8 @@ export default function AdminDashboardPage() {
           />
         </svg>
       ),
-      href: '#',
-      enabled: false,
+      href: '/admin/stats',
+      enabled: true,
     },
     {
       title: 'Tools',

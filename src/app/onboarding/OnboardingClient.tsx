@@ -572,13 +572,15 @@ export default function OnboardingClient() {
         }
       }
 
-      // Notify admins of the new member (fire-and-forget; keepalive survives navigation)
-      void fetch('/api/onboarding/notify', {
-        method: 'POST',
-        keepalive: true,
-      }).catch((err) => {
+      // Notify admins of the new member before navigating
+      try {
+        await fetch('/api/onboarding/notify', {
+          method: 'POST',
+          keepalive: true,
+        });
+      } catch (err) {
         console.error('Error notifying admins of new member:', err);
-      });
+      }
 
       // Refresh profile in auth context
       await refreshProfile();

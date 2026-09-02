@@ -295,10 +295,10 @@ This pattern is used in `src/emails/comment-notification.tsx` and other template
 | File | Notification Type |
 |------|-------------------|
 | `src/app/api/comments/route.ts` | Comment notifications |
-| `src/app/api/challenges/notify-submission/route.ts` | New submission (admin) |
-| `src/app/api/challenges/notify-result/route.ts` | Submission accepted/rejected |
-| `src/app/api/reports/notify/route.ts` | New report (admin) |
-| `src/app/api/reports/resolved/notify/route.ts` | Report resolved |
+| `src/app/api/challenges/submit/route.ts` | New submission (admin) |
+| `src/app/api/challenges/review/route.ts` | Submission accepted/rejected |
+| `src/app/api/reports/route.ts` | New report (admin) |
+| `src/app/api/reports/resolve/route.ts` | Report resolved |
 | `src/app/api/admin/events/announce/route.ts` | Event announcements |
 | `src/app/api/admin/challenges/announce/route.ts` | Challenge announcements |
 | `src/app/api/likes/route.ts` | Like notifications |

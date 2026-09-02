@@ -22,8 +22,6 @@ const publicApiPaths = [
   '/api/cron/',           // Cron jobs (use CRON_SECRET instead)
   '/api/revalidate-all',  // Revalidation (uses REVALIDATION_SECRET)
   '/api/revalidate-changelog',  // Changelog revalidation (uses REVALIDATION_SECRET)
-  '/api/challenges/notify-result',     // Webhook-style endpoint (auth checked in route)
-  '/api/challenges/notify-submission', // Webhook-style endpoint (auth checked in route)
 ];
 
 const KNOWN_ROUTES = new Set([

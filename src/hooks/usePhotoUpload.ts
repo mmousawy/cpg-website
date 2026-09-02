@@ -233,9 +233,17 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ photoId: photoData.id }),
-            }).catch(() => {
-              // Non-blocking: processing failure doesn't fail the upload
-            });
+              keepalive: true,
+            })
+              .then(async (res) => {
+                if (!res.ok) {
+                  const text = await res.text();
+                  console.error('Photo process failed:', res.status, text);
+                }
+              })
+              .catch((err) => {
+                console.error('Photo process failed:', err);
+              });
           }
 
           // Add to albums if specified
@@ -290,7 +298,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 
       const publicPhotoIds = results.filter((photo) => photo.is_public).map((photo) => photo.id);
       if (publicPhotoIds.length > 0) {
-        void notifyFollowersOfUpload(publicPhotoIds);
+        await notifyFollowersOfUpload(publicPhotoIds);
       }
 
       if (results.length > 0) {

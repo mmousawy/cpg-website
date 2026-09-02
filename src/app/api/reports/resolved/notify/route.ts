@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminUser } from '@/lib/auth/requireAdmin';
 import { notifyReportResolved } from '@/lib/notifications/notifyReportResolved';
 
+/**
+ * POST /api/reports/resolved/notify
+ *
+ * Sends notification to the reporter when a report is resolved.
+ * Prefer POST /api/reports/resolve, which resolves and notifies together.
+ */
 export async function POST(request: NextRequest) {
   const adminResult = await requireAdminUser();
   if ('error' in adminResult) {

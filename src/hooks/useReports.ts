@@ -95,36 +95,20 @@ export function useResolveReport() {
       adminNotes?: string;
       resolutionType?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('reports')
-        .update({
+      const res = await fetch('/api/reports/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportId,
           status,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user.id,
-          admin_notes: adminNotes || null,
-        })
-        .eq('id', reportId);
+          adminNotes,
+          resolutionType,
+        }),
+      });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to resolve report');
-      }
-
-      // Notify reporter if resolved (fire-and-forget)
-      if (status === 'resolved') {
-        fetch('/api/reports/resolved/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reportId,
-            resolutionType,
-            message: adminNotes,
-          }),
-        }).catch((err) => {
-          console.error('Error notifying reporter:', err);
-        });
+      const body = await res.json().catch(() => ({})) as { message?: string };
+      if (!res.ok) {
+        throw new Error(body.message || 'Failed to resolve report');
       }
 
       return { reportId, status };
@@ -158,21 +142,20 @@ export function useBulkResolveReports() {
       adminNotes?: string;
       resolutionType?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('reports')
-        .update({
+      const res = await fetch('/api/reports/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportIds,
           status,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user.id,
-          admin_notes: adminNotes || null,
-        })
-        .in('id', reportIds);
+          adminNotes,
+          resolutionType,
+        }),
+      });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to resolve reports');
+      const body = await res.json().catch(() => ({})) as { message?: string };
+      if (!res.ok) {
+        throw new Error(body.message || 'Failed to resolve reports');
       }
 
       return { reportIds, status };

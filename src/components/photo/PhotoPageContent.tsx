@@ -11,6 +11,7 @@ import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
 import { getLicenseInfo } from '@/utils/licenses';
+import { formatFileSize } from '@/utils/formatFileSize';
 import { getPhotoSharePath } from '@/utils/share';
 import { formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 import clsx from 'clsx';
@@ -334,6 +335,26 @@ export function PhotoMetadataColumn({
               {exifString}
             </p>
           </div>
+        )}
+
+        {(photo.width && photo.height) && (
+          <p
+            className="text-xs text-foreground/60"
+          >
+            {photo.width}
+            {' '}
+            ×
+            {' '}
+            {photo.height}
+            {formatFileSize(photo.file_size) && (
+              <>
+                {' '}
+                ·
+                {' '}
+                {formatFileSize(photo.file_size)}
+              </>
+            )}
+          </p>
         )}
 
         {(() => {

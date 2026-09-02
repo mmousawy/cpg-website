@@ -2,6 +2,8 @@
 
 import Container from '@/components/layout/Container';
 import type { AccountStats, Profile } from '@/hooks/useAccountForm';
+import { routes } from '@/config/routes';
+import Link from 'next/link';
 
 type AccountStatsWithChallenges = AccountStats & {
   challengesParticipated?: number;
@@ -21,6 +23,16 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
       >
         Account info
       </h2>
+      <p
+        className="mb-3 text-sm"
+      >
+        <Link
+          href={routes.accountStats.url}
+          className="text-primary hover:underline underline-offset-2"
+        >
+          View full stats →
+        </Link>
+      </p>
       <Container>
         <div
           className="space-y-4"

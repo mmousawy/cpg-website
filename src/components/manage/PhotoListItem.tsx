@@ -3,6 +3,7 @@
 import BlurImage from '@/components/shared/BlurImage';
 import type { Photo, PhotoWithAlbums } from '@/types/photos';
 import { formatAperture, formatExposure, formatFocalLength, formatISO } from '@/utils/exif';
+import { formatFileSize } from '@/utils/formatFileSize';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
@@ -21,14 +22,6 @@ export function getPhotoDisplayName(photo: Photo | PhotoWithAlbums): string {
     return photo.original_filename.replace(/\.[^.]+$/, '');
   }
   return photo.short_id || photo.id.slice(0, 8);
-}
-
-/** Format file size in human readable format */
-function formatFileSize(bytes: number | null | undefined): string | null {
-  if (!bytes) return null;
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** Format date in user-friendly format */

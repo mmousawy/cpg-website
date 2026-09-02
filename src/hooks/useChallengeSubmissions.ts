@@ -94,38 +94,25 @@ export function useSubmitToChallenge() {
       challengeId: string;
       photoIds: string[];
     }) => {
-      const { data, error } = await supabase.rpc('submit_to_challenge', {
-        p_challenge_id: challengeId,
-        p_photo_ids: photoIds,
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to submit to challenge');
-      }
-
-      const submittedCount = data as number;
-
-      // Notify admins about the new submission (fire and forget)
-      fetch('/api/challenges/notify-submission', {
+      const res = await fetch('/api/challenges/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           challengeId,
           photoIds,
         }),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const text = await res.text();
-            console.error('Notify admins failed:', res.status, text);
-          }
-        })
-        .catch((err) => {
-          // Log but don't fail the submission
-          console.error('Failed to notify admins:', err);
-        });
+      });
 
-      return submittedCount;
+      const body = await res.json().catch(() => ({})) as {
+        submittedCount?: number;
+        message?: string;
+      };
+
+      if (!res.ok) {
+        throw new Error(body.message || 'Failed to submit to challenge');
+      }
+
+      return body.submittedCount ?? 0;
     },
     onSuccess: (_, variables) => {
       // Invalidate relevant queries
@@ -191,18 +178,7 @@ export function useReviewSubmission() {
       challengeSlug: string;
       photoShortId: string;
     }) => {
-      const { error } = await supabase.rpc('review_challenge_submission', {
-        p_submission_id: submissionId,
-        p_status: status,
-        p_rejection_reason: rejectionReason ?? undefined,
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to review submission');
-      }
-
-      // Send notification to user (fire-and-forget)
-      fetch('/api/challenges/notify-result', {
+      const res = await fetch('/api/challenges/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -211,7 +187,12 @@ export function useReviewSubmission() {
           rejectionReason,
           challengeSlug,
         }),
-      }).catch((err) => console.error('Failed to send notification:', err));
+      });
+
+      const body = await res.json().catch(() => ({})) as { message?: string };
+      if (!res.ok) {
+        throw new Error(body.message || 'Failed to review submission');
+      }
 
       return { challengeSlug, photoShortId };
     },
@@ -259,18 +240,7 @@ export function useBulkReviewSubmissions() {
       challengeSlug: string;
       photoShortIds: string[];
     }) => {
-      const { data, error } = await supabase.rpc('bulk_review_challenge_submissions', {
-        p_submission_ids: submissionIds,
-        p_status: status,
-        p_rejection_reason: rejectionReason ?? undefined,
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to review submissions');
-      }
-
-      // Send notifications to users (fire-and-forget)
-      fetch('/api/challenges/notify-result', {
+      const res = await fetch('/api/challenges/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -279,9 +249,18 @@ export function useBulkReviewSubmissions() {
           rejectionReason,
           challengeSlug,
         }),
-      }).catch((err) => console.error('Failed to send notifications:', err));
+      });
 
-      return { count: data as number, challengeSlug, photoShortIds };
+      const body = await res.json().catch(() => ({})) as {
+        count?: number;
+        message?: string;
+      };
+
+      if (!res.ok) {
+        throw new Error(body.message || 'Failed to review submissions');
+      }
+
+      return { count: body.count ?? submissionIds.length, challengeSlug, photoShortIds };
     },
     onSuccess: async (data) => {
       // Revalidate server-side cache for the challenge detail page

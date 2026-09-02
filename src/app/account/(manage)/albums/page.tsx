@@ -26,6 +26,7 @@ import {
   useUpdateAlbum,
 } from '@/hooks/useAlbumMutations';
 import type { PendingAlbumInvite, SharedWithMeAlbum } from '@/hooks/useAlbums';
+import { notifyAlbumRequest } from '@/hooks/useSharedAlbumMembers';
 import {
   prefetchAlbumPhotos,
   prefetchOwnedAlbum,
@@ -1133,6 +1134,17 @@ function PendingInviteSidebar({
       const ownerNickname = album.owner_profile?.nickname;
       if (action === 'accept' && ownerNickname && album.slug) {
         await revalidateAlbumBySlug(ownerNickname, album.slug);
+        if (userId && album.user_id) {
+          await notifyAlbumRequest({
+            type: 'shared_album_invite_accepted',
+            albumId: invite.albumId,
+            albumTitle: album.title,
+            albumSlug: album.slug,
+            ownerNickname,
+            ownerId: album.user_id,
+            accepterId: userId,
+          });
+        }
       }
     },
   });
