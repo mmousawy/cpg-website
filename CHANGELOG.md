@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.40.0](https://github.com/mmousawy/cpg-website/compare/v1.39.5...v1.40.0) (2026-09-02)
+
+
+### ✨ Features
+
+* add recharts dependency and enhance admin statistics features ([7914f30](https://github.com/mmousawy/cpg-website/commit/7914f30ee82759823367df650978ddd1a4f6b6c4))
+
 ## [1.39.5](https://github.com/mmousawy/cpg-website/compare/v1.39.4...v1.39.5) (2026-09-02)
 
 
