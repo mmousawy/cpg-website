@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.39.5](https://github.com/mmousawy/cpg-website/compare/v1.39.4...v1.39.5) (2026-09-02)
+
+
+### 🐛 Bug Fixes
+
+* update dependencies and improve PhotoSwipe integration ([a9285bc](https://github.com/mmousawy/cpg-website/commit/a9285bce7ba7a89856ef86cd59b867725c003aab))
+
 ## [1.39.4](https://github.com/mmousawy/cpg-website/compare/v1.39.3...v1.39.4) (2026-08-30)
 
 
