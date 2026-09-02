@@ -32,6 +32,14 @@ export async function initPhotoSwipe() {
 export type PhotoSwipeLightboxInstance = InstanceType<Awaited<ReturnType<typeof initPhotoSwipe>>>;
 
 /**
+ * True while a PhotoSwipe gallery is open (fullscreen).
+ */
+export function isPhotoSwipeOpen() {
+  if (typeof document === 'undefined') return false;
+  return Boolean(document.querySelector('.pswp--open'));
+}
+
+/**
  * Close any PhotoSwipe instance still attached to the document.
  * Used on client navigations so a lightbox from a previous route cannot cover the next page.
  */

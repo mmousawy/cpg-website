@@ -7,6 +7,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import BlurImage from '../shared/BlurImage';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
+function keepLightboxKeysOffThePage(lightbox: PhotoSwipeLightboxInstance) {
+  lightbox.on('keydown', (event) => {
+    event.originalEvent.stopPropagation();
+  });
+}
+
 type GalleryPhoto = {
   shortId: string;
   url: string;
@@ -89,6 +95,7 @@ export default function PhotoWithLightbox({
         showHideAnimationType: 'zoom',
       });
 
+      keepLightboxKeysOffThePage(lightbox);
       lightbox.init();
       lightboxRef.current = lightbox;
     });
@@ -122,6 +129,8 @@ export default function PhotoWithLightbox({
         pswpModule: () => import('photoswipe'),
         showHideAnimationType: 'zoom',
       });
+
+      keepLightboxKeysOffThePage(lightbox);
 
       lightbox.addFilter('itemData', (itemData, index) => {
         if (index !== initialIndexRef.current || !imageAnchorRef.current) {

@@ -5,6 +5,7 @@ import { usePhotoNavigation } from '@/components/photo/PhotoNavigationContext';
 import BlurImage from '@/components/shared/BlurImage';
 import HoverPrefetchLink from '@/components/shared/HoverPrefetchLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { isPhotoSwipeOpen } from '@/utils/photoswipe';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
@@ -86,6 +87,7 @@ export default function AlbumFilmstrip({
       : currentPhotoShortId;
 
   const navigateToPhoto = useCallback((shortId: string) => {
+    if (isPhotoSwipeOpen()) return;
     if (shortId === currentPhotoShortId || shortId === pendingShortId) return;
     setPendingShortId(shortId);
     router.push(getPhotoHref(shortId));
@@ -137,6 +139,12 @@ export default function AlbumFilmstrip({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // PhotoSwipe handles arrows on `document` and does not stopPropagation.
+      // Skip page navigation until the lightbox is closed.
+      if (e.defaultPrevented || isPhotoSwipeOpen()) {
         return;
       }
 
