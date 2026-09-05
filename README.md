@@ -359,17 +359,33 @@ Opens an interactive treemap to visualize bundle composition. See [docs/performa
 
 ## Deployment
 
-Deploy to Vercel:
+### Coolify (VPS, recommended for self-hosting)
+
+See **[docs/deployment/coolify.md](./docs/deployment/coolify.md)** for full setup: Dockerfile build, staging on `staging.creativephotography.group`, scheduled tasks, and production DNS cutover.
+
+Quick reference:
+
+- `Dockerfile` + `output: 'standalone'` in `next.config.ts`
+- Crons: [infra/coolify/scheduled-tasks.md](./infra/coolify/scheduled-tasks.md)
+- Staging QA: [infra/coolify/staging-checklist.md](./infra/coolify/staging-checklist.md)
+- Production cutover: [infra/coolify/production-cutover.md](./infra/coolify/production-cutover.md)
+
+Set GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL` (from Coolify app webhooks) to deploy releases to Coolify instead of Vercel.
+
+### Vercel (legacy / PR previews)
+
+Until Coolify production is live:
 
 1. Connect repository
 2. Set environment variables (including `CRON_SECRET` for reminder emails)
 3. Configure Supabase OAuth redirect URLs for production
-4. Set up RLS and storage policies
-5. Cron jobs are automatically configured via `vercel.json` (reminders daily 8:00 AM, events revalidation daily 5:01 PM, content cleanup Sundays 3:00 AM UTC)
+4. Cron jobs via `vercel.json` (UTC schedules)
 
-**Deployment Strategy:**
-- Main branch commits and PR previews do not trigger production deployments directly
-- Release Please creates releases from `main` and the release workflow deploys those released commits to Vercel production explicitly
+**Deployment strategy:**
+
+- PR previews and E2E still use Vercel (see `.github/workflows/ci.yml`)
+- Release Please creates releases from `main`
+- Production: Coolify webhook if configured, else `vercel promote` of the tested preview
 
 ## Roadmap
 

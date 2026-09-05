@@ -10,6 +10,8 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  // Standalone output for Docker / Coolify (see Dockerfile)
+  output: 'standalone',
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
     NEXT_PUBLIC_COPYRIGHT_YEAR: String(new Date().getFullYear()),
@@ -149,7 +151,7 @@ const nextConfig: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-          // Note: CSP and HSTS should be configured at the hosting/CDN level (Vercel)
+          // Note: CSP and HSTS should be configured at the hosting/CDN level (Cloudflare / reverse proxy)
           // Supabase /render/image default TTL is ~4h for user-photos; cpg-public heroes may differ.
           // Fix: Cloudflare Cache Rule on db.creativephotography.group — see infra/cloudflare-storage-cache.json
           // Verify: curl -sI "https://db.../render/image/public/user-photos/...?width=640" | grep -i cache
