@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.0](https://github.com/mmousawy/cpg-website/compare/v1.40.0...v1.41.0) (2026-09-05)
+
+
+### ✨ Features
+
+* enhance database types and proxy functionality for nickname management ([7b94a62](https://github.com/mmousawy/cpg-website/commit/7b94a62242cbb2ac17b8b7562c605b1a683a3051))
+
 ## [1.40.0](https://github.com/mmousawy/cpg-website/compare/v1.39.5...v1.40.0) (2026-09-02)
 
 
