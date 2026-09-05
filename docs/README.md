@@ -2,6 +2,10 @@
 
 ## Contents
 
+### Deployment
+
+- **[deployment/coolify.md](./deployment/coolify.md)** - Self-host on a VPS with Coolify (Docker, crons, staging, cutover)
+
 ### Caching & Revalidation
 
 - **[revalidation-system.md](./revalidation-system.md)** - Complete guide to the tag-based caching and revalidation system

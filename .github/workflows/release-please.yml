@@ -26,7 +26,7 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  promote:
+  deploy-production:
     runs-on: ubuntu-latest
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
@@ -40,18 +40,31 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Promote preview to production
+      - name: Deploy production (Coolify or Vercel)
         env:
+          COOLIFY_PRODUCTION_WEBHOOK_URL: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK_URL }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # Collect candidate SHAs for the preview Vercel built and E2E tested.
-          # HEAD^2 = merged PR branch (release-please or feature).
-          # HEAD^1^2 = when main was a merge commit, the prior feature PR head.
+          set -euo pipefail
+
+          if [ -n "${COOLIFY_PRODUCTION_WEBHOOK_URL:-}" ]; then
+            echo "Triggering Coolify production deploy..."
+            curl -fsS -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL"
+            echo "Coolify deploy triggered."
+            exit 0
+          fi
+
+          echo "COOLIFY_PRODUCTION_WEBHOOK_URL not set — falling back to Vercel promote."
+
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "::error::Set COOLIFY_PRODUCTION_WEBHOOK_URL or VERCEL_TOKEN for production deploy."
+            exit 1
+          fi
+
+          npm install -g vercel
+
           SHAS_TO_TRY=()
           if git cat-file -e HEAD^2 2>/dev/null; then
             SHAS_TO_TRY+=("$(git rev-parse HEAD^2)")
@@ -67,7 +80,6 @@ jobs:
             API_RESPONSE=$(curl -s \
               -H "Authorization: Bearer $VERCEL_TOKEN" \
               "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA")
-            echo "API response: $API_RESPONSE"
             DEPLOYMENT_UID=$(echo "$API_RESPONSE" | \
               jq -r '.deployments[] | select(.target != "production") | .uid' | head -1)
 

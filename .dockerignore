@@ -1,0 +1,36 @@
+# Dependencies and build output
+node_modules
+.next
+out
+
+# Git and editor
+.git
+.gitignore
+.cursor
+.vscode
+
+# Env and secrets (Coolify injects these at build/runtime)
+.env
+.env.*
+!.env.example
+
+# Tests and local tooling
+coverage
+playwright-report
+test-results
+e2e
+**/*.test.ts
+**/*.test.tsx
+**/__tests__
+
+# Docs and CI (not needed in production image)
+.github
+docs
+*.md
+!CHANGELOG.md
+
+# Lighthouse / analysis artifacts
+.lighthouse-*.json
+
+# Husky
+.husky
