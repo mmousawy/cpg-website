@@ -6,6 +6,7 @@ ENV HUSKY=0
 ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS deps
+ENV CI=true
 RUN corepack enable pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
