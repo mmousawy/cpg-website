@@ -17,6 +17,7 @@ out
 # Tests and local tooling
 coverage
 playwright-report
+playwright.config.ts
 test-results
 e2e
 **/*.test.ts
