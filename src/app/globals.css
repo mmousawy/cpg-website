@@ -814,8 +814,12 @@ html.manage-page .app-header-inner {
   font-size: inherit;
   line-height: 1.5em;
 
+  @media (min-width: 640px) {
+    line-height: 1.45em;
+  }
+
   + p {
-    margin-top: 0.75em;
+    margin-top: 1.25em;
   }
 
   + ul {
@@ -1043,4 +1047,42 @@ html.manage-page .app-header-inner {
 .bg-background-light.bg-no-noise,
 :root.light .bg-background-light.bg-no-noise {
   background-image: none;
+}
+
+/* Stats chart type toggle — subtle inset track */
+.stats-chart-type-toggle {
+  background: var(--background);
+  border: 1px solid var(--border-color);
+  border-top-color: color-mix(in srgb, var(--foreground) 10%, var(--border-color));
+  border-left-color: color-mix(in srgb, var(--foreground) 8%, var(--border-color));
+  border-bottom-color: color-mix(in srgb, var(--background-light) 30%, var(--border-color));
+  border-right-color: color-mix(in srgb, var(--background-light) 18%, var(--border-color));
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+
+:root.dark .stats-chart-type-toggle,
+:root.midnight .stats-chart-type-toggle {
+  border-top-color: color-mix(in srgb, black 40%, var(--border-color));
+  border-left-color: color-mix(in srgb, black 32%, var(--border-color));
+  border-bottom-color: color-mix(in srgb, var(--foreground) 14%, var(--border-color));
+  border-right-color: color-mix(in srgb, var(--foreground) 9%, var(--border-color));
+  box-shadow: inset 0 1px 2px color-mix(in srgb, black 30%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .stats-chart-type-toggle {
+    border-top-color: color-mix(in srgb, black 40%, var(--border-color));
+    border-left-color: color-mix(in srgb, black 32%, var(--border-color));
+    border-bottom-color: color-mix(in srgb, var(--foreground) 14%, var(--border-color));
+    border-right-color: color-mix(in srgb, var(--foreground) 9%, var(--border-color));
+    box-shadow: inset 0 1px 2px color-mix(in srgb, black 30%, transparent);
+  }
+}
+
+.stats-chart-type-toggle__thumb.btn-skeuo {
+  transition:
+    left 200ms ease-out,
+    box-shadow 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
 }

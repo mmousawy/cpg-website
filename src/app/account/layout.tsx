@@ -13,13 +13,8 @@ export const metadata = createNoIndexMetadata({
   description: 'Manage your Creative Photography Group account settings',
 });
 
-async function AccountConnection() {
-  // Opt out of static generation - account pages require authentication
-  await connection();
-  return null;
-}
-
 async function AccountAuthGuard() {
+  await connection();
   const { user, profile } = await getServerAuth();
 
   // Redirect to login if not authenticated (proxy middleware also enforces this)
@@ -46,11 +41,6 @@ export default function AccountLayout({
   return (
     <AuthRouteProvidersLayout>
       <>
-        <Suspense
-          fallback={null}
-        >
-          <AccountConnection />
-        </Suspense>
         <Suspense
           fallback={null}
         >

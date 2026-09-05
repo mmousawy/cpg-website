@@ -49,7 +49,7 @@ export default function PublicProfileSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70 font-heading"
+        className="mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         Your public profile
       </h2>

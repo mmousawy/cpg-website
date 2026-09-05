@@ -17,6 +17,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { validateImage } from '@/utils/imageValidation';
 import { generateBlurhash } from '@/utils/generateBlurhash';
 import { deleteSupabaseStorageObject, uploadUserStorageFile } from '@/utils/supabaseStorage';
+import { getNicknameCooldownEnd } from '@/utils/nickname';
 import {
   getEmailTypes,
   getUserEmailPreferences,
@@ -76,6 +77,7 @@ export type Profile = Pick<
   | 'email'
   | 'full_name'
   | 'nickname'
+  | 'nickname_changed_at'
   | 'avatar_url'
   | 'banner_url'
   | 'banner_blurhash'
@@ -137,6 +139,7 @@ export function useAccountForm() {
 
   // Email change state
   const [emailChangedFromUrl, setEmailChangedFromUrl] = useState(false);
+  const [nicknameChangedFromUrl, setNicknameChangedFromUrl] = useState(false);
 
   // Avatar state - saved value and pending changes
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string | null>(null);
@@ -255,6 +258,30 @@ export function useAccountForm() {
       refreshAuthProfile();
       // Auto-dismiss after 5 seconds
       setTimeout(() => setEmailChangedFromUrl(false), 5000);
+    }
+  }, [searchParams, refreshAuthProfile]);
+
+  useEffect(() => {
+    if (searchParams.get('nickname_changed') === 'true') {
+      setNicknameChangedFromUrl(true);
+      window.history.replaceState({}, '', '/account');
+      void refreshAuthProfile().then(() => {
+        void (async () => {
+          const { fetchOwnProfile } = await import('@/context/authSessionRuntime');
+          const nextProfile = await fetchOwnProfile();
+          if (nextProfile?.nickname) {
+            setNickname(nextProfile.nickname);
+          }
+          if (nextProfile) {
+            setProfile((prev) => (prev ? {
+              ...prev,
+              nickname: nextProfile.nickname,
+              nickname_changed_at: nextProfile.nickname_changed_at,
+            } : null));
+          }
+        })();
+      });
+      setTimeout(() => setNicknameChangedFromUrl(false), 5000);
     }
   }, [searchParams, refreshAuthProfile]);
 
@@ -383,6 +410,7 @@ export function useAccountForm() {
               email: user.email || null,
               full_name: user.user_metadata?.full_name || null,
               nickname: null,
+              nickname_changed_at: null,
               avatar_url: user.user_metadata?.avatar_url || null,
               banner_url: null,
               banner_blurhash: null,
@@ -1055,6 +1083,8 @@ export function useAccountForm() {
     emailPreferences,
     stats,
     emailChangedFromUrl,
+    nicknameChangedFromUrl,
+    nicknameChangeCooldownEnd: getNicknameCooldownEnd(profile?.nickname_changed_at),
 
     // Avatar
     fileInputRef,

@@ -5,8 +5,41 @@ import type { QueryClient } from '@tanstack/react-query';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { fetchAlbumPhotos } from '@/hooks/useAlbumPhotos';
+import type { NotificationType } from '@/types/notifications';
+
+/** Notification types that should refresh the /account/albums "Shared with you" lists. */
+export const SHARED_ALBUM_LIST_NOTIFICATION_TYPES = new Set<NotificationType>([
+  'shared_album_invite_received',
+  'shared_album_request_accepted',
+]);
+
+export function invalidateSharedAlbumListQueries(
+  queryClient: QueryClient,
+  userId: string | undefined,
+) {
+  if (!userId) return;
+  void queryClient.invalidateQueries({ queryKey: ['pending-album-invites', userId] });
+  void queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', userId] });
+  void queryClient.invalidateQueries({ queryKey: ['album-section-counts', userId] });
+}
 
 type AlbumFilter = 'all' | 'personal' | 'shared' | 'event';
+
+type AlbumEventJoin = {
+  slug: string | null;
+  cover_image: string | null;
+  title: string | null;
+  date: string | null;
+};
+
+function albumEventFields(event: AlbumEventJoin | null | undefined) {
+  return {
+    event_slug: event?.slug || null,
+    event_cover_image: event?.cover_image || null,
+    event_title: event?.title || null,
+    event_date: event?.date || null,
+  };
+}
 
 async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise<AlbumWithPhotos[]> {
   let query = supabase
@@ -31,7 +64,7 @@ async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise
         photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
       ),
       tags:album_tags(tag),
-      event:events!albums_event_id_fkey(slug, cover_image)
+      event:events!albums_event_id_fkey(slug, cover_image, title, date)
     `)
     .eq('user_id', userId)
     .is('deleted_at', null)
@@ -78,7 +111,7 @@ async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise
   type AlbumQueryResult = AlbumRow & {
     photos: AlbumPhotoWithPhoto[] | null;
     tags: Array<{ tag: string }> | null;
-    event: { slug: string | null; cover_image: string | null } | null;
+    event: AlbumEventJoin | null;
   };
 
   // Filter out deleted photos from albums and resolve cover image blurhash
@@ -96,8 +129,7 @@ async function fetchAlbums(userId: string, filter: AlbumFilter = 'all'): Promise
       ...album,
       photos: activePhotos,
       cover_image_blurhash,
-      event_slug: album.event?.slug || null,
-      event_cover_image: album.event?.cover_image || null,
+      ...albumEventFields(album.event),
     };
   });
 
@@ -231,7 +263,7 @@ async function fetchAllEventAlbums(): Promise<AlbumWithPhotos[]> {
         photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
       ),
       tags:album_tags(tag),
-      event:events!albums_event_id_fkey(slug, cover_image)
+      event:events!albums_event_id_fkey(slug, cover_image, title, date)
     `)
     .not('event_id', 'is', null)
     .is('deleted_at', null)
@@ -268,7 +300,7 @@ async function fetchAllEventAlbums(): Promise<AlbumWithPhotos[]> {
   type AlbumQueryResult = AlbumRow & {
     photos: AlbumPhotoWithPhoto[] | null;
     tags: Array<{ tag: string }> | null;
-    event: { slug: string | null; cover_image: string | null } | null;
+    event: AlbumEventJoin | null;
   };
 
   const albumsWithFilteredPhotos = (data || []).map((album: AlbumQueryResult) => {
@@ -284,8 +316,7 @@ async function fetchAllEventAlbums(): Promise<AlbumWithPhotos[]> {
       ...album,
       photos: activePhotos,
       cover_image_blurhash,
-      event_slug: album.event?.slug || null,
-      event_cover_image: album.event?.cover_image || null,
+      ...albumEventFields(album.event),
     };
   });
 
@@ -322,7 +353,7 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
       photo:photos!album_photos_photo_id_fkey(deleted_at, blurhash)
     ),
     tags:album_tags(tag),
-    event:events!albums_event_id_fkey(slug, cover_image)
+    event:events!albums_event_id_fkey(slug, cover_image, title, date)
   `;
 
   // Try fetching album owned by the user first
@@ -379,7 +410,7 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
   };
 
   type AlbumQueryResultWithEvent = AlbumQueryResult & {
-    event: { slug: string | null; cover_image: string | null } | null;
+    event: AlbumEventJoin | null;
   };
 
   // Filter out deleted photos from album and resolve cover image blurhash
@@ -396,8 +427,7 @@ async function fetchAlbumBySlug(userId: string, slug: string): Promise<AlbumWith
     ...typedData,
     photos: activePhotos,
     cover_image_blurhash,
-    event_slug: typedData.event?.slug || null,
-    event_cover_image: typedData.event?.cover_image || null,
+    ...albumEventFields(typedData.event),
   };
 
   return albumWithFilteredPhotos as unknown as AlbumWithPhotos;

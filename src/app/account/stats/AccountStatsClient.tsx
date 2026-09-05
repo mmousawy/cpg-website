@@ -2,6 +2,7 @@
 
 import PageContainer from '@/components/layout/PageContainer';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import StatsChartTypeToggle, { type StatsChartType } from '@/components/stats/StatsChartTypeToggle';
 import StatsDonutChart from '@/components/stats/StatsDonutChart';
 import StatsKpiGrid from '@/components/stats/StatsKpiGrid';
 import StatsRangeTabs from '@/components/stats/StatsRangeTabs';
@@ -10,6 +11,7 @@ import StatsSection from '@/components/stats/StatsSection';
 import StatsTimeSeriesChart from '@/components/stats/StatsTimeSeriesChart';
 import type { MemberStatsDetail, StatsRange, StatsTimeSeriesPoint } from '@/types/stats';
 import { formatFileSize } from '@/utils/formatFileSize';
+import type { StatsBucket } from '@/utils/stats/timeSeries';
 import { useCallback, useEffect, useState } from 'react';
 
 type LifetimeStats = {
@@ -42,6 +44,8 @@ export default function AccountStatsClient() {
   const [lifetime, setLifetime] = useState<LifetimeStats | null>(null);
   const [detail, setDetail] = useState<MemberStatsDetail | null>(null);
   const [series, setSeries] = useState<SeriesEntry[]>([]);
+  const [bucket, setBucket] = useState<StatsBucket | undefined>();
+  const [chartType, setChartType] = useState<StatsChartType>('line');
   const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -53,6 +57,7 @@ export default function AccountStatsClient() {
       setLifetime(data.lifetime as LifetimeStats);
       setDetail(data.detail as MemberStatsDetail);
       setSeries(data.series ?? []);
+      setBucket(data.bucket);
     } catch (err) {
       console.error(err);
     } finally {
@@ -100,7 +105,7 @@ export default function AccountStatsClient() {
           My stats
         </h1>
         <p
-          className="mt-2 text-base sm:text-lg text-foreground/80"
+          className="text-base sm:text-lg text-foreground/80 mt-1"
         >
           Views, likes, uploads, storage, and engagement on your content
         </p>
@@ -132,7 +137,17 @@ export default function AccountStatsClient() {
 
       <StatsSection
         title="Activity over time"
-        action={<StatsRangeTabs value={range} onChange={setRange} />}
+        action={(
+          <div
+            className="flex flex-wrap items-center gap-3"
+          >
+            <StatsChartTypeToggle
+              value={chartType}
+              onChange={setChartType}
+            />
+            <StatsRangeTabs value={range} onChange={setRange} />
+          </div>
+        )}
         description="How your content performed in the selected period"
       >
         {isLoading ? (
@@ -153,6 +168,8 @@ export default function AccountStatsClient() {
                 seriesUrl="/api/account/stats/analytics"
                 points={s.points}
                 range={range}
+                bucket={bucket}
+                chartType={chartType}
                 valueFormatter={
                   s.metric === 'storage_added'
                     ? (v) => formatFileSize(v) ?? '0'

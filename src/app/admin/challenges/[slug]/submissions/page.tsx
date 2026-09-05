@@ -16,9 +16,9 @@ import GridCheckbox from '@/components/shared/GridCheckbox';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useChallengeBySlug } from '@/hooks/useChallenges';
 import {
-  useBulkReviewSubmissions,
-  useReviewSubmission,
-  useSubmissionsForReview,
+    useBulkReviewSubmissions,
+    useReviewSubmission,
+    useSubmissionsForReview,
 } from '@/hooks/useChallengeSubmissions';
 import type { SubmissionForReview } from '@/types/challenges';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
@@ -189,7 +189,7 @@ export default function ReviewQueuePage() {
           </h1>
           {challenge && (
             <p
-              className="text-base sm:text-lg mt-2 text-foreground/80"
+              className="text-base sm:text-lg text-foreground/80 mt-1"
             >
               {challenge.title}
             </p>

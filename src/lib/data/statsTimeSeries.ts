@@ -5,6 +5,7 @@ import {
   fillTimeSeriesWindow,
   getRangeConfig,
   parseStorageRpcData,
+  type RangeConfigOptions,
   type StatsBucket,
 } from '@/utils/stats/timeSeries';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -20,10 +21,18 @@ export type StatsSeriesWindow = {
   trimLeading?: boolean;
 };
 
-function resolveWindow(rangeOrWindow: StatsRange | StatsSeriesWindow): StatsSeriesWindow {
+function resolveWindow(
+  rangeOrWindow: StatsRange | StatsSeriesWindow,
+  options?: RangeConfigOptions,
+): StatsSeriesWindow {
   if (typeof rangeOrWindow === 'string') {
-    const { start, end, bucket } = getRangeConfig(rangeOrWindow);
-    return { start, end, bucket, trimLeading: rangeOrWindow === 'all' };
+    const { start, end, bucket } = getRangeConfig(rangeOrWindow, options);
+    return {
+      start,
+      end,
+      bucket,
+      trimLeading: rangeOrWindow === 'all' && !options?.allTimeStart,
+    };
   }
   return rangeOrWindow;
 }
@@ -33,8 +42,9 @@ export async function fetchTimeSeries(
   metric: string,
   rangeOrWindow: StatsRange | StatsSeriesWindow,
   userId?: string,
+  options?: RangeConfigOptions,
 ): Promise<StatsTimeSeriesPoint[]> {
-  const window = resolveWindow(rangeOrWindow);
+  const window = resolveWindow(rangeOrWindow, options);
 
   const { data, error } = await supabase.rpc('get_stats_time_series', {
     p_metric: metric,

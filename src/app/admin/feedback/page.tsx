@@ -67,14 +67,14 @@ export default function AdminFeedbackPage() {
           Feedback
         </h1>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/80"
+          className="text-base sm:text-lg text-foreground/80 mt-1"
         >
           Review user-submitted feedback
         </p>
       </div>
 
       <div
-        className="flex gap-2 mt-6 flex-wrap"
+        className="flex gap-2 mt-6 flex-wrap mb-4"
       >
         {tabs.map((tab) => (
           <Button

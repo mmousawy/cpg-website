@@ -73,8 +73,8 @@ export function truncateDescription(description: string, maxLength = 155): strin
 }
 
 /**
- * Format a profile name for page titles: "Full Name (@nickname)".
- * Falls back to "@nickname" when no full name is set.
+ * Format a profile name for page titles: "Screen Name (@nickname)".
+ * Falls back to "@nickname" when no screen name is set.
  */
 export function formatProfileDisplayName(
   fullName: string | null | undefined,

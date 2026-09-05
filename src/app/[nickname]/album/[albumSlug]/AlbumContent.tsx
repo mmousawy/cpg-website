@@ -1,4 +1,5 @@
 import AlbumSharedActions from '@/components/albums/AlbumSharedActions';
+import EventMiniCard from '@/components/events/EventMiniCard';
 import FullSizeGalleryButton from '@/components/photo/FullSizeGalleryButton';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
@@ -80,30 +81,27 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
         className={clsx(
-          'w-full',
-          // Mobile: padding and min-height
-          'px-4 pt-4 min-h-[calc(100svh-57px)]',
-          // Desktop: flex layout with gap
-          'md:flex md:items-start md:gap-4 md:p-4 md:min-h-[calc(100svh-74px)]',
-          // Large: more gap and padding
+          'flex w-full min-h-[calc(100svh-57px)] flex-col',
+          'px-4 pt-4',
+          // Desktop: fixed viewport height so the gallery column can fill and scroll
+          'md:h-[calc(100svh-74px)] md:min-h-0 md:flex-row md:items-stretch md:gap-4 md:p-4',
           'lg:gap-8 lg:p-8',
         )}
       >
         {/* Gallery column - vertically centers content when short */}
         <div
           className={clsx(
-            'relative w-full flex flex-col justify-center',
-            // Desktop: flex-1 with min-height for vertical centering
-            'md:flex-1 md:min-h-[calc(100svh-105px)]',
-            'lg:min-h-[calc(100svh-137px)]',
+            'relative flex min-h-0 w-full flex-1 flex-col overflow-hidden',
+            'md:min-h-0',
           )}
         >
           {/* Gallery */}
           <div
-            className="w-full"
+            className="flex min-h-0 w-full flex-1 flex-col justify-center overflow-y-auto"
           >
             {photos.length === 0 ? (
               <EmptyState
+                className="h-full min-h-48"
                 icon={<ImageSVG
                   className="size-10 inline-block"
                 />}
@@ -119,10 +117,10 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             )}
           </div>
 
-          {/* Full Size Gallery Button - sticky at bottom of gallery column */}
+          {/* Full Size Gallery Button - pinned to bottom of gallery column */}
           {photos.length > 0 && (
             <div
-              className="sticky bottom-4 mt-4 flex justify-center z-20 md:bottom-8"
+              className="mt-4 flex shrink-0 justify-center z-20 md:mt-6"
             >
               <FullSizeGalleryButton
                 photos={photos}
@@ -135,14 +133,13 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
         {/* Sidebar - sticky, scrollable */}
         <div
           className={clsx(
-            // Mobile: flows normally
-            'mt-4 -mx-4 pt-4 pb-8 px-4',
+            // Mobile: flows normally below gallery
+            'mt-4 -mx-4 shrink-0 pt-4 pb-8 px-4',
             'border-t border-t-border-color bg-background-light',
-            // Desktop: sticky sidebar with fixed width
+            // Desktop: sticky sidebar with fixed width, stretches to row height
             'md:mt-0 md:mx-0 md:w-96 lg:w-lg md:shrink-0',
-            'md:sticky md:self-start md:overflow-y-auto',
-            'md:top-[90px] lg:top-[106px] md:min-h-[calc(100svh-105px)] md:max-h-[calc(100svh-74px)]',
-            'lg:min-h-[calc(100svh-137px)] lg:max-h-[calc(100svh-138px)]',
+            'md:sticky md:top-[90px] lg:top-[106px] md:max-h-[calc(100svh-74px)] md:overflow-y-auto',
+            'lg:max-h-[calc(100svh-138px)]',
             // Desktop: card styling
             'md:pt-6 md:pb-6 md:px-6',
             'md:rounded-lg md:border md:border-border-color',
@@ -204,6 +201,23 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           <div
             className="mt-auto space-y-2 pt-4"
           >
+            {album.event?.slug && (
+              <div
+                className="mb-4"
+              >
+                <p
+                  className="mb-1.5 text-xs font-medium text-foreground/80"
+                >
+                  Linked event
+                </p>
+                <EventMiniCard
+                  title={album.event.title || 'Event'}
+                  coverImageUrl={album.event.cover_image}
+                  href={`/events/${album.event.slug}`}
+                  date={album.event.date}
+                />
+              </div>
+            )}
             {/* Photo count */}
             <div>
               <div

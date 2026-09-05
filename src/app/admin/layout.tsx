@@ -12,13 +12,8 @@ export const metadata = createNoIndexMetadata({
   description: 'Admin dashboard for Creative Photography Group',
 });
 
-async function AdminConnection() {
-  // Opt out of static generation - admin pages require authentication
-  await connection();
-  return null;
-}
-
 async function AdminRoleGuard() {
+  await connection();
   const { user, profile } = await getServerAuth();
 
   // Unauthenticated users are redirected to login by proxy middleware
@@ -37,11 +32,6 @@ export default function AdminLayout({
   return (
     <AuthRouteProvidersLayout>
       <>
-        <Suspense
-          fallback={null}
-        >
-          <AdminConnection />
-        </Suspense>
         <Suspense
           fallback={null}
         >

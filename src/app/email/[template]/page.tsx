@@ -14,6 +14,8 @@ const templates: Record<string, () => Promise<EmailModule>> = {
   'cancel': () => import('../../../emails/cancel') as unknown as Promise<EmailModule>,
   'verify-email': () => import('../../../emails/auth/verify-email') as unknown as Promise<EmailModule>,
   'reset-password': () => import('../../../emails/auth/reset-password') as unknown as Promise<EmailModule>,
+  'change-email': () => import('../../../emails/auth/change-email') as unknown as Promise<EmailModule>,
+  'change-nickname': () => import('../../../emails/auth/change-nickname') as unknown as Promise<EmailModule>,
   'welcome': () => import('../../../emails/auth/welcome') as unknown as Promise<EmailModule>,
   'event-announcement': () => import('../../../emails/event-announcement') as unknown as Promise<EmailModule>,
   'attendee-message': () => import('../../../emails/attendee-message') as unknown as Promise<EmailModule>,

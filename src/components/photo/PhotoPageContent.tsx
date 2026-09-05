@@ -1,5 +1,6 @@
 import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
+import EventMiniCard from '@/components/events/EventMiniCard';
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
@@ -257,6 +258,13 @@ export function PhotoMetadataColumn({
             <div
               className="flex flex-wrap gap-2"
             >
+              {currentEvent && (
+                <EventMiniCard
+                  title={currentEvent.title || 'Event'}
+                  coverImageUrl={currentEvent.cover_image}
+                  href={`/events/${currentEvent.slug}`}
+                />
+              )}
               {currentAlbum && (
                 <AlbumMiniCard
                   title={currentAlbum.title}

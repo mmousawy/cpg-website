@@ -28,6 +28,7 @@ import {
 import type { PendingAlbumInvite, SharedWithMeAlbum } from '@/hooks/useAlbums';
 import { notifyAlbumRequest } from '@/hooks/useSharedAlbumMembers';
 import {
+  invalidateSharedAlbumListQueries,
   prefetchAlbumPhotos,
   prefetchOwnedAlbum,
   prefetchSharedAlbum,
@@ -1128,8 +1129,7 @@ function PendingInviteSidebar({
       return action;
     },
     onSuccess: async (action) => {
-      queryClient.invalidateQueries({ queryKey: ['pending-album-invites', userId] });
-      queryClient.invalidateQueries({ queryKey: ['shared-with-me-albums', userId] });
+      invalidateSharedAlbumListQueries(queryClient, userId);
       onResolved();
       const ownerNickname = album.owner_profile?.nickname;
       if (action === 'accept' && ownerNickname && album.slug) {

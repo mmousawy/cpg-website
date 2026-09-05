@@ -5,19 +5,19 @@ import HelpLink from '@/components/shared/HelpLink';
 import { createMetadata } from '@/utils/metadata';
 
 import {
-  getCpgPastSceneEvents,
-  getCpgUpcomingSceneEvents,
-  mergePastWithCpg,
-  mergeUpcomingWithCpg,
+    getCpgPastSceneEvents,
+    getCpgUpcomingSceneEvents,
+    mergePastWithCpg,
+    mergeUpcomingWithCpg,
 } from '@/data/cpg-scene-events';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { cpgEventToSceneEvent } from '@/lib/data/cpg-events-to-scene';
 import { getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 import {
-  getPastSceneEvents,
-  getSceneEventInterests,
-  getUpcomingSceneEvents,
+    getPastSceneEvents,
+    getSceneEventInterests,
+    getUpcomingSceneEvents,
 } from '@/lib/data/scene';
-import { getServerNow } from '@/lib/cache/serverNow';
 import { getAmsterdamDateString } from '@/lib/events/status';
 
 const PAST_EVENTS_PER_PAGE = 20;
@@ -97,7 +97,7 @@ export default async function ScenePage() {
           <AddSceneEventButton />
         </div>
         <p
-          className="text-base sm:text-lg mt-2 text-foreground/80"
+          className="text-base sm:text-lg text-foreground/80 mt-1"
         >
           A community-curated guide to photography events.
           <br />

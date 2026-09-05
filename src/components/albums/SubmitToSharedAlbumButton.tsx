@@ -9,6 +9,7 @@ import { useMyPhotoCountInAlbum } from '@/hooks/useSharedAlbumSubmissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useContext } from 'react';
+import SubmissionSuccessContent from '@/components/challenges/SubmissionSuccessContent';
 import SubmitToSharedAlbumContent from './SubmitToSharedAlbumContent';
 
 import CheckCircleSVG from 'public/icons/check-circle.svg';
@@ -68,53 +69,39 @@ function SubmitToSharedAlbumButtonAuthenticated(props: SubmitToSharedAlbumButton
   const showSuccessModal = (submittedCount: number, photoUrls: string[]) => {
     const handleClose = () => modalContext.setIsOpen(false);
 
-    modalContext.setSize('small');
+    modalContext.setSize('default');
+    modalContext.setFlushContentTop(false);
     modalContext.setTitle('');
     modalContext.setContent(
+      <SubmissionSuccessContent
+        variant="album"
+        destinationTitle={albumTitle}
+        submittedCount={submittedCount}
+        photoUrls={photoUrls}
+      />,
+    );
+    modalContext.setFooter(
       <div
-        className="flex flex-col items-center gap-4 py-4"
+        className="flex flex-wrap justify-center gap-3 w-full"
       >
-        <CheckCircleSVG
-          className="size-12 text-green-500"
-        />
-        <p
-          className="text-center text-foreground"
+        <Button
+          onClick={handleClose}
+          variant="primary"
+          className="min-w-[120px]"
         >
-          Added
-          {' '}
-          {submittedCount}
-          {' '}
-          photo
-          {submittedCount !== 1 ? 's' : ''}
-          {' '}
-          to
-          {' '}
-          {albumTitle}
-        </p>
-        <div
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full"
+          Got it!
+        </Button>
+        <Button
+          onClick={() => {
+            handleClose();
+            router.push(ownerNickname ? `/@${ownerNickname}/album/${albumSlug}` : '/gallery');
+          }}
+          variant="secondary"
         >
-          <Button
-            onClick={handleClose}
-            variant="primary"
-            className="min-w-[120px]"
-          >
-            Got it!
-          </Button>
-          <Button
-            onClick={() => {
-              handleClose();
-              router.push(ownerNickname ? `/@${ownerNickname}/album/${albumSlug}` : '/gallery');
-            }}
-            variant="secondary"
-          >
-            View album
-          </Button>
-        </div>
+          View album
+        </Button>
       </div>,
     );
-    modalContext.setFooter(null);
-    modalContext.setIsOpen(true);
   };
 
   const handleClick = () => {

@@ -2,12 +2,12 @@
 
 import { FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form';
 
+import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { routes } from '@/config/routes';
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 
 interface OnboardingFinishSectionProps {
   register: UseFormRegister<OnboardingFormData>;
@@ -35,7 +35,7 @@ export default function OnboardingFinishSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70 font-heading"
+        className="mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         One last step
       </h2>

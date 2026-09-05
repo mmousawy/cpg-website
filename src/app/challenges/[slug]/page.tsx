@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 // Cached data functions
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
+import { getServerNow } from '@/lib/cache/serverNow';
 import {
   getAllChallengeSlugs,
   getChallengeBySlug,
@@ -15,7 +16,6 @@ import {
   getChallengeContributors,
   getChallengePhotos,
 } from '@/lib/data/challenges';
-import { getServerNow } from '@/lib/cache/serverNow';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
@@ -289,7 +289,7 @@ export default async function ChallengePage({
       )}
 
       <PageContainer
-        className={challenge.cover_image_url ? 'pt-6! sm:pt-8!' : ''}
+        className={challenge.cover_image_url ? 'pt-6! sm:pt-8! pb-4 sm:pb-8!' : ''}
       >
         <Container>
           {/* Title (if no cover image) */}
@@ -432,6 +432,17 @@ export default async function ChallengePage({
                 html={challenge.prompt}
                 className="max-sm:text-sm text-foreground/90 leading-relaxed max-w-[50ch] mb-4"
               />
+
+              <div
+                className="mt-6 mb-4"
+              >
+                <ShareButton
+                  url={challengeUrl}
+                  title={challengeShareTitle}
+                  image={challengeShareImage}
+                  label="Share this challenge"
+                />
+              </div>
             </div>
           </div>
 
@@ -466,17 +477,6 @@ export default async function ChallengePage({
               </Button>
             )}
           </div>
-
-          <div
-            className="mt-6"
-          >
-            <ShareButton
-              url={challengeUrl}
-              title={challengeShareTitle}
-              image={challengeShareImage}
-              label="Share this challenge"
-            />
-          </div>
         </Container>
 
         {/* Color Draw - gated by has_color_draw */}
@@ -491,7 +491,7 @@ export default async function ChallengePage({
         {/* Empty state - separate section, narrow column when no photos */}
         {photos.length === 0 && (
           <div
-            className="mt-8"
+            className="mt-4 sm:mt-8"
           >
             <ChallengeEmptyState
               isEnded={isEnded}
@@ -533,7 +533,7 @@ export default async function ChallengePage({
 function ChallengeEmptyState({ isEnded }: { isEnded: boolean }) {
   return (
     <EmptyState
-      className="max-w-md mx-auto"
+      className="max-w-xl2 mx-auto"
       icon={<AwardStarSVG
         className="size-10 fill-primary inline-block"
       />}

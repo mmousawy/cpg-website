@@ -623,7 +623,7 @@ export default function ReportsPage() {
             Content reports
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/80"
+            className="text-base sm:text-lg text-foreground/80 mt-1"
           >
             Review and manage user-submitted content reports
           </p>
@@ -631,7 +631,7 @@ export default function ReportsPage() {
 
         {/* Tabs */}
         <div
-          className="flex gap-2 mt-6 flex-wrap"
+          className="flex gap-2 mt-6 flex-wrap mb-4"
         >
           {tabs.map((tab) => (
             <Button

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { formatFileSize } from '@/utils/formatFileSize';
-import { buildEmptyBuckets, bucketForSpanMs, fillStorageTimeSeries, fillTimeSeries, getRangeConfig, isFinerBucket, parseStorageRpcData } from '@/utils/stats/timeSeries';
+import { allTimeBucket, buildEmptyBuckets, bucketForSpanMs, fillStorageTimeSeries, fillTimeSeries, getRangeConfig, isFinerBucket, parseStorageRpcData } from '@/utils/stats/timeSeries';
 
 describe('formatFileSize', () => {
   it('formats bytes', () => {
@@ -25,33 +25,64 @@ describe('timeSeries', () => {
     expect(buildEmptyBuckets('30d').length).toBe(30);
   });
 
-  it('returns monthly UTC bucket keys for all time', () => {
+  it('uses day buckets when all time spans a few months', () => {
+    const created = new Date();
+    created.setUTCDate(created.getUTCDate() - 40);
+    created.setUTCHours(15, 30, 0, 0);
+    const dayKey = created.toISOString().slice(0, 10);
+    const { start, bucket } = getRangeConfig('all', { allTimeStart: created });
+    expect(bucket).toBe('day');
+    expect(start.toISOString().slice(0, 10)).toBe(dayKey);
+    const keys = buildEmptyBuckets('all', { allTimeStart: created });
+    expect(keys[0]).toBe(dayKey);
+    expect(keys.includes('2020-01-01')).toBe(false);
+
+    const mid = keys[Math.floor(keys.length / 2)];
+    const filled = fillTimeSeries('all', [{ date: mid, value: 3 }], { allTimeStart: created });
+    expect(filled[0]?.date).toBe(dayKey);
+    expect(filled[0]?.value).toBe(0);
+    expect(filled.find((p) => p.date === mid)?.value).toBe(3);
+  });
+
+  it('uses week buckets when all time spans years', () => {
+    const created = new Date();
+    created.setUTCFullYear(created.getUTCFullYear() - 3);
+    created.setUTCHours(12, 0, 0, 0);
+    const { start, bucket } = getRangeConfig('all', { allTimeStart: created });
+    expect(bucket).toBe('week');
+    expect(start.getUTCDay()).toBe(1);
+    const keys = buildEmptyBuckets('all', { allTimeStart: created });
+    expect(keys[0]).toBe(start.toISOString().slice(0, 10));
+    expect(keys.length).toBeGreaterThan(100);
+  });
+
+  it('returns weekly UTC bucket keys for all time', () => {
     const { bucket } = getRangeConfig('all');
-    expect(bucket).toBe('month');
+    expect(bucket).toBe('week');
     const keys = buildEmptyBuckets('all');
-    expect(keys[0]).toBe('2020-01-01');
-    expect(keys.includes('2024-06-01')).toBe(true);
+    expect(keys[0]).toBe('2019-12-30');
+    expect(keys.includes('2024-06-03')).toBe(true);
   });
 
-  it('starts all-time charts at the first non-zero month', () => {
+  it('starts all-time charts at the first non-zero week', () => {
     const filled = fillTimeSeries('all', [
-      { date: '2024-06-01', value: 100 },
-      { date: '2025-01-01', value: 50 },
+      { date: '2024-06-03', value: 100 },
+      { date: '2025-01-06', value: 50 },
     ]);
-    expect(filled[0]?.date).toBe('2024-06-01');
-    expect(filled.find((p) => p.date === '2020-01-01')).toBeUndefined();
-    expect(filled.find((p) => p.date === '2024-06-01')?.value).toBe(100);
-    expect(filled.find((p) => p.date === '2025-01-01')?.value).toBe(50);
+    expect(filled[0]?.date).toBe('2024-06-03');
+    expect(filled.find((p) => p.date === '2019-12-30')).toBeUndefined();
+    expect(filled.find((p) => p.date === '2024-06-03')?.value).toBe(100);
+    expect(filled.find((p) => p.date === '2025-01-06')?.value).toBe(50);
   });
 
-  it('starts all-time storage at the first month with data', () => {
+  it('starts all-time storage at the first week with data', () => {
     const filled = fillStorageTimeSeries('all', [
-      { date: '2024-06-01', value: 1000 },
-      { date: '2024-07-01', value: 2500 },
+      { date: '2024-06-03', value: 1000 },
+      { date: '2024-06-10', value: 2500 },
     ]);
-    expect(filled[0]?.date).toBe('2024-06-01');
+    expect(filled[0]?.date).toBe('2024-06-03');
     expect(filled[0]?.value).toBe(1000);
-    expect(filled.find((p) => p.date === '2020-01-01')).toBeUndefined();
+    expect(filled.find((p) => p.date === '2019-12-30')).toBeUndefined();
   });
 
   it('starts from baseline when bucket points are missing', () => {
@@ -101,5 +132,6 @@ describe('timeSeries', () => {
     expect(bucketForSpanMs(800 * 24 * 60 * 60 * 1000)).toBe('month');
     expect(isFinerBucket('day', 'month')).toBe(true);
     expect(isFinerBucket('day', 'day')).toBe(false);
+    expect(allTimeBucket(800 * 24 * 60 * 60 * 1000)).toBe('week');
   });
 });

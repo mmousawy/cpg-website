@@ -1,5 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  buildAtNicknamePath,
+  profileNicknameExists,
+  resolveNicknameRedirect,
+} from '@/lib/nicknameRedirect';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import {
   matchesPath,
@@ -34,10 +39,28 @@ const KNOWN_ROUTES = new Set([
 
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const firstSegment = pathname.split('/')[1];
+
+  // 301 from old @-nickname URLs to the member's current nickname
+  if (firstSegment?.startsWith('@')) {
+    const oldNickname = decodeURIComponent(firstSegment.slice(1));
+    if (oldNickname) {
+      try {
+        const currentNickname = await resolveNicknameRedirect(oldNickname);
+        if (currentNickname && currentNickname !== oldNickname) {
+          const url = request.nextUrl.clone();
+          const rest = pathname.slice(firstSegment.length + 1);
+          url.pathname = buildAtNicknamePath(currentNickname, rest);
+          return NextResponse.redirect(url, 301);
+        }
+      } catch {
+        // Fall through to normal routing
+      }
+    }
+  }
 
   // Redirect bare nickname URLs to @-prefixed versions (e.g. /johndoe → /@johndoe)
-  // Only redirect if the nickname actually exists in the database
-  const firstSegment = pathname.split('/')[1];
+  // Only redirect if the nickname exists or has an active redirect
   if (
     firstSegment &&
     !KNOWN_ROUTES.has(firstSegment) &&
@@ -45,26 +68,22 @@ export default async function proxy(request: NextRequest) {
     !firstSegment.startsWith('_next') &&
     !firstSegment.includes('.')
   ) {
-    // Check if this is an actual profile nickname before redirecting
+    const bareNickname = decodeURIComponent(firstSegment);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?nickname=eq.${encodeURIComponent(firstSegment)}&select=nickname&limit=1`,
-        {
-          headers: {
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-          },
-        },
-      );
+      const exists = await profileNicknameExists(bareNickname);
+      if (exists) {
+        const url = request.nextUrl.clone();
+        const rest = pathname.slice(firstSegment.length + 1);
+        url.pathname = buildAtNicknamePath(bareNickname, rest);
+        return NextResponse.redirect(url, 301);
+      }
 
-      if (res.ok) {
-        const profiles = await res.json();
-        if (profiles.length > 0) {
-          const url = request.nextUrl.clone();
-          const rest = pathname.slice(firstSegment.length + 1);
-          url.pathname = `/@${firstSegment}${rest}`;
-          return NextResponse.redirect(url, 301);
-        }
+      const redirectedNickname = await resolveNicknameRedirect(bareNickname);
+      if (redirectedNickname) {
+        const url = request.nextUrl.clone();
+        const rest = pathname.slice(firstSegment.length + 1);
+        url.pathname = buildAtNicknamePath(redirectedNickname, rest);
+        return NextResponse.redirect(url, 301);
       }
     } catch {
       // If the check fails, fall through and let Next.js handle the route

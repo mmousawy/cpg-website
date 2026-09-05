@@ -291,6 +291,7 @@ export type Database = {
           expires_at: string
           id: string
           new_email: string | null
+          new_nickname: string | null
           token_hash: string
           token_type: string
           used_at: string | null
@@ -302,6 +303,7 @@ export type Database = {
           expires_at: string
           id?: string
           new_email?: string | null
+          new_nickname?: string | null
           token_hash: string
           token_type: string
           used_at?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           expires_at?: string
           id?: string
           new_email?: string | null
+          new_nickname?: string | null
           token_hash?: string
           token_type?: string
           used_at?: string | null
@@ -1369,6 +1372,35 @@ export type Database = {
           },
         ]
       }
+      nickname_redirects: {
+        Row: {
+          created_at: string
+          expires_at: string
+          old_nickname: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          old_nickname: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          old_nickname?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'nickname_redirects_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profile_interests: {
         Row: {
           created_at: string | null
@@ -1418,6 +1450,7 @@ export type Database = {
           last_logged_in: string | null
           newsletter_opt_in: boolean
           nickname: string | null
+          nickname_changed_at: string | null
           onboarding_reminder_sent_at: string | null
           search_vector: unknown
           social_links: Json | null
@@ -1450,6 +1483,7 @@ export type Database = {
           last_logged_in?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
+          nickname_changed_at?: string | null
           onboarding_reminder_sent_at?: string | null
           search_vector?: unknown
           social_links?: Json | null
@@ -1482,6 +1516,7 @@ export type Database = {
           last_logged_in?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
+          nickname_changed_at?: string | null
           onboarding_reminder_sent_at?: string | null
           search_vector?: unknown
           social_links?: Json | null
@@ -1995,6 +2030,18 @@ export type Database = {
       generate_short_id: { Args: { size?: number }; Returns: string }
       get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
       get_own_profile: { Args: never; Returns: Json }
+      is_nickname_available: {
+        Args: { p_nickname: string; p_user_id?: string }
+        Returns: boolean
+      }
+      resolve_nickname_redirect: {
+        Args: { p_nickname: string }
+        Returns: string
+      }
+      admin_undo_nickname_change: {
+        Args: { p_profile_id: string; p_restore_nickname: string }
+        Returns: undefined
+      }
       get_photo_exif: { Args: { p_photo_id: string }; Returns: Json }
       get_profile_stats: { Args: { p_user_id: string }; Returns: Json }
       get_rsvp_by_uuid: { Args: { p_uuid: string }; Returns: Json }

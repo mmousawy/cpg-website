@@ -1,5 +1,6 @@
 import { fetchTimeSeries } from '@/lib/data/statsTimeSeries';
 import type { MemberStatsDetail, StatsBreakdownItem, StatsRange, StatsRankedItem } from '@/types/stats';
+import { getRangeConfig } from '@/utils/stats/timeSeries';
 import { createClient } from '@/utils/supabase/server';
 
 export type { MemberStatsDetail };
@@ -60,16 +61,21 @@ export async function getMemberStatsDetail(userId: string, nickname: string): Pr
   };
 }
 
-export async function getMemberTimeSeries(userId: string, range: StatsRange) {
+export async function getMemberTimeSeries(
+  userId: string,
+  range: StatsRange,
+  allTimeStart?: Date,
+) {
   const supabase = await createClient();
   const metrics = ['uploads', 'views', 'likes', 'storage_added', 'followers_gained'] as const;
+  const { bucket } = getRangeConfig(range, { allTimeStart });
 
   const series = await Promise.all(
     metrics.map(async (metric) => ({
       metric,
-      points: await fetchTimeSeries(supabase, metric, range, userId),
+      points: await fetchTimeSeries(supabase, metric, range, userId, { allTimeStart }),
     })),
   );
 
-  return series;
+  return { bucket, series };
 }

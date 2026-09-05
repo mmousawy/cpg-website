@@ -19,6 +19,7 @@ import { validateImage } from '@/utils/imageValidation';
 import { uploadUserStorageFile } from '@/utils/supabaseStorage';
 import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
 import { isProfileComplete } from '@/utils/profileCompletion';
+import { nicknameSchema } from '@/utils/nickname';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createElement, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -41,18 +42,11 @@ function getPostOnboardingRedirect(redirectTo: string | null): string {
 
 // Zod schema for onboarding validation
 const onboardingSchema = z.object({
-  nickname: z
-    .string()
-    .min(3, 'Nickname must be at least 3 characters')
-    .max(30, 'Nickname must be at most 30 characters')
-    .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens allowed')
-    .refine((val) => !val.startsWith('-') && !val.endsWith('-'), {
-      message: 'Nickname cannot start or end with a hyphen',
-    }),
+  nickname: nicknameSchema,
   fullName: z
     .string()
     .trim()
-    .min(2, 'Please enter your full name'),
+    .min(2, 'Please enter your screen name'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   bio: z.string().optional(),
   interests: z.array(z.string()),
@@ -223,17 +217,16 @@ export default function OnboardingClient() {
 
     setIsCheckingNickname(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('nickname', nickname)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('is_nickname_available', {
+        p_nickname: nickname,
+        p_user_id: user?.id ?? undefined,
+      });
 
       if (error) {
         console.error('Error checking nickname:', error);
         setNicknameAvailable(null);
       } else {
-        setNicknameAvailable(data === null);
+        setNicknameAvailable(data === true);
       }
     } catch (err) {
       console.error('Error checking nickname:', err);

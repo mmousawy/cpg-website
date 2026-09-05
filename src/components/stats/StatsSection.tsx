@@ -14,7 +14,7 @@ export default function StatsSection({ title, description, children, action }: S
       className="space-y-6"
     >
       <div
-        className="flex flex-wrap items-start justify-between gap-3"
+        className="space-y-4"
       >
         <div>
           <h2

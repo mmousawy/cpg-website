@@ -13,7 +13,7 @@ export default function AdminToolsPage() {
         Admin tools
       </h1>
       <p
-        className="text-base sm:text-lg mt-2 text-foreground/80"
+        className="text-base sm:text-lg text-foreground/80 mt-1"
       >
         Administrative utilities and settings
       </p>

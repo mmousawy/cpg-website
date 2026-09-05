@@ -35,15 +35,15 @@ export async function GET(request: NextRequest) {
     const metric = params.get('metric');
     const from = params.get('from');
     const to = params.get('to');
-    const bucket = parseBucket(params.get('bucket'));
+    const zoomBucket = parseBucket(params.get('bucket'));
 
-    if (metric && from && to && bucket) {
+    if (metric && from && to && zoomBucket) {
       const start = new Date(from);
       const end = new Date(to);
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return NextResponse.json({ error: 'Invalid date range' }, { status: 400 });
       }
-      const points = await fetchTimeSeries(supabase, metric, { start, end, bucket });
+      const points = await fetchTimeSeries(supabase, metric, { start, end, bucket: zoomBucket });
       return NextResponse.json({ series: [{ metric, points }] });
     }
 
@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ overview });
     }
 
-    const series = await getAdminTimeSeries(range);
-    return NextResponse.json({ overview, range, series });
+    const { bucket, series } = await getAdminTimeSeries(range);
+    return NextResponse.json({ overview, range, bucket, series });
   } catch (error) {
     console.error('admin stats API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -687,7 +687,7 @@ function AdminEventForm() {
             )}
           </div>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/80"
+            className="text-base sm:text-lg text-foreground/80 mt-1"
           >
             {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
           </p>

@@ -4,18 +4,61 @@ import Image from 'next/image';
 
 import AwardStarSVG from 'public/icons/award-star.svg';
 import CheckAddSVG from 'public/icons/check-add.svg';
+import SharedAlbumSVG from 'public/icons/shared-album.svg';
+
+type SubmissionSuccessVariant = 'challenge' | 'album';
 
 interface SubmissionSuccessContentProps {
-  challengeTitle: string;
+  destinationTitle: string;
   submittedCount: number;
   photoUrls?: string[];
+  variant?: SubmissionSuccessVariant;
 }
 
+const variantConfig = {
+  challenge: {
+    badgeClassName: 'bg-challenge-badge/10 border-challenge-badge/30',
+    badgeTextClassName: 'text-challenge-badge',
+    badgeIconClassName: 'fill-challenge-badge',
+    infoBoxClassName: 'bg-challenge-badge/10 border-challenge-badge/30',
+    infoHeadingClassName: 'text-challenge-badge',
+    heading: "You're in!",
+    subtitle: (count: number) => (
+      count === 1
+        ? 'Your photo has been submitted'
+        : `Your ${count} photos have been submitted`
+    ),
+    infoHeading: 'What happens next?',
+    infoText: 'Your submission is now pending review. Once approved, your photo will appear in the challenge gallery for everyone to see!',
+    BadgeIcon: AwardStarSVG,
+  },
+  album: {
+    badgeClassName: 'bg-primary/10 border-primary/30',
+    badgeTextClassName: 'text-primary',
+    badgeIconClassName: 'fill-primary',
+    infoBoxClassName: 'bg-primary/10 border-primary/30',
+    infoHeadingClassName: 'text-primary',
+    heading: 'Photos added!',
+    subtitle: (count: number) => (
+      count === 1
+        ? 'Your photo has been added to the album'
+        : `Your ${count} photos have been added to the album`
+    ),
+    infoHeading: 'What happens next?',
+    infoText: 'Your photos are now visible in the album for everyone to enjoy!',
+    BadgeIcon: SharedAlbumSVG,
+  },
+} as const;
+
 export default function SubmissionSuccessContent({
-  challengeTitle,
+  destinationTitle,
   submittedCount,
   photoUrls = [],
+  variant = 'challenge',
 }: SubmissionSuccessContentProps) {
+  const config = variantConfig[variant];
+  const BadgeIcon = config.BadgeIcon;
+
   // Show up to 4 photos in stack
   const stackedPhotos = photoUrls.slice(0, 4);
   const hasPhotos = stackedPhotos.length > 0;
@@ -100,17 +143,17 @@ export default function SubmissionSuccessContent({
         )}
       </div>
 
-      {/* Challenge name */}
+      {/* Destination name */}
       <div
-        className="inline-flex items-center gap-2 rounded-full bg-challenge-badge/10 px-3 py-1 mb-6 backdrop-blur-sm border border-challenge-badge/30"
+        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 mb-6 backdrop-blur-sm border ${config.badgeClassName}`}
       >
-        <AwardStarSVG
-          className="size-4 fill-challenge-badge"
+        <BadgeIcon
+          className={`size-4 ${config.badgeIconClassName}`}
         />
         <span
-          className="text-base font-medium text-challenge-badge"
+          className={`text-base font-medium ${config.badgeTextClassName}`}
         >
-          {challengeTitle}
+          {destinationTitle}
         </span>
       </div>
 
@@ -118,32 +161,30 @@ export default function SubmissionSuccessContent({
       <h2
         className="text-xl font-bold text-foreground"
       >
-        You&apos;re in!
+        {config.heading}
       </h2>
 
       {/* Subtitle */}
       <p
         className="text-lg text-foreground/80 mb-4"
       >
-        {submittedCount === 1
-          ? 'Your photo has been submitted'
-          : `Your ${submittedCount} photos have been submitted`}
+        {config.subtitle(submittedCount)}
       </p>
 
       {/* Info box */}
       <div
-        className="w-full max-w-sm rounded-lg bg-challenge-badge/10 border border-challenge-badge/30 p-3"
+        className={`w-full max-w-sm rounded-lg border p-3 ${config.infoBoxClassName}`}
       >
         <p
           className="text-sm"
         >
           <strong
-            className="inline-block mb-2 text-challenge-badge"
+            className={`inline-block mb-2 ${config.infoHeadingClassName}`}
           >
-            What happens next?
+            {config.infoHeading}
           </strong>
           <br />
-          Your submission is now pending review. Once approved, your photo will appear in the challenge gallery for everyone to see!
+          {config.infoText}
         </p>
       </div>
     </div>

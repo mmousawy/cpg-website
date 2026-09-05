@@ -2,6 +2,7 @@ import type { SharedAlbumMember, SharedAlbumRequest } from '@/types/albums';
 import { supabase } from '@/utils/supabase/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { revalidateAlbumBySlug } from '@/app/actions/revalidate';
+import { invalidateSharedAlbumListQueries } from '@/hooks/useAlbums';
 
 type JoinResult = { status: 'joined' | 'requested' | 'already_member' | 'already_requested' };
 type InviteResult = { created: number; skipped_existing_member: number; skipped_pending: number };
@@ -115,7 +116,7 @@ export function useJoinSharedAlbum(
   albumId: string | undefined,
   ownerNickname: string | null,
   albumSlug: string,
-  options?: { albumTitle?: string; ownerId?: string },
+  options?: { albumTitle?: string; ownerId?: string; userId?: string },
 ) {
   const queryClient = useQueryClient();
 
@@ -131,6 +132,9 @@ export function useJoinSharedAlbum(
         queryClient.invalidateQueries({ queryKey: ['shared-album-members', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-requests', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
+      }
+      if (result?.status === 'joined') {
+        invalidateSharedAlbumListQueries(queryClient, options?.userId);
       }
       if (ownerNickname) {
         await revalidateAlbumBySlug(ownerNickname, albumSlug);
@@ -159,6 +163,7 @@ export function useLeaveSharedAlbum(
   albumId: string | undefined,
   ownerNickname: string | null,
   albumSlug: string,
+  userId?: string,
 ) {
   const queryClient = useQueryClient();
 
@@ -173,8 +178,51 @@ export function useLeaveSharedAlbum(
         queryClient.invalidateQueries({ queryKey: ['shared-album-members', albumId] });
         queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
       }
+      invalidateSharedAlbumListQueries(queryClient, userId);
       if (ownerNickname) {
         await revalidateAlbumBySlug(ownerNickname, albumSlug);
+      }
+    },
+  });
+}
+
+export function useAcceptAlbumInvite(
+  albumId: string | undefined,
+  ownerNickname: string | null,
+  albumSlug: string,
+  userId: string | undefined,
+  options?: { albumTitle?: string; ownerId?: string },
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (requestId: number) => {
+      const { error } = await supabase.rpc('resolve_album_request', {
+        p_request_id: requestId,
+        p_action: 'accept',
+      });
+      if (error) throw new Error(error.message || 'Failed to accept invite');
+    },
+    onSuccess: async () => {
+      if (albumId) {
+        queryClient.invalidateQueries({ queryKey: ['shared-album-members', albumId] });
+        queryClient.invalidateQueries({ queryKey: ['shared-album-requests', albumId] });
+        queryClient.invalidateQueries({ queryKey: ['shared-album-membership', albumId] });
+      }
+      invalidateSharedAlbumListQueries(queryClient, userId);
+      if (ownerNickname) {
+        await revalidateAlbumBySlug(ownerNickname, albumSlug);
+      }
+      if (albumId && ownerNickname && options?.albumTitle && options?.ownerId && userId) {
+        await notifyAlbumRequest({
+          type: 'shared_album_invite_accepted',
+          albumId,
+          albumTitle: options.albumTitle,
+          albumSlug,
+          ownerNickname,
+          ownerId: options.ownerId,
+          accepterId: userId,
+        });
       }
     },
   });
