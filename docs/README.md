@@ -4,7 +4,11 @@
 
 ### Deployment
 
-- **[deployment/coolify.md](./deployment/coolify.md)** - Self-host on a VPS with Coolify (Docker, crons, staging, cutover)
+- **[deployment/coolify.md](./deployment/coolify.md)** - Self-host on a VPS with Coolify (Docker, crons, staging, production)
+- **[../infra/coolify/PORTS.md](../infra/coolify/PORTS.md)** - Host port convention (prod `:3000`, staging `:2000`)
+- **[../infra/coolify/production-cutover.md](../infra/coolify/production-cutover.md)** - DNS cutover from Vercel to Coolify
+- **[../infra/coolify/production-checklist.md](../infra/coolify/production-checklist.md)** - Production smoke tests
+- **[../infra/supabase-staging/README.md](../infra/supabase-staging/README.md)** - Isolated staging Supabase on the same VPS
 
 ### Caching & Revalidation
 

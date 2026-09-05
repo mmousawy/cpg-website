@@ -1,0 +1,33 @@
+# Example override for /data/supabase-staging/docker-compose.override.yml
+# Kong on 127.0.0.1:8002 so production can keep :8000.
+# Optional: expose Postgres on 127.0.0.1:5433 for `supabase db push` from the VPS.
+
+services:
+  kong:
+    container_name: supabase-staging-kong
+    ports:
+      - "127.0.0.1:8002:8000"
+      - "127.0.0.1:8444:8443"
+
+  db:
+    container_name: supabase-staging-db
+    ports:
+      - "127.0.0.1:5433:5432"
+
+  auth:
+    container_name: supabase-staging-auth
+
+  rest:
+    container_name: supabase-staging-rest
+
+  storage:
+    container_name: supabase-staging-storage
+
+  imgproxy:
+    container_name: supabase-staging-imgproxy
+
+  meta:
+    container_name: supabase-staging-meta
+
+  realtime:
+    container_name: supabase-staging-realtime

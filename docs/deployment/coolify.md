@@ -1,90 +1,85 @@
 # Deploy on Coolify (VPS)
 
-Self-host the Next.js app on your VPS with [Coolify](https://coolify.io) while keeping **hosted Supabase**, Resend, and OAuth providers.
+Self-host the Next.js app on your VPS with [Coolify](https://coolify.io). Production and staging are separate Coolify apps behind **Nginx** (not Coolify Traefik). Supabase stays self-hosted (`db.creativephotography.group` prod, optional `db-staging` for sandbox).
+
+## Port convention
+
+**Production = default ports. Staging = host port − 1000.**
+
+| Environment | Site | Coolify mapping | Nginx upstream |
+| --- | --- | --- | --- |
+| **Production** | `creativephotography.group`, `www` | `127.0.0.1:3000:3000` | `127.0.0.1:3000` |
+| **Staging** | `staging.creativephotography.group` | `127.0.0.1:2000:3000` | `127.0.0.1:2000` |
+
+Containers always use port **3000** internally. See [infra/coolify/PORTS.md](../../infra/coolify/PORTS.md) for the full table (including Supabase Kong).
 
 ## Architecture
 
 ```
-Visitor → Cloudflare → Coolify (Traefik) → Docker (Next.js) → Supabase / Resend
+Visitor → Cloudflare → Nginx (80/443) → Coolify Next container → Supabase / Resend
                               ↑
                     Coolify scheduled tasks (crons)
 ```
 
+| Environment | Site | Supabase |
+| --- | --- | --- |
+| Staging | `staging.creativephotography.group` | `db-staging.creativephotography.group` (isolated) |
+| Production | `creativephotography.group`, `www` | `db.creativephotography.group` |
+
 ## 1. VPS and Coolify install
 
-**Recommended:** 4 vCPU, 8 GB RAM, 40+ GB disk (Next.js builds are memory-heavy).
+See [install-firewall.sh](../../infra/coolify/install-firewall.sh) and [Coolify docs](https://coolify.io/docs).
 
-On Ubuntu LTS:
+Dashboard: `https://coolify.creativephotography.group` (Nginx → `127.0.0.1:9000`).
 
-```bash
-# From repo: infra/coolify/install-firewall.sh
-sudo bash infra/coolify/install-firewall.sh
+## 2. Staging application
 
-curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
-```
+1. **Sources → GitHub App** → `mmousawy/cpg-website`, branch `migration` or `main`.
+2. **Build pack:** Dockerfile, container port **3000**.
+3. **Ports mappings:** `127.0.0.1:2000:3000` (host **2000** = prod 3000 − 1000).
+4. Nginx: [nginx-staging.conf](../../infra/coolify/nginx-staging.conf) → `proxy_pass http://127.0.0.1:2000`.
+5. **Health check:** `/api/health`.
 
-Open `http://YOUR_VPS_IP:8000`, create admin account, then:
-
-1. Set dashboard FQDN (e.g. `https://coolify.creativephotography.group:8000` or Coolify’s HTTPS domain UI).
-2. Cloudflare: **SSL/TLS → Full (strict)**; disable **Rocket Loader** for the zone.
-3. Restrict port `8000` to your IP after setup.
-
-## 2. Application setup (staging)
-
-1. **Sources → GitHub App** → install for `mmousawy/cpg-website`.
-2. **+ New** → Application → select repo, branch `main`.
-3. **Build Pack:** Dockerfile  
-4. **Ports Exposes:** `3000`  
-5. **Domain:** `https://staging.creativephotography.group:3000`
-6. **Health check:** path `/api/health`
-7. Cloudflare DNS: `staging` A record → VPS IP (proxied).
-
-### Environment variables
-
-Copy from Vercel / `.env.local` (never commit secrets). Mark **build-time** for all `NEXT_PUBLIC_*`:
+### Staging env
 
 | Variable | Build-time | Notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | |
-| `NEXT_PUBLIC_SITE_URL` | Yes | Staging: `https://staging.creativephotography.group` |
-| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Yes | If used |
-| `SUPABASE_SERVICE_ROLE_KEY` | No | |
-| `RESEND_API_KEY` | No | |
-| `CRON_SECRET` | No | For scheduled tasks |
-| `ENCRYPTION_KEY` / `ENCRYPT_KEY` | No | |
-| `EMAIL_*` | No | |
-| `EMAIL_ASSETS_URL` | No | Match staging URL on staging |
-| `REVALIDATION_SECRET` | No | |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | `https://db-staging.creativephotography.group` |
+| `NEXT_PUBLIC_SITE_URL` | Yes | `https://staging.creativephotography.group` |
+| `SUPABASE_SERVICE_ROLE_KEY` | No | staging keys |
 
-**Rebuild** after changing any `NEXT_PUBLIC_*` value.
+Staging Supabase: [infra/supabase-staging/README.md](../../infra/supabase-staging/README.md).
 
-### Deploy
+QA: [staging-checklist.md](../../infra/coolify/staging-checklist.md).
 
-Click **Deploy**. First build may take several minutes. Check logs for OOM or missing build env.
+## 3. Production application
 
-## 3. Scheduled tasks
+See [production-cutover.md](../../infra/coolify/production-cutover.md) and [production-checklist.md](../../infra/coolify/production-checklist.md).
 
-See [infra/coolify/scheduled-tasks.md](../../infra/coolify/scheduled-tasks.md).
+Summary:
 
-## 4. Staging QA
+- Coolify app on `main`, port mapping `127.0.0.1:3000:3000` (default).
+- Nginx: [nginx-production.conf](../../infra/coolify/nginx-production.conf).
+- `NEXT_PUBLIC_SITE_URL=https://creativephotography.group`.
+- `NEXT_PUBLIC_SUPABASE_URL=https://db.creativephotography.group`.
+- Crons: [scheduled-tasks.md](../../infra/coolify/scheduled-tasks.md).
+- Releases: GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL`.
 
-See [infra/coolify/staging-checklist.md](../../infra/coolify/staging-checklist.md).
+## 4. Scheduled tasks
 
-Supabase Dashboard → **Authentication → URL configuration** → add:
+[scheduled-tasks.md](../../infra/coolify/scheduled-tasks.md) — configure per app in Coolify. Use `http://127.0.0.1:3000` **inside the container** (not the host bind port).
 
-- Site URL: `https://staging.creativephotography.group`
-- Redirect URLs: `https://staging.creativephotography.group/**`
+## 5. Moving off Vercel
 
-## 5. Production cutover
+| Was on Vercel | On Coolify |
+| --- | --- |
+| Hosting | Docker on VPS |
+| `vercel.json` crons | Coolify scheduled tasks |
+| `vercel promote` on release | `COOLIFY_PRODUCTION_WEBHOOK_URL` |
+| PR preview E2E | Optional `E2E_BASE_URL` → staging, or keep Vercel previews temporarily |
+| Vercel Analytics | Off by default; set `NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS=true` only on Vercel |
 
-1. Duplicate app or create **production** resource with production env (`NEXT_PUBLIC_SITE_URL=https://creativephotography.group`).
-2. Domains: `creativephotography.group`, `www.creativephotography.group`.
-3. Cloudflare: point `@` and `www` A/AAAA records to VPS (keep orange cloud).
-4. Verify auth, uploads, crons.
-5. Keep Vercel DNS as rollback for a few days, then remove `vercel promote` (see Release Please workflow).
-
-Production deploys are triggered by **Coolify deploy webhook** on release (GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL`).
+`vercel.json` remains in the repo for reference; `git.deploymentEnabled.main` is `false`.
 
 ## Docker (local)
 
@@ -102,8 +97,8 @@ docker run -p 3000:3000 --env-file .env.local cpg-website
 
 | Symptom | Fix |
 | --- | --- |
-| 502 Bad Gateway | Confirm `PORT=3000`, `HOSTNAME=0.0.0.0`; health check `/api/health` |
+| 502 Bad Gateway | Check `docker ps` port mapping; Nginx `proxy_pass` must match host bind (prod `:3000`, staging `:2000`) |
 | Wrong site URL in emails | Rebuild after `NEXT_PUBLIC_SITE_URL` change |
-| Cron 401 | `CRON_SECRET` in container matches scheduled task |
-| OAuth redirect error | Supabase + provider redirect URLs include staging/production |
-| Build OOM | More RAM or external build server in Coolify |
+| Cron 401 | `CRON_SECRET` matches scheduled task |
+| OAuth redirect error | Supabase + provider URLs include correct hostname |
+| Build OOM | More RAM or Coolify remote builder |

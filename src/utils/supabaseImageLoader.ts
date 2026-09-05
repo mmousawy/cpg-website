@@ -1,10 +1,10 @@
 import type { ImageLoaderProps } from 'next/image';
 
-// Supabase storage domains
-const SUPABASE_DOMAINS = [
-  'db.creativephotography.group',
-  'lpdjlhlslqtdswhnchmv.supabase.co',
-];
+import { getSupabaseStorageHosts } from '@/utils/supabaseHosts';
+
+function getSupabaseDomains(): string[] {
+  return getSupabaseStorageHosts();
+}
 
 /** Default quality for Supabase /render/image transforms (20–100). */
 export const DEFAULT_SUPABASE_IMAGE_QUALITY = 92;
@@ -22,7 +22,7 @@ export const MOBILE_PRELOAD_WIDTH = 828;
  * Check if a URL is a Supabase Storage URL
  */
 export function isSupabaseUrl(src: string): boolean {
-  return SUPABASE_DOMAINS.some(domain => src.includes(domain));
+  return getSupabaseDomains().some((domain) => src.includes(domain));
 }
 
 /**
@@ -166,7 +166,8 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
   }
 
   // Check if this is a Supabase Storage URL
-  const isSupabase = typeof imageSrc === 'string' && SUPABASE_DOMAINS.some(domain => imageSrc.includes(domain));
+  const isSupabase = typeof imageSrc === 'string'
+    && getSupabaseDomains().some((domain) => imageSrc.includes(domain));
 
   if (isSupabase && typeof imageSrc === 'string') {
     // Check if URL already has resize=cover (from getSquareThumbnailUrl or getCroppedThumbnailUrl)

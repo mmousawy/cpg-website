@@ -7,7 +7,7 @@ All routes expect: `Authorization: Bearer <CRON_SECRET>` (same value as the `CRO
 
 **Timezone:** Coolify uses the **server timezone**. Vercel crons were UTC. If the VPS uses `Europe/Amsterdam`, adjust cron expressions or set the server to UTC.
 
-Use `http://127.0.0.1:3000` so tasks hit the local process (not the public URL / Cloudflare).
+Use `http://127.0.0.1:3000` — the **container** port (always 3000), not the host bind. Production host is also `:3000`; staging host is `:2000` (see [PORTS.md](./PORTS.md)).
 
 ## Tasks
 

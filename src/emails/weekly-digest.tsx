@@ -14,11 +14,12 @@ import {
   Text,
 } from '@react-email/components';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-
 import type { NotificationWithActor } from '@/types/notifications';
+import { getSupabaseStorageHosts } from '@/utils/supabaseHosts';
 import Footer from './components/Footer';
 import EmailHeader from './components/Header';
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 function formatWithOthers(
   actor: string | null,
@@ -86,10 +87,7 @@ const notificationMessages: Record<string, (actor: string | null, data?: Notific
 };
 
 // Supabase storage domains for image transformation
-const SUPABASE_DOMAINS = [
-  'db.creativephotography.group',
-  'lpdjlhlslqtdswhnchmv.supabase.co',
-];
+const SUPABASE_DOMAINS = getSupabaseStorageHosts();
 
 // Get resized thumbnail URL for Supabase images
 function getResizedThumbnail(src: string | null | undefined, width = 96, quality = 80): string | undefined {

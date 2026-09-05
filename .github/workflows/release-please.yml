@@ -49,6 +49,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Prefer Coolify when COOLIFY_PRODUCTION_WEBHOOK_URL is set (self-hosted production).
+          # Copy the webhook URL from Coolify → production app → Webhooks.
           if [ -n "${COOLIFY_PRODUCTION_WEBHOOK_URL:-}" ]; then
             echo "Triggering Coolify production deploy..."
             curl -fsS -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL"

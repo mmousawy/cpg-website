@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
@@ -22,6 +22,7 @@ function LoginForm() {
   const router = useRouter();
   const redirectToParam = searchParams.get('redirectTo');
   const verified = searchParams.get('verified');
+  const queryError = searchParams.get('error');
   const finalRedirect = getPostLoginRedirect(redirectToParam);
 
   const { signInWithEmail, signInWithGoogle, signInWithDiscord } = useAuth();
@@ -30,6 +31,14 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (queryError === 'staging_admin_only') {
+      setError('Staging is limited to admin accounts. Sign in with a promoted admin user.');
+    } else if (queryError === 'staging_no_signup') {
+      setError('Sign-up is disabled on staging. Use an existing admin account.');
+    }
+  }, [queryError]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

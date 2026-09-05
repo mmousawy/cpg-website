@@ -11,6 +11,7 @@ import {
   needsProxyAuthSession,
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
+import { isStagingDeployment } from '@/utils/siteEnvironment';
 import { hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
 
 // Public API routes skip session/profile checks in this proxy.
@@ -37,9 +38,25 @@ const KNOWN_ROUTES = new Set([
   '_next',
 ]);
 
+const stagingPublicPaths = [
+  '/login',
+  '/auth-callback',
+  '/auth/',
+  '/api/auth/',
+  '/api/health',
+  '/forgot-password',
+  '/reset-password',
+];
+
+function isStagingPublicPath(pathname: string): boolean {
+  return stagingPublicPaths.some((path) => pathname === path || pathname.startsWith(path));
+}
+
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const firstSegment = pathname.split('/')[1];
+  const matchesRoute = (path: string) => matchesPath(pathname, path);
+  const stagingSite = isStagingDeployment();
 
   // 301 from old @-nickname URLs to the member's current nickname
   if (firstSegment?.startsWith('@')) {
@@ -90,28 +107,46 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  const matchesRoute = (path: string) => matchesPath(pathname, path);
+  // Staging is admin-only: no public signup or anonymous browsing.
+  if (stagingSite) {
+    if (matchesRoute('/signup')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('error', 'staging_no_signup');
+      return NextResponse.redirect(url);
+    }
 
-  // Skip auth check for public API routes
+    if (!isStagingPublicPath(pathname) && !hasSupabaseAuthCookies(request.cookies.getAll())) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirectTo', pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Skip auth check for public API routes (production only paths on staging still need admin gate below)
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
-  if (isPublicApiRoute) {
+  if (isPublicApiRoute && !stagingSite) {
     return NextResponse.next();
   }
 
-  // Public pages (gallery, photos, albums, etc.) skip Auth + get_own_profile.
-  // Those two calls were ~210k requests/day because this proxy also runs on
-  // Next.js Link prefetches. Session refresh still happens on gated routes
-  // and in the browser client for logged-in users.
   const isProtectedPath = ['/account', '/admin'].some((path) => matchesRoute(path));
   const isAuthPath = ['/login', '/signup'].some((path) => matchesRoute(path));
   const hasAuthCookie = hasSupabaseAuthCookies(request.cookies.getAll());
 
-  if (!needsProxyAuthSession(pathname) || !hasAuthCookie) {
+  const needsAuthSession = stagingSite
+    ? !isStagingPublicPath(pathname) && hasAuthCookie
+    : needsProxyAuthSession(pathname) && hasAuthCookie;
+
+  if (!needsAuthSession) {
     if (isProtectedPath && !hasAuthCookie) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirectTo', pathname);
       return NextResponse.redirect(url);
+    }
+    if (isPublicApiRoute) {
+      return NextResponse.next();
     }
     return NextResponse.next();
   }
@@ -152,9 +187,12 @@ export default async function proxy(request: NextRequest) {
     full_name: string | null;
     nickname: string | null;
     terms_accepted_at: string | null;
+    is_admin: boolean | null;
   } | null = null;
 
-  if (user && needsProxyOwnProfile(pathname)) {
+  const shouldLoadProfile = user && (stagingSite || needsProxyOwnProfile(pathname));
+
+  if (shouldLoadProfile) {
     const { data } = await supabase.rpc('get_own_profile');
     if (data && typeof data === 'object' && !Array.isArray(data)) {
       const ownProfile = data as Record<string, unknown>;
@@ -165,8 +203,17 @@ export default async function proxy(request: NextRequest) {
         full_name: (ownProfile.full_name as string | null) ?? null,
         nickname: (ownProfile.nickname as string | null) ?? null,
         terms_accepted_at: (ownProfile.terms_accepted_at as string | null) ?? null,
+        is_admin: (ownProfile.is_admin as boolean | null) ?? null,
       };
     }
+  }
+
+  if (stagingSite && user && !isStagingPublicPath(pathname) && !profile?.is_admin) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('error', 'staging_admin_only');
+    return NextResponse.redirect(url);
   }
 
   // Block users whose account is scheduled for deletion
