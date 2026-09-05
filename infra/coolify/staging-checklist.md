@@ -4,37 +4,38 @@ Run against `https://staging.creativephotography.group` before production DNS cu
 
 ## Prerequisites
 
-- [ ] Staging app deployed and healthy in Coolify
+- [ ] Isolated staging Supabase running ([infra/supabase-staging/README.md](../supabase-staging/README.md))
+- [ ] `curl -fsS https://db-staging.creativephotography.group/auth/v1/health` succeeds
+- [ ] Migrations applied (empty content; no prod dump)
+- [ ] Staging admin promoted (`infra/supabase-staging/promote-admin.sql`)
+- [ ] Staging app deployed and healthy in Coolify (`127.0.0.1:2000->3000` — host port 1000 below prod)
+- [ ] `curl -fsS http://127.0.0.1:2000/api/health` on VPS
+- [ ] Nginx staging vhost → `:2000` ([nginx-staging.conf](./nginx-staging.conf), [PORTS.md](./PORTS.md))
 - [ ] `GET /api/health` returns `{"status":"ok",...}`
-- [ ] Supabase Auth → URL configuration includes `https://staging.creativephotography.group/**`
-- [ ] Google OAuth client: authorized redirect URI includes Supabase callback (unchanged) + site URL if required
-- [ ] Discord OAuth: redirect URIs updated if you use app-specific URLs
-- [ ] `NEXT_PUBLIC_SITE_URL` and `EMAIL_ASSETS_URL` set to staging URL (rebuild after change)
+- [ ] Coolify env uses **staging** Supabase URL and keys (not production)
+- [ ] `NEXT_PUBLIC_SITE_URL` and `EMAIL_ASSETS_URL` = `https://staging.creativephotography.group` (rebuild after change)
+- [ ] Google OAuth: redirect URI `https://db-staging.creativephotography.group/auth/v1/callback`
+- [ ] Discord OAuth: same callback on staging Kong host
+- [ ] Staging GoTrue: signup disabled; Site URL = staging site
+- [ ] Coolify **scheduled tasks disabled** on staging (or Resend test key only)
 
-## Smoke tests
+## Smoke tests (admin login required)
 
-- [ ] Homepage, gallery, events, challenges, scene load
-- [ ] Member profile (`/@username`) loads
-- [ ] Login with Google
-- [ ] Login with Discord
-- [ ] Email/password login
-- [ ] Upload a photo to an album (Supabase Storage)
-- [ ] RSVP to an event (if test event exists)
+- [ ] Non-admin / anonymous users redirected to login on staging
+- [ ] `/signup` redirects to login on staging
+- [ ] Login with Google / Discord as promoted admin
+- [ ] Homepage, gallery, events, challenges load (empty until you seed staging)
+- [ ] Upload a photo to an album (lands in **staging** storage buckets)
+- [ ] Create a test event on staging; confirm production events unchanged
 - [ ] Global search (Cmd/Ctrl+K)
-- [ ] Dark / light theme toggle
 - [ ] No mixed-content warnings in browser devtools
-
-## Cron (optional on staging)
-
-- [ ] Execute **Event reminders** task once; confirm `200` in Coolify task history
-- [ ] Confirm no accidental emails to real members (use test accounts only)
 
 ## SSL / Cloudflare
 
-- [ ] Certificate valid in browser
+- [ ] Certificate valid for `staging` and `db-staging` subdomains
 - [ ] Cloudflare SSL mode: **Full (strict)**
-- [ ] Auth cookies persist after refresh (Supabase session)
+- [ ] Auth cookies persist after refresh
 
 ## Rollback
 
-Production remains on Vercel until DNS is switched. To abort: delete or stop the staging app; no production impact.
+Stop staging Supabase (`docker compose -p supabase-staging down`) or point Coolify back at production keys. Production stack is unaffected.

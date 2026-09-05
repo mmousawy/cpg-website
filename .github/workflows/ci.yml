@@ -13,6 +13,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     env:
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -31,14 +32,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Wait for Vercel preview
+      - name: Resolve E2E target URL
         id: preview
         env:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
 
-          echo "Installing Playwright browsers in parallel with Vercel preview wait..."
+          echo "Installing Playwright browsers in parallel with deploy wait..."
           pnpm exec playwright install --with-deps chromium &
           PLAYWRIGHT_INSTALL_PID=$!
 
@@ -52,8 +53,31 @@ jobs:
             fi
           }
 
+          if [ -n "${E2E_BASE_URL:-}" ]; then
+            echo "Using E2E_BASE_URL (Coolify or fixed staging): $E2E_BASE_URL"
+            URL="${E2E_BASE_URL%/}"
+
+            for i in $(seq 1 30); do
+              HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" "$URL/api/health" || echo "000")
+              if [ "$HTTP_CODE" = "200" ]; then
+                echo "Target reachable: $URL"
+                wait_for_playwright
+                echo "url=$URL" >> "$GITHUB_OUTPUT"
+                echo "use_vercel_bypass=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              echo "Reachability $i/30: HTTP $HTTP_CODE"
+              sleep 10
+            done
+
+            echo "::error::E2E_BASE_URL not reachable after 5 minutes: $URL"
+            exit 1
+          fi
+
+          echo "E2E_BASE_URL not set — waiting for Vercel preview..."
+
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::VERCEL_TOKEN is not set."
+            echo "::error::Set E2E_BASE_URL or VERCEL_TOKEN for E2E tests."
             exit 1
           fi
           if [ -z "$BYPASS_TOKEN" ]; then
@@ -61,11 +85,10 @@ jobs:
             exit 1
           fi
           if [ -z "${INTERNAL_API_SECRET:-}" ] && [ -z "${CRON_SECRET:-}" ]; then
-            echo "::error::Set INTERNAL_API_SECRET or CRON_SECRET in GitHub Actions secrets to match the Vercel preview env (required for /api/test/* Bearer auth)."
+            echo "::error::Set INTERNAL_API_SECRET or CRON_SECRET in GitHub Actions secrets to match the preview env (required for /api/test/* Bearer auth)."
             exit 1
           fi
 
-          # Phase 1: wait for Vercel to finish building this commit's preview.
           DEPLOYMENT_URL=""
           for i in $(seq 1 90); do
             RESPONSE=$(curl -s \
@@ -97,9 +120,6 @@ jobs:
           URL="https://$DEPLOYMENT_URL"
           COOKIE_JAR=$(mktemp)
 
-          # Phase 2: wait until bypass works and the app responds.
-          # Vercel Authentication uses an initial 307 + Set-Cookie when
-          # x-vercel-set-bypass-cookie is set — use a cookie jar and allow a few redirects.
           for i in $(seq 1 30); do
             PROBE_BODY=$(mktemp)
             HTTP_CODE=$(curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" --max-redirs 5 \
@@ -113,6 +133,7 @@ jobs:
               rm -f "$PROBE_BODY" "$COOKIE_JAR"
               wait_for_playwright
               echo "url=$URL" >> "$GITHUB_OUTPUT"
+              echo "use_vercel_bypass=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
@@ -131,9 +152,8 @@ jobs:
       - name: E2E tests
         run: pnpm run test:e2e
         env:
-          BASE_URL: ${{ steps.preview.outputs.url }}?x-vercel-protection-bypass=${{ secrets.VERCEL_BYPASS_TOKEN }}
+          BASE_URL: ${{ steps.preview.outputs.use_vercel_bypass == 'true' && format('{0}?x-vercel-protection-bypass={1}', steps.preview.outputs.url, secrets.VERCEL_BYPASS_TOKEN) || steps.preview.outputs.url }}
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
-          # Must match INTERNAL_API_SECRET or CRON_SECRET on the Vercel preview (Bearer for /api/test/*)
           INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
 

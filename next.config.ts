@@ -98,6 +98,9 @@ const nextConfig: NextConfig = {
         hostname: 'db.creativephotography.group',
       },
       {
+        hostname: 'db-staging.creativephotography.group',
+      },
+      {
         hostname: 'cdn.discordapp.com',
       },
       {

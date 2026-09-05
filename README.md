@@ -359,9 +359,11 @@ Opens an interactive treemap to visualize bundle composition. See [docs/performa
 
 ## Deployment
 
-### Coolify (VPS, recommended for self-hosting)
+### Coolify (VPS — staging and production)
 
-See **[docs/deployment/coolify.md](./docs/deployment/coolify.md)** for full setup: Dockerfile build, staging on `staging.creativephotography.group`, scheduled tasks, and production DNS cutover.
+See **[docs/deployment/coolify.md](./docs/deployment/coolify.md)** for full setup: Dockerfile build, staging on `staging.creativephotography.group`, production on `creativephotography.group`, scheduled tasks, and DNS cutover.
+
+**Ports:** production `127.0.0.1:3000:3000`, staging `127.0.0.1:2000:3000` (staging = prod − 1000). See [infra/coolify/PORTS.md](./infra/coolify/PORTS.md).
 
 Quick reference:
 
@@ -369,23 +371,28 @@ Quick reference:
 - Crons: [infra/coolify/scheduled-tasks.md](./infra/coolify/scheduled-tasks.md)
 - Staging QA: [infra/coolify/staging-checklist.md](./infra/coolify/staging-checklist.md)
 - Production cutover: [infra/coolify/production-cutover.md](./infra/coolify/production-cutover.md)
+- Production QA: [infra/coolify/production-checklist.md](./infra/coolify/production-checklist.md)
 
-Set GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL` (from Coolify app webhooks) to deploy releases to Coolify instead of Vercel.
+**GitHub secrets:**
 
-### Vercel (legacy / PR previews)
+| Secret | Purpose |
+| --- | --- |
+| `COOLIFY_PRODUCTION_WEBHOOK_URL` | Release Please triggers Coolify production deploy |
+| `E2E_BASE_URL` | Optional fixed URL for PR E2E (e.g. staging); omit to keep Vercel previews |
 
-Until Coolify production is live:
+### Vercel (optional — PR previews only)
 
-1. Connect repository
+You can keep Vercel for PR preview E2E until staging supports public tests, or set `E2E_BASE_URL` to a Coolify deploy.
+
+1. Connect repository (preview deployments only; disable production deploys on `main`)
 2. Set environment variables (including `CRON_SECRET` for reminder emails)
-3. Configure Supabase OAuth redirect URLs for production
-4. Cron jobs via `vercel.json` (UTC schedules)
+3. Cron jobs in `vercel.json` are **inactive** once production runs on Coolify — use Coolify scheduled tasks instead
 
 **Deployment strategy:**
 
-- PR previews and E2E still use Vercel (see `.github/workflows/ci.yml`)
+- PR E2E: `E2E_BASE_URL` if set, else Vercel preview (see `.github/workflows/ci.yml`)
 - Release Please creates releases from `main`
-- Production: Coolify webhook if configured, else `vercel promote` of the tested preview
+- Production: Coolify webhook when `COOLIFY_PRODUCTION_WEBHOOK_URL` is set; otherwise falls back to `vercel promote`
 
 ## Roadmap
 

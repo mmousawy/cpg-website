@@ -3,12 +3,13 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
+import { HERO_IMAGES } from '@/config/heroImages';
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
 import { getPreloadImageUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
-const BANNER_BACKGROUND =
-  'https://db.creativephotography.group/storage/v1/object/public/cpg-public/hero/home-hero1.jpg';
+
+const BANNER_BACKGROUND = HERO_IMAGES[0]?.src ?? '';
 
 type SignUpCTAVariant = 'banner' | 'inline';
 

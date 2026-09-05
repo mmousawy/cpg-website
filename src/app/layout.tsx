@@ -1,8 +1,9 @@
-import { Analytics } from '@vercel/analytics/react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
+
+import VercelAnalytics from '@/components/analytics/VercelAnalytics';
 
 import AppProvidersTree from '@/components/layout/AppProvidersTree';
 import ClientShellExtras from '@/components/layout/ClientShellExtras';
@@ -12,6 +13,7 @@ import ThemeProviderShell from '@/app/providers/ThemeProvider';
 import JsonLd from '@/components/shared/JsonLd';
 import { socialLinks } from '@/config/socials';
 import { defaultOgImage, defaultTwitterImage, getAbsoluteUrl, siteConfig, truncateDescription } from '@/utils/metadata';
+import { getSupabaseApiHost } from '@/utils/supabaseHosts';
 
 import './globals.css';
 
@@ -92,6 +94,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabasePreconnectHost = getSupabaseApiHost();
+
   return (
     <html
       lang="en"
@@ -99,11 +103,13 @@ export default function RootLayout({
       className="h-full overflow-x-clip"
     >
       <head>
-        <link
-          rel="preconnect"
-          href="https://db.creativephotography.group"
-          crossOrigin="anonymous"
-        />
+        {supabasePreconnectHost ? (
+          <link
+            rel="preconnect"
+            href={`https://${supabasePreconnectHost}`}
+            crossOrigin="anonymous"
+          />
+        ) : null}
         <meta
           name="apple-mobile-web-app-title"
           content="Creative Photography Group"
@@ -146,7 +152,7 @@ export default function RootLayout({
             {children}
           </AppProvidersTree>
         </ThemeProviderShell>
-        <Analytics />
+        <VercelAnalytics />
       </body>
     </html>
   );
