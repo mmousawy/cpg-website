@@ -1,7 +1,8 @@
 'use client';
 
-import { BarChartIcon, LineChartIcon, ResetZoomIcon } from '@/components/icons/stats/StatsChartIcons';
+import { ResetZoomIcon } from '@/components/icons/stats/StatsChartIcons';
 import StatsChartTooltip, { STATS_CHART_TOOLTIP_WRAPPER_STYLE } from '@/components/stats/StatsChartTooltip';
+import type { StatsChartType } from '@/components/stats/StatsChartTypeToggle';
 import type { StatsRange, StatsTimeSeriesPoint } from '@/types/stats';
 import {
   bucketEndInclusive,
@@ -12,7 +13,10 @@ import {
   parseSeriesDateKey,
   type StatsBucket,
 } from '@/utils/stats/timeSeries';
+import clsx from 'clsx';
+import UndoSVG from 'public/icons/undo.svg';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { MouseHandlerDataParam } from 'recharts';
 import {
   Area,
   Bar,
@@ -24,10 +28,26 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { MouseHandlerDataParam } from 'recharts';
-import clsx from 'clsx';
 
 type ChartPoint = StatsTimeSeriesPoint & { label: string };
+
+type ChartViewState = {
+  zoomPoints: StatsTimeSeriesPoint[] | null;
+  displayBucket: StatsBucket;
+  indexZoom: { start: number; end: number } | null;
+};
+
+function snapshotViewState(
+  zoomPoints: StatsTimeSeriesPoint[] | null,
+  displayBucket: StatsBucket,
+  indexZoom: { start: number; end: number } | null,
+): ChartViewState {
+  return {
+    zoomPoints: zoomPoints ? zoomPoints.map((p) => ({ ...p })) : null,
+    displayBucket,
+    indexZoom: indexZoom ? { ...indexZoom } : null,
+  };
+}
 
 type StatsTimeSeriesChartProps = {
   title: string;
@@ -35,6 +55,8 @@ type StatsTimeSeriesChartProps = {
   seriesUrl: string;
   points: StatsTimeSeriesPoint[];
   range: StatsRange;
+  bucket?: StatsBucket;
+  chartType: StatsChartType;
   valueFormatter?: (value: number) => string;
   className?: string;
 };
@@ -55,27 +77,37 @@ export default function StatsTimeSeriesChart({
   seriesUrl,
   points,
   range,
+  bucket,
+  chartType,
   valueFormatter = (v) => v.toLocaleString(),
   className,
 }: StatsTimeSeriesChartProps) {
   const gradientId = useId().replace(/:/g, '');
-  const baseBucket = getRangeConfig(range).bucket;
+  const baseBucket = bucket ?? getRangeConfig(range).bucket;
 
   const [zoomPoints, setZoomPoints] = useState<StatsTimeSeriesPoint[] | null>(null);
   const [displayBucket, setDisplayBucket] = useState<StatsBucket>(baseBucket);
   const [indexZoom, setIndexZoom] = useState<{ start: number; end: number } | null>(null);
+  const [zoomHistory, setZoomHistory] = useState<ChartViewState[]>([]);
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
   const [isZoomLoading, setIsZoomLoading] = useState(false);
-  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const dragRef = useRef<{ start: number } | null>(null);
 
   useEffect(() => {
     setZoomPoints(null);
     setDisplayBucket(baseBucket);
     setIndexZoom(null);
+    setZoomHistory([]);
     setSelection(null);
     dragRef.current = null;
   }, [range, baseBucket]);
+
+  const pushZoomHistory = useCallback(() => {
+    setZoomHistory((prev) => [
+      ...prev,
+      snapshotViewState(zoomPoints, displayBucket, indexZoom),
+    ]);
+  }, [zoomPoints, displayBucket, indexZoom]);
 
   const sourcePoints = zoomPoints ?? points;
   const fullData = useMemo<ChartPoint[]>(
@@ -89,6 +121,7 @@ export default function StatsTimeSeriesChart({
 
   const data = indexZoom ? fullData.slice(indexZoom.start, indexZoom.end + 1) : fullData;
   const isZoomed = zoomPoints != null || indexZoom != null;
+  const canZoomOut = zoomHistory.length > 0;
 
   const applyZoom = useCallback(async () => {
     const drag = dragRef.current;
@@ -112,6 +145,8 @@ export default function StatsTimeSeriesChart({
     const start = parseSeriesDateKey(startKey);
     const end = bucketEndInclusive(endKey, displayBucket);
     const nextBucket = bucketForSpanMs(end.getTime() - start.getTime());
+
+    pushZoomHistory();
 
     if (!isFinerBucket(nextBucket, displayBucket)) {
       setIndexZoom({ start: absFrom, end: absTo });
@@ -138,7 +173,7 @@ export default function StatsTimeSeriesChart({
     } finally {
       setIsZoomLoading(false);
     }
-  }, [selection, indexZoom, fullData, displayBucket, seriesUrl, metric]);
+  }, [selection, indexZoom, fullData, displayBucket, seriesUrl, metric, pushZoomHistory]);
 
   useEffect(() => {
     const onUp = () => {
@@ -166,10 +201,24 @@ export default function StatsTimeSeriesChart({
     setSelection((prev) => (prev ? { ...prev, end: idx } : { start: idx, end: idx }));
   };
 
+  const zoomOut = () => {
+    if (!zoomHistory.length) return;
+    const previous = zoomHistory[zoomHistory.length - 1];
+    setZoomHistory((history) => history.slice(0, -1));
+    setZoomPoints(previous.zoomPoints);
+    setDisplayBucket(previous.displayBucket);
+    setIndexZoom(previous.indexZoom);
+    setSelection(null);
+    dragRef.current = null;
+  };
+
   const resetZoom = () => {
+    setZoomHistory([]);
     setZoomPoints(null);
     setDisplayBucket(baseBucket);
     setIndexZoom(null);
+    setSelection(null);
+    dragRef.current = null;
   };
 
   const selectX1 = selection ? data[Math.min(selection.start, selection.end)]?.date : undefined;
@@ -191,33 +240,21 @@ export default function StatsTimeSeriesChart({
         >
           <button
             type="button"
-            onClick={() => setChartType('bar')}
-            aria-pressed={chartType === 'bar'}
-            aria-label="Bar chart"
-            title="Bar chart"
+            onClick={zoomOut}
+            disabled={!canZoomOut}
+            aria-label="Undo"
+            title="Undo"
             className={clsx(
-              'rounded-md p-1 transition-colors',
-              chartType === 'bar'
-                ? 'bg-background-light text-foreground'
-                : 'text-foreground/50 hover:bg-background-light hover:text-foreground',
+              'inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors',
+              canZoomOut
+                ? 'text-foreground/50 hover:bg-background-light hover:text-foreground'
+                : 'text-foreground/20 cursor-default',
             )}
           >
-            <BarChartIcon />
-          </button>
-          <button
-            type="button"
-            onClick={() => setChartType('line')}
-            aria-pressed={chartType === 'line'}
-            aria-label="Line chart"
-            title="Line chart"
-            className={clsx(
-              'rounded-md p-1 transition-colors',
-              chartType === 'line'
-                ? 'bg-background-light text-foreground'
-                : 'text-foreground/50 hover:bg-background-light hover:text-foreground',
-            )}
-          >
-            <LineChartIcon />
+            <UndoSVG
+              className="size-4 shrink-0 fill-current"
+              aria-hidden="true"
+            />
           </button>
           <button
             type="button"
@@ -237,7 +274,7 @@ export default function StatsTimeSeriesChart({
         </div>
       </div>
       <div
-        className="relative h-56 w-full select-none"
+        className="relative w-full select-none rounded-lg bg-background p-4"
       >
         {isZoomLoading ? (
           <div
@@ -246,6 +283,9 @@ export default function StatsTimeSeriesChart({
             Loading detail…
           </div>
         ) : null}
+        <div
+          className="h-56 w-full"
+        >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
@@ -316,6 +356,7 @@ export default function StatsTimeSeriesChart({
             ) : null}
           </ComposedChart>
         </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

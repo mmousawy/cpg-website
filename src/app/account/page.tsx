@@ -3,6 +3,7 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import AccountStatsSection from '@/components/account/AccountStatsSection';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
+import ChangeNicknameModal from '@/components/account/ChangeNicknameModal';
 import CopyrightSettingsSection from '@/components/account/CopyrightSettingsSection';
 import DeleteAccountSection from '@/components/account/DeleteAccountSection';
 import PreferencesSection from '@/components/account/PreferencesSection';
@@ -52,6 +53,8 @@ function AccountPageContent() {
     emailTypes,
     stats,
     emailChangedFromUrl,
+    nicknameChangedFromUrl,
+    nicknameChangeCooldownEnd,
 
     // Avatar
     fileInputRef,
@@ -96,6 +99,24 @@ function AccountPageContent() {
       <ChangeEmailModal
         key={Date.now()}
         currentEmail={profile?.email || user?.email || ''}
+        onSuccess={() => {}}
+      />,
+    );
+    modalContext.setIsOpen(true);
+  };
+
+  const openNicknameModal = () => {
+    if (!user?.id || !nickname) return;
+
+    modalContext.setSize('default');
+    modalContext.setTitle('Change nickname');
+    modalContext.setFooter(null);
+    modalContext.setContent(
+      <ChangeNicknameModal
+        key={Date.now()}
+        currentNickname={nickname}
+        currentEmail={profile?.email || user?.email || ''}
+        userId={user.id}
         onSuccess={() => {}}
       />,
     );
@@ -231,6 +252,8 @@ function AccountPageContent() {
                     avatarError={avatarError}
                     isSaving={isSaving}
                     emailChangedFromUrl={emailChangedFromUrl}
+                    nicknameChangedFromUrl={nicknameChangedFromUrl}
+                    nicknameChangeCooldownEnd={nicknameChangeCooldownEnd}
                     fileInputRef={fileInputRef}
                     bannerInputRef={bannerInputRef}
                     handleBannerUpload={handleBannerUpload}
@@ -240,6 +263,7 @@ function AccountPageContent() {
                     handleRemoveAvatar={handleRemoveAvatar}
                     handleCancelAvatarChange={handleCancelAvatarChange}
                     onOpenEmailModal={openEmailModal}
+                    onOpenNicknameModal={openNicknameModal}
                     fullName={fullName || user?.email || ''}
                     savedBannerUrl={savedBannerUrl}
                     savedAvatarUrl={savedAvatarUrl}

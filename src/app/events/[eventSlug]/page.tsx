@@ -304,7 +304,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       <PageContainer
         className={clsx(
           event.cover_image ? 'pt-6! sm:pt-8!' : '',
-          'pb-4!',
+          'pb-4 sm:pb-8!',
         )}
       >
         <Container>
@@ -395,7 +395,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Open location in Google Maps"
-                  className="group flex items-start gap-2 text-[15px] font-semibold hover:text-primary"
+                  className="group inline-flex items-start gap-2 text-[15px] font-semibold hover:text-primary"
                 >
                   <LocationSVG
                     className="size-5 shrink-0 fill-current mt-0.5"
@@ -531,7 +531,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         {/* Empty state for Event Photos - separate section */}
         {!hasEventPhotos(eventAlbum) &&  (
           <div
-            className="mt-8"
+            className="mt-4 sm:mt-8"
           >
             <EventPhotosSection
               eventId={event.id}

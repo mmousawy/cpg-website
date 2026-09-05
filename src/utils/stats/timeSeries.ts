@@ -64,7 +64,42 @@ function utcDayStart(daysBeforeEnd: number, end: Date): Date {
   );
 }
 
-export function getRangeConfig(range: StatsRange): {
+export type RangeConfigOptions = {
+  /** When set, "all time" starts at this date (typically account created_at). */
+  allTimeStart?: Date;
+};
+
+function utcMonthStart(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0));
+}
+
+export function alignToBucketStart(date: Date, bucket: StatsBucket): Date {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth();
+  const d = date.getUTCDate();
+  const h = date.getUTCHours();
+
+  if (bucket === 'hour') {
+    return new Date(Date.UTC(y, m, d, h, 0, 0, 0));
+  }
+  if (bucket === 'day') {
+    return new Date(Date.UTC(y, m, d, 0, 0, 0, 0));
+  }
+  if (bucket === 'week') {
+    const dow = date.getUTCDay();
+    const mondayOffset = dow === 0 ? -6 : 1 - dow;
+    return new Date(Date.UTC(y, m, d + mondayOffset, 0, 0, 0, 0));
+  }
+  return utcMonthStart(date);
+}
+
+/** All-time charts use the zoom ladder, but never coarser than a week. */
+export function allTimeBucket(spanMs: number): StatsBucket {
+  const bucket = bucketForSpanMs(spanMs);
+  return bucket === 'month' ? 'week' : bucket;
+}
+
+export function getRangeConfig(range: StatsRange, options?: RangeConfigOptions): {
   start: Date;
   end: Date;
   bucket: StatsBucket;
@@ -83,10 +118,14 @@ export function getRangeConfig(range: StatsRange): {
     return { start: utcDayStart(89, end), end, bucket: 'day' };
   }
 
-  const start = new Date(
-    Date.UTC(STATS_ALL_TIME_START_YEAR, STATS_ALL_TIME_START_MONTH, 1, 0, 0, 0, 0),
-  );
-  return { start, end, bucket: 'month' };
+  const allTimeStart = options?.allTimeStart;
+  const rawStart = allTimeStart && !Number.isNaN(allTimeStart.getTime())
+    ? allTimeStart
+    : new Date(
+      Date.UTC(STATS_ALL_TIME_START_YEAR, STATS_ALL_TIME_START_MONTH, 1, 0, 0, 0, 0),
+    );
+  const bucket = allTimeBucket(end.getTime() - rawStart.getTime());
+  return { start: alignToBucketStart(rawStart, bucket), end, bucket };
 }
 
 export function parseSeriesDateKey(dateKey: string): Date {
@@ -148,8 +187,8 @@ export function buildEmptyBucketsForWindow(
 }
 
 /** Build empty bucket keys for a range so charts show continuous axes. */
-export function buildEmptyBuckets(range: StatsRange): string[] {
-  const { start, end, bucket } = getRangeConfig(range);
+export function buildEmptyBuckets(range: StatsRange, options?: RangeConfigOptions): string[] {
+  const { start, end, bucket } = getRangeConfig(range, options);
   return buildEmptyBucketsForWindow(start, end, bucket);
 }
 
@@ -255,10 +294,11 @@ export function fillStorageTimeSeries(
   range: StatsRange,
   points: StatsTimeSeriesPoint[],
   baseline = 0,
+  options?: RangeConfigOptions,
 ): StatsTimeSeriesPoint[] {
-  const { start, end, bucket } = getRangeConfig(range);
+  const { start, end, bucket } = getRangeConfig(range, options);
   return fillStorageTimeSeriesWindow(
-    { start, end, bucket, trimLeading: range === 'all' },
+    { start, end, bucket, trimLeading: range === 'all' && !options?.allTimeStart },
     points,
     baseline,
   );
@@ -268,9 +308,13 @@ export function fillStorageTimeSeries(
 export function fillTimeSeries(
   range: StatsRange,
   points: StatsTimeSeriesPoint[],
+  options?: RangeConfigOptions,
 ): StatsTimeSeriesPoint[] {
-  const { start, end, bucket } = getRangeConfig(range);
-  return fillTimeSeriesWindow({ start, end, bucket, trimLeading: range === 'all' }, points);
+  const { start, end, bucket } = getRangeConfig(range, options);
+  return fillTimeSeriesWindow(
+    { start, end, bucket, trimLeading: range === 'all' && !options?.allTimeStart },
+    points,
+  );
 }
 
 export function formatChartDateLabel(dateKey: string, bucket: StatsBucket): string {
@@ -285,6 +329,14 @@ export function formatChartDateLabel(dateKey: string, bucket: StatsBucket): stri
   }
   if (bucket === 'month') {
     return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
+  if (bucket === 'week') {
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
   }
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }

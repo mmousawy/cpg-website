@@ -67,7 +67,7 @@ export const gettingStartedFAQ: FAQSection = {
                 Nickname
               </strong>
               {' '}
-              — A unique username (e.g. @johndoe) that appears in your profile URL. This cannot be changed easily later.
+              — A unique username (e.g. @johndoe) that appears in your profile URL. You can change it later from Account settings (confirmed by email, once every 60 days).
             </li>
             <li>
               <strong>
@@ -78,10 +78,10 @@ export const gettingStartedFAQ: FAQSection = {
             </li>
             <li>
               <strong>
-                Full name and bio
+                Screen name and bio
               </strong>
               {' '}
-              — Optional. Helps others get to know you.
+              — Your screen name is how you appear on your profile; it doesn&apos;t have to be your real name. Bio is optional.
             </li>
             <li>
               <strong>

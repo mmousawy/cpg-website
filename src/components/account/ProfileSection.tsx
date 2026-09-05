@@ -8,6 +8,7 @@ import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import type { AccountFormData, Profile } from '@/hooks/useAccountForm';
+import { formatNicknameCooldownDate } from '@/utils/nickname';
 
 interface ProfileSectionProps {
   register: UseFormRegister<AccountFormData>;
@@ -23,6 +24,8 @@ interface ProfileSectionProps {
   avatarError: string | null;
   isSaving: boolean;
   emailChangedFromUrl: boolean;
+  nicknameChangedFromUrl: boolean;
+  nicknameChangeCooldownEnd: Date | null;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   bannerInputRef: React.RefObject<HTMLInputElement | null>;
   handleBannerUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -32,6 +35,7 @@ interface ProfileSectionProps {
   handleRemoveAvatar: () => void;
   handleCancelAvatarChange: () => void;
   onOpenEmailModal: () => void;
+  onOpenNicknameModal: () => void;
   fullName: string;
   savedBannerUrl: string | null;
   savedAvatarUrl: string | null;
@@ -55,6 +59,8 @@ export default function ProfileSection({
   avatarError,
   isSaving,
   emailChangedFromUrl,
+  nicknameChangedFromUrl,
+  nicknameChangeCooldownEnd,
   fileInputRef,
   bannerInputRef,
   handleBannerUpload,
@@ -64,6 +70,7 @@ export default function ProfileSection({
   handleRemoveAvatar,
   handleCancelAvatarChange,
   onOpenEmailModal,
+  onOpenNicknameModal,
   fullName,
   savedBannerUrl,
   savedAvatarUrl,
@@ -72,6 +79,9 @@ export default function ProfileSection({
   pendingBannerRemove,
   pendingAvatarRemove,
 }: ProfileSectionProps) {
+  const nicknameOnCooldown = nicknameChangeCooldownEnd !== null
+    && nicknameChangeCooldownEnd > new Date();
+
   return (
     <div>
       <h2
@@ -156,14 +166,19 @@ export default function ProfileSection({
               htmlFor="fullName"
               className="text-sm font-medium"
             >
-              Full name
+              Screen name
             </label>
             <Input
               id="fullName"
               type="text"
               {...register('fullName')}
-              placeholder="Your full name"
+              placeholder="Your screen name"
             />
+            <p
+              className="text-foreground/50 text-xs"
+            >
+              This is how you appear on your profile. It doesn&apos;t have to be your real name.
+            </p>
           </div>
 
           <div
@@ -175,16 +190,47 @@ export default function ProfileSection({
             >
               Nickname (username)
             </label>
-            <Input
-              id="nickname"
-              type="text"
-              value={nickname}
-              disabled
-            />
+            {nicknameChangedFromUrl && (
+              <SuccessMessage
+                variant="compact"
+              >
+                Your nickname has been successfully changed!
+              </SuccessMessage>
+            )}
+            <div
+              className="flex gap-2"
+            >
+              <Input
+                id="nickname"
+                type="text"
+                value={nickname}
+                disabled
+                className="flex-1"
+                leftAddon="@"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onOpenNicknameModal}
+                disabled={nicknameOnCooldown || !nickname}
+              >
+                Change
+              </Button>
+            </div>
             <p
               className="text-foreground/50 text-xs"
             >
-              Your nickname is used in your profile and gallery URLs and cannot be changed.
+              Used in your profile and gallery URLs. Confirm changes via email. You can change
+              your nickname once every 60 days; old links redirect for one year.
+              {nicknameOnCooldown && nicknameChangeCooldownEnd && (
+                <>
+                  <br />
+                  You can change your nickname again on
+                  {' '}
+                  {formatNicknameCooldownDate(nicknameChangeCooldownEnd)}
+                  .
+                </>
+              )}
               <br />
               URL:
               {' '}

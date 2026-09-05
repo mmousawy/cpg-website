@@ -1,0 +1,57 @@
+feat: Changeable nicknames with email confirmation, 60-day cooldown, and 1-year redirects
+
+Nickname Changes:
+- Add Change nickname flow from Account → Basic info (modal like email change)
+- Require email confirmation via 24-hour link before nickname updates
+- Enforce 60-day cooldown between applied nickname changes
+- Keep 301 redirects from old /@nickname URLs (and nested album/photo paths) for one year
+- Success banner on /account?nickname_changed=true after verification
+
+Database:
+- Add profiles.nickname_changed_at and nickname_redirects table
+- Add auth_tokens.nickname_change token type and new_nickname column
+- BEFORE UPDATE trigger for cooldown, redirect history, and reclaim logic
+- RPCs: resolve_nickname_redirect, is_nickname_available
+- Protect nickname_changed_at from client writes
+
+API & Email:
+- POST /api/account/change-nickname (token + Resend email)
+- GET /auth/verify-nickname-change (apply change + revalidate profiles)
+- ChangeNicknameTemplate email + /email/change-nickname preview
+
+Routing:
+- proxy.ts: 301 /@old/... → /@new/... via nickname_redirects
+- Bare /old/... paths also resolve through redirects
+
+Shared:
+- src/utils/nickname.ts (schema, cooldown helpers, normalization)
+- Onboarding availability uses is_nickname_available RPC
+
+Cleanup & Docs:
+- Weekly cleanup cron deletes expired nickname_redirects
+- Help copy updated for account and getting-started
+
+Files changed (18):
+
+New (9):
+- supabase/migrations/20260312000006_nickname_change_support.sql
+- src/app/api/account/change-nickname/route.ts
+- src/app/auth/verify-nickname-change/route.ts
+- src/components/account/ChangeNicknameModal.tsx
+- src/emails/auth/change-nickname.tsx
+- src/lib/nicknameRedirect.ts
+- src/utils/nickname.ts
+- src/utils/nickname.test.ts
+- changelog/2026-09-04/
+
+Modified (9):
+- src/app/account/page.tsx
+- src/app/api/cron/cleanup-deleted-content/route.ts
+- src/app/email/[template]/page.tsx
+- src/app/onboarding/OnboardingClient.tsx
+- src/components/account/ProfileSection.tsx
+- src/content/help/account.tsx
+- src/content/help/getting-started.tsx
+- src/database.types.ts
+- src/hooks/useAccountForm.ts
+- src/proxy.ts

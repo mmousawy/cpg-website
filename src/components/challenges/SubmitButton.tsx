@@ -4,8 +4,8 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import Button from '@/components/shared/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
 import { useMySubmissionsForChallenge } from '@/hooks/useChallengeSubmissions';
+import { useSession } from '@/hooks/useSession';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useContext } from 'react';
@@ -57,23 +57,25 @@ function SubmitButtonAuthenticated({
   const showSuccessModal = (submittedCount: number, photoUrls: string[]) => {
     const handleClose = () => modalContext.setIsOpen(false);
 
-    modalContext.setSize('small');
+    modalContext.setSize('default');
+    modalContext.setFlushContentTop(false);
     modalContext.setTitle('');
     modalContext.setContent(
       <SubmissionSuccessContent
-        challengeTitle={challengeTitle}
+        variant="challenge"
+        destinationTitle={challengeTitle}
         submittedCount={submittedCount}
         photoUrls={photoUrls}
       />,
     );
     modalContext.setFooter(
       <div
-        className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full"
+        className="flex flex-wrap justify-center gap-3 w-full"
       >
         <Button
           onClick={handleClose}
           variant="primary"
-          className="min-w-[120px]"
+          className="min-w-30"
         >
           Got it!
         </Button>

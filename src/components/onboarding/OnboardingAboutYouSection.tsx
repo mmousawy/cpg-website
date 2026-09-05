@@ -28,7 +28,7 @@ export default function OnboardingAboutYouSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70 font-heading"
+        className="mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         About you
       </h2>
@@ -43,13 +43,13 @@ export default function OnboardingAboutYouSection({
               htmlFor="fullName"
               className="text-sm font-medium"
             >
-              Full name
+              Screen name
             </label>
             <Input
               id="fullName"
               type="text"
               {...register('fullName')}
-              placeholder="Your full name"
+              placeholder="Your screen name"
             />
             {errors.fullName && (
               <p
@@ -58,6 +58,11 @@ export default function OnboardingAboutYouSection({
                 {errors.fullName.message}
               </p>
             )}
+            <p
+              className="text-xs text-foreground/80"
+            >
+              This is how you appear on your profile. It doesn&apos;t have to be your real name.
+            </p>
           </div>
 
           {isOAuthUser && (

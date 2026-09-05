@@ -3,16 +3,17 @@
 import MemberStatsExplorer from '@/components/admin/MemberStatsExplorer';
 import PageContainer from '@/components/layout/PageContainer';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import StatsChartTypeToggle, { type StatsChartType } from '@/components/stats/StatsChartTypeToggle';
 import StatsDonutChart from '@/components/stats/StatsDonutChart';
 import StatsKpiGrid from '@/components/stats/StatsKpiGrid';
 import StatsRangeTabs from '@/components/stats/StatsRangeTabs';
 import StatsRankedList, { formatBytesRanked } from '@/components/stats/StatsRankedList';
 import StatsSection from '@/components/stats/StatsSection';
 import StatsTimeSeriesChart from '@/components/stats/StatsTimeSeriesChart';
-import type { AdminStatsOverview } from '@/types/stats';
-import { formatStorageTableRows } from '@/utils/stats/formatStorageTableRows';
-import type { StatsRange, StatsTimeSeriesPoint } from '@/types/stats';
+import type { AdminStatsOverview, StatsRange, StatsTimeSeriesPoint } from '@/types/stats';
 import { formatFileSize } from '@/utils/formatFileSize';
+import { formatStorageTableRows } from '@/utils/stats/formatStorageTableRows';
+import type { StatsBucket } from '@/utils/stats/timeSeries';
 import clsx from 'clsx';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -33,6 +34,8 @@ export default function AdminStatsClient() {
   const [range, setRange] = useState<StatsRange>('30d');
   const [overview, setOverview] = useState<AdminStatsOverview | null>(null);
   const [series, setSeries] = useState<SeriesEntry[]>([]);
+  const [bucket, setBucket] = useState<StatsBucket | undefined>();
+  const [chartType, setChartType] = useState<StatsChartType>('line');
   const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -43,6 +46,7 @@ export default function AdminStatsClient() {
       if (!res.ok) throw new Error(data.error);
       setOverview(data.overview);
       setSeries(data.series ?? []);
+      setBucket(data.bucket);
     } catch (err) {
       console.error(err);
     } finally {
@@ -91,7 +95,7 @@ export default function AdminStatsClient() {
           Statistics
         </h1>
         <p
-          className="mt-2 text-base sm:text-lg text-foreground/80"
+          className="text-base sm:text-lg text-foreground/80 mt-1"
         >
           Site analytics, member usage, and preference breakdowns
         </p>
@@ -157,7 +161,17 @@ export default function AdminStatsClient() {
 
           <StatsSection
             title="Activity over time"
-            action={<StatsRangeTabs value={range} onChange={setRange} />}
+            action={(
+              <div
+                className="flex flex-wrap items-center gap-3"
+              >
+                <StatsChartTypeToggle
+                  value={chartType}
+                  onChange={setChartType}
+                />
+                <StatsRangeTabs value={range} onChange={setRange} />
+              </div>
+            )}
           >
             {isLoading ? (
               <div
@@ -177,6 +191,8 @@ export default function AdminStatsClient() {
                     seriesUrl="/api/admin/stats"
                     points={s.points}
                     range={range}
+                    bucket={bucket}
+                    chartType={chartType}
                     valueFormatter={
                       s.metric === 'storage_added'
                         ? (v) => formatFileSize(v) ?? '0'

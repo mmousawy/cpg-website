@@ -106,13 +106,18 @@ export default function Modal() {
         >
           {/* Fixed header */}
           <div
-            className="shrink-0 flex items-start justify-between gap-4 p-4 pb-0"
+            className={clsx(
+              'shrink-0 flex items-start gap-4 p-4 pb-0',
+              title ? 'justify-between' : 'justify-end',
+            )}
           >
-            <h2
-              className="text-2xl font-bold max-sm:text-xl"
-            >
-              {title}
-            </h2>
+            {title ? (
+              <h2
+                className="text-2xl font-bold max-sm:text-xl"
+              >
+                {title}
+              </h2>
+            ) : null}
             <button
               className="shrink-0 rounded-full border border-border-color p-1 hover:bg-background"
               onClick={closeModal}

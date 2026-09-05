@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSession } from '@/hooks/useSession';
 import {
+  useAcceptAlbumInvite,
   useJoinSharedAlbum,
   useMySharedAlbumMembership,
   useSharedAlbumRequests,
@@ -67,6 +68,11 @@ function JoinAlbumButtonAuthenticated(props: JoinAlbumButtonProps) {
   const joinMutation = useJoinSharedAlbum(albumId, ownerNickname, albumSlug, {
     albumTitle,
     ownerId,
+    userId: user?.id,
+  });
+  const acceptInviteMutation = useAcceptAlbumInvite(albumId, ownerNickname, albumSlug, user?.id, {
+    albumTitle,
+    ownerId,
   });
 
   if (isEventAlbum || !joinPolicy) {
@@ -77,32 +83,42 @@ function JoinAlbumButtonAuthenticated(props: JoinAlbumButtonProps) {
   const hasPendingRequest = requests?.some(
     (r) => r.user_id === user?.id && r.type === 'request',
   );
-  const hasPendingInvite = requests?.some(
-    (r) => r.user_id === user?.id && r.type === 'invite',
+  const pendingInvite = requests?.find(
+    (r) => r.user_id === user?.id && r.type === 'invite' && r.status === 'pending',
   );
+  const hasPendingInvite = !!pendingInvite;
 
-  const handleClick = () => {
+  const handleJoinClick = () => {
     joinMutation.mutate(undefined, {
       onSuccess: (result) => {
         if (result?.status === 'already_requested' || result?.status === 'requested') {
           // Could show a toast - for now we rely on query invalidation
         }
       },
-      onError: (err) => {
-        modalContext.setSize('small');
-        modalContext.setTitle('Error');
-        modalContext.setContent(
-          <p
-            className="text-sm text-foreground"
-          >
-            {err.message}
-          </p>,
-        );
-        modalContext.setFooter(null);
-        modalContext.setIsOpen(true);
-      },
+      onError: showJoinError,
     });
   };
+
+  const handleAcceptInviteClick = () => {
+    if (!pendingInvite) return;
+    acceptInviteMutation.mutate(pendingInvite.id, {
+      onError: showJoinError,
+    });
+  };
+
+  function showJoinError(err: Error) {
+    modalContext.setSize('small');
+    modalContext.setTitle('Error');
+    modalContext.setContent(
+      <p
+        className="text-sm text-foreground"
+      >
+        {err.message}
+      </p>,
+    );
+    modalContext.setFooter(null);
+    modalContext.setIsOpen(true);
+  }
 
   if (membershipLoading) {
     return (
@@ -123,8 +139,8 @@ function JoinAlbumButtonAuthenticated(props: JoinAlbumButtonProps) {
     return (
       <Button
         variant="primary"
-        onClick={handleClick}
-        loading={joinMutation.isPending}
+        onClick={handleAcceptInviteClick}
+        loading={acceptInviteMutation.isPending}
       >
         Accept invite
       </Button>
@@ -146,7 +162,7 @@ function JoinAlbumButtonAuthenticated(props: JoinAlbumButtonProps) {
   return (
     <Button
       variant="primary"
-      onClick={handleClick}
+      onClick={handleJoinClick}
       loading={joinMutation.isPending}
     >
       {label}

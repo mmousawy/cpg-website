@@ -2,9 +2,11 @@
 
 import NotificationToast from '@/components/notifications/NotificationToast';
 import { useAuth } from '@/hooks/useAuth';
-import { isAdminNotificationType, type NotificationWithActor } from '@/types/notifications';
+import { invalidateSharedAlbumListQueries, SHARED_ALBUM_LIST_NOTIFICATION_TYPES } from '@/hooks/useAlbums';
+import { isAdminNotificationType, type NotificationType, type NotificationWithActor } from '@/types/notifications';
 import { supabase } from '@/utils/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -46,6 +48,7 @@ function handleNotificationSound(): void {
  */
 export function useRealtimeNotifications() {
   const { user, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
@@ -109,6 +112,10 @@ export function useRealtimeNotifications() {
 
           // Trigger a refresh event so NotificationButton updates its count
           window.dispatchEvent(new CustomEvent('notifications:refresh'));
+
+          if (SHARED_ALBUM_LIST_NOTIFICATION_TYPES.has(fullNotification.type as NotificationType)) {
+            invalidateSharedAlbumListQueries(queryClient, user.id);
+          }
         },
       )
       .subscribe();
@@ -121,5 +128,5 @@ export function useRealtimeNotifications() {
         channelRef.current = null;
       }
     };
-  }, [user?.id, isAdmin]);
+  }, [user?.id, isAdmin, queryClient]);
 }

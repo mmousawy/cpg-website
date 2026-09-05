@@ -1,8 +1,8 @@
 'use client';
 
 import Container from '@/components/layout/Container';
-import type { AccountStats, Profile } from '@/hooks/useAccountForm';
 import { routes } from '@/config/routes';
+import type { AccountStats, Profile } from '@/hooks/useAccountForm';
 import Link from 'next/link';
 
 type AccountStatsWithChallenges = AccountStats & {
@@ -19,7 +19,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70 font-heading"
+        className="mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         Account info
       </h2>

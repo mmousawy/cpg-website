@@ -29,15 +29,15 @@ export async function GET(request: NextRequest) {
     const metric = params.get('metric');
     const from = params.get('from');
     const to = params.get('to');
-    const bucket = parseBucket(params.get('bucket'));
+    const zoomBucket = parseBucket(params.get('bucket'));
 
-    if (metric && from && to && bucket) {
+    if (metric && from && to && zoomBucket) {
       const start = new Date(from);
       const end = new Date(to);
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return NextResponse.json({ error: 'Invalid date range' }, { status: 400 });
       }
-      const points = await fetchTimeSeries(supabase, metric, { start, end, bucket }, user.id);
+      const points = await fetchTimeSeries(supabase, metric, { start, end, bucket: zoomBucket }, user.id);
       return NextResponse.json({ series: [{ metric, points }] });
     }
 
@@ -45,11 +45,12 @@ export async function GET(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('nickname')
+      .select('nickname, created_at')
       .eq('id', user.id)
       .single();
 
     const nickname = profile?.nickname ?? user.id;
+    const allTimeStart = new Date(user.created_at ?? profile?.created_at ?? Date.now());
 
     const { data: lifetime, error: statsError } = await supabase.rpc('get_user_stats', {
       p_user_id: user.id,
@@ -61,12 +62,13 @@ export async function GET(request: NextRequest) {
     }
 
     const detail = await getMemberStatsDetail(user.id, nickname);
-    const series = await getMemberTimeSeries(user.id, range);
+    const { bucket, series } = await getMemberTimeSeries(user.id, range, allTimeStart);
 
     return NextResponse.json({
       lifetime,
       detail,
       range,
+      bucket,
       series,
       nickname,
     });

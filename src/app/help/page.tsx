@@ -37,7 +37,7 @@ export default function HelpPage() {
             </h1>
           </div>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/80"
+            className="text-base sm:text-lg text-foreground/80 mt-1"
           >
             Find answers to common questions about using Creative Photography Group.
           </p>

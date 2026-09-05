@@ -103,7 +103,7 @@ function Header({ photoCount, album, albumSlug, ownerNickname, eventId }: { phot
 
   return (
     <div
-      className="flex items-center justify-between mb-6"
+      className="flex items-center justify-between mb-4 sm:mb-6"
     >
       <EventPhotosHeading
         photoCount={photoCount}
@@ -152,7 +152,7 @@ export default function EventPhotosSection({
   return (
     <div
       id="photos"
-      className="mb-4"
+      className="sm:mb-2"
     >
       {gridPhotos.length > 0 ? (
         <JustifiedPhotoGrid

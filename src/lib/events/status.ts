@@ -1,44 +1,53 @@
-import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 export const EVENT_END_HOUR = 17;
 export const EVENT_TIMEZONE = 'Europe/Amsterdam';
 
 export type EventStatus = 'past' | 'now' | 'upcoming';
 
-function getAmsterdamNow(nowTs = Date.now()) {
-  return dayjs(nowTs).tz(EVENT_TIMEZONE);
+const amsterdamClock = new Intl.DateTimeFormat('en-GB', {
+  timeZone: EVENT_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+function getAmsterdamWallClock(nowTs = Date.now()) {
+  const parts = amsterdamClock.formatToParts(new Date(nowTs));
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? '';
+
+  const hour = Number(value('hour'));
+  const minute = Number(value('minute'));
+
+  return {
+    date: `${value('year')}-${value('month')}-${value('day')}`,
+    minutes: hour * 60 + minute,
+  };
 }
 
 export function getAmsterdamDateString(nowTs = Date.now()) {
-  return getAmsterdamNow(nowTs).format('YYYY-MM-DD');
+  return getAmsterdamWallClock(nowTs).date;
 }
 
 function getAmsterdamMinutes(nowTs = Date.now()) {
-  const now = getAmsterdamNow(nowTs);
-  const hours = now.hour();
-  const minutes = now.minute();
-
-  return hours * 60 + minutes;
+  return getAmsterdamWallClock(nowTs).minutes;
 }
 
-function normalizeEventTime(time: string | null) {
-  if (!time) return '00:00:00';
-  if (time.length === 5) return `${time}:00`;
+function eventStartMinutes(time: string) {
+  const normalized = time.length === 5 ? `${time}:00` : time;
+  const [hours, minutes] = normalized.split(':').map(Number);
 
-  return time;
+  return hours * 60 + (minutes || 0);
 }
 
 export function getEventQueryContext(nowTs = Date.now()) {
-  const nowDate = getAmsterdamDateString(nowTs);
+  const { date, minutes } = getAmsterdamWallClock(nowTs);
 
   return {
-    nowDate,
-    hasEventDayEnded: getAmsterdamMinutes(nowTs) >= EVENT_END_HOUR * 60,
+    nowDate: date,
+    hasEventDayEnded: minutes >= EVENT_END_HOUR * 60,
   };
 }
 
@@ -54,21 +63,14 @@ export function getEventStatus(
   if (!date) return 'upcoming';
 
   const { nowDate, hasEventDayEnded } = getEventQueryContext(now);
-  const nowInAmsterdam = getAmsterdamNow(now);
 
   if (date < nowDate) return 'past';
 
   if (date === nowDate) {
     if (hasEventDayEnded) return 'past';
 
-    if (time) {
-      const eventStart = dayjs.tz(
-        `${date} ${normalizeEventTime(time)}`,
-        'YYYY-MM-DD HH:mm:ss',
-        EVENT_TIMEZONE,
-      );
-
-      if (!nowInAmsterdam.isBefore(eventStart)) return 'now';
+    if (time && getAmsterdamMinutes(now) >= eventStartMinutes(time)) {
+      return 'now';
     }
   }
 

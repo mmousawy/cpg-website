@@ -128,7 +128,7 @@ function ProfileHeaderRow({
           />
         )}
       </div>
-      {profile.nickname && (
+      {profile.nickname && !isPreview && (
         <div
           className="flex shrink-0 items-center self-start sm:mt-2"
         >

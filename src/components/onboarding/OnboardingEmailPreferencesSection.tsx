@@ -25,7 +25,7 @@ export default function OnboardingEmailPreferencesSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-70 font-heading"
+        className="mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         Email preferences
       </h2>

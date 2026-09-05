@@ -141,7 +141,7 @@ export default function InviteMembersModal({
             {inviteableResults.map((r) => (
               <li
                 key={r.entity_id}
-                className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-background/50"
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-background/50"
                 onClick={() => toggleSelect(r.entity_id)}
               >
                 <Checkbox

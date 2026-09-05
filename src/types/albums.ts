@@ -33,6 +33,10 @@ export type AlbumWithPhotos = Album & {
   tags?: AlbumTag[];
   /** Slug of linked event when this is an event album */
   event_slug?: string | null;
+  /** Title of linked event when this is an event album */
+  event_title?: string | null;
+  /** Date of linked event when this is an event album */
+  event_date?: string | null;
   profile?: {
     full_name: string | null;
     avatar_url: string | null;

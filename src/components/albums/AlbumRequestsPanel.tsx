@@ -54,7 +54,7 @@ export default function AlbumRequestsPanel({
               {joinRequests.map((req) => (
                 <li
                   key={req.id}
-                  className="flex items-center justify-between gap-3 px-4 py-2"
+                  className="flex items-center justify-between gap-3 px-4 py-3"
                 >
                   <div
                     className="flex items-center gap-3 min-w-0 flex-1"
@@ -66,17 +66,12 @@ export default function AlbumRequestsPanel({
                       size="sm"
                     />
                     <div
-                      className="min-w-0"
+                      className="min-w-0 flex flex-col"
                     >
                       <span
                         className="font-medium block truncate"
                       >
                         {getDisplayName(req)}
-                      </span>
-                      <span
-                        className="text-xs text-foreground/60"
-                      >
-                        Requested to join
                       </span>
                     </div>
                   </div>
@@ -123,7 +118,7 @@ export default function AlbumRequestsPanel({
               {pendingInvites.map((req) => (
                 <li
                   key={req.id}
-                  className="flex items-center justify-between gap-3 px-4 py-2"
+                  className="flex items-center justify-between gap-3 px-4 py-3"
                 >
                   <div
                     className="flex items-center gap-3 min-w-0 flex-1"

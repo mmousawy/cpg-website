@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     albums: { deleted: 0, failed: 0 },
     comments: { deleted: 0, failed: 0 },
     accounts: { deleted: 0, failed: 0 },
+    nicknameRedirects: { deleted: 0, failed: 0 },
     errors: [] as string[],
   };
 
@@ -240,6 +241,19 @@ export async function GET(request: NextRequest) {
           results.accounts.failed += 1;
         }
       }
+    }
+
+    // 5. Remove expired nickname redirects (1-year retention)
+    const { error: redirectDeleteError, count: redirectDeleteCount } = await supabase
+      .from('nickname_redirects')
+      .delete({ count: 'exact' })
+      .lt('expires_at', new Date().toISOString());
+
+    if (redirectDeleteError) {
+      results.errors.push(`Failed to delete expired nickname redirects: ${redirectDeleteError.message}`);
+      results.nicknameRedirects.failed += 1;
+    } else {
+      results.nicknameRedirects.deleted = redirectDeleteCount ?? 0;
     }
 
     console.log('Cleanup completed:', JSON.stringify(results, null, 2));

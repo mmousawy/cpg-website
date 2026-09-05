@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                 Email address (for account verification and communication)
               </li>
               <li>
-                Profile information (nickname, full name, bio, avatar)
+                Profile information (nickname, screen name, bio, avatar)
               </li>
               <li>
                 Authentication information (managed securely by Supabase)

@@ -203,6 +203,12 @@ export type AlbumBySlugResult = Pick<
   profile: Pick<Tables<'profiles'>, 'full_name' | 'avatar_url' | 'nickname'> | null;
   photos: Array<Pick<Tables<'album_photos_active'>, 'id' | 'photo_url' | 'title' | 'width' | 'height' | 'sort_order'>> | null;
   tags: Array<Pick<Tables<'album_tags'>, 'tag'>> | null;
+  event: {
+    slug: string;
+    title: string | null;
+    cover_image: string | null;
+    date: string | null;
+  } | null;
 };
 
 /**
@@ -273,7 +279,8 @@ export async function getAlbumBySlug(
         height,
         sort_order
       ),
-      tags:album_tags(tag)
+      tags:album_tags(tag),
+      event:events!albums_event_id_fkey(slug, title, cover_image, date)
     `)
     .eq('user_id', profile.id)
     .eq('slug', albumSlug)

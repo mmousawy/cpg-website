@@ -1,5 +1,4 @@
 import { CPGEvent } from '@/types/events';
-import dayjs from 'dayjs';
 
 import {
   Button as EmailButton,
@@ -8,15 +7,9 @@ import {
 } from '@react-email/components';
 
 import AddToCalendarDropdown from '@/components/events/AddToCalendarDropdown';
+import { getCalendarDateTimes } from '@/lib/events/calendarTime';
 import { EVENT_TIMEZONE } from '@/lib/events/status';
 import { stripHtml } from '@/utils/stripHtml';
-
-function normalizeEventTime(time: string | null) {
-  if (!time) return '00:00:00';
-  if (time.length === 5) return `${time}:00`;
-
-  return time;
-}
 
 type CalendarLinkKey = 'google' | 'outlook' | 'apple';
 
@@ -35,20 +28,15 @@ const emailButtonStyle =
   'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-1 font-mono text-[14px] font-semibold no-underline';
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
-  const calendarDate = dayjs.tz(
-    `${event.date} ${normalizeEventTime(event.time)}`,
-    'YYYY-MM-DD HH:mm:ss',
-    EVENT_TIMEZONE,
-  );
-  const calendarEndDate = calendarDate.add(3, 'hour');
+  const calendarDate = getCalendarDateTimes(event.date, event.time);
 
   const calendarDetails = {
     title: `${event.title} - Creative Photography Group`,
     // Google/Apple: compact floating datetime (no offset) — mobile GCal rejects +02:00 offsets
-    startDate: calendarDate.format('YYYYMMDDTHHmmss'),
-    endDate: calendarEndDate.format('YYYYMMDDTHHmmss'),
-    outlookStartDate: calendarDate.format('YYYY-MM-DDTHH:mm:ssZ'),
-    outlookEndDate: calendarEndDate.format('YYYY-MM-DDTHH:mm:ssZ'),
+    startDate: calendarDate.startDate,
+    endDate: calendarDate.endDate,
+    outlookStartDate: calendarDate.outlookStartDate,
+    outlookEndDate: calendarDate.outlookEndDate,
     description: stripHtml(event.description ?? ''),
     location: event.location?.replace(/\n/gm, ', '),
   };

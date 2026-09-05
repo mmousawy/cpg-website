@@ -25,6 +25,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import AlbumListItem from './AlbumListItem';
+import LinkedEventSection from './LinkedEventSection';
 import SidebarPanel from './SidebarPanel';
 import type { AlbumFormData } from './SingleAlbumEditForm';
 
@@ -373,6 +374,9 @@ export default function SharedAlbumEditForm({
             publicUrl={album.event_slug
               ? `/events/${album.event_slug}#photos`
               : nickname ? `/@${nickname}/album/${album.slug}` : undefined}
+          />
+          <LinkedEventSection
+            album={album}
           />
         </div>
       )}

@@ -91,7 +91,7 @@ export default function SharedAlbumMemberList({
               return (
                 <li
                   key={member.id}
-                  className="flex items-center gap-3 px-4 py-2"
+                  className="flex items-center gap-3 px-4 py-3"
                 >
                   <Avatar
                     avatarUrl={member.profiles?.avatar_url}
@@ -100,7 +100,7 @@ export default function SharedAlbumMemberList({
                     size="sm"
                   />
                   <div
-                    className="min-w-0 flex-1"
+                    className="min-w-0 flex-1 flex flex-col"
                   >
                     {profileUrl ? (
                       <Link
@@ -117,7 +117,7 @@ export default function SharedAlbumMemberList({
                       </span>
                     )}
                     <span
-                      className="text-xs text-foreground/60"
+                      className="text-xs text-foreground/80"
                     >
                       {isOwnerMember ? 'Owner' : 'Member'}
                       {isCurrentUser && ' (you)'}
@@ -128,11 +128,11 @@ export default function SharedAlbumMemberList({
                       type="button"
                       onClick={() => onRemoveMember(member.user_id)}
                       disabled={isRemoving}
-                      className="shrink-0 rounded p-1 text-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
+                      className="shrink-0 rounded p-1 text-foreground/80 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
                       title={`Remove ${displayName}`}
                     >
                       <CloseMiniSVG
-                        className="size-4"
+                        className="size-5"
                       />
                     </button>
                   )}

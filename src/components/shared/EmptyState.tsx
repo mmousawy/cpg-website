@@ -19,7 +19,7 @@ export default function EmptyState({
   return (
     <div
       className={clsx(
-        'border-2 border-dashed border-border-color rounded-md p-8 text-center flex flex-col items-center justify-center',
+        'border-2 border-dashed border-border-color rounded-md p-6 sm:p-8 text-center flex flex-col items-center justify-center',
         className,
       )}
     >

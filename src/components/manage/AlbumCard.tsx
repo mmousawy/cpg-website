@@ -106,6 +106,13 @@ function AlbumCard({
           {' '}
           {photoCount === 1 ? 'photo' : 'photos'}
         </p>
+        {album.event_title && (
+          <p
+            className="text-xs text-foreground/50 mt-0.5 line-clamp-1"
+          >
+            {album.event_title}
+          </p>
+        )}
       </div>
 
       {/* Hover overlay */}
@@ -132,6 +139,7 @@ export default memo(AlbumCard, (prevProps, nextProps) => {
     prevProps.album.title === nextProps.album.title &&
     prevProps.album.cover_image_url === nextProps.album.cover_image_url &&
     prevProps.album.event_cover_image === nextProps.album.event_cover_image &&
+    prevProps.album.event_title === nextProps.album.event_title &&
     prevProps.album.is_public === nextProps.album.is_public &&
     prevProps.album.is_shared === nextProps.album.is_shared &&
     prevProps.album.photos?.length === nextProps.album.photos?.length &&

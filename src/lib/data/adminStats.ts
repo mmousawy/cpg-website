@@ -1,5 +1,6 @@
 import { fetchTimeSeries } from '@/lib/data/statsTimeSeries';
 import type { AdminStatsOverview, StatsRange, StatsRankedItem } from '@/types/stats';
+import { getRangeConfig } from '@/utils/stats/timeSeries';
 import { createClient } from '@/utils/supabase/server';
 
 export type { AdminStatsOverview };
@@ -64,14 +65,25 @@ export async function getAdminTimeSeries(range: StatsRange) {
   const supabase = await createClient();
   const metrics = ['signups', 'uploads', 'views', 'likes', 'comments', 'storage_added', 'photos_deleted'] as const;
 
+  let allTimeStart: Date | undefined;
+  if (range === 'all') {
+    const { data } = await supabase
+      .from('profiles')
+      .select('created_at')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (data?.created_at) allTimeStart = new Date(data.created_at);
+  }
+
   const series = await Promise.all(
     metrics.map(async (metric) => ({
       metric,
-      points: await fetchTimeSeries(supabase, metric, range),
+      points: await fetchTimeSeries(supabase, metric, range, undefined, { allTimeStart }),
     })),
   );
 
-  return series;
+  return { bucket: getRangeConfig(range, { allTimeStart }).bucket, series };
 }
 
 export async function getAdminMemberStats(params: {

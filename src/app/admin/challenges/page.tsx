@@ -37,7 +37,7 @@ export default function AdminChallengesPage() {
             Manage challenges
           </h1>
           <p
-            className="text-base sm:text-lg mt-2 text-foreground/80"
+            className="text-base sm:text-lg text-foreground/80 mt-1"
           >
             Create, edit, and review photo challenges
           </p>
@@ -78,7 +78,7 @@ export default function AdminChallengesPage() {
           {activeChallenges.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-70 font-heading"
+                className="mb-4 text-lg font-semibold opacity-80 font-heading"
               >
                 Active challenges
               </h2>
@@ -101,7 +101,7 @@ export default function AdminChallengesPage() {
           {inactiveChallenges.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-70 font-heading"
+                className="mb-4 text-lg font-semibold opacity-80 font-heading"
               >
                 Inactive challenges
               </h2>
