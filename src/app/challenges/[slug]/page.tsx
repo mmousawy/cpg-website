@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getServerNow } from '@/lib/cache/serverNow';
+import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getAllChallengeSlugs,
   getChallengeBySlug,
@@ -41,11 +42,8 @@ import ClockSVG from 'public/icons/time.svg';
 // Pre-render all challenges at build time
 export async function generateStaticParams() {
   const slugs = await getAllChallengeSlugs();
-  // Must return at least one result for Next.js Cache Components validation
-  if (slugs.length === 0) {
-    return [{ slug: 'sample' }];
-  }
-  return slugs.map((slug) => ({ slug }));
+  const params = slugs.map((slug) => ({ slug }));
+  return ensureStaticParams(params, { slug: 'sample' });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

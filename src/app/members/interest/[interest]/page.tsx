@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 
 // Cached data functions
+import { ensureStaticParams } from '@/lib/staticParams';
 import { getMembersByInterest, getPopularInterests } from '@/lib/data/interests';
 
 type Params = Promise<{ interest: string }>;
@@ -15,7 +16,10 @@ type Params = Promise<{ interest: string }>;
 // Pre-render all interest pages at build time
 export async function generateStaticParams() {
   const popularInterests = await getPopularInterests(100);
-  return popularInterests.map((interest) => ({ interest: encodeURIComponent(interest.name) }));
+  const params = popularInterests.map((interest) => ({
+    interest: encodeURIComponent(interest.name),
+  }));
+  return ensureStaticParams(params, { interest: 'sample' });
 }
 
 export async function generateMetadata({ params }: { params: Params }) {

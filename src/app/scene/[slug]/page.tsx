@@ -11,6 +11,7 @@ import AuthorRow from '@/components/shared/AuthorRow';
 import BlurImage from '@/components/shared/BlurImage';
 import { getServerNow } from '@/lib/cache/serverNow';
 import { routes } from '@/config/routes';
+import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getAllSceneEventSlugs,
   getRelatedSceneEvents,
@@ -43,7 +44,8 @@ import SceneEventStickyBar from '@/components/scene/SceneEventStickyBar';
 
 export async function generateStaticParams() {
   const slugs = await getAllSceneEventSlugs();
-  return slugs.map((slug) => ({ slug }));
+  const params = slugs.map((slug) => ({ slug }));
+  return ensureStaticParams(params, { slug: 'sample' });
 }
 
 export async function generateMetadata({

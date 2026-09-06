@@ -1,4 +1,5 @@
 import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
@@ -7,7 +8,7 @@ import AlbumContent from './AlbumContent';
 // Pre-render all public albums at build time for optimal caching
 export async function generateStaticParams() {
   const paths = await getAllAlbumPaths();
-  return paths;
+  return ensureStaticParams(paths, { nickname: '@sample', albumSlug: 'sample' });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string; albumSlug: string }> }) {
