@@ -365,6 +365,8 @@ See **[docs/deployment/coolify.md](./docs/deployment/coolify.md)** for full setu
 
 **Ports:** production `127.0.0.1:3000:3000`, staging `127.0.0.1:2000:3000` (staging = prod − 1000). See [infra/coolify/PORTS.md](./infra/coolify/PORTS.md).
 
+**Supabase:** production `/home/ubuntu/supabase-project`, staging `/data/supabase-staging` — [infra/supabase-staging/README.md](./infra/supabase-staging/README.md).
+
 Quick reference:
 
 - `Dockerfile` + `output: 'standalone'` in `next.config.ts`
