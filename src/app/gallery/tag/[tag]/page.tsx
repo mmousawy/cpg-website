@@ -11,6 +11,7 @@ import ImageSVG from 'public/icons/image.svg';
 
 // Cached data functions
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { getAllTagNames, getPhotosByTag } from '@/lib/data/gallery';
 
 type Params = Promise<{ tag: string }>;
@@ -18,7 +19,8 @@ type Params = Promise<{ tag: string }>;
 // Pre-render all tag pages at build time
 export async function generateStaticParams() {
   const tagNames = await getAllTagNames();
-  return tagNames.map((tag) => ({ tag: encodeURIComponent(tag) }));
+  const params = tagNames.map((tag) => ({ tag: encodeURIComponent(tag) }));
+  return ensureStaticParams(params, { tag: 'sample' });
 }
 
 export async function generateMetadata({ params }: { params: Params }) {

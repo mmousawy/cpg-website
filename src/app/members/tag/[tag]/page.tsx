@@ -10,6 +10,7 @@ import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 
 // Cached data functions
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { getPopularTagsWithMemberCounts } from '@/lib/data/gallery';
 import { getMembersByTag } from '@/lib/data/members';
 
@@ -18,7 +19,8 @@ type Params = Promise<{ tag: string }>;
 // Pre-render all tag pages at build time
 export async function generateStaticParams() {
   const popularTags = await getPopularTagsWithMemberCounts(100);
-  return popularTags.map((tag) => ({ tag: encodeURIComponent(tag.name) }));
+  const params = popularTags.map((tag) => ({ tag: encodeURIComponent(tag.name) }));
+  return ensureStaticParams(params, { tag: 'sample' });
 }
 
 export async function generateMetadata({ params }: { params: Params }) {

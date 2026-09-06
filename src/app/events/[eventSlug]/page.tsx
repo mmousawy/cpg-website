@@ -21,6 +21,7 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getEventAlbum } from '@/lib/data/albums';
+import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getAllEventSlugs,
   getEventAttendeesForEvent,
@@ -51,7 +52,8 @@ type AttendeeWithProfile = Pick<Tables<'events_rsvps'>, 'id' | 'email'> & {
 // Pre-render all events at build time for optimal caching
 export async function generateStaticParams() {
   const slugs = await getAllEventSlugs();
-  return slugs.map((eventSlug) => ({ eventSlug }));
+  const params = slugs.map((eventSlug) => ({ eventSlug }));
+  return ensureStaticParams(params, { eventSlug: 'sample' });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ eventSlug: string }> }) {

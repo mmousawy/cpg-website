@@ -16,6 +16,7 @@ import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getAllProfileNicknames,
   getProfileByNickname,
@@ -28,7 +29,8 @@ import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/util
 // Pre-render all public profiles at build time for optimal caching
 export async function generateStaticParams() {
   const nicknames = await getAllProfileNicknames();
-  return nicknames.map((nickname) => ({ nickname }));
+  const params = nicknames.map((nickname) => ({ nickname }));
+  return ensureStaticParams(params, { nickname: '@sample' });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
