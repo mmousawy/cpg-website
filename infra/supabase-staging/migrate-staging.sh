@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Apply repo migrations to an empty staging Postgres (no production data).
-# Usage: ./infra/supabase-staging/migrate-staging.sh 'postgresql://postgres:PASS@127.0.0.1:5433/postgres'
+#
+# Usage (on VPS — Postgres on host :5433 from docker-compose.override.yml):
+#   export STAGING_DB_URL="postgresql://postgres:PASS@127.0.0.1:5433/postgres"
+#   ./infra/supabase-staging/migrate-staging.sh "$STAGING_DB_URL"
 
 set -euo pipefail
 
