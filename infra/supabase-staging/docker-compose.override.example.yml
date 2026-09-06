@@ -1,24 +1,32 @@
-# Example override for /data/supabase-staging/docker-compose.override.yml
-# Kong on 127.0.0.1:8002 so production can keep :8000.
-# Optional: expose Postgres on 127.0.0.1:5433 for `supabase db push` from the VPS.
+# /data/supabase-staging/docker-compose.override.yml
+#
+# REQUIRED on the same VPS as production (/home/ubuntu/supabase-project).
+# Renames all container_name values; Kong :8002, Postgres :5433.
+# Service key for pooler is supavisor (prod container_name: supabase-pooler).
+# db-config and deno-cache need no override.
+#
+#   cp /home/ubuntu/cpg-website/infra/supabase-staging/docker-compose.override.example.yml \
+#     /data/supabase-staging/docker-compose.override.yml
 
 services:
+  studio:
+    container_name: supabase-staging-studio
+
   kong:
     container_name: supabase-staging-kong
-    ports:
+    # !override replaces base compose ports (otherwise Kong also binds :8000 → conflict with prod)
+    ports: !override
       - "127.0.0.1:8002:8000"
       - "127.0.0.1:8444:8443"
-
-  db:
-    container_name: supabase-staging-db
-    ports:
-      - "127.0.0.1:5433:5432"
 
   auth:
     container_name: supabase-staging-auth
 
   rest:
     container_name: supabase-staging-rest
+
+  realtime:
+    container_name: supabase-staging-realtime
 
   storage:
     container_name: supabase-staging-storage
@@ -29,5 +37,21 @@ services:
   meta:
     container_name: supabase-staging-meta
 
-  realtime:
-    container_name: supabase-staging-realtime
+  functions:
+    container_name: supabase-staging-edge-functions
+
+  analytics:
+    container_name: supabase-staging-analytics
+
+  db:
+    container_name: supabase-staging-db
+    ports: !override
+      - "127.0.0.1:5433:5432"
+
+  vector:
+    container_name: supabase-staging-vector
+
+  supavisor:
+    container_name: supabase-staging-pooler
+    # Base compose publishes :5432 on the host (prod). Staging uses direct db on :5433 only.
+    ports: !override []

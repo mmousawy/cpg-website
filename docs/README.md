@@ -8,7 +8,7 @@
 - **[../infra/coolify/PORTS.md](../infra/coolify/PORTS.md)** - Host port convention (prod `:3000`, staging `:2000`)
 - **[../infra/coolify/production-cutover.md](../infra/coolify/production-cutover.md)** - DNS cutover from Vercel to Coolify
 - **[../infra/coolify/production-checklist.md](../infra/coolify/production-checklist.md)** - Production smoke tests
-- **[../infra/supabase-staging/README.md](../infra/supabase-staging/README.md)** - Isolated staging Supabase on the same VPS
+- **[../infra/supabase-staging/README.md](../infra/supabase-staging/README.md)** - Isolated staging Supabase (`/data/supabase-staging`, container override, JWT keys)
 
 ### Caching & Revalidation
 

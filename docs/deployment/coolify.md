@@ -1,6 +1,17 @@
 # Deploy on Coolify (VPS)
 
-Self-host the Next.js app on your VPS with [Coolify](https://coolify.io). Production and staging are separate Coolify apps behind **Nginx** (not Coolify Traefik). Supabase stays self-hosted (`db.creativephotography.group` prod, optional `db-staging` for sandbox).
+Self-host the Next.js app on your VPS with [Coolify](https://coolify.io). Production and staging are separate Coolify apps behind **Nginx** (not Coolify Traefik). Supabase is self-hosted in two isolated Docker stacks on the same VPS.
+
+## VPS layout (this server)
+
+| Component | Production | Staging |
+| --- | --- | --- |
+| Next.js (Coolify) | `127.0.0.1:3000` → `creativephotography.group` | `127.0.0.1:2000` → `staging.creativephotography.group` |
+| Supabase compose dir | `/home/ubuntu/supabase-project` | `/data/supabase-staging` |
+| Supabase API | `https://db.creativephotography.group` (`:8000`) | `https://db-staging.creativephotography.group` (`:8002`) |
+| Coolify dashboard | `https://coolify.creativephotography.group` (`:9000`) | — |
+
+Staging Supabase setup (clone prod compose, container rename override, JWT keys): [infra/supabase-staging/README.md](../../infra/supabase-staging/README.md).
 
 ## Port convention
 
