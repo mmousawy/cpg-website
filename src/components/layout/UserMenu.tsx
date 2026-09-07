@@ -120,6 +120,7 @@ export default function UserMenu() {
               {profile?.nickname && (
                 <Link
                   href={`/@${profile.nickname}`}
+                  prefetch={false}
                   onClick={closeMenu}
                   className={menuLinkClass(`/@${profile.nickname}`, true)}
                 >
@@ -141,6 +142,7 @@ export default function UserMenu() {
               )}
               <Link
                 href="/account/events"
+                prefetch={false}
                 onClick={closeMenu}
                 className={menuLinkClass('/account/events')}
               >
@@ -161,6 +163,7 @@ export default function UserMenu() {
               </Link>
               <Link
                 href="/account/challenges"
+                prefetch={false}
                 onClick={closeMenu}
                 className={menuLinkClass('/account/challenges')}
               >
@@ -181,6 +184,7 @@ export default function UserMenu() {
               </Link>
               <Link
                 href="/account/photos"
+                prefetch={false}
                 onClick={closeMenu}
                 className={menuLinkClass('/account/photos')}
               >
@@ -201,6 +205,7 @@ export default function UserMenu() {
               </Link>
               <Link
                 href="/account/stats"
+                prefetch={false}
                 onClick={closeMenu}
                 className={menuLinkClass('/account/stats')}
               >
@@ -221,6 +226,7 @@ export default function UserMenu() {
               </Link>
               <Link
                 href="/account"
+                prefetch={false}
                 onClick={closeMenu}
                 className={menuLinkClass('/account', true)}
               >
@@ -248,6 +254,7 @@ export default function UserMenu() {
               {isAdmin && (
                 <Link
                   href={routes.admin.url}
+                  prefetch={false}
                   onClick={closeMenu}
                   className={menuLinkClass(routes.admin.url)}
                 >
@@ -370,6 +377,7 @@ export default function UserMenu() {
           >
             <Link
               href={`${routes.login.url}?redirectTo=${encodeURIComponent(pathname)}`}
+              prefetch={false}
               onClick={closeMenu}
               className={menuLinkClass(routes.login.url)}
             >
@@ -390,6 +398,7 @@ export default function UserMenu() {
             </Link>
             <Link
               href={`${routes.signup.url}?redirectTo=${encodeURIComponent(pathname)}`}
+              prefetch={false}
               onClick={closeMenu}
               className={menuLinkClass(routes.signup.url)}
             >
