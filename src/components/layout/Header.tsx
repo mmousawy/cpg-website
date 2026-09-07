@@ -12,6 +12,7 @@ import { useMounted } from '@/hooks/useMounted';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
 import Avatar from '../auth/Avatar';
+import MobileMenu from './MobileMenu';
 import UserMenu from './UserMenu';
 
 const SearchModal = dynamic(
@@ -34,11 +35,6 @@ const NotificationButton = dynamic(
 
 const MobileNotificationButton = dynamic(
   () => import('../notifications/MobileNotificationButton'),
-  { ssr: false },
-);
-
-const MobileMenu = dynamic(
-  () => import('./MobileMenu'),
   { ssr: false },
 );
 
@@ -80,7 +76,6 @@ export default function Header() {
   const mounted = useMounted();
   const { profile, user } = useSession();
   const searchReady = useKeepMounted(searchOpen || searchIntent);
-  const mobileMenuReady = useKeepMounted(mobileMenuOpen);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
@@ -296,13 +291,11 @@ export default function Header() {
                 </svg>
               </button>
 
-              {mobileMenuReady && (
-                <MobileMenu
-                  isOpen={mobileMenuOpen}
-                  onClose={() => setMobileMenuOpen(false)}
-                  mounted={mounted}
-                />
-              )}
+              <MobileMenu
+                isOpen={mobileMenuOpen}
+                onClose={() => setMobileMenuOpen(false)}
+                mounted={mounted}
+              />
             </div>
           </div>
         </div>

@@ -174,6 +174,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               {profile?.nickname && (
                 <Link
                   href={`/@${profile.nickname}`}
+                  prefetch={false}
                   onClick={onClose}
                   className={navLinkClass(`/@${profile.nickname}`, true)}
                 >
@@ -195,6 +196,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               )}
               <Link
                 href="/account/events"
+                prefetch={false}
                 onClick={onClose}
                 className={navLinkClass('/account/events')}
               >
@@ -215,6 +217,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               </Link>
               <Link
                 href="/account/challenges"
+                prefetch={false}
                 onClick={onClose}
                 className={navLinkClass('/account/challenges')}
               >
@@ -235,6 +238,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               </Link>
               <Link
                 href="/account/photos"
+                prefetch={false}
                 onClick={onClose}
                 className={navLinkClass('/account/photos')}
               >
@@ -255,6 +259,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               </Link>
               <Link
                 href="/account/stats"
+                prefetch={false}
                 onClick={onClose}
                 className={navLinkClass('/account/stats')}
               >
@@ -275,6 +280,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               </Link>
               <Link
                 href="/account"
+                prefetch={false}
                 onClick={onClose}
                 className={navLinkClass('/account', true)}
               >
@@ -302,6 +308,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
               {isAdmin && (
                 <Link
                   href={routes.admin.url}
+                  prefetch={false}
                   onClick={onClose}
                   className={navLinkClass(routes.admin.url)}
                 >
@@ -330,6 +337,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           >
             <Link
               href={`${routes.login.url}?redirectTo=${encodeURIComponent(pathname)}`}
+              prefetch={false}
               onClick={onClose}
               className={navLinkClass(routes.login.url)}
             >
@@ -350,6 +358,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
             </Link>
             <Link
               href={`${routes.signup.url}?redirectTo=${encodeURIComponent(pathname)}`}
+              prefetch={false}
               onClick={onClose}
               className={navLinkClass(routes.signup.url)}
             >
