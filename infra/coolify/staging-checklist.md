@@ -2,6 +2,8 @@
 
 Run against `https://staging.creativephotography.group` before treating staging as safe to experiment on.
 
+**Before deploying:** read [vps-resources.md](./vps-resources.md) — do not run prod + staging builds at once on this VPS.
+
 ## Staging Supabase (`/data/supabase-staging`)
 
 - [ ] Override installed: `/data/supabase-staging/docker-compose.override.yml` (unique `supabase-staging-*` container names)

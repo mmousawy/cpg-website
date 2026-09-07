@@ -42,7 +42,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
       {/* Dark overlay - rendered via portal to escape header's stacking context */}
       {mounted && createPortal(
         <div
-          className="fixed inset-0 z-30 bg-black/40 dark:bg-black/60 backdrop-blur-[1px]"
+          className="fixed inset-0 z-30 bg-black/40 dark:bg-black/60"
           onClick={onClose}
           aria-hidden="true"
         />,
@@ -59,6 +59,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
         >
           <Link
             href={routes.gallery.url}
+            prefetch={false}
             onClick={onClose}
             className={navLinkClass(routes.gallery.url)}
           >
@@ -79,6 +80,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </Link>
           <Link
             href={routes.events.url}
+            prefetch={false}
             onClick={onClose}
             className={navLinkClass(routes.events.url)}
           >
@@ -99,6 +101,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </Link>
           <Link
             href={routes.scene.url}
+            prefetch={false}
             onClick={onClose}
             className={navLinkClass(routes.scene.url)}
           >
@@ -110,6 +113,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </Link>
           <Link
             href={routes.challenges.url}
+            prefetch={false}
             onClick={onClose}
             className={navLinkClass(routes.challenges.url)}
           >
@@ -130,6 +134,7 @@ export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps
           </Link>
           <Link
             href={routes.members.url}
+            prefetch={false}
             onClick={onClose}
             className={navLinkClass(routes.members.url)}
           >
