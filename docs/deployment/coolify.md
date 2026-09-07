@@ -13,6 +13,8 @@ Self-host the Next.js app on your VPS with [Coolify](https://coolify.io). Produc
 
 Staging Supabase setup (clone prod compose, container rename override, JWT keys): [infra/supabase-staging/README.md](../../infra/supabase-staging/README.md).
 
+**RAM / OOM during deploy:** this VPS runs Coolify + 2× Supabase + 2× Next. Docker builds are heavy — see [infra/coolify/vps-resources.md](../../infra/coolify/vps-resources.md) (swap, cancel builds, do not deploy prod + staging together).
+
 ## Port convention
 
 **Production = default ports. Staging = host port − 1000.**
@@ -45,7 +47,7 @@ Dashboard: `https://coolify.creativephotography.group` (Nginx → `127.0.0.1:900
 
 ## 2. Staging application
 
-1. **Sources → GitHub App** → `mmousawy/cpg-website`, branch `migration` or `main`.
+1. **Sources → GitHub App** → `mmousawy/cpg-website`, branch **`main`**.
 2. **Build pack:** Dockerfile, container port **3000**.
 3. **Ports mappings:** `127.0.0.1:2000:3000` (host **2000** = prod 3000 − 1000).
 4. Nginx: [nginx-staging.conf](../../infra/coolify/nginx-staging.conf) → `proxy_pass http://127.0.0.1:2000`.
