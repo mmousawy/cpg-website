@@ -7,6 +7,7 @@ import {
   getNicknameCooldownEnd,
   isNicknameChangeOnCooldown,
 } from '@/utils/nickname';
+import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 function hashToken(token: string): string {
@@ -14,12 +15,13 @@ function hashToken(token: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const siteUrl = getRequestSiteUrl(request);
   const token = searchParams.get('token');
 
   if (!token) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
+      `${siteUrl}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
     );
   }
 
@@ -37,13 +39,13 @@ export async function GET(request: NextRequest) {
   if (tokenError || !authToken) {
     console.error('Nickname change token lookup error:', tokenError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_token&message=${encodeURIComponent('This verification link is invalid or has already been used')}`,
+      `${siteUrl}/auth-error?error=invalid_token&message=${encodeURIComponent('This verification link is invalid or has already been used')}`,
     );
   }
 
   if (new Date(authToken.expires_at) < new Date()) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=expired_token&message=${encodeURIComponent('This verification link has expired. Please request a new nickname change.')}`,
+      `${siteUrl}/auth-error?error=expired_token&message=${encodeURIComponent('This verification link has expired. Please request a new nickname change.')}`,
     );
   }
 
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
 
   if (!newNickname || !userId) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_data&message=${encodeURIComponent('Invalid token data')}`,
+      `${siteUrl}/auth-error?error=invalid_data&message=${encodeURIComponent('Invalid token data')}`,
     );
   }
 
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
 
   if (profileError || !profile?.nickname) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_data&message=${encodeURIComponent('Profile not found')}`,
+      `${siteUrl}/auth-error?error=invalid_data&message=${encodeURIComponent('Profile not found')}`,
     );
   }
 
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
       .update({ used_at: new Date().toISOString() })
       .eq('id', authToken.id);
 
-    return NextResponse.redirect(`${origin}/account?nickname_changed=true`);
+    return NextResponse.redirect(`${siteUrl}/account?nickname_changed=true`);
   }
 
   if (isNicknameChangeOnCooldown(profile.nickname_changed_at)) {
@@ -85,7 +87,7 @@ export async function GET(request: NextRequest) {
       ? formatNicknameCooldownDate(cooldownEnd)
       : 'later';
     return NextResponse.redirect(
-      `${origin}/auth-error?error=update_failed&message=${encodeURIComponent(`Nickname change cooldown active until ${dateLabel}`)}`,
+      `${siteUrl}/auth-error?error=update_failed&message=${encodeURIComponent(`Nickname change cooldown active until ${dateLabel}`)}`,
     );
   }
 
@@ -96,7 +98,7 @@ export async function GET(request: NextRequest) {
 
   if (availabilityError || !isAvailable) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=update_failed&message=${encodeURIComponent('This nickname is no longer available. Please request a new nickname change.')}`,
+      `${siteUrl}/auth-error?error=update_failed&message=${encodeURIComponent('This nickname is no longer available. Please request a new nickname change.')}`,
     );
   }
 
@@ -116,7 +118,7 @@ export async function GET(request: NextRequest) {
       ? updateError.message
       : 'Failed to update nickname. Please try again.';
     return NextResponse.redirect(
-      `${origin}/auth-error?error=update_failed&message=${encodeURIComponent(message)}`,
+      `${siteUrl}/auth-error?error=update_failed&message=${encodeURIComponent(message)}`,
     );
   }
 
@@ -131,5 +133,5 @@ export async function GET(request: NextRequest) {
 
   console.log(`✅ Nickname changed for user ${userId}: @${oldNickname} → @${newNickname}`);
 
-  return NextResponse.redirect(`${origin}/account?nickname_changed=true`);
+  return NextResponse.redirect(`${siteUrl}/account?nickname_changed=true`);
 }

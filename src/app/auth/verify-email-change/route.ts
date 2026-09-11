@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
+import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 // Hash token for comparison
@@ -9,13 +10,14 @@ function hashToken(token: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const siteUrl = getRequestSiteUrl(request);
   const token = searchParams.get('token');
   const email = searchParams.get('email'); // This is the NEW email
 
   if (!token || !email) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
+      `${siteUrl}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
     );
   }
 
@@ -35,14 +37,14 @@ export async function GET(request: NextRequest) {
   if (tokenError || !authToken) {
     console.error('Token lookup error:', tokenError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_token&message=${encodeURIComponent('This verification link is invalid or has already been used')}`,
+      `${siteUrl}/auth-error?error=invalid_token&message=${encodeURIComponent('This verification link is invalid or has already been used')}`,
     );
   }
 
   // Check if token is expired
   if (new Date(authToken.expires_at) < new Date()) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=expired_token&message=${encodeURIComponent('This verification link has expired. Please request a new email change.')}`,
+      `${siteUrl}/auth-error?error=expired_token&message=${encodeURIComponent('This verification link has expired. Please request a new email change.')}`,
     );
   }
 
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
 
   if (!newEmail || !userId) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_data&message=${encodeURIComponent('Invalid token data')}`,
+      `${siteUrl}/auth-error?error=invalid_data&message=${encodeURIComponent('Invalid token data')}`,
     );
   }
 
@@ -70,7 +72,7 @@ export async function GET(request: NextRequest) {
   if (authUpdateError) {
     console.error('Error updating auth email:', authUpdateError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=update_failed&message=${encodeURIComponent('Failed to update email. Please try again.')}`,
+      `${siteUrl}/auth-error?error=update_failed&message=${encodeURIComponent('Failed to update email. Please try again.')}`,
     );
   }
 
@@ -90,6 +92,6 @@ export async function GET(request: NextRequest) {
   // Redirect to a success page that doesn't require authentication
   // The user can then log in with their new email
   return NextResponse.redirect(
-    `${origin}/email/changed?success=true&email=${encodeURIComponent(newEmail)}`,
+    `${siteUrl}/email/changed?success=true&email=${encodeURIComponent(newEmail)}`,
   );
 }
