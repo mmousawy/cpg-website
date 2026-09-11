@@ -5,17 +5,22 @@ import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
+import DetailSidebar, {
+  DetailSidebarAuthor,
+  DetailSidebarFooter,
+  DetailSidebarMeta,
+  DetailSidebarTitle,
+} from '@/components/shared/DetailSidebar';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import PhotoActionsPopover from '@/components/shared/PhotoActionsPopover';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
 import { getExifSummary } from '@/utils/exif';
-import { getLicenseInfo } from '@/utils/licenses';
 import { formatFileSize } from '@/utils/formatFileSize';
-import { getPhotoSharePath } from '@/utils/share';
+import { getLicenseInfo } from '@/utils/licenses';
 import { formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
-import clsx from 'clsx';
+import { getPhotoSharePath } from '@/utils/share';
 import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
@@ -171,55 +176,29 @@ export function PhotoMetadataColumn({
   };
 
   return (
-    <div
-      className={clsx(
-        'pt-4 pb-8 border-t border-t-border-color bg-background-light -mx-4 px-4 md:mt-0 md:pt-6 md:pb-6 md:mx-0 md:w-96 lg:w-lg md:shrink-0 md:border md:border-border-color md:px-6 md:rounded-lg md:flex md:flex-col relative',
-        tightTopMargin ? 'mt-2' : 'mt-4',
-      )}
-    >
-      <div
-        className="absolute right-4 top-4 md:right-6 md:top-6"
-      >
+    <DetailSidebar
+      tightTopMargin={tightTopMargin}
+      actions={(
         <PhotoActionsPopover
           photoId={photo.id}
           photoTitle={photo.title}
           photoUserId={photo.user_id}
           storagePath={photo.storage_path}
         />
-      </div>
-
-      <div
-        className="mb-6"
-      >
+      )}
+    >
+      <DetailSidebarAuthor>
         <AuthorRow
           profile={profile}
         />
-      </div>
+      </DetailSidebarAuthor>
 
-      {(photo.title || photo.description) && (
-        <div
-          className="mb-6"
-        >
-          {photo.title && (
-            <h1
-              className="text-2xl md:text-xl font-bold mb-3"
-            >
-              {photo.title}
-            </h1>
-          )}
-          {photo.description && (
-            <p
-              className="text-base md:text-sm opacity-80 whitespace-pre-wrap"
-            >
-              {photo.description}
-            </p>
-          )}
-        </div>
-      )}
+      <DetailSidebarTitle
+        title={photo.title}
+        description={photo.description}
+      />
 
-      <div
-        className="mt-auto space-y-2 pt-4"
-      >
+      <DetailSidebarMeta>
         {challenges.length > 0 && (
           <div
             className="mb-4"
@@ -335,34 +314,33 @@ export function PhotoMetadataColumn({
             className="flex items-start gap-1.5"
           >
             <CameraApertureIcon
-              className="size-4 text-foreground/60 shrink-0 -mt-0.25"
+              className="size-4 text-foreground/60 shrink-0 -mt-px"
             />
             <p
               className="text-xs text-foreground/60"
             >
               {exifString}
-            </p>
-          </div>
-        )}
-
-        {(photo.width && photo.height) && (
-          <p
-            className="text-xs text-foreground/60"
-          >
-            {photo.width}
-            {' '}
-            ×
-            {' '}
-            {photo.height}
-            {formatFileSize(photo.file_size) && (
-              <>
+              {(photo.width && photo.height) && (<>
                 {' '}
                 ·
                 {' '}
-                {formatFileSize(photo.file_size)}
-              </>
-            )}
-          </p>
+                {photo.width}
+                {' '}
+                ×
+                {' '}
+                {photo.height}
+              </>)}
+
+              {formatFileSize(photo.file_size) && (
+                <>
+                  {' '}
+                  ·
+                  {' '}
+                  {formatFileSize(photo.file_size)}
+                </>
+              )}
+            </p>
+          </div>
         )}
 
         {(() => {
@@ -391,11 +369,9 @@ export function PhotoMetadataColumn({
           tags={photo.tags || []}
           className="mt-4"
         />
-      </div>
+      </DetailSidebarMeta>
 
-      <div
-        className="pt-6 border-t border-border-color mt-6 space-y-3"
-      >
+      <DetailSidebarFooter>
         <PhotoActionBar
           entityType="photo"
           entityId={photo.id}
@@ -406,8 +382,8 @@ export function PhotoMetadataColumn({
         <Comments
           photoId={photo.id}
         />
-      </div>
-    </div>
+      </DetailSidebarFooter>
+    </DetailSidebar>
   );
 }
 
