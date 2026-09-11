@@ -67,7 +67,15 @@ function getLayoutConfigs(
 /** Max CSS width of the grid at each breakpoint. Browser then applies DPR to sizes=. */
 const MOBILE_MAX_CSS_WIDTH = 384;
 const TABLET_MAX_CSS_WIDTH = 960;
-const DESKTOP_MAX_CSS_WIDTH = 1800;
+/** Matches `max-w-screen-xl` on WidePageContainer. */
+const DESKTOP_MAX_CSS_WIDTH = 1280;
+/** Cap displayed row height; taller portraits are object-cover cropped. */
+const MAX_ROW_DISPLAY_HEIGHT = 720;
+/**
+ * `deviceSizes` jumps from 1200 to 1920. At 2x DPR, any sizes= above 600px
+ * picks 1920. Grid thumbs don't need that — cap so 2-photo rows stay on 1200.
+ */
+const MAX_GRID_THUMB_CSS_WIDTH = 600;
 
 /**
  * `displayWidth` is in layout-calculation space (400 / 600 / 960).
@@ -83,7 +91,7 @@ function getThumbnailSizes(
   const cssWidth = isConstrained
     ? displayWidth
     : displayWidth * (maxCssWidth / layoutWidth);
-  return `${Math.min(Math.ceil(cssWidth), maxCssWidth)}px`;
+  return `${Math.min(Math.ceil(cssWidth), maxCssWidth, MAX_GRID_THUMB_CSS_WIDTH)}px`;
 }
 
 export default function JustifiedPhotoGridCore({
@@ -140,13 +148,16 @@ export default function JustifiedPhotoGridCore({
   const containerRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<'css' | 'js'>('css');
   const [breakpoint, setBreakpoint] = useState<GridBreakpoint>('mobile');
+  const [containerWidth, setContainerWidth] = useState(0);
 
   const layouts = getLayoutConfigs(mobileRows, tabletRows, desktopRows);
 
   const measureBreakpoint = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
-    const next = widthToBreakpoint(el.clientWidth);
+    const width = el.clientWidth;
+    setContainerWidth((current) => (current === width ? current : width));
+    const next = widthToBreakpoint(width);
     if (!next) return;
     setBreakpoint((current) => (current === next ? current : next));
   }, []);
@@ -154,7 +165,9 @@ export default function JustifiedPhotoGridCore({
   const setContainerRef = useCallback((node: HTMLDivElement | null) => {
     containerRef.current = node;
     if (node) {
-      const next = widthToBreakpoint(node.clientWidth);
+      const width = node.clientWidth;
+      setContainerWidth((current) => (current === width ? current : width));
+      const next = widthToBreakpoint(width);
       if (next) {
         setBreakpoint((current) => (current === next ? current : next));
       }
@@ -182,6 +195,7 @@ export default function JustifiedPhotoGridCore({
     eventSlug,
     showAttribution,
     header,
+    containerWidth,
   };
 
   const activeLayout = layouts[breakpoint];
@@ -258,6 +272,7 @@ function PhotoRows({
   quality,
   header,
   gapClass = 'gap-1 mb-1',
+  containerWidth = 0,
 }: {
   rows: PhotoRow[];
   photoMap: Map<string, Photo | StreamPhoto>;
@@ -272,6 +287,7 @@ function PhotoRows({
   quality: number;
   header?: React.ReactNode;
   gapClass?: string;
+  containerWidth?: number;
 }) {
   const firstRow = rows[0];
   const firstRowConstrained = firstRow?.width !== undefined;
@@ -292,6 +308,11 @@ function PhotoRows({
       )}
       {rows.map((row, rowIndex) => {
         const isConstrained = row.width !== undefined;
+        const cssWidth = containerWidth > 0 ? containerWidth : maxCssWidth;
+        const scaledHeight = isConstrained
+          ? row.height
+          : row.height * (cssWidth / layoutWidth);
+        const isHeightCapped = !isConstrained && scaledHeight > MAX_ROW_DISPLAY_HEIGHT;
 
         return (
           <div
@@ -333,6 +354,11 @@ function PhotoRows({
                   style={isConstrained ? {
                     width: item.displayWidth,
                     height: item.displayHeight,
+                  } : isHeightCapped ? {
+                    flexGrow: item.photo.aspectRatio,
+                    flexBasis: 0,
+                    height: MAX_ROW_DISPLAY_HEIGHT,
+                    minWidth: 0,
                   } : {
                     flexGrow: item.photo.aspectRatio,
                     flexBasis: 0,

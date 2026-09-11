@@ -16,7 +16,7 @@ export interface PhotoLayoutItem {
 export interface PhotoRow {
   items: PhotoLayoutItem[];
   height: number;
-  /** Width of the row (may be less than container for height-capped portrait rows) */
+  /** Width of the row (set only for a single photo that would otherwise be too tall) */
   width?: number;
 }
 
@@ -30,6 +30,9 @@ export interface LayoutOptions {
 
 const DEFAULT_TARGET_ROW_HEIGHT = 240;
 const DEFAULT_GAP = 4; // Gap between photos (gap-1 = 4px)
+const SINGLE_PHOTO_MAX_HEIGHT = 450;
+/** Tallest portrait we'll display (4:5). Taller images are object-cover cropped. */
+const MIN_DISPLAY_ASPECT_RATIO = 4 / 5;
 
 type PhotoData = { id: string; url: string; aspectRatio: number };
 
@@ -60,30 +63,32 @@ function getRowHeight(
 }
 
 /**
- * Build a row, capping height at maxHeight. When capped, the row is narrower
- * than the container and gets marked with a width for centered rendering.
+ * Build a row that fills the container width.
+ * A lone photo is height-capped so it doesn't become a giant portrait.
  */
 function buildRow(
   photos: PhotoData[],
   containerWidth: number,
-  maxHeight: number,
   gap: number,
 ): PhotoRow {
-  const aspectRatios = photos.map((p) => p.aspectRatio);
-  const naturalHeight = getRowHeight(aspectRatios, containerWidth, gap);
-  const cappedHeight = Math.min(naturalHeight, maxHeight);
-
-  if (naturalHeight > maxHeight) {
-    const totalGaps = (photos.length - 1) * gap;
-    const actualWidth = photos.reduce((sum, p) => sum + cappedHeight * p.aspectRatio, 0) + totalGaps;
-    const row = createRow(photos, cappedHeight, actualWidth, gap);
-    if (actualWidth < containerWidth) {
-      row.width = actualWidth;
+  if (photos.length === 1) {
+    const photo = photos[0];
+    const maxWidth = SINGLE_PHOTO_MAX_HEIGHT * photo.aspectRatio;
+    const effectiveWidth = Math.min(containerWidth, maxWidth);
+    const rowHeight = effectiveWidth / photo.aspectRatio;
+    const row = createRow(photos, rowHeight, effectiveWidth, gap);
+    if (effectiveWidth < containerWidth) {
+      row.width = effectiveWidth;
     }
     return row;
   }
 
-  return createRow(photos, cappedHeight, containerWidth, gap);
+  const rowHeight = getRowHeight(
+    photos.map((p) => p.aspectRatio),
+    containerWidth,
+    gap,
+  );
+  return createRow(photos, rowHeight, containerWidth, gap);
 }
 
 /**
@@ -105,32 +110,17 @@ export function calculateJustifiedLayout(
 
   if (photos.length === 0 || containerWidth <= 0) return [];
 
-  // Convert to aspect ratios
   const photoData: PhotoData[] = photos.map((p) => ({
     id: p.id,
     url: p.url,
-    aspectRatio: (p.width || 400) / (p.height || 400),
+    // Clamp portraits to 4:5; the grid also caps row height at 720px
+    aspectRatio: Math.max((p.width || 400) / (p.height || 400), MIN_DISPLAY_ASPECT_RATIO),
   }));
 
   const n = photoData.length;
 
-  // Special case: single photo - limit height to prevent super tall images
-  if (n === 1) {
-    const photo = photoData[0];
-    const maxHeight = 450;
-    const maxWidth = maxHeight * photo.aspectRatio;
-    const effectiveWidth = Math.min(containerWidth, maxWidth);
-    const rowHeight = effectiveWidth / photo.aspectRatio;
-    const row = createRow(photoData, rowHeight, effectiveWidth, gap);
-    if (effectiveWidth < containerWidth) {
-      row.width = effectiveWidth;
-    }
-    return [row];
-  }
-
-  // Special case: fewer photos than minimum per row (but more than 1)
   if (n < minPhotosPerRow) {
-    return [buildRow(photoData, containerWidth, maxRowHeight, gap)];
+    return [buildRow(photoData, containerWidth, gap)];
   }
 
   // Calculate ideal photos per row for balancing
@@ -156,10 +146,7 @@ export function calculateJustifiedLayout(
       const rowHeight = getRowHeight(rowAspectRatios, containerWidth, gap);
       const rowSignature = getRowSignature(rowPhotos);
 
-      // Height penalty for extreme heights
-      // When row height exceeds max, the row will be capped in rendering,
-      // so we use a moderate penalty to prefer better splits
-      // but not make them so expensive that wildly unbalanced rows win.
+      // Prefer packing more photos into rows that would otherwise be very tall
       let heightPenalty = 0;
       if (rowHeight < 100) heightPenalty = 500;
       else if (rowHeight < 150) heightPenalty = 100;
@@ -218,10 +205,9 @@ export function calculateJustifiedLayout(
     current = dp[current].prev;
   }
 
-  // Build rows from breaks
   let start = 0;
   return rowBreaks.map((end) => {
-    const row = buildRow(photoData.slice(start, end), containerWidth, maxRowHeight, gap);
+    const row = buildRow(photoData.slice(start, end), containerWidth, gap);
     start = end;
     return row;
   });
