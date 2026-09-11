@@ -1,0 +1,18 @@
+# Drop-in override for self-hosted Supabase imgproxy (production or staging).
+#
+# Usage (from the Supabase compose directory on the VPS):
+#
+#   cp /path/to/cpg-website/infra/supabase-imgproxy-icc.override.yml \
+#     ./docker-compose.imgproxy-icc.override.yml
+#
+#   docker compose -f docker-compose.yml \
+#     -f docker-compose.override.yml \
+#     -f docker-compose.imgproxy-icc.override.yml \
+#     up -d imgproxy
+#
+# Or merge the `imgproxy.environment` block into your existing docker-compose.override.yml.
+
+services:
+  imgproxy:
+    environment:
+      IMGPROXY_STRIP_COLOR_PROFILE: "false"
