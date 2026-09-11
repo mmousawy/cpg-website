@@ -1,4 +1,9 @@
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import DetailSidebar, {
+  DetailSidebarAuthor,
+  DetailSidebarFooter,
+  DetailSidebarMeta,
+} from '@/components/shared/DetailSidebar';
 
 function SkeletonBar({
   className,
@@ -81,30 +86,32 @@ export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'pag
         </div>
       </div>
 
-      <div
-        className={`relative mt-4 -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 pb-8 md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6 lg:w-lg ${sidebarClass}`}
+      <DetailSidebar
+        className={sidebarClass}
       >
         <SkeletonBar
           className="absolute top-4 right-4 size-8 rounded-full md:top-6 md:right-6"
         />
 
-        <div
-          className="mb-6 flex items-center gap-2.5"
-        >
-          <SkeletonBar
-            className="size-10 shrink-0 rounded-full"
-          />
+        <DetailSidebarAuthor>
           <div
-            className="space-y-1.5"
+            className="flex items-center gap-2.5"
           >
             <SkeletonBar
-              className="h-3.5 w-28"
+              className="size-10 shrink-0 rounded-full"
             />
-            <SkeletonBar
-              className="h-3 w-20"
-            />
+            <div
+              className="space-y-1.5"
+            >
+              <SkeletonBar
+                className="h-3.5 w-28"
+              />
+              <SkeletonBar
+                className="h-3 w-20"
+              />
+            </div>
           </div>
-        </div>
+        </DetailSidebarAuthor>
 
         <div
           className="mb-6 space-y-3"
@@ -120,9 +127,7 @@ export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'pag
           />
         </div>
 
-        <div
-          className="mt-auto space-y-2 pt-4"
-        >
+        <DetailSidebarMeta>
           <SkeletonMetadataRow
             lineClassName="w-32"
           />
@@ -132,11 +137,9 @@ export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'pag
           <SkeletonMetadataRow
             lineClassName="w-36"
           />
-        </div>
+        </DetailSidebarMeta>
 
-        <div
-          className="mt-6 space-y-3 border-t border-border-color pt-6"
-        >
+        <DetailSidebarFooter>
           <SkeletonBar
             className="h-8 w-20 rounded-full"
           />
@@ -146,8 +149,8 @@ export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'pag
             <SkeletonCommentRow />
             <SkeletonCommentRow />
           </div>
-        </div>
-      </div>
+        </DetailSidebarFooter>
+      </DetailSidebar>
     </div>
   );
 }

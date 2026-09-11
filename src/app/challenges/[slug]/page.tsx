@@ -9,7 +9,6 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getServerNow } from '@/lib/cache/serverNow';
-import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getAllChallengeSlugs,
   getChallengeBySlug,
@@ -17,6 +16,7 @@ import {
   getChallengeContributors,
   getChallengePhotos,
 } from '@/lib/data/challenges';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
