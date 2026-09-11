@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Avatar from '@/components/auth/Avatar';
@@ -31,7 +31,45 @@ import PhotoStackSVG from 'public/icons/photo-stack.svg';
 
 type TabStatus = 'pending' | 'accepted' | 'rejected';
 
+function ReviewQueueFallback() {
+  return (
+    <PageContainer
+      className="flex-1"
+    >
+      <div
+        className="mb-6"
+      >
+        <div
+          className="h-8 w-56 animate-pulse rounded bg-background-light"
+        />
+        <div
+          className="mt-2 h-5 w-40 animate-pulse rounded bg-background-light"
+        />
+      </div>
+      <div
+        className="text-center py-12"
+      >
+        <p
+          className="text-foreground/50 animate-pulse"
+        >
+          Loading submissions...
+        </p>
+      </div>
+    </PageContainer>
+  );
+}
+
 export default function ReviewQueuePage() {
+  return (
+    <Suspense
+      fallback={<ReviewQueueFallback />}
+    >
+      <ReviewQueue />
+    </Suspense>
+  );
+}
+
+function ReviewQueue() {
   const params = useParams();
   const challengeSlug = params.slug as string;
   const confirm = useConfirm();

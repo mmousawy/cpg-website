@@ -1,0 +1,37 @@
+fix: Force onboarding after login when nickname or screen name is missing
+
+Login & OAuth:
+- Redirect incomplete profiles to /onboarding after email login and OAuth callback
+- Preserve the intended destination as ?redirectTo= so users return after setup
+- Login from public pages (/members, /gallery, /@…) no longer skips the gate
+
+Classification cookie:
+- Set cpg_onboarding=pending|complete at OAuth callback, gated proxy hops, and onboarding finish
+- Proxy redirects public pages when pending without calling get_own_profile on gallery prefetches
+- First document request with a session and no cookie classifies once, so other tabs/devices cannot browse around the gate
+- Clear the cookie on logout and when auth cookies are gone
+
+Tests:
+- Unit tests for getPostAuthRedirect and cookie gate helpers
+- E2E: incomplete user logging in with redirectTo=/members lands on onboarding
+
+Files changed (15):
+
+New (2):
+- src/utils/onboardingCookie.ts
+- src/utils/onboardingCookie.test.ts
+
+Modified (13):
+- src/utils/postLoginRedirect.ts
+- src/utils/profileCompletion.ts
+- src/utils/security.test.ts
+- src/context/authActions.ts
+- src/context/AuthContext.tsx
+- src/app/login/LoginClient.tsx
+- src/app/auth-callback/route.ts
+- src/proxy.ts
+- src/app/actions/auth.ts
+- src/app/api/onboarding/revalidate/route.ts
+- src/app/onboarding/OnboardingClient.tsx
+- e2e/onboarding.spec.ts
+- changelog/2026-09-11/

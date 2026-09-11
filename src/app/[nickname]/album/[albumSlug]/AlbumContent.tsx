@@ -83,44 +83,40 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
         className={clsx(
           'flex w-full min-h-[calc(100svh-57px)] flex-col',
           'px-4 pt-4',
-          // Desktop: fixed viewport height so the gallery column can fill and scroll
-          'md:h-[calc(100svh-74px)] md:min-h-0 md:flex-row md:items-stretch md:gap-4 md:p-4',
+          // Desktop: page-level scroll; gallery grows with the grid
+          'md:min-h-[calc(100svh-74px)] md:flex-row md:items-start md:gap-4 md:p-4',
           'lg:gap-8 lg:p-8',
         )}
       >
         {/* Gallery column - vertically centers content when short */}
         <div
           className={clsx(
-            'relative flex min-h-0 w-full flex-1 flex-col overflow-hidden',
-            'md:min-h-0',
+            'relative flex w-full flex-col justify-center',
+            'md:min-h-[calc(100svh-106px)] md:flex-1',
+            'lg:min-h-[calc(100svh-138px)]',
           )}
         >
-          {/* Gallery */}
-          <div
-            className="flex min-h-0 w-full flex-1 flex-col justify-center overflow-y-auto"
-          >
-            {photos.length === 0 ? (
-              <EmptyState
-                className="h-full min-h-48"
-                icon={<ImageSVG
-                  className="size-10 inline-block"
-                />}
-                title="This album doesn't have any photos yet."
-              />
-            ) : (
-              <JustifiedPhotoGrid
-                photos={photos}
-                profileNickname={nickname}
-                albumSlug={albumSlug}
-                showAttribution={isSharedAlbum}
-              />
-            )}
-          </div>
+          {photos.length === 0 ? (
+            <EmptyState
+              className="min-h-48"
+              icon={<ImageSVG
+                className="size-10 inline-block"
+              />}
+              title="This album doesn't have any photos yet."
+            />
+          ) : (
+            <JustifiedPhotoGrid
+              photos={photos}
+              profileNickname={nickname}
+              albumSlug={albumSlug}
+              showAttribution={isSharedAlbum}
+            />
+          )}
 
-          {/* Full Size Gallery Button - pinned to bottom of gallery column */}
+          {/* Full Size Gallery Button */}
           {photos.length > 0 && (
             <div
-              className="mt-4 flex shrink-0 justify-center z-20 md:mt-6"
+              className="sticky bottom-4 z-20 mt-4 flex justify-center md:bottom-6 md:mt-6"
             >
               <FullSizeGalleryButton
                 photos={photos}
@@ -136,10 +132,10 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             // Mobile: flows normally below gallery
             'mt-4 -mx-4 shrink-0 pt-4 pb-8 px-4',
             'border-t border-t-border-color bg-background-light',
-            // Desktop: sticky sidebar with fixed width, stretches to row height
-            'md:mt-0 md:mx-0 md:w-96 lg:w-lg md:shrink-0',
-            'md:sticky md:top-[90px] lg:top-[106px] md:max-h-[calc(100svh-74px)] md:overflow-y-auto',
-            'lg:max-h-[calc(100svh-138px)]',
+            // Desktop: sticky full-height column beside the grid
+            'md:mt-0 md:mx-0 md:w-96 lg:w-lg md:shrink-0 md:self-start',
+            'md:sticky md:top-[90px] md:h-[calc(100svh-106px)] md:overflow-y-auto',
+            'lg:top-[106px] lg:h-[calc(100svh-138px)]',
             // Desktop: card styling
             'md:pt-6 md:pb-6 md:px-6',
             'md:rounded-lg md:border md:border-border-color',
@@ -163,7 +159,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
           {/* Author row - hide for event albums (no owner) */}
           {album.profile && (
             <div
-              className="mb-6"
+              className="mb-3"
             >
               <AuthorRow
                 profile={{
@@ -267,7 +263,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
 
           {/* Action bar + Comments */}
           <div
-            className="pt-6 border-t border-border-color mt-6 space-y-3"
+            className="pt-5 border-t border-border-color mt-5 space-y-3"
           >
             {/* Shared album actions - Join and Add photos */}
             {album.is_shared && (

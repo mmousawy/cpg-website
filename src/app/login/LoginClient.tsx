@@ -13,7 +13,7 @@ import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
 import { routes } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
-import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import { getPostAuthRedirect, getPostLoginRedirect } from '@/utils/postLoginRedirect';
 
 import DiscordSVG from 'public/icons/discord2.svg';
 
@@ -45,14 +45,18 @@ function LoginForm() {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await signInWithEmail(email, password);
+    const { error, needsOnboarding } = await signInWithEmail(email, password);
 
     if (error) {
       setError(error.message);
       setIsLoading(false);
     } else {
       router.refresh();
-      router.push(finalRedirect);
+      router.push(
+        needsOnboarding
+          ? getPostAuthRedirect(null, redirectToParam)
+          : finalRedirect,
+      );
     }
   };
 

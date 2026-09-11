@@ -75,13 +75,20 @@ export const AccountDeletionEmail = ({
                 Immediately:
               </strong>
             </Text>
-            <Text
-              className="ml-4 text-[14px] leading-[24px] text-[#171717]"
+            <ul
+              className="m-0 pl-4 text-[14px] leading-[24px] text-[#171717]"
             >
-              • You have been signed out and can no longer log in
-              {'\n'}
-              • Your content is hidden from other users
-            </Text>
+              <li
+                className="mb-2"
+              >
+                You have been signed out and can no longer log in
+              </li>
+              <li
+                className="mb-2"
+              >
+                Your content is hidden from other users
+              </li>
+            </ul>
 
             <Text
               className="text-[14px] leading-[24px] text-[#171717]"
@@ -93,17 +100,30 @@ export const AccountDeletionEmail = ({
                 :
               </strong>
             </Text>
-            <Text
-              className="ml-4 text-[14px] leading-[24px] text-[#171717]"
+            <ul
+              className="m-0 pl-4 text-[14px] leading-[24px] text-[#171717]"
             >
-              • Your profile and account information will be permanently deleted
-              {'\n'}
-              • All your photos (including photos contributed to shared albums) will be removed
-              {'\n'}
-              • Your albums, comments, likes, and all other activity will be removed
-              {'\n'}
-              • Your stored files will be permanently deleted from our servers
-            </Text>
+              <li
+                className="mb-2"
+              >
+                Your profile and account information will be permanently deleted
+              </li>
+              <li
+                className="mb-2"
+              >
+                All your photos (including photos contributed to shared albums) will be removed
+              </li>
+              <li
+                className="mb-2"
+              >
+                Your albums, comments, likes, and all other activity will be removed
+              </li>
+              <li
+                className="mb-2"
+              >
+                Your stored files will be permanently deleted from our servers
+              </li>
+            </ul>
 
             <Hr
               className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"

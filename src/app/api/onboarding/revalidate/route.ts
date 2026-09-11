@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { expireMemberListCaches } from '@/lib/cache/expireTag';
+import { applyOnboardingCookie, ONBOARDING_COOKIE_COMPLETE } from '@/utils/onboardingCookie';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { adminSupabase } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
@@ -30,5 +31,7 @@ export async function POST() {
 
   expireMemberListCaches(profile.nickname);
 
-  return NextResponse.json({ success: true });
+  const response = NextResponse.json({ success: true });
+  applyOnboardingCookie(response, ONBOARDING_COOKIE_COMPLETE);
+  return response;
 }
