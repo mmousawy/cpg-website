@@ -1,4 +1,5 @@
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import { isProfileComplete } from '@/utils/profileCompletion';
 import { loadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 
 import type { Profile } from '@/context/AuthContext';
@@ -48,9 +49,14 @@ export async function signInWithEmail(email: string, password: string) {
       await supabase.auth.signOut();
       return { error: new Error('This account has been suspended. Please contact us if you believe this is an error.') };
     }
+
+    return {
+      error: null,
+      needsOnboarding: !isProfileComplete(profile, { fallbackEmail: data.user.email ?? null }),
+    };
   }
 
-  return { error: null };
+  return { error: null, needsOnboarding: true };
 }
 
 export async function signUpWithEmail(email: string, password: string, bypassToken?: string) {

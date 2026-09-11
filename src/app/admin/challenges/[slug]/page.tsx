@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { Suspense, useContext, useEffect, useRef, useState } from 'react';
 
 import { revalidateChallenge, revalidateChallenges } from '@/app/actions/revalidate';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
@@ -27,7 +27,43 @@ import Image from 'next/image';
 import MegaphoneSVG from 'public/icons/megaphone.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
+function AdminChallengeFormFallback() {
+  return (
+    <PageContainer>
+      <div
+        className="mb-8"
+      >
+        <div
+          className="h-8 w-48 animate-pulse rounded bg-background-light"
+        />
+        <div
+          className="mt-2 h-5 w-72 animate-pulse rounded bg-background-light"
+        />
+      </div>
+      <Container
+        className="text-center animate-pulse"
+      >
+        <p
+          className="text-foreground/50"
+        >
+          Loading challenge...
+        </p>
+      </Container>
+    </PageContainer>
+  );
+}
+
 export default function AdminChallengeFormPage() {
+  return (
+    <Suspense
+      fallback={<AdminChallengeFormFallback />}
+    >
+      <AdminChallengeForm />
+    </Suspense>
+  );
+}
+
+function AdminChallengeForm() {
   const { user } = useAuth();
   const confirm = useConfirm();
   const router = useRouter();

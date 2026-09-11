@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import { getPostAuthRedirect, getPostLoginRedirect } from '@/utils/postLoginRedirect';
 import { getClientIp, safeInternalPath, safeJsonLdStringify, safePixelWidth } from '@/utils/security';
 
 describe('safeInternalPath', () => {
@@ -23,6 +23,31 @@ describe('getPostLoginRedirect', () => {
 
   it('preserves safe deep links', () => {
     expect(getPostLoginRedirect('/members')).toBe('/members');
+  });
+});
+
+describe('getPostAuthRedirect', () => {
+  const completeProfile = {
+    email: 'user@example.com',
+    nickname: 'user',
+    full_name: 'User Name',
+    terms_accepted_at: '2026-01-01T00:00:00.000Z',
+  };
+
+  it('sends incomplete profiles to onboarding with the intended destination', () => {
+    expect(getPostAuthRedirect(null, '/members')).toBe('/onboarding?redirectTo=%2Fmembers');
+    expect(getPostAuthRedirect({ nickname: null, full_name: null }, '/gallery')).toBe(
+      '/onboarding?redirectTo=%2Fgallery',
+    );
+  });
+
+  it('rewrites listing pages before wrapping onboarding', () => {
+    expect(getPostAuthRedirect(null, '/')).toBe('/onboarding?redirectTo=%2Faccount%2Fevents');
+  });
+
+  it('returns the post-login destination when the profile is complete', () => {
+    expect(getPostAuthRedirect(completeProfile, '/members')).toBe('/members');
+    expect(getPostAuthRedirect(completeProfile, '/')).toBe('/account/events');
   });
 });
 

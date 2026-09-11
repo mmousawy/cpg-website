@@ -4,8 +4,41 @@ import { NextResponse, after, type NextRequest } from 'next/server';
 
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
-import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import {
+  applyOnboardingCookie,
+  clearOnboardingCookie,
+  ONBOARDING_COOKIE_COMPLETE,
+  ONBOARDING_COOKIE_PENDING,
+} from '@/utils/onboardingCookie';
+import { getPostAuthRedirect, getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import { isProfileComplete, type ProfileCompletionFields } from '@/utils/profileCompletion';
 import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
+
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: Parameters<NextResponse['cookies']['set']>[2];
+};
+
+function applyCookies(response: NextResponse, cookiesToSet: CookieToSet[]) {
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options);
+  });
+}
+
+function toCompletionProfile(
+  profile: Record<string, unknown> | null,
+): ProfileCompletionFields | null {
+  if (!profile) return null;
+  return {
+    email: typeof profile.email === 'string' ? profile.email : null,
+    nickname: typeof profile.nickname === 'string' ? profile.nickname : null,
+    full_name: typeof profile.full_name === 'string' ? profile.full_name : null,
+    terms_accepted_at: typeof profile.terms_accepted_at === 'string'
+      ? profile.terms_accepted_at
+      : null,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -15,9 +48,7 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const cookieStore = await cookies();
-
-    const finalRedirect = getPostLoginRedirect(redirectToParam);
-    const response = NextResponse.redirect(`${siteUrl}${finalRedirect}`);
+    const cookiesToSet: CookieToSet[] = [];
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,11 +58,10 @@ export async function GET(request: NextRequest) {
           getAll() {
             return cookieStore.getAll();
           },
-          setAll(cookiesToSet) {
-            // Set cookies on both the cookie store AND the response
-            cookiesToSet.forEach(({ name, value, options }) => {
+          setAll(incoming) {
+            incoming.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
-              response.cookies.set(name, value, options);
+              cookiesToSet.push({ name, value, options });
             });
           },
         },
@@ -41,8 +71,8 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Check if user profile exists, if not create one
       const { data: { user } } = await supabase.auth.getUser();
+      let dest = getPostLoginRedirect(redirectToParam);
 
       if (user) {
         const { data: profileData } = await supabase.rpc('get_own_profile');
@@ -51,7 +81,6 @@ export async function GET(request: NextRequest) {
           : null;
 
         if (!profile) {
-          // Create profile for new user
           await supabase.from('profiles').insert({
             id: user.id,
             email: user.email,
@@ -66,18 +95,17 @@ export async function GET(request: NextRequest) {
             });
           });
         } else if (profile.deletion_scheduled_at) {
-          // Account is scheduled for deletion — sign out and redirect to notice page
           await supabase.auth.signOut();
-          return NextResponse.redirect(`${siteUrl}/account-deleted`);
+          const deletedResponse = NextResponse.redirect(`${siteUrl}/account-deleted`);
+          applyCookies(deletedResponse, cookiesToSet);
+          clearOnboardingCookie(deletedResponse);
+          return deletedResponse;
         } else {
-          // Update last logged in and sync OAuth avatar if user hasn't set a custom one
           const oauthAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
           const updateData: Record<string, unknown> = {
             last_logged_in: new Date().toISOString(),
           };
 
-          // Only update avatar if profile doesn't have one (user hasn't uploaded custom)
-          // and OAuth provides one
           if (!profile.avatar_url && oauthAvatarUrl) {
             updateData.avatar_url = oauthAvatarUrl;
           }
@@ -96,15 +124,27 @@ export async function GET(request: NextRequest) {
             });
           }
         }
+
+        const completionProfile = toCompletionProfile(profile);
+        dest = getPostAuthRedirect(completionProfile, redirectToParam, user.email ?? null);
+        const response = NextResponse.redirect(`${siteUrl}${dest}`);
+        applyCookies(response, cookiesToSet);
+        applyOnboardingCookie(
+          response,
+          isProfileComplete(completionProfile, { fallbackEmail: user.email ?? null })
+            ? ONBOARDING_COOKIE_COMPLETE
+            : ONBOARDING_COOKIE_PENDING,
+        );
+        return response;
       }
 
+      const response = NextResponse.redirect(`${siteUrl}${dest}`);
+      applyCookies(response, cookiesToSet);
       return response;
     }
 
-    // Exchange failed - redirect to error page
     return NextResponse.redirect(`${siteUrl}/auth-error`);
   }
 
-  // No code provided - redirect to error page
   return NextResponse.redirect(`${siteUrl}/auth-error`);
 }
