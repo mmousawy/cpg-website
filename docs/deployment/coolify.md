@@ -106,6 +106,14 @@ docker build -t cpg-website \
 docker run -p 3000:3000 --env-file .env.local cpg-website
 ```
 
+## 6. Image color profiles (imgproxy)
+
+Album grids use Supabase `/render/image/` (imgproxy inside the **Supabase compose stack**, not Coolify).
+
+**Coolify auto-deploy does not configure imgproxy.** Pushing to `main` rebuilds the Next.js container only. After merging the ICC runbook changes, run the one-time imgproxy script on the VPS (Coolify server terminal), then purge Cloudflare — see [infra/imgproxy-color-profiles.md](../../infra/imgproxy-color-profiles.md).
+
+Verify: `pnpm verify:image-icc -- "<object-public-url>"`
+
 ## Troubleshooting
 
 | Symptom | Fix |

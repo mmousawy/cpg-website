@@ -60,6 +60,7 @@ This override:
 - Publishes Kong on `127.0.0.1:8002` and Postgres on `127.0.0.1:5433`
 - Uses `ports: !override` on `kong` and `db` so Docker **replaces** the base compose port mappings
 - Uses `ports: !override []` on `supavisor` so staging pooler does not bind host `:5432` (prod pooler)
+- Sets `IMGPROXY_STRIP_COLOR_PROFILE=false` on imgproxy so `/render/image` WebP keeps embedded ICC profiles (see [imgproxy-color-profiles.md](../imgproxy-color-profiles.md))
 
 **Service keys** in compose (use these in the override, not `container_name`):
 
@@ -338,6 +339,19 @@ Apply to **staging first**, verify, then production:
 ```bash
 supabase db push --db-url "$STAGING_DB_URL"
 supabase db push --db-url "$PRODUCTION_DB_URL"
+```
+
+## Image transforms: preserve color profiles
+
+Staging and production imgproxy default to stripping ICC profiles from resized images. The override above keeps Adobe RGB / Display P3 on WebP thumbs so album grids match photo detail pages.
+
+After changing imgproxy env, restart only imgproxy and purge Cloudflare cache for `/storage/v1/render/image/` on `db-staging` and `db`. Full runbook: [infra/imgproxy-color-profiles.md](../imgproxy-color-profiles.md).
+
+Verify from the repo:
+
+```bash
+pnpm verify:image-icc -- \
+  "https://db-staging.creativephotography.group/storage/v1/object/public/user-photos/USER/PHOTO.jpg"
 ```
 
 ## Rollback

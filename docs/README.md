@@ -43,6 +43,8 @@
 
 ### Image Optimization
 
+- **[../infra/imgproxy-color-profiles.md](../infra/imgproxy-color-profiles.md)** - Preserve ICC color profiles on self-hosted imgproxy WebP transforms (`pnpm verify:image-icc`)
+
 The project uses a custom image loader (`src/utils/supabaseImageLoader.ts`) that handles different image sources:
 
 | Image Type | Optimization |

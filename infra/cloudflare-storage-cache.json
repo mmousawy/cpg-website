@@ -1,5 +1,5 @@
 {
-  "description": "Apply in Cloudflare dashboard for zone db.creativephotography.group (must be proxied / orange-cloud).",
+  "description": "Apply in Cloudflare dashboard for zone creativephotography.group (must be proxied / orange-cloud). Purge /storage/v1/render/image/* after changing imgproxy ICC settings — see infra/imgproxy-color-profiles.md.",
   "verification": {
     "command": "curl -sI \"https://db.creativephotography.group/storage/v1/render/image/public/user-photos/...?width=640&quality=80\" | grep -i cache",
     "expected": "Cache-Control: max-age=604800 (7d browser) or higher after rule is live with override origin",

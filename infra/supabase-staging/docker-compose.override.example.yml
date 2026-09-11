@@ -33,6 +33,10 @@ services:
 
   imgproxy:
     container_name: supabase-staging-imgproxy
+    # Preserve embedded ICC (Adobe RGB, Display P3, etc.) on /render/image WebP output.
+    # Default imgproxy strips profiles → sRGB thumbs look dull vs unoptimized originals.
+    environment:
+      IMGPROXY_STRIP_COLOR_PROFILE: "false"
 
   meta:
     container_name: supabase-staging-meta

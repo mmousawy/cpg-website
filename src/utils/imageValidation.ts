@@ -2,6 +2,7 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp
 
 // Cap at ~33 MP (8K resolution: 7680×4320 ≈ 33.2 MP).
 // imgproxy must be configured with IMGPROXY_MAX_SRC_RESOLUTION >= 33.
+// For accurate wide-gamut thumbs, set IMGPROXY_STRIP_COLOR_PROFILE=false (see infra/imgproxy-color-profiles.md).
 const MAX_PIXELS = 33_000_000;
 
 interface ImageValidationOptions {
