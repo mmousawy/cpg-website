@@ -63,7 +63,7 @@ export default function MobileNotificationButton() {
       <button
         onClick={() => {
           setIsOpen(true);
-          // Notify other components (like MobileMenu) to close
+          // Notify other components to close overlays
           window.dispatchEvent(new CustomEvent('notifications:sheet-open'));
         }}
         className="relative flex items-center justify-center size-8 rounded-full hover:bg-foreground/5 transition-colors"

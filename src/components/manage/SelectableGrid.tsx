@@ -574,10 +574,17 @@ export default function SelectableGrid<T>({
         {/* Trailing content (e.g., uploading previews) */}
         {trailingContent}
 
-        {/* Spacer for mobile action bar when items are selected or always if specified */}
+        {/* Spacer for mobile selection bar (tab bar offset is on the scroll container) */}
         {(selectedIds.size > 0 || alwaysShowMobileSpacer) && (
           <div
-            className="col-span-full h-12 md:hidden"
+            className="col-span-full md:hidden"
+            style={{
+              height: selectedIds.size > 0
+                ? 'calc(var(--mobile-sticky-bar-height, 0px) + 0.5rem)'
+                : alwaysShowMobileSpacer
+                  ? '0.5rem'
+                  : undefined,
+            }}
             aria-hidden="true"
           />
         )}

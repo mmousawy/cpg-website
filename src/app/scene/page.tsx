@@ -1,7 +1,6 @@
 import PageContainer from '@/components/layout/PageContainer';
-import AddSceneEventButton from '@/components/scene/AddSceneEventButton';
 import ScenePageContent from '@/components/scene/ScenePageContent';
-import HelpLink from '@/components/shared/HelpLink';
+import ScenePageHeader from '@/app/scene/ScenePageHeader';
 import { createMetadata } from '@/utils/metadata';
 
 import {
@@ -74,36 +73,7 @@ export default async function ScenePage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex flex-wrap items-center justify-between gap-2 mb-2"
-        >
-          <div
-            className="flex items-center gap-2"
-          >
-            <h1
-              className="text-2xl sm:text-3xl font-bold font-heading"
-            >
-              Explore the scene
-            </h1>
-            <HelpLink
-              href="what-is-scene"
-              label="What is Scene?"
-              size="lg"
-            />
-          </div>
-          <AddSceneEventButton />
-        </div>
-        <p
-          className="text-base sm:text-lg text-foreground/80 mt-1"
-        >
-          A community-curated guide to photography events.
-          <br />
-          Added by members, for members.
-        </p>
-      </div>
+      <ScenePageHeader />
 
       <ScenePageContent
         upcomingEvents={upcomingEvents}

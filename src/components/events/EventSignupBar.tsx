@@ -45,10 +45,10 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
       constrainWidth
     >
       <div
-        className="flex flex-col gap-0.5"
+        className="flex min-w-0 flex-col gap-0.5 max-sm:gap-0"
       >
         <p
-          className="text-xs sm:text-sm text-foreground font-medium"
+          className="text-xs sm:text-sm text-foreground font-medium max-sm:truncate"
         >
           {formatEventDate(event.date || '', { includeYear: true })}
           {' '}
@@ -58,11 +58,11 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
         </p>
 
         <div
-          className="flex-1"
+          className="flex-1 min-w-0"
         >
           {spotsLeft !== null && spotsLeft > 0 ? (
             <p
-              className="text-sm text-foreground/80"
+              className="text-sm text-foreground/80 max-sm:text-xs max-sm:truncate"
             >
               {spotsLeft}
               {' '}
@@ -96,7 +96,7 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
         )}
         variant="primary"
         size="md"
-        className="rounded-full"
+        className="shrink-0 rounded-full max-sm:px-3 max-sm:text-sm"
       >
         Join event
       </Button>
@@ -190,10 +190,10 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
       constrainWidth
     >
       <div
-        className="flex flex-col gap-0.5"
+        className="flex min-w-0 flex-col gap-0.5 max-sm:gap-0"
       >
         <p
-          className="text-xs sm:text-sm text-foreground font-medium"
+          className="text-xs sm:text-sm text-foreground font-medium max-sm:truncate"
         >
           {formatEventDate(event.date || '', { includeYear: true })}
           {' '}
@@ -203,7 +203,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         </p>
 
         <div
-          className="flex-1"
+          className="min-w-0 flex-1"
         >
           {isLoading ? (
             <div
@@ -211,17 +211,16 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
             />
           ) : hasRSVP ? (
             <p
-              className="flex items-center text-sm font-medium text-primary"
+              className="flex items-center text-sm font-medium text-primary max-sm:text-xs"
             >
               <CheckSVG
-                className="size-4 fill-current inline-block mr-1.5 align-top"
+                className="size-4 fill-current inline-block mr-1.5 align-top max-sm:mr-1 max-sm:size-3.5"
               />
-              {' '}
               You&apos;re going!
             </p>
           ) : spotsLeft !== null && spotsLeft > 0 ? (
             <p
-              className="text-sm text-foreground/80"
+              className="text-sm text-foreground/80 max-sm:text-xs max-sm:truncate"
             >
               {spotsLeft}
               {' '}
@@ -255,7 +254,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         />}
         variant={hasRSVP ? 'secondary' : 'primary'}
         size="md"
-        className="rounded-full"
+        className="shrink-0 rounded-full max-sm:px-3 max-sm:text-sm"
       >
         {isLoading ? '...' : hasRSVP ? 'Cancel RSVP' : 'Join event'}
 

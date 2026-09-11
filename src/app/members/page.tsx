@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
-import HelpLink from '@/components/shared/HelpLink';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getMembersDiscoveryData } from '@/lib/data/members';
 import { createMetadata } from '@/utils/metadata';
@@ -87,29 +86,9 @@ async function getMembersPageUser() {
 function UnauthenticatedMembersPage() {
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex items-center gap-2 mb-1"
-        >
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Discover our community
-          </h1>
-          <HelpLink
-            href="discover-members"
-            label="Help with discovering members"
-            size="lg"
-          />
-        </div>
-        <p
-          className="text-base sm:text-lg opacity-80"
-        >
-          Sign in to discover and connect with our community members
-        </p>
-      </div>
+      <MembersPageHeader
+        description="Sign in to discover and connect with our community members"
+      />
 
       <div
         className="rounded-xl border border-border-color bg-background-light p-4 sm:p-8 text-center"

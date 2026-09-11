@@ -19,7 +19,7 @@ export const challengesFAQ: FAQSection = {
             My challenge submissions
           </strong>
           {' '}
-          (header menu → My challenges).
+          (click your avatar → My challenges).
         </p>
       ),
     },
@@ -31,10 +31,15 @@ export const challengesFAQ: FAQSection = {
           Go to
           {' '}
           <strong>
-            Challenges
+            Gallery
           </strong>
           {' '}
-          (main navigation) to open the Photography challenges page. Click an active challenge from the Active challenges section, then click
+          in the bottom tab bar, then choose
+          {' '}
+          <strong>
+            Challenges
+          </strong>
+          , or tap Gallery again while you&apos;re already on Gallery or Challenges. Click an active challenge from the Active challenges section, then click
           {' '}
           <strong>
             Submit photos
@@ -90,7 +95,7 @@ export const challengesFAQ: FAQSection = {
               My challenges
             </strong>
             {' '}
-            (header menu → click your avatar). The page is titled My challenge submissions.
+            (click your avatar). The page is titled My challenge submissions.
           </p>
           <p
             className="mb-2 font-medium"
@@ -148,7 +153,7 @@ export const challengesFAQ: FAQSection = {
             My photos
           </strong>
           {' '}
-          (header menu). This shows which challenges your work has been featured in.
+          (click your avatar). This shows which challenges your work has been featured in.
         </p>
       ),
     },

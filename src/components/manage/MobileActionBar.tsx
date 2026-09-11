@@ -1,8 +1,14 @@
 'use client';
 
 import Button from '@/components/shared/Button';
+import {
+  mobileFloatingPillClassName,
+  mobileFloatingPillInsetClassName,
+  mobileStickyChromeZClassName,
+} from '@/components/layout/mobileChrome';
+import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
 import clsx from 'clsx';
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
 
 import CloseMiniSVG from 'public/icons/close-mini.svg';
 import EditMiniSVG from 'public/icons/edit-mini.svg';
@@ -30,72 +36,56 @@ export default function MobileActionBar({
   visible = true,
   hideEdit = false,
 }: MobileActionBarProps) {
-  if (!visible || selectedCount === 0) return null;
+  const rootRef = useRef<HTMLDivElement>(null);
+  const isOpen = visible && selectedCount > 0;
+
+  useReportMobileStickyChromeHeight(rootRef, isOpen);
+
+  if (!isOpen) return null;
 
   return (
     <div
+      ref={rootRef}
       className={clsx(
-        'border-t border-border-color-strong bg-background-light shadow-lg',
-        'transition-transform duration-300 ease-out',
-        visible ? 'translate-y-0' : 'translate-y-full',
+        'md:hidden fixed inset-x-0',
+        mobileFloatingPillInsetClassName,
+        mobileStickyChromeZClassName,
+        'max-sm:bottom-[var(--mobile-nav-offset,0px)]',
       )}
     >
-      {/* Gradient fade at top */}
-      <div
-        className="absolute -top-[13px] left-0 right-0 h-3 bg-linear-to-b from-transparent to-background pointer-events-none"
-      />
-
-      <div
-        className="px-2 py-3"
-      >
-        <div
-          className="flex items-center justify-between gap-3"
-        >
-          {/* Left: Selection count and clear button */}
-          <div
-            className="flex items-center gap-2"
-          >
-            <span
-              className="text-sm font-medium text-foreground/80"
-            >
-              {selectedCount}
-              {' '}
-              {selectedCount === 1 ? 'item' : 'items'}
-              {' '}
-              selected
-            </span>
-            <button
-              onClick={onClearSelection}
-              className="flex items-center justify-center rounded-full border border-border-color p-1 hover:bg-background transition-colors"
-              aria-label="Clear selection"
-            >
-              <CloseMiniSVG
-                className="size-4 fill-foreground"
-              />
-            </button>
-          </div>
-
-          {/* Right: Actions */}
-          <div
-            className="flex items-center gap-2"
-          >
-            {actions}
-            {!hideEdit && (
-              <Button
-                onClick={onEdit}
-                variant="primary"
-                size="sm"
-                icon={<EditMiniSVG
-                  className="size-5 -ml-0.5"
-                />}
+      <div className={clsx(mobileFloatingPillClassName, 'overflow-hidden')}>
+        <div className="px-3 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-sm font-medium text-foreground/80">
+                {selectedCount}
+                {' '}
+                {selectedCount === 1 ? 'item' : 'items'}
+                {' '}
+                selected
+              </span>
+              <button
+                onClick={onClearSelection}
+                className="flex shrink-0 items-center justify-center rounded-full border border-border-color p-1 hover:bg-background transition-colors"
+                aria-label="Clear selection"
               >
-                <span
-                  className="hidden md:inline-block"
+                <CloseMiniSVG className="size-4 fill-foreground" />
+              </button>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {actions}
+              {!hideEdit && (
+                <Button
+                  onClick={onEdit}
+                  variant="primary"
+                  size="sm"
+                  icon={<EditMiniSVG className="size-5 -ml-0.5" />}
                 >
-                  Edit
-                </span>
-              </Button>
-            )}
+                  <span className="hidden md:inline-block">Edit</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -81,7 +81,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
       {/* Desktop: Two-column layout, Mobile: Single column */}
       <div
         className={clsx(
-          'flex w-full min-h-[calc(100svh-57px)] flex-col',
+          'flex w-full min-h-svh flex-col',
           'px-4 pt-4',
           // Desktop: fixed viewport height so the gallery column can fill and scroll
           'md:h-[calc(100svh-74px)] md:min-h-0 md:flex-row md:items-stretch md:gap-4 md:p-4',

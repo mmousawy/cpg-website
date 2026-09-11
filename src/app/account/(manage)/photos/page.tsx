@@ -279,10 +279,13 @@ export default function PhotosPage() {
   const showEmptyState = !photosPending && photos.length === 0 && uploadingPhotos.length === 0;
 
   const handleMobileEdit = () => {
-    // Only open on mobile (below md breakpoint)
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      setIsMobileEditSheetOpen(true);
-    }
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    // Defer past the current pointer event so the opening tap can't hit the backdrop.
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        setIsMobileEditSheetOpen(true);
+      });
+    });
   };
 
   const handleMobileEditClose = async () => {

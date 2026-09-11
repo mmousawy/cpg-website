@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import clsx from 'clsx';
 
+import {
+  mobileFloatingPillClassName,
+  mobileFloatingPillInsetClassName,
+  mobileStickyChromeZClassName,
+} from '@/components/layout/mobileChrome';
+import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
 import { useSectionScroll } from '@/context/SectionScrollContext';
 import type { SectionNavItem } from '@/components/shared/SectionSidebar';
 import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
@@ -17,6 +24,7 @@ interface SectionMobileNavProps {
 export default function SectionMobileNav({ sections, ariaLabel = 'Page sections', sticky = true }: SectionMobileNavProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  useReportMobileStickyChromeHeight(panelRef, sticky);
   const { activeSectionId, pinSection } = useSectionScroll();
   const activeSection = sections.find((s) => s.id === activeSectionId);
 
@@ -59,8 +67,19 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
   return (
     <div
       ref={panelRef}
-      className={`md:hidden ${sticky ? 'sticky bottom-0' : ''} z-30 flex flex-col border-t border-border-color-strong bg-background-light shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.3)] pb-[env(safe-area-inset-bottom)]`}
+      className={clsx(
+        'md:hidden flex flex-col',
+        mobileStickyChromeZClassName,
+        sticky && 'sticky bottom-0 max-sm:bottom-[var(--mobile-nav-offset,0px)]',
+        sticky && mobileFloatingPillInsetClassName,
+      )}
     >
+      <div
+        className={clsx(
+          'flex flex-col overflow-hidden',
+          mobileFloatingPillClassName,
+        )}
+      >
       {/* Collapsed trigger */}
       <button
         type="button"
@@ -128,6 +147,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
             })}
           </ul>
         </nav>
+      </div>
       </div>
     </div>
   );

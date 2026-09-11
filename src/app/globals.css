@@ -91,7 +91,7 @@
   --primary: hsl(157, 36%, 42%);
   --primary-light: rgb(95, 160, 135);
   --primary-alt: #58c287;
-  --background: #171718;
+  --background: #131314;
   --background-medium: hsl(240, 3%, 12%);
   --background-light: #252527;
   --foreground: #ededed;
@@ -137,7 +137,13 @@
 }
 
 html {
-  scroll-padding-top: 7rem;
+  scroll-padding-top: 1rem;
+}
+
+@media (min-width: 640px) {
+  html {
+    scroll-padding-top: 7rem;
+  }
 }
 
 body {
@@ -395,7 +401,9 @@ a, button, input, textarea, select, [tabindex] {
 .scrim-gradient-mask,
 .scrim-gradient-overlay,
 .scrim-gradient-mask-strong,
-.scrim-gradient-overlay-strong {
+.scrim-gradient-overlay-strong,
+.scrim-gradient-mask-sticky,
+.scrim-gradient-overlay-sticky {
   bottom: -1px;
   height: calc(100% + 1px);
 }
@@ -451,6 +459,61 @@ a, button, input, textarea, select, [tabindex] {
     color-mix(in srgb, var(--background) 2.1%, transparent) 91%,
     color-mix(in srgb, var(--background) 0.8%, transparent) 95.2%,
     color-mix(in srgb, var(--background) 0.2%, transparent) 98.2%,
+    transparent 100%
+  );
+}
+
+/* Slightly darker than default — tab bar scrim while a sticky action bar is pinned. */
+.scrim-gradient-mask-sticky {
+  -webkit-mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.82) 19%,
+    rgba(0, 0, 0, 0.64) 34%,
+    rgba(0, 0, 0, 0.47) 47%,
+    rgba(0, 0, 0, 0.36) 56.5%,
+    rgba(0, 0, 0, 0.26) 65%,
+    rgba(0, 0, 0, 0.17) 73%,
+    rgba(0, 0, 0, 0.1) 80.2%,
+    rgba(0, 0, 0, 0.06) 86.1%,
+    rgba(0, 0, 0, 0.03) 91%,
+    rgba(0, 0, 0, 0.012) 95.2%,
+    rgba(0, 0, 0, 0.004) 98.2%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgba(0, 0, 0, 0.82) 19%,
+    rgba(0, 0, 0, 0.64) 34%,
+    rgba(0, 0, 0, 0.47) 47%,
+    rgba(0, 0, 0, 0.36) 56.5%,
+    rgba(0, 0, 0, 0.26) 65%,
+    rgba(0, 0, 0, 0.17) 73%,
+    rgba(0, 0, 0, 0.1) 80.2%,
+    rgba(0, 0, 0, 0.06) 86.1%,
+    rgba(0, 0, 0, 0.03) 91%,
+    rgba(0, 0, 0, 0.012) 95.2%,
+    rgba(0, 0, 0, 0.004) 98.2%,
+    transparent 100%
+  );
+}
+
+.scrim-gradient-overlay-sticky {
+  background: linear-gradient(
+    to top,
+    var(--background) 0%,
+    color-mix(in srgb, var(--background) 82%, transparent) 19%,
+    color-mix(in srgb, var(--background) 64%, transparent) 34%,
+    color-mix(in srgb, var(--background) 47%, transparent) 47%,
+    color-mix(in srgb, var(--background) 36%, transparent) 56.5%,
+    color-mix(in srgb, var(--background) 26%, transparent) 65%,
+    color-mix(in srgb, var(--background) 17%, transparent) 73%,
+    color-mix(in srgb, var(--background) 10%, transparent) 80.2%,
+    color-mix(in srgb, var(--background) 6%, transparent) 86.1%,
+    color-mix(in srgb, var(--background) 3%, transparent) 91%,
+    color-mix(in srgb, var(--background) 1.2%, transparent) 95.2%,
+    color-mix(in srgb, var(--background) 0.4%, transparent) 98.2%,
     transparent 100%
   );
 }
@@ -571,6 +634,68 @@ html.manage-page .app-header-inner {
   max-width: none;
 }
 
+.mobile-tab-bar-scrim {
+  height: max(6rem, calc(var(--mobile-nav-offset, 0px) + 1.5rem));
+  transition: height 250ms ease-in-out;
+}
+
+.mobile-tab-indicator.is-ready {
+  transition: transform 250ms ease-in-out, width 250ms ease-in-out, height 250ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-tab-indicator.is-ready {
+    transition: none;
+  }
+}
+
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
+  height: max(
+    6rem,
+    calc(var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1.5rem)
+  );
+}
+
+.mobile-tab-bar-scrim__fade {
+  background: linear-gradient(to top, var(--background), transparent);
+}
+
+.mobile-tab-bar-scrim__fade--sticky {
+  background: linear-gradient(
+    to top,
+    var(--background) 0%,
+    color-mix(in srgb, var(--background) 55%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+.mobile-tab-bar-scrim__tone {
+  transition: opacity 250ms ease-out;
+}
+
+.mobile-tab-bar-scrim__tone--sticky {
+  opacity: 0;
+}
+
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--default {
+  opacity: 0;
+}
+
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
+  opacity: 1;
+}
+
+@media (max-width: 639px) {
+  html:not(.manage-page) .app-shell-main,
+  html:not(.manage-page) .app-footer {
+    padding-bottom: var(--mobile-nav-offset, 0px);
+  }
+
+  html.manage-page .app-shell-main {
+    padding-bottom: 0;
+  }
+}
+
 /* Toast container positioning - below header */
 .toast-container {
   /* Behind header (header is z-40) */
@@ -598,10 +723,10 @@ html.manage-page .app-header-inner {
   }
 }
 
-/* Mobile: header is 57px (40px logo + 16px padding + 1px border) */
+/* Mobile: no header; keep toasts below the safe area */
 @media (max-width: 639px) {
   .toast-container {
-    top: calc(57px + 0.75rem) !important;
+    top: 0.75rem !important;
     left: 1rem !important;
     right: 1rem !important;
     width: auto !important;
