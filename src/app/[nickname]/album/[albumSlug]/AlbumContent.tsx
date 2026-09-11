@@ -5,6 +5,12 @@ import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import AlbumActionsPopover from '@/components/shared/AlbumActionsPopover';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
+import DetailSidebar, {
+  DetailSidebarAuthor,
+  DetailSidebarFooter,
+  DetailSidebarMeta,
+  DetailSidebarTitle,
+} from '@/components/shared/DetailSidebar';
 import EmptyState from '@/components/shared/EmptyState';
 import PhotoActionBar from '@/components/shared/PhotoActionBar';
 import TagsSection from '@/components/shared/TagsSection';
@@ -127,40 +133,18 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
         </div>
 
         {/* Sidebar - sticky, scrollable */}
-        <div
-          className={clsx(
-            // Mobile: flows normally below gallery
-            'mt-4 -mx-4 shrink-0 pt-4 pb-8 px-4',
-            'border-t border-t-border-color bg-background-light',
-            // Desktop: sticky full-height column beside the grid
-            'md:mt-0 md:mx-0 md:w-96 lg:w-lg md:shrink-0 md:self-start',
-            'md:sticky md:top-[90px] md:h-[calc(100svh-106px)] md:overflow-y-auto',
-            'lg:top-[106px] lg:h-[calc(100svh-138px)]',
-            // Desktop: card styling
-            'md:pt-6 md:pb-6 md:px-6',
-            'md:rounded-lg md:border md:border-border-color',
-            // Flex layout for content
-            'md:flex md:flex-col',
-            // Relative positioning for absolute children
-            'relative',
-          )}
-        >
-          {/* More actions menu - top right */}
-          <div
-            className="absolute right-4 top-4 md:right-6 md:top-6"
-          >
+        <DetailSidebar
+          sticky
+          actions={(
             <AlbumActionsPopover
               albumId={album.id}
               albumTitle={album.title}
               albumUserId={album.user_id ?? null}
             />
-          </div>
-
-          {/* Author row - hide for event albums (no owner) */}
+          )}
+        >
           {album.profile && (
-            <div
-              className="mb-3"
-            >
+            <DetailSidebarAuthor>
               <AuthorRow
                 profile={{
                   full_name: album.profile?.full_name || null,
@@ -168,35 +152,15 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                   avatar_url: album.profile?.avatar_url || null,
                 }}
               />
-            </div>
+            </DetailSidebarAuthor>
           )}
 
-          {/* Title and Description */}
-          {(album.title || album.description) && (
-            <div
-              className="mb-6"
-            >
-              {album.title && (
-                <h1
-                  className="text-2xl md:text-xl font-bold mb-3 font-heading"
-                >
-                  {album.title}
-                </h1>
-              )}
-              {album.description && (
-                <p
-                  className="text-base md:text-sm opacity-80 whitespace-pre-wrap"
-                >
-                  {album.description}
-                </p>
-              )}
-            </div>
-          )}
+          <DetailSidebarTitle
+            title={album.title}
+            description={album.description}
+          />
 
-          {/* Date, Views, Photo count and Tags - pushed to bottom */}
-          <div
-            className="mt-auto space-y-2 pt-4"
-          >
+          <DetailSidebarMeta>
             {album.event?.slug && (
               <div
                 className="mb-4"
@@ -214,7 +178,6 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 />
               </div>
             )}
-            {/* Photo count */}
             <div>
               <div
                 className="flex items-center gap-1.5"
@@ -231,7 +194,6 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 </p>
               </div>
             </div>
-            {/* Date + Views */}
             <div
               className="flex items-center gap-4 flex-wrap"
             >
@@ -239,7 +201,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 className="flex items-center gap-1.5"
               >
                 <CalendarTodayIcon
-                  className="size-4 text-foreground/60 shrink-0"
+                  className="size-4 text-foreground/60 shrink-0 -mt-0.5"
                 />
                 <p
                   className="text-xs text-foreground/60"
@@ -254,18 +216,13 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
               />
             </div>
 
-            {/* Tags */}
             <TagsSection
               tags={(album.tags || []) as SimpleTag[]}
               className="mt-4"
             />
-          </div>
+          </DetailSidebarMeta>
 
-          {/* Action bar + Comments */}
-          <div
-            className="pt-5 border-t border-border-color mt-5 space-y-3"
-          >
-            {/* Shared album actions - Join and Add photos */}
+          <DetailSidebarFooter>
             {album.is_shared && (
               <AlbumSharedActions
                 albumId={album.id}
@@ -279,7 +236,6 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
                 isEventAlbum={!!album.event_id}
               />
             )}
-            {/* Action bar - likes only (views shown above with date) */}
             <PhotoActionBar
               entityType="album"
               entityId={album.id}
@@ -287,12 +243,11 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
               share={shareData}
             />
 
-            {/* Comments */}
             <Comments
               albumId={album.id}
             />
-          </div>
-        </div>
+          </DetailSidebarFooter>
+        </DetailSidebar>
       </div>
     </>
   );
