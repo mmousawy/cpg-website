@@ -23,7 +23,7 @@ Run after [production-cutover.md](./production-cutover.md) DNS points at the VPS
 
 ## Supabase / OAuth
 
-- [ ] imgproxy preserves ICC on `/render/image` WebP — run on VPS (Coolify server terminal or SSH): `./infra/apply-imgproxy-preserve-icc.sh production` ([runbook](../imgproxy-color-profiles.md))
+- [ ] imgproxy preserves ICC on `/render/image` WebP — run on VPS (Coolify server terminal or SSH): `bash infra/apply-imgproxy-preserve-icc.sh production` ([runbook](../imgproxy-color-profiles.md))
 - [ ] After imgproxy change: Cloudflare purge `/storage/v1/render/image/*` on `db.creativephotography.group` (no Coolify redeploy needed)
 - [ ] Auth Site URL: `https://creativephotography.group`
 - [ ] Redirect URLs: `https://creativephotography.group/**`, `https://www.creativephotography.group/**`

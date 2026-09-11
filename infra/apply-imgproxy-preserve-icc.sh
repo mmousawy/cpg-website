@@ -2,8 +2,8 @@
 # Apply IMGPROXY_STRIP_COLOR_PROFILE=false on a self-hosted Supabase stack and restart imgproxy.
 #
 # Usage:
-#   ./infra/apply-imgproxy-preserve-icc.sh staging
-#   ./infra/apply-imgproxy-preserve-icc.sh production
+#   bash infra/apply-imgproxy-preserve-icc.sh staging
+#   bash infra/apply-imgproxy-preserve-icc.sh production
 #
 # Run on the VPS — Coolify server terminal or SSH.
 # Coolify auto-deploy rebuilds Next.js only; this script updates Supabase imgproxy (separate compose stack).

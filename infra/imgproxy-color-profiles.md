@@ -25,10 +25,10 @@ Coolify **does** auto-deploy the Next.js app when you push to `main` (or when Re
 cd /home/ubuntu/cpg-website   # or your persistent checkout on the VPS
 git pull
 
-./infra/apply-imgproxy-preserve-icc.sh staging
+bash infra/apply-imgproxy-preserve-icc.sh staging
 pnpm verify:image-icc -- "https://db-staging.../object/public/user-photos/.../photo.jpg"
 
-./infra/apply-imgproxy-preserve-icc.sh production
+bash infra/apply-imgproxy-preserve-icc.sh production
 pnpm verify:image-icc -- "https://db.../object/public/user-photos/.../photo.jpg"
 ```
 
@@ -51,6 +51,8 @@ docker compose -p supabase-staging \
   -f docker-compose.override.yml \
   -f docker-compose.imgproxy-icc.override.yml \
   up -d imgproxy
+
+# Or: bash infra/apply-imgproxy-preserve-icc.sh staging
 
 # Confirm env inside the container
 docker exec supabase-staging-imgproxy env | grep IMGPROXY_STRIP_COLOR_PROFILE

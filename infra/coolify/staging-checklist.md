@@ -14,7 +14,7 @@ Run against `https://staging.creativephotography.group` before treating staging 
 - [ ] Migrations applied: `./infra/supabase-staging/migrate-staging.sh "$STAGING_DB_URL"`
 - [ ] Staging admin promoted ([promote-admin.sql](../supabase-staging/promote-admin.sql))
 - [ ] Google / Discord OAuth callback: `https://db-staging.creativephotography.group/auth/v1/callback`
-- [ ] imgproxy preserves ICC: `./infra/apply-imgproxy-preserve-icc.sh staging` on VPS ([imgproxy-color-profiles.md](../imgproxy-color-profiles.md)); `pnpm verify:image-icc` passes on a wide-gamut staging upload
+- [ ] imgproxy preserves ICC: `bash infra/apply-imgproxy-preserve-icc.sh staging` on VPS ([imgproxy-color-profiles.md](../imgproxy-color-profiles.md)); `pnpm verify:image-icc` passes on a wide-gamut staging upload
 
 Full setup: [infra/supabase-staging/README.md](../supabase-staging/README.md).
 
