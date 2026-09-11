@@ -6,7 +6,6 @@ import { GalleryRecentAlbumsSection } from '@/app/gallery/GalleryRecentAlbumsSec
 import { GalleryRecentPhotosSection } from '@/app/gallery/GalleryRecentPhotosSection';
 import { GalleryTagsSection } from '@/app/gallery/GalleryTagsSection';
 import { GalleryTrendingAlbumsSection } from '@/app/gallery/GalleryTrendingAlbumsSection';
-import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -48,15 +47,11 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
   } = await getGalleryPageData(includeTestContent);
 
   return (
-    <>
-      <PageContainer
-        className="pb-0!"
-      >
-        <GalleryPageHeader />
-      </PageContainer>
+    <div className="px-3 pt-0 md:px-12 md:pt-12">
+      <GalleryPageHeader />
 
       <div
-        className="grid min-w-0 gap-10 md:gap-12 pb-10 md:pb-12 [&>*]:min-w-0"
+        className="-mx-3 grid min-w-0 gap-10 pb-10 md:-mx-12 md:gap-12 md:pb-12 [&>*]:min-w-0"
       >
         <GalleryTagsSection
           tags={popularTags}
@@ -87,6 +82,6 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
           </div>
         </WidePageContainer>
       </div>
-    </>
+    </div>
   );
 }

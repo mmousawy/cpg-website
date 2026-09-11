@@ -10,6 +10,7 @@ import PreferencesSection from '@/components/account/PreferencesSection';
 import ProfileSection from '@/components/account/ProfileSection';
 import PublicProfileSection from '@/components/account/PublicProfileSection';
 import PageContainer from '@/components/layout/PageContainer';
+import MobileStickyChromeStack from '@/components/layout/MobileStickyChromeStack';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -335,10 +336,7 @@ function AccountPageContent() {
       </PageContainer>
 
       {/* Mobile: section nav + action bar stacked so both are visible */}
-      <div
-        className="md:hidden sticky bottom-0 z-30 flex flex-col"
-        hidden={isLoading || undefined}
-      >
+      <MobileStickyChromeStack hidden={isLoading}>
         <SectionMobileNav
           sections={ACCOUNT_SECTIONS}
           ariaLabel="Account sections"
@@ -352,7 +350,7 @@ function AccountPageContent() {
             {actionBarContent}
           </StickyActionBar>
         )}
-      </div>
+      </MobileStickyChromeStack>
 
       {/* Desktop: save button only */}
       {changeCount > 0 && (

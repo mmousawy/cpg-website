@@ -211,7 +211,7 @@ export default function ManageLayout({
           {/* Content area — this is the scroll container for infinite scroll sentinels */}
           <div
             ref={scrollContainerRef}
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto max-sm:pb-[var(--mobile-nav-offset,0px)]"
           >
             {children}
           </div>
@@ -224,14 +224,8 @@ export default function ManageLayout({
           {sidebar}
         </div>
 
-        {/* Mobile Action Bar (shown when items are selected) */}
-        {mobileActionBar && (
-          <div
-            className="md:hidden fixed bottom-0 left-0 right-0 z-20"
-          >
-            {mobileActionBar}
-          </div>
-      )}
+        {/* Mobile action bar (fixed above tab bar when items are selected) */}
+        {mobileActionBar}
       </div>
     </ManageScrollContext.Provider>
   );

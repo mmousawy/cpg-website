@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
-import HelpLink from '@/components/shared/HelpLink';
+import EventsPageHeader from '@/app/events/EventsPageHeader';
 import { getEventsPageData } from '@/lib/data/eventsPage';
 import { createMetadata } from '@/utils/metadata';
 
@@ -30,29 +30,7 @@ export default async function EventsPage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex items-center gap-2 mb-1"
-        >
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Events
-          </h1>
-          <HelpLink
-            href="join-events"
-            label="How to find and join events"
-            size="lg"
-          />
-        </div>
-        <p
-          className="text-base sm:text-lg opacity-80"
-        >
-          Join our upcoming meetups or explore past events
-        </p>
-      </div>
+      <EventsPageHeader />
 
       <div
         className="space-y-6 sm:space-y-10"

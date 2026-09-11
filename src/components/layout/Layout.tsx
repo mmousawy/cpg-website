@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import { Suspense } from 'react';
 
 import Header from './Header';
 import Footer from './Footer';
+import MobileTabBar from './MobileTabBar';
 import SkipToContent from './SkipToContent';
 
 type LayoutProps = {
@@ -23,6 +25,9 @@ export default function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <Footer />
+      <Suspense fallback={null}>
+        <MobileTabBar />
+      </Suspense>
     </div>
   );
 }

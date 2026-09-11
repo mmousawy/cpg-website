@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
-import HelpLink from '@/components/shared/HelpLink';
+import ChallengesPageHeader from '@/app/challenges/ChallengesPageHeader';
 import { getChallengesPageData } from '@/lib/data/challengesPage';
 import { createMetadata } from '@/utils/metadata';
 
@@ -21,29 +21,7 @@ export default async function ChallengesPage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex items-center gap-2 mb-1"
-        >
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Photography challenges
-          </h1>
-          <HelpLink
-            href="how-challenges-work"
-            label="How photo challenges work"
-            size="lg"
-          />
-        </div>
-        <p
-          className="text-base sm:text-lg opacity-80"
-        >
-          Join our themed challenges and showcase your photography skills
-        </p>
-      </div>
+      <ChallengesPageHeader />
 
       <div
         className="space-y-10"

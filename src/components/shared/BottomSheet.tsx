@@ -27,6 +27,8 @@ export default function BottomSheet({
   maxHeight = 90,
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  const suppressBackdropDismissRef = useRef(false);
   const [isTrapped, setIsTrapped] = useState(false);
   const [startY, setStartY] = useState<number | null>(null);
   const [currentY, setCurrentY] = useState<number | null>(null);
@@ -37,10 +39,30 @@ export default function BottomSheet({
   const [isAnimatedOpen, setIsAnimatedOpen] = useState(false);
   const mounted = useMounted();
 
+  onCloseRef.current = onClose;
+
+  // Ignore backdrop dismissals right after open — the opening tap can land on the backdrop.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    suppressBackdropDismissRef.current = true;
+    const timerId = window.setTimeout(() => {
+      suppressBackdropDismissRef.current = false;
+    }, 400);
+
+    return () => clearTimeout(timerId);
+  }, [isOpen]);
+
+  const handleBackdropDismiss = () => {
+    if (suppressBackdropDismissRef.current) return;
+    onCloseRef.current();
+  };
+
   // Handle mount/unmount with animation
   useEffect(() => {
     let mountTimer: ReturnType<typeof setTimeout> | undefined;
-    let animationTimer: number | undefined;
+    let openAnimFrame1: number | undefined;
+    let openAnimFrame2: number | undefined;
     let closeAnimTimer: ReturnType<typeof setTimeout> | undefined;
     let unmountTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -48,9 +70,11 @@ export default function BottomSheet({
       // First mount the component (use microtask to satisfy linter)
       mountTimer = setTimeout(() => {
         setShouldRender(true);
-        // Then trigger the open animation after a frame (allows CSS transition to work)
-        animationTimer = requestAnimationFrame(() => {
-          setIsAnimatedOpen(true);
+        // Double rAF so the browser paints the closed state before transitioning open.
+        openAnimFrame1 = requestAnimationFrame(() => {
+          openAnimFrame2 = requestAnimationFrame(() => {
+            setIsAnimatedOpen(true);
+          });
         });
       }, 0);
     } else {
@@ -62,7 +86,8 @@ export default function BottomSheet({
 
     return () => {
       if (mountTimer) clearTimeout(mountTimer);
-      if (animationTimer) cancelAnimationFrame(animationTimer);
+      if (openAnimFrame1) cancelAnimationFrame(openAnimFrame1);
+      if (openAnimFrame2) cancelAnimationFrame(openAnimFrame2);
       if (closeAnimTimer) clearTimeout(closeAnimTimer);
       if (unmountTimer) clearTimeout(unmountTimer);
     };
@@ -73,22 +98,36 @@ export default function BottomSheet({
   useCloseOnRouteChange(isOpen, onClose);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      onCloseRef.current();
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen]);
+
+  // Activate the trap only after the sheet is visible — avoids spurious deactivation on reopen.
+  useEffect(() => {
+    if (!isOpen || !isAnimatedOpen) {
       const timerId = setTimeout(() => setIsTrapped(false), 0);
       return () => clearTimeout(timerId);
     }
 
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
-  }, [isOpen]);
+  }, [isOpen, isAnimatedOpen]);
 
-  // Reset drag state when closing
-  // Reset drag state immediately on close without unnecessary rerender risk
-  if (!isOpen) {
-    if (startY !== null) setStartY(null);
-    if (currentY !== null) setCurrentY(null);
-    if (isDragging) setIsDragging(false);
-  }
+  useEffect(() => {
+    if (!isOpen) {
+      setStartY(null);
+      setCurrentY(null);
+      setIsDragging(false);
+    }
+  }, [isOpen]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!sheetRef.current) return;
@@ -166,15 +205,16 @@ export default function BottomSheet({
           !isDragging && 'transition-opacity duration-300',
         )}
         style={{ opacity: getBackdropOpacity() }}
-        onClick={onClose}
+        onPointerUp={handleBackdropDismiss}
       />
 
       <FocusTrap
         active={isTrapped}
         focusTrapOptions={{
           clickOutsideDeactivates: false,
-          escapeDeactivates: true,
-          onDeactivate: onClose,
+          escapeDeactivates: false,
+          returnFocusOnDeactivate: false,
+          initialFocus: false,
           fallbackFocus: () => sheetRef.current || document.body,
         }}
       >
@@ -184,12 +224,15 @@ export default function BottomSheet({
             'absolute bottom-0 left-0 right-0 flex flex-col',
             'bg-background-light rounded-t-2xl border-t border-border-color-strong shadow-xl',
             !isDragging && 'transition-transform duration-300 ease-out',
-            isAnimatedOpen ? 'translate-y-0' : 'translate-y-full',
           )}
           style={{
             maxHeight: `${maxHeight}vh`,
             height: `${maxHeight}vh`,
-            transform: isDragging ? `translateY(${dragDeltaY}px)` : undefined,
+            transform: isDragging
+              ? `translateY(${dragDeltaY}px)`
+              : isAnimatedOpen
+                ? 'translateY(0)'
+                : 'translateY(100%)',
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -218,7 +261,7 @@ export default function BottomSheet({
             </h2>}
             <button
               className="absolute right-3 top-0 shrink-0 rounded-full border border-border-color bg-background p-1 hover:bg-background-medium transition-colors"
-              onClick={onClose}
+              onClick={() => onCloseRef.current()}
               aria-label="Close"
             >
               <CloseSVG

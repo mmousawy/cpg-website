@@ -7,7 +7,6 @@ import BlurImage from '@/components/shared/BlurImage';
 import MagnifyingGlassPlusSVG from 'public/icons/magnifying-glass-plus.svg';
 
 const DESKTOP_HEIGHT = 148;
-const MOBILE_HEIGHT = 64;
 
 interface SceneCoverImageProps {
   url: string;
@@ -38,7 +37,6 @@ export default function SceneCoverImage({
   }, [url, imageWidth, imageHeight]);
 
   const desktopWidth = Math.round((w / h) * DESKTOP_HEIGHT);
-  const mobileWidth = Math.round((w / h) * MOBILE_HEIGHT);
 
   useEffect(() => {
     initPhotoSwipe().then((PhotoSwipeLightbox) => {
@@ -74,7 +72,7 @@ export default function SceneCoverImage({
         alt={title}
         fill
         className="object-cover"
-        sizes={`(max-width: 640px) ${mobileWidth}px, ${desktopWidth}px`}
+        sizes={`${desktopWidth}px`}
         noBlur={/\.png(\?|$)/i.test(url)}
       />
       <div
@@ -88,21 +86,11 @@ export default function SceneCoverImage({
   );
 
   return (
-    <>
-      {/* Mobile: floated right, 52px tall, dynamic width */}
-      <div
-        className="scene-cover-gallery sm:hidden relative rounded-md overflow-hidden bg-white border border-border-color float-right ml-2 mb-1 group cursor-zoom-in"
-        style={{ width: mobileWidth, height: MOBILE_HEIGHT }}
-      >
-        {imageContent}
-      </div>
-      {/* Desktop: floated right, 148px tall, dynamic width */}
-      <div
-        className="scene-cover-gallery hidden sm:block relative rounded-lg overflow-hidden bg-white border border-border-color float-right ml-4 mb-2 group cursor-zoom-in"
-        style={{ width: desktopWidth, height: DESKTOP_HEIGHT }}
-      >
-        {imageContent}
-      </div>
-    </>
+    <div
+      className="scene-cover-gallery hidden sm:block relative rounded-lg overflow-hidden bg-white border border-border-color float-right ml-4 mb-2 group cursor-zoom-in"
+      style={{ width: desktopWidth, height: DESKTOP_HEIGHT }}
+    >
+      {imageContent}
+    </div>
   );
 }

@@ -1,7 +1,14 @@
 'use client';
 
 import clsx from 'clsx';
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
+
+import {
+  mobileFloatingPillClassName,
+  mobileFloatingPillInsetClassName,
+  mobileStickyChromeZClassName,
+} from '@/components/layout/mobileChrome';
+import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
 
 type StickyActionBarProps = {
   children: ReactNode
@@ -23,19 +30,26 @@ export default function StickyActionBar({
   variant = 'default',
   sticky = true,
 }: StickyActionBarProps) {
+  const isBottomSticky = sticky && position === 'bottom';
+  const rootRef = useRef<HTMLDivElement>(null);
+  useReportMobileStickyChromeHeight(rootRef, isBottomSticky);
+
   return (
     <div
+      ref={rootRef}
       className={clsx(
         'relative',
         sticky && 'sticky z-30',
-        sticky && (position === 'bottom' ? 'bottom-0' : 'top-0'),
+        mobileStickyChromeZClassName,
+        isBottomSticky && 'bottom-0 max-sm:bottom-[var(--mobile-nav-offset,0px)]',
+        isBottomSticky && mobileFloatingPillInsetClassName,
+        sticky && position === 'top' && 'top-0',
         className,
       )}
     >
-      {/* Fade above/below bar so scrolling content softens underneath */}
       <div
         className={clsx(
-          'absolute left-0 right-0 pointer-events-none',
+          'absolute left-0 right-0 pointer-events-none hidden sm:block',
           variant === 'compact' ? 'h-4' : 'h-6',
           position === 'bottom'
             ? variant === 'compact' ? '-top-4 bg-gradient-to-b from-transparent to-background-light' : '-top-6 bg-gradient-to-b from-transparent to-background'
@@ -44,14 +58,17 @@ export default function StickyActionBar({
       />
       <div
         className={clsx(
-          'border-border-color-strong bg-background-light',
-          variant === 'compact' ? 'px-2 py-3' : 'px-4 py-3 md:px-12 md:py-4',
-          position === 'bottom' ? 'border-t-[0.0625rem]' : 'border-b-[0.0625rem]',
+          mobileFloatingPillClassName,
+          'max-sm:overflow-hidden',
+          'sm:border-border-color-strong sm:bg-background-light',
+          variant === 'compact' ? 'px-3 py-2.5' : 'px-3 py-3',
+          position === 'bottom' ? 'sm:border-t' : 'sm:border-b',
+          'md:px-12 md:py-4',
         )}
       >
         <div
           className={clsx(
-            'mx-auto flex items-center justify-between gap-4',
+            'mx-auto flex items-center justify-between gap-3 sm:gap-4',
             constrainWidth && 'max-w-screen-md',
           )}
         >
