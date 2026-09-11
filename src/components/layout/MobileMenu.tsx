@@ -15,6 +15,7 @@ interface MobileMenuProps {
   mounted: boolean
 }
 
+/** Must stay inside `<Suspense>` — `usePathname()` is a blocking client hook. */
 export default function MobileMenu({ isOpen, onClose, mounted }: MobileMenuProps) {
   const { user, profile } = useSession();
   const { isAdmin } = useAdmin();
