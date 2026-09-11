@@ -5,9 +5,11 @@ import { NextResponse, after, type NextRequest } from 'next/server';
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const siteUrl = getRequestSiteUrl(request);
   const code = searchParams.get('code');
   const redirectToParam = searchParams.get('redirectTo');
 
@@ -15,7 +17,7 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
 
     const finalRedirect = getPostLoginRedirect(redirectToParam);
-    const response = NextResponse.redirect(`${origin}${finalRedirect}`);
+    const response = NextResponse.redirect(`${siteUrl}${finalRedirect}`);
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest) {
         } else if (profile.deletion_scheduled_at) {
           // Account is scheduled for deletion — sign out and redirect to notice page
           await supabase.auth.signOut();
-          return NextResponse.redirect(`${origin}/account-deleted`);
+          return NextResponse.redirect(`${siteUrl}/account-deleted`);
         } else {
           // Update last logged in and sync OAuth avatar if user hasn't set a custom one
           const oauthAvatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
@@ -100,9 +102,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange failed - redirect to error page
-    return NextResponse.redirect(`${origin}/auth-error`);
+    return NextResponse.redirect(`${siteUrl}/auth-error`);
   }
 
   // No code provided - redirect to error page
-  return NextResponse.redirect(`${origin}/auth-error`);
+  return NextResponse.redirect(`${siteUrl}/auth-error`);
 }
