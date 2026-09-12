@@ -449,7 +449,7 @@ function PhotoFilmstripShellInner({
       const painted = () => {
         requestAnimationFrame(() => requestAnimationFrame(reveal));
       };
-      if (img?.decode) {
+      if (img instanceof HTMLImageElement) {
         img.decode().then(painted, painted);
       } else {
         painted();
