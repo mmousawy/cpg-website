@@ -1,7 +1,6 @@
 'use client';
 
-import { useProgressRouter } from '@/components/layout/NavigationProgress';
-import { usePhotoNavigation } from '@/components/photo/PhotoNavigationContext';
+import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import BlurImage from '@/components/shared/BlurImage';
 import HoverPrefetchLink from '@/components/shared/HoverPrefetchLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -60,8 +59,18 @@ export default function AlbumFilmstrip({
     ? `${basePath}/photo/${shortId}`
     : `/@${nickname}/album/${albumSlug}/photo/${shortId}`,
   [basePath, nickname, albumSlug]);
-  const router = useProgressRouter();
-  const { pendingShortId, setPendingShortId } = usePhotoNavigation();
+  const {
+    currentIndex,
+    hasPrev,
+    hasNext,
+    pendingShortId,
+    setPendingShortId,
+    navigateToPhoto,
+  } = useCollectionPhotoNavigation({
+    photos,
+    currentPhotoShortId,
+    getPhotoHref,
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeThumbnailRef = useRef<HTMLAnchorElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -78,20 +87,10 @@ export default function AlbumFilmstrip({
     setCanScrollRight(isOverflowing && container.scrollLeft < maxScrollLeft - 1);
   }, []);
 
-  const currentIndex = photos.findIndex((p) => p.shortId === currentPhotoShortId);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < photos.length - 1;
   const selectedShortId =
     pendingShortId && pendingShortId !== currentPhotoShortId
       ? pendingShortId
       : currentPhotoShortId;
-
-  const navigateToPhoto = useCallback((shortId: string) => {
-    if (isPhotoSwipeOpen()) return;
-    if (shortId === currentPhotoShortId || shortId === pendingShortId) return;
-    setPendingShortId(shortId);
-    router.push(getPhotoHref(shortId));
-  }, [currentPhotoShortId, pendingShortId, getPhotoHref, router]);
 
   // Scroll active thumbnail into view only when it is outside the visible strip
   useEffect(() => {

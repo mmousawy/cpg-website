@@ -42,15 +42,15 @@ export default function ChallengeMiniCard({
     <Link
       href={href}
       className={clsx(
-        'group inline-flex items-center gap-2.5 max-w-54 w-fit min-w-32 border pr-2.5',
+        'group inline-flex items-center gap-3 max-w-54 w-fit min-w-32 border pr-3',
         'text-sm transition-colors',
         'border-border-color-strong hover:border-primary hover:text-primary',
-        highlighted ? 'bg-background-light' : 'bg-background-medium',
+        highlighted ? 'bg-background-medium border-primary' : 'bg-background-medium',
         className,
       )}
     >
       <div
-        className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
+        className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background"
       >
         {coverImageUrl ? (
           <BlurImage
