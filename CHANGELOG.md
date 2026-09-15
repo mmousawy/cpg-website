@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.41.0](https://github.com/mmousawy/cpg-website/compare/v1.40.0...v1.41.0) (2026-09-15)
+
+
+### ✨ Features
+
+* add image ICC verification and update documentation ([9282979](https://github.com/mmousawy/cpg-website/commit/92829793949f5fae1d3555a8d3318f221c1793d9))
+* add nginx configuration for large client header buffers ([0347256](https://github.com/mmousawy/cpg-website/commit/0347256ae74c9372bb5a5c9171a94434658b4456))
+* enhance database types and proxy functionality for nickname management ([7b94a62](https://github.com/mmousawy/cpg-website/commit/7b94a62242cbb2ac17b8b7562c605b1a683a3051))
+* enhance deployment configuration for Coolify and update environment settings ([5b03d4e](https://github.com/mmousawy/cpg-website/commit/5b03d4ec7152c7f4f5aff1b22f1818a1a5383469))
+* enhance onboarding flow and cookie management ([214bc91](https://github.com/mmousawy/cpg-website/commit/214bc916097b8105765f8a05d90a0e198d169a66))
+* enhance staging and production deployment configurations ([e9918ca](https://github.com/mmousawy/cpg-website/commit/e9918ca8f0d10425eba105b550b8064df90e6398))
+* enhance staging setup and documentation for Supabase ([b70545f](https://github.com/mmousawy/cpg-website/commit/b70545f56b3dac0c37cfe9c61934bc99f45bf177))
+* implement ensureStaticParams for improved static parameter handling ([146c387](https://github.com/mmousawy/cpg-website/commit/146c387bae11332d778aa7d3c11d7fc261bbdde5))
+* update Dockerfile and package.json for CI integration and dependency management ([4e81c87](https://github.com/mmousawy/cpg-website/commit/4e81c87fe1dae51d8c925a8afad93708c133963a))
+* update Dockerfile and package.json for improved dependency management ([9a23b0a](https://github.com/mmousawy/cpg-website/commit/9a23b0a32e616b8644ac733900f9225058c35447))
+
+
+### 🐛 Bug Fixes
+
+* enhance mobile and user menu links with prefetching for performance ([208d643](https://github.com/mmousawy/cpg-website/commit/208d6431e0205653e23de36d75d060d43ae72d2e))
+* enhance OAuth configuration and cookie management for Supabase integration ([440eef1](https://github.com/mmousawy/cpg-website/commit/440eef1fe69fc03e9d0459b6f550f56f879fa62a))
+* introduce DetailSidebar component for enhanced photo and album layouts ([9e31baf](https://github.com/mmousawy/cpg-website/commit/9e31baffbe5f910f8ce50a60756fa8d885f3e676))
+* simplify nginx proxy header script for self-containment ([f8efc2c](https://github.com/mmousawy/cpg-website/commit/f8efc2ce9cd40e634d04366b4bcf3a229fb672ef))
+* update 502 Bad Gateway troubleshooting steps in coolify documentation ([eeeef11](https://github.com/mmousawy/cpg-website/commit/eeeef11374f7d18c6e118c8dacea97d38532b98d))
+* update image decoding check in PhotoFilmstripShell component ([d8689e7](https://github.com/mmousawy/cpg-website/commit/d8689e704ddee3d19415ade3a543d8ec6560c894))
+* update image sizes and enhance documentation for deployment ([d4c349b](https://github.com/mmousawy/cpg-website/commit/d4c349b9be8a05f175a854e8c142ae0bab6f5de6))
+* update migrate-staging.sh for improved usage instructions and superuser checks ([958e0c5](https://github.com/mmousawy/cpg-website/commit/958e0c501f970d9dd71358cac2a556e90a676b31))
+* update script usage in documentation for imgproxy ICC preservation ([de5bb65](https://github.com/mmousawy/cpg-website/commit/de5bb655b59acd1ec86a5bf581354953c9dd774a))
+* update script usage instructions for imgproxy ICC preservation ([d8c2f5c](https://github.com/mmousawy/cpg-website/commit/d8c2f5cfaab82b9249c3f43e53f7498ccfc1479b))
+
+
+### ♻️ Refactoring
+
+* improve ChallengeMiniCard and AlbumFilmstrip components for better layout and navigation ([fa02da8](https://github.com/mmousawy/cpg-website/commit/fa02da818328dc03c641c0e20222fd9e16c736eb))
+* standardize site URL handling in email and nickname verification routes ([3a2f39f](https://github.com/mmousawy/cpg-website/commit/3a2f39fff918fd1db9095ef2099b0c871ee7c047))
+* wrap MobileMenu in Suspense for improved loading handling ([3652b85](https://github.com/mmousawy/cpg-website/commit/3652b857169f3ffc09233f548eb118954cd3df48))
+
+
+### 🔧 Maintenance
+
+* update .dockerignore and tsconfig.json to exclude Playwright config and e2e tests ([5ec7416](https://github.com/mmousawy/cpg-website/commit/5ec74165dda80a6a8778b41a4e44bbfaee370268))
+
 ## [1.40.0](https://github.com/mmousawy/cpg-website/compare/v1.39.5...v1.40.0) (2026-09-02)
 
 
