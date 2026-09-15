@@ -152,9 +152,11 @@ See `.env.example` for all required variables. Key ones:
 
 ### OAuth Configuration
 
-**For Production (Supabase Dashboard):**
+**For Production / staging (self-hosted GoTrue):**
 
-Configure Google and Discord credentials in Supabase Dashboard → Authentication → Providers.
+Credentials live in the Supabase stack `.env` (`GOTRUE_EXTERNAL_GOOGLE_*`, `GOTRUE_EXTERNAL_DISCORD_*`). Stock Docker Compose does **not** pass those into the auth container — Google login then fails with `Unsupported provider: provider is not enabled`. Apply `bash infra/apply-supabase-oauth.sh production` (or `staging`) and follow [infra/supabase-oauth.md](./infra/supabase-oauth.md).
+
+This is **not** configured in the Next.js app or Coolify env. `supabase/config.toml` is local CLI only.
 
 **For Local Development (Supabase CLI):**
 

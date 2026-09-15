@@ -34,6 +34,7 @@
 ### Supabase & auth
 
 - **[supabase-auth-traffic.md](./supabase-auth-traffic.md)** - Auth/proxy traffic reductions, JWKS status on self-hosted Supabase, and future asymmetric JWT setup
+- **[../infra/supabase-oauth.md](../infra/supabase-oauth.md)** - Google/Discord must be passed into the Auth container; Coolify deploys do not do this
 
 ### Shared Albums
 

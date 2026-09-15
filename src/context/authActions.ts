@@ -9,6 +9,7 @@ export async function signOutWithSupabase() {
   await supabase.auth.signOut();
 }
 
+/** Starts Google OAuth. Provider enablement is GoTrue env, not this client — infra/supabase-oauth.md */
 export async function signInWithGoogle(redirectTo?: string) {
   const supabase = await loadBrowserSupabase();
   const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
@@ -20,6 +21,7 @@ export async function signInWithGoogle(redirectTo?: string) {
   return { error };
 }
 
+/** Starts Discord OAuth. Provider enablement is GoTrue env, not this client — infra/supabase-oauth.md */
 export async function signInWithDiscord(redirectTo?: string) {
   const supabase = await loadBrowserSupabase();
   const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
