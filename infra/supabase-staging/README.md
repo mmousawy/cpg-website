@@ -124,6 +124,8 @@ GOTRUE_URI_ALLOW_LIST=https://staging.creativephotography.group/**
 
 Copy OAuth client IDs/secrets from production `.env` (`GOTRUE_EXTERNAL_GOOGLE_*`, `GOTRUE_EXTERNAL_DISCORD_*`). Add staging callback in provider consoles (step 4).
 
+**`.env` alone does not enable login.** Stock compose never injects those keys into `auth`. The override example above includes them; for an existing stack run `bash infra/apply-supabase-oauth.sh staging` and confirm with `docker exec supabase-staging-auth env | grep GOTRUE_EXTERNAL_GOOGLE`. See [supabase-oauth.md](../supabase-oauth.md).
+
 See [gotrue-staging.env.example](./gotrue-staging.env.example) for a checklist.
 
 **RAM:** optionally comment out `studio`, `analytics`, `vector` in `docker-compose.yml` on a small VPS.

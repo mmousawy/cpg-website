@@ -1,0 +1,33 @@
+# Drop-in override for self-hosted GoTrue (production or staging).
+#
+# Stock supabase/docker-compose.yml does not pass GOTRUE_EXTERNAL_GOOGLE_* or
+# GOTRUE_EXTERNAL_DISCORD_* into the auth container. Values in .env are ignored
+# until they are listed here. Symptom: Auth 400
+#   error_code=validation_failed  msg="Unsupported provider: provider is not enabled"
+#
+# Coolify deploys Next.js only — this file is not applied by a git push.
+# Run infra/apply-supabase-oauth.sh on the VPS, or:
+#
+#   cp /path/to/cpg-website/infra/supabase-oauth.override.yml \
+#     ./docker-compose.oauth.override.yml
+#
+#   docker compose -f docker-compose.yml \
+#     -f docker-compose.override.yml \
+#     -f docker-compose.oauth.override.yml \
+#     up -d --force-recreate auth
+#
+# .env (same directory) must already contain GOTRUE_EXTERNAL_GOOGLE_* and
+# GOTRUE_EXTERNAL_DISCORD_* including ENABLED=true, client id, secret, and
+# redirect URI (https://db…/auth/v1/callback).
+
+services:
+  auth:
+    environment:
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOTRUE_EXTERNAL_GOOGLE_ENABLED}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOTRUE_EXTERNAL_GOOGLE_SECRET}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI}
+      GOTRUE_EXTERNAL_DISCORD_ENABLED: ${GOTRUE_EXTERNAL_DISCORD_ENABLED}
+      GOTRUE_EXTERNAL_DISCORD_CLIENT_ID: ${GOTRUE_EXTERNAL_DISCORD_CLIENT_ID}
+      GOTRUE_EXTERNAL_DISCORD_SECRET: ${GOTRUE_EXTERNAL_DISCORD_SECRET}
+      GOTRUE_EXTERNAL_DISCORD_REDIRECT_URI: ${GOTRUE_EXTERNAL_DISCORD_REDIRECT_URI}

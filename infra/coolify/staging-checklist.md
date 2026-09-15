@@ -13,6 +13,7 @@ Run against `https://staging.creativephotography.group` before treating staging 
 - [ ] Staging `.env` has **new** `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY` (not copied from prod)
 - [ ] Migrations applied: `./infra/supabase-staging/migrate-staging.sh "$STAGING_DB_URL"`
 - [ ] Staging admin promoted ([promote-admin.sql](../supabase-staging/promote-admin.sql))
+- [ ] Google / Discord **enabled inside Auth** — `docker exec supabase-staging-auth env | grep GOTRUE_EXTERNAL_GOOGLE` must show `ENABLED=true` (`.env` alone is not enough; run `bash infra/apply-supabase-oauth.sh staging` — [runbook](../supabase-oauth.md))
 - [ ] Google / Discord OAuth callback: `https://db-staging.creativephotography.group/auth/v1/callback`
 - [ ] imgproxy preserves ICC: `bash infra/apply-imgproxy-preserve-icc.sh staging` on VPS ([imgproxy-color-profiles.md](../imgproxy-color-profiles.md)); `pnpm verify:image-icc` passes on a wide-gamut staging upload
 
@@ -23,6 +24,7 @@ Full setup: [infra/supabase-staging/README.md](../supabase-staging/README.md).
 - [ ] Port mapping `127.0.0.1:2000->3000` ([PORTS.md](./PORTS.md))
 - [ ] `curl -fsS http://127.0.0.1:2000/api/health` on VPS
 - [ ] Nginx staging vhost → `:2000` ([nginx-staging.conf](./nginx-staging.conf))
+- [ ] Nginx proxy buffers + Connection map on VPS: `sudo bash infra/coolify/fix-nginx-proxy-headers.sh`
 - [ ] `curl -fsS https://staging.creativephotography.group/api/health`
 - [ ] Coolify env uses **staging** Supabase URL and keys (not production)
 - [ ] `NEXT_PUBLIC_SITE_URL` and `EMAIL_ASSETS_URL` = `https://staging.creativephotography.group` (rebuild after change)
