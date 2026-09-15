@@ -119,7 +119,7 @@ Verify: `pnpm verify:image-icc -- "<object-public-url>"`
 
 | Symptom | Fix |
 | --- | --- |
-| 502 Bad Gateway | Check `docker ps` port mapping; Nginx `proxy_pass` must match host bind (prod `:3000`, staging `:2000`). Logged-in client only (incognito works): chunked `sb-*-auth-token` cookies overflow Nginx headers — run `sudo bash infra/coolify/fix-nginx-proxy-headers.sh` on the VPS; on the device clear website data for the site and log in again. |
+| 502 Bad Gateway | Check `docker ps` port mapping; Nginx `proxy_pass` must match host bind (prod `:3000`, staging `:2000`). Logged-in client only (incognito works): chunked `sb-*-auth-token` cookies overflow Nginx headers — run `sudo bash infra/coolify/fix-nginx-proxy-headers.sh` on the VPS (uses `conf.d` for `large_client_header_buffers`, not inside `location`); on the device clear website data for the site and log in again. |
 | Wrong site URL in emails | Rebuild after `NEXT_PUBLIC_SITE_URL` change |
 | Cron 401 | `CRON_SECRET` matches scheduled task |
 | OAuth redirect error | Supabase + provider URLs include correct hostname |
