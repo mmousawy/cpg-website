@@ -9,8 +9,6 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-MAP_SRC="$REPO_ROOT/infra/coolify/nginx-connection-upgrade-map.conf"
 MAP_DST="/etc/nginx/conf.d/connection-upgrade-map.conf"
 
 if [[ "$(id -u)" -ne 0 ]]; then
@@ -18,12 +16,14 @@ if [[ "$(id -u)" -ne 0 ]]; then
   exit 1
 fi
 
-if [[ ! -f "$MAP_SRC" ]]; then
-  echo "Missing $MAP_SRC" >&2
-  exit 1
-fi
-
-cp "$MAP_SRC" "$MAP_DST"
+# Self-contained: does not require other repo files (safe to curl | bash on the VPS).
+tee "$MAP_DST" >/dev/null <<'EOF'
+# Must live in the http {} context (e.g. /etc/nginx/conf.d/).
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+EOF
 
 VHOSTS=(
   /etc/nginx/sites-available/creativephotography.group
