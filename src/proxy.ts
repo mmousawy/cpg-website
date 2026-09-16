@@ -1,10 +1,19 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextRequest, NextResponse } from 'next/server';
 import {
   buildAtNicknamePath,
   profileNicknameExists,
   resolveNicknameRedirect,
 } from '@/lib/nicknameRedirect';
+import {
+  ONBOARDING_COOKIE_COMPLETE,
+  ONBOARDING_COOKIE_NAME,
+  ONBOARDING_COOKIE_PENDING,
+  applyOnboardingCookie,
+  clearOnboardingCookie,
+  isDocumentNavigation,
+  parseOnboardingCookie,
+  shouldClassifyOnboarding,
+  shouldRedirectPendingOnboarding,
+} from '@/utils/onboardingCookie';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import {
   matchesPath,
@@ -12,7 +21,9 @@ import {
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
 import { isStagingDeployment } from '@/utils/siteEnvironment';
-import { hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
+import { hasSupabaseAuthCookies, expireLegacyHostedSupabaseAuthCookies } from '@/utils/supabase/authCookie';
+import { createServerClient } from '@supabase/ssr';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Public API routes skip session/profile checks in this proxy.
 const publicApiPaths = [
@@ -52,6 +63,39 @@ function isStagingPublicPath(pathname: string): boolean {
   return stagingPublicPaths.some((path) => pathname === path || pathname.startsWith(path));
 }
 
+function withLegacyAuthCookieCleanup(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  expireLegacyHostedSupabaseAuthCookies(request.cookies.getAll(), response);
+  return response;
+}
+
+function copyResponseCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie);
+  });
+}
+
+function nextClearingStaleOnboarding(request: NextRequest, hasAuthCookie: boolean) {
+  const response = NextResponse.next();
+  if (!hasAuthCookie && request.cookies.get(ONBOARDING_COOKIE_NAME)) {
+    clearOnboardingCookie(response);
+  }
+  return withLegacyAuthCookieCleanup(request, response);
+}
+
+function redirectToOnboarding(request: NextRequest, from?: NextResponse) {
+  const url = request.nextUrl.clone();
+  url.pathname = '/onboarding';
+  url.searchParams.set('redirectTo', request.nextUrl.pathname);
+  const redirect = NextResponse.redirect(url);
+  if (from) {
+    copyResponseCookies(from, redirect);
+  }
+  return withLegacyAuthCookieCleanup(request, redirect);
+}
+
 export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const firstSegment = pathname.split('/')[1];
@@ -68,7 +112,7 @@ export default async function proxy(request: NextRequest) {
           const url = request.nextUrl.clone();
           const rest = pathname.slice(firstSegment.length + 1);
           url.pathname = buildAtNicknamePath(currentNickname, rest);
-          return NextResponse.redirect(url, 301);
+          return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url, 301));
         }
       } catch {
         // Fall through to normal routing
@@ -92,7 +136,7 @@ export default async function proxy(request: NextRequest) {
         const url = request.nextUrl.clone();
         const rest = pathname.slice(firstSegment.length + 1);
         url.pathname = buildAtNicknamePath(bareNickname, rest);
-        return NextResponse.redirect(url, 301);
+        return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url, 301));
       }
 
       const redirectedNickname = await resolveNicknameRedirect(bareNickname);
@@ -100,7 +144,7 @@ export default async function proxy(request: NextRequest) {
         const url = request.nextUrl.clone();
         const rest = pathname.slice(firstSegment.length + 1);
         url.pathname = buildAtNicknamePath(redirectedNickname, rest);
-        return NextResponse.redirect(url, 301);
+        return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url, 301));
       }
     } catch {
       // If the check fails, fall through and let Next.js handle the route
@@ -113,42 +157,68 @@ export default async function proxy(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('error', 'staging_no_signup');
-      return NextResponse.redirect(url);
+      return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
     }
 
     if (!isStagingPublicPath(pathname) && !hasSupabaseAuthCookies(request.cookies.getAll())) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirectTo', pathname);
-      return NextResponse.redirect(url);
+      return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
     }
   }
 
   // Skip auth check for public API routes (production only paths on staging still need admin gate below)
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
   if (isPublicApiRoute && !stagingSite) {
-    return NextResponse.next();
+    return withLegacyAuthCookieCleanup(request, NextResponse.next());
   }
 
   const isProtectedPath = ['/account', '/admin'].some((path) => matchesRoute(path));
   const isAuthPath = ['/login', '/signup'].some((path) => matchesRoute(path));
   const hasAuthCookie = hasSupabaseAuthCookies(request.cookies.getAll());
+  const onboardingCookie = parseOnboardingCookie(
+    request.cookies.get(ONBOARDING_COOKIE_NAME)?.value,
+  );
+
+  if (
+    !isPublicApiRoute
+    && shouldRedirectPendingOnboarding({
+      pathname,
+      hasAuthCookie,
+      cookie: onboardingCookie,
+    })
+  ) {
+    return redirectToOnboarding(request);
+  }
+
+  const needsOnboardingClassify = !isPublicApiRoute
+    && shouldClassifyOnboarding({
+      pathname,
+      hasAuthCookie,
+      cookie: onboardingCookie,
+      isDocument: isDocumentNavigation(request.headers),
+    });
 
   const needsAuthSession = stagingSite
     ? !isStagingPublicPath(pathname) && hasAuthCookie
     : needsProxyAuthSession(pathname) && hasAuthCookie;
 
-  if (!needsAuthSession) {
+  if (!needsAuthSession && !needsOnboardingClassify) {
     if (isProtectedPath && !hasAuthCookie) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirectTo', pathname);
-      return NextResponse.redirect(url);
+      const redirect = NextResponse.redirect(url);
+      if (request.cookies.get(ONBOARDING_COOKIE_NAME)) {
+        clearOnboardingCookie(redirect);
+      }
+      return withLegacyAuthCookieCleanup(request, redirect);
     }
     if (isPublicApiRoute) {
-      return NextResponse.next();
+      return withLegacyAuthCookieCleanup(request, NextResponse.next());
     }
-    return NextResponse.next();
+    return nextClearingStaleOnboarding(request, hasAuthCookie);
   }
 
   let supabaseResponse = NextResponse.next();
@@ -190,7 +260,11 @@ export default async function proxy(request: NextRequest) {
     is_admin: boolean | null;
   } | null = null;
 
-  const shouldLoadProfile = user && (stagingSite || needsProxyOwnProfile(pathname));
+  const shouldLoadProfile = user && (
+    stagingSite
+    || needsProxyOwnProfile(pathname)
+    || needsOnboardingClassify
+  );
 
   if (shouldLoadProfile) {
     const { data } = await supabase.rpc('get_own_profile');
@@ -208,12 +282,23 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
+  if (profile) {
+    applyOnboardingCookie(
+      supabaseResponse,
+      isProfileComplete(profile, { fallbackEmail: user?.email ?? null })
+        ? ONBOARDING_COOKIE_COMPLETE
+        : ONBOARDING_COOKIE_PENDING,
+    );
+  } else if (user && (stagingSite || needsProxyOwnProfile(pathname))) {
+    applyOnboardingCookie(supabaseResponse, ONBOARDING_COOKIE_PENDING);
+  }
+
   if (stagingSite && user && !isStagingPublicPath(pathname) && !profile?.is_admin) {
     await supabase.auth.signOut();
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('error', 'staging_admin_only');
-    return NextResponse.redirect(url);
+    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
   }
 
   // Block users whose account is scheduled for deletion
@@ -222,7 +307,10 @@ export default async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/account-deleted';
     url.search = '';
-    return NextResponse.redirect(url);
+    const redirect = NextResponse.redirect(url);
+    copyResponseCookies(supabaseResponse, redirect);
+    clearOnboardingCookie(redirect);
+    return withLegacyAuthCookieCleanup(request, redirect);
   }
 
   // Block suspended users from account/admin areas and write APIs
@@ -237,7 +325,10 @@ export default async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('error', 'suspended');
-    return NextResponse.redirect(url);
+    const redirect = NextResponse.redirect(url);
+    copyResponseCookies(supabaseResponse, redirect);
+    clearOnboardingCookie(redirect);
+    return withLegacyAuthCookieCleanup(request, redirect);
   }
 
   // Force profile completion on gated routes. Public pages skip this so
@@ -251,26 +342,36 @@ export default async function proxy(request: NextRequest) {
     && !matchesRoute('/account-deleted')
     && !isProfileComplete(profile, { fallbackEmail: user.email ?? null })
   ) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/onboarding';
-    url.searchParams.set('redirectTo', pathname);
-    return NextResponse.redirect(url);
+    const redirect = redirectToOnboarding(request, supabaseResponse);
+    applyOnboardingCookie(redirect, ONBOARDING_COOKIE_PENDING);
+    return withLegacyAuthCookieCleanup(request, redirect);
+  }
+
+  if (
+    user
+    && needsOnboardingClassify
+    && profile
+    && !isProfileComplete(profile, { fallbackEmail: user.email ?? null })
+  ) {
+    const redirect = redirectToOnboarding(request, supabaseResponse);
+    applyOnboardingCookie(redirect, ONBOARDING_COOKIE_PENDING);
+    return withLegacyAuthCookieCleanup(request, redirect);
   }
 
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirectTo', pathname);
-    return NextResponse.redirect(url);
+    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
   }
 
   if (isAuthPath && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/account/events';
-    return NextResponse.redirect(url);
+    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
   }
 
-  return supabaseResponse;
+  return withLegacyAuthCookieCleanup(request, supabaseResponse);
 }
 
 export const config = {

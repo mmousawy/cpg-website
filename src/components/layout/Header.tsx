@@ -94,7 +94,7 @@ export default function Header() {
   return (
     <>
       <header
-        className="sticky top-0 z-40 hidden justify-center border-b-[0.0625rem] border-b-border-color border-t-primary bg-background-light px-2 py-2 text-foreground shadow-md shadow-[#00000005] sm:flex"
+        className="sticky top-0 z-40 hidden justify-center border-b border-b-border-color border-t-primary bg-background-light px-2 py-2 text-foreground shadow-md shadow-[#00000005] sm:flex"
       >
         <div className="app-header-inner flex w-full max-w-screen-md items-center justify-between gap-4">
           <div className="flex items-center gap-5">
@@ -141,8 +141,8 @@ export default function Header() {
               </svg>
               <span className="hidden lg:inline text-foreground/60">Search</span>
               <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50 [word-spacing:-0.25em]">
-                <span className="hidden [[data-platform=mac]_&]:inline">⌘</span>
-                <span className="inline [[data-platform=mac]_&]:hidden">Ctrl</span>
+                <span className="hidden in-data-[platform=mac]:inline">⌘</span>
+                <span className="inline in-data-[platform=mac]:hidden">Ctrl</span>
                 {' + '}
                 K
               </kbd>

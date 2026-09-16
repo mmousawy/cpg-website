@@ -21,6 +21,18 @@ services:
 
   auth:
     container_name: supabase-staging-auth
+    # Stock compose does not pass these into the container. .env alone is not enough.
+    # See infra/supabase-oauth.md. Staging callback:
+    # https://db-staging.creativephotography.group/auth/v1/callback
+    environment:
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOTRUE_EXTERNAL_GOOGLE_ENABLED}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOTRUE_EXTERNAL_GOOGLE_SECRET}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI}
+      GOTRUE_EXTERNAL_DISCORD_ENABLED: ${GOTRUE_EXTERNAL_DISCORD_ENABLED}
+      GOTRUE_EXTERNAL_DISCORD_CLIENT_ID: ${GOTRUE_EXTERNAL_DISCORD_CLIENT_ID}
+      GOTRUE_EXTERNAL_DISCORD_SECRET: ${GOTRUE_EXTERNAL_DISCORD_SECRET}
+      GOTRUE_EXTERNAL_DISCORD_REDIRECT_URI: ${GOTRUE_EXTERNAL_DISCORD_REDIRECT_URI}
 
   rest:
     container_name: supabase-staging-rest
@@ -33,6 +45,10 @@ services:
 
   imgproxy:
     container_name: supabase-staging-imgproxy
+    # Preserve embedded ICC (Adobe RGB, Display P3, etc.) on /render/image WebP output.
+    # Default imgproxy strips profiles → sRGB thumbs look dull vs unoptimized originals.
+    environment:
+      IMGPROXY_STRIP_COLOR_PROFILE: "false"
 
   meta:
     container_name: supabase-staging-meta

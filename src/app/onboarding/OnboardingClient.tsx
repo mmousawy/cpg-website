@@ -581,15 +581,19 @@ export default function OnboardingClient() {
       // Expire homepage/members caches before navigating. A server action
       // revalidateTag() would also call refresh() and fight router.push.
       try {
-        await fetch('/api/onboarding/revalidate', {
+        const revalidateResponse = await fetch('/api/onboarding/revalidate', {
           method: 'POST',
           keepalive: true,
         });
+        if (!revalidateResponse.ok) {
+          throw new Error(`Revalidate failed: ${revalidateResponse.status}`);
+        }
+        router.push(postOnboardingRedirect);
       } catch (err) {
         console.error('Error revalidating after onboarding:', err);
+        // Gated /account hop sets the complete cookie if the revalidate response did not.
+        router.push('/account/events');
       }
-
-      router.push(postOnboardingRedirect);
     } catch (err) {
       console.error('Unexpected error saving profile:', err);
       setSubmitError('An unexpected error occurred');

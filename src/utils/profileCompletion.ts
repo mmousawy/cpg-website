@@ -1,4 +1,4 @@
-type ProfileCompletionFields = {
+export type ProfileCompletionFields = {
   email?: string | null;
   nickname?: string | null;
   full_name?: string | null;

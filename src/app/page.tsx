@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { cacheLife, cacheTag } from 'next/cache';
+import { HomeBelowFoldSkeleton } from '@/components/home/HomeBelowFoldSkeleton';
 import { HomeAlbumsSection } from '@/components/home/HomeAlbumsSection';
 import { HomeExploreSection } from '@/components/home/HomeExploreSection';
 import { HomeHeroSection } from '@/components/home/HomeHeroSection';
@@ -39,7 +40,7 @@ export default function Home() {
   return (
     <>
       <HomeHeroSection />
-      <Suspense fallback={<CachedHomeBelowFold includeTestContent={false} />}>
+      <Suspense fallback={<HomeBelowFoldSkeleton />}>
         <HomePageWithE2EFlag />
       </Suspense>
     </>

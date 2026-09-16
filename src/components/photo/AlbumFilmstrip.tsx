@@ -1,7 +1,6 @@
 'use client';
 
-import { useProgressRouter } from '@/components/layout/NavigationProgress';
-import { usePhotoNavigation } from '@/components/photo/PhotoNavigationContext';
+import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import BlurImage from '@/components/shared/BlurImage';
 import HoverPrefetchLink from '@/components/shared/HoverPrefetchLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -60,8 +59,20 @@ export default function AlbumFilmstrip({
     ? `${basePath}/photo/${shortId}`
     : `/@${nickname}/album/${albumSlug}/photo/${shortId}`,
   [basePath, nickname, albumSlug]);
-  const router = useProgressRouter();
-  const { pendingShortId, setPendingShortId } = usePhotoNavigation();
+  const {
+    currentIndex,
+    hasPrev,
+    hasNext,
+    pendingShortId,
+    setPendingShortId,
+    navigateToPhoto,
+    goToPrevPhoto,
+    goToNextPhoto,
+  } = useCollectionPhotoNavigation({
+    photos,
+    currentPhotoShortId,
+    getPhotoHref,
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const activeThumbnailRef = useRef<HTMLAnchorElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -78,20 +89,10 @@ export default function AlbumFilmstrip({
     setCanScrollRight(isOverflowing && container.scrollLeft < maxScrollLeft - 1);
   }, []);
 
-  const currentIndex = photos.findIndex((p) => p.shortId === currentPhotoShortId);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < photos.length - 1;
   const selectedShortId =
     pendingShortId && pendingShortId !== currentPhotoShortId
       ? pendingShortId
       : currentPhotoShortId;
-
-  const navigateToPhoto = useCallback((shortId: string) => {
-    if (isPhotoSwipeOpen()) return;
-    if (shortId === currentPhotoShortId || shortId === pendingShortId) return;
-    setPendingShortId(shortId);
-    router.push(getPhotoHref(shortId));
-  }, [currentPhotoShortId, pendingShortId, getPhotoHref, router]);
 
   // Scroll active thumbnail into view only when it is outside the visible strip
   useEffect(() => {
@@ -104,19 +105,31 @@ export default function AlbumFilmstrip({
       return;
     }
 
+    const scrollBehavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth';
+
+    let targetLeft: number;
     if (currentIndex === 0) {
-      container.scrollLeft = 0;
+      targetLeft = 0;
     } else if (currentIndex === photos.length - 1) {
-      container.scrollLeft = container.scrollWidth - container.clientWidth;
+      targetLeft = container.scrollWidth - container.clientWidth;
     } else {
       const containerRect = container.getBoundingClientRect();
       const elementRect = activeElement.getBoundingClientRect();
-      const scrollLeft = container.scrollLeft + (elementRect.left - containerRect.left) - (containerRect.width / 2) + (elementRect.width / 2);
-      container.scrollLeft = scrollLeft;
+      targetLeft = container.scrollLeft
+        + (elementRect.left - containerRect.left)
+        - (containerRect.width / 2)
+        + (elementRect.width / 2);
     }
 
-    updateScrollEdges();
-  }, [currentIndex, photos.length, updateScrollEdges]);
+    container.scrollTo({ left: targetLeft, behavior: scrollBehavior });
+
+    // Instant scroll: edges update here; smooth scroll updates via the passive scroll listener.
+    if (scrollBehavior === 'auto') {
+      updateScrollEdges();
+    }
+  }, [currentIndex, photos.length, selectedShortId, updateScrollEdges]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -150,29 +163,25 @@ export default function AlbumFilmstrip({
 
       if (e.key === 'ArrowLeft' && hasPrev) {
         e.preventDefault();
-        navigateToPhoto(photos[currentIndex - 1].shortId);
+        goToPrevPhoto();
       } else if (e.key === 'ArrowRight' && hasNext) {
         e.preventDefault();
-        navigateToPhoto(photos[currentIndex + 1].shortId);
+        goToNextPhoto();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, hasPrev, hasNext, photos, navigateToPhoto]);
+  }, [goToNextPhoto, goToPrevPhoto, hasNext, hasPrev]);
 
   const handlePrevClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (hasPrev) {
-      navigateToPhoto(photos[currentIndex - 1].shortId);
-    }
+    goToPrevPhoto();
   };
 
   const handleNextClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (hasNext) {
-      navigateToPhoto(photos[currentIndex + 1].shortId);
-    }
+    goToNextPhoto();
   };
 
   if (photos.length <= 1) {

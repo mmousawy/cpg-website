@@ -130,7 +130,7 @@ export function formatAperture(aperture: number): string {
  */
 export function formatExposure(exposureTime: number): string {
   if (exposureTime >= 1) {
-    return `${exposureTime}s`;
+    return `${parseFloat(exposureTime.toFixed(2))}s`;
   }
   // Express as fraction (1/X)
   const denominator = Math.round(1 / exposureTime);
@@ -172,6 +172,25 @@ function lensModelContainsFocalLength(lensModel: string): boolean {
 }
 
 /**
+ * True when the model already identifies the make (e.g. "iPhone" implies Apple).
+ */
+function makeIsImpliedByModel(make: string, model: string): boolean {
+  const makeLower = make.toLowerCase();
+  const modelLower = model.toLowerCase();
+  if (modelLower.includes(makeLower)) return true;
+  return makeLower === 'apple' && /iphone|ipad|ipod/.test(modelLower);
+}
+
+/**
+ * True when the lens string already names the camera, so showing both is redundant.
+ */
+function lensIncludesCameraName(lensModel: string, camera: string, model?: string): boolean {
+  const lensLower = lensModel.toLowerCase();
+  if (model && lensLower.includes(model.toLowerCase())) return true;
+  return lensLower.includes(camera.toLowerCase());
+}
+
+/**
  * Format parsed EXIF data into display-ready strings.
  */
 export function formatExifData(data: ExifData | null): FormattedExif | null {
@@ -181,12 +200,9 @@ export function formatExifData(data: ExifData | null): FormattedExif | null {
 
   // Camera line: "Make Model" or just one of them
   if (data.make && data.model) {
-    // Avoid duplication if model already contains make name
-    if (data.model.toLowerCase().includes(data.make.toLowerCase())) {
-      formatted.camera = data.model;
-    } else {
-      formatted.camera = `${data.make} ${data.model}`;
-    }
+    formatted.camera = makeIsImpliedByModel(data.make, data.model)
+      ? data.model
+      : `${data.make} ${data.model}`;
   } else if (data.make) {
     formatted.camera = data.make;
   } else if (data.model) {
@@ -257,7 +273,12 @@ export function formatExifData(data: ExifData | null): FormattedExif | null {
 
   // Build summary: Camera · Lens · Settings
   const summaryParts: string[] = [];
-  if (formatted.camera) summaryParts.push(formatted.camera);
+  const lensAlreadyNamesCamera = !!(
+    formatted.camera
+    && formatted.lens
+    && lensIncludesCameraName(formatted.lens, formatted.camera, data.model)
+  );
+  if (formatted.camera && !lensAlreadyNamesCamera) summaryParts.push(formatted.camera);
   if (formatted.lens) summaryParts.push(formatted.lens);
   if (formatted.settingsLine) summaryParts.push(formatted.settingsLine);
 

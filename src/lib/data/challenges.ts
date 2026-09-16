@@ -109,6 +109,21 @@ export async function getAllChallenges() {
  * Tagged with 'challenges' for granular cache invalidation
  */
 export async function getChallengeBySlug(slug: string) {
+  const supabase = createPublicClient();
+  const { data: row } = await supabase
+    .from('challenges')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (!row) {
+    return { challenge: null };
+  }
+
+  return getChallengeBySlugCached(slug);
+}
+
+async function getChallengeBySlugCached(slug: string) {
   'use cache';
   cacheLife('tagged');
   cacheTag('challenges');

@@ -60,6 +60,7 @@ This override:
 - Publishes Kong on `127.0.0.1:8002` and Postgres on `127.0.0.1:5433`
 - Uses `ports: !override` on `kong` and `db` so Docker **replaces** the base compose port mappings
 - Uses `ports: !override []` on `supavisor` so staging pooler does not bind host `:5432` (prod pooler)
+- Sets `IMGPROXY_STRIP_COLOR_PROFILE=false` on imgproxy so `/render/image` WebP keeps embedded ICC profiles (see [imgproxy-color-profiles.md](../imgproxy-color-profiles.md))
 
 **Service keys** in compose (use these in the override, not `container_name`):
 
@@ -122,6 +123,8 @@ GOTRUE_URI_ALLOW_LIST=https://staging.creativephotography.group/**
 ```
 
 Copy OAuth client IDs/secrets from production `.env` (`GOTRUE_EXTERNAL_GOOGLE_*`, `GOTRUE_EXTERNAL_DISCORD_*`). Add staging callback in provider consoles (step 4).
+
+**`.env` alone does not enable login.** Stock compose never injects those keys into `auth`. The override example above includes them; for an existing stack run `bash infra/apply-supabase-oauth.sh staging` and confirm with `docker exec supabase-staging-auth env | grep GOTRUE_EXTERNAL_GOOGLE`. See [supabase-oauth.md](../supabase-oauth.md).
 
 See [gotrue-staging.env.example](./gotrue-staging.env.example) for a checklist.
 
@@ -338,6 +341,19 @@ Apply to **staging first**, verify, then production:
 ```bash
 supabase db push --db-url "$STAGING_DB_URL"
 supabase db push --db-url "$PRODUCTION_DB_URL"
+```
+
+## Image transforms: preserve color profiles
+
+Staging and production imgproxy default to stripping ICC profiles from resized images. The override above keeps Adobe RGB / Display P3 on WebP thumbs so album grids match photo detail pages.
+
+After changing imgproxy env, restart only imgproxy and purge Cloudflare cache for `/storage/v1/render/image/` on `db-staging` and `db`. Full runbook: [infra/imgproxy-color-profiles.md](../imgproxy-color-profiles.md).
+
+Verify from the repo:
+
+```bash
+pnpm verify:image-icc -- \
+  "https://db-staging.creativephotography.group/storage/v1/object/public/user-photos/USER/PHOTO.jpg"
 ```
 
 ## Rollback

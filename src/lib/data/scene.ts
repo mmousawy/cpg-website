@@ -112,7 +112,7 @@ export async function getSceneEventBySlug(slug: string) {
     )
     .eq('slug', slug)
     .is('deleted_at', null)
-    .single();
+    .maybeSingle();
 
   if (!row) {
     return { event: null };

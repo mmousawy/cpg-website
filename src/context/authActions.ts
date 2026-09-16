@@ -1,4 +1,5 @@
 import { getPostLoginRedirect } from '@/utils/postLoginRedirect';
+import { isProfileComplete } from '@/utils/profileCompletion';
 import { loadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 
 import type { Profile } from '@/context/AuthContext';
@@ -8,6 +9,7 @@ export async function signOutWithSupabase() {
   await supabase.auth.signOut();
 }
 
+/** Starts Google OAuth. Provider enablement is GoTrue env, not this client — infra/supabase-oauth.md */
 export async function signInWithGoogle(redirectTo?: string) {
   const supabase = await loadBrowserSupabase();
   const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
@@ -19,6 +21,7 @@ export async function signInWithGoogle(redirectTo?: string) {
   return { error };
 }
 
+/** Starts Discord OAuth. Provider enablement is GoTrue env, not this client — infra/supabase-oauth.md */
 export async function signInWithDiscord(redirectTo?: string) {
   const supabase = await loadBrowserSupabase();
   const safePath = redirectTo ? getPostLoginRedirect(redirectTo) : null;
@@ -48,9 +51,14 @@ export async function signInWithEmail(email: string, password: string) {
       await supabase.auth.signOut();
       return { error: new Error('This account has been suspended. Please contact us if you believe this is an error.') };
     }
+
+    return {
+      error: null,
+      needsOnboarding: !isProfileComplete(profile, { fallbackEmail: data.user.email ?? null }),
+    };
   }
 
-  return { error: null };
+  return { error: null, needsOnboarding: true };
 }
 
 export async function signUpWithEmail(email: string, password: string, bypassToken?: string) {
