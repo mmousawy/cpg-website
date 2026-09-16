@@ -104,10 +104,15 @@ Use `cacheLife('tagged')` for tag-invalidated data. Use `cacheLife('hourly')` fo
 
 ### Avoiding negative cache (404 / empty lists)
 
-`'use cache'` loaders in `src/lib/data/*` must **not** persist long-lived misses. Before returning a 404, unknown slug, or empty member list that may fill later, call helpers from [`src/lib/cache/cacheMiss.ts`](../src/lib/cache/cacheMiss.ts):
+`'use cache'` persists **successful** loader results, including `null` and empty arrays. Do **not** call `connection()` inside a cached function — Next.js forbids it at build/prerender time.
 
-- `uncachedMiss(value)` — slug/detail not found (e.g. `{ challenge: null }`)
-- `skipCacheIfCountMismatch(expected, actual)` — metadata says rows exist but the loaded list is empty
+Use an **uncached outer wrapper** instead:
+
+1. Lightweight live check (slug exists, interest row + `count`, etc.).
+2. Return the miss immediately **without** entering the cached loader (so the miss is not stored).
+3. Call the `'use cache'` inner loader only when the entity should exist.
+
+Examples: `getChallengeBySlug` and `getMembersByInterest` in `src/lib/data/challenges.ts` and `src/lib/data/interests.ts`. See [`src/lib/cache/cacheMiss.ts`](../src/lib/cache/cacheMiss.ts) for the pattern notes.
 
 Always call `revalidateChallenge(slug)` / `revalidateInterest(name)` when **creating** entities, not only on update.
 

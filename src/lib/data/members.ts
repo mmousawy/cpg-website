@@ -4,7 +4,6 @@ import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import { getPopularTagsWithMemberCounts } from './gallery';
-import { skipCacheIfCountMismatch } from '@/lib/cache/cacheMiss';
 import { getPopularInterests } from './interests';
 import { INTEREST_LIST_COLUMNS } from './columns';
 
@@ -434,8 +433,6 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
   });
 
   const members = filterMemberNicknames(sortedMembers as Member[], includeTestContent);
-
-  await skipCacheIfCountMismatch(tagRowCount, members.length);
 
   return {
     members,

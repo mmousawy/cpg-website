@@ -1,5 +1,4 @@
 import type { Tables } from '@/database.types';
-import { uncachedMiss } from '@/lib/cache/cacheMiss';
 import type { Interest } from '@/types/interests';
 import type { Photo } from '@/types/photos';
 import { filterMemberNicknames, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
@@ -169,7 +168,7 @@ export async function getProfileByNickname(nickname: string, includeTestContent 
   }
 
   if (error || !profile) {
-    return uncachedMiss(null);
+    return null;
   }
 
   // Load interests for this profile
@@ -376,7 +375,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .single();
 
   if (!profile || !profile.nickname) {
-    return uncachedMiss(null);
+    return null;
   }
 
   // Get album with photo count
@@ -390,7 +389,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .single();
 
   if (!albumData) {
-    return uncachedMiss(null);
+    return null;
   }
 
   const album = {
@@ -411,7 +410,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .single();
 
   if (!photo) {
-    return uncachedMiss(null);
+    return null;
   }
 
   // Verify photo is part of this album
@@ -423,7 +422,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .single();
 
   if (!albumPhoto) {
-    return uncachedMiss(null);
+    return null;
   }
 
   // Run sibling photos, albums, challenges, and owner profile queries in parallel
@@ -595,7 +594,7 @@ export async function getPhotoByShortId(
     .single();
 
   if (!profile || !profile.nickname) {
-    return uncachedMiss(null);
+    return null;
   }
 
   // Get photo with tags (must be public, exclude event cover images)
@@ -610,7 +609,7 @@ export async function getPhotoByShortId(
     .single();
 
   if (!photo) {
-    return uncachedMiss(null);
+    return null;
   }
 
   // Get albums and challenges in parallel (both depend only on photo.id)
