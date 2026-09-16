@@ -3,7 +3,7 @@
 import { useProgressRouter } from '@/components/layout/NavigationProgress';
 import { usePhotoNavigation } from '@/components/photo/PhotoNavigationContext';
 import { isPhotoSwipeOpen } from '@/utils/photoswipe';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 type CollectionPhoto = {
   shortId: string;
@@ -22,8 +22,21 @@ export function useCollectionPhotoNavigation({
   const { pendingShortId, setPendingShortId } = usePhotoNavigation();
 
   const currentIndex = photos.findIndex((photo) => photo.shortId === currentPhotoShortId);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex >= 0 && currentIndex < photos.length - 1;
+  const photoCount = photos.length;
+  const canWrap = photoCount > 1 && currentIndex >= 0;
+
+  const { prevIndex, nextIndex } = useMemo(() => {
+    if (!canWrap) {
+      return { prevIndex: -1, nextIndex: -1 };
+    }
+    return {
+      prevIndex: currentIndex === 0 ? photoCount - 1 : currentIndex - 1,
+      nextIndex: currentIndex === photoCount - 1 ? 0 : currentIndex + 1,
+    };
+  }, [canWrap, currentIndex, photoCount]);
+
+  const hasPrev = prevIndex >= 0;
+  const hasNext = nextIndex >= 0;
 
   const navigateToPhoto = useCallback((shortId: string) => {
     if (isPhotoSwipeOpen()) return;
@@ -34,16 +47,18 @@ export function useCollectionPhotoNavigation({
 
   const goToPrevPhoto = useCallback(() => {
     if (!hasPrev) return;
-    navigateToPhoto(photos[currentIndex - 1].shortId);
-  }, [currentIndex, hasPrev, navigateToPhoto, photos]);
+    navigateToPhoto(photos[prevIndex].shortId);
+  }, [hasPrev, navigateToPhoto, photos, prevIndex]);
 
   const goToNextPhoto = useCallback(() => {
     if (!hasNext) return;
-    navigateToPhoto(photos[currentIndex + 1].shortId);
-  }, [currentIndex, hasNext, navigateToPhoto, photos]);
+    navigateToPhoto(photos[nextIndex].shortId);
+  }, [hasNext, navigateToPhoto, photos, nextIndex]);
 
   return {
     currentIndex,
+    prevIndex,
+    nextIndex,
     hasPrev,
     hasNext,
     pendingShortId,

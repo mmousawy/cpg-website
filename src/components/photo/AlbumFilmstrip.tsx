@@ -66,6 +66,8 @@ export default function AlbumFilmstrip({
     pendingShortId,
     setPendingShortId,
     navigateToPhoto,
+    goToPrevPhoto,
+    goToNextPhoto,
   } = useCollectionPhotoNavigation({
     photos,
     currentPhotoShortId,
@@ -103,19 +105,31 @@ export default function AlbumFilmstrip({
       return;
     }
 
+    const scrollBehavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth';
+
+    let targetLeft: number;
     if (currentIndex === 0) {
-      container.scrollLeft = 0;
+      targetLeft = 0;
     } else if (currentIndex === photos.length - 1) {
-      container.scrollLeft = container.scrollWidth - container.clientWidth;
+      targetLeft = container.scrollWidth - container.clientWidth;
     } else {
       const containerRect = container.getBoundingClientRect();
       const elementRect = activeElement.getBoundingClientRect();
-      const scrollLeft = container.scrollLeft + (elementRect.left - containerRect.left) - (containerRect.width / 2) + (elementRect.width / 2);
-      container.scrollLeft = scrollLeft;
+      targetLeft = container.scrollLeft
+        + (elementRect.left - containerRect.left)
+        - (containerRect.width / 2)
+        + (elementRect.width / 2);
     }
 
-    updateScrollEdges();
-  }, [currentIndex, photos.length, updateScrollEdges]);
+    container.scrollTo({ left: targetLeft, behavior: scrollBehavior });
+
+    // Instant scroll: edges update here; smooth scroll updates via the passive scroll listener.
+    if (scrollBehavior === 'auto') {
+      updateScrollEdges();
+    }
+  }, [currentIndex, photos.length, selectedShortId, updateScrollEdges]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -149,29 +163,25 @@ export default function AlbumFilmstrip({
 
       if (e.key === 'ArrowLeft' && hasPrev) {
         e.preventDefault();
-        navigateToPhoto(photos[currentIndex - 1].shortId);
+        goToPrevPhoto();
       } else if (e.key === 'ArrowRight' && hasNext) {
         e.preventDefault();
-        navigateToPhoto(photos[currentIndex + 1].shortId);
+        goToNextPhoto();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, hasPrev, hasNext, photos, navigateToPhoto]);
+  }, [goToNextPhoto, goToPrevPhoto, hasNext, hasPrev]);
 
   const handlePrevClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (hasPrev) {
-      navigateToPhoto(photos[currentIndex - 1].shortId);
-    }
+    goToPrevPhoto();
   };
 
   const handleNextClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (hasNext) {
-      navigateToPhoto(photos[currentIndex + 1].shortId);
-    }
+    goToNextPhoto();
   };
 
   if (photos.length <= 1) {
