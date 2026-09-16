@@ -69,6 +69,8 @@ function PhotoFilmstripShellInner({
 
   const {
     currentIndex,
+    prevIndex,
+    nextIndex,
     hasPrev,
     hasNext,
     goToPrevPhoto,
@@ -330,14 +332,14 @@ function PhotoFilmstripShellInner({
     if (dir && dir !== peekDirRef.current) {
       peekDirRef.current = dir;
       const peek = dir === 'left'
-        ? (hasNext ? siblingPhotos[currentIndex + 1] : null)
-        : (hasPrev ? siblingPhotos[currentIndex - 1] : null);
+        ? (hasNext ? siblingPhotos[nextIndex] : null)
+        : (hasPrev ? siblingPhotos[prevIndex] : null);
       setPeekOrigin(dir === 'left' ? 'right' : 'left');
       setPeekShortId(peek?.shortId ?? null);
     }
 
     applySwipeTransforms(visual);
-  }, [applySwipeTransforms, currentIndex, hasNext, hasPrev, siblingPhotos]);
+  }, [applySwipeTransforms, hasNext, hasPrev, nextIndex, prevIndex, siblingPhotos]);
 
   const commitSwipe = useCallback((direction: 'next' | 'prev') => {
     const width = photoContainerRef.current?.offsetWidth ?? 0;
@@ -526,7 +528,6 @@ function PhotoFilmstripShellInner({
                   alt=""
                   contain
                   unoptimized
-                  fadeIn={false}
                   className="max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]"
                   style={{
                     aspectRatio: `${peekPhoto.width}/${peekPhoto.height}`,
@@ -548,7 +549,6 @@ function PhotoFilmstripShellInner({
                 alt=""
                 contain
                 unoptimized
-                fadeIn={false}
                 className="max-h-[calc(100vh-154px)] sm:max-h-[calc(100vh-172px)] lg:max-h-[calc(100vh-218px)]"
                 style={{
                   aspectRatio: `${clickOverlayPhoto.width}/${clickOverlayPhoto.height}`,
