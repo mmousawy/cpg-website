@@ -3,6 +3,7 @@ import { getServerNow } from '@/lib/cache/serverNow';
 import { filterPastEvents, filterUpcomingEvents } from '@/lib/events/filters';
 import { withSanitizedDescriptions } from '@/utils/sanitizeRichHtml';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { uncachedMiss } from '@/lib/cache/cacheMiss';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -113,10 +114,14 @@ export async function getEventBySlug(slug: string) {
     .select(EVENT_LIST_COLUMNS)
     .eq('is_draft', false)
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
+
+  if (!event) {
+    return uncachedMiss({ event: null });
+  }
 
   return {
-    event: event as CPGEvent | null,
+    event: event as CPGEvent,
   };
 }
 

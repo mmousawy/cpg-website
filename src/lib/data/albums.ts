@@ -1,6 +1,7 @@
 import type { Tables } from '@/database.types';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Photo } from '@/types/photos';
+import { skipCacheIfCountMismatch, uncachedMiss } from '@/lib/cache/cacheMiss';
 import { filterAlbumProfiles, filterEventAlbumPhotos, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -247,7 +248,7 @@ export async function getAlbumBySlug(
 
   if (!profile) {
     console.error(`Profile not found for nickname: ${nickname}`);
-    return null;
+    return uncachedMiss(null);
   }
 
   // Get album with photos, tags and moderation data
@@ -295,7 +296,7 @@ export async function getAlbumBySlug(
 
   if (!album) {
     console.error(`Album not found: ${albumSlug} for user ${nickname}`);
-    return null;
+    return uncachedMiss(null);
   }
 
   return album;
@@ -512,7 +513,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
     .single();
 
   if (!event) {
-    return null;
+    return uncachedMiss(null);
   }
 
   cacheTag(`event-album-${event.id}`);
@@ -525,7 +526,7 @@ export async function getEventSiblingPhotos(eventSlug: string, includeTestConten
     .maybeSingle();
 
   if (!album) {
-    return null;
+    return uncachedMiss(null);
   }
 
   const { data: siblingData } = await supabase
@@ -590,7 +591,7 @@ export async function getEventPhotoByShortId(
     .single();
 
   if (!event) {
-    return null;
+    return uncachedMiss(null);
   }
 
   cacheTag(`event-album-${event.id}`);
@@ -604,7 +605,7 @@ export async function getEventPhotoByShortId(
     .maybeSingle();
 
   if (!album) {
-    return null;
+    return uncachedMiss(null);
   }
 
   // Get photo with tags
@@ -616,7 +617,7 @@ export async function getEventPhotoByShortId(
     .single();
 
   if (!photo) {
-    return null;
+    return uncachedMiss(null);
   }
 
   // Verify photo exists in event album
@@ -628,7 +629,7 @@ export async function getEventPhotoByShortId(
     .single();
 
   if (!albumPhoto) {
-    return null;
+    return uncachedMiss(null);
   }
 
   // Get sibling photos from event album, ordered by sort_order
@@ -668,7 +669,7 @@ export async function getEventPhotoByShortId(
 
   // Get photo owner profile
   if (!photo.user_id) {
-    return null;
+    return uncachedMiss(null);
   }
 
   const { data: ownerProfile } = await supabase
@@ -680,7 +681,7 @@ export async function getEventPhotoByShortId(
     .single();
 
   if (!ownerProfile?.nickname) {
-    return null;
+    return uncachedMiss(null);
   }
 
   if (!isPublicProfileAllowed(ownerProfile.nickname, includeTestContent)) {

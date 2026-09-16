@@ -9,6 +9,7 @@ import { filterChallengePhotos, isPublicProfileAllowed } from '@/lib/auth/isTest
 import { getServerNow } from '@/lib/cache/serverNow';
 import { filterActiveChallenges, filterPastChallenges } from '@/lib/challenges/filters';
 import { createPublicClient } from '@/utils/supabase/server';
+import { uncachedMiss } from '@/lib/cache/cacheMiss';
 import { cacheLife, cacheTag } from 'next/cache';
 import { CHALLENGE_LIST_COLUMNS } from './columns';
 
@@ -120,10 +121,10 @@ export async function getChallengeBySlug(slug: string) {
     .from('challenges')
     .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
   if (!challenge) {
-    return { challenge: null };
+    return uncachedMiss({ challenge: null });
   }
 
   // Get submission counts
@@ -255,7 +256,7 @@ export async function getChallengeSiblingPhotos(challengeSlug: string, includeTe
     .single();
 
   if (!challenge) {
-    return null;
+    return uncachedMiss(null);
   }
 
   const { data: siblingData } = await supabase
@@ -301,7 +302,7 @@ export async function getChallengePhotoByShortId(
     .single();
 
   if (!challenge) {
-    return null;
+    return uncachedMiss(null);
   }
 
   // Get photo with tags
@@ -313,7 +314,7 @@ export async function getChallengePhotoByShortId(
     .single();
 
   if (!photo) {
-    return null;
+    return uncachedMiss(null);
   }
 
   // Verify photo has accepted submission in this challenge
@@ -326,7 +327,7 @@ export async function getChallengePhotoByShortId(
     .single();
 
   if (!submission) {
-    return null;
+    return uncachedMiss(null);
   }
 
   // Get sibling photos (all accepted photos in this challenge, ordered by reviewed_at)
@@ -349,7 +350,7 @@ export async function getChallengePhotoByShortId(
 
   // Get photo owner profile
   if (!photo.user_id) {
-    return null;
+    return uncachedMiss(null);
   }
 
   const { data: ownerProfile } = await supabase
@@ -361,7 +362,7 @@ export async function getChallengePhotoByShortId(
     .single();
 
   if (!ownerProfile?.nickname) {
-    return null;
+    return uncachedMiss(null);
   }
 
   if (!isPublicProfileAllowed(ownerProfile.nickname, includeTestContent)) {

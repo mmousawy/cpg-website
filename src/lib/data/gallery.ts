@@ -1,5 +1,6 @@
 import type { Photo, Tag } from '@/types/photos';
 import type { Tables } from '@/database.types';
+import { skipCacheIfCountMismatch } from '@/lib/cache/cacheMiss';
 import { filterStreamPhotos } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -351,6 +352,8 @@ export async function getPhotosByTag(tagName: string, limit = 100, includeTestCo
     .limit(limit);
 
   const photos = (rawPhotos ?? []) as unknown as Photo[];
+
+  await skipCacheIfCountMismatch(photoIds.length, photos.length);
 
   if (photos.length === 0) {
     return [];

@@ -1,3 +1,4 @@
+import { skipCacheIfCountMismatch, uncachedMiss } from '@/lib/cache/cacheMiss';
 import { cacheTag, cacheLife } from 'next/cache';
 import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
@@ -39,36 +40,36 @@ export async function getMembersByInterest(interest: string) {
 
   const supabase = createPublicClient();
 
-  // First verify the interest exists
   const { data: interestData } = await supabase
     .from('interests')
     .select('id, name, count')
     .eq('name', interest)
-    .single();
+    .maybeSingle();
 
   if (!interestData) {
-    return {
+    return uncachedMiss({
       interest: null,
       members: [],
-    };
+    });
   }
 
-  // Get profile IDs with this interest
   const { data: profileInterests } = await supabase
     .from('profile_interests')
     .select('profile_id')
     .eq('interest', interest);
 
-  if (!profileInterests || profileInterests.length === 0) {
+  const linkCount = profileInterests?.length ?? 0;
+
+  if (linkCount === 0) {
+    await skipCacheIfCountMismatch(interestData.count ?? 0, 0);
     return {
       interest: interestData as Interest,
       members: [],
     };
   }
 
-  const profileIds = profileInterests.map((pi) => pi.profile_id);
+  const profileIds = profileInterests!.map((pi) => pi.profile_id);
 
-  // Get member profiles
   const { data: members } = await supabase
     .from('profiles')
     .select('id, full_name, nickname, avatar_url')
@@ -79,9 +80,15 @@ export async function getMembersByInterest(interest: string) {
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });
 
+  const memberList = (members || []) as Member[];
+
+  await skipCacheIfCountMismatch(
+    Math.max(interestData.count ?? 0, linkCount),
+    memberList.length,
+  );
+
   return {
     interest: interestData as Interest,
-    members: (members || []) as Member[],
+    members: memberList,
   };
 }
-
