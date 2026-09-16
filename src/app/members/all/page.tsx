@@ -1,4 +1,5 @@
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import MemberCard from '@/components/shared/MemberCard';
@@ -25,20 +26,10 @@ export default async function AllMembersPage() {
   if (!user) {
     return (
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="text-2xl sm:text-3xl font-bold mb-2 font-heading"
-          >
-            All members
-          </h1>
-          <p
-            className="text-base sm:text-lg opacity-80"
-          >
-            Sign in to see all community members
-          </p>
-        </div>
+        <PageHeading
+          title="All members"
+          description="Sign in to see all community members"
+        />
 
         <div
           className="rounded-xl border border-border-color bg-background-light p-8 text-center"
@@ -86,12 +77,21 @@ export default async function AllMembersPage() {
         Back to members
       </ArrowLink>
 
-      <AllMembersHeader
-        count={members.length}
+      <PageHeading
+        title="All members"
+        description={
+          <>
+            {members.length}
+            {' '}
+            {members.length === 1 ? 'member' : 'members'}
+            {' '}
+            in our community
+          </>
+        }
       />
 
       <div
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
+        className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4"
       >
         {members.map((member) => (
           <MemberCard
@@ -102,34 +102,5 @@ export default async function AllMembersPage() {
         ))}
       </div>
     </PageContainer>
-  );
-}
-
-function AllMembersHeader({ count }: { count?: number }) {
-  return (
-    <div
-      className="mb-8"
-    >
-      <h1
-        className="text-2xl sm:text-3xl font-bold mb-2 font-heading"
-      >
-        All members
-      </h1>
-      <p
-        className="text-base sm:text-lg opacity-80"
-      >
-        {count === undefined
-          ? 'Loading community members…'
-          : (
-            <>
-              {count}
-              {' '}
-              {count === 1 ? 'member' : 'members'}
-              {' '}
-              in our community
-            </>
-          )}
-      </p>
-    </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import MemberStatsExplorer from '@/components/admin/MemberStatsExplorer';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import StatsChartTypeToggle, { type StatsChartType } from '@/components/stats/StatsChartTypeToggle';
 import StatsDonutChart from '@/components/stats/StatsDonutChart';
@@ -86,20 +87,10 @@ export default function AdminStatsClient() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <h1
-          className="text-2xl sm:text-3xl font-bold font-heading"
-        >
-          Statistics
-        </h1>
-        <p
-          className="text-base sm:text-lg text-foreground/80 mt-1"
-        >
-          Site analytics, member usage, and preference breakdowns
-        </p>
-      </div>
+      <PageHeading
+        title="Statistics"
+        description="Site analytics, member usage, and preference breakdowns"
+      />
 
       <div
         className="mb-6 flex flex-wrap gap-2"

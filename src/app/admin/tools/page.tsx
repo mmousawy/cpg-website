@@ -3,23 +3,18 @@
 import NewsletterComposer from '@/components/admin/NewsletterComposer';
 import SignupBypassGenerator from '@/components/admin/SignupBypassGenerator';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 
 export default function AdminToolsPage() {
   return (
     <PageContainer>
-      <h1
-        className="text-2xl sm:text-3xl font-bold font-heading"
-      >
-        Admin tools
-      </h1>
-      <p
-        className="text-base sm:text-lg text-foreground/80 mt-1"
-      >
-        Administrative utilities and settings
-      </p>
+      <PageHeading
+        title="Admin tools"
+        description="Administrative utilities and settings"
+      />
 
       <div
-        className="space-y-6 mt-8"
+        className="space-y-6"
       >
         <NewsletterComposer />
         <SignupBypassGenerator />

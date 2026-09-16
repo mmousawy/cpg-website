@@ -4,40 +4,70 @@ import clsx from 'clsx';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState, type ReactNode } from 'react';
 
-import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { signOutAction } from '@/app/actions/auth';
 import { routes } from '@/config/routes';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
+import AccountMenuChevron from './AccountMenuChevron';
+import AccountMenuSlidingTrack from './AccountMenuSlidingTrack';
+import AccountSiteLinksPanel from './AccountSiteLinksPanel';
 
 type AccountMenuPanelProps = {
   onClose: () => void;
   /** Mobile only: show Notifications as first row */
   showNotificationsEntry?: boolean;
+  /** Mobile only: footer links via Help & info submenu */
+  showSiteLinks?: boolean;
   unseenCount?: number;
   onOpenNotifications?: () => void;
 };
 
+function HelpInfoEntry({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base sm:text-sm hover:bg-background"
+    >
+      <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      Help & info
+      <AccountMenuChevron direction="right" className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+    </button>
+  );
+}
+
 export default function AccountMenuPanel({
   onClose,
   showNotificationsEntry = false,
+  showSiteLinks = false,
   unseenCount = 0,
   onOpenNotifications,
 }: AccountMenuPanelProps) {
-  const { user, profile, signOut, updateProfileTheme } = useAuth();
+  const { user, profile, updateProfileTheme } = useAuth();
   const { isAdmin } = useAdmin();
   const { resolvedTheme, setTheme } = useAppTheme();
   const mounted = useMounted();
   const pathname = usePathname();
-  const confirm = useConfirm();
+  const [view, setView] = useState<'root' | 'site'>('root');
+
+  useEffect(() => {
+    setView('root');
+  }, [pathname]);
 
   const isActive = (href: string, exact = false) =>
     exact ? pathname === href : pathname.startsWith(href);
 
   const menuLinkClass = (href: string, exact = false) => clsx(
-    'flex w-full items-center rounded-lg px-3 py-2 text-left text-sm',
+    'flex w-full items-center rounded-lg px-3 py-2 text-left text-base sm:text-sm',
     isActive(href, exact)
       ? 'bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c] after:ml-auto after:size-1.5 after:shrink-0 after:rounded-full after:bg-primary'
       : 'hover:bg-background',
@@ -55,8 +85,27 @@ export default function AccountMenuPanel({
     }
   };
 
-  if (user) {
+  const sitePanel = (
+    <AccountSiteLinksPanel
+      onBack={() => setView('root')}
+      onClose={onClose}
+      menuLinkClass={menuLinkClass}
+    />
+  );
+
+  const wrapWithSliding = (rootContent: React.ReactNode) => {
+    if (!showSiteLinks) return rootContent;
     return (
+      <AccountMenuSlidingTrack
+        view={view}
+        root={rootContent}
+        site={sitePanel}
+      />
+    );
+  };
+
+  if (user) {
+    return wrapWithSliding(
       <>
         <div className="p-2">
           {showNotificationsEntry && onOpenNotifications && (
@@ -66,7 +115,7 @@ export default function AccountMenuPanel({
                 onClose();
                 onOpenNotifications();
               }}
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
+              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base sm:text-sm hover:bg-background"
             >
               <svg
                 className="mr-3 h-4 w-4"
@@ -120,12 +169,14 @@ export default function AccountMenuPanel({
             </svg>
             My photos
           </Link>
-          <Link href="/account/stats" prefetch={false} onClick={onClose} className={menuLinkClass('/account/stats')}>
-            <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            My stats
-          </Link>
+          {!showSiteLinks && (
+            <Link href="/account/stats" prefetch={false} onClick={onClose} className={menuLinkClass('/account/stats')}>
+              <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              My stats
+            </Link>
+          )}
           <Link href="/account" prefetch={false} onClick={onClose} className={menuLinkClass('/account', true)}>
             <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -141,69 +192,36 @@ export default function AccountMenuPanel({
               {routes.admin.label}
             </Link>
           )}
+          {showSiteLinks && <HelpInfoEntry onOpen={() => setView('site')} />}
         </div>
 
-        <div className="border-t border-border-color-strong mx-4" />
+        {!showSiteLinks && (
+          <>
+            <div className="border-t border-border-color-strong mx-4" />
 
-        <div className="p-2">
-          <button
-            type="button"
-            onClick={handleThemeToggle}
-            className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
-          >
-            <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {mounted && resolvedTheme === 'dark' ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              )}
-            </svg>
-            {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          </button>
-
-          <form
-            action={signOutAction}
-            onSubmit={async (e) => {
-              e.preventDefault();
-
-              const confirmSignOut = await confirm({
-                title: 'Sign out?',
-                message: 'Are you sure you want to sign out?',
-                confirmLabel: 'Sign out',
-                cancelLabel: 'Stay signed in',
-                variant: 'danger',
-              });
-              if (!confirmSignOut) return;
-
-              onClose();
-              try {
-                await signOut();
-                const isProtectedRoute = pathname.startsWith('/account') || pathname.startsWith('/admin');
-                if (isProtectedRoute) {
-                  window.location.href = '/';
-                }
-              } catch (error) {
-                console.error('Error signing out:', error);
-              }
-            }}
-          >
-            <input type="hidden" name="redirectTo" value={pathname} />
-            <button
-              type="submit"
-              className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm text-red-500 hover:bg-red-500/10"
-            >
-              <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Sign out
-            </button>
-          </form>
-        </div>
-      </>
+            <div className="p-2">
+              <button
+                type="button"
+                onClick={handleThemeToggle}
+                className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base sm:text-sm hover:bg-background"
+              >
+                <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {mounted && resolvedTheme === 'dark' ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  )}
+                </svg>
+                {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              </button>
+            </div>
+          </>
+        )}
+      </>,
     );
   }
 
-  return (
+  return wrapWithSliding(
     <div className="p-2">
       <Link
         href={`${routes.login.url}?redirectTo=${encodeURIComponent(pathname)}`}
@@ -228,22 +246,26 @@ export default function AccountMenuPanel({
         {routes.signup.label}
       </Link>
 
-      <div className="border-t border-border-color mt-2 pt-2">
-        <button
-          type="button"
-          onClick={handleThemeToggle}
-          className="flex w-full items-center rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
-        >
-          <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            {mounted && resolvedTheme === 'dark' ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            )}
-          </svg>
-          {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        </button>
-      </div>
-    </div>
+      {showSiteLinks && <HelpInfoEntry onOpen={() => setView('site')} />}
+
+      {!showSiteLinks && (
+        <div className="border-t border-border-color mt-2 pt-2">
+          <button
+            type="button"
+            onClick={handleThemeToggle}
+            className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base sm:text-sm hover:bg-background"
+          >
+            <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {mounted && resolvedTheme === 'dark' ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              )}
+            </svg>
+            {mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          </button>
+        </div>
+      )}
+    </div>,
   );
 }

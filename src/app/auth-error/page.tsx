@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { routes } from '@/config/routes';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import Link from 'next/link';
@@ -15,7 +16,12 @@ export default function AuthErrorPage() {
   return (
     <PageContainer
       className="items-center justify-center"
+      innerClassName="max-w-md"
     >
+      <PageHeading
+        title="Authentication error"
+        description="Something went wrong during the authentication process. This could be due to an expired link or an invalid session."
+      />
       <Container
         padding="lg"
         className="text-center"
@@ -27,17 +33,6 @@ export default function AuthErrorPage() {
             className="h-8 w-8 fill-red-500"
           />
         </div>
-        <h1
-          className="mb-2 text-3xl font-bold"
-        >
-          Authentication error
-        </h1>
-        <p
-          className="text-foreground/80 mb-6"
-        >
-          Something went wrong during the authentication process.
-          This could be due to an expired link or an invalid session.
-        </p>
         <div
           className="flex flex-col gap-3"
         >

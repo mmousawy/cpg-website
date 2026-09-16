@@ -10,6 +10,7 @@ import PreferencesSection from '@/components/account/PreferencesSection';
 import ProfileSection from '@/components/account/ProfileSection';
 import PublicProfileSection from '@/components/account/PublicProfileSection';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import MobileStickyChromeStack from '@/components/layout/MobileStickyChromeStack';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -173,20 +174,10 @@ function AccountPageContent() {
       sectionIds={ACCOUNT_SECTIONS.map((s) => s.id)}
     >
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="mb-2 text-2xl font-bold sm:text-3xl font-heading"
-          >
-            Account settings
-          </h1>
-          <p
-            className="text-base opacity-70 sm:text-lg"
-          >
-            Manage your profile information and preferences
-          </p>
-        </div>
+        <PageHeading
+          title="Account settings"
+          description="Manage your profile information and preferences"
+        />
 
         {/* No-JS fallback: show message and hide loading spinner */}
         <noscript>
@@ -335,14 +326,18 @@ function AccountPageContent() {
         )}
       </PageContainer>
 
-      {/* Mobile: section nav + action bar stacked so both are visible */}
-      <MobileStickyChromeStack hidden={isLoading}>
-        <SectionMobileNav
-          sections={ACCOUNT_SECTIONS}
-          ariaLabel="Account sections"
-          sticky={false}
-        />
-        {changeCount > 0 && (
+      {/* Mobile: section nav slides out before the save bar slides in */}
+      <MobileStickyChromeStack
+        hidden={isLoading}
+        showAction={changeCount > 0}
+        nav={(
+          <SectionMobileNav
+            sections={ACCOUNT_SECTIONS}
+            ariaLabel="Account sections"
+            sticky={false}
+          />
+        )}
+        action={(
           <StickyActionBar
             constrainWidth
             sticky={false}
@@ -350,7 +345,7 @@ function AccountPageContent() {
             {actionBarContent}
           </StickyActionBar>
         )}
-      </MobileStickyChromeStack>
+      />
 
       {/* Desktop: save button only */}
       {changeCount > 0 && (

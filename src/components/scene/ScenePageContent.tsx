@@ -5,8 +5,8 @@ import type { SceneEvent } from '@/types/scene';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 const EMPTY_STATE_EMOTES = [
   '(っ °Д °;)',
@@ -410,7 +410,7 @@ export default function ScenePageContent({
 
   return (
     <div
-      className="space-y-10"
+      className="space-y-6 sm:space-y-10"
     >
       {/* Category filter */}
       <SceneCategoryFilter />
@@ -445,7 +445,7 @@ export default function ScenePageContent({
       {!shouldShowCategoryLoadingState && hasAnyEvents && (
         <section>
           <div
-            className="flex gap-1 mb-4 border-b border-border-color pb-2 overflow-x-auto scrollbar-none"
+            className="max-sm:-mx-3 max-sm:px-3 flex gap-1 mb-4 border-b border-border-color pb-2 overflow-x-auto scrollbar-none"
           >
             {availableTabs.map((tab) => (
               <button
@@ -485,7 +485,7 @@ export default function ScenePageContent({
             activeEvents.length > 0 ? (
               <>
                 <div
-                  className="grid gap-4 sm:gap-6"
+                  className="grid gap-3 sm:gap-6"
                 >
                   {activeEvents.slice(0, visibleCount).map((event) => (
                     <SceneEventCard

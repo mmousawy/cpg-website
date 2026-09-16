@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import HelpAccordion from '@/components/shared/HelpAccordion';
 import SectionMobileNav from '@/components/shared/SectionMobileNav';
 import SectionSidebar from '@/components/shared/SectionSidebar';
@@ -24,24 +25,10 @@ export default function HelpPage() {
       sectionIds={sectionIds}
     >
       <PageContainer>
-        <div
-          className="mb-6 sm:mb-8"
-        >
-          <div
-            className="flex items-center gap-2 mb-1"
-          >
-            <h1
-              className="text-2xl sm:text-3xl font-bold font-heading"
-            >
-              Help & FAQ
-            </h1>
-          </div>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            Find answers to common questions about using Creative Photography Group.
-          </p>
-        </div>
+        <PageHeading
+          title="Help & FAQ"
+          description="Find answers to common questions about using Creative Photography Group."
+        />
 
         <div
           className="flex flex-col md:flex-row md:gap-4 lg:gap-8"

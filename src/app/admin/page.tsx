@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
@@ -153,15 +154,7 @@ export default function AdminDashboardPage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <h1
-          className="text-2xl sm:text-3xl font-bold font-heading"
-        >
-          Admin dashboard
-        </h1>
-      </div>
+      <PageHeading title="Admin dashboard" />
 
       <div
         className="grid gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"

@@ -41,9 +41,7 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
   };
 
   return (
-    <StickyActionBar
-      constrainWidth
-    >
+    <>
       <div
         className="flex min-w-0 flex-col gap-0.5 max-sm:gap-0"
       >
@@ -100,7 +98,7 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
       >
         Join event
       </Button>
-    </StickyActionBar>
+    </>
   );
 }
 
@@ -186,9 +184,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
   };
 
   return (
-    <StickyActionBar
-      constrainWidth
-    >
+    <>
       <div
         className="flex min-w-0 flex-col gap-0.5 max-sm:gap-0"
       >
@@ -259,24 +255,20 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         {isLoading ? '...' : hasRSVP ? 'Cancel RSVP' : 'Join event'}
 
       </Button>
-    </StickyActionBar>
+    </>
   );
 }
 
 export default function EventSignupBar(props: EventSignupBarProps) {
   const { isLoggedIn } = useSession();
 
-  if (!isLoggedIn) {
-    return (
-      <EventSignupBarGuest
-        {...props}
-      />
-    );
-  }
-
   return (
-    <EventSignupBarAuthenticated
-      {...props}
-    />
+    <StickyActionBar constrainWidth>
+      {isLoggedIn ? (
+        <EventSignupBarAuthenticated {...props} />
+      ) : (
+        <EventSignupBarGuest {...props} />
+      )}
+    </StickyActionBar>
   );
 }

@@ -48,7 +48,7 @@ export default function TabBarPopoverBackdrop({
     <button
       type="button"
       aria-label="Close menu"
-      className="pointer-events-auto fixed inset-0 z-0 bg-black/25"
+      className="pointer-events-auto fixed inset-0 z-0 bg-black/45"
       style={{
         opacity: isVisible ? 1 : 0,
         transition: `opacity ${POPOVER_ANIMATION_MS}ms ease-out`,

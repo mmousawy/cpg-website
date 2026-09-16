@@ -6,6 +6,7 @@ import { startTransition, useEffect, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -101,29 +102,18 @@ export default function MyChallengesPage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex items-center gap-2 mb-1"
-        >
-          <h1
-            className="text-3xl font-bold font-heading"
-          >
-            My challenge submissions
-          </h1>
+      <PageHeading
+        title="My challenges"
+        description="View and manage your photo challenge submissions"
+        aside={
           <HelpLink
             href="submit-challenge"
             label="Help with challenge submissions"
             size="lg"
+            className="max-sm:m-0"
           />
-        </div>
-        <p
-          className="text-base sm:text-lg opacity-80"
-        >
-          View and manage your photo challenge submissions
-        </p>
-      </div>
+        }
+      />
 
       <div
         className="space-y-8 sm:space-y-10"

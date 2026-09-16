@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { ReactNode, useRef } from 'react';
 
+import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
@@ -34,19 +35,8 @@ export default function StickyActionBar({
   const rootRef = useRef<HTMLDivElement>(null);
   useReportMobileStickyChromeHeight(rootRef, isBottomSticky);
 
-  return (
-    <div
-      ref={rootRef}
-      className={clsx(
-        'relative',
-        sticky && 'sticky z-30',
-        mobileStickyChromeZClassName,
-        isBottomSticky && 'bottom-0 max-sm:bottom-[var(--mobile-nav-offset,0px)]',
-        isBottomSticky && mobileFloatingPillInsetClassName,
-        sticky && position === 'top' && 'top-0',
-        className,
-      )}
-    >
+  const inner = (
+    <>
       <div
         className={clsx(
           'absolute left-0 right-0 pointer-events-none hidden sm:block',
@@ -75,6 +65,37 @@ export default function StickyActionBar({
           {children}
         </div>
       </div>
+    </>
+  );
+
+  const rootClassName = clsx(
+    'relative',
+    sticky && 'sticky z-30',
+    mobileStickyChromeZClassName,
+    isBottomSticky && 'bottom-0 max-sm:bottom-(--mobile-nav-offset,0px)',
+    isBottomSticky && mobileFloatingPillInsetClassName,
+    sticky && position === 'top' && 'top-0',
+    className,
+  );
+
+  if (isBottomSticky) {
+    return (
+      <AnimatedStickyBarSlide
+        open
+        innerRef={rootRef}
+        className={rootClassName}
+      >
+        {inner}
+      </AnimatedStickyBarSlide>
+    );
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      className={rootClassName}
+    >
+      {inner}
     </div>
   );
 }

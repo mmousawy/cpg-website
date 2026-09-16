@@ -3,6 +3,8 @@
 import MemberConfirmDialog from '@/components/admin/MemberConfirmDialog';
 import MemberSearchFilters from '@/components/admin/MemberSearchFilters';
 import MemberTable from '@/components/admin/MemberTable';
+import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import type { Tables } from '@/database.types';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -150,28 +152,11 @@ export default function AdminMembersPage() {
   };
 
   return (
-    <div
-      className="bg-background px-2 py-8"
-    >
-      {/* Header */}
-      <div
-        className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Manage members
-          </h1>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            {total}
-            {' '}
-            total members
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeading
+        title="Manage members"
+        description={`${total} total members`}
+      />
 
       <MemberSearchFilters
         search={search}
@@ -232,6 +217,6 @@ export default function AdminMembersPage() {
           isLoading={actionLoading === confirmDialog.member.id}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

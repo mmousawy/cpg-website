@@ -6,6 +6,7 @@ import { Suspense, useState } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -74,7 +75,21 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
     return (
       <PageContainer
         className="items-center justify-center"
+        innerClassName="max-w-md"
       >
+        <PageHeading
+          title="Check your email"
+          description={
+            <>
+              We&apos;ve sent a confirmation link to
+              {' '}
+              <strong>
+                {email}
+              </strong>
+              . Click the link in the email to activate your account.
+            </>
+          }
+        />
         <Container
           padding="lg"
           className="mx-auto max-w-md text-center"
@@ -86,22 +101,6 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
               className="h-8 w-8 fill-green-500"
             />
           </div>
-          <h1
-            className="mb-2 text-3xl font-bold"
-          >
-            Check your email
-          </h1>
-          <p
-            className="text-foreground/80"
-          >
-            We&apos;ve sent a confirmation link to
-            {' '}
-            <strong>
-              {email}
-            </strong>
-            .
-            Click the link in the email to activate your account.
-          </p>
           <ArrowLink
             href={routes.login.url}
             direction="left"
@@ -117,30 +116,24 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
   return (
     <PageContainer
       className="items-center justify-center"
+      innerClassName="max-w-md"
     >
-      <Container
-        padding="lg"
-        className="mx-auto max-w-md"
-      >
-        <h1
-          className="mb-2 text-center text-3xl font-bold"
-        >
-          Create an account
-        </h1>
-        <div
-          className="flex items-center justify-center mb-8"
-        >
-          <p
-            className="text-center text-sm text-foreground/80"
-          >
-            Join the Creative Photography Group community
-          </p>
+      <PageHeading
+        title="Create an account"
+        description="Join the Creative Photography Group community"
+        aside={
           <HelpLink
             href="create-account"
             label="Help with creating an account"
             size="sm"
+            className="max-sm:m-0"
           />
-        </div>
+        }
+      />
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
 
         {/* Social Login Buttons */}
         <div

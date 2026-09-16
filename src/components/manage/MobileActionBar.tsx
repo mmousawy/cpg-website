@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/components/shared/Button';
+import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
@@ -41,16 +42,15 @@ export default function MobileActionBar({
 
   useReportMobileStickyChromeHeight(rootRef, isOpen);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      ref={rootRef}
+    <AnimatedStickyBarSlide
+      open={isOpen}
+      innerRef={rootRef}
       className={clsx(
         'md:hidden fixed inset-x-0',
         mobileFloatingPillInsetClassName,
         mobileStickyChromeZClassName,
-        'max-sm:bottom-[var(--mobile-nav-offset,0px)]',
+        'max-sm:bottom-(--mobile-nav-offset,0px)',
       )}
     >
       <div className={clsx(mobileFloatingPillClassName, 'overflow-hidden')}>
@@ -89,6 +89,6 @@ export default function MobileActionBar({
           </div>
         </div>
       </div>
-    </div>
+    </AnimatedStickyBarSlide>
   );
 }

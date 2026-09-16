@@ -12,6 +12,7 @@ import EventForm from '@/components/admin/EventForm';
 import EventRsvpList from '@/components/admin/EventRsvpList';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import StickyActionBar from '@/components/shared/StickyActionBar';
@@ -667,31 +668,21 @@ function AdminEventForm() {
   return (
     <>
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <div
-            className="flex flex-wrap items-center gap-3"
-          >
-            <h1
-              className="text-2xl sm:text-3xl font-bold font-heading"
-            >
-              {isNewEvent ? 'Create new event' : 'Edit event'}
-            </h1>
-            {isDraft && (
+        <PageHeading
+          title={isNewEvent ? 'Create new event' : 'Edit event'}
+          description={
+            isNewEvent ? 'Fill in the details for your event' : 'Update the event details'
+          }
+          aside={
+            isDraft ? (
               <span
                 className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700"
               >
                 Draft
               </span>
-            )}
-          </div>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            {isNewEvent ? 'Fill in the details for your event' : 'Update the event details'}
-          </p>
-        </div>
+            ) : undefined
+          }
+        />
 
         {isLoading ? (
           <Container

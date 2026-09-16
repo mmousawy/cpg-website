@@ -16,6 +16,8 @@ type MobileAccountMenuProps = {
   avatarUrl?: string | null;
   fullName?: string | null;
   active?: boolean;
+  /** When set, open state is controlled by the parent (e.g. tab bar backdrop). */
+  open?: boolean;
   onOpenChange?: (open: boolean) => void;
 };
 
@@ -23,17 +25,23 @@ function MobileAccountMenuContent({
   avatarUrl,
   fullName,
   active = false,
+  open: openControlled,
   onOpenChange,
 }: MobileAccountMenuProps) {
   const { user } = useAuth();
   const mounted = useMounted();
   const rootRef = useRef<HTMLDivElement>(null);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountOpenUncontrolled, setAccountOpenUncontrolled] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unseenCount } = useNotifications(user?.id || null);
 
+  const isControlled = openControlled !== undefined;
+  const accountOpen = isControlled ? openControlled : accountOpenUncontrolled;
+
   const setOpen = (open: boolean) => {
-    setAccountOpen(open);
+    if (!isControlled) {
+      setAccountOpenUncontrolled(open);
+    }
     onOpenChange?.(open);
   };
 
@@ -97,7 +105,7 @@ function MobileAccountMenuContent({
           <span
             className={clsx(
               'relative rounded-full',
-              active && 'shadow-[0_0_0_2px_var(--foreground)]',
+              active && 'outline outline-2 outline-primary outline-offset-2',
             )}
           >
             <Avatar
@@ -114,11 +122,12 @@ function MobileAccountMenuContent({
           open={accountOpen}
           align="end"
           widthClass="w-64 max-w-[calc(100vw-1.5rem)]"
-          panelClassName="max-h-[min(70vh,28rem)] overflow-y-auto"
+          panelClassName="overflow-hidden"
         >
           <AccountMenuPanel
             onClose={() => setOpen(false)}
             showNotificationsEntry={Boolean(user)}
+            showSiteLinks
             unseenCount={unseenCount}
             onOpenNotifications={openNotifications}
           />

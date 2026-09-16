@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { createNoIndexMetadata } from '@/utils/metadata';
 import Link from 'next/link';
 
@@ -10,7 +11,13 @@ export const metadata = createNoIndexMetadata({
 
 export default function AccountDeletedPage() {
   return (
-    <PageContainer>
+    <PageContainer
+      innerClassName="max-w-xl"
+    >
+      <PageHeading
+        title="Account scheduled for deletion"
+        description="Your account has been scheduled for permanent deletion. All your content will be permanently removed within 30 days."
+      />
       <Container
         padding="lg"
         className="mx-auto max-w-xl"
@@ -35,18 +42,6 @@ export default function AccountDeletedPage() {
               />
             </svg>
           </div>
-
-          <h1
-            className="text-2xl font-bold sm:text-3xl"
-          >
-            Account scheduled for deletion
-          </h1>
-
-          <p
-            className="text-foreground/80"
-          >
-            Your account has been scheduled for permanent deletion. All your content will be permanently removed within 30 days.
-          </p>
 
           <p
             className="text-foreground/80"

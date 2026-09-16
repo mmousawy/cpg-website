@@ -39,7 +39,7 @@ export function GalleryMostViewedPhotosSection({ photos }: { photos: StreamPhoto
         }
       />
       <div
-        className="mt-6 flex justify-center"
+        className="mt-4 mb-2 sm:mt-6 flex justify-center "
       >
         <Button
           href={`${routes.galleryPhotos.url}?sort=popular`}

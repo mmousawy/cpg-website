@@ -204,12 +204,6 @@ export function ProfileHeroBanner({
         )}
       </div>
 
-      {hasBannerImage && (
-        <div
-          className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
-        />
-      )}
-
       <div
         className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"
       />

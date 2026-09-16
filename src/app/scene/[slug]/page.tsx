@@ -9,9 +9,8 @@ import SceneCoverImage from '@/components/scene/SceneCoverImage';
 import ArrowLink from '@/components/shared/ArrowLink';
 import AuthorRow from '@/components/shared/AuthorRow';
 import BlurImage from '@/components/shared/BlurImage';
-import { getServerNow } from '@/lib/cache/serverNow';
 import { routes } from '@/config/routes';
-import { ensureStaticParams } from '@/lib/staticParams';
+import { getServerNow } from '@/lib/cache/serverNow';
 import {
   getAllSceneEventSlugs,
   getRelatedSceneEvents,
@@ -19,6 +18,7 @@ import {
   getSceneEventInterests,
   type SceneEventWithSubmitter,
 } from '@/lib/data/scene';
+import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getSceneCategoryStyle,
   SCENE_EVENT_CATEGORIES,
@@ -207,10 +207,6 @@ export default async function SceneEventDetailPage({
               noBlur={/\.png(\?|$)/i.test(event.cover_image_url)}
             />
           </div>
-
-          <div
-            className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
-          />
 
           <div
             className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"

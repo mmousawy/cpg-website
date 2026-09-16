@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { useLayoutEffect, useRef } from 'react';
 
-/** Matches Tailwind `max-sm` — same breakpoint where the site header is hidden. */
+/** Mobile-only sticky page title chrome (`max-sm`). */
 const MOBILE_STICKY_MEDIA = '(max-width: 639px)';
 
 type StickyScrollHeaderProps = {

@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { getCachedChangelogIndexData } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
 
@@ -23,6 +24,10 @@ export default async function ChangelogPage() {
 
   return (
     <PageContainer>
+      <PageHeading
+        title="Changelog"
+        description="All changes to the Creative Photography Group app are listed here."
+      />
       <Container
         padding="md"
         className="mx-auto max-w-3xl"
@@ -30,21 +35,6 @@ export default async function ChangelogPage() {
         <div
           className="space-y-6 sm:space-y-8 text-sm sm:text-base"
         >
-          <div
-            className="prose prose-slate dark:prose-invert max-w-none"
-          >
-            <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
-            >
-              Changelog
-            </h1>
-            <p
-              className="text-sm text-foreground/80"
-            >
-              All changes to the Creative Photography Group app are listed here.
-            </p>
-          </div>
-
           {entries.length === 0 ? (
             <div
               className="rounded-lg border border-border-color bg-background-light p-6 text-center"

@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 
 function EmailChangedContent() {
@@ -17,7 +18,12 @@ function EmailChangedContent() {
     return (
       <PageContainer
         className="items-center justify-center"
+        innerClassName="max-w-md"
       >
+        <PageHeading
+          title="Something went wrong"
+          description="We couldn't verify your email change. The link may be invalid or expired."
+        />
         <Container
           padding="lg"
           className="text-center"
@@ -39,16 +45,6 @@ function EmailChangedContent() {
               />
             </svg>
           </div>
-          <h1
-            className="mb-2 text-3xl font-bold"
-          >
-            Something went wrong
-          </h1>
-          <p
-            className="text-foreground/80 mb-6"
-          >
-            We couldn&apos;t verify your email change. The link may be invalid or expired.
-          </p>
           <Link
             href="/account"
           >
@@ -64,7 +60,12 @@ function EmailChangedContent() {
   return (
     <PageContainer
       className="items-center justify-center"
+      innerClassName="max-w-md"
     >
+      <PageHeading
+        title="Email changed successfully!"
+        description="Your email has been updated. You can use it to log in to your account."
+      />
       <Container
         padding="lg"
         className="text-center"
@@ -86,11 +87,6 @@ function EmailChangedContent() {
             />
           </svg>
         </div>
-        <h1
-          className="mb-2 text-3xl font-bold"
-        >
-          Email changed successfully!
-        </h1>
         <p
           className="text-foreground/80 mb-2"
         >

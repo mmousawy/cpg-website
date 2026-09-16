@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { getCachedChangelogIndexData } from '@/lib/changelog';
 import { createMetadata } from '@/utils/metadata';
 import Link from 'next/link';
@@ -36,6 +37,19 @@ export default async function ChangelogDetailsPage({ searchParams }: PageProps) 
 
   return (
     <PageContainer>
+      <Link
+        href="/changelog"
+        className="mb-4 flex items-center gap-1 text-sm text-primary no-underline hover:underline"
+      >
+        <ArrowRightIcon
+          className="h-4 w-4 rotate-180 fill-current"
+        />
+        Back to overview
+      </Link>
+      <PageHeading
+        title="Detailed changes"
+        description="Full breakdown of features, fixes, and other changes per version."
+      />
       <Container
         padding="md"
         className="mx-auto max-w-3xl"
@@ -43,30 +57,6 @@ export default async function ChangelogDetailsPage({ searchParams }: PageProps) 
         <div
           className="space-y-6 sm:space-y-8 text-sm sm:text-base"
         >
-          <div
-            className="prose prose-slate dark:prose-invert max-w-none"
-          >
-            <Link
-              href="/changelog"
-              className="text-sm text-primary hover:underline no-underline flex items-center gap-1 mb-4"
-            >
-              <ArrowRightIcon
-                className="w-4 h-4 fill-current rotate-180"
-              />
-              Back to overview
-            </Link>
-            <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
-            >
-              Detailed Changes
-            </h1>
-            <p
-              className="text-sm text-foreground/80"
-            >
-              Full breakdown of features, fixes, and other changes per version.
-            </p>
-          </div>
-
           {entries.length === 0 ? (
             <div
               className="rounded-lg border border-border-color bg-background-light p-6 text-center"

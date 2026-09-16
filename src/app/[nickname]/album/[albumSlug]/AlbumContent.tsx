@@ -126,7 +126,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
             >
               <FullSizeGalleryButton
                 photos={photos}
-                className="text-xs bg-background/70 dark:bg-border-color/70 backdrop-blur-md hover:bg-background/90! dark:hover:bg-border-color/90!"
+                className="text-xs bg-background/70 dark:bg-border-color/70 hover:bg-background/90! dark:hover:bg-border-color/90!"
               />
             </div>
           )}

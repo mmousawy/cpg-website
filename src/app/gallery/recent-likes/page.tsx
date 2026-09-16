@@ -1,7 +1,6 @@
 import PageContainer from '@/components/layout/PageContainer';
-import { cacheLife } from 'next/cache';
+import PageHeading from '@/components/layout/PageHeading';
 
-import WidePageContainer from '@/components/layout/WidePageContainer';
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import { createMetadata } from '@/utils/metadata';
 
@@ -25,35 +24,20 @@ export default async function RecentlyLikedPage() {
   const hasMore = allPhotos.length > 20;
 
   return (
-    <>
-      <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="mb-2 text-3xl font-bold font-heading"
-          >
-            Recently liked photos
-          </h1>
-          <p
-            className="text-lg opacity-70"
-          >
-            Photos that received likes recently from the community
-          </p>
-        </div>
-      </PageContainer>
-
-      <WidePageContainer
-        className="pt-0!"
-      >
-        <PhotosPaginated
-          initialPhotos={photos}
-          apiEndpoint="/api/gallery/recent-likes"
-          perPage={20}
-          initialHasMore={hasMore}
-          showSortToggle={false}
-        />
-      </WidePageContainer>
-    </>
+    <PageContainer
+      innerClassName="max-w-screen-xl"
+    >
+      <PageHeading
+        title="Recently liked photos"
+        description="Photos that received likes recently from the community"
+      />
+      <PhotosPaginated
+        initialPhotos={photos}
+        apiEndpoint="/api/gallery/recent-likes"
+        perPage={20}
+        initialHasMore={hasMore}
+        showSortToggle={false}
+      />
+    </PageContainer>
   );
 }

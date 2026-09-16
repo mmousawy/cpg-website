@@ -4,6 +4,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import OnboardingAboutYouSection from '@/components/onboarding/OnboardingAboutYouSection';
 import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
 import OnboardingFinishSection from '@/components/onboarding/OnboardingFinishSection';
@@ -642,30 +643,17 @@ export default function OnboardingClient() {
       <div
         className="mx-auto max-w-xl"
       >
-        <div
-          className="mb-8 text-center"
-        >
-          <h1
-            className="mb-2 text-2xl font-bold sm:text-3xl font-heading"
-          >
-            Welcome to the group
-            {displayName ? ` ${displayName.split(' ')[0]}` : ''}
-            !
-          </h1>
-          <div
-            className="flex items-center justify-center gap-2"
-          >
-            <p
-              className="text-base opacity-70 sm:text-lg"
-            >
-              Just a few steps to get you started
-            </p>
+        <PageHeading
+          title={`Welcome to the group${displayName ? ` ${displayName.split(' ')[0]}` : ''}!`}
+          description="Just a few steps to get you started"
+          aside={
             <HelpLink
               href="setup-profile"
               label="Help with profile setup"
+              className="max-sm:m-0"
             />
-          </div>
-        </div>
+          }
+        />
 
         <form
           onSubmit={handleSubmit(onSubmit)}

@@ -79,7 +79,7 @@ export default function Modal() {
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto',
         'flex size-full max-h-none max-w-none p-6 max-sm:p-4',
-        'bg-black/40 backdrop-blur-sm',
+        'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}
     >

@@ -22,7 +22,7 @@ export default function Footer() {
 
   return (
     <footer
-      className="app-footer mt-auto flex justify-center border-t border-border-color bg-background-light px-2 py-4 sm:py-6 text-foreground"
+      className="app-footer mt-auto hidden justify-center border-t border-border-color bg-background-light px-2 py-4 sm:flex sm:py-6 text-foreground"
     >
       <div
         className="flex w-full max-w-screen-md flex-col items-center gap-3"

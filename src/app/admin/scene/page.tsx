@@ -7,6 +7,7 @@ import BlurImage from '@/components/shared/BlurImage';
 import { useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -138,20 +139,10 @@ export default function AdminScenePage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <h1
-          className="text-2xl sm:text-3xl font-bold font-heading"
-        >
-          Scene events
-        </h1>
-        <p
-          className="text-base sm:text-lg text-foreground/80 mt-1"
-        >
-          Browse and manage community-submitted photography events
-        </p>
-      </div>
+      <PageHeading
+        title="Scene events"
+        description="Browse and manage community-submitted photography events"
+      />
 
       {/* Search & filters */}
       <div

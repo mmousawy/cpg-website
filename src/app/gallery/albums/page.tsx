@@ -1,6 +1,6 @@
 import AlbumsPaginated from '@/components/gallery/AlbumsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
-import WidePageContainer from '@/components/layout/WidePageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import HelpLink from '@/components/shared/HelpLink';
 import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
@@ -46,40 +46,28 @@ export default async function AlbumsPage({ searchParams }: PageProps) {
       <JsonLd
         data={breadcrumbJsonLd}
       />
-      <PageContainer>
-        <div>
-          <div
-            className="flex items-center gap-2 mb-1"
-          >
-            <h1
-              className="text-3xl font-bold font-heading"
-            >
-              Photo albums
-            </h1>
+      <PageContainer
+        innerClassName="max-w-screen-xl"
+      >
+        <PageHeading
+          title="Photo albums"
+          description="Photo collections from community members"
+          aside={
             <HelpLink
               href="manage-albums"
               label="Help with albums"
               size="lg"
+              className="max-sm:m-0"
             />
-          </div>
-          <p
-            className="text-lg opacity-70"
-          >
-            Photo collections from community members
-          </p>
-        </div>
-      </PageContainer>
-
-      <WidePageContainer
-        className="pt-0!"
-      >
+          }
+        />
         <AlbumsPaginated
           initialAlbums={albums}
           perPage={20}
           initialHasMore={hasMore}
           initialSort={initialSort}
         />
-      </WidePageContainer>
+      </PageContainer>
     </>
   );
 }

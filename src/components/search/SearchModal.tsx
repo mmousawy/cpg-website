@@ -1,12 +1,12 @@
 'use client';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useSearch } from '@/hooks/useSearch';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useRouter } from 'next/navigation';
 import CloseSVG from 'public/icons/close.svg';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import SearchInput from './SearchInput';
 import SearchResults from './SearchResults';
 
@@ -112,7 +112,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
-        'bg-black/40 backdrop-blur-sm',
+        'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}
       onClick={(e) => {

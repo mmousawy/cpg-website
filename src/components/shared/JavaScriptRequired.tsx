@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { routes } from '@/config/routes';
 import ArrowLink from './ArrowLink';
 
@@ -31,7 +32,12 @@ export default function JavaScriptRequired({ contentClass = 'js-content' }: Java
       </style>
       <PageContainer
         className="items-center justify-center"
+        innerClassName="max-w-md"
       >
+        <PageHeading
+          title="JavaScript required"
+          description="Please enable JavaScript in your browser to continue."
+        />
         <Container
           padding="lg"
           className="mx-auto max-w-md text-center"
@@ -53,16 +59,6 @@ export default function JavaScriptRequired({ contentClass = 'js-content' }: Java
               />
             </svg>
           </div>
-          <h1
-            className="mb-2 text-2xl font-bold"
-          >
-            JavaScript Required
-          </h1>
-          <p
-            className="text-foreground/80"
-          >
-            Please enable JavaScript in your browser to continue.
-          </p>
           <ArrowLink
             href={routes.home.url}
             prefetch={false}

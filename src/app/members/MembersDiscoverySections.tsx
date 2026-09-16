@@ -180,7 +180,7 @@ function RecentlyActiveSection({ recentlyActive }: { recentlyActive: MembersDisc
 
   return (
     <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
+      className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4"
     >
       {recentlyActive.map((member) => (
         <MemberCard
@@ -242,7 +242,7 @@ function NewMembersSection({ newMembers }: { newMembers: MembersDiscoveryData['n
 
   return (
     <div
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
+      className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4"
     >
       {newMembers.map((member) => (
         <MemberCard

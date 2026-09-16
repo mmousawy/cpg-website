@@ -8,6 +8,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import AddRsvpModal from '@/components/admin/AddRsvpModal';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -181,18 +182,10 @@ export default function AdminEventAttendancePage() {
   if (!event) {
     return (
       <PageContainer>
-        <Container>
-          <h1
-            className="mb-4 text-3xl font-bold font-heading"
-          >
-            Event not found
-          </h1>
-          <p
-            className="text-foreground/80"
-          >
-            The event you&apos;re looking for doesn&apos;t exist.
-          </p>
-        </Container>
+        <PageHeading
+          title="Event not found"
+          description="The event you're looking for doesn't exist."
+        />
       </PageContainer>
     );
   }
@@ -203,28 +196,19 @@ export default function AdminEventAttendancePage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-6"
-      >
-        <h1
-          className="text-2xl sm:text-3xl font-bold font-heading"
+      <PageHeading
+        title="Event attendance"
+        description="Manage attendee check-ins for this event"
+      />
+      {event && (
+        <div
+          className="mb-6 rounded-2xl border border-border-color bg-background-light p-4"
         >
-          Event attendance
-        </h1>
-        <p
-          className="text-base sm:text-lg text-foreground/80 mt-1"
-        >
-          Manage attendee check-ins for this event
-        </p>
-        {event && (
-          <div
-            className="rounded-2xl border border-border-color bg-background-light p-4"
+          <h2
+            className="mb-3 text-xl font-semibold font-heading"
           >
-            <h2
-              className="mb-3 text-xl font-semibold font-heading"
-            >
-              {event.title}
-            </h2>
+            {event.title}
+          </h2>
             <div
               className="flex flex-wrap gap-4 text-sm text-foreground/80"
             >
@@ -281,8 +265,7 @@ export default function AdminEventAttendancePage() {
               )}
             </div>
           </div>
-        )}
-      </div>
+      )}
 
       <div>
         <div

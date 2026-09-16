@@ -1,6 +1,7 @@
 'use client';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import NotificationItem from '@/components/notifications/NotificationItem';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
@@ -107,32 +108,47 @@ export default function ActivityContent() {
 
   const hasNotifications = notifications.length > 0;
 
+  const activityHeaderActions = (
+    <div className="flex items-center gap-4">
+      {isAdmin && (
+        <button
+          onClick={handleCreateMocks}
+          disabled={isCreatingMocks}
+          className="text-sm font-medium text-foreground/50 hover:text-foreground/80 disabled:opacity-50"
+        >
+          {isCreatingMocks ? 'Adding...' : '+ Add mock'}
+        </button>
+      )}
+      {hasNotifications && unseenCount > 0 && (
+        <button
+          onClick={handleMarkAllAsSeen}
+          className="text-sm font-medium text-primary hover:text-primary/80"
+        >
+          Mark all as seen (
+          {unseenCount}
+          )
+        </button>
+      )}
+    </div>
+  );
+
+  const activityHelpLink = (
+    <HelpLink
+      href="notifications"
+      label="Help with notifications"
+      size="lg"
+      className="max-sm:m-0"
+    />
+  );
+
   if (isLoading) {
     return (
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <div
-            className="flex items-center gap-2 mb-1"
-          >
-            <h1
-              className="text-3xl font-bold font-heading"
-            >
-              Activity
-            </h1>
-            <HelpLink
-              href="notifications"
-              label="Help with notifications"
-              size="lg"
-            />
-          </div>
-          <p
-            className="text-base sm:text-lg opacity-80"
-          >
-            View your notifications and activity
-          </p>
-        </div>
+        <PageHeading
+          title="Activity"
+          description="View your notifications and activity"
+          aside={activityHelpLink}
+        />
         <div
           className="rounded-xl border border-border-color bg-background-light p-8 text-center"
         >
@@ -148,57 +164,12 @@ export default function ActivityContent() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex items-center justify-between mb-2"
-        >
-          <div
-            className="flex items-center gap-2"
-          >
-            <h1
-              className="text-3xl font-bold font-heading"
-            >
-              Activity
-            </h1>
-            <HelpLink
-              href="notifications"
-              label="Help with notifications"
-              size="lg"
-            />
-          </div>
-          <div
-            className="flex items-center gap-4"
-          >
-            {/* Admin-only mock button */}
-            {isAdmin && (
-              <button
-                onClick={handleCreateMocks}
-                disabled={isCreatingMocks}
-                className="text-sm text-foreground/50 hover:text-foreground/80 font-medium disabled:opacity-50"
-              >
-                {isCreatingMocks ? 'Adding...' : '+ Add mock'}
-              </button>
-            )}
-            {hasNotifications && unseenCount > 0 && (
-              <button
-                onClick={handleMarkAllAsSeen}
-                className="text-sm text-primary hover:text-primary/80 font-medium"
-              >
-                Mark all as seen (
-                {unseenCount}
-                )
-              </button>
-            )}
-          </div>
-        </div>
-        <p
-          className="text-base sm:text-lg opacity-80"
-        >
-          View your notifications and activity
-        </p>
-      </div>
+      <PageHeading
+        title="Activity"
+        description="View your notifications and activity"
+        aside={activityHelpLink}
+        actions={activityHeaderActions}
+      />
 
       {!hasNotifications ? (
         <div

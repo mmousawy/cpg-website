@@ -9,6 +9,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -209,30 +210,17 @@ function ReviewQueue() {
       <PageContainer
         className="flex-1"
       >
-        {/* Header */}
-        <div
-          className="mb-6"
+        <ArrowLink
+          href={`/challenges/${challengeSlug}`}
+          direction="left"
+          className="mb-4"
         >
-          <ArrowLink
-            href={`/challenges/${challengeSlug}`}
-            direction="left"
-            className="mb-4"
-          >
-            Back to challenge
-          </ArrowLink>
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Review submissions
-          </h1>
-          {challenge && (
-            <p
-              className="text-base sm:text-lg text-foreground/80 mt-1"
-            >
-              {challenge.title}
-            </p>
-          )}
-        </div>
+          Back to challenge
+        </ArrowLink>
+        <PageHeading
+          title="Review submissions"
+          description={challenge?.title}
+        />
 
         {/* Tabs */}
         <div

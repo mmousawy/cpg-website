@@ -1,6 +1,6 @@
 import PhotosPaginated from '@/components/gallery/PhotosPaginated';
 import PageContainer from '@/components/layout/PageContainer';
-import WidePageContainer from '@/components/layout/WidePageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import HelpLink from '@/components/shared/HelpLink';
 import JsonLd from '@/components/shared/JsonLd';
 import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
@@ -46,40 +46,28 @@ export default async function PhotosPage({ searchParams }: PageProps) {
       <JsonLd
         data={breadcrumbJsonLd}
       />
-      <PageContainer>
-        <div>
-          <div
-            className="flex items-center gap-2 mb-1"
-          >
-            <h1
-              className="text-3xl font-bold font-heading"
-            >
-              Community photos
-            </h1>
+      <PageContainer
+        innerClassName="max-w-screen-xl"
+      >
+        <PageHeading
+          title="Community photos"
+          description="Photos from the community"
+          aside={
             <HelpLink
               href="photos"
               label="Help with photos and gallery"
               size="lg"
+              className="max-sm:m-0"
             />
-          </div>
-          <p
-            className="text-lg opacity-70"
-          >
-            Photos from the community
-          </p>
-        </div>
-      </PageContainer>
-
-      <WidePageContainer
-        className="pt-0!"
-      >
+          }
+        />
         <PhotosPaginated
           initialPhotos={photos}
           perPage={20}
           initialHasMore={hasMore}
           initialSort={initialSort}
         />
-      </WidePageContainer>
+      </PageContainer>
     </>
   );
 }
