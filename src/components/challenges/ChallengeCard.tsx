@@ -6,7 +6,6 @@ import StackedAvatarsPopover from '@/components/shared/StackedAvatarsPopover';
 import type { ChallengeWithStats } from '@/types/challenges';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useMemo } from 'react';
 
 import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
@@ -94,14 +93,12 @@ export default function ChallengeCard({
 
   // Transform contributors for StackedAvatarsPopover
   // Use id prefix as fallback when both full_name and nickname are null (e.g. incomplete profiles)
-  const contributorAvatars = useMemo(() =>
-    (challenge.contributors || []).map((c) => ({
-      id: c.id,
-      avatarUrl: c.avatar_url,
-      fullName: c.full_name,
-      nickname: c.nickname ?? (c.id ? c.id.slice(0, 2).toUpperCase() : null),
-    })),
-  [challenge.contributors]);
+  const contributorAvatars = (challenge.contributors || []).map((c) => ({
+    id: c.id,
+    avatarUrl: c.avatar_url,
+    fullName: c.full_name,
+    nickname: c.nickname ?? (c.id ? c.id.slice(0, 2).toUpperCase() : null),
+  }));
 
   const pendingCount = challenge.pending_count || 0;
   const rejectedCount = challenge.rejected_count || 0;
@@ -117,18 +114,11 @@ export default function ChallengeCard({
             src={challenge.cover_image_url}
             alt={challenge.title}
             fill
+            lite
             className="object-cover transition-all duration-200 group-hover:brightness-110"
             sizes="(max-width: 640px) 280px, (max-width: 1024px) 40vw, 320px"
             blurhash={challenge.image_blurhash}
             quality={THUMBNAIL_IMAGE_QUALITY}
-          />
-          {/* Bottom blur layer with gradient mask */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-32 backdrop-blur-md transition-opacity duration-200"
-            style={{
-              WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
-              maskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
-            }}
           />
           {/* Bottom gradient overlay */}
           <div
@@ -161,7 +151,7 @@ export default function ChallengeCard({
       >
         {/* Challenge badge - icon only on mobile */}
         <div
-          className="flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-1 py-1 sm:px-2 text-xs font-medium text-white border border-challenge-badge/90"
+          className="flex items-center gap-1.5 rounded-full bg-challenge-badge/85 text-shadow-sm px-1 py-1 sm:px-2 text-xs font-medium text-white border border-challenge-badge/90"
         >
           <AwardStarMiniSVG
             className="h-4 w-4 sm:-ml-0.5 shrink-0 fill-current"
@@ -176,7 +166,7 @@ export default function ChallengeCard({
         {/* Deadline/Status badge - short on mobile */}
         {isEnded ? (
           <div
-            className="flex items-center gap-1.5 rounded-full bg-black/50 px-1.5 py-1 sm:px-2 text-xs font-medium text-white/90 backdrop-blur-sm"
+            className="flex items-center gap-1.5 rounded-full bg-black/60 px-1.5 py-1 sm:px-2 text-xs font-medium text-white/90"
           >
             <ClockMiniSVG
               className="h-4 w-4 sm:-ml-0.5 shrink-0 fill-current"
@@ -196,7 +186,7 @@ export default function ChallengeCard({
           </div>
         ) : deadline && deadlineShort ? (
           <div
-            className="flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-amber-500/90"
+            className="flex items-center gap-1.5 rounded-full bg-amber-500/85 text-shadow-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-amber-500/90"
           >
             <ClockMiniSVG
               className="h-4 w-4 sm:-ml-0.5 shrink-0 fill-current"
@@ -214,7 +204,7 @@ export default function ChallengeCard({
           </div>
         ) : (
           <div
-            className="flex items-center gap-1 rounded-full bg-green-600/70 px-1.5 py-1 sm:px-2.5 text-xs font-semibold text-white shadow-md text-shadow-sm backdrop-blur-sm border border-green-600/90"
+            className="flex items-center gap-1 rounded-full bg-green-600/85 px-1.5 py-1 sm:px-2.5 text-xs font-semibold text-white shadow-md text-shadow-sm border border-green-600/90"
           >
             <span>
               Open

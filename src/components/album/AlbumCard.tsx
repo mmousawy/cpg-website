@@ -52,6 +52,7 @@ export default function AlbumCard({
           <BlurImage
             src={getCroppedThumbnailUrl(coverImage, 512, 384, 85) || coverImage}
             alt={album.title}
+            lite
             blurhash={album.cover_image_blurhash}
             sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 384px"
             quality={THUMBNAIL_IMAGE_QUALITY}
