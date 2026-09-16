@@ -6,7 +6,6 @@ import {
   filterUpcomingSceneEvents,
 } from '@/lib/scene/filters';
 import { createPublicClient } from '@/utils/supabase/server';
-import { uncachedMiss } from '@/lib/cache/cacheMiss';
 import { cacheLife, cacheTag } from 'next/cache';
 
 const SCENE_LIST_COLUMNS =
@@ -116,7 +115,7 @@ export async function getSceneEventBySlug(slug: string) {
     .maybeSingle();
 
   if (!row) {
-    return uncachedMiss({ event: null });
+    return { event: null };
   }
 
   const { submitter, ...event } = row as unknown as SceneEventWithSubmitter;
