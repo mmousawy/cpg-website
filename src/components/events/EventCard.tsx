@@ -71,9 +71,9 @@ function EventStatusBadge({ status }: { status: EventStatus }) {
     <span
       className={clsx(
         'absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
-        status === 'past' && 'bg-black/50 text-white backdrop-blur-sm',
-        status === 'now' && 'bg-green-600/80 text-white backdrop-blur-sm',
-        status === 'upcoming' && 'bg-primary/80 text-white backdrop-blur-sm',
+        status === 'past' && 'bg-black/60 text-white',
+        status === 'now' && 'bg-green-600/90 text-white',
+        status === 'upcoming' && 'bg-primary/90 text-white',
       )}
     >
       {status === 'now' && (
@@ -107,6 +107,9 @@ export default function EventCard({
   const imageSrc = event.cover_image;
   const imageQuality = THUMBNAIL_IMAGE_QUALITY;
   const attendeePeople = transformAttendeesToAvatarPeople(attendees);
+  const coverSrc = imageSrc
+    ? getCroppedThumbnailUrl(imageSrc, 480, 288) || imageSrc
+    : null;
 
   const wrapperClasses = clsx(
     'block transition-colors group overflow-hidden',
@@ -116,24 +119,26 @@ export default function EventCard({
   );
 
   const content = (
-    <>
-      {/* Mobile: image on top, edge-to-edge */}
-      {imageSrc && (
+    <div
+      className="flex flex-col sm:flex-row"
+    >
+      {coverSrc && (
         <div
-          className="relative sm:hidden aspect-21/9"
+          className="relative aspect-21/9 shrink-0 sm:order-2 sm:aspect-auto sm:w-48 sm:self-stretch lg:w-56"
         >
           <BlurImage
             fill
-            sizes="(max-width: 640px) 90vw, 480px"
+            lite
+            sizes="(max-width: 640px) 90vw, (min-width: 1024px) 384px, 320px"
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
             quality={imageQuality}
             alt={event.title || 'Event cover image'}
             className={clsx(
-              'object-cover rounded-t-xl',
+              'object-cover rounded-t-xl sm:rounded-t-none sm:rounded-r-xl',
               isPast && '',
             )}
-            src={getCroppedThumbnailUrl(imageSrc, 480, 206) || imageSrc}
+            src={coverSrc}
             blurhash={event.image_blurhash}
           />
           {showBadge && (
@@ -145,137 +150,15 @@ export default function EventCard({
       )}
 
       <div
-        className="flex sm:flex-row flex-col"
+        className="flex-1 min-w-0 p-4 sm:order-1 sm:p-6"
       >
-        {/* Content */}
-        <div
-          className="flex-1 min-w-0 p-4 sm:p-6"
-        >
-          {/* Mobile: badge inline when no image */}
-          {!imageSrc && showBadge && (
-            <div
-              className="sm:hidden mb-2"
-            >
-              <span
-                className={clsx(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
-                  status === 'past' && 'bg-foreground/10 text-foreground/60',
-                  status === 'now' && 'bg-green-600 text-white',
-                  status === 'upcoming' && 'bg-primary text-white',
-                )}
-              >
-                {getStatusLabel(status)}
-              </span>
-            </div>
-          )}
-
-          <h3
-            className={clsx(
-              'text-lg font-semibold leading-tight line-clamp-2 mb-3 transition-colors',
-              isPast ? 'text-foreground/80' : 'group-hover:text-primary',
-            )}
-          >
-            {event.title}
-          </h3>
-
-          <div
-            className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-sm text-foreground/80"
-          >
-            {event.date && (
-              <span
-                className="flex items-center gap-1"
-              >
-                <CalendarSVG
-                  className="size-3.5 fill-foreground/80"
-                />
-                {formatEventDate(event.date)}
-              </span>
-            )}
-            {event.time && (
-              <span
-                className="flex items-center gap-1"
-              >
-                <TimeSVG
-                  className="size-3.5 fill-foreground/80"
-                />
-                {formatEventTime(event.time)}
-              </span>
-            )}
-            {event.location && (
-              <span
-                className="flex items-center gap-1"
-              >
-                <LocationSVG
-                  className="size-3.5 fill-foreground/80"
-                />
-                <span
-                  className="line-clamp-1"
-                >
-                  {formatEventLocation(event.location)}
-                </span>
-              </span>
-            )}
-          </div>
-
-          {event.description && (
-            <RichDescriptionView
-              html={event.description}
-              className="text-foreground/90 text-sm line-clamp-3"
-              disableLinks
-            />
-          )}
-
-          {attendees.length > 0 && (
-            <div
-              className="mt-4"
-            >
-              <StackedAvatarsPopover
-                people={attendeePeople}
-                singularLabel="attendee"
-                pluralLabel="attendees"
-                showInlineCount={true}
-                maxVisibleAvatarsMobile={8}
-                showCountOnMobile={true}
-                disablePopover={disableAttendeesPopover}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Desktop: image on right, flush to edges */}
-        {imageSrc && (
-          <div
-            className="relative w-48 lg:w-56 shrink-0 max-sm:hidden"
-          >
-            <BlurImage
-              fill
-              sizes="(min-width: 1024px) 384px, 320px"
-              loading="lazy"
-              quality={imageQuality}
-              alt={event.title || 'Event cover image'}
-              className={clsx(
-                'object-cover rounded-r-xl',
-                isPast && '',
-              )}
-              src={getCroppedThumbnailUrl(imageSrc, 384, 288) || imageSrc}
-              blurhash={event.image_blurhash}
-            />
-            {showBadge && (
-              <EventStatusBadge
-                status={status}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Desktop: badge only (when no image) */}
         {!imageSrc && showBadge && (
-          <span
-            className="hidden sm:inline-flex shrink-0 self-start m-3"
+          <div
+            className="sm:hidden mb-2"
           >
             <span
               className={clsx(
-                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium',
                 status === 'past' && 'bg-foreground/10 text-foreground/60',
                 status === 'now' && 'bg-green-600 text-white',
                 status === 'upcoming' && 'bg-primary text-white',
@@ -283,18 +166,107 @@ export default function EventCard({
             >
               {getStatusLabel(status)}
             </span>
-          </span>
+          </div>
         )}
 
-        {rightSlot && (
+        <h3
+          className={clsx(
+            'text-lg font-semibold leading-tight line-clamp-2 mb-3 transition-colors',
+            isPast ? 'text-foreground/80' : 'group-hover:text-primary',
+          )}
+        >
+          {event.title}
+        </h3>
+
+        <div
+          className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-sm text-foreground/80"
+        >
+          {event.date && (
+            <span
+              className="flex items-center gap-1"
+            >
+              <CalendarSVG
+                className="size-3.5 fill-foreground/80"
+              />
+              {formatEventDate(event.date)}
+            </span>
+          )}
+          {event.time && (
+            <span
+              className="flex items-center gap-1"
+            >
+              <TimeSVG
+                className="size-3.5 fill-foreground/80"
+              />
+              {formatEventTime(event.time)}
+            </span>
+          )}
+          {event.location && (
+            <span
+              className="flex items-center gap-1"
+            >
+              <LocationSVG
+                className="size-3.5 fill-foreground/80"
+              />
+              <span
+                className="line-clamp-1"
+              >
+                {formatEventLocation(event.location)}
+              </span>
+            </span>
+          )}
+        </div>
+
+        {event.description && (
+          <RichDescriptionView
+            html={event.description}
+            className="text-foreground/90 text-sm line-clamp-3"
+            disableLinks
+          />
+        )}
+
+        {attendees.length > 0 && (
           <div
-            className="shrink-0 flex items-center gap-2 p-3"
+            className="mt-4"
           >
-            {rightSlot}
+            <StackedAvatarsPopover
+              people={attendeePeople}
+              singularLabel="attendee"
+              pluralLabel="attendees"
+              showInlineCount={true}
+              maxVisibleAvatarsMobile={8}
+              showCountOnMobile={true}
+              disablePopover={disableAttendeesPopover}
+            />
           </div>
         )}
       </div>
-    </>
+
+      {!imageSrc && showBadge && (
+        <span
+          className="hidden sm:inline-flex shrink-0 self-start m-3 sm:order-3"
+        >
+          <span
+            className={clsx(
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+              status === 'past' && 'bg-foreground/10 text-foreground/60',
+              status === 'now' && 'bg-green-600 text-white',
+              status === 'upcoming' && 'bg-primary text-white',
+            )}
+          >
+            {getStatusLabel(status)}
+          </span>
+        </span>
+      )}
+
+      {rightSlot && (
+        <div
+          className="shrink-0 flex items-center gap-2 p-3 sm:order-3"
+        >
+          {rightSlot}
+        </div>
+      )}
+    </div>
   );
 
   if (asLink && event.slug) {

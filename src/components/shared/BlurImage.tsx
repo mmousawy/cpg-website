@@ -45,6 +45,8 @@ type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   onLoad?: () => void;
   /** When false, SSR and first paint use opacity-100 (LCP heroes). Default true. */
   fadeIn?: boolean;
+  /** Lightweight fill thumbnails: blurhash bg + single image, no fade state machine */
+  lite?: boolean;
 };
 
 /**
@@ -67,6 +69,7 @@ export default function BlurImage({
   contain = false,
   onLoad: onLoadProp,
   fadeIn = true,
+  lite = false,
   preload,
   fetchPriority,
   loading,
@@ -229,6 +232,47 @@ export default function BlurImage({
 
   // Fall back to Supabase tiny image if no blurhash
   const blurUrl = noBlur ? null : (blurhashDataUrl || getBlurPlaceholderUrl(srcString));
+
+  if (lite && fill) {
+    return (
+      <>
+        {!blurhashDataUrl && blurUrl && (
+          <Image
+            src={blurUrl}
+            alt=""
+            aria-hidden="true"
+            fill
+            className={className}
+            quality={30}
+            sizes="64px"
+          />
+        )}
+        {blurhashDataUrl && (
+          <div
+            className={`${className} absolute inset-0 bg-neutral-200 dark:bg-neutral-800`}
+            style={{
+              backgroundImage: `url(${blurhashDataUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+            aria-hidden="true"
+          />
+        )}
+        <Image
+          src={effectiveSrc}
+          alt={alt || ''}
+          fill
+          className={className}
+          onError={handleImageError}
+          preload={preload}
+          fetchPriority={fetchPriority}
+          loading={loading}
+          {...props}
+          unoptimized={effectiveUnoptimized}
+        />
+      </>
+    );
+  }
 
   // If no blur placeholder available, render normal Image with fade
   if (!blurUrl) {

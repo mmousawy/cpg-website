@@ -1,5 +1,6 @@
 'use client';
 
+import { useHasHover } from '@/hooks/useHasHover';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
@@ -145,6 +146,7 @@ export default function JustifiedPhotoGridCore({
   }
 
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));
+  const hasHover = useHasHover();
   const containerRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<'css' | 'js'>('css');
   const [breakpoint, setBreakpoint] = useState<GridBreakpoint>('mobile');
@@ -194,6 +196,7 @@ export default function JustifiedPhotoGridCore({
     challengeSlug,
     eventSlug,
     showAttribution,
+    showHoverOverlays: hasHover,
     header,
     containerWidth,
   };
@@ -206,44 +209,14 @@ export default function JustifiedPhotoGridCore({
       className="@container w-full"
     >
       {phase === 'css' ? (
-        <>
-          <div
-            className="block @[600px]:hidden"
-          >
-            <PhotoRows
-              {...sharedPhotoRowsProps}
-              rows={layouts.mobile.rows}
-              layoutWidth={layouts.mobile.layoutWidth}
-              maxCssWidth={layouts.mobile.maxCssWidth}
-              quality={layouts.mobile.quality}
-              gapClass={layouts.mobile.gapClass}
-            />
-          </div>
-          <div
-            className="hidden @[600px]:block @[960px]:hidden"
-          >
-            <PhotoRows
-              {...sharedPhotoRowsProps}
-              rows={layouts.tablet.rows}
-              layoutWidth={layouts.tablet.layoutWidth}
-              maxCssWidth={layouts.tablet.maxCssWidth}
-              quality={layouts.tablet.quality}
-              gapClass={layouts.tablet.gapClass}
-            />
-          </div>
-          <div
-            className="hidden @[960px]:block"
-          >
-            <PhotoRows
-              {...sharedPhotoRowsProps}
-              rows={layouts.desktop.rows}
-              layoutWidth={layouts.desktop.layoutWidth}
-              maxCssWidth={layouts.desktop.maxCssWidth}
-              quality={layouts.desktop.quality}
-              gapClass={layouts.desktop.gapClass}
-            />
-          </div>
-        </>
+        <PhotoRows
+          {...sharedPhotoRowsProps}
+          rows={layouts.mobile.rows}
+          layoutWidth={layouts.mobile.layoutWidth}
+          maxCssWidth={layouts.mobile.maxCssWidth}
+          quality={layouts.mobile.quality}
+          gapClass={layouts.mobile.gapClass}
+        />
       ) : (
         <PhotoRows
           {...sharedPhotoRowsProps}
@@ -267,6 +240,7 @@ function PhotoRows({
   challengeSlug,
   eventSlug,
   showAttribution,
+  showHoverOverlays,
   layoutWidth,
   maxCssWidth,
   quality,
@@ -282,6 +256,7 @@ function PhotoRows({
   challengeSlug?: string;
   eventSlug?: string;
   showAttribution: boolean;
+  showHoverOverlays: boolean;
   layoutWidth: number;
   maxCssWidth: number;
   quality: number;
@@ -370,6 +345,7 @@ function PhotoRows({
                     alt=""
                     blurhash={photo?.blurhash}
                     fill
+                    lite
                     className="object-cover transition-all duration-200 group-hover:brightness-110"
                     sizes={getThumbnailSizes(item.displayWidth, layoutWidth, maxCssWidth, isConstrained)}
                     loading="lazy"
@@ -382,62 +358,44 @@ function PhotoRows({
                     className="absolute bottom-2! right-2! z-10"
                   />}
 
-                  {photo?.title && (
-                    <div
-                      className="absolute inset-x-0 top-0 h-20 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      style={{
-                        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-                        maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-                      }}
-                    />
-                  )}
-                  {photo?.title && (
-                    <div
-                      className="absolute inset-x-0 top-0 h-20 bg-linear-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                    />
-                  )}
-                  {photo?.title && (
-                    <div
-                      className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                    >
-                      <h3
-                        className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
+                  {showHoverOverlays && photo?.title && (
+                    <>
+                      <div
+                        className="absolute inset-x-0 top-0 h-20 bg-linear-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                      />
+                      <div
+                        className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                       >
-                        {photo.title}
-                      </h3>
-                    </div>
+                        <h3
+                          className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
+                        >
+                          {photo.title}
+                        </h3>
+                      </div>
+                    </>
                   )}
 
-                  {showAttribution && streamPhoto?.profile && (
-                    <div
-                      className="absolute inset-x-0 bottom-0 h-20 backdrop-blur-md opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      style={{
-                        WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
-                        maskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
-                      }}
-                    />
-                  )}
-                  {showAttribution && streamPhoto?.profile && (
-                    <div
-                      className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                    />
-                  )}
-                  {showAttribution && streamPhoto?.profile && (
-                    <div
-                      className="absolute left-0 right-0 pr-12 bottom-0 flex items-center gap-1 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                    >
-                      <Avatar
-                        avatarUrl={streamPhoto.profile.avatar_url}
-                        fullName={streamPhoto.profile.full_name}
-                        size="xxs"
+                  {showHoverOverlays && showAttribution && streamPhoto?.profile && (
+                    <>
+                      <div
+                        className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                       />
-                      <span
-                        className="text-xs font-medium text-white"
+                      <div
+                        className="absolute left-0 right-0 pr-12 bottom-0 flex items-center gap-1 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                       >
-                        @
-                        {streamPhoto.profile.nickname}
-                      </span>
-                    </div>
+                        <Avatar
+                          avatarUrl={streamPhoto.profile.avatar_url}
+                          fullName={streamPhoto.profile.full_name}
+                          size="xxs"
+                        />
+                        <span
+                          className="text-xs font-medium text-white"
+                        >
+                          @
+                          {streamPhoto.profile.nickname}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </HoverPrefetchLink>
               );

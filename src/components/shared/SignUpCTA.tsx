@@ -6,8 +6,8 @@ import Button from '@/components/shared/Button';
 import { HERO_IMAGES } from '@/config/heroImages';
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
-import { getPreloadImageUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
+import Image from 'next/image';
 
 const BANNER_BACKGROUND = HERO_IMAGES[0]?.src ?? '';
 
@@ -26,21 +26,25 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
   }
 
   if (variant === 'banner') {
-    const bannerBackground = getPreloadImageUrl(BANNER_BACKGROUND, 1200, 60);
-
     return (
       <div
         className="relative overflow-hidden bg-background-light"
       >
+        {BANNER_BACKGROUND && (
+          <Image
+            src={BANNER_BACKGROUND}
+            alt=""
+            fill
+            aria-hidden
+            className="object-cover object-[center_25%] brightness-75"
+            sizes="100vw"
+            loading="lazy"
+            quality={60}
+          />
+        )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-[center_25%] brightness-75"
-          style={{ backgroundImage: `url(${bannerBackground})` }}
-        />        <div
-          className="absolute inset-0 bg-[#bba5fa] mix-blend-overlay"
-        />
-        <div
-          className="backdrop-blur-[3px] bg-black/40 absolute inset-0"
+          className="absolute inset-0 bg-linear-to-t from-black/75 via-black/55 to-[#bba5fa]/25"
         />
         <div
           className="relative z-10 inset-0 flex items-center px-4 pt-10 pb-11 md:px-8 sm:py-14"
