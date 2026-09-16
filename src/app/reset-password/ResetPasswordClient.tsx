@@ -5,6 +5,7 @@ import { Suspense, useState } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import Input from '@/components/shared/Input';
@@ -75,7 +76,12 @@ function ResetPasswordForm() {
     return (
       <PageContainer
         className="items-center justify-center"
+        innerClassName="max-w-md"
       >
+        <PageHeading
+          title="Password updated!"
+          description="Your password has been successfully updated. Redirecting you to login..."
+        />
         <Container
           padding="lg"
           className="mx-auto max-w-md text-center"
@@ -87,16 +93,6 @@ function ResetPasswordForm() {
               className="h-8 w-8 fill-green-500"
             />
           </div>
-          <h1
-            className="mb-2 text-3xl font-bold"
-          >
-            Password updated!
-          </h1>
-          <p
-            className="text-foreground/80"
-          >
-            Your password has been successfully updated. Redirecting you to login...
-          </p>
         </Container>
       </PageContainer>
     );
@@ -106,21 +102,16 @@ function ResetPasswordForm() {
     return (
       <PageContainer
         className="items-center justify-center"
+        innerClassName="max-w-md"
       >
+        <PageHeading
+          title="Invalid reset link"
+          description="This password reset link is invalid or has expired."
+        />
         <Container
           padding="lg"
           className="mx-auto max-w-md text-center"
         >
-          <h1
-            className="mb-2 text-3xl font-bold"
-          >
-            Invalid reset link
-          </h1>
-          <p
-            className="mb-6 text-foreground/80"
-          >
-            This password reset link is invalid or has expired.
-          </p>
           <Button
             href={routes.forgotPassword.url}
           >
@@ -134,22 +125,16 @@ function ResetPasswordForm() {
   return (
     <PageContainer
       className="items-center justify-center"
+      innerClassName="max-w-md"
     >
+      <PageHeading
+        title="Set new password"
+        description="Enter your new password below."
+      />
       <Container
         padding="lg"
         className="mx-auto max-w-md"
       >
-        <h1
-          className="mb-2 text-center text-3xl font-bold"
-        >
-          Set new password
-        </h1>
-        <p
-          className="mb-8 text-center text-sm text-foreground/80"
-        >
-          Enter your new password below.
-        </p>
-
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-4"

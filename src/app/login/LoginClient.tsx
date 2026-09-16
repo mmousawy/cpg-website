@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import HelpLink from '@/components/shared/HelpLink';
@@ -85,30 +86,24 @@ function LoginForm() {
   return (
     <PageContainer
       className="items-center justify-center"
+      innerClassName="max-w-md"
     >
-      <Container
-        padding="lg"
-        className="mx-auto max-w-md"
-      >
-        <h1
-          className="mb-2 text-center text-3xl font-bold"
-        >
-          Welcome back
-        </h1>
-        <div
-          className="flex items-center justify-center mb-8"
-        >
-          <p
-            className="text-center text-sm text-foreground/80"
-          >
-            Log in to your account to continue
-          </p>
+      <PageHeading
+        title="Welcome back"
+        description="Log in to your account to continue"
+        aside={
           <HelpLink
             href="change-password"
             label="Help with account access"
             size="sm"
+            className="max-sm:m-0"
           />
-        </div>
+        }
+      />
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
 
         {verified && (
           <SuccessMessage

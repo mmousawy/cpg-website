@@ -45,7 +45,7 @@ export function GalleryRecentAlbumsSection({ albums }: { albums: AlbumWithPhotos
             className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 sm:gap-6"
           />
           <div
-            className="mt-6 flex justify-center"
+            className="mt-4 mb-2 sm:mt-6 flex justify-center "
           >
             <Button
               href={routes.galleryAlbums.url}

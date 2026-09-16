@@ -1,7 +1,7 @@
 'use client';
 
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
@@ -130,7 +130,7 @@ export default function PastSceneEventsPaginated({
   return (
     <>
       <div
-        className="grid gap-4 sm:gap-6"
+        className="grid gap-3 sm:gap-6"
       >
         {allEvents.map((event) => (
           <SceneEventCard

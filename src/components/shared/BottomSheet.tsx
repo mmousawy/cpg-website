@@ -1,12 +1,12 @@
 'use client';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
+import { useMounted } from '@/hooks/useMounted';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
-import { useMounted } from '@/hooks/useMounted';
 
 import CloseSVG from 'public/icons/close.svg';
 
@@ -201,7 +201,7 @@ export default function BottomSheet({
     >
       <div
         className={clsx(
-          'absolute inset-0 bg-black/40 backdrop-blur-sm',
+          'absolute inset-0 bg-black/40',
           !isDragging && 'transition-opacity duration-300',
         )}
         style={{ opacity: getBackdropOpacity() }}

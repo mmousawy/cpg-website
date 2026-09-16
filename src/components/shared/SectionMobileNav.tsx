@@ -13,6 +13,7 @@ import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileSticky
 import { useSectionScroll } from '@/context/SectionScrollContext';
 import type { SectionNavItem } from '@/components/shared/SectionSidebar';
 import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
+import TocSVG from 'public/icons/toc.svg';
 
 interface SectionMobileNavProps {
   sections: SectionNavItem[];
@@ -89,9 +90,15 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
         aria-label={isExpanded ? 'Close sections' : 'Open sections'}
       >
         <span
-          className="text-sm font-medium text-foreground"
+          className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground"
         >
-          {activeSection ? activeSection.title : 'Jump to section'}
+          <TocSVG
+            className="size-5 shrink-0 fill-current text-foreground/70"
+            aria-hidden
+          />
+          <span className="truncate">
+            {activeSection ? activeSection.title : 'Jump to section'}
+          </span>
         </span>
         <span
           className={`shrink-0 text-foreground/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}

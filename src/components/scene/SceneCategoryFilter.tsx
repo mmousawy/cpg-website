@@ -34,7 +34,7 @@ function CategoryPill(props: {
       onClick={onClick}
       style={activeStyle}
       className={`
-        inline-flex items-center gap-1.5 rounded-full pr-2.5 pl-1 py-1 text-sm font-medium font-(family-name:--font-geist-mono) transition-colors
+        inline-flex shrink-0 items-center gap-1.5 rounded-full pr-2.5 pl-1 py-1 text-sm font-medium font-(family-name:--font-geist-mono) whitespace-nowrap transition-colors
         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
         ${isActive
           ? 'border'
@@ -92,7 +92,7 @@ export default function SceneCategoryFilter({
 
   return (
     <div
-      className="flex flex-wrap gap-2"
+      className="-mx-3 flex gap-2 overflow-x-auto max-sm:px-3 py-0.5 scrollbar-hide sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
     >
       <CategoryPill
         label="All"

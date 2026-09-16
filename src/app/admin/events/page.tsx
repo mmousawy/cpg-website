@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
 import type { Tables } from '@/database.types';
@@ -54,31 +55,21 @@ export default function AdminEventsPage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8 flex items-start justify-between gap-4"
-      >
-        <div>
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
+      <PageHeading
+        title="Manage events"
+        description="Create, edit, and delete events"
+        actions={(
+          <Button
+            href="/admin/events/new"
+            icon={<PlusSVG
+              className="h-5 w-5"
+            />}
+            variant="primary"
           >
-            Manage events
-          </h1>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            Create, edit, and delete events
-          </p>
-        </div>
-        <Button
-          href="/admin/events/new"
-          icon={<PlusSVG
-            className="h-5 w-5"
-          />}
-          variant="primary"
-        >
-          Create event
-        </Button>
-      </div>
+            Create event
+          </Button>
+        )}
+      />
 
       {isLoading ? (
         <div

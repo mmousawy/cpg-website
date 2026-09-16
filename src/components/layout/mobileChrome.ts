@@ -22,3 +22,13 @@ export const mobileTabActivePillClassName =
 /** Active tab label (background lives on the sliding pill). */
 export const mobileTabActiveClassName =
   'text-foreground/90 font-medium';
+
+/** Duration for sequenced sticky-bar hide/show slides. Matches `.mobile-sticky-bar-slide`. */
+export const STICKY_BAR_SLIDE_MS = 250;
+
+export function getStickyBarSlideDurationMs() {
+  if (typeof window === 'undefined') return 0;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+  if (!window.matchMedia('(max-width: 639px)').matches) return 0;
+  return STICKY_BAR_SLIDE_MS;
+}

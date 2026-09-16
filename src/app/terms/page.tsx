@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import { createMetadata } from '@/utils/metadata';
 
 export const metadata = createMetadata({
@@ -11,6 +12,10 @@ export const metadata = createMetadata({
 export default function TermsPage() {
   return (
     <PageContainer>
+      <PageHeading
+        title="Terms of Service"
+        description="Last updated: March 9, 2026"
+      />
       <Container
         padding="lg"
         className="mx-auto max-w-3xl"
@@ -18,21 +23,6 @@ export default function TermsPage() {
         <div
           className="space-y-6 sm:space-y-8 text-sm sm:text-base"
         >
-          <div
-            className="prose prose-slate dark:prose-invert max-w-none"
-          >
-            <h1
-              className="mb-2 sm:mb-4 text-2xl font-bold sm:text-3xl font-heading"
-            >
-              Terms of Service
-            </h1>
-            <p
-              className="text-sm text-foreground/80"
-            >
-              Last updated: March 9, 2026
-            </p>
-          </div>
-
           <section>
             <h2
               className="mb-2 sm:mb-4 text-xl font-semibold sm:text-2xl font-heading"

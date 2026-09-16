@@ -16,14 +16,14 @@ import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import type { StreamPhoto } from '@/lib/data/gallery';
-import { ensureStaticParams } from '@/lib/staticParams';
 import {
-  getAllProfileNicknames,
-  getProfileByNickname,
-  getProfileStats,
-  getUserPublicPhotoCount,
-  getUserPublicPhotos,
+    getAllProfileNicknames,
+    getProfileByNickname,
+    getProfileStats,
+    getUserPublicPhotoCount,
+    getUserPublicPhotos,
 } from '@/lib/data/profiles';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
 
 // Pre-render all public profiles at build time for optimal caching
@@ -220,7 +220,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
           />
           {totalPhotos > publicPhotos.length && (
             <div
-              className="mt-6 flex justify-center"
+              className="mt-4 mb-2 sm:mt-6 flex justify-center "
             >
               <Button
                 href={`/@${encodeURIComponent(profile.nickname || nickname)}/photos`}
@@ -263,7 +263,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
             albums={albums}
           />
           <div
-            className="mt-6 flex justify-center"
+            className="mt-4 mb-2 sm:mt-6 flex justify-center "
           >
             <Button
               href={`/@${encodeURIComponent(profile.nickname || nickname)}/albums`}

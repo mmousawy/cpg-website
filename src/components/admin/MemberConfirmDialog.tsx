@@ -67,7 +67,7 @@ export default function MemberConfirmDialog({
         isVisible ? 'visible opacity-100' : 'invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto',
         'flex size-full max-h-none max-w-none p-4',
-        'bg-black/40 backdrop-blur-sm',
+        'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}
     >

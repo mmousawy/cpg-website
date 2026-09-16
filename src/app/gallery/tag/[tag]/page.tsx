@@ -1,7 +1,6 @@
 import PageContainer from '@/components/layout/PageContainer';
-import { cacheLife } from 'next/cache';
+import PageHeading from '@/components/layout/PageHeading';
 
-import WidePageContainer from '@/components/layout/WidePageContainer';
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
 import EmptyState from '@/components/shared/EmptyState';
 import PopularTagsSection from '@/components/shared/PopularTagsSection';
@@ -57,51 +56,39 @@ export default async function TagPage({ params }: { params: Params }) {
   const photos = await getPhotosByTag(tagName, 100, includeTestContent);
 
   return (
-    <>
-      <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="mb-2 text-3xl font-bold font-heading"
-          >
-            Photos tagged &ldquo;
-            {tagName}
-            &rdquo;
-          </h1>
-          <p
-            className="text-lg opacity-70"
-          >
+    <PageContainer
+      innerClassName="max-w-screen-xl"
+    >
+      <PageHeading
+        title={`Photos tagged “${tagName}”`}
+        description={
+          <>
             {photos.length}
             {' '}
             {photos.length === 1 ? 'photo' : 'photos'}
             {' '}
             with this tag
-          </p>
-        </div>
+          </>
+        }
+      />
 
-        <PopularTagsSection
-          activeTag={tagName}
+      <PopularTagsSection
+        activeTag={tagName}
+      />
+
+      {photos.length === 0 ? (
+        <EmptyState
+          icon={<ImageSVG
+            className="size-10 inline-block"
+          />}
+          title="No photos found with this tag."
         />
-      </PageContainer>
-
-      <WidePageContainer
-        className="pt-0!"
-      >
-        {photos.length === 0 ? (
-          <EmptyState
-            icon={<ImageSVG
-              className="size-10 inline-block"
-            />}
-            title="No photos found with this tag."
-          />
-        ) : (
-          <JustifiedPhotoGrid
-            photos={photos}
-            showAttribution
-          />
-        )}
-      </WidePageContainer>
-    </>
+      ) : (
+        <JustifiedPhotoGrid
+          photos={photos}
+          showAttribution
+        />
+      )}
+    </PageContainer>
   );
 }

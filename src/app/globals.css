@@ -643,8 +643,27 @@ html.manage-page .app-header-inner {
   transition: transform 250ms ease-in-out, width 250ms ease-in-out, height 250ms ease-in-out;
 }
 
+.mobile-sticky-bar-slide {
+  transform: none;
+}
+
+@media (max-width: 639px) {
+  .mobile-sticky-bar-slide {
+    transform: translateY(calc(100% + 1rem));
+    transition: transform 250ms ease-out;
+  }
+
+  .mobile-sticky-bar-slide[data-open] {
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-tab-indicator.is-ready {
+    transition: none;
+  }
+
+  .mobile-sticky-bar-slide {
     transition: none;
   }
 }
@@ -686,9 +705,10 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
 }
 
 @media (max-width: 639px) {
-  html:not(.manage-page) .app-shell-main,
-  html:not(.manage-page) .app-footer {
-    padding-bottom: var(--mobile-nav-offset, 0px);
+  html:not(.manage-page) .app-shell-main {
+    padding-bottom: calc(
+      var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1rem
+    );
   }
 
   html.manage-page .app-shell-main {

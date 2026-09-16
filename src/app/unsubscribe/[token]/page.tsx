@@ -2,6 +2,7 @@
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import type { EmailType } from '@/utils/emailPreferencesClient';
 import { useParams } from 'next/navigation';
@@ -71,29 +72,27 @@ export default function UnsubscribePage() {
 
   if (isSuccess) {
     return (
-      <PageContainer>
+      <PageContainer
+        innerClassName="max-w-md"
+      >
+        <PageHeading
+          title="You're unsubscribed"
+          description={
+            emailTypeLabel
+              ? `You've been unsubscribed from emails ${emailTypeLabel}.`
+              : "You've been unsubscribed from these emails."
+          }
+        />
         <Container
           variant="centered"
-          className="max-w-md mx-auto"
+          className="mx-auto max-w-md"
         >
           <div
             className="text-center"
           >
             <ThumbsUpSVG
-              className="inline-block mb-4 size-10"
+              className="mb-4 inline-block size-10"
             />
-            <h1
-              className="mb-4 text-2xl font-bold"
-            >
-              No biggie! You&apos;re unsubscribed
-            </h1>
-            <p
-              className="text-foreground/80"
-            >
-              {emailTypeLabel
-                ? `You've been unsubscribed from emails ${emailTypeLabel}.`
-                : 'You\'ve been unsubscribed from these emails.'}
-            </p>
             <p
               className="mb-6 text-foreground/80"
             >
@@ -118,24 +117,24 @@ export default function UnsubscribePage() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer
+      innerClassName="max-w-md"
+    >
+      <PageHeading
+        title="Unsubscribe from emails"
+        description={
+          emailType
+            ? `Are you sure you want to unsubscribe from emails ${emailTypeLabel}?`
+            : 'Are you sure you want to unsubscribe from these emails?'
+        }
+      />
       <Container
         variant="centered"
-        className="max-w-md mx-auto"
+        className="mx-auto max-w-md"
       >
         <div
           className="text-center"
         >
-          <h1
-            className="mb-4 text-2xl font-bold"
-          >
-            Unsubscribe from emails
-          </h1>
-          <p
-            className="mb-6 text-foreground/80"
-          >
-            { emailType ? `Are you sure you want to unsubscribe from emails ${emailTypeLabel}?` : 'Are you sure you want to unsubscribe from these emails?' }
-          </p>
           {error && (
             <div
               className="mb-4 rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"

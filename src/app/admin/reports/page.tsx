@@ -13,6 +13,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import ResolveReportModal from '@/components/admin/ResolveReportModal';
 import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
 import GridCheckbox from '@/components/shared/GridCheckbox';
@@ -613,21 +614,10 @@ export default function ReportsPage() {
       <PageContainer
         className="flex-1"
       >
-        {/* Header */}
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Content reports
-          </h1>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            Review and manage user-submitted content reports
-          </p>
-        </div>
+        <PageHeading
+          title="Content reports"
+          description="Review and manage user-submitted content reports"
+        />
 
         {/* Tabs */}
         <div

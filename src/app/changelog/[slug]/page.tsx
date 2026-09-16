@@ -1,6 +1,7 @@
 import Container from '@/components/layout/Container';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import {
   getCachedChangelogDetailData,
@@ -142,55 +143,43 @@ export default async function ChangelogDetailPage({ params }: ChangelogDetailPag
 
   return (
     <PageContainer>
+      <Button
+        href="/changelog"
+        variant="secondary"
+        size="md"
+        className="mb-4"
+        icon={
+          <ArrowLeftIcon
+            className="h-4 w-4"
+          />
+        }
+      >
+        Back to changelog
+      </Button>
+      <PageHeading
+        title={summary || `Release ${slug}`}
+        description={
+          <div className="flex flex-wrap items-center gap-2">
+            {version && (
+              <span
+                className="rounded-full border border-border-color bg-background px-3 py-1 text-xs font-medium text-foreground/80"
+              >
+                v
+                {version}
+              </span>
+            )}
+            <span
+              className="inline-block rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white"
+            >
+              {slug}
+            </span>
+          </div>
+        }
+      />
       <Container
         padding="lg"
         className="mx-auto max-w-3xl space-y-4 sm:space-y-6"
       >
-        <header
-          className="space-y-4"
-        >
-          <Button
-            href="/changelog"
-            variant="secondary"
-            size="md"
-            icon={
-              <ArrowLeftIcon
-                className="h-4 w-4"
-              />
-            }
-          >
-            Back to changelog
-          </Button>
-          <div
-            className="space-y-2"
-          >
-            <div
-              className="flex flex-wrap items-center gap-2"
-            >
-              {version && (
-                <span
-                  className="rounded-full border border-border-color bg-background px-3 py-1 text-xs font-medium text-foreground/80"
-                >
-                  v
-                  {version}
-                </span>
-              )}
-              <span
-                className="inline-block rounded-full bg-primary/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white"
-              >
-                {slug}
-              </span>
-            </div>
-            {summary && (
-              <h1
-                className="text-2xl font-semibold leading-snug text-foreground sm:text-2xl mt-4 sm:mt-6 font-heading"
-              >
-                {summary}
-              </h1>
-            )}
-          </div>
-        </header>
-
         <article>
           <ReactMarkdown
             components={markdownComponents}

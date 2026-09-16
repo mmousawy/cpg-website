@@ -70,7 +70,7 @@ async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent:
 
   return (
     <div
-      className="grid min-w-0 gap-10 md:gap-12 py-10 md:py-12 [&>*]:min-w-0"
+      className="grid min-w-0 gap-10 md:gap-12 pt-10 pb-0 md:p-12 [&>*]:min-w-0"
     >
         <HomeExploreSection
           events={events}

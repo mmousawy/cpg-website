@@ -27,9 +27,7 @@ function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
   const count = event.interest_count ?? 0;
 
   return (
-    <StickyActionBar
-      constrainWidth
-    >
+    <>
       <div
         className="flex items-center gap-2 min-w-0"
       >
@@ -94,7 +92,7 @@ function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
           </Button>
         )}
       </div>
-    </StickyActionBar>
+    </>
   );
 }
 
@@ -145,9 +143,7 @@ function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
   };
 
   return (
-    <StickyActionBar
-      constrainWidth
-    >
+    <>
       <div
         className="flex items-center gap-2 min-w-0"
       >
@@ -235,24 +231,20 @@ function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
           </Button>
         )}
       </div>
-    </StickyActionBar>
+    </>
   );
 }
 
 export default function SceneEventStickyBar(props: SceneEventStickyBarProps) {
   const { isLoggedIn } = useSession();
 
-  if (!isLoggedIn) {
-    return (
-      <SceneEventStickyBarGuest
-        {...props}
-      />
-    );
-  }
-
   return (
-    <SceneEventStickyBarAuthenticated
-      {...props}
-    />
+    <StickyActionBar constrainWidth>
+      {isLoggedIn ? (
+        <SceneEventStickyBarAuthenticated {...props} />
+      ) : (
+        <SceneEventStickyBarGuest {...props} />
+      )}
+    </StickyActionBar>
   );
 }

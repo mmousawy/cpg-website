@@ -1,10 +1,10 @@
-import { cacheLife, cacheTag } from 'next/cache';
+import EventsPageHeader from '@/app/events/EventsPageHeader';
 import EventsList from '@/components/events/EventsList';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
-import EventsPageHeader from '@/app/events/EventsPageHeader';
 import { getEventsPageData } from '@/lib/data/eventsPage';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
 const PAST_EVENTS_PER_PAGE = 5;
 
@@ -42,7 +42,7 @@ export default async function EventsPage() {
             Upcoming events &mdash; {upcomingEvents.length}
           </h2>
           <div
-            className="grid gap-4 sm:gap-6"
+            className="grid gap-3 sm:gap-6"
           >
             <EventsList
               events={upcomingEvents}
@@ -60,7 +60,7 @@ export default async function EventsPage() {
             Past events &mdash; {pastEventsCount}
           </h2>
           <div
-            className="grid gap-4 sm:gap-6"
+            className="grid gap-3 sm:gap-6"
           >
             <PastEventsPaginated
               initialEvents={initialPast}

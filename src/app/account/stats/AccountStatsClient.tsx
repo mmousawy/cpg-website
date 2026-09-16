@@ -1,6 +1,7 @@
 'use client';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import StatsChartTypeToggle, { type StatsChartType } from '@/components/stats/StatsChartTypeToggle';
 import StatsDonutChart from '@/components/stats/StatsDonutChart';
@@ -96,20 +97,10 @@ export default function AccountStatsClient() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <h1
-          className="text-2xl sm:text-3xl font-bold font-heading"
-        >
-          My stats
-        </h1>
-        <p
-          className="text-base sm:text-lg text-foreground/80 mt-1"
-        >
-          Views, likes, uploads, storage, and engagement on your content
-        </p>
-      </div>
+      <PageHeading
+        title="My stats"
+        description="Views, likes, uploads, storage, and engagement on your content"
+      />
 
       <div
         className="space-y-12"

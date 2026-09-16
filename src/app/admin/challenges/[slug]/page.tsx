@@ -9,6 +9,7 @@ import { ModalContext } from '@/app/providers/ModalProvider';
 import AnnounceChallengeModal from '@/components/admin/AnnounceChallengeModal';
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
@@ -361,22 +362,14 @@ function AdminChallengeForm() {
   return (
     <>
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            {isNewChallenge ? 'Create new challenge' : 'Edit challenge'}
-          </h1>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            {isNewChallenge
-            ? 'Set up a new photo challenge'
-            : 'Update the challenge details'}
-          </p>
-        </div>
+        <PageHeading
+          title={isNewChallenge ? 'Create new challenge' : 'Edit challenge'}
+          description={
+            isNewChallenge
+              ? 'Set up a new photo challenge'
+              : 'Update the challenge details'
+          }
+        />
 
         {isLoading ? (
           <Container

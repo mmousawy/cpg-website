@@ -4,6 +4,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
+import { setAppNavigationBusy } from '@/lib/appNavigation';
+
+const OVERLAY_FADE_MS = 200;
+
 // Custom event name for triggering navigation progress
 const NAVIGATION_START_EVENT = 'navigation:start';
 
@@ -80,11 +84,13 @@ export function useProgressRouter(): AppRouterInstance {
 export default function NavigationProgress() {
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [overlayOpaque, setOverlayOpaque] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const prevPathnameRef = useRef(pathname);
   const navigationStartTimeRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const fadeInFrameRef = useRef<number | null>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const safetyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -93,6 +99,10 @@ export default function NavigationProgress() {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
+    }
+    if (fadeInFrameRef.current) {
+      cancelAnimationFrame(fadeInFrameRef.current);
+      fadeInFrameRef.current = null;
     }
     if (hideTimeoutRef.current) {
       clearTimeout(hideTimeoutRef.current);
@@ -109,19 +119,29 @@ export default function NavigationProgress() {
     cleanup();
     navigationStartTimeRef.current = null;
     setProgress(100);
+    setOverlayOpaque(false);
 
     hideTimeoutRef.current = setTimeout(() => {
       setIsNavigating(false);
       setProgress(0);
-    }, 200);
+      setAppNavigationBusy(false);
+    }, OVERLAY_FADE_MS);
   }, [cleanup]);
 
   // Start the progress animation
   const startProgress = useCallback(() => {
     cleanup();
     navigationStartTimeRef.current = Date.now();
+    setAppNavigationBusy(true);
     setIsNavigating(true);
     setProgress(0);
+
+    fadeInFrameRef.current = requestAnimationFrame(() => {
+      fadeInFrameRef.current = requestAnimationFrame(() => {
+        fadeInFrameRef.current = null;
+        setOverlayOpaque(true);
+      });
+    });
 
     // Safety: auto-cancel if no pathname change occurs (e.g. preventDefault on link)
     safetyTimeoutRef.current = setTimeout(() => {
@@ -251,13 +271,26 @@ export default function NavigationProgress() {
   if (!isNavigating) return null;
 
   return (
-    <div
-      className="fixed inset-x-0 top-0 z-9999 h-1 bg-primary/30"
-    >
+    <>
       <div
-        className="h-full origin-left bg-primary transition-transform duration-150 ease-out"
-        style={{ transform: `scaleX(${progress / 100})` }}
+        className="fixed inset-x-0 top-0 z-9999 h-1 bg-primary/30"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+        aria-label="Page loading"
+      >
+        <div
+          className="h-full origin-left bg-primary transition-transform duration-150 ease-out"
+          style={{ transform: `scaleX(${progress / 100})` }}
+        />
+      </div>
+      <div
+        className={`pointer-events-none fixed inset-0 z-34 bg-background/40 transition-opacity duration-200 ease-out sm:hidden ${
+          overlayOpaque ? 'opacity-100' : 'opacity-0'
+        }`}
+        aria-hidden
       />
-    </div>
+    </>
   );
 }

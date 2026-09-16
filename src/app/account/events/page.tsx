@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { startTransition, useEffect, useState } from 'react';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -105,29 +106,18 @@ export default function MyEventsPage() {
 
   return (
     <PageContainer>
-      <div
-        className="mb-8"
-      >
-        <div
-          className="flex items-center gap-2 mb-1"
-        >
-          <h1
-            className="text-3xl font-bold font-heading"
-          >
-            My events
-          </h1>
+      <PageHeading
+        title="My events"
+        description="View and manage your event registrations"
+        aside={
           <HelpLink
             href="rsvp"
             label="Help with events and RSVP"
             size="lg"
+            className="max-sm:m-0"
           />
-        </div>
-        <p
-          className="text-base sm:text-lg opacity-80"
-        >
-          View and manage your event registrations
-        </p>
-      </div>
+        }
+      />
 
       {/* No-JS fallback */}
       <noscript>

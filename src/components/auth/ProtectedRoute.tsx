@@ -1,6 +1,7 @@
 'use client';
 
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import PageLoading from '@/components/shared/PageLoading';
 import { useAuth } from '@/hooks/useAuth';
 import { isProfileComplete } from '@/utils/profileCompletion';
@@ -86,20 +87,10 @@ export default function ProtectedRoute({
   if (requireAdmin && !isAdmin) {
     return (
       <PageContainer>
-        <div
-          className="flex min-h-[50vh] flex-col items-center justify-center text-center"
-        >
-          <h1
-            className="mb-4 text-3xl font-bold"
-          >
-            Access denied
-          </h1>
-          <p
-            className="text-foreground/80"
-          >
-            You don&apos;t have permission to access this page.
-          </p>
-        </div>
+        <PageHeading
+          title="Access denied"
+          description="You don't have permission to access this page."
+        />
       </PageContainer>
     );
   }

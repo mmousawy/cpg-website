@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { cacheLife, cacheTag } from 'next/cache';
 import { GalleryMostViewedPhotosSection } from '@/app/gallery/GalleryMostViewedPhotosSection';
 import GalleryPageHeader from '@/app/gallery/GalleryPageHeader';
 import { GalleryRecentAlbumsSection } from '@/app/gallery/GalleryRecentAlbumsSection';
@@ -11,6 +9,8 @@ import SignUpCTA from '@/components/shared/SignUpCTA';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getGalleryPageData } from '@/lib/data/galleryPage';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
+import { Suspense } from 'react';
 
 export const metadata = createMetadata({
   title: 'Community gallery',
@@ -47,11 +47,13 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
   } = await getGalleryPageData(includeTestContent);
 
   return (
-    <div className="px-3 pt-0 md:px-12 md:pt-12">
-      <GalleryPageHeader />
+    <div className="px-3 pt-0 sm:pt-8 md:px-12 md:pt-12">
+      <div className="mx-auto w-full max-w-screen-md">
+        <GalleryPageHeader />
+      </div>
 
       <div
-        className="-mx-3 grid min-w-0 gap-10 pb-10 md:-mx-12 md:gap-12 md:pb-12 [&>*]:min-w-0"
+        className="-mx-3 grid min-w-0 gap-10 md:-mx-12 md:gap-12 md:pb-12 [&>*]:min-w-0"
       >
         <GalleryTagsSection
           tags={popularTags}

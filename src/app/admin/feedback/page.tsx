@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 import Avatar from '@/components/auth/Avatar';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
 import {
@@ -58,20 +59,10 @@ export default function AdminFeedbackPage() {
     <PageContainer
       className="flex-1"
     >
-      <div
-        className="mb-8"
-      >
-        <h1
-          className="text-2xl sm:text-3xl font-bold font-heading"
-        >
-          Feedback
-        </h1>
-        <p
-          className="text-base sm:text-lg text-foreground/80 mt-1"
-        >
-          Review user-submitted feedback
-        </p>
-      </div>
+      <PageHeading
+        title="Feedback"
+        description="Review user-submitted feedback"
+      />
 
       <div
         className="flex gap-2 mt-6 flex-wrap mb-4"

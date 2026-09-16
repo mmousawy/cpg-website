@@ -3,15 +3,15 @@
 import SearchInput from '@/components/search/SearchInput';
 import SearchResultItem from '@/components/search/SearchResultItem';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useFollowList } from '@/hooks/useFollowList';
 import type { FollowListType } from '@/types/follows';
 import type { SearchResult } from '@/types/search';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import CloseSVG from 'public/icons/close.svg';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type FollowListModalProps = {
   isOpen: boolean;
@@ -134,7 +134,7 @@ export default function FollowListModal({
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
-        'bg-black/40 backdrop-blur-sm',
+        'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}
       onClick={(e) => {

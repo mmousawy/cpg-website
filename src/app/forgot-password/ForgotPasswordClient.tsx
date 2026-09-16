@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import HelpLink from '@/components/shared/HelpLink';
@@ -42,7 +43,21 @@ export default function ForgotPasswordClient() {
     return (
       <PageContainer
         className="items-center justify-center"
+        innerClassName="max-w-md"
       >
+        <PageHeading
+          title="Check your email"
+          description={
+            <>
+              We&apos;ve sent a password reset link to
+              {' '}
+              <strong>
+                {email}
+              </strong>
+              . Click the link in the email to reset your password.
+            </>
+          }
+        />
         <Container
           padding="lg"
           className="mx-auto max-w-md text-center"
@@ -54,22 +69,6 @@ export default function ForgotPasswordClient() {
               className="h-8 w-8 fill-green-500"
             />
           </div>
-          <h1
-            className="mb-2 text-3xl font-bold"
-          >
-            Check your email
-          </h1>
-          <p
-            className="text-foreground/80"
-          >
-            We&apos;ve sent a password reset link to
-            {' '}
-            <strong>
-              {email}
-            </strong>
-            .
-            Click the link in the email to reset your password.
-          </p>
           <ArrowLink
             href={routes.login.url}
             direction="left"
@@ -85,30 +84,24 @@ export default function ForgotPasswordClient() {
   return (
     <PageContainer
       className="items-center justify-center"
+      innerClassName="max-w-md"
     >
-      <Container
-        padding="lg"
-        className="mx-auto max-w-md"
-      >
-        <h1
-          className="mb-2 text-center text-3xl font-bold"
-        >
-          Forgot password?
-        </h1>
-        <div
-          className="flex items-center justify-center mb-8"
-        >
-          <p
-            className="text-center text-sm text-foreground/80"
-          >
-            No worries, we&apos;ll send you reset instructions.
-          </p>
+      <PageHeading
+        title="Forgot password?"
+        description="No worries, we'll send you reset instructions."
+        aside={
           <HelpLink
             href="change-password"
             label="Help with password reset"
             size="sm"
+            className="max-sm:m-0"
           />
-        </div>
+        }
+      />
+      <Container
+        padding="lg"
+        className="mx-auto max-w-md"
+      >
 
         <form
           onSubmit={handleSubmit}

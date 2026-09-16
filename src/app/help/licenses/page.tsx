@@ -1,5 +1,6 @@
 import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
 import HelpAccordion from '@/components/shared/HelpAccordion';
 import SectionMobileNav from '@/components/shared/SectionMobileNav';
@@ -24,28 +25,17 @@ export default function LicensesHelpPage() {
       sectionIds={sectionIds}
     >
       <PageContainer>
-        <div
-          className="mb-8"
+        <ArrowLink
+          href={routes.help.url}
+          direction="left"
+          className="mb-4"
         >
-          <ArrowLink
-            href={routes.help.url}
-            direction="left"
-            className="mb-2"
-          >
-            Help
-          </ArrowLink>
-          <h1
-            className="text-2xl sm:text-3xl font-bold font-heading"
-          >
-            Copyright & licensing
-          </h1>
-          <p
-            className="text-base sm:text-lg text-foreground/80 mt-1"
-          >
-            Set licenses for your photos, add watermarks, and embed copyright in
-            EXIF metadata.
-          </p>
-        </div>
+          Help
+        </ArrowLink>
+        <PageHeading
+          title="Copyright & licensing"
+          description="Set licenses for your photos, add watermarks, and embed copyright in EXIF metadata."
+        />
 
         <div
           className="flex flex-col md:flex-row md:gap-4 lg:gap-8"

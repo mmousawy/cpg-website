@@ -21,7 +21,6 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getEventAlbum } from '@/lib/data/albums';
-import { ensureStaticParams } from '@/lib/staticParams';
 import {
   getAllEventSlugs,
   getEventAttendeesForEvent,
@@ -29,6 +28,7 @@ import {
 } from '@/lib/data/events';
 import { getOrganizers } from '@/lib/data/profiles';
 import { formatEventDate, formatEventPageTitle, formatEventTime } from '@/lib/events/format';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
@@ -246,11 +246,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
               blurhash={event.image_blurhash}
             />
           </div>
-
-          {/* Frosted glass blur layer with eased gradient mask */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
-          />
 
           {/* Eased gradient overlay */}
           <div

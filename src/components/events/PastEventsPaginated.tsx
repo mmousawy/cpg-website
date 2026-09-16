@@ -112,7 +112,7 @@ export default function PastEventsPaginated({
 
       {hasMore && (
         <div
-          className="flex justify-center max-sm:mb-4 sm:pt-4"
+          className="flex justify-center max-sm:mb-2 sm:pt-4"
         >
           <Button
             onClick={loadMore}

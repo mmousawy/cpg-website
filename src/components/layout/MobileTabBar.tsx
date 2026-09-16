@@ -2,26 +2,17 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
-import CategoryLocationSVG from 'public/icons/category-location.svg';
 import MobileAccountMenu from './MobileAccountMenu';
-import TabBarPopoverAnchor from './TabBarPopoverAnchor';
 import TabBarPopoverBackdrop from './TabBarPopoverBackdrop';
 import { mobileScrimZClassName, mobileTabActiveClassName, mobileTabActivePillClassName, mobileTabBarZClassName } from './mobileChrome';
 
-type PopoverId = 'events' | 'gallery' | 'members';
-type TabId = 'home' | PopoverId;
-
-type MenuItem =
-  | { type: 'link'; href: string; label: string; icon: React.ReactNode }
-  | { type: 'action'; label: string; icon: React.ReactNode; action: () => void };
-
-const LONG_PRESS_MS = 400;
+type TabId = 'home' | 'events' | 'gallery' | 'members';
 
 function TabIcon({ children }: { children: React.ReactNode }) {
   return (
@@ -64,180 +55,9 @@ const MEMBERS_ICON = (
   </svg>
 );
 
-const CHALLENGES_ICON = (
-  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-  </svg>
-);
-
-const SEARCH_ICON = (
-  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-);
-
 function matchesPath(pathname: string, href: string) {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function TabPopover({
-  open,
-  items,
-  onClose,
-}: {
-  open: boolean;
-  items: MenuItem[];
-  onClose: () => void;
-}) {
-  const pathname = usePathname();
-
-  return (
-    <TabBarPopoverAnchor open={open}>
-      <ul className="p-1">
-        {items.map((item) => {
-          const isCurrent = item.type === 'link' && matchesPath(pathname, item.href);
-          const className = clsx(
-            'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors',
-            isCurrent
-              ? 'bg-primary/10 text-primary font-medium'
-              : 'text-foreground hover:bg-background-medium',
-          );
-
-          if (item.type === 'link') {
-            return (
-              <li key={item.href} role="none">
-                <Link
-                  href={item.href}
-                  prefetch={false}
-                  role="menuitem"
-                  onClick={onClose}
-                  className={className}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              </li>
-            );
-          }
-
-          return (
-            <li key={item.label} role="none">
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  item.action();
-                  onClose();
-                }}
-                className={className}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </TabBarPopoverAnchor>
-  );
-}
-
-function NestedTab({
-  id,
-  label,
-  icon,
-  primaryHref,
-  isActive,
-  items,
-  openPopover,
-  onOpenPopover,
-  onClosePopover,
-}: {
-  id: PopoverId;
-  label: string;
-  icon: React.ReactNode;
-  primaryHref: string;
-  isActive: boolean;
-  items: MenuItem[];
-  openPopover: PopoverId | null;
-  onOpenPopover: (id: PopoverId) => void;
-  onClosePopover: () => void;
-}) {
-  const router = useRouter();
-  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressedRef = useRef(false);
-
-  const clearLongPress = useCallback(() => {
-    if (longPressRef.current) {
-      clearTimeout(longPressRef.current);
-      longPressRef.current = null;
-    }
-  }, []);
-
-  const handlePointerDown = () => {
-    longPressedRef.current = false;
-    clearLongPress();
-    longPressRef.current = setTimeout(() => {
-      longPressedRef.current = true;
-      onOpenPopover(id);
-    }, LONG_PRESS_MS);
-  };
-
-  const handlePointerUp = () => {
-    clearLongPress();
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (longPressedRef.current) {
-      e.preventDefault();
-      longPressedRef.current = false;
-      return;
-    }
-
-    if (isActive) {
-      e.preventDefault();
-      onOpenPopover(id);
-      return;
-    }
-
-    e.preventDefault();
-    router.push(primaryHref);
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    onOpenPopover(id);
-  };
-
-  return (
-    <li className="relative">
-      <TabPopover
-        open={openPopover === id}
-        items={items}
-        onClose={onClosePopover}
-      />
-      <button
-        type="button"
-        aria-current={isActive ? 'page' : undefined}
-        aria-expanded={openPopover === id}
-        aria-haspopup="menu"
-        data-mobile-tab={id}
-        className={tabButtonClass(isActive)}
-        onClick={handleClick}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onContextMenu={handleContextMenu}
-      >
-        <TabIcon>{icon}</TabIcon>
-        <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
-          {label}
-        </span>
-      </button>
-    </li>
-  );
 }
 
 /** Must stay inside `<Suspense>` — `usePathname()` is a blocking client hook. */
@@ -246,23 +66,13 @@ export default function MobileTabBar() {
   const { profile } = useSession();
   const containerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
-  const tabListRef = useRef<HTMLUListElement>(null);
-  const [openPopover, setOpenPopover] = useState<PopoverId | null>(null);
+  const tabListRef = useRef<HTMLDivElement>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [pendingTab, setPendingTab] = useState<TabId | null>(null);
   const [indicator, setIndicator] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [indicatorReady, setIndicatorReady] = useState(false);
 
-  const closePopover = useCallback(() => setOpenPopover(null), []);
-
-  const handleOpenPopover = useCallback((id: PopoverId) => {
-    setAccountOpen(false);
-    setOpenPopover(id);
-  }, []);
-
-  const closeAllPopovers = useCallback(() => {
-    closePopover();
-    setAccountOpen(false);
-  }, [closePopover]);
+  const closeAccount = useCallback(() => setAccountOpen(false), []);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
@@ -289,25 +99,24 @@ export default function MobileTabBar() {
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
-      closePopover();
       setAccountOpen(false);
     });
-  }, [closePopover]);
+  }, []);
 
   useEffect(() => {
-    closePopover();
-  }, [pathname, closePopover]);
+    setPendingTab(null);
+  }, [pathname]);
 
   useEffect(() => {
-    if (!openPopover && !accountOpen) return;
+    if (!accountOpen) return;
 
     const handlePointerDown = (e: PointerEvent) => {
       if (navRef.current?.contains(e.target as Node)) return;
-      closeAllPopovers();
+      closeAccount();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeAllPopovers();
+      if (e.key === 'Escape') closeAccount();
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
@@ -316,7 +125,7 @@ export default function MobileTabBar() {
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [openPopover, accountOpen, closeAllPopovers]);
+  }, [accountOpen, closeAccount]);
 
   const handleNavPointerDown = (e: React.PointerEvent) => {
     const accountRoot = navRef.current?.querySelector('[data-account-menu]');
@@ -324,30 +133,25 @@ export default function MobileTabBar() {
     if (accountOpen) setAccountOpen(false);
   };
 
-  const isAnyPopoverOpen = openPopover !== null || accountOpen;
-
-  const openSearch = () => {
-    window.dispatchEvent(new CustomEvent('search:open'));
-  };
-
-  const isHomeActive = pathname === '/';
-  const isEventsActive = matchesPath(pathname, routes.events.url) || matchesPath(pathname, routes.scene.url);
-  const isGalleryActive = matchesPath(pathname, routes.gallery.url) || matchesPath(pathname, routes.challenges.url);
-  const isMembersActive = matchesPath(pathname, routes.members.url);
-  const isAvatarActive = accountOpen
-    || pathname.startsWith('/account')
-    || pathname.startsWith('/admin')
-    || (profile?.nickname ? pathname === `/@${profile.nickname}` || pathname.startsWith(`/@${profile.nickname}/`) : false);
-
-  const activeTab: TabId | null = isHomeActive
+  const isHomeCurrent = pathname === '/';
+  const isEventsCurrent = matchesPath(pathname, routes.events.url) || matchesPath(pathname, routes.scene.url);
+  const isGalleryCurrent = matchesPath(pathname, routes.gallery.url) || matchesPath(pathname, routes.challenges.url);
+  const isMembersCurrent = matchesPath(pathname, routes.members.url);
+  const pathTab: TabId | null = isHomeCurrent
     ? 'home'
-    : isEventsActive
+    : isEventsCurrent
       ? 'events'
-      : isGalleryActive
+      : isGalleryCurrent
         ? 'gallery'
-        : isMembersActive
+        : isMembersCurrent
           ? 'members'
           : null;
+
+  const activeTab: TabId | null = pendingTab ?? pathTab;
+  const isHomeActive = activeTab === 'home';
+  const isEventsActive = activeTab === 'events';
+  const isGalleryActive = activeTab === 'gallery';
+  const isMembersActive = activeTab === 'members';
 
   useLayoutEffect(() => {
     const list = tabListRef.current;
@@ -388,26 +192,17 @@ export default function MobileTabBar() {
     };
   }, [activeTab]);
 
-  const eventsMenu: MenuItem[] = [
-    { type: 'link', href: routes.events.url, label: routes.events.label, icon: EVENTS_ICON },
-    { type: 'link', href: routes.scene.url, label: routes.scene.label, icon: <CategoryLocationSVG className="size-5 fill-current" /> },
-  ];
-
-  const galleryMenu: MenuItem[] = [
-    { type: 'link', href: routes.gallery.url, label: routes.gallery.label, icon: GALLERY_ICON },
-    { type: 'link', href: routes.challenges.url, label: routes.challenges.label, icon: CHALLENGES_ICON },
-  ];
-
-  const membersMenu: MenuItem[] = [
-    { type: 'link', href: routes.members.url, label: routes.members.label, icon: MEMBERS_ICON },
-    { type: 'action', label: 'Search', icon: SEARCH_ICON, action: openSearch },
-  ];
-
-  const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (isHomeActive) {
+  const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, tab: TabId, isCurrent: boolean) => {
+    if (isCurrent) {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
+    setPendingTab(tab);
+  };
+
+  const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    handleTabClick(e, 'home', isHomeCurrent);
   };
 
   return (
@@ -424,7 +219,7 @@ export default function MobileTabBar() {
       </div>
 
       <div className={clsx('mobile-tab-bar pointer-events-none fixed inset-x-0 bottom-0 sm:hidden', mobileTabBarZClassName)}>
-      <TabBarPopoverBackdrop open={isAnyPopoverOpen} onClose={closeAllPopovers} />
+      <TabBarPopoverBackdrop open={accountOpen} onClose={closeAccount} />
 
       <div ref={containerRef} className="relative">
         <nav
@@ -466,51 +261,61 @@ export default function MobileTabBar() {
               </Link>
             </li>
 
-            <NestedTab
-              id="events"
-              label={routes.events.label}
-              icon={EVENTS_ICON}
-              primaryHref={routes.events.url}
-              isActive={isEventsActive}
-              items={eventsMenu}
-              openPopover={openPopover}
-              onOpenPopover={handleOpenPopover}
-              onClosePopover={closePopover}
-            />
+            <li>
+              <Link
+                href={routes.events.url}
+                prefetch={false}
+                aria-current={isEventsActive ? 'page' : undefined}
+                data-mobile-tab="events"
+                onClick={(e) => handleTabClick(e, 'events', isEventsCurrent)}
+                className={tabButtonClass(isEventsActive)}
+              >
+                <TabIcon>{EVENTS_ICON}</TabIcon>
+                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
+                  {routes.events.label}
+                </span>
+              </Link>
+            </li>
 
-            <NestedTab
-              id="gallery"
-              label={routes.gallery.label}
-              icon={GALLERY_ICON}
-              primaryHref={routes.gallery.url}
-              isActive={isGalleryActive}
-              items={galleryMenu}
-              openPopover={openPopover}
-              onOpenPopover={handleOpenPopover}
-              onClosePopover={closePopover}
-            />
+            <li>
+              <Link
+                href={routes.gallery.url}
+                prefetch={false}
+                aria-current={isGalleryActive ? 'page' : undefined}
+                data-mobile-tab="gallery"
+                onClick={(e) => handleTabClick(e, 'gallery', isGalleryCurrent)}
+                className={tabButtonClass(isGalleryActive)}
+              >
+                <TabIcon>{GALLERY_ICON}</TabIcon>
+                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
+                  {routes.gallery.label}
+                </span>
+              </Link>
+            </li>
 
-            <NestedTab
-              id="members"
-              label={routes.members.label}
-              icon={MEMBERS_ICON}
-              primaryHref={routes.members.url}
-              isActive={isMembersActive}
-              items={membersMenu}
-              openPopover={openPopover}
-              onOpenPopover={handleOpenPopover}
-              onClosePopover={closePopover}
-            />
+            <li>
+              <Link
+                href={routes.members.url}
+                prefetch={false}
+                aria-current={isMembersActive ? 'page' : undefined}
+                data-mobile-tab="members"
+                onClick={(e) => handleTabClick(e, 'members', isMembersCurrent)}
+                className={tabButtonClass(isMembersActive)}
+              >
+                <TabIcon>{MEMBERS_ICON}</TabIcon>
+                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
+                  {routes.members.label}
+                </span>
+              </Link>
+            </li>
 
             <li className="relative flex items-center justify-center">
               <MobileAccountMenu
-                active={isAvatarActive}
+                active={accountOpen}
                 avatarUrl={profile?.avatar_url}
                 fullName={profile?.full_name}
-                onOpenChange={(open) => {
-                  setAccountOpen(open);
-                  if (open) closePopover();
-                }}
+                open={accountOpen}
+                onOpenChange={setAccountOpen}
               />
             </li>
           </ul>

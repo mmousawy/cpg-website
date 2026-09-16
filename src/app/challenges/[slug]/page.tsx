@@ -217,11 +217,6 @@ export default async function ChallengePage({
             />
           </div>
 
-          {/* Frosted glass blur layer with eased gradient mask */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-full backdrop-blur-md scrim-gradient-mask-strong"
-          />
-
           {/* Eased gradient overlay */}
           <div
             className="absolute inset-x-0 bottom-0 h-full scrim-gradient-overlay-strong"

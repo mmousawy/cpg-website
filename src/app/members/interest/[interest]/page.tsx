@@ -1,15 +1,16 @@
 import PageContainer from '@/components/layout/PageContainer';
+import PageHeading from '@/components/layout/PageHeading';
 
+import EmptyState from '@/components/shared/EmptyState';
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
-import EmptyState from '@/components/shared/EmptyState';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
 
 // Cached data functions
-import { ensureStaticParams } from '@/lib/staticParams';
 import { getMembersByInterest, getPopularInterests } from '@/lib/data/interests';
+import { ensureStaticParams } from '@/lib/staticParams';
 
 type Params = Promise<{ interest: string }>;
 
@@ -64,26 +65,18 @@ export default async function InterestMembersPage({ params }: { params: Params }
   return (
     <>
       <PageContainer>
-        <div
-          className="mb-8"
-        >
-          <h1
-            className="mb-2 text-3xl font-bold font-heading"
-          >
-            Members interested in &ldquo;
-            {interest.name}
-            &rdquo;
-          </h1>
-          <p
-            className="text-lg opacity-70"
-          >
-            {members.length}
-            {' '}
-            {members.length === 1 ? 'member' : 'members'}
-            {' '}
-            with this interest
-          </p>
-        </div>
+        <PageHeading
+          title={`Members interested in “${interest.name}”`}
+          description={
+            <>
+              {members.length}
+              {' '}
+              {members.length === 1 ? 'member' : 'members'}
+              {' '}
+              with this interest
+            </>
+          }
+        />
 
         {/* Popular interests sidebar */}
         {popularInterests.length > 0 && (
@@ -111,7 +104,7 @@ export default async function InterestMembersPage({ params }: { params: Params }
           />
         ) : (
           <div
-            className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+            className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
           >
             {members.map((member) => (
               <MemberCard

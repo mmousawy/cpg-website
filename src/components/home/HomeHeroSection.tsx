@@ -33,10 +33,6 @@ export async function HomeHeroSection() {
         className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+5rem)]"
       >
         <div
-          className="absolute inset-0 scrim-gradient-mask-strong"
-        />
-
-        <div
           className="absolute inset-0 scrim-gradient-overlay-strong"
         />
       </div>
