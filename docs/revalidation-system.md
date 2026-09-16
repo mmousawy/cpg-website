@@ -102,6 +102,15 @@ const nextConfig: NextConfig = {
 
 Use `cacheLife('tagged')` for tag-invalidated data. Use `cacheLife('hourly')` for events, challenges, and the gallery homepage (most-viewed sections).
 
+### Avoiding negative cache (404 / empty lists)
+
+`'use cache'` loaders in `src/lib/data/*` must **not** persist long-lived misses. Before returning a 404, unknown slug, or empty member list that may fill later, call helpers from [`src/lib/cache/cacheMiss.ts`](../src/lib/cache/cacheMiss.ts):
+
+- `uncachedMiss(value)` — slug/detail not found (e.g. `{ challenge: null }`)
+- `skipCacheIfCountMismatch(expected, actual)` — metadata says rows exist but the loaded list is empty
+
+Always call `revalidateChallenge(slug)` / `revalidateInterest(name)` when **creating** entities, not only on update.
+
 > Optional on Vercel: you can use **`'use cache: remote'`** instead of **`'use cache'`** to store entries in Vercel Runtime Cache (shared across instances). That is separate from ISR and may be metered on your plan; this repo uses in-memory **`'use cache'`** only.
 
 ## Homepage caching

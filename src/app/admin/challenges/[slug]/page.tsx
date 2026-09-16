@@ -322,8 +322,9 @@ function AdminChallengeForm() {
           return;
         }
 
-        // Revalidate all challenges (new challenge affects list pages)
+        const newSlug = slug.trim();
         await revalidateChallenges();
+        await revalidateChallenge(newSlug);
 
         setSuccess(true);
         setTimeout(() => router.push('/admin/challenges'), 1500);

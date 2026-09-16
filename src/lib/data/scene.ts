@@ -6,6 +6,7 @@ import {
   filterUpcomingSceneEvents,
 } from '@/lib/scene/filters';
 import { createPublicClient } from '@/utils/supabase/server';
+import { uncachedMiss } from '@/lib/cache/cacheMiss';
 import { cacheLife, cacheTag } from 'next/cache';
 
 const SCENE_LIST_COLUMNS =
@@ -112,10 +113,10 @@ export async function getSceneEventBySlug(slug: string) {
     )
     .eq('slug', slug)
     .is('deleted_at', null)
-    .single();
+    .maybeSingle();
 
   if (!row) {
-    return { event: null };
+    return uncachedMiss({ event: null });
   }
 
   const { submitter, ...event } = row as unknown as SceneEventWithSubmitter;
