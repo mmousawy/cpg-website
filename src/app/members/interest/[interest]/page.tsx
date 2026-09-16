@@ -17,7 +17,7 @@ type Params = Promise<{ interest: string }>;
 export async function generateStaticParams() {
   const popularInterests = await getPopularInterests(100);
   const params = popularInterests.map((interest) => ({
-    interest: encodeURIComponent(interest.name),
+    interest: interest.name,
   }));
   return ensureStaticParams(params, { interest: 'sample' });
 }

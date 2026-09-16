@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 
+import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
 import { createAdminClient } from '@/utils/supabase/admin';
 import WelcomeTemplate from '@/emails/auth/welcome';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
@@ -15,12 +16,13 @@ function hashToken(token: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const siteUrl = getRequestSiteUrl(request);
   const token = searchParams.get('token');
 
   if (!token) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
+      `${siteUrl}/auth-error?error=missing_params&message=${encodeURIComponent('Invalid verification link')}`,
     );
   }
 
@@ -39,14 +41,14 @@ export async function GET(request: NextRequest) {
   if (tokenError || !authToken) {
     console.error('Token lookup error:', tokenError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=invalid_token&message=${encodeURIComponent('This verification link is invalid or has already been used')}`,
+      `${siteUrl}/auth-error?error=invalid_token&message=${encodeURIComponent('This verification link is invalid or has already been used')}`,
     );
   }
 
   // Check if token is expired
   if (new Date(authToken.expires_at) < new Date()) {
     return NextResponse.redirect(
-      `${origin}/auth-error?error=expired_token&message=${encodeURIComponent('This verification link has expired. Please sign up again.')}`,
+      `${siteUrl}/auth-error?error=expired_token&message=${encodeURIComponent('This verification link has expired. Please sign up again.')}`,
     );
   }
 
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
   if (confirmError) {
     console.error('Error confirming user:', confirmError);
     return NextResponse.redirect(
-      `${origin}/auth-error?error=confirm_failed&message=${encodeURIComponent('Failed to verify email. Please try again.')}`,
+      `${siteUrl}/auth-error?error=confirm_failed&message=${encodeURIComponent('Failed to verify email. Please try again.')}`,
     );
   }
 
@@ -100,6 +102,6 @@ export async function GET(request: NextRequest) {
 
   // Redirect to login with success message
   return NextResponse.redirect(
-    `${origin}/login?verified=true`,
+    `${siteUrl}/login?verified=true`,
   );
 }

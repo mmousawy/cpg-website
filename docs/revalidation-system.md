@@ -102,6 +102,20 @@ const nextConfig: NextConfig = {
 
 Use `cacheLife('tagged')` for tag-invalidated data. Use `cacheLife('hourly')` for events, challenges, and the gallery homepage (most-viewed sections).
 
+### Avoiding negative cache (404 / empty lists)
+
+`'use cache'` persists **successful** loader results, including `null` and empty arrays. Do **not** call `connection()` inside a cached function — Next.js forbids it at build/prerender time.
+
+Use an **uncached outer wrapper** instead:
+
+1. Lightweight live check (slug exists, interest row + `count`, etc.).
+2. Return the miss immediately **without** entering the cached loader (so the miss is not stored).
+3. Call the `'use cache'` inner loader only when the entity should exist.
+
+Examples: `getChallengeBySlug` and `getMembersByInterest` in `src/lib/data/challenges.ts` and `src/lib/data/interests.ts`. See [`src/lib/cache/cacheMiss.ts`](../src/lib/cache/cacheMiss.ts) for the pattern notes.
+
+Always call `revalidateChallenge(slug)` / `revalidateInterest(name)` when **creating** entities, not only on update.
+
 > Optional on Vercel: you can use **`'use cache: remote'`** instead of **`'use cache'`** to store entries in Vercel Runtime Cache (shared across instances). That is separate from ISR and may be metered on your plan; this repo uses in-memory **`'use cache'`** only.
 
 ## Homepage caching

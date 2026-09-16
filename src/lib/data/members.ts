@@ -374,7 +374,9 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
     .eq('photos.is_public', true)
     .is('photos.deleted_at', null);
 
-  if (!photoTags || photoTags.length === 0) {
+  const tagRowCount = photoTags?.length ?? 0;
+
+  if (tagRowCount === 0) {
     return {
       members: [],
     };
@@ -387,7 +389,7 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
     photo_id: string;
     photos: PhotoRow | null;
   };
-  photoTags.forEach((pt: PhotoTagQueryResult) => {
+  (photoTags ?? []).forEach((pt: PhotoTagQueryResult) => {
     const photo = pt.photos;
     if (photo?.user_id) {
       const current = userTagCounts.get(photo.user_id) || 0;
@@ -407,7 +409,7 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
   }
 
   // Fetch member profiles
-  const { data: members } = await supabase
+  const { data: memberRows } = await supabase
     .from('profiles')
     .select('id, full_name, nickname, avatar_url')
     .in('id', userIds)
@@ -418,7 +420,7 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
     .order('nickname', { ascending: true });
 
   // Maintain sort order by tag usage
-  const sortedMembers = (members || []).sort((a, b) => {
+  const sortedMembers = (memberRows || []).sort((a, b) => {
     const aCount = userTagCounts.get(a.id) || 0;
     const bCount = userTagCounts.get(b.id) || 0;
     if (bCount !== aCount) {
@@ -430,8 +432,10 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
     return aName.localeCompare(bName);
   });
 
+  const members = filterMemberNicknames(sortedMembers as Member[], includeTestContent);
+
   return {
-    members: filterMemberNicknames(sortedMembers as Member[], includeTestContent),
+    members,
   };
 }
 

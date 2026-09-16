@@ -28,6 +28,7 @@
     "analyze": "cross-env ANALYZE=true next build --webpack",
     "scrape:all": "npx tsx scripts/scrape-uitagenda-events.ts && npx tsx scripts/scrape-tpc-events.ts && npx tsx scripts/scrape-cameranu-events.ts",
     "verify:jwt": "node scripts/verify-jwt-signing.mjs",
+    "verify:image-icc": "node scripts/verify-image-icc.mjs",
     "prepare": "husky"
   },
   "dependencies": {

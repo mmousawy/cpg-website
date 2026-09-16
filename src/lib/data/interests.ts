@@ -32,6 +32,27 @@ export async function getPopularInterests(limit = 20) {
  * Tagged with specific interest tag for granular invalidation
  */
 export async function getMembersByInterest(interest: string) {
+  const supabase = createPublicClient();
+  const { data: interestMeta } = await supabase
+    .from('interests')
+    .select('id, name, count')
+    .eq('name', interest)
+    .maybeSingle();
+
+  if (!interestMeta) {
+    return { interest: null, members: [] };
+  }
+
+  const cached = await getMembersByInterestCached(interest);
+  const expectedCount = interestMeta.count ?? 0;
+  if (expectedCount > 0 && cached.members.length === 0) {
+    return loadMembersByInterestLive(interest, interestMeta as Interest);
+  }
+
+  return cached;
+}
+
+async function getMembersByInterestCached(interest: string) {
   'use cache';
   cacheLife('tagged');
   cacheTag('interests');
@@ -39,36 +60,61 @@ export async function getMembersByInterest(interest: string) {
 
   const supabase = createPublicClient();
 
-  // First verify the interest exists
   const { data: interestData } = await supabase
     .from('interests')
     .select('id, name, count')
     .eq('name', interest)
     .single();
 
-  if (!interestData) {
-    return {
-      interest: null,
-      members: [],
-    };
-  }
-
-  // Get profile IDs with this interest
   const { data: profileInterests } = await supabase
     .from('profile_interests')
     .select('profile_id')
     .eq('interest', interest);
 
-  if (!profileInterests || profileInterests.length === 0) {
+  const linkCount = profileInterests?.length ?? 0;
+
+  if (linkCount === 0) {
     return {
       interest: interestData as Interest,
       members: [],
     };
   }
 
-  const profileIds = profileInterests.map((pi) => pi.profile_id);
+  const profileIds = profileInterests!.map((pi) => pi.profile_id);
 
-  // Get member profiles
+  const { data: members } = await supabase
+    .from('profiles')
+    .select('id, full_name, nickname, avatar_url')
+    .in('id', profileIds)
+    .not('nickname', 'is', null)
+    .is('suspended_at', null)
+    .is('deletion_scheduled_at', null)
+    .order('full_name', { ascending: true, nullsFirst: false })
+    .order('nickname', { ascending: true });
+
+  const memberList = (members || []) as Member[];
+
+  return {
+    interest: interestData as Interest,
+    members: memberList,
+  };
+}
+
+async function loadMembersByInterestLive(interest: string, interestData: Interest) {
+  const supabase = createPublicClient();
+
+  const { data: profileInterests } = await supabase
+    .from('profile_interests')
+    .select('profile_id')
+    .eq('interest', interest);
+
+  const linkCount = profileInterests?.length ?? 0;
+  if (linkCount === 0) {
+    return { interest: interestData, members: [] };
+  }
+
+  const profileIds = profileInterests!.map((pi) => pi.profile_id);
+
   const { data: members } = await supabase
     .from('profiles')
     .select('id, full_name, nickname, avatar_url')
@@ -80,8 +126,7 @@ export async function getMembersByInterest(interest: string) {
     .order('nickname', { ascending: true });
 
   return {
-    interest: interestData as Interest,
+    interest: interestData,
     members: (members || []) as Member[],
   };
 }
-

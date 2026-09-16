@@ -113,10 +113,14 @@ export async function getEventBySlug(slug: string) {
     .select(EVENT_LIST_COLUMNS)
     .eq('is_draft', false)
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
+
+  if (!event) {
+    return { event: null };
+  }
 
   return {
-    event: event as CPGEvent | null,
+    event: event as CPGEvent,
   };
 }
 

@@ -86,6 +86,38 @@ test.describe('Onboarding Flow', () => {
   });
 });
 
+test.describe('Onboarding after login from a public page', () => {
+  let testUser: TestUser;
+
+  test.beforeAll(async ({ request }) => {
+    testUser = await createTestUser(request, { completeOnboarding: false });
+  });
+
+  test.afterAll(async ({ request }) => {
+    if (!testUser) return;
+
+    try {
+      await cleanupTestUsers(request, [testUser.email]);
+    } catch (err) {
+      console.error('Failed to cleanup test user:', err);
+    }
+  });
+
+  test('should land on onboarding when redirectTo is a public page', async ({ page }) => {
+    await page.goto('/login?redirectTo=/members');
+
+    await page.locator('input[type="email"]').first().fill(testUser.email);
+    await page.locator('input[type="password"]').first().fill(testUser.password);
+    const submitButton = page.locator('button[type="submit"]').or(
+      page.getByRole('button', { name: /log in|sign in/i }),
+    );
+    await submitButton.click();
+
+    await expect(page).toHaveURL(/\/onboarding/, { timeout: 15000 });
+    await expect(page.getByRole('heading', { name: /welcome to the group/i })).toBeVisible();
+  });
+});
+
 test.describe('Onboarding profile images', () => {
   let testUser: TestUser;
 

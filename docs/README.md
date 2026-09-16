@@ -34,6 +34,7 @@
 ### Supabase & auth
 
 - **[supabase-auth-traffic.md](./supabase-auth-traffic.md)** - Auth/proxy traffic reductions, JWKS status on self-hosted Supabase, and future asymmetric JWT setup
+- **[../infra/supabase-oauth.md](../infra/supabase-oauth.md)** - Google/Discord must be passed into the Auth container; Coolify deploys do not do this
 
 ### Shared Albums
 
@@ -42,6 +43,8 @@
 - **[event-albums.md](./event-albums.md)** - Event album auto-creation, event page integration, repair strategy
 
 ### Image Optimization
+
+- **[../infra/imgproxy-color-profiles.md](../infra/imgproxy-color-profiles.md)** - Preserve ICC color profiles on self-hosted imgproxy WebP transforms (`pnpm verify:image-icc`)
 
 The project uses a custom image loader (`src/utils/supabaseImageLoader.ts`) that handles different image sources:
 

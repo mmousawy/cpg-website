@@ -77,10 +77,12 @@ Remove Vercel DNS records for `@` / `www` when ready.
 
 ## 4. Supabase (production instance)
 
-Authentication → URL configuration:
+Authentication URL configuration (GoTrue `.env`):
 
 - Site URL: `https://creativephotography.group`
 - Redirect URLs: `https://creativephotography.group/**`, `https://www.creativephotography.group/**`
+
+Google / Discord: values in `.env` are **not** visible to Auth until compose passes them. Run `bash infra/apply-supabase-oauth.sh production` and confirm `docker exec supabase-auth env | grep GOTRUE_EXTERNAL_GOOGLE` shows `ENABLED=true`. See [supabase-oauth.md](../supabase-oauth.md).
 
 ## 5. GitHub Actions
 

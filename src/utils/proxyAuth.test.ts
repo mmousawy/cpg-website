@@ -6,7 +6,9 @@ import {
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
 import {
+  expireLegacyHostedSupabaseAuthCookies,
   hasSupabaseAuthCookies,
+  isLegacyHostedSupabaseAuthCookieName,
   isSupabaseAuthCookieName,
 } from '@/utils/supabase/authCookie';
 
@@ -61,5 +63,32 @@ describe('supabase auth cookies', () => {
     expect(isSupabaseAuthCookieName('theme')).toBe(false);
     expect(hasSupabaseAuthCookies([{ name: 'theme' }])).toBe(false);
     expect(hasSupabaseAuthCookies([{ name: 'sb-xxxx-auth-token.0' }])).toBe(true);
+  });
+
+  it('detects legacy hosted Supabase auth cookie chunks', () => {
+    expect(isLegacyHostedSupabaseAuthCookieName('sb-lpdjlhlslqtdswhnchmv-auth-token')).toBe(true);
+    expect(isLegacyHostedSupabaseAuthCookieName('sb-lpdjlhlslqtdswhnchmv-auth-token.0')).toBe(true);
+    expect(isLegacyHostedSupabaseAuthCookieName('sb-db-auth-token')).toBe(false);
+  });
+
+  it('expires legacy hosted auth cookies on the response', () => {
+    const setCalls: { name: string; value: string; options?: { maxAge?: number } }[] = [];
+    const response = {
+      cookies: {
+        set(name: string, value: string, options?: { path?: string; maxAge?: number }) {
+          setCalls.push({ name, value, options });
+        },
+      },
+    };
+    expireLegacyHostedSupabaseAuthCookies(
+      [
+        { name: 'sb-lpdjlhlslqtdswhnchmv-auth-token.0' },
+        { name: 'sb-db-auth-token' },
+      ],
+      response,
+    );
+    expect(setCalls).toEqual([
+      { name: 'sb-lpdjlhlslqtdswhnchmv-auth-token.0', value: '', options: { path: '/', maxAge: 0 } },
+    ]);
   });
 });

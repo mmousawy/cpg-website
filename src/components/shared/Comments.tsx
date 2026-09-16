@@ -472,8 +472,22 @@ const CommentItem = memo(function CommentItem({
             </div>
           </Link>
           <div
-            className="flex items-center gap-1"
+            className="flex items-center gap-2"
           >
+            {currentUser && !isEditing && !isCurrentlyReplying && (
+              <button
+                type="button"
+                onClick={handleReplyClickLocal}
+                className="flex text-xs items-center justify-center rounded-full border border-border-color-strong bg-background-medium dark:bg-[#2e3032] h-6 gap-1 px-2 text-foreground/60 hover:border-primary hover:bg-primary/5 hover:text-foreground transition-colors"
+                aria-label="Reply"
+                title="Reply"
+              >
+                <ReplySVG
+                  className="size-3.5 shrink-0 fill-current -ml-0.5 -mt-px"
+                />
+                Reply
+              </button>
+            )}
             <CommentActionsPopover
               commentId={comment.id}
               commentUserId={comment.user_id}
@@ -556,22 +570,6 @@ const CommentItem = memo(function CommentItem({
           >
             {renderCommentText(comment.comment_text)}
           </p>
-        )}
-        {currentUser && !isEditing && !isCurrentlyReplying && (
-          <div
-            className="mt-4 sm:mt-6"
-          >
-            <Button
-              onClick={handleReplyClickLocal}
-              variant="secondary"
-              size="sm"
-              icon={<ReplySVG
-                className="size-5"
-              />}
-            >
-              Reply
-            </Button>
-          </div>
         )}
       </div>
       {/* Collapse/expand toggle — shown below the comment card on the border line */}
