@@ -206,8 +206,6 @@ export default function BlurImage({
         ? 'animate-fade-in-fast'
         : 'opacity-0';
 
-  const isLoaded = loadState !== 'loading';
-
   // When transform fails, fall back to the raw /object/public/ URL
   const effectiveSrc = useRawFallback ? getRawObjectUrl(srcString) : src;
   const effectiveUnoptimized = useRawFallback ? true : props.unoptimized;
@@ -401,10 +399,10 @@ export default function BlurImage({
         ...passedStyle,
       }}
     >
-      {/* Blur placeholder as background div - matches the main image dimensions */}
+      {/* Keep the placeholder until fade-in finishes so the image can dissolve over it. */}
       {blurhashDataUrl ? (
         <div
-          className={`w-full ${isLoaded ? 'invisible' : ''}`}
+          className={`w-full ${loadState === 'visible' ? 'invisible' : ''}`}
           style={{
             backgroundImage: `url(${blurhashDataUrl})`,
             backgroundSize: 'cover',
@@ -420,13 +418,13 @@ export default function BlurImage({
           aria-hidden="true"
           width={props.width}
           height={props.height}
-          className={`${className} ${isLoaded ? 'invisible' : ''}`}
+          className={`${className} ${loadState === 'visible' ? 'invisible' : ''}`}
           quality={30}
           sizes="64px"
         />
       ) : (
         <div
-          className={`w-full bg-white ${isLoaded ? 'invisible' : ''}`}
+          className={`w-full bg-white ${loadState === 'visible' ? 'invisible' : ''}`}
           style={{
             aspectRatio: imgWidth && imgHeight ? `${imgWidth} / ${imgHeight}` : undefined,
           }}
@@ -442,6 +440,7 @@ export default function BlurImage({
         className={`absolute inset-0 w-full h-full object-cover ${opacityClass}`}
         onLoad={handleImageLoad}
         onError={handleImageError}
+        onAnimationEnd={handleAnimationEnd}
         preload={preload}
         fetchPriority={fetchPriority}
         loading={loading}
