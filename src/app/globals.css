@@ -267,6 +267,67 @@ body {
   animation: fade-in 0.3s ease-in-out both;
 }
 
+@keyframes onboarding-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes onboarding-progress-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes onboarding-page-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-page-title-in {
+  animation: onboarding-page-title-in 0.55s ease-out both;
+}
+
+.onboarding-step-title {
+  animation: onboarding-rise-in 0.5s ease-out both;
+}
+
+.onboarding-rise-in {
+  animation: onboarding-rise-in 0.5s ease-out both;
+}
+
+.onboarding-rise-in-delay-1 {
+  animation-delay: 100ms;
+}
+
+.onboarding-rise-in-delay-2 {
+  animation-delay: 200ms;
+}
+
+.onboarding-rise-in-delay-3 {
+  animation-delay: 300ms;
+}
+
+.onboarding-progress-slide-in {
+  animation: onboarding-progress-slide-in 0.45s ease-out both;
+}
+
 /* Hide scrollbars utility */
 .scrollbar-hide {
   scrollbar-width: none;
@@ -666,6 +727,14 @@ html.manage-page .app-header-inner {
   .mobile-sticky-bar-slide {
     transition: none;
   }
+
+  .onboarding-page-title-in,
+  .onboarding-step-title,
+  .onboarding-rise-in,
+  .onboarding-progress-slide-in {
+    animation: fade-in 0.2s ease-out both;
+    transform: none;
+  }
 }
 
 html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
@@ -707,7 +776,7 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
 @media (max-width: 639px) {
   html:not(.manage-page) .app-shell-main {
     padding-bottom: calc(
-      var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1rem
+      var(--mobile-nav-offset, 0px) + var(--mobile-overlay-chrome-height, 0px)
     );
   }
 

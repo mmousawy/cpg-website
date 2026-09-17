@@ -2042,6 +2042,15 @@ export type Database = {
         Args: { p_profile_id: string; p_restore_nickname: string }
         Returns: undefined
       }
+      promote_admin: {
+        Args: { p_email: string }
+        Returns: {
+          email: string | null
+          id: string
+          is_admin: boolean | null
+          nickname: string | null
+        }[]
+      }
       get_photo_exif: { Args: { p_photo_id: string }; Returns: Json }
       get_profile_stats: { Args: { p_user_id: string }; Returns: Json }
       get_rsvp_by_uuid: { Args: { p_uuid: string }; Returns: Json }

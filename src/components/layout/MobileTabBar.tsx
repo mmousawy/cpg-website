@@ -8,6 +8,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
+import { isOnboardingPath } from '@/utils/onboardingPath';
 import MobileAccountMenu from './MobileAccountMenu';
 import TabBarPopoverBackdrop from './TabBarPopoverBackdrop';
 import { mobileScrimZClassName, mobileTabActiveClassName, mobileTabActivePillClassName, mobileTabBarZClassName } from './mobileChrome';
@@ -63,6 +64,7 @@ function matchesPath(pathname: string, href: string) {
 /** Must stay inside `<Suspense>` — `usePathname()` is a blocking client hook. */
 export default function MobileTabBar() {
   const pathname = usePathname();
+  const hidden = isOnboardingPath(pathname);
   const { profile } = useSession();
   const containerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -76,6 +78,11 @@ export default function MobileTabBar() {
 
   useLayoutEffect(() => {
     const root = document.documentElement;
+    if (hidden) {
+      root.style.removeProperty('--mobile-nav-offset');
+      return;
+    }
+
     const el = containerRef.current;
     if (!el) return;
 
@@ -95,7 +102,7 @@ export default function MobileTabBar() {
       window.removeEventListener('resize', updateOffset);
       root.style.removeProperty('--mobile-nav-offset');
     };
-  }, []);
+  }, [hidden]);
 
   useLayoutEffect(() => {
     return subscribeRouteChange(() => {
@@ -204,6 +211,10 @@ export default function MobileTabBar() {
   const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     handleTabClick(e, 'home', isHomeCurrent);
   };
+
+  if (hidden) {
+    return null;
+  }
 
   return (
     <>

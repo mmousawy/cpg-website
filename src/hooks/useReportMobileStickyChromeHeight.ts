@@ -1,6 +1,7 @@
 import { type RefObject, useLayoutEffect } from 'react';
 
 const HEIGHT_VAR = '--mobile-sticky-bar-height';
+const OVERLAY_HEIGHT_VAR = '--mobile-overlay-chrome-height';
 const EXPANDED_ATTR = 'data-mobile-sticky-chrome-sticky';
 const MOBILE_MEDIA = '(max-width: 639px)';
 
@@ -40,6 +41,7 @@ function getScrimState(el: HTMLElement, current: ScrimState): ScrimState {
 export function useReportMobileStickyChromeHeight(
   ref: RefObject<HTMLElement | null>,
   enabled = true,
+  overlaysContent = false,
 ) {
   useLayoutEffect(() => {
     if (!enabled) return;
@@ -61,7 +63,11 @@ export function useReportMobileStickyChromeHeight(
     };
 
     const updateHeight = () => {
-      root.style.setProperty(HEIGHT_VAR, `${el.getBoundingClientRect().height}px`);
+      const heightPx = `${el.getBoundingClientRect().height}px`;
+      root.style.setProperty(HEIGHT_VAR, heightPx);
+      if (overlaysContent) {
+        root.style.setProperty(OVERLAY_HEIGHT_VAR, heightPx);
+      }
     };
 
     const updateScrimState = () => {
@@ -91,6 +97,9 @@ export function useReportMobileStickyChromeHeight(
       window.removeEventListener('scroll', updateScrimState);
       root.removeAttribute(EXPANDED_ATTR);
       root.style.removeProperty(HEIGHT_VAR);
+      if (overlaysContent) {
+        root.style.removeProperty(OVERLAY_HEIGHT_VAR);
+      }
     };
-  }, [enabled]);
+  }, [enabled, overlaysContent]);
 }

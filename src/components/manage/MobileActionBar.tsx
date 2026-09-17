@@ -40,7 +40,7 @@ export default function MobileActionBar({
   const rootRef = useRef<HTMLDivElement>(null);
   const isOpen = visible && selectedCount > 0;
 
-  useReportMobileStickyChromeHeight(rootRef, isOpen);
+  useReportMobileStickyChromeHeight(rootRef, isOpen, true);
 
   return (
     <AnimatedStickyBarSlide

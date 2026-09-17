@@ -25,11 +25,11 @@ export default function OnboardingEmailPreferencesSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-80 font-heading"
+        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         Email preferences
       </h2>
-      <Container>
+      <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
         <p
           className="text-xs text-foreground/80 mb-4"
         >

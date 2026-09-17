@@ -80,7 +80,7 @@ type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'btn-skeuo btn-skeuo-primary bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt',
+    'btn-skeuo btn-skeuo-primary bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt disabled:bg-foreground/10 disabled:text-foreground/40 disabled:border-transparent disabled:hover:bg-foreground/10 disabled:hover:text-foreground/40 disabled:hover:border-transparent data-[disabled=true]:bg-foreground/10 data-[disabled=true]:text-foreground/40 data-[disabled=true]:border-transparent',
   secondary:
     'btn-skeuo btn-skeuo-secondary bg-background dark:bg-[#2e3032] border-border-color-strong text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)]',
   danger:
@@ -119,7 +119,8 @@ export default function Button({
     // Width
     fullWidth && 'w-full',
     // Disabled/loading state
-    isDisabled && 'cursor-not-allowed opacity-70 pointer-events-none',
+    isDisabled && 'cursor-not-allowed pointer-events-none',
+    isDisabled && variant !== 'primary' && 'opacity-70',
     // Custom className
     className,
   );

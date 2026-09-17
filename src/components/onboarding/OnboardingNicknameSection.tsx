@@ -25,11 +25,11 @@ export default function OnboardingNicknameSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-80 font-heading"
+        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         Your nickname
       </h2>
-      <Container>
+      <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
         <div
           className="flex flex-col gap-2"
         >

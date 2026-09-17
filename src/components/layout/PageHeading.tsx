@@ -1,10 +1,12 @@
 'use client';
 
 import clsx from 'clsx';
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import PageHeadingMobileSearch from '@/components/layout/PageHeadingMobileSearch';
 import StickyScrollHeader from '@/components/layout/StickyScrollHeader';
+import { isOnboardingPath } from '@/utils/onboardingPath';
 type PageHeadingProps = {
   title: string;
   description?: ReactNode;
@@ -25,7 +27,9 @@ export default function PageHeading({
   subnav,
   className,
 }: PageHeadingProps) {
+  const pathname = usePathname();
   const hasMeta = description || actions;
+  const showMobileSearch = !isOnboardingPath(pathname);
 
   return (
     <>
@@ -53,9 +57,11 @@ export default function PageHeading({
               <div className="hidden min-w-0 shrink-0 max-sm:block">{subnav}</div>
             ) : null}
           </div>
-          <div className="hidden shrink-0 max-sm:block">
-            <PageHeadingMobileSearch />
-          </div>
+          {showMobileSearch ? (
+            <div className="hidden shrink-0 max-sm:block">
+              <PageHeadingMobileSearch />
+            </div>
+          ) : null}
         </div>
       </StickyScrollHeader>
       {hasMeta ? (

@@ -28,11 +28,11 @@ export default function OnboardingAboutYouSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-80 font-heading"
+        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         About you
       </h2>
-      <Container>
+      <Container className="onboarding-rise-in onboarding-rise-in-delay-2">
         <div
           className="space-y-4"
         >
