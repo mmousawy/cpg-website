@@ -9,8 +9,9 @@ import OnboardingEmailPreferencesSection from '@/components/onboarding/Onboardin
 import OnboardingFinishSection from '@/components/onboarding/OnboardingFinishSection';
 import OnboardingIntroSection from '@/components/onboarding/OnboardingIntroSection';
 import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
+import OnboardingHeader from '@/components/onboarding/OnboardingHeader';
 import OnboardingPageHeader from '@/components/onboarding/OnboardingPageHeader';
-import { useOnboardingStepMinHeight } from '@/components/onboarding/onboardingLayout';
+import { onboardingChromeInnerClassName, useOnboardingStepMinHeight } from '@/components/onboarding/onboardingLayout';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import OnboardingStyleSection from '@/components/onboarding/OnboardingStyleSection';
 import type { OnboardingStepIndex } from '@/components/onboarding/onboardingSteps';
@@ -227,7 +228,7 @@ export default function OnboardingClient() {
     !isLoading &&
     !((!user && !isPreviewMode) ||
       (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode));
-  useOnboardingStepMinHeight(stepFrameRef, progressRef, isWizardVisible);
+  useOnboardingStepMinHeight(stepFrameRef, progressRef, isWizardVisible, step);
   const watchedNickname = watch('nickname');
   const watchedEmail = watch('email');
   const watchedTermsAccepted = watch('termsAccepted');
@@ -706,8 +707,10 @@ export default function OnboardingClient() {
     </Button>
   );
   return (
-    <PageContainer>
-      <div className="mx-auto w-full max-w-xl">
+    <>
+      {step > 0 ? <OnboardingHeader /> : null}
+      <PageContainer>
+        <div className={onboardingChromeInnerClassName}>
         <form
           ref={stepFrameRef}
           onSubmit={handleFormSubmit}
@@ -833,7 +836,8 @@ export default function OnboardingClient() {
             primaryAction={primaryAction}
           />
         </form>
-      </div>
-    </PageContainer>
+        </div>
+      </PageContainer>
+    </>
   );
 }

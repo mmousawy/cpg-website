@@ -1,3 +1,11 @@
+import AlternateEmailSVG from 'public/icons/alternate-email.svg';
+import GavelSVG from 'public/icons/gavel.svg';
+import ImageSVG from 'public/icons/image.svg';
+import MailSVG from 'public/icons/mail.svg';
+import PaletteSVG from 'public/icons/palette.svg';
+import PersonSVG from 'public/icons/person.svg';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
+
 import type { FAQSection } from './types';
 
 const Kbd = ({ children }: { children: string }) => (
@@ -7,6 +15,33 @@ const Kbd = ({ children }: { children: string }) => (
     {children}
   </kbd>
 );
+
+function HelpStep({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex gap-3">
+      <Icon
+        className="mt-0.5 size-5 shrink-0"
+        aria-hidden
+      />
+      <div className="min-w-0">
+        <p className="mb-0.5 font-medium text-foreground">
+          {title}
+        </p>
+        <div className="space-y-1.5">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export const gettingStartedFAQ: FAQSection = {
   id: 'getting-started',
@@ -46,7 +81,7 @@ export const gettingStartedFAQ: FAQSection = {
             </li>
           </ul>
           <p>
-            After signing up, you&apos;ll be asked to complete your profile (nickname, avatar, bio) before accessing the full site.
+            After signing up, you finish a short profile setup before the rest of the site opens up.
           </p>
         </>
       ),
@@ -56,51 +91,41 @@ export const gettingStartedFAQ: FAQSection = {
       title: 'Setting up your profile',
       content: (
         <>
-          <p
-            className="mb-3"
-          >
-            During onboarding, you&apos;ll set up:
+          <p className="mb-4">
+            A few screens, then you&apos;re in. Skip anything marked optional — you can fill it in later from Account.
           </p>
-          <ul>
-            <li>
-              <strong>
-                Nickname
-              </strong>
-              {' '}
-              — A unique username (e.g. @johndoe) that appears in your profile URL. You can change it later from Account settings (confirmed by email, once every 60 days).
-            </li>
-            <li>
-              <strong>
-                Profile picture
-              </strong>
-              {' '}
-              — A profile photo. You can upload one or skip and add it later.
-            </li>
-            <li>
-              <strong>
-                Screen name and bio
-              </strong>
-              {' '}
-              — Your screen name is how you appear on your profile; it doesn&apos;t have to be your real name. Bio is optional.
-            </li>
-            <li>
-              <strong>
-                Interests
-              </strong>
-              {' '}
-              — Optional tags like &quot;street photography&quot; or &quot;analog&quot; that help you connect with like-minded members.
-            </li>
-            <li>
-              <strong>
-                Email preferences
-              </strong>
-              {' '}
-              — Choose whether to receive notifications about events and activity.
-            </li>
-          </ul>
-          <p>
-            You can update most of these later from your account settings.
-          </p>
+          <div className="space-y-4">
+            <HelpStep icon={AlternateEmailSVG} title="Your nickname">
+              <p>
+                This is the unique handle in your profile URL, like @janedoe. Lowercase letters, numbers, and hyphens; 3–30 characters. You can change it later from Account, with an email confirm, once every 60 days.
+              </p>
+            </HelpStep>
+            <HelpStep icon={PersonSVG} title="About you">
+              <p>
+                Screen name is what people see on your profile — it doesn&apos;t have to be your real name. Bio and interests are optional. Interests (up to 10) help others find you.
+              </p>
+            </HelpStep>
+            <HelpStep icon={PaletteSVG} title="Theme">
+              <p>
+                Color scheme: Auto follows your device; Light, Dark, and Midnight stay put. Album cards can be Large (details under the photo) or Compact. Both live in Account if you change your mind.
+              </p>
+            </HelpStep>
+            <HelpStep icon={ImageSVG} title="Profile images">
+              <p>
+                A profile picture and a banner, if you have them. You can skip this and add them later.
+              </p>
+            </HelpStep>
+            <HelpStep icon={MailSVG} title="Email preferences">
+              <p>
+                Tick the kinds of email you actually want — events, comments, challenges, and so on. Unchecked stays off. You can flip these anytime in Account → Preferences.
+              </p>
+            </HelpStep>
+            <HelpStep icon={GavelSVG} title="One last step">
+              <p>
+                Agree to the Terms and confirm you&apos;ve read the Privacy Policy. You keep copyright on your photos. Then hit Join the group.
+              </p>
+            </HelpStep>
+          </div>
         </>
       ),
     },

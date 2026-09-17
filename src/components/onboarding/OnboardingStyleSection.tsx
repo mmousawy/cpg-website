@@ -4,7 +4,10 @@ import AlbumCardStylePicker, { type AlbumCardStyle } from '@/components/account/
 import ProfileImageUploadSections from '@/components/account/ProfileImageUploadSections';
 import ThemePreferencePicker from '@/components/account/ThemePreferencePicker';
 import Container from '@/components/layout/Container';
+import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import type { AppThemeSelection } from '@/hooks/useAppTheme';
+import ImageSVG from 'public/icons/image.svg';
+import PaletteSVG from 'public/icons/palette.svg';
 
 interface OnboardingStyleSectionProps {
   profileId: string;
@@ -72,9 +75,9 @@ export default function OnboardingStyleSection({
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading">
+        <OnboardingSectionTitle icon={PaletteSVG}>
           Theme
-        </h2>
+        </OnboardingSectionTitle>
         <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
           <div className="space-y-6">
             <div className="flex flex-col gap-2">
@@ -93,9 +96,9 @@ export default function OnboardingStyleSection({
       </div>
 
       <div>
-        <h2 className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading">
+        <OnboardingSectionTitle icon={ImageSVG}>
           Profile images
-        </h2>
+        </OnboardingSectionTitle>
         <Container className="onboarding-rise-in onboarding-rise-in-delay-2 overflow-hidden">
           <ProfileImageUploadSections
             profileId={profileId}

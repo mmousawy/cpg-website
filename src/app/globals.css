@@ -300,6 +300,17 @@ body {
   }
 }
 
+@keyframes onboarding-header-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .onboarding-page-title-in {
   animation: onboarding-page-title-in 0.55s ease-out both;
 }
@@ -326,6 +337,10 @@ body {
 
 .onboarding-progress-slide-in {
   animation: onboarding-progress-slide-in 0.45s ease-out both;
+}
+
+.onboarding-header-slide-in {
+  animation: onboarding-header-slide-in 0.45s ease-out both;
 }
 
 /* Hide scrollbars utility */
@@ -731,7 +746,8 @@ html.manage-page .app-header-inner {
   .onboarding-page-title-in,
   .onboarding-step-title,
   .onboarding-rise-in,
-  .onboarding-progress-slide-in {
+  .onboarding-progress-slide-in,
+  .onboarding-header-slide-in {
     animation: fade-in 0.2s ease-out both;
     transform: none;
   }

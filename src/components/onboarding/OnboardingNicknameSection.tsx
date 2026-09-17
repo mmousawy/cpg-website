@@ -2,7 +2,9 @@
 
 import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
+import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Input from '@/components/shared/Input';
+import AlternateEmailSVG from 'public/icons/alternate-email.svg';
 import { FieldErrors, UseFormRegister } from 'react-hook-form';
 
 interface OnboardingNicknameSectionProps {
@@ -24,11 +26,9 @@ export default function OnboardingNicknameSection({
 }: OnboardingNicknameSectionProps) {
   return (
     <div>
-      <h2
-        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-      >
+      <OnboardingSectionTitle icon={AlternateEmailSVG}>
         Your nickname
-      </h2>
+      </OnboardingSectionTitle>
       <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
         <div
           className="flex flex-col gap-2"

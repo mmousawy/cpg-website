@@ -46,6 +46,7 @@ async function removeProfileImage(
 
 async function startOnboardingWizard(page: Page) {
   await page.getByRole('button', { name: /let's go/i }).click();
+  await expect(page.getByRole('heading', { name: 'Creative Photography Group', exact: true })).toBeVisible();
 }
 
 async function continueOnboardingWizard(page: Page) {

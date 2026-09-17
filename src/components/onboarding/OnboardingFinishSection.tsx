@@ -4,9 +4,11 @@ import { FieldErrors, UseFormRegister } from 'react-hook-form';
 
 import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
+import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { routes } from '@/config/routes';
+import GavelSVG from 'public/icons/gavel.svg';
 
 interface OnboardingFinishSectionProps {
   register: UseFormRegister<OnboardingFormData>;
@@ -23,11 +25,9 @@ export default function OnboardingFinishSection({
 }: OnboardingFinishSectionProps) {
   return (
     <div>
-      <h2
-        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-      >
+      <OnboardingSectionTitle icon={GavelSVG}>
         One last step
-      </h2>
+      </OnboardingSectionTitle>
       <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
         <div
           className="space-y-4"

@@ -97,6 +97,22 @@ export default function ThemePreferencePicker({
     }
   };
 
+  const themeHint = (() => {
+    if (value === 'system') {
+      if (themeMounted && resolvedTheme) {
+        return `Follows your system — currently ${resolvedTheme}`;
+      }
+      return 'Follows your system preference';
+    }
+    if (value === 'light') {
+      return 'Always uses the light theme';
+    }
+    if (value === 'dark') {
+      return 'Always uses the dark theme';
+    }
+    return 'A deeper dark theme';
+  })();
+
   return (
     <div className="flex flex-col gap-2">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -118,9 +134,7 @@ export default function ThemePreferencePicker({
         ))}
       </div>
       <p className="text-xs text-foreground/80">
-        {themeMounted && resolvedTheme && value === 'system'
-          ? `Currently using ${resolvedTheme} mode based on your system`
-          : 'Choose your preferred color scheme'}
+        {themeHint}
       </p>
     </div>
   );
