@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 
-import Header from './Header';
 import Footer from './Footer';
+import { HideOnOnboarding, OnboardingAwareHeader } from './OnboardingAwareChrome';
 import MobileTabBar from './MobileTabBar';
 import SkipToContent from './SkipToContent';
 
@@ -16,7 +16,9 @@ export default function Layout({ children }: LayoutProps) {
       className="app-shell flex min-h-full flex-col"
     >
       <SkipToContent />
-      <Header />
+      <Suspense fallback={null}>
+        <OnboardingAwareHeader />
+      </Suspense>
       <main
         id="main-content"
         tabIndex={-1}
@@ -24,7 +26,11 @@ export default function Layout({ children }: LayoutProps) {
       >
         {children}
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <HideOnOnboarding>
+          <Footer />
+        </HideOnOnboarding>
+      </Suspense>
       <Suspense fallback={null}>
         <MobileTabBar />
       </Suspense>

@@ -44,6 +44,30 @@ async function removeProfileImage(
   await expect(section.locator('img')).toHaveCount(0);
 }
 
+async function startOnboardingWizard(page: Page) {
+  await page.getByRole('button', { name: /let's go/i }).click();
+}
+
+async function continueOnboardingWizard(page: Page) {
+  await page.getByRole('button', { name: /^continue$/i }).click();
+}
+
+async function goToStyleStep(page: Page, nickname: string, fullName = 'Test User') {
+  await startOnboardingWizard(page);
+  await page.locator('#nickname').fill(nickname);
+  await expect(page.getByText(/nickname is available/i)).toBeVisible({ timeout: 10000 });
+  await page.locator('#fullName').fill(fullName);
+  await continueOnboardingWizard(page);
+  await expect(page.getByRole('heading', { name: /^theme$/i })).toBeVisible();
+}
+
+async function advanceToFinishStep(page: Page) {
+  await continueOnboardingWizard(page);
+  await expect(page.getByRole('heading', { name: /email preferences/i })).toBeVisible();
+  await continueOnboardingWizard(page);
+  await expect(page.getByRole('heading', { name: /one last step/i })).toBeVisible();
+}
+
 test.describe('Onboarding Flow', () => {
   test('should redirect to login when not authenticated', async ({ page }) => {
     // Try to access onboarding without being logged in
@@ -57,13 +81,18 @@ test.describe('Onboarding Flow', () => {
     await page.goto('/onboarding?preview=true');
 
     await expect(page).toHaveURL(/\/onboarding\?preview=true/, { timeout: 10000 });
-    await expect(page.getByRole('heading', { name: /welcome to the group/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome to.*creative photography group/i })).toBeVisible();
     await expect(page.getByText(/preview mode:/i)).toBeVisible();
   });
 
   test('should upload and remove avatar and banner in preview mode', async ({ page }) => {
     await page.goto('/onboarding?preview=true');
-    await expect(page.getByRole('heading', { name: /profile images/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /let's go/i })).toBeVisible();
+    await startOnboardingWizard(page);
+    await page.locator('#nickname').fill('preview-user');
+    await page.locator('#fullName').fill('Preview User');
+    await continueOnboardingWizard(page);
+    await expect(page.getByRole('heading', { name: /^theme$/i })).toBeVisible();
 
     await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
     await removeProfileImage(page, 'profile-picture-section', /remove profile picture/i);
@@ -114,7 +143,7 @@ test.describe('Onboarding after login from a public page', () => {
     await submitButton.click();
 
     await expect(page).toHaveURL(/\/onboarding/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: /welcome to the group/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome to.*creative photography group/i })).toBeVisible();
   });
 });
 
@@ -140,12 +169,9 @@ test.describe('Onboarding profile images', () => {
 
     await loginTestUser(page, testUser.email, testUser.password);
     await expect(page).toHaveURL(/\/onboarding/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: /welcome to the group/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome to.*creative photography group/i })).toBeVisible();
 
-    await page.locator('#nickname').fill(testUser.nickname);
-    await expect(page.getByText(/nickname is available/i)).toBeVisible({ timeout: 10000 });
-
-    await page.locator('#fullName').fill('Test User');
+    await goToStyleStep(page, testUser.nickname);
 
     await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
     await uploadProfileImage(page, 'banner-image-section', /crop banner/i, TEST_BANNER_PATH);
@@ -156,9 +182,11 @@ test.describe('Onboarding profile images', () => {
     await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
     await uploadProfileImage(page, 'banner-image-section', /crop banner/i, TEST_BANNER_PATH);
 
+    await advanceToFinishStep(page);
+
     await page.locator('#terms-accepted').check();
 
-    const completeButton = page.getByRole('button', { name: /complete setup/i });
+    const completeButton = page.getByRole('button', { name: /join the group/i });
     await expect(completeButton).toBeEnabled();
     await completeButton.click();
     await expect(completeButton).toBeHidden({ timeout: 45000 });

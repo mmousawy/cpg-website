@@ -21,6 +21,8 @@ type StickyActionBarProps = {
   variant?: 'default' | 'compact'
   /** Whether the bar is sticky (set false when stacked inside another sticky container) */
   sticky?: boolean
+  /** Reserve scroll padding because later content scrolls under this bar (e.g. comments below) */
+  overlaysContent?: boolean
 }
 
 export default function StickyActionBar({
@@ -30,10 +32,11 @@ export default function StickyActionBar({
   constrainWidth = false,
   variant = 'default',
   sticky = true,
+  overlaysContent = false,
 }: StickyActionBarProps) {
   const isBottomSticky = sticky && position === 'bottom';
   const rootRef = useRef<HTMLDivElement>(null);
-  useReportMobileStickyChromeHeight(rootRef, isBottomSticky);
+  useReportMobileStickyChromeHeight(rootRef, isBottomSticky, overlaysContent);
 
   const inner = (
     <>
@@ -50,7 +53,7 @@ export default function StickyActionBar({
         className={clsx(
           mobileFloatingPillClassName,
           'max-sm:overflow-hidden',
-          'sm:border-border-color-strong sm:bg-background-light',
+          'bg-background-light sm:border-border-color-strong',
           variant === 'compact' ? 'px-3 py-2.5' : 'px-3 py-3',
           position === 'bottom' ? 'sm:border-t' : 'sm:border-b',
           'md:px-12 md:py-4',

@@ -310,7 +310,13 @@ docker compose -p supabase-staging exec -T db psql -U postgres -d postgres \
 1. Google / Discord: add redirect URI  
    `https://db-staging.creativephotography.group/auth/v1/callback`
 2. Log in once on `https://staging.creativephotography.group` (denied until promoted).
-3. Edit email in `promote-admin.sql`, then:
+3. Promote by email (Studio / psql as postgres). If they have an auth user but no `profiles` row, one is created:
+
+```sql
+SELECT * FROM public.promote_admin('you@example.com');
+```
+
+Or edit the email in `promote-admin.sql`, then:
 
 ```bash
 docker compose -p supabase-staging exec -T db psql -U postgres -d postgres \

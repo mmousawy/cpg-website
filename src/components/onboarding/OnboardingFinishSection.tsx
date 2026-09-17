@@ -1,10 +1,9 @@
 'use client';
 
-import { FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form';
+import { FieldErrors, UseFormRegister } from 'react-hook-form';
 
 import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
-import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import ErrorMessage from '@/components/shared/ErrorMessage';
 import { routes } from '@/config/routes';
@@ -12,34 +11,24 @@ import { routes } from '@/config/routes';
 interface OnboardingFinishSectionProps {
   register: UseFormRegister<OnboardingFormData>;
   errors: FieldErrors<OnboardingFormData>;
-  watch: UseFormWatch<OnboardingFormData>;
   submitError: string | null;
   isPreviewMode: boolean;
-  isSaving: boolean;
-  isOAuthUser: boolean;
-  nicknameAvailable: boolean | null;
-  watchedNickname: string;
 }
 
 export default function OnboardingFinishSection({
   register,
   errors,
-  watch,
   submitError,
   isPreviewMode,
-  isSaving,
-  isOAuthUser,
-  nicknameAvailable,
-  watchedNickname,
 }: OnboardingFinishSectionProps) {
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-80 font-heading"
+        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         One last step
       </h2>
-      <Container>
+      <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
         <div
           className="space-y-4"
         >
@@ -66,7 +55,7 @@ export default function OnboardingFinishSection({
                 Terms of Service
               </a>
               {' '}
-              and acknowledge that I retain full copyright ownership of my photos. I have also read the
+              and acknowledge that I retain full copyright ownership of my photos.<br />I have also read the
               {' '}
               <a
                 href={routes.privacy.url}
@@ -93,33 +82,11 @@ export default function OnboardingFinishSection({
             </ErrorMessage>
           )}
 
-          {isPreviewMode && (
-            <div
-              className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
-            >
-              <strong>
-                Preview mode:
-              </strong>
-              {' '}
-              Auth and profile-completion redirects are disabled. Form validation
-              works, but submission will not save your profile.
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={
-              isSaving ||
-              nicknameAvailable === false ||
-              !watchedNickname ||
-              (isOAuthUser && !watch('email') && !isPreviewMode) ||
-              !watch('termsAccepted')
-            }
-            loading={isSaving}
-          >
-            {isPreviewMode ? 'Test form validation' : 'Complete setup'}
-          </Button>
+          {isPreviewMode ? (
+            <p className="text-xs text-foreground/80">
+              Use Join the group below to run validation in preview mode.
+            </p>
+          ) : null}
         </div>
       </Container>
     </div>

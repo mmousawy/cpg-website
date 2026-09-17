@@ -19,7 +19,7 @@ DECLARE
   v_user_id uuid;
 BEGIN
   IF EXISTS (SELECT 1 FROM public.profiles WHERE is_admin IS TRUE) THEN
-    RAISE EXCEPTION 'An admin already exists. Use promote-admin.sql instead.';
+    RAISE EXCEPTION 'An admin already exists. Use promote_admin(email) instead.';
   END IF;
 
   SELECT id INTO v_user_id

@@ -97,7 +97,7 @@ ADMIN_COUNT="$(docker exec "$DB_CONTAINER" psql -U postgres -d postgres -tAc \
 
 if [[ "${ADMIN_COUNT:-0}" -gt 0 ]]; then
   echo "ERROR: staging already has ${ADMIN_COUNT} admin(s). This script only creates the first admin."
-  echo "To add another admin, edit and run infra/supabase-staging/promote-admin.sql"
+  echo "To add another admin, run: SELECT * FROM public.promote_admin('email@example.com');"
   docker exec "$DB_CONTAINER" psql -U postgres -d postgres -c \
     "SELECT id, email, nickname FROM public.profiles WHERE is_admin IS TRUE;"
   exit 1

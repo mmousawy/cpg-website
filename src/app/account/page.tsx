@@ -285,7 +285,6 @@ function AccountPageContent() {
                   <PreferencesSection
                     control={control}
                     themeMounted={themeMounted}
-                    resolvedTheme={resolvedTheme}
                     emailTypes={emailTypes}
                     watch={watch}
                     setValue={form.setValue}
