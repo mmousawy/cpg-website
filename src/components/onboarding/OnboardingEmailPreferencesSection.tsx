@@ -4,8 +4,10 @@ import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-f
 
 import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
+import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Checkbox from '@/components/shared/Checkbox';
 import type { EmailTypeData } from '@/utils/emailPreferencesClient';
+import MailSVG from 'public/icons/mail.svg';
 
 interface OnboardingEmailPreferencesSectionProps {
   control: Control<OnboardingFormData>;
@@ -24,11 +26,9 @@ export default function OnboardingEmailPreferencesSection({
 }: OnboardingEmailPreferencesSectionProps) {
   return (
     <div>
-      <h2
-        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-      >
+      <OnboardingSectionTitle icon={MailSVG}>
         Email preferences
-      </h2>
+      </OnboardingSectionTitle>
       <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
         <p
           className="text-xs text-foreground/80 mb-4"

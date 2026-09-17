@@ -10,6 +10,9 @@ function ancestorPaddingBottom(from: HTMLElement, stopAtId = 'main-content'): nu
   return padding;
 }
 
+/** Shared content width for the onboarding header, form, and progress chrome. */
+export const onboardingChromeInnerClassName = 'mx-auto w-full max-w-xl';
+
 /**
  * Sets min-height on the step element to the remaining viewport after:
  * - its offset from the top of the document (outer PageContainer top padding included)
@@ -23,22 +26,23 @@ export function useOnboardingStepMinHeight(
   stepRef: RefObject<HTMLElement | null>,
   progressRef: RefObject<HTMLElement | null>,
   enabled: boolean,
+  step: number,
 ) {
   useLayoutEffect(() => {
     if (!enabled) return;
 
-    const step = stepRef.current;
+    const stepEl = stepRef.current;
     const progress = progressRef.current;
-    if (!step || !progress) return;
+    if (!stepEl || !progress) return;
 
     const update = () => {
-      const offsetTop = step.getBoundingClientRect().top + window.scrollY;
+      const offsetTop = stepEl.getBoundingClientRect().top + window.scrollY;
       const progressHeight = progress.offsetHeight;
-      const outerBottomPadding = ancestorPaddingBottom(step);
+      const outerBottomPadding = ancestorPaddingBottom(stepEl);
       const available =
         window.innerHeight - offsetTop - progressHeight - outerBottomPadding;
-      step.style.minHeight = `${Math.max(0, available)}px`;
-      step.style.marginBottom = `${progressHeight}px`;
+      stepEl.style.minHeight = `${Math.max(0, available)}px`;
+      stepEl.style.marginBottom = `${progressHeight}px`;
     };
 
     update();
@@ -49,8 +53,8 @@ export function useOnboardingStepMinHeight(
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
-      step.style.minHeight = '';
-      step.style.marginBottom = '';
+      stepEl.style.minHeight = '';
+      stepEl.style.marginBottom = '';
     };
-  }, [enabled, progressRef, stepRef]);
+  }, [enabled, progressRef, step, stepRef]);
 }

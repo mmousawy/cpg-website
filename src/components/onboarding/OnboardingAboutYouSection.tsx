@@ -4,9 +4,11 @@ import { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'rea
 
 import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
 import Container from '@/components/layout/Container';
+import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Input from '@/components/shared/Input';
 import InterestInput from '@/components/shared/InterestInput';
 import Textarea from '@/components/shared/Textarea';
+import PersonSVG from 'public/icons/person.svg';
 
 interface OnboardingAboutYouSectionProps {
   register: UseFormRegister<OnboardingFormData>;
@@ -27,11 +29,9 @@ export default function OnboardingAboutYouSection({
 }: OnboardingAboutYouSectionProps) {
   return (
     <div>
-      <h2
-        className="onboarding-step-title mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-      >
+      <OnboardingSectionTitle icon={PersonSVG}>
         About you
-      </h2>
+      </OnboardingSectionTitle>
       <Container className="onboarding-rise-in onboarding-rise-in-delay-2">
         <div
           className="space-y-4"
