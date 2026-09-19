@@ -1,9 +1,9 @@
 /** Shared frosted pill styling for mobile bottom chrome (tab bar, action bars). */
 export const mobileFloatingPillClassName =
-  'max-sm:rounded-2xl max-sm:border max-sm:border-border-color-strong max-sm:bg-background-light/85 max-sm:bg-no-noise max-sm:shadow-lg max-sm:backdrop-blur-xl';
+  'bg-noise max-sm:rounded-2xl max-sm:border max-sm:border-border-color-strong max-sm:bg-background-light/85 max-sm:shadow-lg max-sm:backdrop-blur-xl';
 
 /** Horizontal inset + gap above the tab bar for stacked floating pills. */
-export const mobileFloatingPillInsetClassName = 'max-sm:px-3 max-sm:pb-3.5';
+export const mobileFloatingPillInsetClassName = 'max-sm:px-3';
 
 /**
  * Mobile bottom chrome stacking (low → high):

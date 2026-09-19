@@ -9,25 +9,41 @@ const MOBILE_MEDIA = '(max-width: 639px)';
 const SETTLED_ENTER_PX = 4;
 /** Parent bottom must exceed this distance before leaving the resting state. */
 const SETTLED_EXIT_PX = 10;
-const PIN_TOLERANCE_PX = 4;
+const PIN_TOLERANCE_PX = 12;
 
 type ScrimState = 'default' | 'expanded';
+
+function parsePx(value: string) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getPinLine(el: HTMLElement, style: CSSStyleDeclaration) {
+  const stickyBottom = parsePx(style.bottom);
+  const navOffset = parsePx(
+    getComputedStyle(document.documentElement).getPropertyValue('--mobile-nav-offset'),
+  );
+  const bottomInset = stickyBottom || navOffset;
+  return window.innerHeight - bottomInset;
+}
 
 function getScrimState(el: HTMLElement, current: ScrimState): ScrimState {
   if (!window.matchMedia(MOBILE_MEDIA).matches) return 'default';
 
   const style = window.getComputedStyle(el);
-  if (style.position !== 'sticky') return 'default';
-
-  const stickyBottom = Number.parseFloat(style.bottom);
-  if (!Number.isFinite(stickyBottom)) return 'default';
+  // Fixed overlay bars (e.g. manage selection actions) always sit above the tab bar.
+  if (style.position === 'fixed') {
+    return style.display === 'none' ? 'default' : 'expanded';
+  }
 
   const rect = el.getBoundingClientRect();
-  const pinLine = window.innerHeight - stickyBottom;
+  if (rect.height < 1) return 'default';
+
+  const pinLine = getPinLine(el, style);
   if (Math.abs(rect.bottom - pinLine) > PIN_TOLERANCE_PX) return 'default';
 
   const parent = el.parentElement;
-  if (!parent) return 'default';
+  if (!parent) return 'expanded';
 
   const parentDelta = Math.abs(parent.getBoundingClientRect().bottom - pinLine);
 
@@ -38,6 +54,66 @@ function getScrimState(el: HTMLElement, current: ScrimState): ScrimState {
   return parentDelta > SETTLED_EXIT_PX ? 'expanded' : 'default';
 }
 
+function setupReporter(
+  el: HTMLElement,
+  overlaysContent: boolean,
+) {
+  const root = document.documentElement;
+  let scrimState: ScrimState = 'default';
+
+  const applyScrimState = (next: ScrimState) => {
+    if (next === scrimState) return;
+    scrimState = next;
+    if (next === 'expanded') {
+      root.setAttribute(EXPANDED_ATTR, '');
+    } else {
+      root.removeAttribute(EXPANDED_ATTR);
+    }
+  };
+
+  const updateHeight = () => {
+    const heightPx = `${el.getBoundingClientRect().height}px`;
+    root.style.setProperty(HEIGHT_VAR, heightPx);
+    if (overlaysContent) {
+      root.style.setProperty(OVERLAY_HEIGHT_VAR, heightPx);
+    }
+  };
+
+  const updateScrimState = () => {
+    applyScrimState(getScrimState(el, scrimState));
+  };
+
+  const update = () => {
+    updateHeight();
+    updateScrimState();
+  };
+
+  update();
+
+  const resizeObserver = new ResizeObserver(update);
+  resizeObserver.observe(el);
+  const mutationObserver = new MutationObserver(update);
+  mutationObserver.observe(el, { attributes: true, attributeFilter: ['data-open', 'class'] });
+
+  window.addEventListener('resize', update);
+  el.addEventListener('transitionend', update);
+  // Scroll does not bubble; capture so nested overflow containers still update the scrim.
+  document.addEventListener('scroll', updateScrimState, { passive: true, capture: true });
+
+  return () => {
+    resizeObserver.disconnect();
+    mutationObserver.disconnect();
+    window.removeEventListener('resize', update);
+    el.removeEventListener('transitionend', update);
+    document.removeEventListener('scroll', updateScrimState, { capture: true });
+    root.removeAttribute(EXPANDED_ATTR);
+    root.style.removeProperty(HEIGHT_VAR);
+    if (overlaysContent) {
+      root.style.removeProperty(OVERLAY_HEIGHT_VAR);
+    }
+  };
+}
+
 export function useReportMobileStickyChromeHeight(
   ref: RefObject<HTMLElement | null>,
   enabled = true,
@@ -46,60 +122,26 @@ export function useReportMobileStickyChromeHeight(
   useLayoutEffect(() => {
     if (!enabled) return;
 
-    const el = ref.current;
-    if (!el) return;
+    let cancelled = false;
+    let rafId = 0;
+    let teardown: (() => void) | undefined;
 
-    const root = document.documentElement;
-    let scrimState: ScrimState = 'default';
-
-    const applyScrimState = (next: ScrimState) => {
-      if (next === scrimState) return;
-      scrimState = next;
-      if (next === 'expanded') {
-        root.setAttribute(EXPANDED_ATTR, '');
-      } else {
-        root.removeAttribute(EXPANDED_ATTR);
+    const attach = () => {
+      if (cancelled) return;
+      const el = ref.current;
+      if (!el) {
+        rafId = requestAnimationFrame(attach);
+        return;
       }
+      teardown = setupReporter(el, overlaysContent);
     };
 
-    const updateHeight = () => {
-      const heightPx = `${el.getBoundingClientRect().height}px`;
-      root.style.setProperty(HEIGHT_VAR, heightPx);
-      if (overlaysContent) {
-        root.style.setProperty(OVERLAY_HEIGHT_VAR, heightPx);
-      }
-    };
-
-    const updateScrimState = () => {
-      applyScrimState(getScrimState(el, scrimState));
-    };
-
-    updateHeight();
-    updateScrimState();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateHeight();
-      updateScrimState();
-    });
-    resizeObserver.observe(el);
-
-    const onResize = () => {
-      updateHeight();
-      updateScrimState();
-    };
-
-    window.addEventListener('resize', onResize);
-    window.addEventListener('scroll', updateScrimState, { passive: true });
+    attach();
 
     return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('scroll', updateScrimState);
-      root.removeAttribute(EXPANDED_ATTR);
-      root.style.removeProperty(HEIGHT_VAR);
-      if (overlaysContent) {
-        root.style.removeProperty(OVERLAY_HEIGHT_VAR);
-      }
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      teardown?.();
     };
-  }, [enabled, overlaysContent]);
+  }, [enabled, overlaysContent, ref]);
 }

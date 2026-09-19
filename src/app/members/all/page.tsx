@@ -69,23 +69,26 @@ export default async function AllMembersPage() {
 
   return (
     <PageContainer>
-      <ArrowLink
-        href="/members"
-        direction="left"
-        className="mb-6"
-      >
-        Back to members
-      </ArrowLink>
-
       <PageHeading
         title="All members"
         description={
           <>
-            {members.length}
-            {' '}
-            {members.length === 1 ? 'member' : 'members'}
-            {' '}
-            in our community
+            <div>
+              {members.length}
+              {' '}
+              {members.length === 1 ? 'member' : 'members'}
+              {' '}
+              in our community
+            </div>
+
+            <div className="mt-4">
+            <ArrowLink
+              href="/members"
+              direction="left"
+            >
+              Back to members
+            </ArrowLink>
+            </div>
           </>
         }
       />

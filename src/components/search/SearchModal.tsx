@@ -1,6 +1,7 @@
 'use client';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import { useSearch } from '@/hooks/useSearch';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
@@ -41,7 +42,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       return () => clearTimeout(timerId);
     }
 
-    modalRef.current?.show();
+    showDialogWithoutScrolling(modalRef.current);
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
   }, [isOpen]);
@@ -110,7 +111,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-50 overflow-auto',
+        'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
@@ -127,6 +128,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
+          preventScroll: true,
           onDeactivate: onClose,
           fallbackFocus: () => modalRef.current || document.body,
         }}

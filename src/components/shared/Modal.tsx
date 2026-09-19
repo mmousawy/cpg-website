@@ -8,6 +8,7 @@ import CloseSVG from 'public/icons/close.svg';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 
 export default function Modal() {
   const { isOpen, setIsOpen, requestClose, title, content, footer, size, flushContentTop } = useContext(ModalContext);
@@ -41,7 +42,7 @@ export default function Modal() {
       return () => clearTimeout(timerId);
     }
 
-    modalRef.current?.show();
+    showDialogWithoutScrolling(modalRef.current);
     // Focus trap the dialog element after a brief delay
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
@@ -77,7 +78,7 @@ export default function Modal() {
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-50 overflow-auto',
+        'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-6 max-sm:p-4',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
@@ -88,6 +89,7 @@ export default function Modal() {
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
+          preventScroll: true,
           onDeactivate: closeModal,
           fallbackFocus: () => modalRef.current || document.body,
         }}

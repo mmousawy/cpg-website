@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 import { lockBodyScroll, unlockBodyScroll } from '@/lib/bodyScrollLock';
 
 /**
- * Locks body scroll while `locked` is true. Unlock runs in effect cleanup so
- * unmounting the overlay while open still restores scroll.
+ * Freezes document scroll while `locked` is true without hiding the scrollbar
+ * or changing body overflow. Uses a layout effect so the lock captures scroll
+ * position before `dialog.show()` / focus can move it.
  */
 export function useBodyScrollLock(locked: boolean) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!locked) return;
 
     lockBodyScroll();

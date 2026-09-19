@@ -1,5 +1,6 @@
 'use client';
 
+import EmptyState from '@/components/shared/EmptyState';
 import { useSelectionBox } from '@/hooks/useSelectionBox';
 import {
   Active,
@@ -27,7 +28,6 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import clsx from 'clsx';
-import EmptyState from '@/components/shared/EmptyState';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SortableGridItem from './SortableGridItem';
 
@@ -573,21 +573,6 @@ export default function SelectableGrid<T>({
 
         {/* Trailing content (e.g., uploading previews) */}
         {trailingContent}
-
-        {/* Spacer for mobile selection bar (tab bar offset is on the scroll container) */}
-        {(selectedIds.size > 0 || alwaysShowMobileSpacer) && (
-          <div
-            className="col-span-full md:hidden"
-            style={{
-              height: selectedIds.size > 0
-                ? 'calc(var(--mobile-sticky-bar-height, 0px) + 0.5rem)'
-                : alwaysShowMobileSpacer
-                  ? '0.5rem'
-                  : undefined,
-            }}
-            aria-hidden="true"
-          />
-        )}
       </div>
 
       {/* Selection box overlay - in outer container for proper positioning */}

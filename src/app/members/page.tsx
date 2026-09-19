@@ -35,7 +35,7 @@ function MembersPageSkeleton() {
       <MembersPageHeader />
       <MembersDiscoverySkeleton />
       <div
-        className="mt-4 mb-2 sm:mt-6 flex justify-center "
+        className="mt-4 max-sm:mb-2 sm:mt-6 flex justify-center "
       >
         <div
           className="h-10 w-40 animate-pulse rounded-full border border-border-color-strong bg-background-medium"
@@ -62,7 +62,7 @@ async function MembersPageContent() {
         data={data}
       />
       <div
-        className="mt-4 mb-2 sm:mt-6 flex justify-center "
+        className="mt-4 max-sm:mb-2 sm:mt-6 flex justify-center "
       >
         <Button
           href="/members/all"

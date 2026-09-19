@@ -63,7 +63,7 @@ export default function MobileStickyChromeStack({
     <div
       ref={ref}
       className={clsx(
-        'md:hidden sticky bottom-0 max-sm:bottom-(--mobile-nav-offset,0px) grid',
+        'md:hidden sticky bottom-0 my-3.5 max-sm:bottom-(--mobile-nav-offset,0px) grid',
         mobileStickyChromeZClassName,
         mobileFloatingPillInsetClassName,
         className,

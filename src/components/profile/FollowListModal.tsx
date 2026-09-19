@@ -4,6 +4,7 @@ import SearchInput from '@/components/search/SearchInput';
 import SearchResultItem from '@/components/search/SearchResultItem';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useFollowList } from '@/hooks/useFollowList';
 import type { FollowListType } from '@/types/follows';
@@ -80,7 +81,7 @@ export default function FollowListModal({
       return () => clearTimeout(trapTimerId);
     }
 
-    modalRef.current?.show();
+    showDialogWithoutScrolling(modalRef.current);
     const trapTimerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(trapTimerId);
   }, [isOpen]);
@@ -132,7 +133,7 @@ export default function FollowListModal({
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-50 overflow-auto',
+        'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
@@ -148,6 +149,7 @@ export default function FollowListModal({
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
+          preventScroll: true,
           onDeactivate: handleClose,
           fallbackFocus: () => modalRef.current || document.body,
         }}

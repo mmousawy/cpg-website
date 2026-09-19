@@ -7,13 +7,13 @@ import PageContainer from '@/components/layout/PageContainer';
 import OnboardingAboutYouSection from '@/components/onboarding/OnboardingAboutYouSection';
 import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
 import OnboardingFinishSection from '@/components/onboarding/OnboardingFinishSection';
+import OnboardingHeader from '@/components/onboarding/OnboardingHeader';
 import OnboardingIntroSection from '@/components/onboarding/OnboardingIntroSection';
 import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknameSection';
-import OnboardingHeader from '@/components/onboarding/OnboardingHeader';
 import OnboardingPageHeader from '@/components/onboarding/OnboardingPageHeader';
-import { onboardingChromeInnerClassName, useOnboardingStepMinHeight } from '@/components/onboarding/onboardingLayout';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import OnboardingStyleSection from '@/components/onboarding/OnboardingStyleSection';
+import { onboardingChromeInnerClassName, useOnboardingStepMinHeight } from '@/components/onboarding/onboardingLayout';
 import type { OnboardingStepIndex } from '@/components/onboarding/onboardingSteps';
 import { LAST_ONBOARDING_STEP } from '@/components/onboarding/onboardingSteps';
 import Button from '@/components/shared/Button';
@@ -25,15 +25,21 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { generateBlurhash } from '@/utils/generateBlurhash';
 import { validateImage } from '@/utils/imageValidation';
-import { nicknameSchema } from '@/utils/nickname';
+import {
+  createOnboardingSchema,
+  isProfileStepReady,
+  profileStepFields,
+  submitFields,
+  type OnboardingFormData,
+} from '@/app/onboarding/onboardingSchema';
 import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { uploadUserStorageFile } from '@/utils/supabaseStorage';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ArrowRightFillSVG from 'public/icons/arrow-right-fill.svg';
 import { createElement, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 const PUBLIC_LISTING_PAGES = ['/', '/events'];
 function getPostOnboardingRedirect(redirectTo: string | null): string {
   if (!redirectTo || !redirectTo.startsWith('/') || redirectTo.startsWith('//')) {
@@ -56,22 +62,6 @@ function parseAlbumCardStyle(style: string | null | undefined): AlbumCardStyle {
   }
   return 'large';
 }
-// Zod schema for onboarding validation
-const onboardingSchema = z.object({
-  nickname: nicknameSchema,
-  fullName: z
-    .string()
-    .trim()
-    .min(2, 'Please enter your screen name'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  bio: z.string().optional(),
-  interests: z.array(z.string()),
-  emailPreferences: z.record(z.string(), z.boolean()),
-  termsAccepted: z.boolean().refine((val) => val === true, {
-    message: 'You must agree to the Terms of Service to continue',
-  }),
-});
-export type OnboardingFormData = z.infer<typeof onboardingSchema>;
 export default function OnboardingClient() {
   const { user, profile, isLoading, refreshProfile } = useAuth();
   const router = useRouter();
@@ -142,6 +132,10 @@ export default function OnboardingClient() {
       appProvider === 'apple'
     );
   }, [user]);
+  const onboardingSchema = useMemo(
+    () => createOnboardingSchema(isOAuthUser),
+    [isOAuthUser],
+  );
   const {
     register,
     control,
@@ -149,8 +143,11 @@ export default function OnboardingClient() {
     watch,
     setValue,
     trigger,
+    getFieldState,
+    getValues,
     formState: { errors },
     setError,
+    setFocus,
   } = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
     mode: 'onTouched',
@@ -230,8 +227,21 @@ export default function OnboardingClient() {
       (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode));
   useOnboardingStepMinHeight(stepFrameRef, progressRef, isWizardVisible, step);
   const watchedNickname = watch('nickname');
+  const watchedFullName = watch('fullName');
   const watchedEmail = watch('email');
   const watchedTermsAccepted = watch('termsAccepted');
+  const profileStepReady = useMemo(
+    () =>
+      isProfileStepReady(
+        {
+          nickname: watchedNickname,
+          fullName: watchedFullName,
+          email: watchedEmail,
+        },
+        isOAuthUser,
+      ),
+    [watchedEmail, watchedFullName, watchedNickname, isOAuthUser],
+  );
   const nicknameCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -241,6 +251,56 @@ export default function OnboardingClient() {
     setStep((step - 1) as OnboardingStepIndex);
     scrollToTop();
   };
+  const focusFirstInvalidProfileField = () => {
+    for (const field of profileStepFields(isOAuthUser)) {
+      if (getFieldState(field).invalid) {
+        setFocus(field);
+        return;
+      }
+    }
+  };
+  const validateProfileStep = async (options: { returnToProfileStepOnError: boolean }) => {
+    if (isCheckingNickname) {
+      return false;
+    }
+    const valid = await trigger(profileStepFields(isOAuthUser), {
+      shouldFocus: !options.returnToProfileStepOnError,
+    });
+    if (!valid) {
+      if (options.returnToProfileStepOnError) {
+        setStep(1);
+        scrollToTop();
+        queueMicrotask(() => {
+          focusFirstInvalidProfileField();
+        });
+      }
+      return false;
+    }
+    const nickname = getValues('nickname').trim();
+    let available = nicknameAvailable;
+    if (available !== true) {
+      available = await checkNicknameAvailability(nickname);
+    }
+    if (available !== true) {
+      setError('nickname', {
+        message:
+          available === false
+            ? 'This nickname is already taken'
+            : 'Unable to verify nickname availability. Try again.',
+      });
+      if (options.returnToProfileStepOnError) {
+        setStep(1);
+        scrollToTop();
+        queueMicrotask(() => {
+          setFocus('nickname');
+        });
+      } else {
+        setFocus('nickname');
+      }
+      return false;
+    }
+    return true;
+  };
   const goNext = async () => {
     if (step === 0) {
       setStep(1);
@@ -248,13 +308,7 @@ export default function OnboardingClient() {
       return;
     }
     if (step === 1) {
-      const fields: (keyof OnboardingFormData)[] = ['nickname', 'fullName'];
-      if (isOAuthUser) {
-        fields.push('email');
-      }
-      const valid = await trigger(fields);
-      if (!valid) return;
-      if (isCheckingNickname || nicknameAvailable === false || !watchedNickname) {
+      if (!(await validateProfileStep({ returnToProfileStepOnError: false }))) {
         return;
       }
       setStep(2);
@@ -262,25 +316,31 @@ export default function OnboardingClient() {
       return;
     }
     if (step === 2) {
+      if (!(await validateProfileStep({ returnToProfileStepOnError: true }))) {
+        return;
+      }
       setStep(3);
       scrollToTop();
       return;
     }
     if (step === 3) {
+      if (!(await validateProfileStep({ returnToProfileStepOnError: true }))) {
+        return;
+      }
       setStep(4);
       scrollToTop();
     }
   };
   // Check nickname availability with debounce
-  const checkNicknameAvailability = async (nickname: string) => {
+  const checkNicknameAvailability = async (nickname: string): Promise<boolean | null> => {
     if (!nickname || nickname.length < 3) {
       setNicknameAvailable(null);
-      return;
+      return null;
     }
     // Validate format first
     if (!/^[a-z0-9-]+$/.test(nickname) || nickname.startsWith('-') || nickname.endsWith('-')) {
       setNicknameAvailable(null);
-      return;
+      return null;
     }
     setIsCheckingNickname(true);
     try {
@@ -291,12 +351,15 @@ export default function OnboardingClient() {
       if (error) {
         console.error('Error checking nickname:', error);
         setNicknameAvailable(null);
-      } else {
-        setNicknameAvailable(data === true);
+        return null;
       }
+      const available = data === true;
+      setNicknameAvailable(available);
+      return available;
     } catch (err) {
       console.error('Error checking nickname:', err);
       setNicknameAvailable(null);
+      return null;
     } finally {
       setIsCheckingNickname(false);
     }
@@ -626,17 +689,51 @@ export default function OnboardingClient() {
     }
     setIsSaving(false);
   };
-  const completeOnboarding = () => {
+  const focusFirstSubmitError = () => {
+    for (const field of submitFields(isOAuthUser)) {
+      if (!getFieldState(field).invalid) {
+        continue;
+      }
+      if (field !== 'termsAccepted') {
+        setStep(1);
+      }
+      queueMicrotask(() => {
+        setFocus(field);
+      });
+      return;
+    }
+  };
+  const completeOnboarding = async () => {
     if (stepRef.current !== LAST_ONBOARDING_STEP) {
       return;
     }
-    void handleSubmit(onSubmit, (fieldErrors) => {
-      if (fieldErrors.nickname || fieldErrors.fullName || fieldErrors.email) {
-        setStep(1);
-      } else if (fieldErrors.termsAccepted) {
-        setStep(LAST_ONBOARDING_STEP);
-      }
-    })();
+    if (isCheckingNickname) {
+      return;
+    }
+    const valid = await trigger(submitFields(isOAuthUser), { shouldFocus: false });
+    if (!valid) {
+      focusFirstSubmitError();
+      return;
+    }
+    const nickname = watchedNickname.trim();
+    let available = nicknameAvailable;
+    if (available !== true) {
+      available = await checkNicknameAvailability(nickname);
+    }
+    if (available !== true) {
+      setError('nickname', {
+        message:
+          available === false
+            ? 'This nickname is already taken'
+            : 'Unable to verify nickname availability. Try again.',
+      });
+      setStep(1);
+      queueMicrotask(() => {
+        setFocus('nickname');
+      });
+      return;
+    }
+    void handleSubmit(onSubmit)();
   };
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -653,7 +750,6 @@ export default function OnboardingClient() {
   if ((!user && !isPreviewMode) || (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode)) {
     return <PageLoading />;
   }
-  const watchedFullName = watch('fullName');
   const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove;
   const hasBannerChanges = pendingBannerFile !== null || pendingBannerRemove;
   const displayAvatarUrl = pendingAvatarPreview
@@ -671,19 +767,12 @@ export default function OnboardingClient() {
     : pendingBannerRemove
       ? null
       : savedBannerBlurhash;
-  const step1ContinueDisabled =
-    isCheckingNickname ||
-    nicknameAvailable === false ||
-    !watchedNickname ||
-    (isOAuthUser && !watchedEmail?.trim());
-  const completeDisabled =
-    isSaving ||
-    nicknameAvailable === false ||
-    !watchedNickname ||
-    (isOAuthUser && !watchedEmail && !isPreviewMode) ||
-    !watchedTermsAccepted;
+  const continueDisabled =
+    (step === 1 || step === 2 || step === 3) &&
+    (isCheckingNickname || !profileStepReady || nicknameAvailable !== true);
+  const completeDisabled = isSaving || !watchedTermsAccepted;
   const primaryAction = step === 0 ? (
-    <Button key="intro" type="button" onClick={() => void goNext()}>
+    <Button key="intro" type="button" onClick={() => void goNext()} iconRight={<ArrowRightFillSVG className="size-4 -mr-1" />}>
       Let&apos;s go!
     </Button>
   ) : step === LAST_ONBOARDING_STEP ? (
@@ -701,7 +790,8 @@ export default function OnboardingClient() {
       key="continue"
       type="button"
       onClick={() => void goNext()}
-      disabled={step === 1 && step1ContinueDisabled}
+      disabled={continueDisabled}
+      iconRight={<ArrowRightFillSVG className="size-4 -mr-1" />}
     >
       Continue
     </Button>
@@ -758,6 +848,7 @@ export default function OnboardingClient() {
                   isCheckingNickname={isCheckingNickname}
                   nicknameAvailable={nicknameAvailable}
                   onNicknameChange={(value) => {
+                    setNicknameAvailable(null);
                     if (nicknameCheckTimeoutRef.current) {
                       clearTimeout(nicknameCheckTimeoutRef.current);
                     }

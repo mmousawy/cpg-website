@@ -6,6 +6,7 @@ import { gallerySectionSubtabs } from '@/lib/sectionSubtabs';
 export default function GalleryPageHeader() {
   return (
     <PageHeading
+      className="mx-auto w-full max-w-screen-md"
       title="Photo gallery"
       subnav={<SectionSubtabs items={gallerySectionSubtabs} />}
       description="Explore beautiful photos from the community"

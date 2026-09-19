@@ -106,7 +106,7 @@ export default function AdminEventsPage() {
           {upcomingEvents.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-80 font-heading"
+                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
               >
                 Upcoming events
               </h2>
@@ -127,7 +127,7 @@ export default function AdminEventsPage() {
           {pastEvents.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-80 font-heading"
+                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
               >
                 Past events
               </h2>

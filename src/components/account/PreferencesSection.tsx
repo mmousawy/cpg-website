@@ -27,7 +27,7 @@ export default function PreferencesSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold opacity-80 font-heading"
+        className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
       >
         Preferences
       </h2>

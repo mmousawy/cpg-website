@@ -1,17 +1,17 @@
 'use client';
 
+import clsx from 'clsx';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import clsx from 'clsx';
 
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
-import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
-import { useSectionScroll } from '@/context/SectionScrollContext';
 import type { SectionNavItem } from '@/components/shared/SectionSidebar';
+import { useSectionScroll } from '@/context/SectionScrollContext';
+import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
 import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader';
 import TocSVG from 'public/icons/toc.svg';
 
@@ -76,16 +76,13 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
       )}
     >
       <div
-        className={clsx(
-          'flex flex-col overflow-hidden',
-          mobileFloatingPillClassName,
-        )}
+        className={clsx('flex flex-col overflow-hidden', mobileFloatingPillClassName)}
       >
       {/* Collapsed trigger */}
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex items-center justify-between gap-3 px-4 py-3 text-left"
+        className="relative z-[2] flex items-center justify-between gap-3 px-4 py-3 text-left"
         aria-expanded={isExpanded}
         aria-label={isExpanded ? 'Close sections' : 'Open sections'}
       >
@@ -126,7 +123,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
       >
         <nav
           aria-label={ariaLabel}
-          className="border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
+          className="relative z-[2] border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
         >
           <ul
             className="py-2"

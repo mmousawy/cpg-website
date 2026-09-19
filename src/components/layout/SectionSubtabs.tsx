@@ -36,7 +36,7 @@ export default function SectionSubtabs({ items, className }: SectionSubtabsProps
             className={clsx(
               'whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium transition-colors sm:px-3 sm:py-1 sm:text-sm',
               active
-                ? 'bg-primary text-primary-foreground'
+                ? 'bg-primary text-white'
                 : 'text-foreground/70 hover:text-foreground',
             )}
           >

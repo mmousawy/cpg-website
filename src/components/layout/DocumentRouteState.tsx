@@ -22,7 +22,7 @@ export default function DocumentRouteState() {
   useLayoutEffect(() => {
     const isManage = isManagePagePath(pathname);
     document.documentElement.classList.toggle('manage-page', isManage);
-    // Restore body styles without jumping to the previous lock scrollY.
+    // Drop any overlay scroll lock from the previous route.
     resetBodyScrollLock();
     closeOpenPhotoSwipes();
 

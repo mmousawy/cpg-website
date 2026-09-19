@@ -146,7 +146,7 @@ export default function ActivityContent() {
       <PageContainer>
         <PageHeading
           title="Activity"
-          description="View your notifications and activity"
+          description="Your notifications and activity"
           aside={activityHelpLink}
         />
         <div
@@ -203,121 +203,122 @@ export default function ActivityContent() {
           )}
         </div>
       ) : (
-        <div
-          className="space-y-8"
-        >
-          {groups.today.length > 0 && (
-            <section>
-              <h2
-                className="mb-3 text-lg font-semibold font-heading"
-              >
-                Today
-              </h2>
-              <div
-                className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
-              >
-                {groups.today.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onView={handleView}
-                    onDismiss={handleDismiss}
-                    onMarkAsSeen={handleMarkAsSeen}
-                    showDismiss
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+        <>
+          <div
+            className="space-y-8"
+          >
+            {groups.today.length > 0 && (
+              <section>
+                <h2
+                  className="mb-3 text-lg font-semibold font-heading"
+                >
+                  Today
+                </h2>
+                <div
+                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                >
+                  {groups.today.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onView={handleView}
+                      onDismiss={handleDismiss}
+                      onMarkAsSeen={handleMarkAsSeen}
+                      showDismiss
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {groups.yesterday.length > 0 && (
-            <section>
-              <h2
-                className="mb-3 text-lg font-semibold font-heading"
-              >
-                Yesterday
-              </h2>
-              <div
-                className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
-              >
-                {groups.yesterday.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onView={handleView}
-                    onDismiss={handleDismiss}
-                    onMarkAsSeen={handleMarkAsSeen}
-                    showDismiss
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+            {groups.yesterday.length > 0 && (
+              <section>
+                <h2
+                  className="mb-3 text-lg font-semibold font-heading"
+                >
+                  Yesterday
+                </h2>
+                <div
+                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                >
+                  {groups.yesterday.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onView={handleView}
+                      onDismiss={handleDismiss}
+                      onMarkAsSeen={handleMarkAsSeen}
+                      showDismiss
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {groups.thisWeek.length > 0 && (
-            <section>
-              <h2
-                className="mb-3 text-lg font-semibold font-heading"
-              >
-                This week
-              </h2>
-              <div
-                className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
-              >
-                {groups.thisWeek.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onView={handleView}
-                    onDismiss={handleDismiss}
-                    onMarkAsSeen={handleMarkAsSeen}
-                    showDismiss
-                  />
-                ))}
-              </div>
-            </section>
-          )}
+            {groups.thisWeek.length > 0 && (
+              <section>
+                <h2
+                  className="mb-3 text-lg font-semibold font-heading"
+                >
+                  This week
+                </h2>
+                <div
+                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                >
+                  {groups.thisWeek.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onView={handleView}
+                      onDismiss={handleDismiss}
+                      onMarkAsSeen={handleMarkAsSeen}
+                      showDismiss
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
-          {groups.earlier.length > 0 && (
-            <section>
-              <h2
-                className="mb-3 text-lg font-semibold font-heading"
-              >
-                Earlier
-              </h2>
-              <div
-                className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
-              >
-                {groups.earlier.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                    onView={handleView}
-                    onDismiss={handleDismiss}
-                    onMarkAsSeen={handleMarkAsSeen}
-                    showDismiss
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
+            {groups.earlier.length > 0 && (
+              <section className="mb-4">
+                <h2
+                  className="mb-3 text-lg font-semibold font-heading"
+                >
+                  Earlier
+                </h2>
+                <div
+                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                >
+                  {groups.earlier.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onView={handleView}
+                      onDismiss={handleDismiss}
+                      onMarkAsSeen={handleMarkAsSeen}
+                      showDismiss
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
           {/* Load more button */}
           {hasMore && (
             <div
-              className="text-center"
+              className="text-center mb-2"
             >
               <Button
                 onClick={loadMore}
                 loading={isLoadingMore}
-                variant="ghost"
+                variant="secondary"
                 size="sm"
               >
                 {isLoadingMore ? 'Loading...' : `Load more (${totalCount - notifications.length} remaining)`}
               </Button>
             </div>
           )}
-        </div>
+        </>
       )}
     </PageContainer>
   );

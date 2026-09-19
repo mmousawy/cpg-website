@@ -141,12 +141,12 @@ export default function MyEventsPage() {
       </noscript>
 
       <div
-        className="space-y-10"
+        className="space-y-8"
       >
         {/* Upcoming Events */}
         <section>
           <h2
-            className="mb-4 text-lg font-semibold font-heading opacity-80"
+            className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-80"
           >
             Your upcoming events &mdash; {upcomingRSVPs.length}
           </h2>
@@ -197,7 +197,7 @@ export default function MyEventsPage() {
         {pastRSVPs.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold font-heading opacity-80"
+              className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-80"
             >
               Past events &mdash; {pastRSVPs.length}
             </h2>
@@ -220,7 +220,7 @@ export default function MyEventsPage() {
         {canceledRSVPs.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold font-heading opacity-80"
+              className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-80"
             >
               Canceled RSVPs
             </h2>

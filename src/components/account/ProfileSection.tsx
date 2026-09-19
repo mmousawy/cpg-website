@@ -2,8 +2,8 @@
 
 import { UseFormRegister } from 'react-hook-form';
 
-import Container from '@/components/layout/Container';
 import ProfileImageUploadSections from '@/components/account/ProfileImageUploadSections';
+import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
@@ -85,7 +85,7 @@ export default function ProfileSection({
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold font-heading opacity-70"
+        className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-70"
       >
         Basic info
       </h2>

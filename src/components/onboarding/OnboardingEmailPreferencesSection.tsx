@@ -2,7 +2,7 @@
 
 import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
+import type { OnboardingFormData } from '@/app/onboarding/onboardingSchema';
 import Container from '@/components/layout/Container';
 import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Checkbox from '@/components/shared/Checkbox';

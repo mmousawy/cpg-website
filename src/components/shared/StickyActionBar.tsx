@@ -53,7 +53,7 @@ export default function StickyActionBar({
         className={clsx(
           mobileFloatingPillClassName,
           'max-sm:overflow-hidden',
-          'bg-background-light sm:border-border-color-strong',
+          'bg-background-light bg-no-noise sm:border-border-color-strong',
           variant === 'compact' ? 'px-3 py-2.5' : 'px-3 py-3',
           position === 'bottom' ? 'sm:border-t' : 'sm:border-b',
           'md:px-12 md:py-4',
@@ -75,7 +75,7 @@ export default function StickyActionBar({
     'relative',
     sticky && 'sticky z-30',
     mobileStickyChromeZClassName,
-    isBottomSticky && 'bottom-0 max-sm:bottom-(--mobile-nav-offset,0px)',
+    isBottomSticky && 'bottom-0 max-sm:mb-3.5 max-sm:bottom-(--mobile-nav-offset,0px)',
     isBottomSticky && mobileFloatingPillInsetClassName,
     sticky && position === 'top' && 'top-0',
     className,
