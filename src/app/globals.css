@@ -150,6 +150,27 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Overlay lock keeps window.scrollY and the scrollbar. Do not use
+   overflow:hidden / position:fixed on body — that resets scrollY.
+   Neutralize react-remove-scroll (Radix Select) while a modal is open. */
+html[data-overlay-scroll-lock] {
+  overscroll-behavior: none;
+}
+
+html[data-overlay-scroll-lock]:not(.manage-page) body,
+html[data-overlay-scroll-lock]:not(.manage-page) body[data-scroll-locked] {
+  overflow: visible !important;
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: auto !important;
+  height: auto !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Container gradient variant - only active in dark/midnight themes */
 .container-gradient {
   border: 0.0625rem solid var(--border-color);
@@ -711,7 +732,7 @@ html.manage-page .app-header-inner {
 }
 
 .mobile-tab-bar-scrim {
-  height: max(6rem, calc(var(--mobile-nav-offset, 0px) + 1.5rem));
+  height: max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem));
   transition: height 250ms ease-in-out;
 }
 
@@ -761,14 +782,19 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
 }
 
 .mobile-tab-bar-scrim__fade {
-  background: linear-gradient(to top, var(--background), transparent);
+  background: linear-gradient(
+    to top,
+    var(--background) 15%,
+    color-mix(in srgb, var(--background) 70%, transparent) 50%,
+    transparent 100%
+  );
 }
 
 .mobile-tab-bar-scrim__fade--sticky {
   background: linear-gradient(
     to top,
-    var(--background) 0%,
-    color-mix(in srgb, var(--background) 55%, transparent) 50%,
+    var(--background) 15%,
+    color-mix(in srgb, var(--background) 70%, transparent) 50%,
     transparent 100%
   );
 }
@@ -1043,6 +1069,7 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
 .rich-description p {
   font-size: inherit;
   line-height: 1.5em;
+  word-break: break-word;
 
   @media (min-width: 640px) {
     line-height: 1.45em;
@@ -1264,11 +1291,33 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
   background-size: 350px 350px;
 }
 
-
 :root.light {
   .bg-background-light {
     background-image: url('/noise-dark.svg');
   }
+}
+
+/* Grain on frosted surfaces (tab bar, section nav). ::after sits above the fill/blur. */
+.bg-noise {
+  position: relative;
+  isolation: isolate;
+}
+
+.bg-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: url('/noise.svg');
+  background-repeat: repeat;
+  background-size: 350px 350px;
+  opacity: 0.55;
+}
+
+:root.light .bg-noise::after {
+  background-image: url('/noise-dark.svg');
 }
 
 /* Small pill/circle controls — grain reads as dirt at this size */

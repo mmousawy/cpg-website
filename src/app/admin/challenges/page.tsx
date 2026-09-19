@@ -69,7 +69,7 @@ export default function AdminChallengesPage() {
           {activeChallenges.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-80 font-heading"
+                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
               >
                 Active challenges
               </h2>
@@ -92,7 +92,7 @@ export default function AdminChallengesPage() {
           {inactiveChallenges.length > 0 && (
             <section>
               <h2
-                className="mb-4 text-lg font-semibold opacity-80 font-heading"
+                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
               >
                 Inactive challenges
               </h2>

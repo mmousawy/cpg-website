@@ -5,12 +5,12 @@ import StackedAvatarsPopover from '@/components/shared/StackedAvatarsPopover';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
-import { useSession } from '@/hooks/useSession';
 import {
   useSceneEventInterest,
   useToggleSceneEventInterest,
   type SceneEventInterest,
 } from '@/hooks/useSceneEvents';
+import { useSession } from '@/hooks/useSession';
 import type { SceneEvent } from '@/types/scene';
 import clsx from 'clsx';
 import StarFilledIcon from 'public/icons/star-filled.svg';
@@ -36,7 +36,8 @@ function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
           onClick={() => showAuthPrompt({ feature: 'show interest in Scene events' })}
           className={clsx(
             'group flex items-center justify-center gap-2 shrink-0',
-            'size-9 rounded-full sm:size-auto sm:h-9 sm:min-w-35 sm:px-3',
+            'h-9 rounded-full',
+            count > 0 ? 'size-9 sm:size-auto sm:h-9 sm:min-w-35 sm:px-3' : 'px-3',
             'border border-border-color-strong',
             'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
             'bg-background-light hover:bg-background-medium',
@@ -44,10 +45,10 @@ function SceneEventStickyBarGuest({ event }: SceneEventStickyBarProps) {
           aria-label="I'm interested"
         >
           <StarOutlineIcon
-            className="size-4 shrink-0 sm:-ml-[0.2rem] text-foreground transition-colors group-hover:text-primary"
+            className="size-4 shrink-0 -ml-[0.2rem] text-foreground transition-colors group-hover:text-primary"
           />
           <span
-            className="hidden sm:inline text-sm font-medium"
+            className={clsx('text-sm font-medium', count > 0 && 'hidden sm:inline')}
           >
             I&apos;m interested
           </span>
@@ -152,9 +153,10 @@ function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
           onClick={handleInterestClick}
           disabled={toggleMutation.isPending}
           className={clsx(
-            'group flex items-center justify-center gap-2 shrink-0',
-            'size-9 rounded-full',
-            !interested && 'sm:size-auto sm:h-9 sm:min-w-35 sm:px-3',
+            'group flex items-center justify-center gap-2 shrink-0 rounded-full',
+            interested && 'size-9',
+            !interested && count > 0 && 'size-9 sm:size-auto sm:h-9 sm:min-w-35 sm:px-3',
+            !interested && count === 0 && 'h-9 px-3',
             'border border-border-color-strong',
             'hover:border-primary focus-visible:border-primary focus-visible:outline-none',
             'bg-background-light hover:bg-background-medium',
@@ -167,12 +169,15 @@ function SceneEventStickyBarAuthenticated({ event }: SceneEventStickyBarProps) {
             />
           ) : (
             <StarOutlineIcon
-              className="size-4 shrink-0 sm:-ml-[0.2rem] text-foreground transition-colors group-hover:text-primary"
+              className={clsx(
+                'size-4 shrink-0 text-foreground transition-colors group-hover:text-primary',
+                count === 0 && '-ml-[0.2rem]',
+              )}
             />
           )}
           {!interested && (
             <span
-              className="hidden sm:inline text-sm font-medium"
+              className={clsx('text-sm font-medium', count > 0 && 'hidden sm:inline')}
             >
               I&apos;m interested
             </span>
@@ -239,7 +244,7 @@ export default function SceneEventStickyBar(props: SceneEventStickyBarProps) {
   const { isLoggedIn } = useSession();
 
   return (
-    <StickyActionBar constrainWidth overlaysContent>
+    <StickyActionBar constrainWidth>
       {isLoggedIn ? (
         <SceneEventStickyBarAuthenticated {...props} />
       ) : (

@@ -10,6 +10,7 @@ import {
   type OnboardingStepIndex,
 } from '@/components/onboarding/onboardingSteps';
 import Button from '@/components/shared/Button';
+import ArrowLeftFillSVG from 'public/icons/arrow-left-fill.svg';
 
 type OnboardingProgressProps = {
   step: OnboardingStepIndex;
@@ -66,6 +67,7 @@ const OnboardingProgress = forwardRef<HTMLDivElement, OnboardingProgressProps>(
                 variant="secondary"
                 className="mr-auto shrink-0"
                 onClick={onBack}
+                icon={<ArrowLeftFillSVG className="size-4 -ml-1" />}
               >
                 Back
               </Button>

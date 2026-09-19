@@ -29,14 +29,18 @@ export default function DetailSidebar({
   return (
     <div
       className={clsx(
-        'relative -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 pb-8',
+        'relative -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 pb-2 sm:pb-8',
         'md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6',
         'lg:w-lg',
         tightTopMargin ? 'mt-2' : 'mt-4',
-        sticky && 'md:sticky md:top-[90px] md:h-[calc(100vh-106px)] md:self-start md:overflow-y-auto lg:top-[106px] lg:h-[calc(100vh-138px)]',
+        sticky && 'md:sticky md:top-22.5 md:h-[calc(100vh-106px)] md:self-start md:overflow-y-auto lg:top-[106px] lg:h-[calc(100vh-138px)]',
         className,
       )}
     >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-x-4 bottom-0 z-10 h-50 bg-linear-to-b from-transparent to-background md:hidden"
+      />
       {actions ? (
         <div
           className="absolute right-4 top-4 md:right-6 md:top-6"
@@ -103,7 +107,7 @@ export function DetailSidebarMeta({ children }: { children: ReactNode }) {
 export function DetailSidebarFooter({ children }: { children: ReactNode }) {
   return (
     <div
-      className="mt-5 space-y-3 border-t border-border-color pt-5"
+      className="mt-5 space-y-3 border-t border-border-color pt-5 relative z-10"
     >
       {children}
     </div>

@@ -561,14 +561,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       />}
 
       {/* Comments Section */}
-      <PageContainer
-        variant="alt"
-        className="border-t border-t-border-color"
-      >
-        <EventComments
-          eventId={String(event.id)}
-        />
-      </PageContainer>
+      <div className="relative">
+        <PageContainer
+          variant="alt"
+          className="border-t border-t-border-color max-sm:pb-2"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-50 bg-linear-to-b from-transparent to-background md:hidden"
+          />
+          <div className="relative z-10">
+            <EventComments
+              eventId={String(event.id)}
+            />
+          </div>
+        </PageContainer>
+
+      </div>
 
     </>
   );

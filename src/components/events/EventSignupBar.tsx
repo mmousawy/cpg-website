@@ -199,7 +199,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         </p>
 
         <div
-          className="min-w-0 flex-1"
+          className="min-w-0 flex-1 mt-1"
         >
           {isLoading ? (
             <div
@@ -263,7 +263,7 @@ export default function EventSignupBar(props: EventSignupBarProps) {
   const { isLoggedIn } = useSession();
 
   return (
-    <StickyActionBar constrainWidth overlaysContent>
+    <StickyActionBar constrainWidth>
       {isLoggedIn ? (
         <EventSignupBarAuthenticated {...props} />
       ) : (

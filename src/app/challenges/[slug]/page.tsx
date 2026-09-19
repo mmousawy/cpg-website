@@ -224,7 +224,7 @@ export default async function ChallengePage({
 
           {/* Title overlay */}
           <div
-            className="absolute inset-x-0 bottom-0 px-2 pb-0 sm:px-8"
+            className="absolute inset-x-0 bottom-0 px-3 pb-0 sm:px-8"
           >
             <div
               className="mx-auto max-w-screen-md"

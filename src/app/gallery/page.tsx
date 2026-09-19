@@ -48,9 +48,7 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
 
   return (
     <div className="px-3 pt-0 sm:pt-8 md:px-12 md:pt-12">
-      <div className="mx-auto w-full max-w-screen-md">
-        <GalleryPageHeader />
-      </div>
+      <GalleryPageHeader />
 
       <div
         className="-mx-3 grid min-w-0 gap-10 md:-mx-12 md:gap-12 md:pb-12 [&>*]:min-w-0"

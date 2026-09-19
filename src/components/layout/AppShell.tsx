@@ -5,6 +5,8 @@ import ConfirmProvider from '@/app/providers/ConfirmProvider';
 import ModalProvider from '@/app/providers/ModalProvider';
 import LazyOverlays from '@/components/layout/LazyOverlays';
 import Layout from '@/components/layout/Layout';
+import { HideOnOnboarding } from '@/components/layout/OnboardingAwareChrome';
+import SiteSearch from '@/components/layout/SiteSearch';
 import DeferredNotificationToastManager from '@/components/notifications/DeferredNotificationToastManager';
 
 type AppShellProps = {
@@ -18,6 +20,11 @@ export default function AppShell({ children }: AppShellProps) {
         <Layout>
           {children}
         </Layout>
+        <Suspense fallback={null}>
+          <HideOnOnboarding>
+            <SiteSearch />
+          </HideOnOnboarding>
+        </Suspense>
         <LazyOverlays />
         <Suspense
           fallback={null}

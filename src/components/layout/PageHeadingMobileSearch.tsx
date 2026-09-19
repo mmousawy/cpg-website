@@ -1,12 +1,15 @@
 'use client';
 
-/** Opens the global search modal (see Header `search:open` listener). */
+/** Opens the global search overlay (see `SiteSearch` `search:open` listener). */
 export default function PageHeadingMobileSearch() {
   return (
     <button
       type="button"
       aria-label="Search"
       className="flex shrink-0 items-center justify-center rounded-full p-2 text-foreground/80 transition-colors hover:text-foreground"
+      onPointerDown={() => {
+        window.dispatchEvent(new CustomEvent('search:intent'));
+      }}
       onClick={() => {
         window.dispatchEvent(new CustomEvent('search:open'));
       }}

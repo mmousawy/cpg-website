@@ -87,7 +87,9 @@ export default function MobileTabBar() {
     if (!el) return;
 
     const updateOffset = () => {
-      const height = el.getBoundingClientRect().height;
+      const marginSource = navRef.current ?? el;
+      const marginBottom = Number.parseFloat(getComputedStyle(marginSource).marginBottom) || 0;
+      const height = el.getBoundingClientRect().height + marginBottom * 2;
       root.style.setProperty('--mobile-nav-offset', `${height}px`);
     };
 
@@ -237,7 +239,7 @@ export default function MobileTabBar() {
           ref={navRef}
           aria-label="Main"
           onPointerDownCapture={handleNavPointerDown}
-          className="pointer-events-auto relative z-10 mx-3 mb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-no-noise shadow-lg backdrop-blur-sm"
+          className="pointer-events-auto relative z-10 mx-3 mb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-noise shadow-lg backdrop-blur-sm"
         >
           <div ref={tabListRef} className="relative">
             {indicator && (

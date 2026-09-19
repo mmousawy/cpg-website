@@ -2,7 +2,7 @@
 
 import { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
+import type { OnboardingFormData } from '@/app/onboarding/onboardingSchema';
 import Container from '@/components/layout/Container';
 import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Input from '@/components/shared/Input';
@@ -61,7 +61,8 @@ export default function OnboardingAboutYouSection({
             <p
               className="text-xs text-foreground/80"
             >
-              This is how you appear on your profile. It doesn&apos;t have to be your real name.
+              At least 2 characters. This is how you appear on your profile—it doesn&apos;t have to
+              be your real name.
             </p>
           </div>
 
@@ -78,7 +79,7 @@ export default function OnboardingAboutYouSection({
               <Input
                 id="email"
                 type="email"
-                {...register('email', { required: isOAuthUser ? 'Email is required' : false })}
+                {...register('email')}
                 placeholder="you@example.com"
               />
               {errors.email && (

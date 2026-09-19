@@ -1,8 +1,8 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import Container from '@/components/layout/Container';
 import SignOutButton from '@/components/account/SignOutButton';
+import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import Checkbox from '@/components/shared/Checkbox';
 import type { AccountStats } from '@/hooks/useAccountForm';
@@ -165,7 +165,7 @@ export default function DeleteAccountSection({ stats }: DeleteAccountSectionProp
   return (
     <div>
       <h2
-        className="mb-4 text-lg font-semibold text-red-600 font-heading opacity-80"
+        className="mb-2 sm:mb-4 text-lg font-semibold text-red-600 dark:text-red-500 font-heading opacity-80"
       >
         Danger zone
       </h2>

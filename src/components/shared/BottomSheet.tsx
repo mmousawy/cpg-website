@@ -215,6 +215,7 @@ export default function BottomSheet({
           escapeDeactivates: false,
           returnFocusOnDeactivate: false,
           initialFocus: false,
+          preventScroll: true,
           fallbackFocus: () => sheetRef.current || document.body,
         }}
       >
@@ -260,7 +261,7 @@ export default function BottomSheet({
               {title}
             </h2>}
             <button
-              className="absolute right-3 top-0 shrink-0 rounded-full border border-border-color bg-background p-1 hover:bg-background-medium transition-colors"
+              className="absolute right-3 top-0 shrink-0 rounded-full border border-border-color bg-background-light p-1 hover:bg-background-medium transition-colors"
               onClick={() => onCloseRef.current()}
               aria-label="Close"
             >

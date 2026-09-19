@@ -212,7 +212,7 @@ export default function MyChallengesPage() {
         {rejectedSubmissions.length > 0 && (
           <section>
             <h2
-              className="mb-4 text-lg font-semibold opacity-80 font-heading"
+              className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
             >
               Rejected
             </h2>

@@ -1,6 +1,6 @@
 'use client';
 
-import type { OnboardingFormData } from '@/app/onboarding/OnboardingClient';
+import type { OnboardingFormData } from '@/app/onboarding/onboardingSchema';
 import Container from '@/components/layout/Container';
 import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import Input from '@/components/shared/Input';
@@ -24,6 +24,8 @@ export default function OnboardingNicknameSection({
   nicknameAvailable,
   onNicknameChange,
 }: OnboardingNicknameSectionProps) {
+  const { onChange, ...nicknameField } = register('nickname');
+
   return (
     <div>
       <OnboardingSectionTitle icon={AlternateEmailSVG}>
@@ -42,13 +44,13 @@ export default function OnboardingNicknameSection({
           <Input
             id="nickname"
             type="text"
-            {...register('nickname', {
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                e.target.value = value;
-                onNicknameChange(value);
-              },
-            })}
+            {...nicknameField}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+              e.target.value = value;
+              void onChange(e);
+              onNicknameChange(value);
+            }}
             placeholder="your-nickname"
             autoComplete="off"
             leftAddon="@"
@@ -126,7 +128,7 @@ export default function OnboardingNicknameSection({
             <p
               className="text-sm text-primary"
             >
-              Nickname is available!
+              Your nickname is available!
             </p>
           )}
           <p

@@ -68,6 +68,7 @@ export default function PageHeading({
         <div
           className={clsx(
             'mb-8 mt-1',
+            className,
             actions && 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4',
           )}
         >
@@ -79,7 +80,7 @@ export default function PageHeading({
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
       ) : (
-        <div className="mb-8" />
+        <div className={clsx('mb-8', className)} />
       )}
     </>
   );

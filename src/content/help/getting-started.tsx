@@ -102,7 +102,7 @@ export const gettingStartedFAQ: FAQSection = {
             </HelpStep>
             <HelpStep icon={PersonSVG} title="About you">
               <p>
-                Screen name is what people see on your profile — it doesn&apos;t have to be your real name. Bio and interests are optional. Interests (up to 10) help others find you.
+                Screen name is what people see on your profile (at least 2 characters)—it doesn&apos;t have to be your real name. Bio and interests are optional. Interests (up to 10) help others find you.
               </p>
             </HelpStep>
             <HelpStep icon={PaletteSVG} title="Theme">

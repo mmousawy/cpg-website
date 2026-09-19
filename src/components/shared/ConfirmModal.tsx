@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useConfirmState } from '@/app/providers/ConfirmProvider';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import TrashSVG from 'public/icons/trash.svg';
 import Button from './Button';
 
@@ -23,7 +24,7 @@ export default function ConfirmModal() {
       return () => clearTimeout(timerId);
     }
 
-    modalRef.current?.show();
+    showDialogWithoutScrolling(modalRef.current);
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
   }, [isOpen]);
@@ -43,7 +44,7 @@ export default function ConfirmModal() {
       ref={modalRef}
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
-        'fixed inset-0 z-60 overflow-auto',
+        'fixed inset-0 z-60 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-4',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
@@ -54,6 +55,7 @@ export default function ConfirmModal() {
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: true,
+          preventScroll: true,
           onDeactivate: handleCancel,
           fallbackFocus: () => modalRef.current || document.body,
         }}

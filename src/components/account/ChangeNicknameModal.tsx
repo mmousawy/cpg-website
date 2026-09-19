@@ -343,7 +343,7 @@ export default function ChangeNicknameModal({
               <p
                 className="mt-1 text-sm text-primary"
               >
-                Nickname is available!
+                Your nickname is available!
               </p>
             )}
           </div>

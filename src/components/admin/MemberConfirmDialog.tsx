@@ -8,6 +8,7 @@ import Button from '@/components/shared/Button';
 import Textarea from '@/components/shared/Textarea';
 import type { Tables } from '@/database.types';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 
 type Member = Pick<
   Tables<'profiles'>,
@@ -50,7 +51,7 @@ export default function MemberConfirmDialog({
   useBodyScrollLock(true);
 
   useEffect(() => {
-    modalRef.current?.show();
+    showDialogWithoutScrolling(modalRef.current);
     const visibilityTimer = requestAnimationFrame(() => setIsVisible(true));
     const trapTimerId = setTimeout(() => setIsTrapped(true), 16);
 
@@ -65,7 +66,7 @@ export default function MemberConfirmDialog({
       ref={modalRef}
       className={clsx([
         isVisible ? 'visible opacity-100' : 'invisible opacity-0',
-        'fixed inset-0 z-60 overflow-auto',
+        'fixed inset-0 z-60 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-4',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
@@ -76,6 +77,7 @@ export default function MemberConfirmDialog({
         focusTrapOptions={{
           clickOutsideDeactivates: false,
           escapeDeactivates: !isLoading,
+          preventScroll: true,
           onDeactivate: onCancel,
           fallbackFocus: () => modalRef.current || document.body,
         }}

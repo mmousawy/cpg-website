@@ -460,18 +460,25 @@ export default async function SceneEventDetailPage({
         event={event}
       />
 
-      <PageContainer
-        variant="alt"
-        className="border-t border-t-border-color"
-      >
-        <div
-          id="comments"
+      <div className="relative">
+        <PageContainer
+          variant="alt"
+          className="border-t border-t-border-color max-sm:pb-2"
         >
-          <SceneEventComments
-            eventId={event.id}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-50 bg-linear-to-b from-transparent to-background md:hidden"
           />
-        </div>
-      </PageContainer>
+          <div
+            id="comments"
+            className="relative z-10"
+          >
+            <SceneEventComments
+              eventId={event.id}
+            />
+          </div>
+        </PageContainer>
+      </div>
     </>
   );
 }

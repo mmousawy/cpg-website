@@ -154,7 +154,7 @@ export default function RelatedEventsSlider({
 
         {/* Mobile nav buttons */}
         <div
-          className="flex sm:hidden justify-center gap-4 mt-3"
+          className="max-sm:mb-3 flex sm:hidden justify-center gap-4 mt-3"
         >
           <NavButton
             direction="prev"

@@ -23,7 +23,7 @@ export default function SearchInput({
     if (autoFocus && inputRef.current) {
       // Small delay to ensure modal is fully rendered
       const timer = setTimeout(() => {
-        inputRef.current?.focus();
+        inputRef.current?.focus({ preventScroll: true });
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -36,7 +36,6 @@ export default function SearchInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      autoFocus={autoFocus}
       leftAddon={
         <svg
           className="size-4"
