@@ -23,6 +23,7 @@ export default function SignOutButton() {
           confirmLabel: 'Sign out',
           cancelLabel: 'Stay signed in',
           variant: 'danger',
+          confirmIcon: false,
         });
         if (!confirmSignOut) return;
 

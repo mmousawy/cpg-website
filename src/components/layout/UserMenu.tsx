@@ -69,7 +69,7 @@ export default function UserMenu() {
           'absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light bg-no-noise shadow-lg',
         )}
       >
-        <AccountMenuPanel onClose={closeMenu} />
+        <AccountMenuPanel onClose={closeMenu} showSiteLinks />
       </div>
     </details>
   );

@@ -9,6 +9,7 @@ import { useAppTheme } from '@/hooks/useAppTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import AccountMenuChevron from './AccountMenuChevron';
+import AccountMenuSignOutButton from './AccountMenuSignOutButton';
 
 type AccountSiteLinksPanelProps = {
   onBack: () => void;
@@ -150,6 +151,15 @@ export default function AccountSiteLinksPanel({
           {routes.privacy.label}
         </Link>
       </div>
+
+      {user ? (
+        <>
+          <AccountMenuDivider />
+          <div className="p-2">
+            <AccountMenuSignOutButton onClose={onClose} />
+          </div>
+        </>
+      ) : null}
     </>
   );
 }
