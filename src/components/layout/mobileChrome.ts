@@ -5,9 +5,9 @@ export const mobileFloatingPillClassName =
 /** Horizontal inset + gap above the tab bar for stacked floating pills. */
 export const mobileFloatingPillInsetClassName = 'max-sm:px-3';
 
-/** Bottom sticky chrome: same screen inset as the tab bar, plus 0.25rem. */
+/** Bottom sticky chrome: pin 0.25rem above the tab bar (or next chrome bar). */
 export const mobileStickyBottomWithGapClassName =
-  'sticky bottom-0 max-sm:pb-1';
+  'sticky max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)] sm:bottom-0';
 
 /**
  * In-flow spacer below a settled sticky bar. Must be a sibling (not a wrapper)

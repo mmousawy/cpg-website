@@ -806,12 +806,14 @@ html.manage-page .app-header-inner {
 
 @media (max-width: 639px) {
   .mobile-sticky-bar-slide {
-    transform: translateY(calc(100% + var(--mobile-tab-bar-bottom-gap, 0.75rem)));
-    transition: transform 250ms ease-out;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 250ms ease-out, opacity 250ms ease-out;
   }
 
   .mobile-sticky-bar-slide[data-open] {
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -889,12 +891,20 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
       max(var(--mobile-nav-offset), var(--mobile-overlay-chrome-height, 0px))
       + var(--mobile-content-bottom-gap)
     );
-    padding-bottom: var(--mobile-shell-padding-bottom);
+  }
+
+  /* In-flow spacer — padding-bottom on the scroller lifts sticky bottom chrome. */
+  html:not(.manage-page) .mobile-main-bottom-spacer {
+    height: var(--mobile-shell-padding-bottom);
   }
 
   /* Terminal in-flow sticky nav only — mid-page bars (e.g. RSVP) still need content gap below. */
   html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap--terminal) {
     --mobile-content-bottom-gap: 0px;
+  }
+
+  html.manage-page .mobile-main-bottom-spacer {
+    display: none;
   }
 
   html.manage-page .app-shell-main {
