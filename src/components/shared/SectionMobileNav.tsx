@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
-  mobileStickyBarSettleGapClassName,
+  mobileStickyBarTerminalSettleGapClassName,
   mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
@@ -166,7 +166,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
   return (
     <>
       {nav}
-      <div className={mobileStickyBarSettleGapClassName} aria-hidden />
+      <div className={mobileStickyBarTerminalSettleGapClassName} aria-hidden />
     </>
   );
 }

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
   mobileFloatingPillInsetClassName,
-  mobileStickyBarSettleGapClassName,
+  mobileStickyBarTerminalSettleGapClassName,
   mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
@@ -94,7 +94,7 @@ export default function MobileStickyChromeStack({
         )}
       </div>
       <div
-        className={mobileStickyBarSettleGapClassName}
+        className={mobileStickyBarTerminalSettleGapClassName}
         hidden={hidden || undefined}
         aria-hidden
       />

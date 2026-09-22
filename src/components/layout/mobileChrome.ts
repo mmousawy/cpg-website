@@ -16,6 +16,10 @@ export const mobileStickyBottomWithGapClassName =
 export const mobileStickyBarSettleGapClassName =
   'mobile-sticky-bar-settle-gap pointer-events-none max-sm:h-[calc(0.875rem-0.25rem)] sm:hidden';
 
+/** Settle gap at the end of scroll content — suppresses duplicate `#main-content` bottom gap. */
+export const mobileStickyBarTerminalSettleGapClassName =
+  `${mobileStickyBarSettleGapClassName} mobile-sticky-bar-settle-gap--terminal`;
+
 /** Bottom sticky chrome flush with the tab bar's screen inset. */
 export const mobileStickyBottomClassName =
   'sticky bottom-0';
