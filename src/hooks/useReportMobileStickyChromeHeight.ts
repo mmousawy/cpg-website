@@ -4,7 +4,6 @@ import { getScrollContainer, subscribeScrollContainer } from '@/utils/scrollCont
 
 const HEIGHT_VAR = '--mobile-sticky-bar-height';
 const OVERLAY_HEIGHT_VAR = '--mobile-overlay-chrome-height';
-const SCRIM_HEIGHT_VAR = '--mobile-tab-bar-scrim-height';
 const EXPANDED_ATTR = 'data-mobile-sticky-chrome-sticky';
 const SETTLE_GAP_CLASS = 'mobile-sticky-bar-settle-gap';
 const MOBILE_MEDIA = '(max-width: 639px)';
@@ -13,8 +12,6 @@ const MOBILE_MEDIA = '(max-width: 639px)';
 const PIN_TOLERANCE_PX = 12;
 /** Settle-gap sibling is adjacent in flow when its top matches the bar's bottom. */
 const SETTLED_ADJACENT_PX = 6;
-
-type ScrimState = 'default' | 'expanded';
 
 function parsePx(value: string) {
   const parsed = Number.parseFloat(value);
@@ -40,29 +37,13 @@ function getSettleGap(el: HTMLElement) {
   return next;
 }
 
-function remPx(rem: number) {
-  return rem * (parsePx(getComputedStyle(document.documentElement).fontSize) || 16);
+function isLaidOut(el: HTMLElement) {
+  if (el.hidden) return false;
+  return el.getClientRects().length > 0;
 }
 
-function getNavOffset() {
-  const fromVar = parsePx(
-    getComputedStyle(document.documentElement).getPropertyValue('--mobile-nav-offset'),
-  );
-  if (fromVar > 0) return fromVar;
-
-  const tabBar = document.querySelector('.mobile-tab-bar');
-  if (tabBar instanceof HTMLElement) {
-    return tabBar.getBoundingClientRect().height;
-  }
-  return 0;
-}
-
-function measureScrimHeightPx(el: HTMLElement, state: ScrimState) {
-  const navOffset = getNavOffset();
-  if (state === 'expanded') {
-    return navOffset + el.getBoundingClientRect().height + remPx(1.5);
-  }
-  return Math.max(remPx(4.5), navOffset + remPx(0.5));
+function getSlideSurface(el: HTMLElement) {
+  return el.querySelector<HTMLElement>('.mobile-sticky-bar-slide') ?? el;
 }
 
 function isSettledInFlow(el: HTMLElement, rect: DOMRect) {
@@ -71,35 +52,32 @@ function isSettledInFlow(el: HTMLElement, rect: DOMRect) {
   return Math.abs(gap.getBoundingClientRect().top - rect.bottom) <= SETTLED_ADJACENT_PX;
 }
 
-function getSlideSurface(el: HTMLElement) {
-  return el.querySelector<HTMLElement>('.mobile-sticky-bar-slide') ?? el;
-}
+/** Only the laid-out bar may clear the shared chrome variables on unmount. */
+let chromePublisher: object | null = null;
 
-function getScrimState(el: HTMLElement): ScrimState {
-  if (!window.matchMedia(MOBILE_MEDIA).matches) return 'default';
+function isStickyChromeExpanded(el: HTMLElement): boolean {
+  if (!window.matchMedia(MOBILE_MEDIA).matches) return false;
 
   const style = window.getComputedStyle(el);
-  if (style.display === 'none' || el.hidden) return 'default';
+  if (style.display === 'none' || el.hidden) return false;
   const slide = getSlideSurface(el);
   if (slide.classList.contains('mobile-sticky-bar-slide') && !slide.hasAttribute('data-open')) {
-    return 'default';
+    return false;
   }
   if (style.position === 'fixed') {
-    return 'expanded';
+    return true;
   }
 
   const rect = el.getBoundingClientRect();
-  if (rect.height < 1) return 'default';
+  if (rect.height < 1) return false;
 
   const gap = getSettleGap(el);
   if (gap) {
-    return isSettledInFlow(el, rect) ? 'default' : 'expanded';
+    return !isSettledInFlow(el, rect);
   }
 
   const pinLine = getPinLine(el, style);
-  if (Math.abs(rect.bottom - pinLine) <= PIN_TOLERANCE_PX) return 'expanded';
-
-  return 'default';
+  return Math.abs(rect.bottom - pinLine) <= PIN_TOLERANCE_PX;
 }
 
 function setupReporter(
@@ -107,21 +85,11 @@ function setupReporter(
   overlaysContent: boolean,
 ) {
   const root = document.documentElement;
+  const token = {};
+  let lastStuck: boolean | null = null;
 
-  const applyScrimState = (next: ScrimState) => {
-    const heightPx = `${measureScrimHeightPx(el, next)}px`;
-    if (root.style.getPropertyValue(SCRIM_HEIGHT_VAR) !== heightPx) {
-      root.style.setProperty(SCRIM_HEIGHT_VAR, heightPx);
-    }
-    if (next === 'expanded') {
-      root.setAttribute(EXPANDED_ATTR, '');
-    } else {
-      root.removeAttribute(EXPANDED_ATTR);
-    }
-  };
-
-  const updateHeight = () => {
-    const heightPx = `${el.getBoundingClientRect().height}px`;
+  const publishHeight = () => {
+    const heightPx = `${Math.round(el.getBoundingClientRect().height)}px`;
     if (root.style.getPropertyValue(HEIGHT_VAR) !== heightPx) {
       root.style.setProperty(HEIGHT_VAR, heightPx);
     }
@@ -130,50 +98,67 @@ function setupReporter(
     }
   };
 
-  const updateScrimState = () => {
-    applyScrimState(getScrimState(el));
+  const publishStuck = () => {
+    if (!isLaidOut(el)) return;
+
+    if (!window.matchMedia(MOBILE_MEDIA).matches) {
+      if (chromePublisher !== token) return;
+      lastStuck = false;
+      root.removeAttribute(EXPANDED_ATTR);
+      return;
+    }
+
+    chromePublisher = token;
+    const stuck = isStickyChromeExpanded(el);
+    if (stuck === lastStuck) return;
+    lastStuck = stuck;
+    if (stuck) {
+      root.setAttribute(EXPANDED_ATTR, '');
+    } else {
+      root.removeAttribute(EXPANDED_ATTR);
+    }
+  };
+
+  const onLayoutChange = () => {
+    // Account settings mounts a mobile stack and a desktop save bar together.
+    // The hidden one still has a reporter; letting it publish fights the visible bar.
+    if (!isLaidOut(el)) return;
+    chromePublisher = token;
+    publishHeight();
+    publishStuck();
   };
 
   let scrollRaf = 0;
-  const updateScrimStateOnScroll = () => {
+  const onScroll = () => {
     if (scrollRaf) return;
     scrollRaf = requestAnimationFrame(() => {
       scrollRaf = 0;
-      updateScrimState();
+      publishStuck();
     });
   };
 
-  const update = () => {
-    updateHeight();
-    updateScrimState();
-  };
+  onLayoutChange();
 
-  update();
-
-  const resizeObserver = new ResizeObserver(update);
+  const resizeObserver = new ResizeObserver(onLayoutChange);
   resizeObserver.observe(el);
-  const mutationObserver = new MutationObserver(update);
+  const mutationObserver = new MutationObserver(onLayoutChange);
   mutationObserver.observe(el, { attributes: true, attributeFilter: ['data-open', 'class', 'hidden'] });
 
-  window.addEventListener('resize', update);
-  el.addEventListener('transitionend', update);
-  const unsubscribeScroll = subscribeScrollContainer(updateScrimStateOnScroll);
-  document.addEventListener('scroll', updateScrimStateOnScroll, { passive: true, capture: true });
-  const rootObserver = new MutationObserver(update);
-  rootObserver.observe(root, { attributes: true, attributeFilter: ['style'] });
+  window.addEventListener('resize', onLayoutChange);
+  el.addEventListener('transitionend', onLayoutChange);
+  const unsubscribeScroll = subscribeScrollContainer(onScroll);
 
   return () => {
     resizeObserver.disconnect();
     mutationObserver.disconnect();
-    rootObserver.disconnect();
-    window.removeEventListener('resize', update);
-    el.removeEventListener('transitionend', update);
+    window.removeEventListener('resize', onLayoutChange);
+    el.removeEventListener('transitionend', onLayoutChange);
     unsubscribeScroll();
-    document.removeEventListener('scroll', updateScrimStateOnScroll, { capture: true });
     if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    if (chromePublisher !== token) return;
+    chromePublisher = null;
     root.removeAttribute(EXPANDED_ATTR);
     root.style.removeProperty(HEIGHT_VAR);
-    root.style.removeProperty(SCRIM_HEIGHT_VAR);
     if (overlaysContent) {
       root.style.removeProperty(OVERLAY_HEIGHT_VAR);
     }
