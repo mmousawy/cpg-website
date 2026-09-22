@@ -66,7 +66,7 @@ export default function MobileStickyChromeStack({
       <div
         ref={ref}
         className={clsx(
-          'md:hidden mt-3.5 grid',
+          'md:hidden grid mt-3.5 md:mt-0',
           mobileStickyBottomWithGapClassName,
           mobileStickyChromeZClassName,
           mobileFloatingPillInsetClassName,

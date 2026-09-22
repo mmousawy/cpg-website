@@ -80,15 +80,18 @@ export default function AnimatedStickyBarSlide({
   return (
     <div
       ref={innerRef}
-      className={clsx(
-        'mobile-sticky-bar-slide col-start-1 row-start-1 w-full',
-        !isVisible && 'pointer-events-none',
-        className,
-      )}
-      data-open={isVisible ? '' : undefined}
-      aria-hidden={!isVisible}
+      className={clsx('col-start-1 row-start-1 w-full', className)}
     >
-      {children}
+      <div
+        className={clsx(
+          'mobile-sticky-bar-slide w-full',
+          !isVisible && 'pointer-events-none',
+        )}
+        data-open={isVisible ? '' : undefined}
+        aria-hidden={!isVisible}
+      >
+        {children}
+      </div>
     </div>
   );
 }

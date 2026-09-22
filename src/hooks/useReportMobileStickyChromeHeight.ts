@@ -71,12 +71,17 @@ function isSettledInFlow(el: HTMLElement, rect: DOMRect) {
   return Math.abs(gap.getBoundingClientRect().top - rect.bottom) <= SETTLED_ADJACENT_PX;
 }
 
+function getSlideSurface(el: HTMLElement) {
+  return el.querySelector<HTMLElement>('.mobile-sticky-bar-slide') ?? el;
+}
+
 function getScrimState(el: HTMLElement): ScrimState {
   if (!window.matchMedia(MOBILE_MEDIA).matches) return 'default';
 
   const style = window.getComputedStyle(el);
   if (style.display === 'none' || el.hidden) return 'default';
-  if (el.classList.contains('mobile-sticky-bar-slide') && !el.hasAttribute('data-open')) {
+  const slide = getSlideSurface(el);
+  if (slide.classList.contains('mobile-sticky-bar-slide') && !slide.hasAttribute('data-open')) {
     return 'default';
   }
   if (style.position === 'fixed') {

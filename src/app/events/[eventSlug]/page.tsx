@@ -554,13 +554,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
       <SignUpCTASection />
 
-      {/* Sticky Action Bar - only show for upcoming events */}
-      {!isPastEvent && <EventSignupBar
-        event={event}
-        confirmedAttendeeCount={attendees.length}
-      />}
+      {!isPastEvent && (
+        <EventSignupBar
+          event={event}
+          confirmedAttendeeCount={attendees.length}
+        />
+      )}
 
-      {/* Comments Section */}
       <div className="relative">
         <PageContainer
           variant="alt"
@@ -576,7 +576,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             />
           </div>
         </PageContainer>
-
       </div>
 
     </>
