@@ -50,7 +50,7 @@ export default function MobileActionBar({
         'md:hidden fixed inset-x-0',
         mobileFloatingPillInsetClassName,
         mobileStickyChromeZClassName,
-        'max-sm:bottom-(--mobile-nav-offset,0px)',
+        'max-sm:pb-1',
       )}
     >
       <div className={clsx(mobileFloatingPillClassName, 'overflow-hidden')}>

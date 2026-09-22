@@ -10,6 +10,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['bring-stickers-showcase-entire.trycloudflare.com'],
   // Standalone output for Docker / Coolify (see Dockerfile)
   output: 'standalone',
   env: {

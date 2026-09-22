@@ -3,6 +3,8 @@
 import clsx from 'clsx';
 import { useLayoutEffect, useRef } from 'react';
 
+import { getScrollContainer, getScrollTop, subscribeScrollContainer } from '@/utils/scrollContainer';
+
 /** Mobile-only sticky page title chrome (`max-sm`). */
 const MOBILE_STICKY_MEDIA = '(max-width: 639px)';
 
@@ -28,10 +30,16 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
 
     const mediaQuery = window.matchMedia(MOBILE_STICKY_MEDIA);
 
+    const scrollPortTop = () => {
+      const container = getScrollContainer();
+      return container ? container.getBoundingClientRect().top : 0;
+    };
+
     const updateBorder = () => {
       const headerHeight = inner.offsetHeight;
-      const atTop = window.scrollY <= 0.5;
-      const scrolledPastHeader = headerHeight > 0 && flow.getBoundingClientRect().top <= -headerHeight;
+      const atTop = getScrollTop() <= 0.5;
+      const scrolledPastHeader =
+        headerHeight > 0 && flow.getBoundingClientRect().top <= scrollPortTop() - headerHeight;
 
       if (atTop) {
         borderBrightRef.current = false;
@@ -69,7 +77,7 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
         return;
       }
 
-      const scrollY = Math.max(0, window.scrollY);
+      const scrollY = Math.max(0, getScrollTop());
       const delta = scrollY - lastScrollYRef.current;
       lastScrollYRef.current = scrollY;
 
@@ -80,7 +88,7 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
         return;
       }
 
-      const isStuck = sticky.getBoundingClientRect().top <= 0.5;
+      const isStuck = sticky.getBoundingClientRect().top <= scrollPortTop() + 0.5;
 
       if (!isStuck) {
         hideOffsetRef.current = 0;
@@ -111,22 +119,24 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
         return;
       }
       updateHeight();
-      lastScrollYRef.current = window.scrollY;
+      lastScrollYRef.current = getScrollTop();
       onScroll();
     };
 
     if (mediaQuery.matches) {
       updateHeight();
-      lastScrollYRef.current = window.scrollY;
+      lastScrollYRef.current = getScrollTop();
       onScroll();
     }
 
+    const unsubscribeScroll = subscribeScrollContainer(onScroll);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onLayoutChange, { passive: true });
     mediaQuery.addEventListener('change', onMediaChange);
 
     return () => {
       resizeObserver.disconnect();
+      unsubscribeScroll();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onLayoutChange);
       mediaQuery.removeEventListener('change', onMediaChange);

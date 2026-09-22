@@ -35,6 +35,7 @@ export default function JavaScriptRequired({ contentClass = 'js-content' }: Java
         innerClassName="max-w-md"
       >
         <PageHeading
+          align="center"
           title="JavaScript required"
           description="Please enable JavaScript in your browser to continue."
         />

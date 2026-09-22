@@ -203,7 +203,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         >
           {isLoading ? (
             <div
-              className="h-5 w-24 animate-pulse rounded bg-border-color"
+              className="h-4 w-24 animate-pulse rounded bg-border-color"
             />
           ) : hasRSVP ? (
             <p

@@ -220,7 +220,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
           />
           {totalPhotos > publicPhotos.length && (
             <div
-              className="mt-4 max-sm:mb-2 sm:mt-6 flex justify-center "
+              className="mt-4 sm:mt-6 flex justify-center "
             >
               <Button
                 href={`/@${encodeURIComponent(profile.nickname || nickname)}/photos`}
@@ -263,7 +263,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
             albums={albums}
           />
           <div
-            className="mt-4 max-sm:mb-2 sm:mt-6 flex justify-center "
+            className="mt-4 sm:mt-6 flex justify-center "
           >
             <Button
               href={`/@${encodeURIComponent(profile.nickname || nickname)}/albums`}

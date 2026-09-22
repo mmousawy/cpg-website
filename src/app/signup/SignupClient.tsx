@@ -78,6 +78,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
         innerClassName="max-w-md"
       >
         <PageHeading
+          align="center"
           title="Check your email"
           description={
             <>
@@ -119,6 +120,7 @@ function SignupForm({ bypassToken }: { bypassToken: string | null }) {
       innerClassName="max-w-md"
     >
       <PageHeading
+        align="center"
         title="Create an account"
         description="Join the Creative Photography Group community"
         aside={

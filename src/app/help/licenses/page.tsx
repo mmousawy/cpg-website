@@ -82,6 +82,7 @@ export default function LicensesHelpPage() {
             <ArrowLink
               href={routes.help.url}
               direction="left"
+              className="mb-4"
             >
               Back to Help
             </ArrowLink>

@@ -9,7 +9,7 @@ export const accountFAQ: FAQSection = {
       title: 'Updating your profile',
       content: (
         <p>
-          Go to Account (click your avatar in the Header → Settings) to update your screen name, bio, avatar, and interests. A preview at the top shows how your profile looks; use the Banner image and Profile picture sections below it to upload or change your images. You can change your nickname from Account → Basic info: we&apos;ll email you a confirmation link, and you can change it once every 60 days. Old profile URLs redirect for one year.
+          Go to Account (click your avatar in the Header → Settings) to update your screen name, bio, avatar, and interests. Under Your public profile, a preview shows how your profile looks; use the Banner image and Profile picture sections below it to upload or change your images. You can change your nickname from Account → Basic info: we&apos;ll email you a confirmation link, and you can change it once every 60 days. Old profile URLs redirect for one year.
         </p>
       ),
     },

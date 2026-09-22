@@ -44,7 +44,7 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
         )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-linear-to-t from-black/75 via-black/55 to-[#bba5fa]/25"
+          className="absolute inset-0 bg-linear-to-t from-black/75 via-black/65 to-[#bba5fa]/25 backdrop-blur-xs"
         />
         <div
           className="relative z-10 inset-0 flex items-center px-4 pt-10 pb-11 md:px-8 sm:py-14"
@@ -115,7 +115,7 @@ export function SignUpCTASection() {
 
   return (
     <PageContainer
-      className="pt-0! pb-12!"
+      className="pt-8! pb-0! sm:pt-0! sm:pb-12!"
     >
       <SignUpCTA
         variant="inline"

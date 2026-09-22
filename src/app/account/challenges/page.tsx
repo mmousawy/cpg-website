@@ -2,26 +2,61 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
-import { startTransition, useEffect, useState } from 'react';
+import { startTransition, useEffect, useMemo, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
+import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import CardBadges from '@/components/shared/CardBadges';
 import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useAllMySubmissions, useWithdrawSubmission } from '@/hooks/useChallengeSubmissions';
-import type { SubmissionWithDetails } from '@/types/challenges';
+import { useActiveChallenges } from '@/hooks/useChallenges';
+import type { ChallengeStatus, SubmissionWithDetails } from '@/types/challenges';
+import { DEFAULT_SUPABASE_IMAGE_QUALITY, getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CancelSVG from 'public/icons/cancel.svg';
-import CheckCircleFilledSVG from 'public/icons/check-circle-filled.svg';
 import CheckSVG from 'public/icons/check.svg';
 import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import UndoSVG from 'public/icons/undo.svg';
+
+type ChallengeGroup = {
+  challengeId: string;
+  challenge: NonNullable<SubmissionWithDetails['challenge']>;
+  submissions: SubmissionWithDetails[];
+};
+
+function groupSubmissionsByChallenge(submissions: SubmissionWithDetails[]): ChallengeGroup[] {
+  const map = new Map<string, ChallengeGroup>();
+
+  for (const submission of submissions) {
+    const challenge = submission.challenge;
+    if (!challenge) continue;
+
+    const existing = map.get(challenge.id);
+    if (existing) {
+      existing.submissions.push(submission);
+    } else {
+      map.set(challenge.id, {
+        challengeId: challenge.id,
+        challenge,
+        submissions: [submission],
+      });
+    }
+  }
+
+  return Array.from(map.values());
+}
+
+function groupHasPending(group: ChallengeGroup): boolean {
+  return group.submissions.some((s) => s.status === 'pending');
+}
 
 /**
  * Format deadline countdown
@@ -68,9 +103,22 @@ function formatDeadlineShort(endsAt: string | null, serverNow: number): string |
   return 'Soon';
 }
 
+function isChallengeEnded(
+  challenge: NonNullable<SubmissionWithDetails['challenge']>,
+  now: number | null,
+): boolean {
+  if (!challenge.is_active) return true;
+  if (now == null || !challenge.ends_at) return false;
+  const deadline = formatDeadline(challenge.ends_at, now);
+  return deadline?.includes('Ended') ?? false;
+}
+
+const JOINED_CARD_GRID = 'flex flex-col gap-4';
+
 export default function MyChallengesPage() {
   const { user } = useAuth();
-  const { data: submissions, isLoading } = useAllMySubmissions(user?.id);
+  const { data: submissions, isPending: submissionsPending } = useAllMySubmissions(user?.id);
+  const { data: activeChallenges, isPending: activeChallengesPending } = useActiveChallenges();
   const withdrawMutation = useWithdrawSubmission();
   const confirm = useConfirm();
 
@@ -81,10 +129,20 @@ export default function MyChallengesPage() {
     });
   }, []);
 
-  // Group submissions by status
-  const pendingSubmissions = (submissions || []).filter((s) => s.status === 'pending');
-  const acceptedSubmissions = (submissions || []).filter((s) => s.status === 'accepted');
-  const rejectedSubmissions = (submissions || []).filter((s) => s.status === 'rejected');
+  const allSubmissions = submissions ?? [];
+
+  const { pendingGroups, yourGroups, joinedChallengeIds } = useMemo(() => {
+    const groups = groupSubmissionsByChallenge(allSubmissions);
+    const pending = groups.filter(groupHasPending);
+    const yours = groups.filter((g) => !groupHasPending(g));
+    const joinedIds = new Set(groups.map((g) => g.challengeId));
+    return { pendingGroups: pending, yourGroups: yours, joinedChallengeIds: joinedIds };
+  }, [allSubmissions]);
+
+  const openChallenges = useMemo(() => {
+    if (submissionsPending) return [];
+    return (activeChallenges ?? []).filter((c) => !joinedChallengeIds.has(c.id));
+  }, [activeChallenges, joinedChallengeIds, submissionsPending]);
 
   const handleWithdraw = async (submission: SubmissionWithDetails) => {
     const confirmed = await confirm({
@@ -99,6 +157,13 @@ export default function MyChallengesPage() {
       withdrawMutation.mutate(submission.id);
     }
   };
+
+  const hasJoinedChallenges = pendingGroups.length > 0 || yourGroups.length > 0;
+  const isPageLoading = submissionsPending || (!hasJoinedChallenges && activeChallengesPending);
+
+  const showGlobalEmpty = !isPageLoading
+    && !hasJoinedChallenges
+    && openChallenges.length === 0;
 
   return (
     <PageContainer>
@@ -118,406 +183,349 @@ export default function MyChallengesPage() {
       <div
         className="space-y-8 sm:space-y-10"
       >
-        {/* Accepted Submissions */}
-        {acceptedSubmissions.length > 0 && (
-          <section>
-            <h2
-              className="mb-4 text-xl font-semibold opacity-80 font-heading"
-            >
-              Accepted
-            </h2>
-            <div
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {acceptedSubmissions.map((submission) => (
-                <SubmissionCard
-                  key={submission.id}
-                  submission={submission}
-                  now={now}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Pending Submissions */}
-        <section>
-          <h2
-            className="mb-4 text-xl font-semibold opacity-80 font-heading"
+        {isPageLoading ? (
+          <div
+            className="text-center animate-pulse py-12"
           >
-            Pending review
-          </h2>
-          {isLoading ? (
-            <div
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            <p
+              className="text-foreground/50"
             >
-              {[1, 2, 3].map((i) => (
+              Loading your challenges...
+            </p>
+          </div>
+        ) : showGlobalEmpty ? (
+          <EmptyState
+            icon={<AwardStarMiniSVG
+              className="size-10 fill-foreground/20 inline-block"
+            />}
+            title="No challenge submissions yet"
+            action={(
+              <Button
+                href="/challenges"
+                size="sm"
+                iconRight={<ArrowRightSVG
+                  className="-mr-1.5"
+                />}
+                className="rounded-full"
+              >
+                Browse challenges
+              </Button>
+            )}
+          />
+        ) : (
+          <>
+            {pendingGroups.length > 0 && (
+              <section>
+                <h2
+                  className="mb-4 text-xl font-semibold opacity-80 font-heading"
+                >
+                  Pending review
+                </h2>
                 <div
-                  key={i}
-                  className="animate-pulse rounded-2xl bg-background-light border border-border-color overflow-hidden"
+                  className={JOINED_CARD_GRID}
                 >
-                  <div
-                    className="aspect-16/10 bg-background-medium"
-                  />
-                  <div
-                    className="p-4 space-y-2"
-                  >
-                    <div
-                      className="h-4 bg-background-medium rounded w-3/4"
+                  {pendingGroups.map((group) => (
+                    <JoinedChallengeCard
+                      key={group.challengeId}
+                      group={group}
+                      now={now}
+                      onWithdraw={handleWithdraw}
+                      isWithdrawing={withdrawMutation.isPending}
                     />
-                    <div
-                      className="h-3 bg-background-medium rounded w-1/2"
-                    />
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : pendingSubmissions.length === 0 ? (
-            <EmptyState
-              icon={<AwardStarMiniSVG
-                className="size-10 fill-foreground/20 inline-block"
-              />}
-              title="No pending submissions"
-              action={(
-                <Button
-                  href="/challenges"
-                  size="sm"
-                  iconRight={<ArrowRightSVG
-                    className="-mr-1.5"
-                  />}
-                  className="rounded-full"
-                >
-                  Browse challenges
-                </Button>
-              )}
-            />
-          ) : (
-            <div
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {pendingSubmissions.map((submission) => (
-                <SubmissionCard
-                  key={submission.id}
-                  submission={submission}
-                  now={now}
-                  onWithdraw={() => handleWithdraw(submission)}
-                  isWithdrawing={withdrawMutation.isPending}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+              </section>
+            )}
 
-        {/* Rejected Submissions */}
-        {rejectedSubmissions.length > 0 && (
-          <section>
-            <h2
-              className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-            >
-              Rejected
-            </h2>
-            <div
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {rejectedSubmissions.map((submission) => (
-                <SubmissionCard
-                  key={submission.id}
-                  submission={submission}
-                  now={now}
+            {yourGroups.length > 0 && (
+              <section>
+                <h2
+                  className="mb-4 text-xl font-semibold opacity-80 font-heading"
+                >
+                  Your challenges
+                </h2>
+                <div
+                  className={JOINED_CARD_GRID}
+                >
+                  {yourGroups.map((group) => (
+                    <JoinedChallengeCard
+                      key={group.challengeId}
+                      group={group}
+                      now={now}
+                      onWithdraw={handleWithdraw}
+                      isWithdrawing={withdrawMutation.isPending}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {openChallenges.length > 0 && (
+              <section>
+                <h2
+                  className="mb-4 text-xl font-semibold opacity-80 font-heading"
+                >
+                  Open challenges
+                </h2>
+                <ChallengesList
+                  challenges={openChallenges}
+                  serverNow={now ?? Date.now()}
+                  emptyMessage="No open challenges right now."
                 />
-              ))}
-            </div>
-          </section>
+              </section>
+            )}
+          </>
         )}
       </div>
     </PageContainer>
   );
 }
 
-function SubmissionCard({
-  submission,
+const statusAccent: Record<ChallengeStatus, string> = {
+  pending: 'border-amber-500/60',
+  accepted: 'border-green-600/60',
+  rejected: 'border-red-700/60',
+};
+
+function submissionStatusBadge(status: ChallengeStatus) {
+  if (status === 'accepted') {
+    return {
+      icon: <CheckSVG
+        className="size-4 fill-current"
+      />,
+      variant: 'accepted' as const,
+      tooltip: 'Accepted',
+    };
+  }
+  if (status === 'rejected') {
+    return {
+      icon: <CancelSVG
+        className="size-4 fill-current"
+      />,
+      variant: 'rejected' as const,
+      tooltip: 'Rejected',
+    };
+  }
+  return {
+    icon: <ClockMiniSVG
+      className="size-4 fill-current"
+    />,
+    variant: 'pending' as const,
+    tooltip: 'Pending review',
+  };
+}
+
+function JoinedChallengeCard({
+  group,
   now,
   onWithdraw,
   isWithdrawing,
 }: {
-  submission: SubmissionWithDetails;
+  group: ChallengeGroup;
   now: number | null;
-  onWithdraw?: () => void;
-  isWithdrawing?: boolean;
+  onWithdraw: (submission: SubmissionWithDetails) => void;
+  isWithdrawing: boolean;
 }) {
-  const photo = submission.photo;
-  const challenge = submission.challenge;
-  const deadline = now != null && challenge?.ends_at
+  const { challenge, submissions } = group;
+  const challengeLink = `/challenges/${challenge.slug}`;
+  const deadline = now != null && challenge.ends_at
     ? formatDeadline(challenge.ends_at, now)
     : null;
-  const deadlineShort = now != null && challenge?.ends_at
+  const deadlineShort = now != null && challenge.ends_at
     ? formatDeadlineShort(challenge.ends_at, now)
     : null;
-  const isEnded = deadline?.includes('Ended') || !challenge?.is_active;
-  const photoHref = submission.user?.nickname && photo?.short_id
-    ? `/@${submission.user.nickname}/photo/${photo.short_id}`
-    : null;
+  const ended = isChallengeEnded(challenge, now);
+  const canSubmitAnother = challenge.is_active && !ended;
 
-  const statusConfigs = {
-    pending: {
-      badge: (
-        <span
-          className="flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-amber-500/90"
-        >
-          <ClockMiniSVG
-            className="size-4 -ml-0.5 shrink-0 fill-current"
-          />
-          <span
-            className="hidden sm:inline"
-          >
-            Pending
-          </span>
-        </span>
-      ),
-      accent: 'ring-amber-500',
-    },
-    accepted: {
-      badge: (
-        <span
-          className="flex items-center gap-1.5 rounded-full bg-green-600/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-green-600/90"
-        >
-          <CheckSVG
-            className="size-4 shrink-0 fill-current"
-          />
-          <span
-            className="hidden sm:inline"
-          >
-            Accepted
-          </span>
-        </span>
-      ),
-      accent: 'ring-green-600',
-    },
-    rejected: {
-      badge: (
-        <span
-          className="flex items-center gap-1.5 rounded-full bg-red-700/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-semibold text-white border border-red-700/90"
-        >
-          <CancelSVG
-            className="size-4 shrink-0 fill-current"
-          />
-          <span
-            className="hidden sm:inline"
-          >
-            Rejected
-          </span>
-        </span>
-      ),
-      accent: 'ring-red-700',
-    },
-  };
+  const sortedSubmissions = [...submissions].sort(
+    (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime(),
+  );
 
-  const statusConfig = statusConfigs[submission.status as keyof typeof statusConfigs] || statusConfigs.pending;
+  const deadlineLabel = ended
+    ? (deadline ?? 'Ended')
+    : (deadline ?? (challenge.is_active ? 'Open' : null));
 
   return (
-    <div
+    <article
       className={clsx(
-        'group relative flex flex-col overflow-hidden rounded-2xl transition-all',
+        'flex flex-col overflow-hidden rounded-2xl transition-all sm:flex-row',
         'bg-background-light border border-border-color',
         'hover:border-border-color-strong hover:shadow-lg',
       )}
     >
-      {/* Cover Image Area - Challenge background with submitted photo overlay */}
-      <div
-        className="relative aspect-16/10 w-full overflow-hidden bg-background-medium"
+      <Link
+        href={challengeLink}
+        className="relative min-h-28 w-full shrink-0 bg-background-medium sm:aspect-square sm:w-48 "
       >
-        {/* Challenge cover as background */}
-        {challenge?.cover_image_url ? (
-          <>
-            <BlurImage
-              src={challenge.cover_image_url}
-              alt={challenge.title}
-              fill
-              className="object-cover brightness-90"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              blurhash={challenge.image_blurhash}
-            />
-            {/* Blur overlay */}
-            <div
-              className="absolute inset-0 backdrop-blur-sm"
-              style={{
-                WebkitMaskImage: 'radial-gradient(circle at center, transparent 60%, black 100%)',
-                maskImage: 'radial-gradient(circle at center, transparent 60%, black)',
-              }}
-            />
-          </>
+        {challenge.cover_image_url ? (
+          <BlurImage
+            src={challenge.cover_image_url}
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 224px"
+            blurhash={challenge.image_blurhash}
+          />
         ) : (
           <div
-            className="absolute inset-0 bg-linear-to-br from-primary/20 via-primary/10 to-background-medium"
-          />
-        )}
-
-        {/* Gradient overlay */}
-        <div
-          className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-black/40"
-        />
-
-        {/* Submitted photo - centered and featured */}
-        <div
-          className="absolute inset-0 flex items-center justify-center p-4"
-        >
-          <div
-            className={clsx(
-              'relative h-full aspect-square rounded-xl overflow-hidden shadow-2xl ring-2 ring-offset-2 ring-offset-black/50',
-              statusConfig.accent,
-            )}
-          >
-            {photo?.url ? (
-              <>
-                <BlurImage
-                  src={photo.url}
-                  alt={photo.title || 'Submitted photo'}
-                  fill
-                  className="object-cover"
-                  sizes="200px"
-                  blurhash={photo.blurhash}
-                />
-                {photoHref && (
-                  <Link
-                    href={photoHref}
-                    className="absolute inset-0 z-10"
-                  />
-                )}
-              </>
-            ) : (
-              <div
-                className="flex h-full w-full items-center justify-center bg-background-medium text-foreground/30"
-              >
-                ?
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Top badges row */}
-        <div
-          className="absolute inset-x-0 top-0 flex items-start justify-between p-3"
-        >
-          {/* Challenge badge - icon only on mobile to save space */}
-          <div
-            className="flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-1.5 py-1 sm:px-2 text-xs font-medium text-white border border-challenge-badge/90"
+            className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-primary/20 via-primary/10 to-background-medium"
           >
             <AwardStarMiniSVG
-              className="size-4 fill-current shrink-0"
+              className="size-8 fill-primary/30 sm:size-12"
             />
-            <span
-              className="hidden sm:inline"
-            >
-              Challenge
-            </span>
           </div>
+        )}
 
-          {/* Status badge */}
-          {statusConfig.badge}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div
-        className="flex flex-col gap-2 p-3"
-      >
-        {/* Challenge title */}
-        {challenge && (
-          <Link
-            href={`/challenges/${challenge.slug}`}
-            className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1"
+        <div
+          className="absolute inset-x-0 top-0 z-10 bg-linear-to-b from-black/85 via-black/40 to-transparent p-4 pb-12 sm:p-4 sm:pb-15"
+        >
+          <p
+            className="font-heading text-xl font-semibold leading-tight text-white line-clamp-3 sm:text-xl"
           >
             {challenge.title}
-          </Link>
-        )}
-
-        {/* Deadline badge - short on mobile */}
-        {!isEnded && deadline && deadlineShort && (
-          <div
-            className="flex items-center gap-1.5 text-xs text-foreground/80"
+          </p>
+        </div>
+        {deadlineLabel && (
+          <span
+            className={clsx(
+              'absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold text-white sm:bottom-3 sm:right-3 sm:px-2 sm:py-1 sm:text-xs',
+              ended
+                ? 'border-black/90 bg-black/85'
+                : deadline
+                  ? 'border-amber-500/90 bg-amber-500/85'
+                  : 'border-green-600/90 bg-green-600/85',
+            )}
           >
             <ClockMiniSVG
-              className="size-4 fill-current shrink-0"
+              className="size-3 shrink-0 fill-current sm:size-3.5"
             />
             <span
               className="hidden sm:inline"
             >
-              {deadline}
+              {deadlineLabel}
             </span>
             <span
               className="sm:hidden"
             >
-              {deadlineShort}
-            </span>
-          </div>
-        )}
-
-        {/* Meta info */}
-        <div
-          className="flex items-center justify-between text-xs text-foreground/80"
-        >
-          <span
-            className="flex items-center gap-1.5"
-          >
-            <CheckCircleFilledSVG
-              className="size-4 fill-current shrink-0"
-            />
-            <span
-              className="hidden sm:inline"
-            >
-              Submitted
-              {' '}
-              {(() => {
-                const d = new Date(submission.submitted_at);
-                return d.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: now != null && d.getFullYear() === new Date(now).getFullYear()
-                    ? undefined
-                    : 'numeric',
-                });
-              })()}
-            </span>
-            <span
-              className="sm:hidden"
-            >
-              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
+              {ended ? 'Ended' : (deadlineShort ?? deadlineLabel)}
             </span>
           </span>
+        )}
+      </Link>
+
+      <div
+        className="flex min-w-0 flex-1 flex-col gap-4 p-5 pt-4 sm:px-5 sm:py-4"
+      >
+        <div
+          className="flex flex-wrap gap-4 sm:gap-5"
+        >
+          {sortedSubmissions.map((submission) => {
+            const photo = submission.photo;
+            const photoHref = submission.user?.nickname && photo?.short_id
+              ? `/@${submission.user.nickname}/photo/${photo.short_id}`
+              : null;
+            const status = submission.status as ChallengeStatus;
+            const accent = statusAccent[status] ?? statusAccent.pending;
+
+            return (
+              <div
+                key={submission.id}
+                className="flex w-24 flex-col gap-2 sm:w-28"
+              >
+                <div
+                  className={clsx(
+                    'aspect-square border-2 bg-background-light p-0.5',
+                    accent,
+                  )}
+                >
+                  <div
+                    className="relative size-full overflow-hidden"
+                  >
+                    {photo?.url ? (
+                      <>
+                        <BlurImage
+                          src={getSquareThumbnailUrl(photo.url, 512, DEFAULT_SUPABASE_IMAGE_QUALITY) || photo.url}
+                          alt={photo.title || 'Submitted photo'}
+                          fill
+                          className="object-cover"
+                          sizes="256px"
+                          quality={DEFAULT_SUPABASE_IMAGE_QUALITY}
+                          blurhash={photo.blurhash}
+                        />
+                        {photoHref && (
+                          <Link
+                            href={photoHref}
+                            className="absolute inset-0 z-10"
+                            aria-label={photo.title || 'View submitted photo'}
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <div
+                        className="flex h-full w-full items-center justify-center bg-background-medium text-foreground/30"
+                      >
+                        ?
+                      </div>
+                    )}
+                    <CardBadges
+                      badges={[submissionStatusBadge(status)]}
+                    />
+                  </div>
+                </div>
+
+                {status === 'pending' && (
+                  <button
+                    type="button"
+                    onClick={() => onWithdraw(submission)}
+                    disabled={isWithdrawing}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground disabled:opacity-50"
+                  >
+                    <UndoSVG
+                      className="size-3.5 shrink-0"
+                    />
+                    Withdraw
+                  </button>
+                )}
+
+                {status === 'rejected' && submission.rejection_reason && (
+                  <p
+                    className="text-xs leading-snug text-red-500/80 line-clamp-3"
+                  >
+                    {submission.rejection_reason}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Withdraw button for pending */}
-        {submission.status === 'pending' && onWithdraw && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onWithdraw}
-            disabled={isWithdrawing}
-            icon={<UndoSVG
-              className="h-3.5 w-3.5"
-            />}
-            className="mt-2"
-          >
-            Withdraw
-          </Button>
-          )}
+        <hr
+          className="mt-auto border-border-color"
+        />
 
-        {/* Rejection reason */}
-        {submission.status === 'rejected' && submission.rejection_reason && (
-          <p
-            className="text-xs text-red-500/80 bg-red-500/10 rounded-lg px-3 py-2"
-          >
-            <strong>
-              Reason:
-            </strong>
+        <div
+          className="flex items-center justify-between gap-3 text-xs text-foreground/70"
+        >
+          <span>
+            {submissions.length}
             {' '}
-            {submission.rejection_reason}
-          </p>
-        )}
+            {submissions.length === 1 ? 'submission' : 'submissions'}
+          </span>
+          {canSubmitAnother && (
+            <Button
+              href={challengeLink}
+              variant="secondary"
+              size="sm"
+              className="shrink-0 px-2.5! py-1! text-xs!"
+              iconRight={<ArrowRightSVG
+                className="size-3.5 -ml-0.5"
+              />}
+            >
+              Submit another
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

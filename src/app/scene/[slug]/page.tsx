@@ -463,7 +463,7 @@ export default async function SceneEventDetailPage({
       <div className="relative">
         <PageContainer
           variant="alt"
-          className="border-t border-t-border-color max-sm:pb-2"
+          className="border-t border-t-border-color"
         >
           <div
             aria-hidden

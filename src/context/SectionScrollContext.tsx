@@ -10,6 +10,7 @@ import {
 } from 'react';
 
 import { useActiveSectionScroll } from '@/hooks/useActiveSectionScroll';
+import { subscribeScrollContainer } from '@/utils/scrollContainer';
 
 interface SectionScrollContextType {
   activeSectionId: string | null;
@@ -27,23 +28,36 @@ export function SectionScrollProvider({ sectionIds, children }: SectionScrollPro
   const observedActive = useActiveSectionScroll(sectionIds);
   const [pinnedSectionId, setPinnedSectionId] = useState<string | null>(null);
   const ignoreScrollUntilRef = useRef<number>(0);
+  const pinCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => {
+    pinCleanupRef.current?.();
+  }, []);
 
   const pinSection = useCallback((id: string) => {
     setPinnedSectionId(id);
     // Ignore scroll events during the programmatic scroll animation
     ignoreScrollUntilRef.current = Date.now() + 800;
+    pinCleanupRef.current?.();
 
-    // After the scroll settles, clear the pin on the next user-initiated scroll
+    let unsubscribe: (() => void) | null = null;
     const handleUserScroll = () => {
       if (Date.now() < ignoreScrollUntilRef.current) return;
       setPinnedSectionId(null);
-      window.removeEventListener('scroll', handleUserScroll);
+      pinCleanupRef.current?.();
+      pinCleanupRef.current = null;
     };
-
-    // Defer attaching so the current click's scroll doesn't immediately clear
-    setTimeout(() => {
-      window.addEventListener('scroll', handleUserScroll, { passive: true });
+    const timeoutId = window.setTimeout(() => {
+      unsubscribe = subscribeScrollContainer(handleUserScroll);
+      document.addEventListener('scroll', handleUserScroll, { passive: true, capture: true });
     }, 100);
+
+    pinCleanupRef.current = () => {
+      window.clearTimeout(timeoutId);
+      unsubscribe?.();
+      unsubscribe = null;
+      document.removeEventListener('scroll', handleUserScroll, { capture: true });
+    };
   }, []);
 
   const activeSectionId = pinnedSectionId ?? observedActive;

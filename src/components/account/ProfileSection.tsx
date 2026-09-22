@@ -2,7 +2,6 @@
 
 import { UseFormRegister } from 'react-hook-form';
 
-import ProfileImageUploadSections from '@/components/account/ProfileImageUploadSections';
 import Container from '@/components/layout/Container';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
@@ -15,34 +14,11 @@ interface ProfileSectionProps {
   profile: Profile | null;
   userEmail: string | null | undefined;
   nickname: string;
-  displayBannerUrl: string | null;
-  displayBannerBlurhash: string | null;
-  displayAvatarUrl: string | null;
-  hasBannerChanges: boolean;
-  hasAvatarChanges: boolean;
-  bannerError: string | null;
-  avatarError: string | null;
-  isSaving: boolean;
   emailChangedFromUrl: boolean;
   nicknameChangedFromUrl: boolean;
   nicknameChangeCooldownEnd: Date | null;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
-  bannerInputRef: React.RefObject<HTMLInputElement | null>;
-  handleBannerUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleRemoveBanner: () => void;
-  handleCancelBannerChange: () => void;
-  handleAvatarUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleRemoveAvatar: () => void;
-  handleCancelAvatarChange: () => void;
   onOpenEmailModal: () => void;
   onOpenNicknameModal: () => void;
-  fullName: string;
-  savedBannerUrl: string | null;
-  savedAvatarUrl: string | null;
-  pendingBannerFile: File | null;
-  pendingAvatarFile: File | null;
-  pendingBannerRemove: boolean;
-  pendingAvatarRemove: boolean;
 }
 
 export default function ProfileSection({
@@ -50,34 +26,11 @@ export default function ProfileSection({
   profile,
   userEmail,
   nickname,
-  displayBannerUrl,
-  displayBannerBlurhash,
-  displayAvatarUrl,
-  hasBannerChanges,
-  hasAvatarChanges,
-  bannerError,
-  avatarError,
-  isSaving,
   emailChangedFromUrl,
   nicknameChangedFromUrl,
   nicknameChangeCooldownEnd,
-  fileInputRef,
-  bannerInputRef,
-  handleBannerUpload,
-  handleRemoveBanner,
-  handleCancelBannerChange,
-  handleAvatarUpload,
-  handleRemoveAvatar,
-  handleCancelAvatarChange,
   onOpenEmailModal,
   onOpenNicknameModal,
-  fullName,
-  savedBannerUrl,
-  savedAvatarUrl,
-  pendingBannerFile,
-  pendingAvatarFile,
-  pendingBannerRemove,
-  pendingAvatarRemove,
 }: ProfileSectionProps) {
   const nicknameOnCooldown = nicknameChangeCooldownEnd !== null
     && nicknameChangeCooldownEnd > new Date();
@@ -90,36 +43,6 @@ export default function ProfileSection({
         Basic info
       </h2>
       <Container>
-        <ProfileImageUploadSections
-          profileId={profile?.id ?? ''}
-          nickname={nickname || profile?.nickname || null}
-          fullName={fullName || profile?.full_name || null}
-          displayBannerUrl={displayBannerUrl}
-          displayBannerBlurhash={displayBannerBlurhash}
-          displayAvatarUrl={displayAvatarUrl}
-          savedBannerUrl={savedBannerUrl}
-          savedAvatarUrl={savedAvatarUrl}
-          pendingBannerFile={pendingBannerFile}
-          pendingAvatarFile={pendingAvatarFile}
-          pendingBannerRemove={pendingBannerRemove}
-          pendingAvatarRemove={pendingAvatarRemove}
-          hasBannerChanges={hasBannerChanges}
-          hasAvatarChanges={hasAvatarChanges}
-          bannerError={bannerError}
-          avatarError={avatarError}
-          isSaving={isSaving}
-          fileInputRef={fileInputRef}
-          bannerInputRef={bannerInputRef}
-          handleBannerUpload={handleBannerUpload}
-          handleRemoveBanner={handleRemoveBanner}
-          handleCancelBannerChange={handleCancelBannerChange}
-          handleAvatarUpload={handleAvatarUpload}
-          handleRemoveAvatar={handleRemoveAvatar}
-          handleCancelAvatarChange={handleCancelAvatarChange}
-          heroVariant="account"
-        />
-
-        {/* Form Fields */}
         <div
           className="space-y-4"
         >

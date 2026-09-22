@@ -8,10 +8,16 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
 import { subscribeRouteChange } from '@/lib/routeChange';
+import { scrollContainerTo } from '@/utils/scrollContainer';
 import { isOnboardingPath } from '@/utils/onboardingPath';
 import MobileAccountMenu from './MobileAccountMenu';
 import TabBarPopoverBackdrop from './TabBarPopoverBackdrop';
-import { mobileScrimZClassName, mobileTabActiveClassName, mobileTabActivePillClassName, mobileTabBarZClassName } from './mobileChrome';
+import {
+  mobileScrimZClassName,
+  mobileTabActiveClassName,
+  mobileTabActivePillClassName,
+  mobileTabBarZClassName,
+} from './mobileChrome';
 
 type TabId = 'home' | 'events' | 'gallery' | 'members';
 
@@ -86,10 +92,16 @@ export default function MobileTabBar() {
     const el = containerRef.current;
     if (!el) return;
 
+    let lastHeightPx = 0;
+
     const updateOffset = () => {
-      const marginSource = navRef.current ?? el;
-      const marginBottom = Number.parseFloat(getComputedStyle(marginSource).marginBottom) || 0;
-      const height = el.getBoundingClientRect().height + marginBottom * 2;
+      const tabBar = el.closest('.mobile-tab-bar');
+      const gap = tabBar
+        ? Number.parseFloat(getComputedStyle(tabBar).paddingBottom) || 0
+        : 0;
+      const height = el.offsetHeight + gap;
+      if (Math.abs(height - lastHeightPx) < 0.5) return;
+      lastHeightPx = height;
       root.style.setProperty('--mobile-nav-offset', `${height}px`);
     };
 
@@ -97,11 +109,12 @@ export default function MobileTabBar() {
 
     const observer = new ResizeObserver(updateOffset);
     observer.observe(el);
-    window.addEventListener('resize', updateOffset);
+    if (navRef.current) observer.observe(navRef.current);
+    const tabBar = el.closest('.mobile-tab-bar');
+    if (tabBar) observer.observe(tabBar);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateOffset);
       root.style.removeProperty('--mobile-nav-offset');
     };
   }, [hidden]);
@@ -188,23 +201,22 @@ export default function MobileTabBar() {
 
     const resizeObserver = new ResizeObserver(updateIndicator);
     resizeObserver.observe(list);
-    resizeObserver.observe(list.querySelector<HTMLElement>(`[data-mobile-tab="${activeTab}"]`) ?? list);
+    const activeTabEl = list.querySelector<HTMLElement>(`[data-mobile-tab="${activeTab}"]`);
+    if (activeTabEl) resizeObserver.observe(activeTabEl);
     const mutationObserver = new MutationObserver(updateIndicator);
     mutationObserver.observe(list, { childList: true, subtree: true });
-    window.addEventListener('resize', updateIndicator);
 
     return () => {
       window.cancelAnimationFrame(frame);
       resizeObserver.disconnect();
       mutationObserver.disconnect();
-      window.removeEventListener('resize', updateIndicator);
     };
   }, [activeTab]);
 
   const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, tab: TabId, isCurrent: boolean) => {
     if (isCurrent) {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollContainerTo(0, 'smooth');
       return;
     }
     setPendingTab(tab);
@@ -227,21 +239,27 @@ export default function MobileTabBar() {
         )}
         aria-hidden
       >
-        <div className="mobile-tab-bar-scrim__tone mobile-tab-bar-scrim__tone--default absolute inset-0 mobile-tab-bar-scrim__fade" />
-        <div className="mobile-tab-bar-scrim__tone mobile-tab-bar-scrim__tone--sticky absolute inset-0 mobile-tab-bar-scrim__fade mobile-tab-bar-scrim__fade--sticky" />
+        <div className="mobile-tab-bar-scrim__tone mobile-tab-bar-scrim__tone--default absolute inset-x-0 bottom-0 mobile-tab-bar-scrim__fade" />
+        <div className="mobile-tab-bar-scrim__tone mobile-tab-bar-scrim__tone--sticky absolute inset-x-0 bottom-0 mobile-tab-bar-scrim__fade mobile-tab-bar-scrim__fade--sticky" />
       </div>
 
-      <div className={clsx('mobile-tab-bar pointer-events-none fixed inset-x-0 bottom-0 sm:hidden', mobileTabBarZClassName)}>
-      <TabBarPopoverBackdrop open={accountOpen} onClose={closeAccount} />
+      <div
+        className={clsx(
+          'mobile-tab-bar-shell pointer-events-none fixed inset-x-0 bottom-0 sm:hidden',
+          mobileTabBarZClassName,
+        )}
+      >
+      <div className="mobile-tab-bar pointer-events-none absolute inset-x-0 bottom-0">
+        <TabBarPopoverBackdrop open={accountOpen} onClose={closeAccount} />
 
-      <div ref={containerRef} className="relative">
-        <nav
-          ref={navRef}
-          aria-label="Main"
-          onPointerDownCapture={handleNavPointerDown}
-          className="pointer-events-auto relative z-10 mx-3 mb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-noise shadow-lg backdrop-blur-sm"
-        >
-          <div ref={tabListRef} className="relative">
+        <div ref={containerRef} className="relative">
+          <nav
+            ref={navRef}
+            aria-label="Main"
+            onPointerDownCapture={handleNavPointerDown}
+            className="pointer-events-auto relative z-10 mx-3 overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-noise shadow-lg backdrop-blur-sm"
+          >
+            <div ref={tabListRef} className="relative">
             {indicator && (
               <div
                 aria-hidden
@@ -332,10 +350,11 @@ export default function MobileTabBar() {
               />
             </li>
           </ul>
-          </div>
-        </nav>
+            </div>
+          </nav>
+        </div>
       </div>
-    </div>
+      </div>
     </>
   );
 }

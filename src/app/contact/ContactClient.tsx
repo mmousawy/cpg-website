@@ -81,6 +81,7 @@ function ContactForm() {
         innerClassName="max-w-xl"
       >
         <PageHeading
+          align="center"
           title="Message sent"
           description="Thank you for reaching out! We'll get back to you as soon as possible."
         />

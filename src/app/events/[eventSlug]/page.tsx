@@ -528,7 +528,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         {/* Empty state for Event Photos - separate section */}
         {!hasEventPhotos(eventAlbum) &&  (
           <div
-            className="mt-4 sm:mt-8"
+            className="mt-4 sm:mt-8 empty:hidden"
           >
             <EventPhotosSection
               eventId={event.id}
@@ -564,7 +564,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       <div className="relative">
         <PageContainer
           variant="alt"
-          className="border-t border-t-border-color max-sm:pb-2"
+          className="border-t border-t-border-color"
         >
           <div
             aria-hidden

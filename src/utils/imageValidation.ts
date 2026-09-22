@@ -1,5 +1,25 @@
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
+const MIME_ALIASES: Record<string, string> = {
+  'image/jpg': 'image/jpeg',
+  'image/pjpeg': 'image/jpeg',
+};
+
+const EXT_TO_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+};
+
+function resolveImageMime(file: File): string {
+  const aliased = MIME_ALIASES[file.type] ?? file.type;
+  if (aliased) return aliased;
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  return EXT_TO_MIME[ext] ?? '';
+}
+
 // Cap at ~33 MP (8K resolution: 7680×4320 ≈ 33.2 MP).
 // imgproxy must be configured with IMGPROXY_MAX_SRC_RESOLUTION >= 33.
 // For accurate wide-gamut thumbs, set IMGPROXY_STRIP_COLOR_PROFILE=false (see infra/imgproxy-color-profiles.md).
@@ -29,7 +49,7 @@ export function validateImageFile(
     allowedTypes = ALLOWED_IMAGE_TYPES,
   } = options;
 
-  if (!allowedTypes.includes(file.type)) {
+  if (!allowedTypes.includes(resolveImageMime(file))) {
     return {
       type: 'file_type',
       message: 'Please upload a valid image file (JPEG, PNG, GIF, or WebP)',
@@ -77,6 +97,11 @@ export async function validateImageResolution(
     }
 
     return null;
+  } catch {
+    return {
+      type: 'file_type',
+      message: 'Could not read that image. Please try a JPEG, PNG, GIF, or WebP.',
+    };
   } finally {
     URL.revokeObjectURL(url);
   }

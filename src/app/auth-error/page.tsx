@@ -19,6 +19,7 @@ export default function AuthErrorPage() {
       innerClassName="max-w-md"
     >
       <PageHeading
+        align="center"
         title="Authentication error"
         description="Something went wrong during the authentication process. This could be due to an expired link or an invalid session."
       />

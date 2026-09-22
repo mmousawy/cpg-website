@@ -1,9 +1,9 @@
-import { cacheLife, cacheTag } from 'next/cache';
+import ChallengesPageHeader from '@/app/challenges/ChallengesPageHeader';
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
-import ChallengesPageHeader from '@/app/challenges/ChallengesPageHeader';
 import { getChallengesPageData } from '@/lib/data/challengesPage';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 
 export const metadata = createMetadata({
   title: 'Photo challenges',

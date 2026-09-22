@@ -46,6 +46,7 @@ export default function ForgotPasswordClient() {
         innerClassName="max-w-md"
       >
         <PageHeading
+          align="center"
           title="Check your email"
           description={
             <>
@@ -87,6 +88,7 @@ export default function ForgotPasswordClient() {
       innerClassName="max-w-md"
     >
       <PageHeading
+        align="center"
         title="Forgot password?"
         description="No worries, we'll send you reset instructions."
         aside={

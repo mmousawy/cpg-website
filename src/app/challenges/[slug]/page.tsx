@@ -484,7 +484,7 @@ export default async function ChallengePage({
         {/* Empty state - separate section, narrow column when no photos */}
         {photos.length === 0 && (
           <div
-            className="mt-4 sm:mt-8"
+            className="mt-4 sm:mt-8 empty:hidden"
           >
             <ChallengeEmptyState
               isEnded={isEnded}

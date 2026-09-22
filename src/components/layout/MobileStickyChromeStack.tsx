@@ -6,6 +6,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
   mobileFloatingPillInsetClassName,
+  mobileStickyBarSettleGapClassName,
+  mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
 import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
@@ -60,34 +62,42 @@ export default function MobileStickyChromeStack({
   }, [showAction, hidden]);
 
   return (
-    <div
-      ref={ref}
-      className={clsx(
-        'md:hidden sticky bottom-0 my-3.5 max-sm:bottom-(--mobile-nav-offset,0px) grid',
-        mobileStickyChromeZClassName,
-        mobileFloatingPillInsetClassName,
-        className,
-      )}
-      hidden={hidden || undefined}
-    >
-      <AnimatedStickyBarSlide
-        open={navOpen}
-        onExited={() => {
-          if (pendingRef.current === 'action') setActionOpen(true);
-        }}
+    <>
+      <div
+        ref={ref}
+        className={clsx(
+          'md:hidden mt-3.5 grid',
+          mobileStickyBottomWithGapClassName,
+          mobileStickyChromeZClassName,
+          mobileFloatingPillInsetClassName,
+          className,
+        )}
+        hidden={hidden || undefined}
       >
-        {nav}
-      </AnimatedStickyBarSlide>
-      {action != null && (
         <AnimatedStickyBarSlide
-          open={actionOpen}
+          open={navOpen}
           onExited={() => {
-            if (pendingRef.current === 'nav') setNavOpen(true);
+            if (pendingRef.current === 'action') setActionOpen(true);
           }}
         >
-          {action}
+          {nav}
         </AnimatedStickyBarSlide>
-      )}
-    </div>
+        {action != null && (
+          <AnimatedStickyBarSlide
+            open={actionOpen}
+            onExited={() => {
+              if (pendingRef.current === 'nav') setNavOpen(true);
+            }}
+          >
+            {action}
+          </AnimatedStickyBarSlide>
+        )}
+      </div>
+      <div
+        className={mobileStickyBarSettleGapClassName}
+        hidden={hidden || undefined}
+        aria-hidden
+      />
+    </>
   );
 }

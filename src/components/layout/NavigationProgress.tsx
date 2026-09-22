@@ -8,8 +8,9 @@ import { setAppNavigationBusy } from '@/lib/appNavigation';
 
 const OVERLAY_FADE_MS = 200;
 
-// Custom event name for triggering navigation progress
+// Custom event names for triggering navigation progress
 const NAVIGATION_START_EVENT = 'navigation:start';
+const NAVIGATION_COMPLETE_EVENT = 'navigation:complete';
 
 /**
  * Trigger the navigation progress bar manually.
@@ -18,6 +19,16 @@ const NAVIGATION_START_EVENT = 'navigation:start';
 export function triggerNavigationProgress() {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(NAVIGATION_START_EVENT));
+  }
+}
+
+/**
+ * Complete an in-flight navigation progress bar without a pathname change.
+ * Use for things like `router.refresh()` where the URL stays the same.
+ */
+export function triggerNavigationProgressComplete() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(NAVIGATION_COMPLETE_EVENT));
   }
 }
 
@@ -242,12 +253,20 @@ export default function NavigationProgress() {
       startProgress();
     };
 
+    const handleNavigationComplete = () => {
+      if (navigationStartTimeRef.current) {
+        completeProgress();
+      }
+    };
+
     window.addEventListener(NAVIGATION_START_EVENT, handleNavigationStart);
+    window.addEventListener(NAVIGATION_COMPLETE_EVENT, handleNavigationComplete);
 
     return () => {
       window.removeEventListener(NAVIGATION_START_EVENT, handleNavigationStart);
+      window.removeEventListener(NAVIGATION_COMPLETE_EVENT, handleNavigationComplete);
     };
-  }, [startProgress]);
+  }, [startProgress, completeProgress]);
 
   // When pathname changes, complete the progress
   // Note: This is intentional - we need to respond to pathname changes from Next.js
@@ -286,9 +305,10 @@ export default function NavigationProgress() {
         />
       </div>
       <div
-        className={`pointer-events-none fixed inset-0 z-34 bg-background/40 transition-opacity duration-200 ease-out sm:hidden ${
+        className={`pointer-events-none fixed inset-x-0 top-0 z-34 bg-background/40 transition-opacity duration-200 ease-out sm:hidden ${
           overlayOpaque ? 'opacity-100' : 'opacity-0'
         }`}
+        style={{ bottom: 'var(--mobile-nav-offset, 0px)' }}
         aria-hidden
       />
     </>

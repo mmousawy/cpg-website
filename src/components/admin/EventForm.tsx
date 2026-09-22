@@ -28,6 +28,7 @@ interface EventFormProps {
   onCoverImageChange: (file: File | null) => void;
   onCoverImageRemove: () => void;
   coverImageInputRef: React.RefObject<HTMLInputElement | null>;
+  onCoverImageError?: (error: string | null) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -44,6 +45,7 @@ export default function EventForm({
   onCoverImageChange,
   onCoverImageRemove,
   coverImageInputRef,
+  onCoverImageError,
   onSubmit,
 }: EventFormProps) {
   return (
@@ -182,6 +184,7 @@ export default function EventForm({
             onCoverImageChange={onCoverImageChange}
             onCoverImageRemove={onCoverImageRemove}
             coverImageInputRef={coverImageInputRef}
+            onError={onCoverImageError}
           />
         </div>
       </Container>

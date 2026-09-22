@@ -45,7 +45,7 @@ function GallerySectionHeader({
 function ButtonSkeleton({ className = 'w-44' }: { className?: string }) {
   return (
     <div
-      className="mt-4 max-sm:mb-2 sm:mt-6 flex justify-center "
+      className="mt-4 sm:mt-6 flex justify-center "
     >
       <SkeletonBar
         className={`h-[2.125rem] rounded-full border border-border-color-strong ${className}`}
