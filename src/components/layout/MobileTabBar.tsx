@@ -95,11 +95,15 @@ export default function MobileTabBar() {
     let lastHeightPx = 0;
 
     const updateOffset = () => {
-      const tabBar = el.closest('.mobile-tab-bar');
+      const current = containerRef.current;
+      if (!current) return;
+
+      const tabBar = current.closest('.mobile-tab-bar');
       const gap = tabBar
         ? Number.parseFloat(getComputedStyle(tabBar).paddingBottom) || 0
         : 0;
-      const height = el.offsetHeight + gap;
+      const height = current.offsetHeight + gap;
+      if (height < 1) return;
       if (Math.abs(height - lastHeightPx) < 0.5) return;
       lastHeightPx = height;
       root.style.setProperty('--mobile-nav-offset', `${height}px`);
@@ -115,7 +119,6 @@ export default function MobileTabBar() {
 
     return () => {
       observer.disconnect();
-      root.style.removeProperty('--mobile-nav-offset');
     };
   }, [hidden]);
 
