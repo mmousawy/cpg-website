@@ -244,7 +244,7 @@ export default function SceneEventStickyBar(props: SceneEventStickyBarProps) {
   const { isLoggedIn } = useSession();
 
   return (
-    <StickyActionBar constrainWidth>
+    <StickyActionBar constrainWidth overlaysContent>
       {isLoggedIn ? (
         <SceneEventStickyBarAuthenticated {...props} />
       ) : (

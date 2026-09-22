@@ -892,8 +892,8 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
     padding-bottom: var(--mobile-shell-padding-bottom);
   }
 
-  /* In-flow sticky section nav already adds settle gap above tab-bar padding. */
-  html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap) {
+  /* Terminal in-flow sticky nav only — mid-page bars (e.g. RSVP) still need content gap below. */
+  html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap--terminal) {
     --mobile-content-bottom-gap: 0px;
   }
 
