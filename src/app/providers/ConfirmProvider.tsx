@@ -12,6 +12,8 @@ export interface ConfirmOptions {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: 'danger' | 'default';
+  /** Confirm button icon. `false` hides it; default for `danger` is the delete (trash) icon. */
+  confirmIcon?: React.ReactNode | false;
 }
 
 interface ConfirmContextValue {

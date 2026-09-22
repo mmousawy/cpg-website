@@ -45,7 +45,9 @@ export default function AccountMenuSlidingTrack({
   const measureView = useCallback((target: 'root' | 'site') => {
     const el = target === 'root' ? rootInnerRef.current : siteInnerRef.current;
     if (!el) return null;
-    return Math.min(el.offsetHeight, getMaxMenuHeightPx());
+    const natural = el.offsetHeight;
+    if (target === 'site') return natural;
+    return Math.min(natural, getMaxMenuHeightPx());
   }, []);
 
   const prevViewRef = useRef(view);
@@ -92,7 +94,13 @@ export default function AccountMenuSlidingTrack({
 
   if (reduceMotion) {
     return (
-      <div className="max-h-[min(70vh,28rem)] overflow-x-hidden overflow-y-auto">
+      <div
+        className={
+          view === 'site'
+            ? 'overflow-x-hidden'
+            : 'max-h-[min(70vh,28rem)] overflow-x-hidden overflow-y-auto'
+        }
+      >
         {view === 'root' ? root : site}
       </div>
     );
@@ -100,13 +108,16 @@ export default function AccountMenuSlidingTrack({
 
   const viewportHeightStyle = {
     height: heightPx !== null ? `${heightPx}px` : 'auto',
-    maxHeight: 'min(70vh, 28rem)',
+    maxHeight: view === 'site' ? undefined : 'min(70vh, 28rem)',
     transition: heightTransitionsEnabled
       ? `height ${SLIDE_MS}ms ${SLIDE_EASE}`
       : 'none',
   };
 
-  const paneShellClass = 'w-1/2 shrink-0 self-start overflow-x-hidden overflow-y-auto';
+  const paneShellClass = (pane: 'root' | 'site') =>
+    pane === 'site'
+      ? 'w-1/2 shrink-0 self-start overflow-x-hidden'
+      : 'w-1/2 shrink-0 self-start overflow-x-hidden overflow-y-auto';
 
   return (
     <div
@@ -121,9 +132,9 @@ export default function AccountMenuSlidingTrack({
         }}
       >
         <div
-          className={paneShellClass}
+          className={paneShellClass('root')}
           style={
-            heightPx !== null
+            heightPx !== null && view === 'root'
               ? { maxHeight: `${heightPx}px` }
               : undefined
           }
@@ -135,12 +146,7 @@ export default function AccountMenuSlidingTrack({
           </div>
         </div>
         <div
-          className={paneShellClass}
-          style={
-            heightPx !== null
-              ? { maxHeight: `${heightPx}px` }
-              : undefined
-          }
+          className={paneShellClass('site')}
           aria-hidden={view !== 'site'}
           inert={view !== 'site'}
         >

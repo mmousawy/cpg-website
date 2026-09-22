@@ -38,6 +38,14 @@ export default function ConfirmModal() {
   };
 
   const isDanger = options?.variant === 'danger';
+  const confirmIcon =
+    options?.confirmIcon === false
+      ? undefined
+      : options?.confirmIcon !== undefined
+        ? options.confirmIcon
+        : isDanger
+          ? <TrashSVG className="size-4 -ml-0.5" />
+          : undefined;
 
   return (
     <dialog
@@ -100,9 +108,7 @@ export default function ConfirmModal() {
             <Button
               variant={isDanger ? 'danger' : 'primary'}
               onClick={handleConfirm}
-              icon={isDanger ? <TrashSVG
-                className="size-4 -ml-0.5"
-              /> : undefined}
+              icon={confirmIcon}
             >
               {options?.confirmLabel || 'Confirm'}
             </Button>
