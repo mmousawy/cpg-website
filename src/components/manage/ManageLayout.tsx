@@ -211,7 +211,7 @@ export default function ManageLayout({
           {/* Content area — this is the scroll container for infinite scroll sentinels */}
           <div
             ref={scrollContainerRef}
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto max-sm:pb-[calc(max(var(--mobile-nav-offset,0px),var(--mobile-overlay-chrome-height,0px))+var(--mobile-content-bottom-gap,0px))]"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto max-sm:pb-(--mobile-shell-padding-bottom)"
           >
             {children}
           </div>

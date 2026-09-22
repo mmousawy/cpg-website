@@ -45,15 +45,6 @@ export default function DocumentRouteState() {
       resetScrollContainer();
     }
     prevPathnameRef.current = pathname;
-
-    return () => {
-      if (isManage) {
-        document.documentElement.classList.remove('manage-page');
-      }
-      if (pinnedMobileShell) {
-        document.documentElement.classList.remove('mobile-pinned-shell');
-      }
-    };
   }, [pathname, pinnedMobileShell]);
 
   return null;

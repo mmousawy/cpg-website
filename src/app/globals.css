@@ -20,6 +20,8 @@
   --category-text-shadow: none;
   --mobile-tab-bar-bottom-gap: 0.75rem;
   --mobile-content-bottom-gap: 1rem;
+  /* Fallback until MobileTabBar measures; matches scrim minimum (~4.5rem). */
+  --mobile-nav-offset: 4.5rem;
   /* Scene category colors (light mode) */
   --category-all: #475569;
   --category-exhibition: #b45309;
@@ -875,21 +877,24 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
 }
 
 @media (max-width: 639px) {
-  html:not(.manage-page) .app-shell-main {
-    padding-bottom: calc(
-      max(
-        var(--mobile-nav-offset, 0px),
-        var(--mobile-overlay-chrome-height, 0px)
-      ) + var(--mobile-content-bottom-gap, 0px)
+  :root {
+    --mobile-shell-padding-bottom: calc(
+      max(var(--mobile-nav-offset), var(--mobile-overlay-chrome-height, 0px))
+      + var(--mobile-content-bottom-gap)
     );
+  }
+
+  html:not(.manage-page) .app-shell-main {
+    --mobile-shell-padding-bottom: calc(
+      max(var(--mobile-nav-offset), var(--mobile-overlay-chrome-height, 0px))
+      + var(--mobile-content-bottom-gap)
+    );
+    padding-bottom: var(--mobile-shell-padding-bottom);
   }
 
   /* In-flow sticky section nav already adds settle gap above tab-bar padding. */
   html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap) {
-    padding-bottom: max(
-      var(--mobile-nav-offset, 0px),
-      var(--mobile-overlay-chrome-height, 0px)
-    );
+    --mobile-content-bottom-gap: 0px;
   }
 
   html.manage-page .app-shell-main {
