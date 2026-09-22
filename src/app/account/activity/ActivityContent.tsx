@@ -280,7 +280,7 @@ export default function ActivityContent() {
             )}
 
             {groups.earlier.length > 0 && (
-              <section className="mb-4">
+              <section>
                 <h2
                   className="mb-3 text-lg font-semibold font-heading"
                 >

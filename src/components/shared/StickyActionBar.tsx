@@ -7,6 +7,8 @@ import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
+  mobileStickyBarSettleGapClassName,
+  mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
 import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
@@ -75,7 +77,7 @@ export default function StickyActionBar({
     'relative',
     sticky && 'sticky z-30',
     mobileStickyChromeZClassName,
-    isBottomSticky && 'bottom-0 max-sm:mb-3.5 max-sm:bottom-(--mobile-nav-offset,0px)',
+    isBottomSticky && mobileStickyBottomWithGapClassName,
     isBottomSticky && mobileFloatingPillInsetClassName,
     sticky && position === 'top' && 'top-0',
     className,
@@ -83,13 +85,16 @@ export default function StickyActionBar({
 
   if (isBottomSticky) {
     return (
-      <AnimatedStickyBarSlide
-        open
-        innerRef={rootRef}
-        className={rootClassName}
-      >
-        {inner}
-      </AnimatedStickyBarSlide>
+      <>
+        <AnimatedStickyBarSlide
+          open
+          innerRef={rootRef}
+          className={rootClassName}
+        >
+          {inner}
+        </AnimatedStickyBarSlide>
+        <div className={mobileStickyBarSettleGapClassName} aria-hidden />
+      </>
     );
   }
 

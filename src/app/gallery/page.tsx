@@ -61,7 +61,7 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
           className="py-0!"
         >
           <div
-            className="grid min-w-0 gap-10 md:gap-12 [&>*]:min-w-0"
+            className="grid min-w-0 gap-10 md:gap-12 *:min-w-0"
           >
             <GalleryMostViewedPhotosSection
               photos={mostViewedPhotos}
@@ -75,11 +75,11 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
             <GalleryRecentAlbumsSection
               albums={recentAlbums}
             />
-            <SignUpCTA
-              variant="inline"
-              className="max-w-screen-md mx-auto"
-            />
           </div>
+          <SignUpCTA
+            variant="inline"
+            className="max-w-screen-md  mx-auto sm:mt-12"
+          />
         </WidePageContainer>
       </div>
     </div>

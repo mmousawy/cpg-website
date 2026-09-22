@@ -251,32 +251,17 @@ export default function ChallengeCard({
           >
             {photoCount > 0 && (
               <>
-                <span
-                  className="hidden sm:inline"
-                >
+                <span>
                   {photoCount}
                   {' '}
                   {photoCount !== 1 ? 'entries' : 'entry'}
-                </span>
-                <span
-                  className="sm:hidden"
-                >
-                  {photoCount}
-                  {photoCount !== 1 ? ' photos' : ' photo'}
                 </span>
               </>
             )}
             {!photoCount && (
               <>
-                <span
-                  className="hidden sm:inline"
-                >
-                  No submissions yet
-                </span>
-                <span
-                  className="sm:hidden"
-                >
-                  None yet
+                <span>
+                  No entries yet
                 </span>
               </>
             )}

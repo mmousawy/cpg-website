@@ -22,7 +22,7 @@ export function HomeMembersSection({ organizers, recentMembers }: HomeMembersSec
       >
         <div>
           <h2
-            className="text-2xl font-bold mb-4 font-heading"
+            className="text-2xl font-bold mb-2 font-heading"
           >
             Meet the community
           </h2>
@@ -36,7 +36,7 @@ export function HomeMembersSection({ organizers, recentMembers }: HomeMembersSec
         {organizers && organizers.length > 0 && (
           <div>
             <h3
-              className="text-lg font-semibold mb-4"
+              className="text-lg font-semibold mb-2"
             >
               Organizers
             </h3>
@@ -88,7 +88,7 @@ export function HomeMembersSection({ organizers, recentMembers }: HomeMembersSec
         {members && members.length > 0 && (
           <div>
             <h3
-              className="text-lg font-semibold mb-4"
+              className="text-lg font-semibold mb-2"
             >
               Members
             </h3>

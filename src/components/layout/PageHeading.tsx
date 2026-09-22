@@ -16,6 +16,8 @@ type PageHeadingProps = {
   actions?: ReactNode;
   /** Segmented section links (e.g. Events | Scene) — mobile sticky row only; desktop uses main nav */
   subnav?: ReactNode;
+  /** Standalone pages (login, etc.) center the title; listing pages stay start-aligned */
+  align?: 'start' | 'center';
   className?: string;
 };
 
@@ -25,22 +27,36 @@ export default function PageHeading({
   aside,
   actions,
   subnav,
+  align = 'start',
   className,
 }: PageHeadingProps) {
   const pathname = usePathname();
   const hasMeta = description || actions;
   const showMobileSearch = !isOnboardingPath(pathname);
+  const center = align === 'center';
 
   return (
     <>
       <StickyScrollHeader className={className}>
-        <div className="flex w-full items-center gap-2">
+        <div
+          className={clsx(
+            'flex w-full items-center gap-2',
+            center && showMobileSearch && 'max-sm:grid max-sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]',
+          )}
+        >
           <div
             className={clsx(
-              'flex min-w-0 flex-1 flex-wrap items-center justify-start gap-x-2 gap-y-1 sm:gap-3',
+              'flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 sm:gap-3',
+              center ? 'justify-center' : 'justify-start',
+              center && showMobileSearch && 'max-sm:col-start-2',
             )}
           >
-            <div className="flex min-w-0 items-center justify-start gap-2">
+            <div
+              className={clsx(
+                'flex min-w-0 items-center gap-2',
+                center ? 'justify-center' : 'justify-start',
+              )}
+            >
               <h1
                 className={clsx(
                   'font-bold font-heading',
@@ -58,7 +74,12 @@ export default function PageHeading({
             ) : null}
           </div>
           {showMobileSearch ? (
-            <div className="hidden shrink-0 max-sm:block">
+            <div
+              className={clsx(
+                'hidden shrink-0 max-sm:block',
+                center && 'max-sm:col-start-3 max-sm:justify-self-end',
+              )}
+            >
               <PageHeadingMobileSearch />
             </div>
           ) : null}
@@ -69,6 +90,7 @@ export default function PageHeading({
           className={clsx(
             'mb-8 mt-1',
             className,
+            center && 'text-center',
             actions && 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4',
           )}
         >

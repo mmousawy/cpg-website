@@ -43,7 +43,7 @@ export const profileHeroBannerPreviewHeightClassName =
 export const profileHeroMobileGapClassName = 'max-sm:pt-4!';
 
 /** Tight top spacing below the profile hero */
-export const profileHeroPageClassName = `${profileHeroMobileGapClassName} sm:pt-0! pb-4! sm:pt-4! sm:pb-6!`;
+export const profileHeroPageClassName = `${profileHeroMobileGapClassName} sm:pt-0! pb-4!`;
 
 function getProfileDisplayTitle(profile: ProfileHeaderProfile): string {
   if (profile.full_name) {

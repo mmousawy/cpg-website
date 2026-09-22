@@ -6,6 +6,8 @@ import { useLayoutEffect, useRef } from 'react';
 import { resetBodyScrollLock } from '@/lib/bodyScrollLock';
 import { dispatchRouteChange } from '@/lib/routeChange';
 import { isManagePagePath } from '@/utils/managePage';
+import { isMobilePinnedShellPath } from '@/utils/mobilePinnedShell';
+import { refreshScrollContainerBinding, resetScrollContainer, resetWindowScroll } from '@/utils/scrollContainer';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 
 /**
@@ -19,15 +21,28 @@ export default function DocumentRouteState() {
   const pathname = usePathname();
   const prevPathnameRef = useRef(pathname);
 
+  const pinnedMobileShell = isMobilePinnedShellPath(pathname);
+
   useLayoutEffect(() => {
     const isManage = isManagePagePath(pathname);
     document.documentElement.classList.toggle('manage-page', isManage);
-    // Drop any overlay scroll lock from the previous route.
+    document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
+    if (pinnedMobileShell && window.matchMedia('(max-width: 639px)').matches) {
+      if (history.scrollRestoration) {
+        history.scrollRestoration = 'manual';
+      }
+      resetWindowScroll();
+    }
     resetBodyScrollLock();
     closeOpenPhotoSwipes();
+    refreshScrollContainerBinding();
 
-    if (prevPathnameRef.current !== pathname) {
+    const pathChanged = prevPathnameRef.current !== pathname;
+    if (pathChanged) {
       dispatchRouteChange();
+    }
+    if (!window.location.hash && (pathChanged || pinnedMobileShell)) {
+      resetScrollContainer();
     }
     prevPathnameRef.current = pathname;
 
@@ -35,8 +50,11 @@ export default function DocumentRouteState() {
       if (isManage) {
         document.documentElement.classList.remove('manage-page');
       }
+      if (pinnedMobileShell) {
+        document.documentElement.classList.remove('mobile-pinned-shell');
+      }
     };
-  }, [pathname]);
+  }, [pathname, pinnedMobileShell]);
 
   return null;
 }

@@ -79,6 +79,7 @@ function ResetPasswordForm() {
         innerClassName="max-w-md"
       >
         <PageHeading
+          align="center"
           title="Password updated!"
           description="Your password has been successfully updated. Redirecting you to login..."
         />
@@ -105,6 +106,7 @@ function ResetPasswordForm() {
         innerClassName="max-w-md"
       >
         <PageHeading
+          align="center"
           title="Invalid reset link"
           description="This password reset link is invalid or has expired."
         />
@@ -128,6 +130,7 @@ function ResetPasswordForm() {
       innerClassName="max-w-md"
     >
       <PageHeading
+        align="center"
         title="Set new password"
         description="Enter your new password below."
       />

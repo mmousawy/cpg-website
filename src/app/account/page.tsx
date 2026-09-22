@@ -235,34 +235,11 @@ function AccountPageContent() {
                     profile={profile}
                     userEmail={user?.email}
                     nickname={nickname}
-                    displayBannerUrl={displayBannerUrl}
-                    displayBannerBlurhash={displayBannerBlurhash}
-                    displayAvatarUrl={displayAvatarUrl}
-                    hasBannerChanges={hasBannerChanges}
-                    hasAvatarChanges={hasAvatarChanges}
-                    bannerError={bannerError}
-                    avatarError={avatarError}
-                    isSaving={isSaving}
                     emailChangedFromUrl={emailChangedFromUrl}
                     nicknameChangedFromUrl={nicknameChangedFromUrl}
                     nicknameChangeCooldownEnd={nicknameChangeCooldownEnd}
-                    fileInputRef={fileInputRef}
-                    bannerInputRef={bannerInputRef}
-                    handleBannerUpload={handleBannerUpload}
-                    handleRemoveBanner={handleRemoveBanner}
-                    handleCancelBannerChange={handleCancelBannerChange}
-                    handleAvatarUpload={handleAvatarUpload}
-                    handleRemoveAvatar={handleRemoveAvatar}
-                    handleCancelAvatarChange={handleCancelAvatarChange}
                     onOpenEmailModal={openEmailModal}
                     onOpenNicknameModal={openNicknameModal}
-                    fullName={fullName || user?.email || ''}
-                    savedBannerUrl={savedBannerUrl}
-                    savedAvatarUrl={savedAvatarUrl}
-                    pendingBannerFile={pendingBannerFile}
-                    pendingAvatarFile={pendingAvatarFile}
-                    pendingBannerRemove={pendingBannerRemove}
-                    pendingAvatarRemove={pendingAvatarRemove}
                   />
                 </section>
 
@@ -275,6 +252,30 @@ function AccountPageContent() {
                     control={control}
                     socialLinksFieldArray={socialLinksFieldArray}
                     isSaving={isSaving}
+                    profileId={profile?.id ?? ''}
+                    nickname={nickname || profile?.nickname || null}
+                    fullName={fullName || user?.email || profile?.full_name || null}
+                    displayBannerUrl={displayBannerUrl}
+                    displayBannerBlurhash={displayBannerBlurhash}
+                    displayAvatarUrl={displayAvatarUrl}
+                    savedBannerUrl={savedBannerUrl}
+                    savedAvatarUrl={savedAvatarUrl}
+                    pendingBannerFile={pendingBannerFile}
+                    pendingAvatarFile={pendingAvatarFile}
+                    pendingBannerRemove={pendingBannerRemove}
+                    pendingAvatarRemove={pendingAvatarRemove}
+                    hasBannerChanges={hasBannerChanges}
+                    hasAvatarChanges={hasAvatarChanges}
+                    bannerError={bannerError}
+                    avatarError={avatarError}
+                    fileInputRef={fileInputRef}
+                    bannerInputRef={bannerInputRef}
+                    handleBannerUpload={handleBannerUpload}
+                    handleRemoveBanner={handleRemoveBanner}
+                    handleCancelBannerChange={handleCancelBannerChange}
+                    handleAvatarUpload={handleAvatarUpload}
+                    handleRemoveAvatar={handleRemoveAvatar}
+                    handleCancelAvatarChange={handleCancelAvatarChange}
                   />
                 </section>
 

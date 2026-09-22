@@ -21,6 +21,7 @@ function EmailChangedContent() {
         innerClassName="max-w-md"
       >
         <PageHeading
+          align="center"
           title="Something went wrong"
           description="We couldn't verify your email change. The link may be invalid or expired."
         />
@@ -63,6 +64,7 @@ function EmailChangedContent() {
       innerClassName="max-w-md"
     >
       <PageHeading
+        align="center"
         title="Email changed successfully!"
         description="Your email has been updated. You can use it to log in to your account."
       />

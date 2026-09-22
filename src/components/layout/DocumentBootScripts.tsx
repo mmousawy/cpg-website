@@ -4,6 +4,7 @@ import { useServerInsertedHTML } from 'next/navigation';
 import { useRef } from 'react';
 
 import { MANAGE_PAGE_BOOT_SCRIPT } from '@/utils/managePage';
+import { MOBILE_PINNED_SHELL_BOOT_SCRIPT } from '@/utils/mobilePinnedShell';
 import { PLATFORM_BOOT_SCRIPT } from '@/utils/platform';
 
 /**
@@ -23,7 +24,7 @@ export default function DocumentBootScripts() {
       <script
         suppressHydrationWarning
         dangerouslySetInnerHTML={{
-          __html: `${MANAGE_PAGE_BOOT_SCRIPT}${PLATFORM_BOOT_SCRIPT}`,
+          __html: `${MANAGE_PAGE_BOOT_SCRIPT}${MOBILE_PINNED_SHELL_BOOT_SCRIPT}${PLATFORM_BOOT_SCRIPT}`,
         }}
       />
     );

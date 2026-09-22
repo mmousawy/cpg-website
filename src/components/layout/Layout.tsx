@@ -13,7 +13,7 @@ type LayoutProps = {
 export default function Layout({ children }: LayoutProps) {
   return (
     <div
-      className="app-shell flex min-h-full flex-col"
+      className="app-shell flex min-h-full max-sm:min-h-0 flex-col"
     >
       <SkipToContent />
       <Suspense fallback={null}>

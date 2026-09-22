@@ -2,6 +2,9 @@
 
 import { Control, Controller, UseFormRegister } from 'react-hook-form';
 
+import ProfileImageUploadSections, {
+  type ProfileImageUploadSectionsProps,
+} from '@/components/account/ProfileImageUploadSections';
 import Container from '@/components/layout/Container';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import Button from '@/components/shared/Button';
@@ -27,7 +30,7 @@ const SOCIAL_LABEL_SUGGESTIONS = [
   'SmugMug',
 ];
 
-interface PublicProfileSectionProps {
+interface PublicProfileSectionProps extends ProfileImageUploadSectionsProps {
   register: UseFormRegister<AccountFormData>;
   control: Control<AccountFormData>;
   socialLinksFieldArray: {
@@ -35,7 +38,6 @@ interface PublicProfileSectionProps {
     append: (value: { label: string; url: string }) => void;
     remove: (index: number) => void;
   };
-  isSaving: boolean;
 }
 
 export default function PublicProfileSection({
@@ -43,6 +45,7 @@ export default function PublicProfileSection({
   control,
   socialLinksFieldArray,
   isSaving,
+  ...imageProps
 }: PublicProfileSectionProps) {
   const { fields, append, remove } = socialLinksFieldArray;
 
@@ -54,6 +57,11 @@ export default function PublicProfileSection({
         Your public profile
       </h2>
       <Container>
+        <ProfileImageUploadSections
+          {...imageProps}
+          isSaving={isSaving}
+          heroVariant="account"
+        />
         <p
           className="text-foreground/80 mb-4 text-sm"
         >

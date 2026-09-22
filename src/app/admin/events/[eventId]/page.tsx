@@ -162,13 +162,23 @@ function AdminEventForm() {
   const handleCoverImageChange = (file: File | null) => {
     setCoverImageFile(file);
     if (file) {
-      setCoverImagePreview(URL.createObjectURL(file));
+      setCoverImagePreview((prev) => {
+        if (prev?.startsWith('blob:')) {
+          URL.revokeObjectURL(prev);
+        }
+        return URL.createObjectURL(file);
+      });
     }
   };
 
   const handleCoverImageRemove = () => {
     setCoverImageFile(null);
-    setCoverImagePreview(null);
+    setCoverImagePreview((prev) => {
+      if (prev?.startsWith('blob:')) {
+        URL.revokeObjectURL(prev);
+      }
+      return null;
+    });
     setCoverImage('');
     if (coverImageInputRef.current) {
       coverImageInputRef.current.value = '';
@@ -412,8 +422,8 @@ function AdminEventForm() {
       return;
     }
 
-    if (!coverImageFile && !coverImagePreview) {
-      setError('Cover image is required');
+    if (!asDraft && !coverImageFile && !coverImagePreview) {
+      setError('Cover image is required to publish');
       return;
     }
 
@@ -537,7 +547,7 @@ function AdminEventForm() {
             date,
             time: time || null,
             location: location.trim() || null,
-            cover_image: coverImageUrl,
+            cover_image: coverImageUrl || null,
             image_blurhash: imageBlurhash,
             image_width: imageWidth,
             image_height: imageHeight,
@@ -582,7 +592,7 @@ function AdminEventForm() {
           date,
           time: time || null,
           location: location.trim() || null,
-          cover_image: coverImageUrl,
+          cover_image: coverImageUrl || null,
           is_draft: asDraft,
           ...(coverImageFile && imageBlurhash
             ? {
@@ -725,6 +735,7 @@ function AdminEventForm() {
               onCoverImageChange={handleCoverImageChange}
               onCoverImageRemove={handleCoverImageRemove}
               coverImageInputRef={coverImageInputRef}
+              onCoverImageError={setError}
               onSubmit={handleSave}
             />
 
@@ -816,7 +827,7 @@ function AdminEventForm() {
             {/* Danger Zone - Only show for existing events */}
             {!isNewEvent && (
               <Container
-                className="border-red-500/30 bg-red-500/5"
+                className="border-red-500/30 bg-red-500/5 mb-4"
               >
                 <h3
                   className="mb-2 font-semibold text-red-600"

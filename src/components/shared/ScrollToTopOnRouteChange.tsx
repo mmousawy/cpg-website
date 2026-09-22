@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 
+import { scrollContainerTo } from '@/utils/scrollContainer';
+
 /**
  * Ensures a fresh page starts at the top on client navigations.
  * Skip hash URLs so deep links like #comments still work.
@@ -15,7 +17,7 @@ function ScrollToTopOnRouteChangeInner() {
     if (window.location.hash) return;
 
     const scrollToTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      scrollContainerTo(0, 'auto');
     };
 
     // Run immediately and again on the next frame for mobile browser stability.

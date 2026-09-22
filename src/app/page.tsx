@@ -1,7 +1,5 @@
-import { Suspense } from 'react';
-import { cacheLife, cacheTag } from 'next/cache';
-import { HomeBelowFoldSkeleton } from '@/components/home/HomeBelowFoldSkeleton';
 import { HomeAlbumsSection } from '@/components/home/HomeAlbumsSection';
+import { HomeBelowFoldSkeleton } from '@/components/home/HomeBelowFoldSkeleton';
 import { HomeExploreSection } from '@/components/home/HomeExploreSection';
 import { HomeHeroSection } from '@/components/home/HomeHeroSection';
 import { HomeMembersSection } from '@/components/home/HomeMembersSection';
@@ -14,9 +12,11 @@ import { socialLinks } from '@/config/socials';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getHomePageData } from '@/lib/data/home';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
+import { Suspense } from 'react';
 
 export const metadata = {
   ...createMetadata({
@@ -70,7 +70,7 @@ async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent:
 
   return (
     <div
-      className="grid min-w-0 gap-10 md:gap-12 pt-10 pb-0 md:p-12 [&>*]:min-w-0"
+      className="grid min-w-0 gap-10 md:gap-12 pt-10 pb-0 sm:pt-12 *:min-w-0 sm:pb-12"
     >
         <HomeExploreSection
           events={events}
@@ -90,7 +90,7 @@ async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent:
         >
           <Container>
             <h2
-              className="text-2xl font-bold mb-4 font-heading"
+              className="text-2xl font-bold mb-2 font-heading"
             >
               What&apos;s Creative Photography Group?
             </h2>

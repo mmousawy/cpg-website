@@ -164,7 +164,7 @@ export default function PastSceneEventsPaginated({
       {hasMore && allEvents.length > 0 && (
         <div
           ref={sentinelRef}
-          className="flex justify-center max-sm:smb-4 sm:pt-4 pb-2"
+          className="flex justify-center sm:pt-4 pb-2"
         >
           {isPending && (
             <p

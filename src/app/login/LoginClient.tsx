@@ -89,6 +89,7 @@ function LoginForm() {
       innerClassName="max-w-md"
     >
       <PageHeading
+        align="center"
         title="Welcome back"
         description="Log in to your account to continue"
         aside={

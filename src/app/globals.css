@@ -18,6 +18,8 @@
   --error-red: #f75074;
   --challenge-badge: #2c96d3;
   --category-text-shadow: none;
+  --mobile-tab-bar-bottom-gap: 0.75rem;
+  --mobile-content-bottom-gap: 1rem;
   /* Scene category colors (light mode) */
   --category-all: #475569;
   --category-exhibition: #b45309;
@@ -731,9 +733,65 @@ html.manage-page .app-header-inner {
   max-width: none;
 }
 
-.mobile-tab-bar-scrim {
-  height: max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem));
-  transition: height 250ms ease-in-out;
+/* Mobile: pin chrome to the layout viewport so the tab bar does not wiggle with the URL bar.
+   Only `#main-content` scrolls; pull-to-refresh is handled in MobilePullToRefresh. */
+@media (max-width: 639px) {
+  html.mobile-pinned-shell,
+  html.mobile-pinned-shell body {
+    overflow: hidden;
+    height: 100%;
+    max-height: 100%;
+  }
+
+  html.mobile-pinned-shell .app-shell {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html.mobile-pinned-shell .app-shell-main {
+    /* `height: 0` + flex-grow is the iOS-safe way to give the scroller a bounded
+       height. `display: block` avoids flex children stretching past scrollTop 0. */
+    display: block;
+    flex: 1 1 0%;
+    height: 0;
+    min-height: 0;
+    overflow-x: clip;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html.mobile-pinned-shell .mobile-tab-bar-shell,
+  html.manage-page .mobile-tab-bar-shell,
+  html.mobile-pinned-shell .mobile-tab-bar-scrim,
+  html.manage-page .mobile-tab-bar-scrim {
+    position: absolute;
+  }
+
+  html.mobile-pinned-shell .mobile-tab-bar,
+  html.manage-page .mobile-tab-bar {
+    position: absolute;
+  }
+}
+
+.mobile-tab-bar-scrim,
+.mobile-tab-bar-scrim__tone {
+  height: var(
+    --mobile-tab-bar-scrim-height,
+    max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem))
+  );
+  transition: height 150ms ease-out;
+}
+
+@media (max-width: 639px) {
+  .mobile-tab-bar {
+    padding-bottom: var(--mobile-tab-bar-bottom-gap, 0.75rem);
+  }
 }
 
 .mobile-tab-indicator.is-ready {
@@ -746,7 +804,7 @@ html.manage-page .app-header-inner {
 
 @media (max-width: 639px) {
   .mobile-sticky-bar-slide {
-    transform: translateY(calc(100% + 1rem));
+    transform: translateY(calc(100% + var(--mobile-tab-bar-bottom-gap, 0.75rem)));
     transition: transform 250ms ease-out;
   }
 
@@ -774,9 +832,10 @@ html.manage-page .app-header-inner {
   }
 }
 
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
-  height: max(
-    6rem,
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim,
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone {
+  height: var(
+    --mobile-tab-bar-scrim-height,
     calc(var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1.5rem)
   );
 }
@@ -800,7 +859,7 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
 }
 
 .mobile-tab-bar-scrim__tone {
-  transition: opacity 250ms ease-out;
+  transition: height 150ms ease-out, opacity 150ms ease-out;
 }
 
 .mobile-tab-bar-scrim__tone--sticky {
@@ -818,7 +877,18 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
 @media (max-width: 639px) {
   html:not(.manage-page) .app-shell-main {
     padding-bottom: calc(
-      var(--mobile-nav-offset, 0px) + var(--mobile-overlay-chrome-height, 0px)
+      max(
+        var(--mobile-nav-offset, 0px),
+        var(--mobile-overlay-chrome-height, 0px)
+      ) + var(--mobile-content-bottom-gap, 0px)
+    );
+  }
+
+  /* In-flow sticky section nav already adds settle gap above tab-bar padding. */
+  html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap) {
+    padding-bottom: max(
+      var(--mobile-nav-offset, 0px),
+      var(--mobile-overlay-chrome-height, 0px)
     );
   }
 

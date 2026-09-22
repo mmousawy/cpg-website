@@ -3,6 +3,8 @@
  * Reads the header height directly for reliable offset calculation.
  */
 
+import { getScrollTop, scrollContainerTo } from '@/utils/scrollContainer';
+
 function getHeaderOffset(): number {
   if (typeof window === 'undefined') return 0;
   const header = document.querySelector('header');
@@ -30,8 +32,9 @@ export function scrollToIdWithStickyHeaderOffset(
     }
 
     const offset = getHeaderOffset();
-    const top = el.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top: Math.max(0, top), behavior });
+    const scrollTop = getScrollTop();
+    const top = el.getBoundingClientRect().top + scrollTop - offset;
+    scrollContainerTo(Math.max(0, top), behavior);
     return true;
   };
 

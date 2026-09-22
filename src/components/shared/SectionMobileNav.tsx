@@ -7,6 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
+  mobileStickyBarSettleGapClassName,
+  mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
 import type { SectionNavItem } from '@/components/shared/SectionSidebar';
@@ -65,14 +67,15 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [close]);
 
-  return (
+  const nav = (
     <div
       ref={panelRef}
       className={clsx(
         'md:hidden flex flex-col',
         mobileStickyChromeZClassName,
-        sticky && 'sticky bottom-0 max-sm:bottom-[var(--mobile-nav-offset,0px)]',
+        sticky && mobileStickyBottomWithGapClassName,
         sticky && mobileFloatingPillInsetClassName,
+        sticky && 'mt-3.5',
       )}
     >
       <div
@@ -154,5 +157,16 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
       </div>
       </div>
     </div>
+  );
+
+  if (!sticky) {
+    return nav;
+  }
+
+  return (
+    <>
+      {nav}
+      <div className={mobileStickyBarSettleGapClassName} aria-hidden />
+    </>
   );
 }

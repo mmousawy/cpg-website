@@ -75,7 +75,7 @@ export default function HelpPage() {
             ))}
 
             <p
-              className='mt-6 mb-6'
+              className='mt-6 mb-4'
             >
               Still have questions?
               {' '}
