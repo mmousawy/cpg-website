@@ -377,10 +377,10 @@ function JoinedChallengeCard({
         )}
 
         <div
-          className="absolute inset-x-0 top-0 z-10 bg-linear-to-b from-black/85 via-black/40 to-transparent p-4 pb-12 sm:p-4 sm:pb-15"
+          className="absolute h-full inset-x-0 top-0 z-10 bg-linear-to-b from-black/85 via-black/20 to-transparent p-4 pb-12 sm:p-4 sm:pb-15"
         >
           <p
-            className="font-heading text-xl font-semibold leading-tight text-white line-clamp-3 sm:text-xl"
+            className="pr-16 font-heading text-xl font-semibold leading-tight text-white line-clamp-3 sm:pr-0 sm:text-xl"
           >
             {challenge.title}
           </p>
@@ -388,7 +388,7 @@ function JoinedChallengeCard({
         {deadlineLabel && (
           <span
             className={clsx(
-              'absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold text-white sm:bottom-3 sm:right-3 sm:px-2 sm:py-1 sm:text-xs',
+              'absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold text-white sm:top-auto sm:bottom-3 sm:right-3 sm:px-2 sm:py-1 sm:text-xs',
               ended
                 ? 'border-black/90 bg-black/85'
                 : deadline
@@ -414,7 +414,7 @@ function JoinedChallengeCard({
       </Link>
 
       <div
-        className="flex min-w-0 flex-1 flex-col gap-4 p-5 pt-4 sm:px-5 sm:py-4"
+        className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:px-5 sm:py-4"
       >
         <div
           className="flex flex-wrap gap-4 sm:gap-5"
@@ -521,7 +521,7 @@ function JoinedChallengeCard({
                 className="size-3.5 -ml-0.5"
               />}
             >
-              Submit another
+              Submit more
             </Button>
           )}
         </div>

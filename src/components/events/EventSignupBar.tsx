@@ -15,7 +15,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
-import CloseSVG from 'public/icons/close.svg';
+import EditSquareSVG from 'public/icons/edit-square.svg';
 
 type EventSignupBarProps = {
   event: CPGEvent
@@ -243,16 +243,16 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
       <Button
         onClick={openModal}
         disabled={isLoading || (spotsLeft === 0 && !hasRSVP)}
-        icon={hasRSVP ? <CloseSVG
-          className="size-4 -ml-0.5 fill-current"
+        icon={hasRSVP ? <EditSquareSVG
+          className="size-5 -ml-0.5 fill-current"
         /> : <CheckSVG
-          className="size-4 -ml-0.5 fill-current"
+          className="size-5 -ml-0.5 fill-current"
         />}
         variant={hasRSVP ? 'secondary' : 'primary'}
         size="md"
         className="shrink-0 rounded-full max-sm:px-3 max-sm:text-sm"
       >
-        {isLoading ? '...' : hasRSVP ? 'Cancel RSVP' : 'Join event'}
+        {isLoading ? '...' : hasRSVP ? 'Edit RSVP' : 'Join event'}
 
       </Button>
     </>

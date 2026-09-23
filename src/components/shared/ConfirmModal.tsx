@@ -57,7 +57,7 @@ export default function ConfirmModal() {
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none p-4 max-sm:p-4',
+        'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}

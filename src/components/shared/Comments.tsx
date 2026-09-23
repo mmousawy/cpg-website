@@ -6,6 +6,7 @@ import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSession } from '@/hooks/useSession';
 import { useSupabase } from '@/hooks/useSupabase';
 import { confirmDeleteComment } from '@/utils/confirmHelpers';
+import { scrollBehavior } from '@/utils/reduceMotion';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { memo, useCallback, useEffect, useState, type ReactNode } from 'react';
@@ -78,7 +79,7 @@ function scrollToComment(commentId: string) {
   const target = document.getElementById(`comment-${commentId}`);
   if (!target) return;
 
-  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.scrollIntoView({ behavior: scrollBehavior('smooth'), block: 'center' });
   const card = target.querySelector(':scope > div');
   if (card) {
     card.classList.add('!border-primary', '!bg-primary/20');
@@ -400,7 +401,7 @@ const CommentItem = memo(function CommentItem({
     if (!isCurrentlyReplying) return;
     requestAnimationFrame(() => {
       document.getElementById(`reply-composer-${comment.id}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        ?.scrollIntoView({ behavior: scrollBehavior('smooth'), block: 'center' });
     });
   }, [isCurrentlyReplying, comment.id]);
 

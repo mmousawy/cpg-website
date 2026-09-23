@@ -1,5 +1,6 @@
 'use client';
 
+import { motionDuration } from '@/utils/reduceMotion';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 
@@ -38,7 +39,7 @@ export default function AnimatedPopoverPanel({
       }, 0);
     } else {
       closeTimer = setTimeout(() => setIsVisible(false), 0);
-      unmountTimer = setTimeout(() => setShouldRender(false), POPOVER_ANIMATION_MS);
+      unmountTimer = setTimeout(() => setShouldRender(false), motionDuration(POPOVER_ANIMATION_MS));
     }
 
     return () => {

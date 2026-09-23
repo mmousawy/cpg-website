@@ -42,7 +42,7 @@ function ThemeToggleButton() {
     <button
       type="button"
       onClick={handleThemeToggle}
-      className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background"
+      className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background sm:text-sm"
     >
       <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         {mounted && resolvedTheme === 'dark' ? (
@@ -63,7 +63,7 @@ export default function AccountSiteLinksPanel({
 }: AccountSiteLinksPanelProps) {
   const { user } = useAuth();
   const externalLinkClass =
-    'flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background';
+    'flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background sm:text-sm';
 
   return (
     <>
@@ -71,7 +71,7 @@ export default function AccountSiteLinksPanel({
         <button
           type="button"
           onClick={onBack}
-          className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background"
+          className="flex w-full items-center rounded-lg px-3 py-2 text-left text-base hover:bg-background sm:text-sm"
         >
           <AccountMenuChevron direction="left" className="mr-3 h-4 w-4 shrink-0 opacity-50" />
           Help & info

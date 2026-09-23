@@ -3,6 +3,10 @@
 import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
 import AlbumCardStylePicker from '@/components/account/AlbumCardStylePicker';
+import MotionPreferencePicker from '@/components/account/MotionPreferencePicker';
+import PhotoCaptionsPicker from '@/components/account/PhotoCaptionsPicker';
+import PhotoGridDensityPicker from '@/components/account/PhotoGridDensityPicker';
+import PhotoGridStylePicker from '@/components/account/PhotoGridStylePicker';
 import ThemePreferencePicker from '@/components/account/ThemePreferencePicker';
 import Container from '@/components/layout/Container';
 import Checkbox from '@/components/shared/Checkbox';
@@ -57,6 +61,50 @@ export default function PreferencesSection({
               control={control}
               render={({ field }) => (
                 <AlbumCardStylePicker value={field.value} onChange={field.onChange} />
+              )}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Photo grid style</label>
+            <Controller
+              name="photoGridStyle"
+              control={control}
+              render={({ field }) => (
+                <PhotoGridStylePicker value={field.value} onChange={field.onChange} />
+              )}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Photo grid density</label>
+            <Controller
+              name="photoGridDensity"
+              control={control}
+              render={({ field }) => (
+                <PhotoGridDensityPicker value={field.value} onChange={field.onChange} />
+              )}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Photo captions</label>
+            <Controller
+              name="photoCaptions"
+              control={control}
+              render={({ field }) => (
+                <PhotoCaptionsPicker value={field.value} onChange={field.onChange} />
+              )}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium">Motion</label>
+            <Controller
+              name="motion"
+              control={control}
+              render={({ field }) => (
+                <MotionPreferencePicker value={field.value} onChange={field.onChange} />
               )}
             />
           </div>

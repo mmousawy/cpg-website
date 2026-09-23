@@ -1433,6 +1433,10 @@ export type Database = {
       profiles: {
         Row: {
           album_card_style: string | null
+          motion: string | null
+          photo_captions: string | null
+          photo_grid_density: string | null
+          photo_grid_style: string | null
           avatar_url: string | null
           banner_blurhash: string | null
           banner_url: string | null
@@ -1466,6 +1470,10 @@ export type Database = {
         }
         Insert: {
           album_card_style?: string | null
+          motion?: string | null
+          photo_captions?: string | null
+          photo_grid_density?: string | null
+          photo_grid_style?: string | null
           avatar_url?: string | null
           banner_blurhash?: string | null
           banner_url?: string | null
@@ -1499,6 +1507,10 @@ export type Database = {
         }
         Update: {
           album_card_style?: string | null
+          motion?: string | null
+          photo_captions?: string | null
+          photo_grid_density?: string | null
+          photo_grid_style?: string | null
           avatar_url?: string | null
           banner_blurhash?: string | null
           banner_url?: string | null

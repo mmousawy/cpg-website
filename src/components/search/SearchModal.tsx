@@ -1,8 +1,8 @@
 'use client';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import { useSearch } from '@/hooks/useSearch';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useRouter } from 'next/navigation';
@@ -116,7 +116,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
+        'flex size-full max-h-none max-w-none p-3 max-sm:p-2',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}

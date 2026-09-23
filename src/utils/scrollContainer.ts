@@ -1,6 +1,14 @@
-/** Scroll container when the mobile shell pins chrome and only `#main-content` scrolls. */
+/** Matches the CSS that makes `#main-content` the only scroller. */
+const MOBILE_PINNED_SHELL_MEDIA = '(max-width: 639px)';
+
+/**
+ * True only while the pinned shell is actually scrolling `#main-content`.
+ * The `mobile-pinned-shell` class stays on desktop routes; overflow lock is
+ * media-query only, so desktop must keep scrolling the window.
+ */
 export function isMobilePinnedShell(): boolean {
   if (typeof document === 'undefined') return false;
+  if (!window.matchMedia(MOBILE_PINNED_SHELL_MEDIA).matches) return false;
   return document.documentElement.classList.contains('mobile-pinned-shell');
 }
 
@@ -65,8 +73,17 @@ function bindScrollTarget() {
   boundTarget.addEventListener('scroll', notifyScrollListeners, { passive: true });
 }
 
+let mediaQuery: MediaQueryList | null = null;
+
+function ensureMediaRebind() {
+  if (typeof window === 'undefined' || mediaQuery) return;
+  mediaQuery = window.matchMedia(MOBILE_PINNED_SHELL_MEDIA);
+  mediaQuery.addEventListener('change', refreshScrollContainerBinding);
+}
+
 export function subscribeScrollContainer(listener: ScrollListener): () => void {
   scrollListeners.add(listener);
+  ensureMediaRebind();
   bindScrollTarget();
 
   return () => {

@@ -14,6 +14,10 @@ import {
   getUserPublicPhotos,
 } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
+import {
+  PHOTO_PAGE_PREFETCH_LIMIT,
+  PHOTO_PAGE_SIZE_COMFORTABLE,
+} from '@/utils/displayPreferences';
 import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ nickname: string }> }) {
@@ -84,9 +88,9 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
     notFound();
   }
 
-  const perPage = 20;
+  const perPage = PHOTO_PAGE_SIZE_COMFORTABLE;
   const [allPhotos, totalPhotos, followCounts] = await Promise.all([
-    getUserPublicPhotos(profile.id, nickname, perPage + 1),
+    getUserPublicPhotos(profile.id, nickname, PHOTO_PAGE_PREFETCH_LIMIT),
     getUserPublicPhotoCount(profile.id, nickname),
     getProfileFollowCounts(profile.id),
   ]);
@@ -94,7 +98,7 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
   const initialPhotos = allPhotos.slice(0, perPage);
   const hasMore = allPhotos.length > perPage;
 
-  const photosWithProfile: StreamPhoto[] = initialPhotos.map((photo) => ({
+  const photosWithProfile: StreamPhoto[] = allPhotos.map((photo) => ({
     ...photo,
     profile: {
       nickname: profile.nickname || nickname,
@@ -121,7 +125,8 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
         className="pt-0!"
       >
         <PhotosPaginated
-          initialPhotos={photosWithProfile}
+          initialPhotos={photosWithProfile.slice(0, perPage)}
+          prefetchedPhotos={photosWithProfile}
           perPage={perPage}
           initialHasMore={hasMore}
           apiEndpoint={`/api/photos/user?nickname=${encodeURIComponent(profileNickname)}`}

@@ -32,7 +32,6 @@ export function HomeAlbumsSection({ albums }: HomeAlbumsSectionProps) {
       </div>
       <AlbumGrid
         albums={albums}
-        variant="large"
         liveLikeCounts={false}
         prefetchLinks={false}
         className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:[&>:nth-child(n+4)]:hidden"

@@ -4,7 +4,17 @@ import { useBatchPhotoLikeCounts } from '@/hooks/useBatchLikeCounts';
 import JustifiedPhotoGridCore from './JustifiedPhotoGridCore';
 import type { JustifiedPhotoGridProps } from './justifiedPhotoGridTypes';
 
-type JustifiedPhotoGridWithLiveLikesProps = Omit<JustifiedPhotoGridProps, 'liveLikeCounts'>;
+type JustifiedPhotoGridWithLiveLikesProps = Omit<
+  JustifiedPhotoGridProps,
+  'liveLikeCounts' | 'gridStyle' | 'gridDensity' | 'captions'
+> & Pick<
+  import('./justifiedPhotoGridTypes').JustifiedPhotoGridCoreProps,
+  | 'captionMode'
+  | 'gridDensity'
+  | 'targetRowHeightMobile'
+  | 'targetRowHeightTablet'
+  | 'targetRowHeightDesktop'
+>;
 
 export default function JustifiedPhotoGridWithLiveLikes(props: JustifiedPhotoGridWithLiveLikesProps) {
   const { photos, ...rest } = props;

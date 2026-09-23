@@ -9,6 +9,7 @@ import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPh
 import type { SiblingPhoto } from '@/components/photo/PhotoPageContent';
 import BlurImage from '@/components/shared/BlurImage';
 import { useHorizontalSwipe } from '@/hooks/useHorizontalSwipe';
+import { prefersReducedMotion } from '@/utils/reduceMotion';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
@@ -248,6 +249,12 @@ function PhotoFilmstripShellInner({
         container.style.height = `${targetHeight}px`;
       }
     };
+
+    if (prefersReducedMotion()) {
+      apply(targetHeight);
+      finish();
+      return;
+    }
 
     // Apply the start state synchronously so the first painted frame already
     // shows the previous height, not the snapped new one.

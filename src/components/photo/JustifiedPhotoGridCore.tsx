@@ -6,12 +6,10 @@ import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
 import { GRID_THUMBNAIL_QUALITY, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
-import HoverPrefetchLink from '../shared/HoverPrefetchLink';
-import Avatar from '../auth/Avatar';
-import BlurImage from '../shared/BlurImage';
-import CardLikes from '../shared/CardLikes';
 import EmptyState from '../shared/EmptyState';
+import PhotoGridTile, { buildPhotoHref } from './PhotoGridTile';
 import type { JustifiedPhotoGridCoreProps } from './justifiedPhotoGridTypes';
+import type { PhotoCaptionsMode, PhotoGridDensity } from '@/utils/displayPreferences';
 import ImageSVG from 'public/icons/image.svg';
 
 const MOBILE_WIDTH = 400;
@@ -106,6 +104,11 @@ export default function JustifiedPhotoGridCore({
   minPhotosPerRow,
   header,
   batchLikesMap,
+  captionMode = 'hover',
+  gridDensity = 'comfortable',
+  targetRowHeightMobile = 180,
+  targetRowHeightTablet = 220,
+  targetRowHeightDesktop = 280,
 }: JustifiedPhotoGridCoreProps) {
   const photoInput = photos.map((p) => ({
     id: p.short_id || p.id,
@@ -117,19 +120,19 @@ export default function JustifiedPhotoGridCore({
   const mobileRows = calculateJustifiedLayout(photoInput, MOBILE_WIDTH, {
     minPhotosPerRow: minPhotosPerRow ?? 2,
     maxPhotosPerRow: 3,
-    targetRowHeight: 180,
+    targetRowHeight: targetRowHeightMobile,
     maxRowHeight,
   });
   const tabletRows = calculateJustifiedLayout(photoInput, TABLET_WIDTH, {
     minPhotosPerRow: minPhotosPerRow ?? 2,
     maxPhotosPerRow: 4,
-    targetRowHeight: 220,
+    targetRowHeight: targetRowHeightTablet,
     maxRowHeight,
   });
   const desktopRows = calculateJustifiedLayout(photoInput, DESKTOP_WIDTH, {
     minPhotosPerRow: minPhotosPerRow ?? 2,
     maxPhotosPerRow: 5,
-    targetRowHeight: 280,
+    targetRowHeight: targetRowHeightDesktop,
     maxRowHeight,
     gap: 8,
   });
@@ -196,7 +199,9 @@ export default function JustifiedPhotoGridCore({
     challengeSlug,
     eventSlug,
     showAttribution,
-    showHoverOverlays: hasHover,
+    captionMode,
+    gridDensity,
+    canHover: hasHover,
     header,
     containerWidth,
   };
@@ -240,7 +245,9 @@ function PhotoRows({
   challengeSlug,
   eventSlug,
   showAttribution,
-  showHoverOverlays,
+  captionMode,
+  gridDensity,
+  canHover,
   layoutWidth,
   maxCssWidth,
   quality,
@@ -256,7 +263,9 @@ function PhotoRows({
   challengeSlug?: string;
   eventSlug?: string;
   showAttribution: boolean;
-  showHoverOverlays: boolean;
+  captionMode: PhotoCaptionsMode;
+  gridDensity: PhotoGridDensity;
+  canHover: boolean;
   layoutWidth: number;
   maxCssWidth: number;
   quality: number;
@@ -300,32 +309,34 @@ function PhotoRows({
               const thumbnailUrl = item.photo.url;
 
               const streamPhoto = photo as StreamPhoto;
-              const nickname = albumSlug && profileNickname
-                ? profileNickname
-                : streamPhoto?.profile?.nickname || profileNickname || '';
-
-              const photoHref = challengeSlug
-                ? `/challenges/${challengeSlug}/photo/${item.photo.id}`
-                : eventSlug
-                  ? `/events/${eventSlug}/photo/${item.photo.id}`
-                  : albumSlug
-                    ? `/@${nickname}/album/${albumSlug}/photo/${item.photo.id}`
-                    : `/@${nickname}/photo/${item.photo.id}`;
+              const { href: photoHref, nickname } = buildPhotoHref({
+                photoId: item.photo.id,
+                profileNickname,
+                albumSlug,
+                challengeSlug,
+                eventSlug,
+                streamNickname: streamPhoto?.profile?.nickname,
+              });
 
               const shortId = photo?.short_id || photo?.id;
               const likesCount = (shortId ? batchLikesMap.get(shortId) : undefined) ?? photo?.likes_count ?? 0;
 
-              const photoTitle = photo?.title;
-              const ariaLabel = photoTitle
-                ? `View photo: ${photoTitle} by @${nickname}`
-                : `View photo by @${nickname}`;
+              if (!photo) return null;
 
               return (
-                <HoverPrefetchLink
+                <PhotoGridTile
                   key={item.photo.id}
-                  href={photoHref}
-                  className="group relative block overflow-hidden bg-background-light"
-                  aria-label={ariaLabel}
+                  photo={photo}
+                  likesCount={likesCount}
+                  photoHref={photoHref}
+                  nickname={nickname}
+                  showAttribution={showAttribution}
+                  captionMode={captionMode}
+                  gridDensity={gridDensity}
+                  canHover={canHover}
+                  imageSrc={thumbnailUrl}
+                  sizes={getThumbnailSizes(item.displayWidth, layoutWidth, maxCssWidth, isConstrained)}
+                  quality={quality}
                   style={isConstrained ? {
                     width: item.displayWidth,
                     height: item.displayHeight,
@@ -339,65 +350,7 @@ function PhotoRows({
                     flexBasis: 0,
                     aspectRatio: item.photo.aspectRatio,
                   }}
-                >
-                  <BlurImage
-                    src={thumbnailUrl}
-                    alt=""
-                    blurhash={photo?.blurhash}
-                    fill
-                    lite
-                    className="object-cover transition-all duration-200 group-hover:brightness-110"
-                    sizes={getThumbnailSizes(item.displayWidth, layoutWidth, maxCssWidth, isConstrained)}
-                    loading="lazy"
-                    fetchPriority="low"
-                    quality={quality}
-                  />
-
-                  {photo?.id && <CardLikes
-                    likesCount={likesCount}
-                    className="absolute bottom-2! right-2! z-10"
-                  />}
-
-                  {showHoverOverlays && photo?.title && (
-                    <>
-                      <div
-                        className="absolute inset-x-0 top-0 h-20 bg-linear-to-b from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      />
-                      <div
-                        className="absolute top-0 left-0 right-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      >
-                        <h3
-                          className="text-sm font-semibold text-white line-clamp-2 drop-shadow-md"
-                        >
-                          {photo.title}
-                        </h3>
-                      </div>
-                    </>
-                  )}
-
-                  {showHoverOverlays && showAttribution && streamPhoto?.profile && (
-                    <>
-                      <div
-                        className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      />
-                      <div
-                        className="absolute left-0 right-0 pr-12 bottom-0 flex items-center gap-1 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      >
-                        <Avatar
-                          avatarUrl={streamPhoto.profile.avatar_url}
-                          fullName={streamPhoto.profile.full_name}
-                          size="xxs"
-                        />
-                        <span
-                          className="text-xs font-medium text-white"
-                        >
-                          @
-                          {streamPhoto.profile.nickname}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </HoverPrefetchLink>
+                />
               );
             })}
           </div>

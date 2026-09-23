@@ -1,5 +1,6 @@
 import EventsPageHeader from '@/app/events/EventsPageHeader';
 import EventsList from '@/components/events/EventsList';
+import EventsSectionHeading from '@/components/events/EventsSectionHeading';
 import PastEventsPaginated from '@/components/events/PastEventsPaginated';
 import PageContainer from '@/components/layout/PageContainer';
 import { getEventsPageData } from '@/lib/data/eventsPage';
@@ -36,11 +37,9 @@ export default async function EventsPage() {
         className="space-y-6 sm:space-y-10"
       >
         <section>
-          <h2
-            className="text-xl font-semibold mb-4 opacity-80 font-heading"
-          >
+          <EventsSectionHeading>
             Upcoming events &mdash; {upcomingEvents.length}
-          </h2>
+          </EventsSectionHeading>
           <div
             className="grid gap-3 sm:gap-6"
           >
@@ -54,11 +53,9 @@ export default async function EventsPage() {
         </section>
 
         <section>
-          <h2
-            className="text-xl font-semibold mb-4 opacity-80 font-heading"
-          >
+          <EventsSectionHeading>
             Past events &mdash; {pastEventsCount}
-          </h2>
+          </EventsSectionHeading>
           <div
             className="grid gap-3 sm:gap-6"
           >

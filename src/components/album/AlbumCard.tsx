@@ -32,6 +32,7 @@ export default function AlbumCard({
 }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
+  const isCompact = variant === 'compact';
 
   // When isOwner but no onClick, link to the unified photos page
   // (the onClick prop is preferred when available for in-page navigation)
@@ -46,11 +47,11 @@ export default function AlbumCard({
       className="group block overflow-hidden border border-border-color bg-background-light group-hover:shadow-lg group-focus:shadow-lg group-hover:border-border-color-strong group-focus:border-border-color-strong transition-all duration-200"
     >
       <div
-        className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-background"
+        className={`relative flex items-center justify-center overflow-hidden bg-background ${isCompact ? 'aspect-square' : 'aspect-4/3'}`}
       >
         {coverImage ? (
           <BlurImage
-            src={getCroppedThumbnailUrl(coverImage, 512, 384, 85) || coverImage}
+            src={getCroppedThumbnailUrl(coverImage, 512, isCompact ? 512 : 384, 85) || coverImage}
             alt={album.title}
             lite
             blurhash={album.cover_image_blurhash}
@@ -72,7 +73,7 @@ export default function AlbumCard({
         />
 
         {/* Compact variant: hover overlays */}
-        {variant === 'compact' && (
+        {isCompact && (
           <>
             {/* Top blur layer with gradient mask */}
             <div
@@ -146,7 +147,7 @@ export default function AlbumCard({
         )}
 
         {/* Badges - on image for compact variant */}
-        {variant === 'compact' && !album.is_public && isOwner && (
+        {isCompact && !album.is_public && isOwner && (
           <CardBadges
             badges={[{ label: 'Private', className: 'px-2 py-0.5', variant: 'private' }]}
           />

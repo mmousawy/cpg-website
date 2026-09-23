@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { generateBlurhash } from '@/utils/generateBlurhash';
+import { scrollBehavior } from '@/utils/reduceMotion';
 import { validateImage } from '@/utils/imageValidation';
 import {
   createOnboardingSchema,
@@ -244,7 +245,7 @@ export default function OnboardingClient() {
   );
   const nicknameCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior('smooth') });
   };
   const goBack = () => {
     if (step <= 0) return;

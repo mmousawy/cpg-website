@@ -1,6 +1,6 @@
 'use client';
 
-import type { AlbumWithPhotos } from '@/types/albums';
+import { useAuth } from '@/hooks/useAuth';
 import { useSyncExternalStore } from 'react';
 import AlbumCard, { type AlbumCardVariant } from './AlbumCard';
 import type { AlbumGridProps } from './albumGridTypes';
@@ -35,13 +35,19 @@ export default function AlbumGridStatic({
   onAlbumClick,
   prefetchLinks = true,
 }: AlbumGridStaticProps) {
+  const { profile } = useAuth();
+
   const localPreference = useSyncExternalStore(
     subscribeToStorage,
     getStoredPreference,
     getServerSnapshot,
   );
 
-  const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? 'large';
+  const profileVariant = profile?.album_card_style === 'large' || profile?.album_card_style === 'compact'
+    ? profile.album_card_style
+    : undefined;
+
+  const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? profileVariant ?? 'large';
 
   return (
     <div

@@ -4,9 +4,9 @@ import SearchInput from '@/components/search/SearchInput';
 import SearchResultItem from '@/components/search/SearchResultItem';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useFollowList } from '@/hooks/useFollowList';
+import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import type { FollowListType } from '@/types/follows';
 import type { SearchResult } from '@/types/search';
 import clsx from 'clsx';
@@ -134,7 +134,7 @@ export default function FollowListModal({
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
+        'flex size-full max-h-none max-w-none p-3 max-sm:p-2',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}

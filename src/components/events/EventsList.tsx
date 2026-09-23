@@ -203,7 +203,7 @@ export default function EventsList({
                 />
                 <span
                   className={clsx(
-                    'absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
+                    'absolute top-3 right-3 z-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
                     status === 'past' && 'bg-black/50 text-white backdrop-blur-sm',
                     status === 'now' && 'bg-green-600/80 text-white backdrop-blur-sm',
                     status === 'upcoming' && 'bg-primary/80 text-white backdrop-blur-sm',
@@ -323,7 +323,7 @@ export default function EventsList({
                   />
                   <span
                     className={clsx(
-                      'absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
+                      'absolute top-3 right-3 z-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
                       status === 'past' && 'bg-black/50 text-white backdrop-blur-sm',
                       status === 'now' && 'bg-green-600/80 text-white backdrop-blur-sm',
                       status === 'upcoming' && 'bg-primary/80 text-white backdrop-blur-sm',

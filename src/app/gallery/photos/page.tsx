@@ -7,6 +7,10 @@ import { createMetadata, getAbsoluteUrl, siteConfig } from '@/utils/metadata';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPublicPhotostream } from '@/lib/data/gallery';
+import {
+  PHOTO_PAGE_PREFETCH_LIMIT,
+  PHOTO_PAGE_SIZE_COMFORTABLE,
+} from '@/utils/displayPreferences';
 
 export const metadata = createMetadata({
   title: 'Community photo stream',
@@ -27,9 +31,9 @@ export default async function PhotosPage({ searchParams }: PageProps) {
   const initialSort = sort === 'popular' ? 'popular' : 'recent';
 
   const includeTestContent = await getIncludeTestContent();
-  const allPhotos = await getPublicPhotostream(21, initialSort, includeTestContent);
-  const photos = allPhotos.slice(0, 20);
-  const hasMore = allPhotos.length > 20;
+  const allPhotos = await getPublicPhotostream(PHOTO_PAGE_PREFETCH_LIMIT, initialSort, includeTestContent);
+  const photos = allPhotos.slice(0, PHOTO_PAGE_SIZE_COMFORTABLE);
+  const hasMore = allPhotos.length > PHOTO_PAGE_SIZE_COMFORTABLE;
 
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -63,7 +67,8 @@ export default async function PhotosPage({ searchParams }: PageProps) {
         />
         <PhotosPaginated
           initialPhotos={photos}
-          perPage={20}
+          prefetchedPhotos={allPhotos}
+          perPage={PHOTO_PAGE_SIZE_COMFORTABLE}
           initialHasMore={hasMore}
           initialSort={initialSort}
         />
