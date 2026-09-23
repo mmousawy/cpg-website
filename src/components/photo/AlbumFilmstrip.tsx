@@ -4,6 +4,7 @@ import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPh
 import BlurImage from '@/components/shared/BlurImage';
 import HoverPrefetchLink from '@/components/shared/HoverPrefetchLink';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { scrollBehavior } from '@/utils/reduceMotion';
 import { isPhotoSwipeOpen } from '@/utils/photoswipe';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
@@ -105,9 +106,7 @@ export default function AlbumFilmstrip({
       return;
     }
 
-    const scrollBehavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      ? 'auto'
-      : 'smooth';
+    const behavior = scrollBehavior('smooth');
 
     let targetLeft: number;
     if (currentIndex === 0) {
@@ -123,10 +122,10 @@ export default function AlbumFilmstrip({
         + (elementRect.width / 2);
     }
 
-    container.scrollTo({ left: targetLeft, behavior: scrollBehavior });
+    container.scrollTo({ left: targetLeft, behavior });
 
     // Instant scroll: edges update here; smooth scroll updates via the passive scroll listener.
-    if (scrollBehavior === 'auto') {
+    if (behavior === 'auto') {
       updateScrollEdges();
     }
   }, [currentIndex, photos.length, selectedShortId, updateScrollEdges]);

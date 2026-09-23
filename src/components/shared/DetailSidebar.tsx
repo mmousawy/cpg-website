@@ -29,7 +29,7 @@ export default function DetailSidebar({
   return (
     <div
       className={clsx(
-        'relative -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 pb-2 sm:pb-8',
+        'relative -mx-4 border-t border-t-border-color bg-background-light px-4 pt-4 sm:pb-8',
         'md:mx-0 md:mt-0 md:flex md:w-96 md:shrink-0 md:flex-col md:rounded-lg md:border md:border-border-color md:px-6 md:pt-6 md:pb-6',
         'lg:w-lg',
         tightTopMargin ? 'mt-2' : 'mt-4',

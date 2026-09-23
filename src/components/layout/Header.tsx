@@ -4,12 +4,15 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoSVG from 'public/cpg-logo.svg';
-import { Suspense } from 'react';
+import { Suspense, useLayoutEffect, useRef } from 'react';
 
 import { routes } from '@/config/routes';
 import { useSession } from '@/hooks/useSession';
 import HeaderSiteSearch from './HeaderSiteSearch';
 import UserMenu from './UserMenu';
+
+/** Measured height of the desktop site header (`sm+`); used by sticky in-page section rows. */
+export const APP_HEADER_HEIGHT_VAR = '--app-header-height';
 
 const NotificationButton = dynamic(
   () => import('../notifications/NotificationButton'),
@@ -55,9 +58,35 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 
 export default function Header() {
   const { user } = useSession();
+  const headerRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const syncHeight = () => {
+      const height = header.getBoundingClientRect().height;
+      document.documentElement.style.setProperty(
+        APP_HEADER_HEIGHT_VAR,
+        height > 0 ? `${height}px` : '0px',
+      );
+    };
+
+    syncHeight();
+    const resizeObserver = new ResizeObserver(syncHeight);
+    resizeObserver.observe(header);
+    window.addEventListener('resize', syncHeight, { passive: true });
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', syncHeight);
+      document.documentElement.style.setProperty(APP_HEADER_HEIGHT_VAR, '0px');
+    };
+  }, []);
 
   return (
     <header
+      ref={headerRef}
       className="sticky top-0 z-40 hidden justify-center border-b border-b-border-color border-t-primary bg-background-light px-2 py-2 text-foreground shadow-md shadow-[#00000005] sm:flex"
     >
       <div className="app-header-inner flex w-full max-w-screen-md items-center justify-between gap-4">

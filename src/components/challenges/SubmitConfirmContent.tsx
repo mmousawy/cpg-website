@@ -136,7 +136,7 @@ export default function SubmitConfirmContent({
 
       {/* Photo preview grid */}
       <div
-        className="grid gap-2 md:grid-cols-2 max-h-[50vh] overflow-y-auto"
+        className="grid min-w-0 gap-2 md:grid-cols-2 max-h-[50vh] overflow-y-auto"
       >
         {selectedPhotos.map((photo) => (
           <PhotoListItem

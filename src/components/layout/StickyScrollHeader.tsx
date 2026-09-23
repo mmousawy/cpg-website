@@ -8,6 +8,9 @@ import { getScrollContainer, getScrollTop, subscribeScrollContainer } from '@/ut
 /** Mobile-only sticky page title chrome (`max-sm`). */
 const MOBILE_STICKY_MEDIA = '(max-width: 639px)';
 
+/** Visible height of the mobile sticky page title; used by other sticky rows (e.g. section headings). */
+export const STICKY_PAGE_HEADING_HEIGHT_VAR = '--sticky-page-heading-height';
+
 type StickyScrollHeaderProps = {
   children: React.ReactNode;
   className?: string;
@@ -54,15 +57,36 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
       }
     };
 
+    const syncStickyPageHeadingInset = () => {
+      if (!mediaQuery.matches) {
+        document.documentElement.style.setProperty(STICKY_PAGE_HEADING_HEIGHT_VAR, '0px');
+        return;
+      }
+
+      const scrollY = Math.max(0, getScrollTop());
+      const isStuck = sticky.getBoundingClientRect().top <= scrollPortTop() + 0.5;
+      const visibleChrome =
+        isStuck && scrollY > 0
+          ? Math.max(0, heightRef.current - hideOffsetRef.current)
+          : 0;
+
+      document.documentElement.style.setProperty(
+        STICKY_PAGE_HEADING_HEIGHT_VAR,
+        `${visibleChrome}px`,
+      );
+    };
+
     const reset = () => {
       hideOffsetRef.current = 0;
       borderBrightRef.current = false;
       inner.style.transform = '';
+      document.documentElement.style.setProperty(STICKY_PAGE_HEADING_HEIGHT_VAR, '0px');
       updateBorder();
     };
 
     const updateHeight = () => {
       heightRef.current = inner.offsetHeight;
+      syncStickyPageHeadingInset();
     };
 
     const applyTransform = () => {
@@ -85,6 +109,7 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
         hideOffsetRef.current = 0;
         applyTransform();
         updateBorder();
+        syncStickyPageHeadingInset();
         return;
       }
 
@@ -99,6 +124,7 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
 
       applyTransform();
       updateBorder();
+      syncStickyPageHeadingInset();
     };
 
     const onLayoutChange = () => {
@@ -150,12 +176,13 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
       <div
         ref={stickyRef}
         className={clsx(
-          'max-sm:sticky max-sm:top-0 max-sm:z-20 max-sm:pointer-events-none',
+          'max-sm:sticky max-sm:top-0 max-sm:z-30 max-sm:pointer-events-none',
           className,
         )}
       >
         <div
           ref={innerRef}
+          data-sticky-page-heading=""
           className="max-sm:pointer-events-auto max-sm:-mx-3 max-sm:border-b max-sm:border-border-color max-sm:bg-background max-sm:px-3 max-sm:py-2.5 max-sm:transition-[border-color] max-sm:data-settled:border-background"
           data-settled=""
         >

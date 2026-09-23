@@ -6,7 +6,7 @@
   --primary: #38785f;
   --primary-light: #5a9c83;
   --primary-alt: #a6db93;
-  --background: #f0f1f3;
+  --background: #ecedf0;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
   --background-special: #bba5fa;
@@ -69,7 +69,7 @@
   --primary: #38785f;
   --primary-light: #5a9c83;
   --primary-alt: #a6db93;
-  --background: #f0f1f3;
+  --background: #ecedf0;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
   --foreground: #171717;
@@ -840,27 +840,25 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
   }
 }
 
+/* OS reduced motion and account "Reduce" preference (html.reduce-motion). */
 @media (prefers-reduced-motion: reduce) {
-  .mobile-tab-indicator.is-ready {
-    transition: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
 
-  .mobile-tab-bar-scrim,
-  .mobile-sticky-bar-slide,
-  .modal-overlay-in,
-  .modal-panel-in {
-    transition: none;
-    animation: none;
-  }
-
-  .onboarding-page-title-in,
-  .onboarding-step-title,
-  .onboarding-rise-in,
-  .onboarding-progress-slide-in,
-  .onboarding-header-slide-in {
-    animation: fade-in 0.2s ease-out both;
-    transform: none;
-  }
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 .mobile-tab-bar-scrim__fade {

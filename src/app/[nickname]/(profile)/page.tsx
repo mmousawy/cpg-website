@@ -2,7 +2,7 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import { ProfileBelowHeroSection, ProfileHeroBanner, profileHeroPageClassName } from '@/components/profile/ProfileHeader';
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialLinks';
 import Button from '@/components/shared/Button';
@@ -24,6 +24,11 @@ import {
     getUserPublicPhotos,
 } from '@/lib/data/profiles';
 import { ensureStaticParams } from '@/lib/staticParams';
+import {
+  PROFILE_PHOTOSTREAM_FETCH_LIMIT,
+  PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE,
+  PROFILE_PHOTOSTREAM_LIMIT_COMPACT,
+} from '@/utils/displayPreferences';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';
 
 // Pre-render all public profiles at build time for optimal caching
@@ -110,7 +115,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
 
   const [albums, publicPhotos, totalPhotos, followCounts] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname),
-    getUserPublicPhotos(profile.id, nickname, 20),
+    getUserPublicPhotos(profile.id, nickname, PROFILE_PHOTOSTREAM_FETCH_LIMIT),
     getUserPublicPhotoCount(profile.id, nickname),
     getProfileFollowCounts(profile.id),
   ]);
@@ -187,7 +192,24 @@ async function ProfileContent({ nickname }: { nickname: string }) {
         <WidePageContainer
           className="pt-0!"
         >
-          <JustifiedPhotoGrid
+          <div
+            className="mb-6 flex items-start justify-between gap-4"
+          >
+            <div>
+              <h2
+                className="text-xl font-semibold font-heading"
+              >
+                Photostream
+              </h2>
+              <p
+                className="text-sm text-foreground/80 leading-snug"
+              >
+                Latest photos by @
+                {profile.nickname}
+              </p>
+            </div>
+          </div>
+          <DensityAwarePhotoGrid
             photos={publicPhotos.map((photo) => ({
               ...photo,
               profile: {
@@ -196,29 +218,14 @@ async function ProfileContent({ nickname }: { nickname: string }) {
                 avatar_url: profile.avatar_url,
               },
             })) as StreamPhoto[]}
+            sectionLimits={{
+              comfortable: PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE,
+              compact: PROFILE_PHOTOSTREAM_LIMIT_COMPACT,
+            }}
             profileNickname={profile.nickname || nickname}
             showAttribution
-            header={
-              <div
-                className="mb-6 flex items-start justify-between gap-4"
-              >
-                <div>
-                  <h2
-                    className="text-xl font-semibold font-heading"
-                  >
-                    Photostream
-                  </h2>
-                  <p
-                    className="text-sm text-foreground/80 leading-snug"
-                  >
-                    Latest photos by @
-                    {profile.nickname}
-                  </p>
-                </div>
-              </div>
-            }
           />
-          {totalPhotos > publicPhotos.length && (
+          {totalPhotos > PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE && (
             <div
               className="mt-4 sm:mt-6 flex justify-center "
             >

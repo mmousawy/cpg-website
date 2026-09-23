@@ -8,6 +8,8 @@ import { getServerNow } from '@/lib/cache/serverNow';
 import { getRecentAlbums } from './albums';
 import { getPublishedChallengesWithStats } from './challenges';
 import { getEventAttendees, getPublishedEvents } from './events';
+import { PHOTO_SECTION_FETCH_LIMIT } from '@/utils/displayPreferences';
+
 import { type StreamPhoto, getPublicPhotostream } from './gallery';
 import { getOrganizers, getRecentMembers } from './profiles';
 
@@ -43,7 +45,7 @@ export async function getHomePageData(includeTestContent = false): Promise<HomeP
     getPublishedEvents(),
     getPublishedChallengesWithStats(),
     getRecentAlbums(4, includeTestContent),
-    getPublicPhotostream(10, 'recent', includeTestContent),
+    getPublicPhotostream(PHOTO_SECTION_FETCH_LIMIT, 'recent', includeTestContent),
     getOrganizers(5),
     getRecentMembers(8, includeTestContent),
   ]);

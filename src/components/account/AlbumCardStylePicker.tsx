@@ -83,7 +83,7 @@ export default function AlbumCardStylePicker({ value, onChange }: AlbumCardStyle
             <p className="ml-6 text-xs text-foreground/50">Info shown on hover</p>
           </div>
           <div className="w-20 shrink-0 overflow-hidden rounded border border-border-color-strong bg-background">
-            <div className="relative h-[4.75rem] bg-foreground/5">
+            <div className="relative aspect-square bg-foreground/5">
               <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-background-light to-transparent p-1.5">
                 <div className="h-1 w-3/4 rounded bg-foreground/25" />
               </div>

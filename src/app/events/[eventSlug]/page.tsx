@@ -7,6 +7,7 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
+import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
 import ShareButton from '@/components/shared/ShareButton';
@@ -34,6 +35,7 @@ import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@
 import { stripHtml } from '@/utils/stripHtml';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationChipSVG from 'public/icons/location-chip.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
@@ -473,7 +475,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     />
                     <div>
                       <p
-                        className="font-medium group-hover:text-primary transition-colors"
+                        className="font-medium group-hover:text-primary transition-colors leading-tight"
                       >
                         {host.full_name || 'Host'}
                       </p>
@@ -506,15 +508,29 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           </div>
 
           <div
-            className="flex items-center gap-4 mt-8"
+            className="flex flex-wrap items-center gap-4 mt-8"
           >
+            {event.location && (
+              <Button
+                href={getGoogleMapsSearchUrl(event.location)}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+                size="sm"
+                className="inline-flex!"
+                icon={<LocationChipSVG className="size-4 shrink-0 fill-current" />}
+              >
+                See location
+              </Button>
+            )}
+
             {/* Add to Calendar */}
             {!isPastEvent && (
               <AddToCalendar
                 event={event}
               />
             )}
-            
+
             <ShareButton
               url={eventUrl}
               title={eventShareTitle}

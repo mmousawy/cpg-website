@@ -85,7 +85,7 @@ export default function Modal() {
       className={clsx([
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none p-6 max-sm:p-4',
+        'flex size-full max-h-none max-w-none p-3 sm:p-6',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}

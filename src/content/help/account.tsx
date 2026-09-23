@@ -154,7 +154,48 @@ export const accountFAQ: FAQSection = {
             Compact
           </strong>
           {' '}
-          (info on hover).
+          (info on hover). Photo grids can use a
+          {' '}
+          <strong>
+            Justified
+          </strong>
+          {' '}
+          or
+          {' '}
+          <strong>
+            Square
+          </strong>
+          {' '}
+          layout,
+          {' '}
+          <strong>
+            Comfortable
+          </strong>
+          {' '}
+          or
+          {' '}
+          <strong>
+            Compact
+          </strong>
+          {' '}
+          density, and photo captions
+          {' '}
+          <strong>
+            On hover
+          </strong>
+          {' '}
+          or
+          {' '}
+          <strong>
+            Always
+          </strong>
+          . Motion can follow your system setting or be set to
+          {' '}
+          <strong>
+            Reduce
+          </strong>
+          {' '}
+          to minimize animations.
         </p>
       ),
     },

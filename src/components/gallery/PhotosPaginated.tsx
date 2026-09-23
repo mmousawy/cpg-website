@@ -1,8 +1,13 @@
 'use client';
 
+import { useEffectivePhotoGridDensity } from '@/hooks/useDisplayPreferences';
 import type { StreamPhoto } from '@/lib/data/gallery';
+import {
+  getPhotoPageSize,
+  PHOTO_PAGE_SIZE_COMFORTABLE,
+} from '@/utils/displayPreferences';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState, useTransition } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import JustifiedPhotoGrid from '../photo/JustifiedPhotoGrid';
 import Button from '../shared/Button';
 import EmptyState from '../shared/EmptyState';
@@ -15,6 +20,8 @@ type PhotoBatch = {
 
 type PhotosPaginatedProps = {
   initialPhotos: StreamPhoto[];
+  /** Extra photos prefetched on the server for compact page size without another round trip */
+  prefetchedPhotos?: StreamPhoto[];
   perPage?: number;
   initialHasMore?: boolean;
   initialSort?: 'recent' | 'popular';
@@ -93,7 +100,8 @@ function PhotosPaginatedFallback({
 
 function PhotosPaginatedInner({
   initialPhotos,
-  perPage = 20,
+  prefetchedPhotos,
+  perPage: perPageProp = PHOTO_PAGE_SIZE_COMFORTABLE,
   initialHasMore,
   initialSort = 'recent',
   apiEndpoint = '/api/gallery/photos',
@@ -102,13 +110,27 @@ function PhotosPaginatedInner({
 }: PhotosPaginatedProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const density = useEffectivePhotoGridDensity();
+  const perPage = getPhotoPageSize(density);
+
+  const photoPool = useMemo(
+    () => prefetchedPhotos ?? initialPhotos,
+    [prefetchedPhotos, initialPhotos],
+  );
+
+  const comfortableInitialPhotos = useMemo(
+    () => photoPool.slice(0, perPageProp),
+    [photoPool, perPageProp],
+  );
 
   // Initialize state from sessionStorage if available
   const getInitialState = useCallback((): { batches: PhotoBatch[]; hasMore: boolean } => {
     if (typeof window === 'undefined') {
       return {
-        batches: [{ id: 'initial', photos: initialPhotos }],
-        hasMore: initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
+        batches: [{ id: 'initial', photos: comfortableInitialPhotos }],
+        hasMore: initialHasMore !== undefined
+          ? initialHasMore
+          : comfortableInitialPhotos.length >= perPageProp,
       };
     }
 
@@ -127,17 +149,21 @@ function PhotosPaginatedInner({
     }
 
     return {
-      batches: [{ id: 'initial', photos: initialPhotos }],
-      hasMore: initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage,
+      batches: [{ id: 'initial', photos: comfortableInitialPhotos }],
+      hasMore: initialHasMore !== undefined
+        ? initialHasMore
+        : comfortableInitialPhotos.length >= perPageProp,
     };
-  }, [pathname, initialSort, initialPhotos, initialHasMore, perPage]);
+  }, [pathname, initialSort, comfortableInitialPhotos, initialHasMore, perPageProp]);
 
   // Track batches of photos - each batch has its own stable layout
   // Always initialise with server-safe values to avoid hydration mismatches;
   // sessionStorage restoration happens in the useEffect below.
-  const [batches, setBatches] = useState<PhotoBatch[]>([{ id: 'initial', photos: initialPhotos }]);
+  const [batches, setBatches] = useState<PhotoBatch[]>([{ id: 'initial', photos: comfortableInitialPhotos }]);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
-  const [hasMore, setHasMore] = useState(initialHasMore !== undefined ? initialHasMore : initialPhotos.length >= perPage);
+  const [hasMore, setHasMore] = useState(
+    initialHasMore !== undefined ? initialHasMore : comfortableInitialPhotos.length >= perPageProp,
+  );
   const [isPending, startTransition] = useTransition();
   const [isSorting, setIsSorting] = useState(false);
 
@@ -148,8 +174,17 @@ function PhotosPaginatedInner({
     if (cachedBatches.length > 1) {
       setBatches(cachedBatches);
       setHasMore(cachedHasMore);
+      return;
     }
-  }, [getInitialState]);
+
+    const expanded = photoPool.slice(0, perPage);
+    setBatches([{ id: 'initial', photos: expanded }]);
+    setHasMore(
+      initialHasMore !== undefined
+        ? initialHasMore || photoPool.length > perPage
+        : photoPool.length > perPage,
+    );
+  }, [getInitialState, initialHasMore, perPage, photoPool]);
 
   // Persist state to sessionStorage when batches change
   useEffect(() => {

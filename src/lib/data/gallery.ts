@@ -3,6 +3,8 @@ import type { Tables } from '@/database.types';
 import { filterStreamPhotos } from '@/lib/auth/isTestProfile';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
+import { PHOTO_SECTION_FETCH_LIMIT } from '@/utils/displayPreferences';
+
 import { getMostViewedAlbumsLastWeek, getPublicAlbums } from './albums';
 import { PHOTO_LIST_COLUMNS } from './columns';
 
@@ -420,7 +422,8 @@ export async function getMostViewedPhotosLastWeek(limit = 20, includeTestContent
   cacheTag('gallery');
 
   const supabase = createPublicClient();
-  const minPhotos = 10;
+  /** Keep widening the window until we have enough candidates for the section limit (e.g. 16 compact). */
+  const minUniquePhotos = limit;
 
   // Progressively widen the timeframe until we have enough unique photos
   const timeframeDays = [7, 14, 30, 60, 90];
@@ -452,14 +455,14 @@ export async function getMostViewedPhotosLastWeek(limit = 20, includeTestContent
       photoViewMap.set(view.photo_id, score + weight);
     }
 
-    if (photoViewMap.size >= minPhotos) break;
+    if (photoViewMap.size >= minUniquePhotos) break;
   }
 
-  // Sort by recency-weighted score and get top photo IDs
-  const topPhotoIds = Array.from(photoViewMap.entries())
+  // Sort by recency-weighted score; over-fetch IDs so filtering still leaves `limit` photos
+  const rankedPhotoIds = Array.from(photoViewMap.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
     .map(([photoId]) => photoId);
+  const topPhotoIds = rankedPhotoIds.slice(0, limit * 2);
 
   if (topPhotoIds.length === 0) {
     return [];
@@ -478,8 +481,8 @@ export async function getMostViewedPhotosLastWeek(limit = 20, includeTestContent
     return [];
   }
 
-  // Sort photos by date (newest first)
-  photos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const rankOrder = new Map(topPhotoIds.map((id, index) => [id, index]));
+  photos.sort((a, b) => (rankOrder.get(a.id) ?? 999) - (rankOrder.get(b.id) ?? 999));
 
   // Get unique user IDs
   const userIds = [...new Set(photos.map((p) => p.user_id).filter((id): id is string => id !== null))];
@@ -514,7 +517,7 @@ export async function getMostViewedPhotosLastWeek(limit = 20, includeTestContent
       } as StreamPhoto;
     });
 
-  return filterStreamPhotos(validPhotos, includeTestContent);
+  return filterStreamPhotos(validPhotos, includeTestContent).slice(0, limit);
 }
 
 export type GalleryHomeData = {
@@ -531,8 +534,8 @@ export type GalleryHomeData = {
 export async function getGalleryHomeData(includeTestContent = false): Promise<GalleryHomeData> {
   const [albums, photos, mostViewedPhotos, mostViewedAlbums, popularTags] = await Promise.all([
     getPublicAlbums(10, 'recent', includeTestContent),
-    getPublicPhotostream(10, 'recent', includeTestContent),
-    getMostViewedPhotosLastWeek(10, includeTestContent),
+    getPublicPhotostream(PHOTO_SECTION_FETCH_LIMIT, 'recent', includeTestContent),
+    getMostViewedPhotosLastWeek(PHOTO_SECTION_FETCH_LIMIT, includeTestContent),
     getMostViewedAlbumsLastWeek(10, includeTestContent),
     getPopularTags(30),
   ]);

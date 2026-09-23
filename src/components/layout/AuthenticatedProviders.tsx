@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
+import ReduceMotionSync from '@/components/layout/ReduceMotionSync';
 import SupabaseProvider from '@/app/providers/SupabaseProvider';
 import { AuthProvider } from '@/context/AuthContext';
 import { useSession } from '@/context/SessionContext';
@@ -27,6 +28,7 @@ export default function AuthenticatedProviders({
         <AuthProvider
           initialAuth={initialAuth}
         >
+          <ReduceMotionSync />
           {children}
         </AuthProvider>
       </QueryProvider>

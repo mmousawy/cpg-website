@@ -106,7 +106,7 @@ export const ConfirmEmail = ({
 
             <EventDetails
               event={event}
-              noDescription
+              noDescription={!preview}
             />
 
             <AddToCalendar

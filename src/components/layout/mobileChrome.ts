@@ -1,3 +1,5 @@
+import { prefersReducedMotion } from '@/utils/reduceMotion';
+
 /** Shared frosted pill styling for mobile bottom chrome (tab bar, action bars). */
 export const mobileFloatingPillClassName =
   'bg-noise max-sm:rounded-2xl max-sm:border max-sm:border-border-color-strong max-sm:bg-background-light/85 max-sm:shadow-lg max-sm:backdrop-blur-xl';
@@ -51,7 +53,7 @@ export const STICKY_BAR_SLIDE_MS = 250;
 
 export function getStickyBarSlideDurationMs() {
   if (typeof window === 'undefined') return 0;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+  if (prefersReducedMotion()) return 0;
   if (!window.matchMedia('(max-width: 639px)').matches) return 0;
   return STICKY_BAR_SLIDE_MS;
 }

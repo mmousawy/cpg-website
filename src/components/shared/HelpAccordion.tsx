@@ -45,7 +45,7 @@ export default function HelpAccordion({ id, title, children }: HelpAccordionProp
     let cancelled = false;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (!cancelled) scrollToIdWithStickyHeaderOffset(id);
+        if (!cancelled) scrollToIdWithStickyHeaderOffset(id, 'auto');
       });
     });
     return () => {

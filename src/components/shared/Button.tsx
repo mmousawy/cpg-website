@@ -126,7 +126,7 @@ export default function Button({
   );
 
   const content = (
-    <span className="relative z-10 flex min-w-0 max-w-full items-center justify-center gap-[inherit]">
+    <span className="relative z-5 flex min-w-0 max-w-full items-center justify-center gap-[inherit]">
       {loading ? (
         <LoadingSpinner />
       ) : (
