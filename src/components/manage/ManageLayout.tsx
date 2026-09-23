@@ -89,6 +89,7 @@ export default function ManageLayout({
     <ManageScrollContext.Provider
       value={scrollContainerRef}
     >
+      <>
       <div
         className="flex flex-1 min-h-0 w-full select-none"
       >
@@ -223,10 +224,11 @@ export default function ManageLayout({
         >
           {sidebar}
         </div>
-
-        {/* Mobile action bar (fixed above tab bar when items are selected) */}
-        {mobileActionBar}
       </div>
+
+      {/* Mobile selection chrome — fixed above tab bar (manage shell is overflow-hidden). */}
+      {mobileActionBar}
+      </>
     </ManageScrollContext.Provider>
   );
 }
