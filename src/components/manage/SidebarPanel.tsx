@@ -49,6 +49,7 @@ export default function SidebarPanel({
           <StickyActionBar
             variant="compact"
             sticky={false}
+            edges="flush"
           >
             {footer}
           </StickyActionBar>

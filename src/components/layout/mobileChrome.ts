@@ -9,6 +9,10 @@ export const mobileFloatingPillInsetClassName = 'max-sm:px-3';
 export const mobileStickyBottomWithGapClassName =
   'sticky max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)] sm:bottom-0';
 
+/** Fixed bottom chrome for overflow-hidden shells (e.g. manage pages) — same pin line as sticky. */
+export const mobileFixedBottomChromeClassName =
+  'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)]';
+
 /**
  * In-flow spacer below a settled sticky bar. Must be a sibling (not a wrapper)
  * so sticky containing-block height is unchanged (`mb-3.5` minus the bar's `pb-1`).

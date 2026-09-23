@@ -801,10 +801,16 @@ html.manage-page .app-header-inner {
   }
 }
 
-.mobile-tab-bar-scrim,
-.mobile-tab-bar-scrim__tone {
-  height: max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem));
+.mobile-tab-bar-scrim {
+  --scrim-collapsed: max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem));
+  --scrim-expanded: calc(var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1.5rem);
+  overflow: hidden;
+  height: var(--scrim-collapsed);
   transition: height 250ms ease-out;
+}
+
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
+  height: var(--scrim-expanded);
 }
 
 @media (max-width: 639px) {
@@ -839,6 +845,7 @@ html.manage-page .app-header-inner {
     transition: none;
   }
 
+  .mobile-tab-bar-scrim,
   .mobile-sticky-bar-slide,
   .modal-overlay-in,
   .modal-panel-in {
@@ -856,43 +863,15 @@ html.manage-page .app-header-inner {
   }
 }
 
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim,
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone {
-  height: calc(var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1.5rem);
-}
-
 .mobile-tab-bar-scrim__fade {
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     to top,
     var(--background) 15%,
     color-mix(in srgb, var(--background) 70%, transparent) 50%,
     transparent 100%
   );
-}
-
-.mobile-tab-bar-scrim__fade--sticky {
-  background: linear-gradient(
-    to top,
-    var(--background) 15%,
-    color-mix(in srgb, var(--background) 70%, transparent) 50%,
-    transparent 100%
-  );
-}
-
-.mobile-tab-bar-scrim__tone {
-  transition: height 250ms ease-out, opacity 250ms ease-out;
-}
-
-.mobile-tab-bar-scrim__tone--sticky {
-  opacity: 0;
-}
-
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--default {
-  opacity: 0;
-}
-
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
-  opacity: 1;
 }
 
 @media (max-width: 639px) {

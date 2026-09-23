@@ -2,6 +2,7 @@
 
 import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
+  mobileFixedBottomChromeClassName,
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
   mobileStickyChromeZClassName,
@@ -47,13 +48,13 @@ export default function MobileActionBar({
       open={isOpen}
       innerRef={rootRef}
       className={clsx(
-        'md:hidden fixed inset-x-0',
+        'md:hidden pointer-events-none',
+        mobileFixedBottomChromeClassName,
         mobileFloatingPillInsetClassName,
         mobileStickyChromeZClassName,
-        'max-sm:pb-1',
       )}
     >
-      <div className={clsx(mobileFloatingPillClassName, 'overflow-hidden')}>
+      <div className={clsx(mobileFloatingPillClassName, 'pointer-events-auto overflow-hidden')}>
         <div className="px-3 py-2.5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">

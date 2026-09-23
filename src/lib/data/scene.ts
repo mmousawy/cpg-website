@@ -88,10 +88,19 @@ export type SceneEventWithSubmitter = SceneEvent & {
   } | null;
 };
 
+const SCENE_EVENT_DETAIL_SELECT = `
+  id, slug, title, description, category, start_date, end_date, start_time, end_time,
+  location_name, location_city, location_address, url, cover_image_url,
+  image_blurhash, image_width, image_height, organizer, price_info,
+  submitted_by, interest_count, created_at,
+  submitter:profiles!scene_events_submitted_by_fkey(nickname, full_name, avatar_url)
+`;
+
 /**
- * Get a single scene event by slug with submitter profile
+ * Direct slug read. Query failures throw so `'use cache'` does not store them
+ * as a successful miss — a stored miss stays a 404 for the tagged lifetime.
  */
-export async function getSceneEventBySlug(slug: string) {
+async function getCachedSceneEventBySlug(slug: string) {
   'use cache';
   cacheLife('tagged');
   cacheTag('scene');
@@ -99,20 +108,16 @@ export async function getSceneEventBySlug(slug: string) {
 
   const supabase = createPublicClient();
 
-  const { data: row } = await supabase
+  const { data: row, error } = await supabase
     .from('scene_events')
-    .select(
-      `
-      id, slug, title, description, category, start_date, end_date, start_time, end_time,
-      location_name, location_city, location_address, url, cover_image_url,
-      image_blurhash, image_width, image_height, organizer, price_info,
-      submitted_by, interest_count, created_at,
-      submitter:profiles!scene_events_submitted_by_fkey(nickname, full_name, avatar_url)
-    `,
-    )
+    .select(SCENE_EVENT_DETAIL_SELECT)
     .eq('slug', slug)
     .is('deleted_at', null)
     .maybeSingle();
+
+  if (error) {
+    throw new Error(`Scene event lookup failed for ${slug}: ${error.message}`);
+  }
 
   if (!row) {
     return { event: null };
@@ -120,7 +125,39 @@ export async function getSceneEventBySlug(slug: string) {
 
   const { submitter, ...event } = row as unknown as SceneEventWithSubmitter;
   return {
-    event: { ...event, submitter } as SceneEventWithSubmitter | null,
+    event: { ...event, submitter } as SceneEventWithSubmitter,
+  };
+}
+
+function isAbortedLookup(error: unknown): boolean {
+  return error instanceof Error && (
+    error.name === 'AbortError' || error.message.includes('aborted')
+  );
+}
+
+/**
+ * Get a single scene event by slug with submitter profile.
+ * Falls back to the published list when the per-slug cache missed or the
+ * direct read failed. Prerender aborts that lookup under load; storing the
+ * abort as an empty result was serving 404s for events still listed on /scene.
+ */
+export async function getSceneEventBySlug(slug: string) {
+  try {
+    const cached = await getCachedSceneEventBySlug(slug);
+    if (cached.event) return cached;
+  } catch (error) {
+    if (!isAbortedLookup(error)) {
+      console.error(`Scene event lookup failed for ${slug}:`, error);
+    }
+  }
+
+  const listed = (await getPublishedSceneEvents()).find((event) => event.slug === slug);
+  if (!listed) {
+    return { event: null };
+  }
+
+  return {
+    event: { ...listed, submitter: null },
   };
 }
 

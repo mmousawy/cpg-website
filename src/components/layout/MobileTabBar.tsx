@@ -242,8 +242,7 @@ export default function MobileTabBar() {
         )}
         aria-hidden
       >
-        <div className="mobile-tab-bar-scrim__tone mobile-tab-bar-scrim__tone--default absolute inset-x-0 bottom-0 mobile-tab-bar-scrim__fade" />
-        <div className="mobile-tab-bar-scrim__tone mobile-tab-bar-scrim__tone--sticky absolute inset-x-0 bottom-0 mobile-tab-bar-scrim__fade mobile-tab-bar-scrim__fade--sticky" />
+        <div className="mobile-tab-bar-scrim__fade" />
       </div>
 
       <div
