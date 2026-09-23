@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useConfirmState } from '@/app/providers/ConfirmProvider';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -17,6 +17,11 @@ export default function ConfirmModal() {
 
   useBodyScrollLock(isOpen);
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    showDialogWithoutScrolling(modalRef.current);
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) {
       modalRef.current?.close();
@@ -24,7 +29,6 @@ export default function ConfirmModal() {
       return () => clearTimeout(timerId);
     }
 
-    showDialogWithoutScrolling(modalRef.current);
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
   }, [isOpen]);
@@ -51,7 +55,7 @@ export default function ConfirmModal() {
     <dialog
       ref={modalRef}
       className={clsx([
-        isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
+        isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-4',
         'bg-black/40',
@@ -70,7 +74,7 @@ export default function ConfirmModal() {
       >
         <div
           className={clsx([
-            isOpen ? 'scale-100' : 'scale-95',
+            isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
             'w-full max-w-md',
             'relative m-auto',
             'rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',

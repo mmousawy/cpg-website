@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useRouter } from 'next/navigation';
 import CloseSVG from 'public/icons/close.svg';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import SearchInput from './SearchInput';
 import SearchResults from './SearchResults';
 
@@ -35,6 +35,11 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   // Handle modal open/close
   useBodyScrollLock(isOpen);
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    showDialogWithoutScrolling(modalRef.current);
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) {
       modalRef.current?.close();
@@ -42,7 +47,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       return () => clearTimeout(timerId);
     }
 
-    showDialogWithoutScrolling(modalRef.current);
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
   }, [isOpen]);
@@ -110,7 +114,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     <dialog
       ref={modalRef}
       className={clsx([
-        isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
+        isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-4 max-sm:p-2',
         'bg-black/40',
@@ -135,7 +139,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       >
         <div
           className={clsx([
-            isOpen ? 'scale-100' : 'scale-95',
+            isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
             'w-full max-w-xl',
             'relative m-auto',
             'max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)]',
