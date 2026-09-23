@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import CloseSVG from 'public/icons/close.svg';
 
@@ -34,6 +34,13 @@ export default function Modal() {
 
   useBodyScrollLock(isOpen);
 
+  // Show before paint so the entrance animation is on the first frame.
+  // useEffect runs after paint, by which time a just-mounted dialog is already open.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    showDialogWithoutScrolling(modalRef.current);
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) {
       modalRef.current?.close();
@@ -42,7 +49,6 @@ export default function Modal() {
       return () => clearTimeout(timerId);
     }
 
-    showDialogWithoutScrolling(modalRef.current);
     // Focus trap the dialog element after a brief delay
     const timerId = setTimeout(() => setIsTrapped(true), 16);
     return () => clearTimeout(timerId);
@@ -77,7 +83,7 @@ export default function Modal() {
     <dialog
       ref={modalRef}
       className={clsx([
-        isOpen ? 'pointer-events-auto visible opacity-100' : 'pointer-events-none invisible opacity-0',
+        isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-6 max-sm:p-4',
         'bg-black/40',
@@ -96,7 +102,7 @@ export default function Modal() {
       >
         <div
           className={clsx([
-            isOpen ? 'scale-100' : 'scale-95',
+            isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
             'w-full',
             sizeClasses[size],
             'relative m-auto',

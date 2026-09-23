@@ -3,10 +3,12 @@
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef } from 'react';
 
+import { resetMobileStickyChromeDocumentState } from '@/hooks/useReportMobileStickyChromeHeight';
 import { resetBodyScrollLock } from '@/lib/bodyScrollLock';
 import { dispatchRouteChange } from '@/lib/routeChange';
 import { isManagePagePath } from '@/utils/managePage';
 import { isMobilePinnedShellPath } from '@/utils/mobilePinnedShell';
+import { isMobileTerminalStickySettlePath } from '@/utils/mobileTerminalStickySettle';
 import { refreshScrollContainerBinding, resetScrollContainer, resetWindowScroll } from '@/utils/scrollContainer';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 
@@ -27,6 +29,10 @@ export default function DocumentRouteState() {
     const isManage = isManagePagePath(pathname);
     document.documentElement.classList.toggle('manage-page', isManage);
     document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
+    document.documentElement.classList.toggle(
+      'mobile-terminal-sticky-settle',
+      isMobileTerminalStickySettlePath(pathname),
+    );
     if (pinnedMobileShell && window.matchMedia('(max-width: 639px)').matches) {
       if (history.scrollRestoration) {
         history.scrollRestoration = 'manual';
@@ -40,6 +46,7 @@ export default function DocumentRouteState() {
     const pathChanged = prevPathnameRef.current !== pathname;
     if (pathChanged) {
       dispatchRouteChange();
+      resetMobileStickyChromeDocumentState();
     }
     if (!window.location.hash && (pathChanged || pinnedMobileShell)) {
       resetScrollContainer();

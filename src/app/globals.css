@@ -292,6 +292,26 @@ html[data-overlay-scroll-lock]:not(.manage-page) body[data-scroll-locked] {
   animation: fade-in 0.3s ease-in-out both;
 }
 
+/* Entrance for lazily mounted dialogs. A transition has no previous frame
+   on first open, so the overlay and panel appear instantly. */
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-panel-in {
+  from { scale: 0.95; }
+  to { scale: 1; }
+}
+
+.modal-overlay-in {
+  animation: modal-overlay-in 300ms ease-out backwards;
+}
+
+.modal-panel-in {
+  animation: modal-panel-in 300ms ease-out backwards;
+}
+
 @keyframes onboarding-rise-in {
   from {
     opacity: 0;
@@ -784,7 +804,7 @@ html.manage-page .app-header-inner {
 .mobile-tab-bar-scrim,
 .mobile-tab-bar-scrim__tone {
   height: max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem));
-  transition: height 150ms ease-out;
+  transition: height 250ms ease-out;
 }
 
 @media (max-width: 639px) {
@@ -819,8 +839,11 @@ html.manage-page .app-header-inner {
     transition: none;
   }
 
-  .mobile-sticky-bar-slide {
+  .mobile-sticky-bar-slide,
+  .modal-overlay-in,
+  .modal-panel-in {
     transition: none;
+    animation: none;
   }
 
   .onboarding-page-title-in,
@@ -857,7 +880,7 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone {
 }
 
 .mobile-tab-bar-scrim__tone {
-  transition: height 150ms ease-out, opacity 150ms ease-out;
+  transition: height 250ms ease-out, opacity 250ms ease-out;
 }
 
 .mobile-tab-bar-scrim__tone--sticky {
@@ -892,8 +915,9 @@ html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
     height: var(--mobile-shell-padding-bottom);
   }
 
-  /* Terminal in-flow sticky nav only — mid-page bars (e.g. RSVP) still need content gap below. */
-  html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap--terminal) {
+  /* Terminal sticky settle — toggled from pathname (DocumentRouteState), not :has(),
+     because Next.js may keep the previous route in the DOM after navigation. */
+  html.mobile-terminal-sticky-settle:not(.manage-page) .app-shell-main {
     --mobile-content-bottom-gap: 0px;
   }
 

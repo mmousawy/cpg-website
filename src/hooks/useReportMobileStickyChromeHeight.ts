@@ -1,5 +1,6 @@
 import { type RefObject, useLayoutEffect } from 'react';
 
+import { getStickyBarSlideDurationMs } from '@/components/layout/mobileChrome';
 import { getScrollContainer, subscribeScrollContainer } from '@/utils/scrollContainer';
 
 const HEIGHT_VAR = '--mobile-sticky-bar-height';
@@ -42,10 +43,6 @@ function isLaidOut(el: HTMLElement) {
   return el.getClientRects().length > 0;
 }
 
-function getSlideSurface(el: HTMLElement) {
-  return el.querySelector<HTMLElement>('.mobile-sticky-bar-slide') ?? el;
-}
-
 function isSettledInFlow(el: HTMLElement, rect: DOMRect) {
   const gap = getSettleGap(el);
   if (!gap) return false;
@@ -55,15 +52,48 @@ function isSettledInFlow(el: HTMLElement, rect: DOMRect) {
 /** Only the laid-out bar may clear the shared chrome variables on unmount. */
 let chromePublisher: object | null = null;
 
+function hasStackedSlides(el: HTMLElement) {
+  return el.querySelector('.mobile-sticky-bar-slide') != null;
+}
+
+function getVisibleSlides(el: HTMLElement) {
+  const slides = el.querySelectorAll<HTMLElement>('.mobile-sticky-bar-slide');
+  return [...slides].filter((slide) => {
+    if (slide.hasAttribute('data-open')) return true;
+    return parseFloat(getComputedStyle(slide).opacity) > 0.01;
+  });
+}
+
+function isSlideChromeVisible(el: HTMLElement) {
+  if (!hasStackedSlides(el)) return true;
+  return getVisibleSlides(el).length > 0;
+}
+
+function measureBarHeight(el: HTMLElement) {
+  const openSlide = el.querySelector<HTMLElement>('.mobile-sticky-bar-slide[data-open]');
+  if (openSlide?.parentElement) {
+    return openSlide.parentElement.getBoundingClientRect().height;
+  }
+
+  const slideCells = el.querySelectorAll<HTMLElement>('.mobile-sticky-bar-slide');
+  for (const slide of slideCells) {
+    const cell = slide.parentElement;
+    if (cell) return cell.getBoundingClientRect().height;
+  }
+
+  return el.getBoundingClientRect().height;
+}
+
 function isStickyChromeExpanded(el: HTMLElement): boolean {
   if (!window.matchMedia(MOBILE_MEDIA).matches) return false;
 
   const style = window.getComputedStyle(el);
   if (style.display === 'none' || el.hidden) return false;
-  const slide = getSlideSurface(el);
-  if (slide.classList.contains('mobile-sticky-bar-slide') && !slide.hasAttribute('data-open')) {
+
+  if (hasStackedSlides(el) && !isSlideChromeVisible(el)) {
     return false;
   }
+
   if (style.position === 'fixed') {
     return true;
   }
@@ -87,9 +117,22 @@ function setupReporter(
   const root = document.documentElement;
   const token = {};
   let lastStuck: boolean | null = null;
+  let lastPublishedHeight = 0;
+  let scrimHoldUntil = 0;
 
   const publishHeight = () => {
-    const heightPx = `${Math.round(el.getBoundingClientRect().height)}px`;
+    const visible = getVisibleSlides(el);
+    let measured = Math.round(measureBarHeight(el));
+    if (
+      hasStackedSlides(el)
+      && visible.length === 0
+      && lastPublishedHeight > 0
+      && Date.now() < scrimHoldUntil
+    ) {
+      measured = lastPublishedHeight;
+    }
+    lastPublishedHeight = measured;
+    const heightPx = `${measured}px`;
     if (root.style.getPropertyValue(HEIGHT_VAR) !== heightPx) {
       root.style.setProperty(HEIGHT_VAR, heightPx);
     }
@@ -109,7 +152,14 @@ function setupReporter(
     }
 
     chromePublisher = token;
-    const stuck = isStickyChromeExpanded(el);
+    let stuck = isStickyChromeExpanded(el);
+    if (hasStackedSlides(el)) {
+      if (isSlideChromeVisible(el)) {
+        scrimHoldUntil = Date.now() + getStickyBarSlideDurationMs() * 2;
+      } else if (Date.now() < scrimHoldUntil && lastStuck === true) {
+        stuck = true;
+      }
+    }
     if (stuck === lastStuck) return;
     lastStuck = stuck;
     if (stuck) {
@@ -139,22 +189,36 @@ function setupReporter(
 
   onLayoutChange();
 
-  const resizeObserver = new ResizeObserver(onLayoutChange);
-  resizeObserver.observe(el);
-  const mutationObserver = new MutationObserver(onLayoutChange);
-  mutationObserver.observe(el, { attributes: true, attributeFilter: ['data-open', 'class', 'hidden'] });
+  let layoutRaf = 0;
+  const scheduleLayoutChange = () => {
+    if (layoutRaf) return;
+    layoutRaf = requestAnimationFrame(() => {
+      layoutRaf = 0;
+      onLayoutChange();
+    });
+  };
 
-  window.addEventListener('resize', onLayoutChange);
-  el.addEventListener('transitionend', onLayoutChange);
+  const resizeObserver = new ResizeObserver(scheduleLayoutChange);
+  resizeObserver.observe(el);
+  const mutationObserver = new MutationObserver(scheduleLayoutChange);
+  mutationObserver.observe(el, {
+    attributes: true,
+    attributeFilter: ['data-open', 'class', 'hidden'],
+    subtree: true,
+  });
+
+  window.addEventListener('resize', scheduleLayoutChange);
+  el.addEventListener('transitionend', scheduleLayoutChange);
   const unsubscribeScroll = subscribeScrollContainer(onScroll);
 
   return () => {
     resizeObserver.disconnect();
     mutationObserver.disconnect();
-    window.removeEventListener('resize', onLayoutChange);
-    el.removeEventListener('transitionend', onLayoutChange);
+    window.removeEventListener('resize', scheduleLayoutChange);
+    el.removeEventListener('transitionend', scheduleLayoutChange);
     unsubscribeScroll();
     if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    if (layoutRaf) cancelAnimationFrame(layoutRaf);
     if (chromePublisher !== token) return;
     chromePublisher = null;
     root.removeAttribute(EXPANDED_ATTR);
@@ -163,6 +227,15 @@ function setupReporter(
       root.style.removeProperty(OVERLAY_HEIGHT_VAR);
     }
   };
+}
+
+/** Clears document-level mobile sticky chrome set by useReportMobileStickyChromeHeight. */
+export function resetMobileStickyChromeDocumentState() {
+  chromePublisher = null;
+  const root = document.documentElement;
+  root.removeAttribute(EXPANDED_ATTR);
+  root.style.removeProperty(HEIGHT_VAR);
+  root.style.removeProperty(OVERLAY_HEIGHT_VAR);
 }
 
 export function useReportMobileStickyChromeHeight(
