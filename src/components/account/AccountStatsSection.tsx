@@ -1,9 +1,9 @@
 'use client';
 
 import Container from '@/components/layout/Container';
+import ArrowLink from '@/components/shared/ArrowLink';
 import { routes } from '@/config/routes';
 import type { AccountStats, Profile } from '@/hooks/useAccountForm';
-import Link from 'next/link';
 
 type AccountStatsWithChallenges = AccountStats & {
   challengesParticipated?: number;
@@ -18,27 +18,26 @@ interface AccountStatsSectionProps {
 export default function AccountStatsSection({ profile, stats }: AccountStatsSectionProps) {
   return (
     <div>
-      <h2
-        className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
+      <div
+        className="mb-2 flex items-center justify-between gap-3 sm:mb-4"
       >
-        Account info
-      </h2>
-      <p
-        className="mb-3 text-sm"
-      >
-        <Link
-          href={routes.accountStats.url}
-          className="text-primary hover:underline underline-offset-2"
+        <h2
+          className="text-lg font-semibold opacity-80 font-heading"
         >
-          View full stats →
-        </Link>
-      </p>
+          Account info
+        </h2>
+        <ArrowLink
+          href={routes.accountStats.url}
+        >
+          View full stats
+        </ArrowLink>
+      </div>
       <Container>
         <div
-          className="space-y-4"
+          className="space-y-3 sm:space-y-4"
         >
           <div
-            className="grid grid-cols-2 gap-4 text-sm"
+            className="grid grid-cols-2 gap-3 text-sm sm:gap-4"
           >
             <div>
               <p
@@ -71,15 +70,15 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
           </div>
 
           <div
-            className="border-border-color-strong border-t pt-4"
+            className="border-border-color-strong border-t pt-3 sm:pt-4"
           >
             <p
-              className="text-foreground mb-3 text-sm font-medium"
+              className="text-foreground mb-2 text-sm font-medium sm:mb-3"
             >
               Content
             </p>
             <div
-              className="grid grid-cols-2 gap-4 text-sm"
+              className="grid grid-cols-2 gap-3 text-sm sm:gap-4"
             >
               <div>
                 <p
@@ -88,7 +87,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Albums
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.albums}
                 </p>
@@ -100,7 +99,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Photos
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.photos}
                 </p>
@@ -109,15 +108,15 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
           </div>
 
           <div
-            className="border-border-color-strong border-t pt-4"
+            className="border-border-color-strong border-t pt-3 sm:pt-4"
           >
             <p
-              className="text-foreground mb-3 text-sm font-medium"
+              className="text-foreground mb-2 text-sm font-medium sm:mb-3"
             >
               Engagement
             </p>
             <div
-              className="grid grid-cols-2 gap-4 text-sm"
+              className="grid grid-cols-2 gap-3 text-sm sm:gap-4"
             >
               <div>
                 <p
@@ -126,7 +125,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Likes received
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.likesReceived}
                 </p>
@@ -138,7 +137,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Likes given
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.likesMade}
                 </p>
@@ -150,7 +149,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Comments made
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.commentsMade}
                 </p>
@@ -162,7 +161,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Comments received
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.commentsReceived}
                 </p>
@@ -174,7 +173,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Views received
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.viewsReceived}
                 </p>
@@ -183,15 +182,15 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
           </div>
 
           <div
-            className="border-border-color-strong border-t pt-4"
+            className="border-border-color-strong border-t pt-3 sm:pt-4"
           >
             <p
-              className="text-foreground mb-3 text-sm font-medium"
+              className="text-foreground mb-2 text-sm font-medium sm:mb-3"
             >
               Attendance
             </p>
             <div
-              className="grid grid-cols-2 gap-4 text-sm"
+              className="grid grid-cols-2 gap-3 text-sm sm:gap-4"
             >
               <div>
                 <p
@@ -200,7 +199,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Events attended
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.eventsAttended}
                 </p>
@@ -212,7 +211,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   RSVPs
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.rsvpsConfirmed}
                   {' '}
@@ -227,15 +226,15 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
           </div>
 
           <div
-            className="border-border-color-strong border-t pt-4"
+            className="border-border-color-strong border-t pt-3 sm:pt-4"
           >
             <p
-              className="text-foreground mb-3 text-sm font-medium"
+              className="text-foreground mb-2 text-sm font-medium sm:mb-3"
             >
               Challenges
             </p>
             <div
-              className="grid grid-cols-2 gap-4 text-sm"
+              className="grid grid-cols-2 gap-3 text-sm sm:gap-4"
             >
               <div>
                 <p
@@ -244,7 +243,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Participated
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.challengesParticipated ?? 0}
                 </p>
@@ -256,7 +255,7 @@ export default function AccountStatsSection({ profile, stats }: AccountStatsSect
                   Photos accepted
                 </p>
                 <p
-                  className="text-foreground text-lg font-semibold"
+                  className="text-foreground text-base font-semibold sm:text-lg"
                 >
                   {stats.challengePhotosAccepted ?? 0}
                 </p>

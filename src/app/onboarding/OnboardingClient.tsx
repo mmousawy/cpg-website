@@ -1,6 +1,5 @@
 'use client';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import type { AlbumCardStyle } from '@/components/account/AlbumCardStylePicker';
 import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
 import PageContainer from '@/components/layout/PageContainer';
@@ -22,6 +21,11 @@ import type { AppThemeSelection } from '@/hooks/useAppTheme';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
+import {
+  DISPLAY_PREF_STORAGE_KEYS,
+  parseMotionPreference,
+  type MotionPreference,
+} from '@/utils/displayPreferences';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { generateBlurhash } from '@/utils/generateBlurhash';
 import { scrollBehavior } from '@/utils/reduceMotion';
@@ -57,11 +61,9 @@ function parseProfileTheme(theme: string | null | undefined): AppThemeSelection 
   }
   return 'system';
 }
-function parseAlbumCardStyle(style: string | null | undefined): AlbumCardStyle {
-  if (style === 'large' || style === 'compact') {
-    return style;
-  }
-  return 'large';
+function applyMotionPreference(motion: MotionPreference) {
+  localStorage.setItem(DISPLAY_PREF_STORAGE_KEYS.motion, motion);
+  window.dispatchEvent(new Event('display-preferences-changed'));
 }
 export default function OnboardingClient() {
   const { user, profile, isLoading, refreshProfile } = useAuth();
@@ -81,7 +83,7 @@ export default function OnboardingClient() {
   stepRef.current = step;
   const [previewNoticeDismissed, setPreviewNoticeDismissed] = useState(false);
   const [themeSelection, setThemeSelection] = useState<AppThemeSelection>('system');
-  const [albumCardStyle, setAlbumCardStyle] = useState<AlbumCardStyle>('large');
+  const [motionPreference, setMotionPreference] = useState<MotionPreference>('system');
   const [themeInitialized, setThemeInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -167,14 +169,16 @@ export default function OnboardingClient() {
     if (themeInitialized) return;
     const initialTheme = parseProfileTheme(profile?.theme);
     setThemeSelection(initialTheme);
-    setAlbumCardStyle(parseAlbumCardStyle(profile?.album_card_style));
+    const initialMotion = parseMotionPreference(profile?.motion) ?? 'system';
+    setMotionPreference(initialMotion);
+    applyMotionPreference(initialMotion);
     if (initialTheme === 'system') {
       setTheme('system');
     } else {
       setTheme(initialTheme);
     }
     setThemeInitialized(true);
-  }, [profile?.album_card_style, profile?.theme, setTheme, themeInitialized]);
+  }, [profile?.motion, profile?.theme, setTheme, themeInitialized]);
   // Load email types on mount
   useEffect(() => {
     const loadEmailTypes = async () => {
@@ -577,7 +581,7 @@ export default function OnboardingClient() {
         newsletter_opt_in: boolean;
         terms_accepted_at: string;
         theme: AppThemeSelection;
-        album_card_style: AlbumCardStyle;
+        motion: MotionPreference;
       } = {
         nickname: data.nickname,
         full_name: data.fullName || null,
@@ -588,7 +592,7 @@ export default function OnboardingClient() {
         newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
         terms_accepted_at: new Date().toISOString(),
         theme: themeSelection,
-        album_card_style: albumCardStyle,
+        motion: motionPreference,
       };
       // Only update email if OAuth user and email is provided
       if (isOAuthUser && data.email) {
@@ -897,8 +901,11 @@ export default function OnboardingClient() {
                 handleCancelAvatarChange={handleCancelAvatarChange}
                 theme={themeSelection}
                 onThemeChange={setThemeSelection}
-                albumCardStyle={albumCardStyle}
-                onAlbumCardStyleChange={setAlbumCardStyle}
+                motion={motionPreference}
+                onMotionChange={(motion) => {
+                  setMotionPreference(motion);
+                  applyMotionPreference(motion);
+                }}
               />
             )}
             {step === 3 && (

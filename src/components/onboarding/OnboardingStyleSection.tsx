@@ -1,11 +1,12 @@
 'use client';
 
-import AlbumCardStylePicker, { type AlbumCardStyle } from '@/components/account/AlbumCardStylePicker';
+import MotionPreferencePicker from '@/components/account/MotionPreferencePicker';
 import ProfileImageUploadSections from '@/components/account/ProfileImageUploadSections';
 import ThemePreferencePicker from '@/components/account/ThemePreferencePicker';
 import Container from '@/components/layout/Container';
 import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
 import type { AppThemeSelection } from '@/hooks/useAppTheme';
+import type { MotionPreference } from '@/utils/displayPreferences';
 import ImageSVG from 'public/icons/image.svg';
 import PaletteSVG from 'public/icons/palette.svg';
 
@@ -37,8 +38,8 @@ interface OnboardingStyleSectionProps {
   handleCancelAvatarChange: () => void;
   theme: AppThemeSelection;
   onThemeChange: (theme: AppThemeSelection) => void;
-  albumCardStyle: AlbumCardStyle;
-  onAlbumCardStyleChange: (style: AlbumCardStyle) => void;
+  motion: MotionPreference;
+  onMotionChange: (motion: MotionPreference) => void;
 }
 
 export default function OnboardingStyleSection({
@@ -69,14 +70,14 @@ export default function OnboardingStyleSection({
   handleCancelAvatarChange,
   theme,
   onThemeChange,
-  albumCardStyle,
-  onAlbumCardStyleChange,
+  motion,
+  onMotionChange,
 }: OnboardingStyleSectionProps) {
   return (
     <div className="space-y-8">
       <div>
         <OnboardingSectionTitle icon={PaletteSVG}>
-          Theme
+          Appearance
         </OnboardingSectionTitle>
         <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
           <div className="space-y-6">
@@ -85,11 +86,11 @@ export default function OnboardingStyleSection({
               <ThemePreferencePicker value={theme} onChange={onThemeChange} />
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Album card style</span>
-              <AlbumCardStylePicker value={albumCardStyle} onChange={onAlbumCardStyleChange} />
+              <span className="text-sm font-medium">Motion</span>
+              <MotionPreferencePicker value={motion} onChange={onMotionChange} />
             </div>
             <p className="text-xs text-foreground/80">
-              You can change these preferences anytime in account settings.
+              You can change these anytime in Account → Appearance.
             </p>
           </div>
         </Container>

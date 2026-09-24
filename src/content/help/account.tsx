@@ -30,7 +30,7 @@ export const accountFAQ: FAQSection = {
           <p
             className="mb-4"
           >
-            Go to Account → Preferences to control which emails you receive. Each category can be turned on or off independently. You can change these settings anytime.
+            Go to Account → Email preferences to control which emails you receive. Each category can be turned on or off independently. You can change these settings anytime.
           </p>
           <p
             className="mb-2 font-medium"
@@ -123,80 +123,67 @@ export const accountFAQ: FAQSection = {
     },
     {
       id: 'theme',
-      title: 'Theme and display preferences',
+      title: 'Appearance',
       content: (
-        <p>
-          In account settings, you can choose your theme:
-          {' '}
-          <strong>
-            Auto
-          </strong>
-          {' '}
-          (follows your system preference),
-          {' '}
-          <strong>
-            Light
-          </strong>
-          , or
-          {' '}
-          <strong>
-            Dark
-          </strong>
-          . You can also set the album card style to
-          {' '}
-          <strong>
-            Large
-          </strong>
-          {' '}
-          (info below the image) or
-          {' '}
-          <strong>
-            Compact
-          </strong>
-          {' '}
-          (info on hover). Photo grids can use a
-          {' '}
-          <strong>
-            Justified
-          </strong>
-          {' '}
-          or
-          {' '}
-          <strong>
-            Square
-          </strong>
-          {' '}
-          layout,
-          {' '}
-          <strong>
-            Comfortable
-          </strong>
-          {' '}
-          or
-          {' '}
-          <strong>
-            Compact
-          </strong>
-          {' '}
-          density, and photo captions
-          {' '}
-          <strong>
-            On hover
-          </strong>
-          {' '}
-          or
-          {' '}
-          <strong>
-            Always
-          </strong>
-          . Motion can follow your system setting or be set to
-          {' '}
-          <strong>
-            Reduce
-          </strong>
-          {' '}
-          to minimize animations.
-        </p>
+        <>
+          <p
+            className="mb-4"
+          >
+            In Account → Appearance you set how the site looks and moves. During signup you choose color scheme and motion; the rest of these options are only in account settings.
+          </p>
+          <p
+            className="mb-4"
+          >
+            <strong>
+              Color scheme.
+            </strong>
+            {' '}
+            Auto follows your device. Light, Dark, and Midnight stay fixed.
+          </p>
+          <p
+            className="mb-4"
+          >
+            <strong>
+              Album card style.
+            </strong>
+            {' '}
+            Large shows the title and author below the image. Compact shows them on hover.
+          </p>
+          <p
+            className="mb-4"
+          >
+            <strong>
+              Photo grid style.
+            </strong>
+            {' '}
+            Justified rows fit the width of each photo. Square uses uniform tiles.
+          </p>
+          <p
+            className="mb-4"
+          >
+            <strong>
+              Photo grid density.
+            </strong>
+            {' '}
+            Comfortable uses larger previews. Compact fits more photos on screen.
+          </p>
+          <p
+            className="mb-4"
+          >
+            <strong>
+              Photo captions.
+            </strong>
+            {' '}
+            On hover, titles appear when you point at a photo. Always keeps titles and authors visible.
+          </p>
+          <p>
+            <strong>
+              Motion.
+            </strong>
+            {' '}
+            System follows your device. Reduce minimizes animations and transitions.
+          </p>
+        </>
       ),
     },
     {

@@ -5,6 +5,7 @@ import AccountStatsSection from '@/components/account/AccountStatsSection';
 import ChangeEmailModal from '@/components/account/ChangeEmailModal';
 import ChangeNicknameModal from '@/components/account/ChangeNicknameModal';
 import CopyrightSettingsSection from '@/components/account/CopyrightSettingsSection';
+import EmailPreferencesSection from '@/components/account/EmailPreferencesSection';
 import DeleteAccountSection from '@/components/account/DeleteAccountSection';
 import PreferencesSection from '@/components/account/PreferencesSection';
 import ProfileSection from '@/components/account/ProfileSection';
@@ -26,7 +27,8 @@ import { Suspense, useContext } from 'react';
 const ACCOUNT_SECTIONS = [
   { id: 'basic-info', title: 'Basic info' },
   { id: 'public-profile', title: 'Public profile' },
-  { id: 'preferences', title: 'Preferences' },
+  { id: 'appearance', title: 'Appearance' },
+  { id: 'email', title: 'Email preferences' },
   { id: 'copyright', title: 'Copyright & licensing' },
   { id: 'account-info', title: 'Account info' },
   { id: 'danger-zone', title: 'Danger zone' },
@@ -280,12 +282,21 @@ function AccountPageContent() {
                 </section>
 
                 <section
-                  id="preferences"
+                  id="appearance"
                   className="-scroll-mt-4"
                 >
                   <PreferencesSection
                     control={control}
                     themeMounted={themeMounted}
+                  />
+                </section>
+
+                <section
+                  id="email"
+                  className="-scroll-mt-4"
+                >
+                  <EmailPreferencesSection
+                    control={control}
                     emailTypes={emailTypes}
                     watch={watch}
                     setValue={form.setValue}
