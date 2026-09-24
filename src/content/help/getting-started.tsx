@@ -105,9 +105,9 @@ export const gettingStartedFAQ: FAQSection = {
                 Screen name is what people see on your profile (at least 2 characters)—it doesn&apos;t have to be your real name. Bio and interests are optional. Interests (up to 10) help others find you.
               </p>
             </HelpStep>
-            <HelpStep icon={PaletteSVG} title="Theme">
+            <HelpStep icon={PaletteSVG} title="Appearance">
               <p>
-                Color scheme: Auto follows your device; Light, Dark, and Midnight stay put. Album cards can be Large (details under the photo) or Compact. Both live in Account if you change your mind.
+                Color scheme: Auto follows your device; Light, Dark, and Midnight stay fixed. Motion: System follows your device, or Reduce to cut down animations. Album cards, photo grids, and captions can be changed later in Account → Appearance.
               </p>
             </HelpStep>
             <HelpStep icon={ImageSVG} title="Profile images">
@@ -117,7 +117,7 @@ export const gettingStartedFAQ: FAQSection = {
             </HelpStep>
             <HelpStep icon={MailSVG} title="Email preferences">
               <p>
-                Tick the kinds of email you actually want — events, comments, challenges, and so on. Unchecked stays off. You can flip these anytime in Account → Preferences.
+                Tick the kinds of email you actually want — events, comments, challenges, and so on. Unchecked stays off. You can flip these anytime in Account → Email preferences.
               </p>
             </HelpStep>
             <HelpStep icon={GavelSVG} title="One last step">

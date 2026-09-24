@@ -21,3 +21,9 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-x64-msvc@16.3.0-preview.10'
   - eslint-config-next@16.3.0-preview.10
   - next@16.3.0-preview.10
+  - '@supabase/auth-js@2.117.1'
+  - '@supabase/functions-js@2.117.1'
+  - '@supabase/postgrest-js@2.117.1'
+  - '@supabase/realtime-js@2.117.1'
+  - '@supabase/storage-js@2.117.1'
+  - '@supabase/supabase-js@2.117.1'

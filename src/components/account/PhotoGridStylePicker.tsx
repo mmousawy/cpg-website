@@ -1,7 +1,6 @@
 'use client';
 
-import clsx from 'clsx';
-
+import { AppearanceChoice, AppearanceChoiceGrid } from '@/components/account/AppearanceChoice';
 import type { PhotoGridStyle } from '@/utils/displayPreferences';
 
 type PhotoGridStylePickerProps = {
@@ -11,80 +10,46 @@ type PhotoGridStylePickerProps = {
 
 export default function PhotoGridStylePicker({ value, onChange }: PhotoGridStylePickerProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <button
-        type="button"
-        onClick={() => onChange('justified')}
-        className={clsx(
-          'rounded-lg border-2 p-3 text-left transition-colors',
-          value === 'justified'
-            ? 'border-primary bg-primary/5'
-            : 'border-border-color hover:border-border-color-strong',
-        )}
+    <AppearanceChoiceGrid>
+      <AppearanceChoice
+        selected={value === 'justified'}
+        onSelect={() => onChange('justified')}
+        label="Justified"
+        description="Rows fit the width of each photo"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <div
-                className={clsx(
-                  'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
-                  value === 'justified' ? 'border-primary' : 'border-border-color-strong',
-                )}
-              >
-                {value === 'justified' && (
-                  <div className="size-2 rounded-full bg-primary" />
-                )}
-              </div>
-              <span className="text-sm font-medium">Justified</span>
+          <div className="flex aspect-square w-20 shrink-0 flex-col gap-0.5 overflow-hidden rounded bg-foreground/5 p-1.5">
+            <div className="flex min-h-0 flex-[1.15] gap-0.5">
+              <div className="min-w-0 flex-[1.4] rounded-[1px] bg-foreground/20" />
+              <div className="min-w-0 flex-[0.65] rounded-[1px] bg-foreground/20" />
+              <div className="min-w-0 flex-1 rounded-[1px] bg-foreground/20" />
             </div>
-            <p className="ml-6 text-xs text-foreground/50">Rows fit the width of each photo</p>
+            <div className="flex min-h-0 flex-1 gap-0.5">
+              <div className="min-w-0 flex-[0.85] rounded-[1px] bg-foreground/20" />
+              <div className="min-w-0 flex-[1.55] rounded-[1px] bg-foreground/20" />
+            </div>
+            <div className="flex min-h-0 flex-[0.9] gap-0.5">
+              <div className="min-w-0 flex-[1.1] rounded-[1px] bg-foreground/20" />
+              <div className="min-w-0 flex-[0.7] rounded-[1px] bg-foreground/20" />
+              <div className="min-w-0 flex-1 rounded-[1px] bg-foreground/20" />
+            </div>
           </div>
-          <div className="flex h-12 w-20 shrink-0 items-end gap-0.5 overflow-hidden rounded border border-border-color-strong bg-background p-1">
-            <div className="h-7 w-5 rounded-sm bg-foreground/15" />
-            <div className="h-9 w-7 rounded-sm bg-foreground/20" />
-            <div className="h-6 w-4 rounded-sm bg-foreground/12" />
-            <div className="h-8 w-6 rounded-sm bg-foreground/18" />
-          </div>
-        </div>
-      </button>
+      </AppearanceChoice>
 
-      <button
-        type="button"
-        onClick={() => onChange('square')}
-        className={clsx(
-          'rounded-lg border-2 p-3 text-left transition-colors',
-          value === 'square'
-            ? 'border-primary bg-primary/5'
-            : 'border-border-color hover:border-border-color-strong',
-        )}
+      <AppearanceChoice
+        selected={value === 'square'}
+        onSelect={() => onChange('square')}
+        label="Square"
+        description="Uniform square tiles"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <div
-                className={clsx(
-                  'flex size-4 shrink-0 items-center justify-center rounded-full border-2',
-                  value === 'square' ? 'border-primary' : 'border-border-color-strong',
-                )}
-              >
-                {value === 'square' && (
-                  <div className="size-2 rounded-full bg-primary" />
-                )}
-              </div>
-              <span className="text-sm font-medium">Square</span>
-            </div>
-            <p className="ml-6 text-xs text-foreground/50">Uniform square tiles</p>
-          </div>
-          <div className="grid h-12 w-20 shrink-0 grid-cols-2 gap-0.5 overflow-hidden rounded border border-border-color-strong bg-background p-1">
+          <div className="grid aspect-square w-20 shrink-0 grid-cols-2 gap-0.5 overflow-hidden rounded bg-foreground/5 p-1.5">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="aspect-square rounded-sm bg-foreground/15"
+                className="rounded-sm bg-foreground/20"
               />
             ))}
           </div>
-        </div>
-      </button>
-    </div>
+      </AppearanceChoice>
+    </AppearanceChoiceGrid>
   );
 }
