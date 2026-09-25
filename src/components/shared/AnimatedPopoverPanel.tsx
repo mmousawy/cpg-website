@@ -10,7 +10,8 @@ type AnimatedPopoverPanelProps = {
   open: boolean;
   className?: string;
   role?: string;
-  origin?: 'center' | 'right';
+  /** `top-right` for menus that open downward from a trigger. */
+  origin?: 'center' | 'right' | 'top-right';
   children: React.ReactNode;
 };
 
@@ -52,8 +53,14 @@ export default function AnimatedPopoverPanel({
 
   if (!shouldRender) return null;
 
-  const closedTransform = 'translateY(8px) scale(0.96)';
+  const opensDownward = origin === 'top-right';
+  const closedTransform = opensDownward ? 'translateY(-8px) scale(0.96)' : 'translateY(8px) scale(0.96)';
   const openTransform = 'translateY(0) scale(1)';
+  const transformOrigin = opensDownward
+    ? 'top right'
+    : origin === 'right'
+      ? 'bottom right'
+      : 'bottom center';
 
   return (
     <div
@@ -62,8 +69,8 @@ export default function AnimatedPopoverPanel({
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? openTransform : closedTransform,
-        transformOrigin: origin === 'right' ? 'bottom right' : 'bottom center',
-        transition: `opacity ${POPOVER_ANIMATION_MS}ms ease-out, transform ${POPOVER_ANIMATION_MS}ms ease-out`,
+        transformOrigin,
+        transition: `opacity ${motionDuration(POPOVER_ANIMATION_MS)}ms ease-out, transform ${motionDuration(POPOVER_ANIMATION_MS)}ms ease-out`,
       }}
     >
       {children}

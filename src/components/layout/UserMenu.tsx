@@ -2,8 +2,9 @@
 
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import AnimatedPopoverPanel from '@/components/shared/AnimatedPopoverPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import Avatar from '../auth/Avatar';
@@ -14,40 +15,51 @@ export default function UserMenu() {
   const { user, profile, isLoading } = useAuth();
   const mounted = useMounted();
   const showSkeleton = !mounted || isLoading;
-  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const closeMenu = () => {
-    if (detailsRef.current) {
-      detailsRef.current.open = false;
-    }
+    setMenuOpen(false);
   };
 
   useEffect(() => {
+    if (!menuOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (detailsRef.current && !detailsRef.current.contains(event.target as Node)) {
-        detailsRef.current.open = false;
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
       }
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
-    if (detailsRef.current) {
-      detailsRef.current.open = false;
-    }
+    setMenuOpen(false);
   }, [pathname]);
 
   return (
-    <details
-      ref={detailsRef}
-      className="relative group shrink-0"
-    >
-      <summary
-        className="list-none cursor-pointer block rounded-full hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2 outline-transparent group-open:outline-primary group-open:outline-2 [&::-webkit-details-marker]:hidden"
+    <div ref={rootRef} className="relative shrink-0">
+      <button
+        type="button"
+        className={clsx(
+          'block cursor-pointer rounded-full outline-transparent hover:outline-primary hover:outline-2 focus:outline-primary focus:outline-2',
+          menuOpen && 'outline-primary outline-2',
+        )}
         aria-label="User menu"
+        aria-expanded={menuOpen}
+        aria-haspopup="menu"
+        onClick={() => setMenuOpen((open) => !open)}
       >
         {showSkeleton ? (
           <div
@@ -62,15 +74,15 @@ export default function UserMenu() {
             usePersonIconFallback
           />
         )}
-      </summary>
+      </button>
 
-      <div
-        className={clsx(
-          'absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light bg-no-noise shadow-lg',
-        )}
+      <AnimatedPopoverPanel
+        open={menuOpen}
+        origin="top-right"
+        className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light bg-no-noise shadow-lg"
       >
         <AccountMenuPanel onClose={closeMenu} showSiteLinks />
-      </div>
-    </details>
+      </AnimatedPopoverPanel>
+    </div>
   );
 }
