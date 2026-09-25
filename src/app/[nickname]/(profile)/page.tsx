@@ -192,23 +192,6 @@ async function ProfileContent({ nickname }: { nickname: string }) {
         <WidePageContainer
           className="pt-0!"
         >
-          <div
-            className="mb-6 flex items-start justify-between gap-4"
-          >
-            <div>
-              <h2
-                className="text-xl font-semibold font-heading"
-              >
-                Photostream
-              </h2>
-              <p
-                className="text-sm text-foreground/80 leading-snug"
-              >
-                Latest photos by @
-                {profile.nickname}
-              </p>
-            </div>
-          </div>
           <DensityAwarePhotoGrid
             photos={publicPhotos.map((photo) => ({
               ...photo,
@@ -224,6 +207,23 @@ async function ProfileContent({ nickname }: { nickname: string }) {
             }}
             profileNickname={profile.nickname || nickname}
             showAttribution
+            header={
+              <div
+                className="mb-6"
+              >
+                <h2
+                  className="text-xl font-semibold font-heading"
+                >
+                  Photostream
+                </h2>
+                <p
+                  className="text-sm text-foreground/80 leading-snug"
+                >
+                  Latest photos by @
+                  {profile.nickname}
+                </p>
+              </div>
+            }
           />
           {totalPhotos > PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE && (
             <div
