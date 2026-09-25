@@ -19,15 +19,19 @@ function readCssPx(variable: string) {
   return parsePx(getComputedStyle(document.documentElement).getPropertyValue(variable));
 }
 
+/** Overlap the bar above so 1.5x DPR subpixel rounding cannot leave a hairline gap. */
+const STICKY_SUBTITLE_OVERLAP_PX = 1;
+
 function getSectionHeadingStickyTopPx() {
   if (typeof window === 'undefined') return 0;
   if (window.matchMedia('(min-width: 640px)').matches) {
     const fromVar = readCssPx('--app-header-height');
-    if (fromVar > 0) return fromVar;
-    const header = document.querySelector('header');
-    return header?.getBoundingClientRect().height ?? 0;
+    const headerHeight = fromVar > 0
+      ? fromVar
+      : (document.querySelector('header')?.getBoundingClientRect().height ?? 0);
+    return Math.max(0, headerHeight - STICKY_SUBTITLE_OVERLAP_PX);
   }
-  return readCssPx('--sticky-page-heading-height');
+  return Math.max(0, readCssPx('--sticky-page-heading-height') - STICKY_SUBTITLE_OVERLAP_PX);
 }
 
 function useSectionHeadingStuck(headingRef: React.RefObject<HTMLElement | null>) {
@@ -72,7 +76,7 @@ export default function EventsSectionHeading({ children, className }: EventsSect
       ref={headingRef}
       className={clsx(
         'sticky z-10 -mx-3 px-3 py-2 mb-2 sm:mx-0 sm:px-0',
-        'top-(--sticky-page-heading-height,0px) sm:top-(--app-header-height,4.5625rem)',
+        'top-[calc(var(--sticky-page-heading-height,0px)-1px)] sm:top-[calc(var(--app-header-height,4.5625rem)-1px)]',
         'bg-background/80 backdrop-blur-sm',
         'border-b transition-[border-color]',
         isStuck ? 'border-border-color' : 'border-transparent',

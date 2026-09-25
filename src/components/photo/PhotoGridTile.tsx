@@ -73,7 +73,6 @@ export default function PhotoGridTile({
         alt=""
         blurhash={photo?.blurhash}
         fill
-        lite
         className="object-cover transition-all duration-200 group-hover:brightness-110"
         sizes={sizes}
         loading="lazy"
