@@ -25,7 +25,7 @@ export function ProfileDesktopSocialLinks({ profile }: { profile: ProfileHeaderP
 
   return (
     <div
-      className="hidden flex-wrap items-center gap-2 sm:flex"
+      className="hidden flex-wrap items-center gap-2 pt-px sm:flex"
     >
       {showFollow && profile.nickname && (
         <FollowButton
