@@ -1,10 +1,10 @@
-import type { SceneEvent } from '@/types/scene';
 import { getServerNow } from '@/lib/cache/serverNow';
 import {
-  filterPastSceneEvents,
-  filterRelatedSceneEvents,
-  filterUpcomingSceneEvents,
+    filterPastSceneEvents,
+    filterRelatedSceneEvents,
+    filterUpcomingSceneEvents,
 } from '@/lib/scene/filters';
+import type { SceneEvent } from '@/types/scene';
 import { createPublicClient } from '@/utils/supabase/server';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -129,9 +129,16 @@ async function getCachedSceneEventBySlug(slug: string) {
   };
 }
 
-function isAbortedLookup(error: unknown): boolean {
-  return error instanceof Error && (
-    error.name === 'AbortError' || error.message.includes('aborted')
+function isAbandonedPrerenderLookup(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const digest = (error as Error & { digest?: string }).digest;
+  return (
+    error.name === 'AbortError'
+    || error.message.includes('aborted')
+    // `stale: 0` caches are dynamic holes. When the prerender finishes first,
+    // Next rejects the in-flight read with this digest. React normally swallows
+    // it; this wrapper observes it, so handle it here and use the list fallback.
+    || digest === 'HANGING_PROMISE_REJECTION'
   );
 }
 
@@ -146,7 +153,7 @@ export async function getSceneEventBySlug(slug: string) {
     const cached = await getCachedSceneEventBySlug(slug);
     if (cached.event) return cached;
   } catch (error) {
-    if (!isAbortedLookup(error)) {
+    if (!isAbandonedPrerenderLookup(error)) {
       console.error(`Scene event lookup failed for ${slug}:`, error);
     }
   }

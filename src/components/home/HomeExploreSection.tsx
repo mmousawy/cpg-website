@@ -9,13 +9,16 @@ import type { HomePageData } from '@/lib/data/home';
 type HomeExploreSectionProps = Pick<
   HomePageData,
   'events' | 'attendeesByEvent' | 'challenges' | 'serverNow'
->;
+> & {
+  showEventDescriptions?: boolean;
+};
 
 export function HomeExploreSection({
   events,
   attendeesByEvent,
   challenges,
   serverNow,
+  showEventDescriptions = true,
 }: HomeExploreSectionProps) {
   return (
     <PageContainer
@@ -47,6 +50,7 @@ export function HomeExploreSection({
           avatarSize="xs"
           serverNow={serverNow}
           prefetchLinks={false}
+          showDescriptions={showEventDescriptions}
         />
       </div>
 

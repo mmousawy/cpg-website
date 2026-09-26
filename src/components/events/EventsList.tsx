@@ -49,6 +49,8 @@ type EventsListProps = {
   avatarSize?: keyof typeof SIZE_MAP
   /** When false, disables Next.js viewport prefetch on event links */
   prefetchLinks?: boolean
+  /** When false, omits event description HTML from cards (smaller payloads) */
+  showDescriptions?: boolean
 }
 
 // Transform attendees to AvatarPerson format for the shared component
@@ -99,6 +101,7 @@ export default function EventsList({
   serverNow,
   avatarSize = 'xxs',
   prefetchLinks = true,
+  showDescriptions = true,
 }: EventsListProps) {
   if (!events || events.length === 0) {
     return (
@@ -153,7 +156,8 @@ export default function EventsList({
               key={event.id}
               event={event}
               showBadge
-              description={event.description}
+              description={showDescriptions ? event.description : null}
+              showDescription={showDescriptions}
               attendees={attendees}
               disableAttendeesPopover={disableAttendeesPopover}
               serverNow={serverNow}
