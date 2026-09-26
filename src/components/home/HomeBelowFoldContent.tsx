@@ -39,7 +39,6 @@ export function HomeBelowFoldContent({
         attendeesByEvent={attendeesByEvent}
         challenges={challenges}
         serverNow={serverNow}
-        showEventDescriptions={false}
       />
       <HomeAlbumsSection
         albums={albums}
