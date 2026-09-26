@@ -24,6 +24,8 @@ type ChallengeCardProps = {
   /** Show admin action buttons (Edit, Review) in footer */
   showAdminActions?: boolean;
   prefetch?: boolean;
+  /** Override next/image sizes for cover (e.g. homepage two-column grid) */
+  coverImageSizes?: string;
 };
 
 /**
@@ -79,12 +81,15 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
+const DEFAULT_COVER_IMAGE_SIZES = '(max-width: 640px) 280px, (max-width: 1024px) 40vw, 320px';
+
 export default function ChallengeCard({
   challenge,
   serverNow,
   isPast = false,
   showAdminActions = false,
   prefetch,
+  coverImageSizes = DEFAULT_COVER_IMAGE_SIZES,
 }: ChallengeCardProps) {
   const deadline = formatDeadline(challenge.ends_at, serverNow);
   const deadlineShort = formatDeadlineShort(challenge.ends_at, serverNow);
@@ -116,7 +121,7 @@ export default function ChallengeCard({
             fill
             lite
             className="object-cover transition-all duration-200 group-hover:brightness-110"
-            sizes="(max-width: 640px) 280px, (max-width: 1024px) 40vw, 320px"
+            sizes={coverImageSizes}
             blurhash={challenge.image_blurhash}
             quality={THUMBNAIL_IMAGE_QUALITY}
           />

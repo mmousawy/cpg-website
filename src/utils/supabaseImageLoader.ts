@@ -62,6 +62,7 @@ export function getBlurPlaceholderUrl(src: string | null | undefined): string | 
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
 
     // Convert to render/image endpoint for transformations
     url.pathname = url.pathname.replace(
@@ -72,6 +73,7 @@ export function getBlurPlaceholderUrl(src: string | null | undefined): string | 
     // Request small image for blur placeholder (32px gives smoother blur than 16px)
     url.searchParams.set('width', '32');
     url.searchParams.set('quality', '30');
+    url.searchParams.set('format', 'webp');
 
     return url.toString();
   } catch {
@@ -104,6 +106,7 @@ export function getCroppedThumbnailUrl(
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
 
     // Convert object URL to render/image URL for transformations
     url.pathname = url.pathname.replace(
@@ -116,6 +119,7 @@ export function getCroppedThumbnailUrl(
     url.searchParams.set('height', height.toString());
     url.searchParams.set('resize', 'cover'); // Crop to fill dimensions (center-crop)
     url.searchParams.set('quality', quality.toString());
+    url.searchParams.set('format', 'webp');
 
     return url.toString();
   } catch {
@@ -182,6 +186,7 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
 
     // Convert object URL to render/image URL for transformations
     // Supabase requires /render/image/public/ endpoint for image transformations
@@ -200,6 +205,7 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
     // Add Supabase transform params
     url.searchParams.set('width', cappedWidth.toString());
     url.searchParams.set('quality', (quality ?? DEFAULT_SUPABASE_IMAGE_QUALITY).toString());
+    url.searchParams.set('format', 'webp');
 
     // If resize=cover was in the original URL, preserve aspect ratio cropping
     if (hasResizeCover && existingHeight) {

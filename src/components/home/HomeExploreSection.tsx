@@ -2,6 +2,7 @@ import ChallengesList from '@/components/challenges/ChallengesList';
 import EventsList from '@/components/events/EventsList';
 import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
+import { HOME_TWO_COLUMN_COVER_SIZES } from '@/config/homeImageSizes';
 import { routes } from '@/config/routes';
 import type { HomePageData } from '@/lib/data/home';
 
@@ -70,6 +71,7 @@ export function HomeExploreSection({
             challenges={challenges}
             serverNow={serverNow}
             prefetchLinks={false}
+            coverImageSizes={HOME_TWO_COLUMN_COVER_SIZES}
             className="grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] sm:[&>:nth-child(n+4)]:hidden"
           />
         </div>

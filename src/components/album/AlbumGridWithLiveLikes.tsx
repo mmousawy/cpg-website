@@ -35,6 +35,7 @@ export default function AlbumGridWithLiveLikes({
   className = 'grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]',
   onAlbumClick,
   prefetchLinks = true,
+  coverImageSizes,
 }: AlbumGridWithLiveLikesProps) {
   const { profile } = useAuth();
 
@@ -70,6 +71,7 @@ export default function AlbumGridWithLiveLikes({
             onClick={onAlbumClick}
             likesCount={likesCount}
             prefetch={prefetchLinks}
+            coverImageSizes={coverImageSizes}
           />
         );
       })}
