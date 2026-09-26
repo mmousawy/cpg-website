@@ -148,6 +148,7 @@ export function NotificationBadge({ count }: { count: number }) {
 
   return (
     <span
+      aria-hidden
       className={clsx(
         'absolute -top-0.5 -right-0.5 bg-red-700 text-white text-[9px] font-medium',
         'rounded-full min-w-3.5 h-3.5 flex items-center justify-center px-0.5',

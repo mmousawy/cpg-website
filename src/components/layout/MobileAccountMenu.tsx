@@ -8,9 +8,9 @@ import { useMounted } from '@/hooks/useMounted';
 import { useNotifications } from '@/hooks/useNotifications';
 import { subscribeRouteChange } from '@/lib/routeChange';
 import Avatar from '../auth/Avatar';
+import { NotificationBadge, NotificationsSheet } from '../notifications/NotificationsSheet';
 import AccountMenuPanel from './AccountMenuPanel';
 import TabBarPopoverAnchor from './TabBarPopoverAnchor';
-import { NotificationBadge, NotificationsSheet } from '../notifications/NotificationsSheet';
 
 type MobileAccountMenuProps = {
   avatarUrl?: string | null;
@@ -86,7 +86,11 @@ function MobileAccountMenuContent({
     );
   }
 
-  const ariaLabel = user ? 'Open account menu' : 'Log in or sign up';
+  const ariaLabel = user
+    ? (unseenCount > 0
+        ? `Open account menu, ${unseenCount > 99 ? '99+' : unseenCount} unread notification${unseenCount === 1 ? '' : 's'}`
+        : 'Open account menu')
+    : 'Log in or sign up';
 
   return (
     <>

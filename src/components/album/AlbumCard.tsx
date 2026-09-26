@@ -20,7 +20,11 @@ type AlbumCardProps = {
   /** Like count to display */
   likesCount?: number
   prefetch?: boolean
+  /** Override next/image sizes for cover (e.g. homepage two-column grid) */
+  coverImageSizes?: string
 }
+
+const DEFAULT_COVER_IMAGE_SIZES = '(max-width: 640px) 256px, (max-width: 1024px) 480px, 384px';
 
 export default function AlbumCard({
   album,
@@ -29,6 +33,7 @@ export default function AlbumCard({
   onClick,
   likesCount,
   prefetch = true,
+  coverImageSizes = DEFAULT_COVER_IMAGE_SIZES,
 }: AlbumCardProps) {
   const coverImage = album.cover_image_url || album.photos?.[0]?.photo_url || album.event_cover_image;
   const photoCount = album.photos?.length || 0;
@@ -55,7 +60,7 @@ export default function AlbumCard({
             alt={album.title}
             lite
             blurhash={album.cover_image_blurhash}
-            sizes="(max-width: 640px) 256px, (max-width: 1024px) 480px, 384px"
+            sizes={coverImageSizes}
             quality={THUMBNAIL_IMAGE_QUALITY}
             fill
             loading='lazy'

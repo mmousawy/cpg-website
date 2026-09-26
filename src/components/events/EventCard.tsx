@@ -53,7 +53,10 @@ type EventCardProps = {
   /** Prioritize loading for LCP (first visible event card on homepage) */
   priority?: boolean;
   prefetch?: boolean;
+  coverImageSizes?: string;
 };
+
+const DEFAULT_COVER_IMAGE_SIZES = '(max-width: 640px) calc(100vw - 1.5rem), (min-width: 1024px) 384px, 320px';
 
 function getStatusLabel(status: EventStatus): string {
   switch (status) {
@@ -98,6 +101,7 @@ export default function EventCard({
   serverNow,
   priority = false,
   prefetch = true,
+  coverImageSizes = DEFAULT_COVER_IMAGE_SIZES,
 }: EventCardProps) {
   const status =
     serverNow !== undefined
@@ -129,7 +133,7 @@ export default function EventCard({
           <BlurImage
             fill
             lite
-            sizes="(max-width: 640px) 90vw, (min-width: 1024px) 384px, 320px"
+            sizes={coverImageSizes}
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : undefined}
             quality={imageQuality}

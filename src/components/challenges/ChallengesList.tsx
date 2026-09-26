@@ -9,6 +9,7 @@ type ChallengesListProps = {
   isPast?: boolean;
   prefetchLinks?: boolean;
   className?: string;
+  coverImageSizes?: string;
 };
 
 export default function ChallengesList({
@@ -18,6 +19,7 @@ export default function ChallengesList({
   isPast = false,
   prefetchLinks,
   className = 'grid gap-3 sm:gap-5 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]',
+  coverImageSizes,
 }: ChallengesListProps) {
   if (challenges.length === 0) {
     return (
@@ -41,6 +43,7 @@ export default function ChallengesList({
           serverNow={serverNow}
           isPast={isPast}
           prefetch={prefetchLinks}
+          coverImageSizes={coverImageSizes}
         />
       ))}
     </div>

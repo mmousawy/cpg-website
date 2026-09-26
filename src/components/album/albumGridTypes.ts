@@ -11,4 +11,5 @@ export type AlbumGridProps = {
   liveLikeCounts?: boolean
   /** When false, disables Next.js viewport prefetch on album links */
   prefetchLinks?: boolean
+  coverImageSizes?: string
 }

@@ -34,6 +34,7 @@ export default function AlbumGridStatic({
   className = 'grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]',
   onAlbumClick,
   prefetchLinks = true,
+  coverImageSizes,
 }: AlbumGridStaticProps) {
   const { profile } = useAuth();
 
@@ -62,6 +63,7 @@ export default function AlbumGridStatic({
           onClick={onAlbumClick}
           likesCount={album.likes_count ?? 0}
           prefetch={prefetchLinks}
+          coverImageSizes={coverImageSizes}
         />
       ))}
     </div>
