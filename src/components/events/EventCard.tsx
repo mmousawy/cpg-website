@@ -54,6 +54,7 @@ type EventCardProps = {
   priority?: boolean;
   prefetch?: boolean;
   coverImageSizes?: string;
+  showDescription?: boolean;
 };
 
 const DEFAULT_COVER_IMAGE_SIZES = '(max-width: 640px) calc(100vw - 1.5rem), (min-width: 1024px) 384px, 320px';
@@ -102,6 +103,7 @@ export default function EventCard({
   priority = false,
   prefetch = true,
   coverImageSizes = DEFAULT_COVER_IMAGE_SIZES,
+  showDescription = true,
 }: EventCardProps) {
   const status =
     serverNow !== undefined
@@ -221,7 +223,7 @@ export default function EventCard({
           )}
         </div>
 
-        {event.description && (
+        {showDescription && event.description && (
           <RichDescriptionView
             html={event.description}
             className="text-foreground/90 text-sm line-clamp-3"
