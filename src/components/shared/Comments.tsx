@@ -501,7 +501,7 @@ const CommentItem = memo(function CommentItem({
         <p
           className="text-xs text-foreground/60 mb-3"
         >
-          Posted on{' '}
+          Posted{' '}
           {formatDateFn(comment.created_at)}
           {comment.edited_at && (
             <>
@@ -1178,15 +1178,29 @@ export default function Comments({
 
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const diffInSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
+    // Relative phrases already include "ago", so the label is "Posted 10 hours ago".
+    // Calendar dates need the preposition: "Posted on Sep 20, 2026".
     if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    }
 
-    return date.toLocaleDateString();
+    return `on ${date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })}`;
   }, []);
 
   const handleReplyClick = useCallback((commentId: string) => {
@@ -1307,15 +1321,17 @@ export default function Comments({
         )}
       </div>
 
-      <CommentComposer
-        profile={currentUserProfile}
-        commentText={commentText}
-        onCommentTextChange={setCommentText}
-        onSubmit={handleSubmitComment}
-        isSubmitting={isSubmitting}
-        user={user}
-        showAuthPrompt={stableShowAuthPrompt}
-      />
+      {!replyingTo && (
+        <CommentComposer
+          profile={currentUserProfile}
+          commentText={commentText}
+          onCommentTextChange={setCommentText}
+          onSubmit={handleSubmitComment}
+          isSubmitting={isSubmitting}
+          user={user}
+          showAuthPrompt={stableShowAuthPrompt}
+        />
+      )}
     </div>
   );
 }

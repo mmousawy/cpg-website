@@ -584,7 +584,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         >
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-50 bg-linear-to-b from-transparent to-background md:hidden"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-full bg-linear-to-b from-transparent to-[black]/12 dark:to-[black]/40"
           />
           <div className="relative z-10">
             <EventComments
