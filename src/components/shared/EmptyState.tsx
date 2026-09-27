@@ -7,6 +7,7 @@ type EmptyStateProps = {
   description?: ReactNode;
   action?: ReactNode;
   className?: string;
+  id?: string;
 };
 
 export default function EmptyState({
@@ -15,9 +16,11 @@ export default function EmptyState({
   description,
   action,
   className,
+  id,
 }: EmptyStateProps) {
   return (
     <div
+      id={id}
       className={clsx(
         'border-2 border-dashed border-border-color rounded-md p-6 sm:p-8 text-center flex flex-col items-center justify-center',
         className,

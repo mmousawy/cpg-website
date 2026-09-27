@@ -78,6 +78,7 @@ export default function MobileActionBar({
               {actions}
               {!hideEdit && (
                 <Button
+                  id="photos-tour-mobile-edit"
                   onClick={onEdit}
                   variant="primary"
                   size="sm"

@@ -3,9 +3,10 @@
 import { ManageScrollContext } from '@/context/ManageScrollContext';
 import { useAuth } from '@/hooks/useAuth';
 import { albumCountQueryKey, photoCountQueryKey, useAlbumCount, usePhotoCount } from '@/hooks/usePhotoCounts';
+import { isPhotosTourMockMode } from '@/tours/photosFirstRunTour.constants';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useTransition } from 'react';
 
 import AlbumSwitcher from '@/components/manage/AlbumSwitcher';
@@ -48,13 +49,45 @@ function ManageTabActiveMarker({
   );
 }
 
-export default function ManageLayout({
+export default function ManageLayout(props: ManageLayoutProps) {
+  return (
+    <Suspense
+      fallback={(
+        <ManageLayoutContent
+          {...props}
+          forceUploadTourPhotoCountZero={false}
+        />
+      )}
+    >
+      <ManageLayoutWithTourMock
+        {...props}
+      />
+    </Suspense>
+  );
+}
+
+function ManageLayoutWithTourMock(props: ManageLayoutProps) {
+  const searchParams = useSearchParams();
+  const forceUploadTourPhotoCountZero = isPhotosTourMockMode(searchParams);
+
+  return (
+    <ManageLayoutContent
+      {...props}
+      forceUploadTourPhotoCountZero={forceUploadTourPhotoCountZero}
+    />
+  );
+}
+
+function ManageLayoutContent({
   children,
   sidebar,
   actions,
   albumDetail,
   mobileActionBar,
-}: ManageLayoutProps) {
+  forceUploadTourPhotoCountZero,
+}: ManageLayoutProps & {
+  forceUploadTourPhotoCountZero: boolean;
+}) {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -71,7 +104,9 @@ export default function ManageLayout({
     ? queryClient.getQueryData<number>(albumCountQueryKey(user.id))
     : undefined;
 
-  const displayPhotoCount = photoCount ?? cachedPhotoCount ?? 0;
+  const displayPhotoCount = forceUploadTourPhotoCountZero
+    ? 0
+    : (photoCount ?? cachedPhotoCount ?? 0);
   const displayAlbumCount = albumCount ?? cachedAlbumCount ?? 0;
 
   const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -137,6 +172,7 @@ export default function ManageLayout({
                     </Suspense>
                   </Link>
                   <Link
+                    id="photos-tour-albums-tab"
                     href="/account/albums"
                     onClick={(e) => handleTabClick(e, '/account/albums')}
                     className="-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
