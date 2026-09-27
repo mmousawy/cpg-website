@@ -1010,6 +1010,35 @@ export type Database = {
         }
         Relationships: []
       }
+      nickname_redirects: {
+        Row: {
+          created_at: string
+          expires_at: string
+          old_nickname: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          old_nickname: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          old_nickname?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'nickname_redirects_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       notification_email_batches: {
         Row: {
           batch_key: string
@@ -1372,35 +1401,6 @@ export type Database = {
           },
         ]
       }
-      nickname_redirects: {
-        Row: {
-          created_at: string
-          expires_at: string
-          old_nickname: string
-          profile_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at: string
-          old_nickname: string
-          profile_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          old_nickname?: string
-          profile_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'nickname_redirects_profile_id_fkey'
-            columns: ['profile_id']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       profile_interests: {
         Row: {
           created_at: string | null
@@ -1433,10 +1433,6 @@ export type Database = {
       profiles: {
         Row: {
           album_card_style: string | null
-          motion: string | null
-          photo_captions: string | null
-          photo_grid_density: string | null
-          photo_grid_style: string | null
           avatar_url: string | null
           banner_blurhash: string | null
           banner_url: string | null
@@ -1452,16 +1448,21 @@ export type Database = {
           id: string
           is_admin: boolean | null
           last_logged_in: string | null
+          motion: string | null
           newsletter_opt_in: boolean
           nickname: string | null
           nickname_changed_at: string | null
           onboarding_reminder_sent_at: string | null
+          photo_captions: string | null
+          photo_grid_density: string | null
+          photo_grid_style: string | null
           search_vector: unknown
           social_links: Json | null
           suspended_at: string | null
           suspended_reason: string | null
           terms_accepted_at: string | null
           theme: string | null
+          tours: Json
           updated_at: string | null
           watermark_enabled: boolean
           watermark_style: string | null
@@ -1470,10 +1471,6 @@ export type Database = {
         }
         Insert: {
           album_card_style?: string | null
-          motion?: string | null
-          photo_captions?: string | null
-          photo_grid_density?: string | null
-          photo_grid_style?: string | null
           avatar_url?: string | null
           banner_blurhash?: string | null
           banner_url?: string | null
@@ -1489,16 +1486,21 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           last_logged_in?: string | null
+          motion?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
           nickname_changed_at?: string | null
           onboarding_reminder_sent_at?: string | null
+          photo_captions?: string | null
+          photo_grid_density?: string | null
+          photo_grid_style?: string | null
           search_vector?: unknown
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
           terms_accepted_at?: string | null
           theme?: string | null
+          tours?: Json
           updated_at?: string | null
           watermark_enabled?: boolean
           watermark_style?: string | null
@@ -1507,10 +1509,6 @@ export type Database = {
         }
         Update: {
           album_card_style?: string | null
-          motion?: string | null
-          photo_captions?: string | null
-          photo_grid_density?: string | null
-          photo_grid_style?: string | null
           avatar_url?: string | null
           banner_blurhash?: string | null
           banner_url?: string | null
@@ -1526,16 +1524,21 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           last_logged_in?: string | null
+          motion?: string | null
           newsletter_opt_in?: boolean
           nickname?: string | null
           nickname_changed_at?: string | null
           onboarding_reminder_sent_at?: string | null
+          photo_captions?: string | null
+          photo_grid_density?: string | null
+          photo_grid_style?: string | null
           search_vector?: unknown
           social_links?: Json | null
           suspended_at?: string | null
           suspended_reason?: string | null
           terms_accepted_at?: string | null
           theme?: string | null
+          tours?: Json
           updated_at?: string | null
           watermark_enabled?: boolean
           watermark_style?: string | null
@@ -2004,6 +2007,10 @@ export type Database = {
         Returns: undefined
       }
       admin_delete_album: { Args: { p_album_id: string }; Returns: boolean }
+      admin_undo_nickname_change: {
+        Args: { p_profile_id: string; p_restore_nickname: string }
+        Returns: undefined
+      }
       batch_update_album_photos: {
         Args: { photo_updates: Json }
         Returns: undefined
@@ -2040,36 +2047,6 @@ export type Database = {
         Returns: string
       }
       generate_short_id: { Args: { size?: number }; Returns: string }
-      get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
-      get_own_profile: { Args: never; Returns: Json }
-      is_nickname_available: {
-        Args: { p_nickname: string; p_user_id?: string }
-        Returns: boolean
-      }
-      resolve_nickname_redirect: {
-        Args: { p_nickname: string }
-        Returns: string
-      }
-      admin_undo_nickname_change: {
-        Args: { p_profile_id: string; p_restore_nickname: string }
-        Returns: undefined
-      }
-      promote_admin: {
-        Args: { p_email: string }
-        Returns: {
-          email: string | null
-          id: string
-          is_admin: boolean | null
-          nickname: string | null
-        }[]
-      }
-      get_photo_exif: { Args: { p_photo_id: string }; Returns: Json }
-      get_profile_stats: { Args: { p_user_id: string }; Returns: Json }
-      get_rsvp_by_uuid: { Args: { p_uuid: string }; Returns: Json }
-      get_user_album_photos_count: {
-        Args: { user_uuid: string }
-        Returns: number
-      }
       get_admin_member_stats: {
         Args: {
           p_filter?: string
@@ -2082,7 +2059,12 @@ export type Database = {
         Returns: Json
       }
       get_admin_stats_overview: { Args: never; Returns: Json }
+      get_album_photo_count: { Args: { album_uuid: string }; Returns: number }
       get_member_stats_detail: { Args: { p_user_id: string }; Returns: Json }
+      get_own_profile: { Args: never; Returns: Json }
+      get_photo_exif: { Args: { p_photo_id: string }; Returns: Json }
+      get_profile_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_rsvp_by_uuid: { Args: { p_uuid: string }; Returns: Json }
       get_stats_time_series: {
         Args: {
           p_bucket?: string
@@ -2092,6 +2074,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: Json
+      }
+      get_user_album_photos_count: {
+        Args: { user_uuid: string }
+        Returns: number
       }
       get_user_stats: { Args: { p_user_id: string }; Returns: Json }
       global_search: {
@@ -2120,6 +2106,10 @@ export type Database = {
         Returns: Json
       }
       is_admin: { Args: never; Returns: boolean }
+      is_nickname_available: {
+        Args: { p_nickname: string; p_user_id?: string }
+        Returns: boolean
+      }
       is_shared_album_member: {
         Args: { p_album_id: string; p_user_id: string }
         Returns: boolean
@@ -2137,6 +2127,10 @@ export type Database = {
       resolve_album_request: {
         Args: { p_action: string; p_request_id: number }
         Returns: undefined
+      }
+      resolve_nickname_redirect: {
+        Args: { p_nickname: string }
+        Returns: string
       }
       restore_album: { Args: { p_album_id: string }; Returns: boolean }
       restore_comment: { Args: { p_comment_id: string }; Returns: boolean }
@@ -2156,11 +2150,11 @@ export type Database = {
     }
     Enums: {
       license_type:
-        | 'all-rights-reserved'
-        | 'cc-by-nc-nd-4.0'
-        | 'cc-by-nc-4.0'
-        | 'cc-by-4.0'
-        | 'cc0'
+      | 'all-rights-reserved'
+      | 'cc-by-nc-nd-4.0'
+      | 'cc-by-nc-4.0'
+      | 'cc-by-4.0'
+      | 'cc0'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2174,116 +2168,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-    : never = never,
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R
     }
-    ? R
-    : never
+  ? R
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] &
-        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+    DefaultSchema['Views'])
+  ? (DefaultSchema['Tables'] &
+    DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema['Tables']
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema['Tables']
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema['Enums']
+  | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+  : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema['CompositeTypes']
+  | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-    : never = never,
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+  : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {

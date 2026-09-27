@@ -604,6 +604,40 @@ COMMENT ON FUNCTION "public"."admin_delete_album"("p_album_id" "uuid") IS 'Admin
 
 
 
+CREATE OR REPLACE FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+  IF auth.role() <> 'service_role' AND current_user NOT IN ('postgres', 'supabase_admin') THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF p_restore_nickname IS NULL OR length(trim(p_restore_nickname)) < 3 THEN
+    RAISE EXCEPTION 'Invalid nickname';
+  END IF;
+
+  ALTER TABLE public.profiles DISABLE TRIGGER handle_profile_nickname_change_trigger;
+  ALTER TABLE public.profiles DISABLE TRIGGER protect_profiles_privileged_columns_trigger;
+
+  DELETE FROM public.nickname_redirects
+  WHERE profile_id = p_profile_id
+    AND old_nickname = p_restore_nickname;
+
+  UPDATE public.profiles
+  SET nickname = p_restore_nickname,
+      nickname_changed_at = NULL
+  WHERE id = p_profile_id;
+
+  ALTER TABLE public.profiles ENABLE TRIGGER handle_profile_nickname_change_trigger;
+  ALTER TABLE public.profiles ENABLE TRIGGER protect_profiles_privileged_columns_trigger;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."auto_assign_album_photo_sort_order"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -1188,6 +1222,321 @@ $$;
 ALTER FUNCTION "public"."generate_short_id"("size" integer) OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."get_admin_member_stats"("p_search" "text" DEFAULT ''::"text", "p_filter" "text" DEFAULT 'all'::"text", "p_sort_by" "text" DEFAULT 'created_at'::"text", "p_sort_order" "text" DEFAULT 'desc'::"text", "p_page" integer DEFAULT 1, "p_limit" integer DEFAULT 50) RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_offset int;
+  v_total int;
+  v_members jsonb;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  v_offset := (GREATEST(p_page, 1) - 1) * p_limit;
+
+  WITH filtered AS (
+    SELECT p.*
+    FROM profiles p
+    WHERE (
+      p_search = '' OR
+      p.email ILIKE '%' || p_search || '%' OR
+      p.full_name ILIKE '%' || p_search || '%' OR
+      p.nickname ILIKE '%' || p_search || '%'
+    )
+    AND (
+      p_filter = 'all' OR
+      (p_filter = 'active' AND p.suspended_at IS NULL) OR
+      (p_filter = 'suspended' AND p.suspended_at IS NOT NULL)
+    )
+  ),
+  counted AS (
+    SELECT COUNT(*)::int AS total FROM filtered
+  ),
+  rows AS (
+    SELECT
+      f.id,
+      f.email,
+      f.full_name,
+      f.nickname,
+      f.avatar_url,
+      f.created_at,
+      f.last_logged_in,
+      f.suspended_at,
+      f.deletion_scheduled_at,
+      f.theme,
+      f.album_card_style,
+      f.default_license::text AS default_license,
+      f.watermark_enabled,
+      f.embed_copyright_exif,
+      f.newsletter_opt_in,
+      f.terms_accepted_at,
+      COALESCE(ph.photo_count, 0)::int AS photo_count,
+      COALESCE(al.album_count, 0)::int AS album_count,
+      COALESCE(ph.storage_bytes, 0)::bigint AS storage_bytes,
+      COALESCE(ph.views_received, 0)::int AS views_received,
+      COALESCE(ph.likes_received, 0)::int AS likes_received,
+      COALESCE(cm.comments_received, 0)::int AS comments_received,
+      COALESCE(fl.followers, 0)::int AS followers,
+      COALESCE(fl.following, 0)::int AS following,
+      COALESCE(rv.rsvps_confirmed, 0)::int AS rsvps_confirmed,
+      COALESCE(rv.events_attended, 0)::int AS events_attended,
+      COALESCE(cs.challenges_submitted, 0)::int AS challenges_submitted,
+      COALESCE(cs.challenges_accepted, 0)::int AS challenges_accepted,
+      COALESCE(ep.email_opt_out_count, 0)::int AS email_opt_out_count,
+      COALESCE(pi.interests_count, 0)::int AS interests_count
+    FROM filtered f
+    LEFT JOIN (
+      SELECT user_id,
+        COUNT(*)::int AS photo_count,
+        COALESCE(SUM(file_size), 0)::bigint AS storage_bytes,
+        COALESCE(SUM(view_count), 0)::int AS views_received,
+        COALESCE(SUM(likes_count), 0)::int AS likes_received
+      FROM photos WHERE deleted_at IS NULL
+      GROUP BY user_id
+    ) ph ON ph.user_id = f.id
+    LEFT JOIN (
+      SELECT user_id, COUNT(*)::int AS album_count
+      FROM albums WHERE deleted_at IS NULL
+      GROUP BY user_id
+    ) al ON al.user_id = f.id
+    LEFT JOIN (
+      SELECT c.user_id AS owner_id, COUNT(*)::int AS comments_received
+      FROM comments c
+      JOIN photo_comments pc ON pc.comment_id = c.id
+      JOIN photos p ON p.id = pc.photo_id
+      WHERE c.deleted_at IS NULL AND c.user_id <> p.user_id
+      GROUP BY c.user_id
+    ) cm ON cm.owner_id = f.id
+    LEFT JOIN (
+      SELECT following_id AS user_id, COUNT(*)::int AS followers
+      FROM follows GROUP BY following_id
+    ) fl_f ON fl_f.user_id = f.id
+    LEFT JOIN (
+      SELECT follower_id AS user_id, COUNT(*)::int AS following
+      FROM follows GROUP BY follower_id
+    ) fl_g ON fl_g.user_id = f.id
+    LEFT JOIN LATERAL (
+      SELECT COALESCE(fl_f.followers, 0) AS followers, COALESCE(fl_g.following, 0) AS following
+    ) fl ON true
+    LEFT JOIN (
+      SELECT user_id,
+        COUNT(*) FILTER (WHERE confirmed_at IS NOT NULL AND canceled_at IS NULL)::int AS rsvps_confirmed,
+        COUNT(*) FILTER (WHERE attended_at IS NOT NULL)::int AS events_attended
+      FROM events_rsvps
+      GROUP BY user_id
+    ) rv ON rv.user_id = f.id
+    LEFT JOIN (
+      SELECT user_id,
+        COUNT(*)::int AS challenges_submitted,
+        COUNT(*) FILTER (WHERE status = 'accepted')::int AS challenges_accepted
+      FROM challenge_submissions
+      GROUP BY user_id
+    ) cs ON cs.user_id = f.id
+    LEFT JOIN (
+      SELECT user_id, COUNT(*)::int AS email_opt_out_count
+      FROM email_preferences WHERE opted_out = true
+      GROUP BY user_id
+    ) ep ON ep.user_id = f.id
+    LEFT JOIN (
+      SELECT profile_id, COUNT(*)::int AS interests_count
+      FROM profile_interests
+      GROUP BY profile_id
+    ) pi ON pi.profile_id = f.id
+    ORDER BY
+      CASE WHEN p_sort_by = 'storage_bytes' AND p_sort_order = 'asc' THEN COALESCE(ph.storage_bytes, 0) END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'storage_bytes' AND p_sort_order = 'desc' THEN COALESCE(ph.storage_bytes, 0) END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'photo_count' AND p_sort_order = 'asc' THEN COALESCE(ph.photo_count, 0) END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'photo_count' AND p_sort_order = 'desc' THEN COALESCE(ph.photo_count, 0) END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'views_received' AND p_sort_order = 'asc' THEN COALESCE(ph.views_received, 0) END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'views_received' AND p_sort_order = 'desc' THEN COALESCE(ph.views_received, 0) END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'followers' AND p_sort_order = 'asc' THEN COALESCE(fl_f.followers, 0) END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'followers' AND p_sort_order = 'desc' THEN COALESCE(fl_f.followers, 0) END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'email' AND p_sort_order = 'asc' THEN f.email END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'email' AND p_sort_order = 'desc' THEN f.email END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'full_name' AND p_sort_order = 'asc' THEN f.full_name END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'full_name' AND p_sort_order = 'desc' THEN f.full_name END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'nickname' AND p_sort_order = 'asc' THEN f.nickname END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'nickname' AND p_sort_order = 'desc' THEN f.nickname END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'last_logged_in' AND p_sort_order = 'asc' THEN f.last_logged_in END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'last_logged_in' AND p_sort_order = 'desc' THEN f.last_logged_in END DESC NULLS LAST,
+      CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'asc' THEN f.created_at END ASC NULLS LAST,
+      CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'desc' THEN f.created_at END DESC NULLS LAST,
+      f.created_at DESC
+    LIMIT p_limit OFFSET v_offset
+  )
+  SELECT
+    (SELECT total FROM counted),
+    COALESCE(jsonb_agg(to_jsonb(rows)), '[]'::jsonb)
+  INTO v_total, v_members
+  FROM rows;
+
+  RETURN jsonb_build_object(
+    'members', COALESCE(v_members, '[]'::jsonb),
+    'total', COALESCE(v_total, 0),
+    'page', p_page,
+    'limit', p_limit,
+    'totalPages', CEIL(COALESCE(v_total, 0)::numeric / GREATEST(p_limit, 1))
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_admin_member_stats"("p_search" "text", "p_filter" "text", "p_sort_by" "text", "p_sort_order" "text", "p_page" integer, "p_limit" integer) OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_admin_stats_overview"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_result jsonb;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  SELECT jsonb_build_object(
+    'kpis', jsonb_build_object(
+      'members', (SELECT COUNT(*)::int FROM profiles),
+      'photos', (SELECT COUNT(*)::int FROM photos WHERE deleted_at IS NULL),
+      'albums', (SELECT COUNT(*)::int FROM albums WHERE deleted_at IS NULL),
+      'views', (
+        (SELECT COUNT(*)::int FROM photo_views) + (SELECT COUNT(*)::int FROM album_views)
+      ),
+      'likes', (
+        (SELECT COUNT(*)::int FROM photo_likes) + (SELECT COUNT(*)::int FROM album_likes)
+      ),
+      'comments', (SELECT COUNT(*)::int FROM comments WHERE deleted_at IS NULL),
+      'events', (SELECT COUNT(*)::int FROM events WHERE is_draft = false),
+      'submissions', (SELECT COUNT(*)::int FROM challenge_submissions),
+      'totalStorage', (SELECT COALESCE(SUM(file_size), 0)::bigint FROM photos WHERE deleted_at IS NULL),
+      'activeLast30Days', (
+        SELECT COUNT(*)::int FROM profiles
+        WHERE last_logged_in >= (now() - interval '30 days')
+      ),
+      'onboardingComplete', (
+        SELECT COUNT(*)::int FROM profiles WHERE terms_accepted_at IS NOT NULL
+      ),
+      'suspendedMembers', (SELECT COUNT(*)::int FROM profiles WHERE suspended_at IS NOT NULL),
+      'scheduledDeletion', (SELECT COUNT(*)::int FROM profiles WHERE deletion_scheduled_at IS NOT NULL)
+    ),
+    'health', jsonb_build_object(
+      'pendingReports', (SELECT COUNT(*)::int FROM reports WHERE status = 'pending'),
+      'pendingSubmissions', (SELECT COUNT(*)::int FROM challenge_submissions WHERE status = 'pending'),
+      'pendingSceneEvents', (
+        SELECT COUNT(*)::int FROM scene_events WHERE deleted_at IS NULL
+      ),
+      'newFeedback', (SELECT COUNT(*)::int FROM feedback WHERE status = 'new'),
+      'pendingSharedRequests', (
+        SELECT COUNT(*)::int FROM shared_album_requests WHERE status = 'pending'
+      ),
+      'pendingNotifications', (SELECT COUNT(*)::int FROM pending_notifications),
+      'pendingEmailBatches', (
+        SELECT COUNT(*)::int FROM notification_email_batches WHERE status = 'pending'
+      )
+    ),
+    'preferences', jsonb_build_object(
+      'themes', (
+        SELECT COALESCE(jsonb_agg(jsonb_build_object('label', theme, 'value', cnt)), '[]'::jsonb)
+        FROM (
+          SELECT COALESCE(theme, 'system') AS theme, COUNT(*)::int AS cnt
+          FROM profiles GROUP BY 1
+        ) t
+      ),
+      'albumCardStyles', (
+        SELECT COALESCE(jsonb_agg(jsonb_build_object('label', style, 'value', cnt)), '[]'::jsonb)
+        FROM (
+          SELECT COALESCE(album_card_style, 'large') AS style, COUNT(*)::int AS cnt
+          FROM profiles GROUP BY 1
+        ) t
+      ),
+      'defaultLicenses', (
+        SELECT COALESCE(jsonb_agg(jsonb_build_object('label', license, 'value', cnt)), '[]'::jsonb)
+        FROM (
+          SELECT default_license::text AS license, COUNT(*)::int AS cnt
+          FROM profiles GROUP BY 1
+        ) t
+      ),
+      'newsletterOptIn', (
+        SELECT COUNT(*)::int FROM profiles WHERE newsletter_opt_in = true
+      ),
+      'watermarkEnabled', (
+        SELECT COUNT(*)::int FROM profiles WHERE watermark_enabled = true
+      ),
+      'embedCopyrightExif', (
+        SELECT COUNT(*)::int FROM profiles WHERE embed_copyright_exif = true
+      ),
+      'topInterests', (
+        SELECT COALESCE(jsonb_agg(jsonb_build_object('label', interest, 'value', cnt) ORDER BY cnt DESC), '[]'::jsonb)
+        FROM (
+          SELECT interest, COUNT(*)::int AS cnt
+          FROM profile_interests
+          GROUP BY interest
+          ORDER BY cnt DESC
+          LIMIT 10
+        ) t
+      ),
+      'emailOptOuts', (
+        SELECT COALESCE(jsonb_agg(jsonb_build_object('label', et.type_label, 'value', cnt)), '[]'::jsonb)
+        FROM (
+          SELECT ep.email_type_id, COUNT(*)::int AS cnt
+          FROM email_preferences ep
+          WHERE ep.opted_out = true
+          GROUP BY ep.email_type_id
+        ) eo
+        JOIN email_types et ON et.id = eo.email_type_id
+      )
+    ),
+    'topPhotosByViews', (
+      SELECT COALESCE(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      FROM (
+        SELECT p.id, p.short_id, p.title, p.url, p.blurhash, p.view_count AS value,
+          pr.nickname
+        FROM photos p
+        JOIN profiles pr ON pr.id = p.user_id
+        WHERE p.deleted_at IS NULL AND p.is_public = true
+        ORDER BY p.view_count DESC
+        LIMIT 10
+      ) t
+    ),
+    'topPhotosByLikes', (
+      SELECT COALESCE(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      FROM (
+        SELECT p.id, p.short_id, p.title, p.url, p.blurhash, p.likes_count AS value,
+          pr.nickname
+        FROM photos p
+        JOIN profiles pr ON pr.id = p.user_id
+        WHERE p.deleted_at IS NULL AND p.is_public = true
+        ORDER BY p.likes_count DESC
+        LIMIT 10
+      ) t
+    ),
+    'storageByMember', (
+      SELECT COALESCE(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      FROM (
+        SELECT pr.id, pr.nickname, pr.full_name,
+          COUNT(p.id)::int AS photo_count,
+          COALESCE(SUM(p.file_size), 0)::bigint AS storage_bytes
+        FROM profiles pr
+        JOIN photos p ON p.user_id = pr.id AND p.deleted_at IS NULL
+        GROUP BY pr.id, pr.nickname, pr.full_name
+        ORDER BY storage_bytes DESC
+        LIMIT 20
+      ) t
+    )
+  ) INTO v_result;
+
+  RETURN v_result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_admin_stats_overview"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") RETURNS integer
     LANGUAGE "sql" STABLE
     SET "search_path" TO ''
@@ -1201,6 +1550,117 @@ $$;
 
 
 ALTER FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_member_stats_detail"("p_user_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_caller uuid := auth.uid();
+  v_result jsonb;
+BEGIN
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF v_caller <> p_user_id AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  SELECT jsonb_build_object(
+    'topPhotosByViews', (
+      SELECT COALESCE(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      FROM (
+        SELECT id, short_id, title, url, blurhash, width, height, file_size,
+          view_count AS value
+        FROM photos
+        WHERE user_id = p_user_id AND deleted_at IS NULL
+        ORDER BY view_count DESC
+        LIMIT 10
+      ) t
+    ),
+    'topPhotosByLikes', (
+      SELECT COALESCE(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      FROM (
+        SELECT id, short_id, title, url, blurhash, width, height, file_size,
+          likes_count AS value
+        FROM photos
+        WHERE user_id = p_user_id AND deleted_at IS NULL
+        ORDER BY likes_count DESC
+        LIMIT 10
+      ) t
+    ),
+    'largestPhotos', (
+      SELECT COALESCE(jsonb_agg(row_to_json(t)), '[]'::jsonb)
+      FROM (
+        SELECT id, short_id, title, url, blurhash, width, height,
+          file_size AS value
+        FROM photos
+        WHERE user_id = p_user_id AND deleted_at IS NULL
+        ORDER BY file_size DESC
+        LIMIT 10
+      ) t
+    ),
+    'storageBytes', (
+      SELECT COALESCE(SUM(file_size), 0)::bigint FROM photos
+      WHERE user_id = p_user_id AND deleted_at IS NULL
+    ),
+    'publicPhotoCount', (
+      SELECT COUNT(*)::int FROM photos
+      WHERE user_id = p_user_id AND deleted_at IS NULL AND is_public = true
+    ),
+    'privatePhotoCount', (
+      SELECT COUNT(*)::int FROM photos
+      WHERE user_id = p_user_id AND deleted_at IS NULL AND is_public = false
+    ),
+    'followers', (SELECT COUNT(*)::int FROM follows WHERE following_id = p_user_id),
+    'following', (SELECT COUNT(*)::int FROM follows WHERE follower_id = p_user_id),
+    'sharedAlbumsJoined', (
+      SELECT COUNT(*)::int FROM shared_album_members WHERE user_id = p_user_id
+    ),
+    'sceneEventsSubmitted', (
+      SELECT COUNT(*)::int FROM scene_events WHERE submitted_by = p_user_id AND deleted_at IS NULL
+    ),
+    'sceneInterests', (
+      SELECT COUNT(*)::int FROM scene_event_interests WHERE user_id = p_user_id
+    ),
+    'mimeTypes', (
+      SELECT COALESCE(jsonb_agg(jsonb_build_object('label', mime_type, 'value', cnt)), '[]'::jsonb)
+      FROM (
+        SELECT mime_type, COUNT(*)::int AS cnt
+        FROM photos WHERE user_id = p_user_id AND deleted_at IS NULL
+        GROUP BY mime_type
+      ) t
+    ),
+    'licenses', (
+      SELECT COALESCE(jsonb_agg(jsonb_build_object('label', license::text, 'value', cnt)), '[]'::jsonb)
+      FROM (
+        SELECT license, COUNT(*)::int AS cnt
+        FROM photos WHERE user_id = p_user_id AND deleted_at IS NULL
+        GROUP BY license
+      ) t
+    ),
+    'topTags', (
+      SELECT COALESCE(jsonb_agg(jsonb_build_object('label', tag, 'value', cnt) ORDER BY cnt DESC), '[]'::jsonb)
+      FROM (
+        SELECT pt.tag, COUNT(*)::int AS cnt
+        FROM photo_tags pt
+        JOIN photos p ON p.id = pt.photo_id
+        WHERE p.user_id = p_user_id AND p.deleted_at IS NULL
+        GROUP BY pt.tag
+        ORDER BY cnt DESC
+        LIMIT 10
+      ) t
+    )
+  ) INTO v_result;
+
+  RETURN v_result;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_member_stats_detail"("p_user_id" "uuid") OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_own_profile"() RETURNS "jsonb"
@@ -1395,6 +1855,207 @@ $$;
 
 
 ALTER FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_stats_time_series"("p_metric" "text", "p_start" timestamp with time zone, "p_end" timestamp with time zone, "p_bucket" "text" DEFAULT 'day'::"text", "p_user_id" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_trunc text;
+  v_step interval;
+  v_date_fmt text;
+  v_result jsonb;
+  v_caller uuid := auth.uid();
+BEGIN
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF p_user_id IS NOT NULL AND v_caller <> p_user_id AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  IF p_user_id IS NULL AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  v_trunc := CASE
+    WHEN p_bucket = 'hour' THEN 'hour'
+    WHEN p_bucket = 'month' THEN 'month'
+    WHEN p_bucket = 'week' THEN 'week'
+    ELSE 'day'
+  END;
+
+  v_step := CASE v_trunc
+    WHEN 'hour' THEN interval '1 hour'
+    WHEN 'month' THEN interval '1 month'
+    WHEN 'week' THEN interval '1 week'
+    ELSE interval '1 day'
+  END;
+
+  v_date_fmt := CASE
+    WHEN v_trunc = 'hour' THEN 'YYYY-MM-DD"T"HH24":00"'
+    ELSE 'YYYY-MM-DD'
+  END;
+
+  IF p_metric = 'signups' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', date_trunc(v_trunc, created_at)), v_date_fmt),
+      'value', cnt
+    ) ORDER BY date_trunc(v_trunc, created_at)), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, created_at) AS bucket, COUNT(*)::int AS cnt
+      FROM profiles
+      WHERE created_at >= p_start AND created_at <= p_end
+      GROUP BY 1
+    ) s;
+
+  ELSIF p_metric = 'uploads' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, created_at) AS bucket, COUNT(*)::int AS cnt
+      FROM photos
+      WHERE deleted_at IS NULL
+        AND created_at >= p_start AND created_at <= p_end
+        AND (p_user_id IS NULL OR user_id = p_user_id)
+      GROUP BY 1
+    ) s;
+
+  ELSIF p_metric = 'views' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, viewed_at) AS bucket, COUNT(*)::int AS cnt
+      FROM (
+        SELECT pv.viewed_at FROM photo_views pv
+        JOIN photos p ON p.id = pv.photo_id
+        WHERE pv.viewed_at >= p_start AND pv.viewed_at <= p_end
+          AND p.deleted_at IS NULL
+          AND (p_user_id IS NULL OR p.user_id = p_user_id)
+        UNION ALL
+        SELECT av.viewed_at FROM album_views av
+        JOIN albums a ON a.id = av.album_id
+        WHERE av.viewed_at >= p_start AND av.viewed_at <= p_end
+          AND a.deleted_at IS NULL
+          AND (p_user_id IS NULL OR a.user_id = p_user_id)
+      ) v
+      GROUP BY date_trunc(v_trunc, viewed_at)
+    ) s;
+
+  ELSIF p_metric = 'likes' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, created_at) AS bucket, COUNT(*)::int AS cnt
+      FROM (
+        SELECT pl.created_at FROM photo_likes pl
+        JOIN photos p ON p.id = pl.photo_id
+        WHERE pl.created_at >= p_start AND pl.created_at <= p_end
+          AND p.deleted_at IS NULL
+          AND (p_user_id IS NULL OR p.user_id = p_user_id)
+        UNION ALL
+        SELECT al.created_at FROM album_likes al
+        JOIN albums a ON a.id = al.album_id
+        WHERE al.created_at >= p_start AND al.created_at <= p_end
+          AND a.deleted_at IS NULL
+          AND (p_user_id IS NULL OR a.user_id = p_user_id)
+      ) l
+      GROUP BY date_trunc(v_trunc, created_at)
+    ) s;
+
+  ELSIF p_metric = 'comments' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, c.created_at) AS bucket, COUNT(*)::int AS cnt
+      FROM comments c
+      WHERE c.deleted_at IS NULL
+        AND c.created_at >= p_start AND c.created_at <= p_end
+        AND (p_user_id IS NULL OR c.user_id = p_user_id)
+      GROUP BY 1
+    ) s;
+
+  ELSIF p_metric = 'storage_added' THEN
+    -- Absolute storage at the end of each bucket, including photos uploaded
+    -- before the range (so week/month charts start at the then-current total).
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(s.bucket, v_date_fmt),
+      'value', s.total
+    ) ORDER BY s.bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT
+        gs.bucket,
+        COALESCE(SUM(p.file_size), 0)::bigint AS total
+      FROM generate_series(
+        date_trunc(v_trunc, p_start AT TIME ZONE 'UTC'),
+        date_trunc(v_trunc, p_end AT TIME ZONE 'UTC'),
+        v_step
+      ) AS gs(bucket)
+      LEFT JOIN photos p ON
+        (p_user_id IS NULL OR p.user_id = p_user_id)
+        AND (p.created_at AT TIME ZONE 'UTC') < gs.bucket + v_step
+        AND (
+          p.deleted_at IS NULL
+          OR (p.deleted_at AT TIME ZONE 'UTC') >= gs.bucket + v_step
+        )
+      GROUP BY gs.bucket
+    ) s;
+
+  ELSIF p_metric = 'photos_deleted' THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, deleted_at) AS bucket, COUNT(*)::int AS cnt
+      FROM photos
+      WHERE deleted_at IS NOT NULL
+        AND deleted_at >= p_start AND deleted_at <= p_end
+        AND (p_user_id IS NULL OR user_id = p_user_id)
+      GROUP BY 1
+    ) s;
+
+  ELSIF p_metric = 'followers_gained' AND p_user_id IS NOT NULL THEN
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'date', to_char(timezone('UTC', bucket), v_date_fmt),
+      'value', cnt
+    ) ORDER BY bucket), '[]'::jsonb)
+    INTO v_result
+    FROM (
+      SELECT date_trunc(v_trunc, created_at) AS bucket, COUNT(*)::int AS cnt
+      FROM follows
+      WHERE following_id = p_user_id
+        AND created_at >= p_start AND created_at <= p_end
+      GROUP BY 1
+    ) s;
+
+  ELSE
+    RAISE EXCEPTION 'Unknown metric: %', p_metric;
+  END IF;
+
+  RETURN COALESCE(v_result, '[]'::jsonb);
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_stats_time_series"("p_metric" "text", "p_start" timestamp with time zone, "p_end" timestamp with time zone, "p_bucket" "text", "p_user_id" "uuid") OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_user_album_photos_count"("user_uuid" "uuid") RETURNS integer
@@ -1726,6 +2387,96 @@ $$;
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."handle_profile_nickname_change"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  v_cooldown_end timestamptz;
+  v_other_profile_id uuid;
+  v_redirect_profile_id uuid;
+  v_pending_user_id uuid;
+BEGIN
+  IF NEW.nickname IS NOT DISTINCT FROM OLD.nickname THEN
+    RETURN NEW;
+  END IF;
+
+  -- First-time set during onboarding (NULL -> nickname): no cooldown or redirect
+  IF OLD.nickname IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.nickname IS NULL THEN
+    RAISE EXCEPTION 'Cannot clear nickname';
+  END IF;
+
+  -- 60-day cooldown from last applied change
+  IF OLD.nickname_changed_at IS NOT NULL THEN
+    v_cooldown_end := OLD.nickname_changed_at + interval '60 days';
+    IF now() < v_cooldown_end THEN
+      RAISE EXCEPTION 'Nickname change cooldown active until %', v_cooldown_end;
+    END IF;
+  END IF;
+
+  -- Taken by another profile
+  SELECT id INTO v_other_profile_id
+  FROM public.profiles
+  WHERE nickname = NEW.nickname
+    AND id <> OLD.id
+  LIMIT 1;
+
+  IF v_other_profile_id IS NOT NULL THEN
+    RAISE EXCEPTION 'Nickname is already taken';
+  END IF;
+
+  -- Active redirect owned by someone else
+  SELECT profile_id INTO v_redirect_profile_id
+  FROM public.nickname_redirects
+  WHERE old_nickname = NEW.nickname
+    AND expires_at > now()
+  LIMIT 1;
+
+  IF v_redirect_profile_id IS NOT NULL AND v_redirect_profile_id <> OLD.id THEN
+    RAISE EXCEPTION 'Nickname is reserved';
+  END IF;
+
+  -- Pending nickname_change token for another user
+  SELECT user_id INTO v_pending_user_id
+  FROM public.auth_tokens
+  WHERE token_type = 'nickname_change'
+    AND new_nickname = NEW.nickname
+    AND used_at IS NULL
+    AND expires_at > now()
+    AND user_id <> OLD.id
+  LIMIT 1;
+
+  IF v_pending_user_id IS NOT NULL THEN
+    RAISE EXCEPTION 'Nickname is reserved';
+  END IF;
+
+  -- Record redirect from old nickname (1 year)
+  INSERT INTO public.nickname_redirects (old_nickname, profile_id, expires_at)
+  VALUES (OLD.nickname, OLD.id, now() + interval '1 year')
+  ON CONFLICT (old_nickname) DO UPDATE
+    SET profile_id = EXCLUDED.profile_id,
+        created_at = now(),
+        expires_at = EXCLUDED.expires_at;
+
+  -- Reclaim own previous nickname redirect
+  DELETE FROM public.nickname_redirects
+  WHERE old_nickname = NEW.nickname
+    AND profile_id = OLD.id;
+
+  NEW.nickname_changed_at := now();
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."handle_profile_nickname_change"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1856,6 +2607,61 @@ $$;
 
 
 ALTER FUNCTION "public"."is_admin"() OWNER TO "supabase_admin";
+
+
+CREATE OR REPLACE FUNCTION "public"."is_nickname_available"("p_nickname" "text", "p_user_id" "uuid" DEFAULT NULL::"uuid") RETURNS boolean
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  v_profile_id uuid;
+  v_redirect_profile_id uuid;
+  v_pending_user_id uuid;
+BEGIN
+  IF p_nickname IS NULL OR length(trim(p_nickname)) < 3 THEN
+    RETURN false;
+  END IF;
+
+  SELECT id INTO v_profile_id
+  FROM public.profiles
+  WHERE nickname = p_nickname
+    AND (p_user_id IS NULL OR id <> p_user_id)
+  LIMIT 1;
+
+  IF v_profile_id IS NOT NULL THEN
+    RETURN false;
+  END IF;
+
+  SELECT profile_id INTO v_redirect_profile_id
+  FROM public.nickname_redirects
+  WHERE old_nickname = p_nickname
+    AND expires_at > now()
+    AND (p_user_id IS NULL OR profile_id <> p_user_id)
+  LIMIT 1;
+
+  IF v_redirect_profile_id IS NOT NULL THEN
+    RETURN false;
+  END IF;
+
+  SELECT user_id INTO v_pending_user_id
+  FROM public.auth_tokens
+  WHERE token_type = 'nickname_change'
+    AND new_nickname = p_nickname
+    AND used_at IS NULL
+    AND expires_at > now()
+    AND (p_user_id IS NULL OR user_id <> p_user_id)
+  LIMIT 1;
+
+  IF v_pending_user_id IS NOT NULL THEN
+    RETURN false;
+  END IF;
+
+  RETURN true;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."is_nickname_available"("p_nickname" "text", "p_user_id" "uuid") OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."is_shared_album_member"("p_album_id" "uuid", "p_user_id" "uuid") RETURNS boolean
@@ -2003,6 +2809,10 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  IF pg_catalog.pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+
   IF NOT public.is_admin() THEN
     IF NEW.is_suspended IS DISTINCT FROM OLD.is_suspended
        OR NEW.suspended_at IS DISTINCT FROM OLD.suspended_at
@@ -2086,6 +2896,10 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  IF pg_catalog.pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+
   IF NOT public.is_admin() THEN
     IF NEW.likes_count IS DISTINCT FROM OLD.likes_count
        OR NEW.view_count IS DISTINCT FROM OLD.view_count THEN
@@ -2129,6 +2943,10 @@ BEGIN
 
   IF NEW.onboarding_reminder_sent_at IS DISTINCT FROM OLD.onboarding_reminder_sent_at THEN
     RAISE EXCEPTION 'Cannot modify onboarding_reminder_sent_at';
+  END IF;
+
+  IF NEW.nickname_changed_at IS DISTINCT FROM OLD.nickname_changed_at THEN
+    RAISE EXCEPTION 'Cannot modify nickname_changed_at';
   END IF;
 
   RETURN NEW;
@@ -2388,6 +3206,22 @@ ALTER FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action
 
 COMMENT ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") IS 'Accept or decline an album invite/request';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."resolve_nickname_redirect"("p_nickname" "text") RETURNS "text"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  SELECT p.nickname
+  FROM public.nickname_redirects nr
+  INNER JOIN public.profiles p ON p.id = nr.profile_id
+  WHERE nr.old_nickname = p_nickname
+    AND nr.expires_at > now()
+  LIMIT 1;
+$$;
+
+
+ALTER FUNCTION "public"."resolve_nickname_redirect"("p_nickname" "text") OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."restore_album"("p_album_id" "uuid") RETURNS boolean
@@ -3029,7 +3863,8 @@ CREATE TABLE IF NOT EXISTS "public"."auth_tokens" (
     "used_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"(),
     "new_email" "text",
-    CONSTRAINT "auth_tokens_token_type_check" CHECK (("token_type" = ANY (ARRAY['email_confirmation'::"text", 'password_reset'::"text", 'email_change'::"text", 'signup_bypass'::"text"])))
+    "new_nickname" "text",
+    CONSTRAINT "auth_tokens_token_type_check" CHECK (("token_type" = ANY (ARRAY['email_confirmation'::"text", 'password_reset'::"text", 'email_change'::"text", 'signup_bypass'::"text", 'nickname_change'::"text"])))
 );
 
 
@@ -3128,10 +3963,20 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "banner_url" "text",
     "banner_blurhash" "text",
     "onboarding_reminder_sent_at" timestamp with time zone,
+    "nickname_changed_at" timestamp with time zone,
+    "photo_grid_style" "text" DEFAULT 'justified'::"text",
+    "photo_grid_density" "text" DEFAULT 'comfortable'::"text",
+    "photo_captions" "text" DEFAULT 'hover'::"text",
+    "motion" "text" DEFAULT 'system'::"text",
+    "tours" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     CONSTRAINT "album_card_style_check" CHECK ((("album_card_style" IS NULL) OR ("album_card_style" = ANY (ARRAY['large'::"text", 'compact'::"text"])))),
     CONSTRAINT "check_social_links_max_3" CHECK (("jsonb_array_length"(COALESCE("social_links", '[]'::"jsonb")) <= 3)),
+    CONSTRAINT "profiles_motion_check" CHECK ((("motion" IS NULL) OR ("motion" = ANY (ARRAY['system'::"text", 'reduce'::"text"])))),
     CONSTRAINT "profiles_nickname_format" CHECK ((("nickname" IS NULL) OR ("nickname" ~ '^[a-z0-9-]+$'::"text"))),
     CONSTRAINT "profiles_nickname_length" CHECK ((("nickname" IS NULL) OR (("length"("nickname") >= 3) AND ("length"("nickname") <= 30)))),
+    CONSTRAINT "profiles_photo_captions_check" CHECK ((("photo_captions" IS NULL) OR ("photo_captions" = ANY (ARRAY['hover'::"text", 'always'::"text"])))),
+    CONSTRAINT "profiles_photo_grid_density_check" CHECK ((("photo_grid_density" IS NULL) OR ("photo_grid_density" = ANY (ARRAY['comfortable'::"text", 'compact'::"text"])))),
+    CONSTRAINT "profiles_photo_grid_style_check" CHECK ((("photo_grid_style" IS NULL) OR ("photo_grid_style" = ANY (ARRAY['justified'::"text", 'square'::"text"])))),
     CONSTRAINT "profiles_watermark_style_check" CHECK (("watermark_style" = ANY (ARRAY['text'::"text", 'diagonal'::"text"]))),
     CONSTRAINT "theme_check" CHECK ((("theme" IS NULL) OR ("theme" = ANY (ARRAY['light'::"text", 'dark'::"text", 'midnight'::"text", 'system'::"text"]))))
 );
@@ -3149,6 +3994,10 @@ COMMENT ON COLUMN "public"."profiles"."terms_accepted_at" IS 'Timestamp when the
 
 
 COMMENT ON COLUMN "public"."profiles"."onboarding_reminder_sent_at" IS 'When the incomplete-onboarding reminder email was sent.';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."tours" IS 'Product tour state keyed by tour id (e.g. photos, photos-edit) with dismissed_at and finished_at';
 
 
 
@@ -3430,6 +4279,19 @@ CREATE TABLE IF NOT EXISTS "public"."interests" (
 
 
 ALTER TABLE "public"."interests" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."nickname_redirects" (
+    "old_nickname" "text" NOT NULL,
+    "profile_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "expires_at" timestamp with time zone NOT NULL,
+    CONSTRAINT "nickname_redirects_format" CHECK (("old_nickname" ~ '^[a-z0-9-]+$'::"text")),
+    CONSTRAINT "nickname_redirects_length" CHECK ((("length"("old_nickname") >= 3) AND ("length"("old_nickname") <= 30)))
+);
+
+
+ALTER TABLE "public"."nickname_redirects" OWNER TO "supabase_admin";
 
 
 CREATE TABLE IF NOT EXISTS "public"."notification_email_batches" (
@@ -3906,6 +4768,11 @@ ALTER TABLE ONLY "public"."interests"
 
 
 
+ALTER TABLE ONLY "public"."nickname_redirects"
+    ADD CONSTRAINT "nickname_redirects_pkey" PRIMARY KEY ("old_nickname");
+
+
+
 ALTER TABLE ONLY "public"."notification_email_batches"
     ADD CONSTRAINT "notification_email_batches_pkey" PRIMARY KEY ("id");
 
@@ -4025,6 +4892,10 @@ CREATE UNIQUE INDEX "albums_system_slug_key" ON "public"."albums" USING "btree" 
 
 
 CREATE UNIQUE INDEX "albums_user_id_slug_key" ON "public"."albums" USING "btree" ("user_id", "slug") WHERE (("deleted_at" IS NULL) AND ("user_id" IS NOT NULL));
+
+
+
+CREATE UNIQUE INDEX "auth_tokens_pending_nickname_change_unique" ON "public"."auth_tokens" USING "btree" ("new_nickname") WHERE (("token_type" = 'nickname_change'::"text") AND ("used_at" IS NULL) AND ("new_nickname" IS NOT NULL));
 
 
 
@@ -4500,6 +5371,10 @@ CREATE INDEX "idx_tags_name_prefix" ON "public"."tags" USING "btree" ("name" "te
 
 
 
+CREATE INDEX "nickname_redirects_expires_at_idx" ON "public"."nickname_redirects" USING "btree" ("expires_at");
+
+
+
 CREATE INDEX "notification_email_batches_pending_send_after_idx" ON "public"."notification_email_batches" USING "btree" ("status", "send_after") WHERE ("status" = 'pending'::"text");
 
 
@@ -4521,6 +5396,10 @@ CREATE INDEX "profiles_pending_onboarding_reminder_idx" ON "public"."profiles" U
 
 
 CREATE UNIQUE INDEX "uq_shared_album_requests_pending" ON "public"."shared_album_requests" USING "btree" ("album_id", "user_id") WHERE ("status" = 'pending'::"text");
+
+
+
+CREATE OR REPLACE TRIGGER "handle_profile_nickname_change_trigger" BEFORE UPDATE OF "nickname" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."handle_profile_nickname_change"();
 
 
 
@@ -4808,6 +5687,11 @@ ALTER TABLE ONLY "public"."follows"
 
 ALTER TABLE ONLY "public"."follows"
     ADD CONSTRAINT "follows_following_id_fkey" FOREIGN KEY ("following_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."nickname_redirects"
+    ADD CONSTRAINT "nickname_redirects_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -5241,6 +6125,10 @@ CREATE POLICY "Service role only" ON "public"."auth_tokens" USING (false) WITH C
 
 
 
+CREATE POLICY "Service role only" ON "public"."nickname_redirects" USING (false) WITH CHECK (false);
+
+
+
 CREATE POLICY "Tags are viewable by everyone" ON "public"."tags" FOR SELECT USING (true);
 
 
@@ -5520,6 +6408,9 @@ ALTER TABLE "public"."follows" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."interests" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."nickname_redirects" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."notification_email_batches" ENABLE ROW LEVEL SECURITY;
@@ -5941,6 +6832,14 @@ GRANT ALL ON FUNCTION "public"."admin_delete_album"("p_album_id" "uuid") TO "ser
 
 
 
+REVOKE ALL ON FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."admin_undo_nickname_change"("p_profile_id" "uuid", "p_restore_nickname" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."auto_assign_album_photo_sort_order"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."auto_assign_album_photo_sort_order"() TO "anon";
 GRANT ALL ON FUNCTION "public"."auto_assign_album_photo_sort_order"() TO "authenticated";
@@ -6028,10 +6927,31 @@ GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."get_admin_member_stats"("p_search" "text", "p_filter" "text", "p_sort_by" "text", "p_sort_order" "text", "p_page" integer, "p_limit" integer) TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_admin_member_stats"("p_search" "text", "p_filter" "text", "p_sort_by" "text", "p_sort_order" "text", "p_page" integer, "p_limit" integer) TO "anon";
+GRANT ALL ON FUNCTION "public"."get_admin_member_stats"("p_search" "text", "p_filter" "text", "p_sort_by" "text", "p_sort_order" "text", "p_page" integer, "p_limit" integer) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_admin_member_stats"("p_search" "text", "p_filter" "text", "p_sort_by" "text", "p_sort_order" "text", "p_page" integer, "p_limit" integer) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_admin_stats_overview"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_admin_stats_overview"() TO "anon";
+GRANT ALL ON FUNCTION "public"."get_admin_stats_overview"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_admin_stats_overview"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") TO "postgres";
 GRANT ALL ON FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_album_photo_count"("album_uuid" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."get_member_stats_detail"("p_user_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_member_stats_detail"("p_user_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_member_stats_detail"("p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_member_stats_detail"("p_user_id" "uuid") TO "service_role";
 
 
 
@@ -6063,6 +6983,13 @@ GRANT ALL ON FUNCTION "public"."get_rsvp_by_uuid"("p_uuid" "uuid") TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."get_stats_time_series"("p_metric" "text", "p_start" timestamp with time zone, "p_end" timestamp with time zone, "p_bucket" "text", "p_user_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."get_stats_time_series"("p_metric" "text", "p_start" timestamp with time zone, "p_end" timestamp with time zone, "p_bucket" "text", "p_user_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."get_stats_time_series"("p_metric" "text", "p_start" timestamp with time zone, "p_end" timestamp with time zone, "p_bucket" "text", "p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_stats_time_series"("p_metric" "text", "p_start" timestamp with time zone, "p_end" timestamp with time zone, "p_bucket" "text", "p_user_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_user_album_photos_count"("user_uuid" "uuid") TO "postgres";
 GRANT ALL ON FUNCTION "public"."get_user_album_photos_count"("user_uuid" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_user_album_photos_count"("user_uuid" "uuid") TO "authenticated";
@@ -6090,6 +7017,13 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."handle_profile_nickname_change"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."handle_profile_nickname_change"() TO "anon";
+GRANT ALL ON FUNCTION "public"."handle_profile_nickname_change"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."handle_profile_nickname_change"() TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "postgres";
 GRANT ALL ON FUNCTION "public"."increment_view_count"("p_entity_type" "text", "p_entity_id" "uuid") TO "service_role";
@@ -6106,6 +7040,13 @@ GRANT ALL ON FUNCTION "public"."is_admin"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."is_admin"() TO "anon";
 GRANT ALL ON FUNCTION "public"."is_admin"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."is_nickname_available"("p_nickname" "text", "p_user_id" "uuid") TO "postgres";
+GRANT ALL ON FUNCTION "public"."is_nickname_available"("p_nickname" "text", "p_user_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."is_nickname_available"("p_nickname" "text", "p_user_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."is_nickname_available"("p_nickname" "text", "p_user_id" "uuid") TO "service_role";
 
 
 
@@ -6205,6 +7146,13 @@ GRANT ALL ON FUNCTION "public"."remove_shared_album_photo"("p_album_id" "uuid", 
 GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "postgres";
 GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."resolve_album_request"("p_request_id" bigint, "p_action" "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."resolve_nickname_redirect"("p_nickname" "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."resolve_nickname_redirect"("p_nickname" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."resolve_nickname_redirect"("p_nickname" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."resolve_nickname_redirect"("p_nickname" "text") TO "service_role";
 
 
 
@@ -6508,6 +7456,11 @@ GRANT SELECT("banner_blurhash") ON TABLE "public"."profiles" TO "authenticated";
 
 
 
+GRANT SELECT("nickname_changed_at") ON TABLE "public"."profiles" TO "anon";
+GRANT SELECT("nickname_changed_at") ON TABLE "public"."profiles" TO "authenticated";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_photos" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_photos" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."challenge_photos" TO "authenticated";
@@ -6613,6 +7566,13 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."nickname_redirects" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."nickname_redirects" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."nickname_redirects" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."nickname_redirects" TO "service_role";
 
 
 
