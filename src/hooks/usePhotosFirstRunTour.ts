@@ -1,18 +1,23 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
+import type { Profile } from '@/context/AuthContext';
+import {
+    isPhotosManageTourDismissed,
+    isPhotosUploadTourDismissed,
+} from '@/lib/profileTours';
 import { startPhotosFirstRunTour, startPhotosManageTour } from '@/tours/photosFirstRunTour';
 import {
     PHOTOS_MANAGE_TOUR_TARGETS,
     PHOTOS_TOUR_TARGETS,
-    getPhotosManageTourDismissed,
-    getPhotosTourDismissed,
 } from '@/tours/photosFirstRunTour.constants';
 import type { Driver } from 'driver.js';
 import { useContext, useEffect, useRef } from 'react';
 
 type UsePhotosFirstRunTourOptions = {
   userId?: string;
+  profile?: Profile | null;
+  refreshProfile?: () => Promise<void>;
   photosPending: boolean;
   /** Empty library chrome is on screen (real empty state or upload mock). */
   uploadTourActive: boolean;
@@ -45,6 +50,8 @@ function waitForSelector(selector: string, maxFrames = 10): Promise<boolean> {
 
 export function usePhotosFirstRunTour({
   userId,
+  profile,
+  refreshProfile,
   photosPending,
   uploadTourActive,
   isUploadTourMock,
@@ -88,8 +95,9 @@ export function usePhotosFirstRunTour({
     if (shouldRunUpload && shouldRunManage) return;
 
     if (shouldRunUpload) {
+      if (!isUploadTourMock && !profile) return;
       if (!isUploadTourMock && photosPending) return;
-      if (!isUploadTourMock && getPhotosTourDismissed(userId)) return;
+      if (!isUploadTourMock && isPhotosUploadTourDismissed(profile)) return;
       if (uploadStartedRef.current) return;
 
       const frame = requestAnimationFrame(() => {
@@ -103,6 +111,8 @@ export function usePhotosFirstRunTour({
           driverRef.current = startPhotosFirstRunTour({
             persistDismissOnEnd: !isUploadTourMock,
             userId,
+            profile,
+            refreshProfile,
           });
         });
       });
@@ -111,8 +121,9 @@ export function usePhotosFirstRunTour({
     }
 
     if (shouldRunManage) {
+      if (!isManageTourMock && !profile) return;
       if (!isManageTourMock && photosPending) return;
-      if (!isManageTourMock && getPhotosManageTourDismissed(userId)) return;
+      if (!isManageTourMock && isPhotosManageTourDismissed(profile)) return;
       if (manageStartedRef.current) return;
 
       prepareManageTour();
@@ -139,6 +150,8 @@ export function usePhotosFirstRunTour({
           driverRef.current = startPhotosManageTour({
             persistDismissOnEnd: !isManageTourMock,
             userId,
+            profile,
+            refreshProfile,
           });
         });
       });
@@ -147,6 +160,8 @@ export function usePhotosFirstRunTour({
     }
   }, [
     userId,
+    profile,
+    refreshProfile,
     photosPending,
     isModalOpen,
     uploadTourActive,

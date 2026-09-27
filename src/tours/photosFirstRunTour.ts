@@ -1,13 +1,24 @@
 import { driver, type DriveStep, type Driver } from 'driver.js';
 
+import type { Profile } from '@/context/AuthContext';
 import {
-  PHOTOS_MANAGE_TOUR_TARGETS,
-  PHOTOS_TOUR_TARGETS,
-  setPhotosManageTourDismissed,
-  setPhotosTourDismissed,
+    persistPhotosManageTourOutcome,
+    persistPhotosUploadTourOutcome,
+} from '@/lib/profileTours';
+import {
+    PHOTOS_MANAGE_TOUR_TARGETS,
+    PHOTOS_TOUR_TARGETS,
 } from '@/tours/photosFirstRunTour.constants';
 
 import '@/tours/photosFirstRunTour.css';
+
+/** driver.js replaces the default Finish handler when onDoneClick is set — must destroy explicitly. */
+function onTourDoneClick(markFinished: () => void) {
+  return (_element: Element | undefined, _step: DriveStep, opts: { driver: Driver }) => {
+    markFinished();
+    opts.driver.destroy();
+  };
+}
 
 function shouldIncludeSidebarStep(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
@@ -80,7 +91,10 @@ export function createPhotosFirstRunTourSteps(): DriveStep[] {
 export function startPhotosFirstRunTour(options: {
   persistDismissOnEnd: boolean;
   userId: string;
+  profile?: Profile | null;
+  refreshProfile?: () => Promise<void>;
 }): Driver {
+  let finished = false;
   const driverObj = driver({
     showProgress: true,
     progressText: '{{current}} of {{total}}',
@@ -94,9 +108,17 @@ export function startPhotosFirstRunTour(options: {
     prevBtnText: 'Back',
     doneBtnText: 'Finish',
     steps: createPhotosFirstRunTourSteps(),
+    onDoneClick: onTourDoneClick(() => {
+      finished = true;
+    }),
     onDestroyed: () => {
       if (options.persistDismissOnEnd) {
-        setPhotosTourDismissed(options.userId);
+        void persistPhotosUploadTourOutcome(
+          options.userId,
+          finished ? 'finished' : 'dismissed',
+          options.profile,
+          options.refreshProfile,
+        );
       }
     },
   });
@@ -185,7 +207,10 @@ export function createPhotosManageTourSteps(): DriveStep[] {
 export function startPhotosManageTour(options: {
   persistDismissOnEnd: boolean;
   userId: string;
+  profile?: Profile | null;
+  refreshProfile?: () => Promise<void>;
 }): Driver {
+  let finished = false;
   const driverObj = driver({
     showProgress: true,
     progressText: '{{current}} of {{total}}',
@@ -200,9 +225,17 @@ export function startPhotosManageTour(options: {
     prevBtnText: 'Back',
     doneBtnText: 'Finish',
     steps: createPhotosManageTourSteps(),
+    onDoneClick: onTourDoneClick(() => {
+      finished = true;
+    }),
     onDestroyed: () => {
       if (options.persistDismissOnEnd) {
-        setPhotosManageTourDismissed(options.userId);
+        void persistPhotosManageTourOutcome(
+          options.userId,
+          finished ? 'finished' : 'dismissed',
+          options.profile,
+          options.refreshProfile,
+        );
       }
     },
   });

@@ -82,7 +82,7 @@ function PhotosPageLoadingFallback() {
 }
 
 function PhotosPageContent() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
@@ -329,6 +329,8 @@ function PhotosPageContent() {
 
   usePhotosFirstRunTour({
     userId: user?.id,
+    profile,
+    refreshProfile,
     photosPending,
     uploadTourActive: showEmptyState,
     isUploadTourMock: isPhotosUploadTourMock,
