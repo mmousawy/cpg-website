@@ -1,0 +1,162 @@
+@import "driver.js/dist/driver.css";
+
+.cpg-photos-tour-popover.driver-popover {
+  background-color: var(--background-light);
+  color: var(--foreground);
+  border: 1px solid var(--border-color-strong);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.12);
+  max-width: min(20rem, calc(100vw - 2rem));
+}
+
+.cpg-photos-tour-popover .driver-popover-title {
+  font-family: var(--font-heading), var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.cpg-photos-tour-popover .driver-popover-description {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.cpg-photos-tour-popover .driver-popover-progress-text {
+  color: var(--text-muted-light);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+.cpg-photos-tour-popover .driver-popover-close-btn {
+  color: var(--text-muted-light);
+  width: 36px;
+  height: 36px;
+  font-size: 28px;
+  line-height: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.cpg-photos-tour-popover .driver-popover-close-btn:hover,
+.cpg-photos-tour-popover .driver-popover-close-btn:focus {
+  color: var(--foreground);
+}
+
+.cpg-photos-tour-popover .driver-popover-footer-btn {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border-color: var(--border-color-strong);
+  background-color: var(--background-medium);
+  color: var(--foreground);
+  padding: 0.375rem 0.75rem;
+}
+
+.cpg-photos-tour-popover .driver-popover-footer-btn:hover,
+.cpg-photos-tour-popover .driver-popover-footer-btn:focus {
+  border-color: var(--primary);
+  background-color: color-mix(in srgb, var(--primary) 8%, var(--background-medium));
+}
+
+.cpg-photos-tour-popover .driver-popover-navigation-btns .driver-popover-footer-btn:last-child {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.cpg-photos-tour-popover .driver-popover-navigation-btns .driver-popover-footer-btn:last-child:hover,
+.cpg-photos-tour-popover .driver-popover-navigation-btns .driver-popover-footer-btn:last-child:focus {
+  background-color: var(--primary-light);
+  border-color: var(--primary-light);
+  color: #fff;
+}
+
+/*
+ * Driver's arrow is one CSS triangle. Its hidden sides are transparent black
+ * (#0000), which anti-aliases into a dark outline. Draw a border-colored
+ * triangle, then a smaller fill triangle so the edge matches the popover border.
+ * Hidden sides use the same color at alpha 0 so the fringe stays on-color.
+ */
+.cpg-photos-tour-popover .driver-popover-arrow {
+  border-style: solid;
+  border-width: 6px;
+  border-color: transparent;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow::before {
+  content: "";
+  position: absolute;
+  border-style: solid;
+  border-width: 5px;
+  border-color: transparent;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-left {
+  border-left-color: var(--border-color-strong);
+  border-top-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-right-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-bottom-color: rgb(from var(--border-color-strong) r g b / 0);
+  left: 100%;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-left::before {
+  border-left-color: var(--background-light);
+  border-top-color: rgb(from var(--background-light) r g b / 0);
+  border-right-color: rgb(from var(--background-light) r g b / 0);
+  border-bottom-color: rgb(from var(--background-light) r g b / 0);
+  top: -5px;
+  left: -6px;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-right {
+  border-right-color: var(--border-color-strong);
+  border-top-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-left-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-bottom-color: rgb(from var(--border-color-strong) r g b / 0);
+  right: 100%;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-right::before {
+  border-right-color: var(--background-light);
+  border-top-color: rgb(from var(--background-light) r g b / 0);
+  border-left-color: rgb(from var(--background-light) r g b / 0);
+  border-bottom-color: rgb(from var(--background-light) r g b / 0);
+  top: -5px;
+  left: -4px;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-top {
+  border-top-color: var(--border-color-strong);
+  border-right-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-bottom-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-left-color: rgb(from var(--border-color-strong) r g b / 0);
+  top: 100%;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-top::before {
+  border-top-color: var(--background-light);
+  border-right-color: rgb(from var(--background-light) r g b / 0);
+  border-bottom-color: rgb(from var(--background-light) r g b / 0);
+  border-left-color: rgb(from var(--background-light) r g b / 0);
+  top: -6px;
+  left: -5px;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-bottom {
+  border-bottom-color: var(--border-color-strong);
+  border-top-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-right-color: rgb(from var(--border-color-strong) r g b / 0);
+  border-left-color: rgb(from var(--border-color-strong) r g b / 0);
+  bottom: 100%;
+}
+
+.cpg-photos-tour-popover .driver-popover-arrow-side-bottom::before {
+  border-bottom-color: var(--background-light);
+  border-top-color: rgb(from var(--background-light) r g b / 0);
+  border-right-color: rgb(from var(--background-light) r g b / 0);
+  border-left-color: rgb(from var(--background-light) r g b / 0);
+  top: -4px;
+  left: -5px;
+}

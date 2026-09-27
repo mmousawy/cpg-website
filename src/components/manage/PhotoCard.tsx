@@ -28,6 +28,8 @@ interface PhotoCardProps {
   disabled?: boolean;
   /** Message to show when disabled */
   disabledMessage?: string;
+  /** Optional id for onboarding tour anchor */
+  tourAnchorId?: string;
   /** Whether this photo was rejected (for challenge submissions) */
   rejected?: boolean;
   /** Whether this photo is pending review (for challenge submissions) */
@@ -50,6 +52,7 @@ function PhotoCard({
   pending = false,
   accepted = false,
   notOwnedProfile,
+  tourAnchorId,
 }: PhotoCardProps) {
   // Generate square cropped thumbnail URL (256x256px, center-cropped)
   const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
@@ -159,6 +162,7 @@ function PhotoCard({
 
   return (
     <div
+      id={tourAnchorId}
       data-testid="photo-card"
       className={clsx(
         'overflow-hidden transition-all duration-300',
@@ -237,6 +241,7 @@ export default memo(PhotoCard, (prevProps, nextProps) => {
     prevProps.disabled === nextProps.disabled &&
     prevProps.disabledMessage === nextProps.disabledMessage &&
     prevProps.rejected === nextProps.rejected &&
-    prevProps.notOwnedProfile === nextProps.notOwnedProfile
+    prevProps.notOwnedProfile === nextProps.notOwnedProfile &&
+    prevProps.tourAnchorId === nextProps.tourAnchorId
   );
 });

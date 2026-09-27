@@ -13,14 +13,16 @@ type HelpLinkProps = {
   label?: string;
   size?: keyof typeof sizeMap;
   className?: string;
+  id?: string;
 };
 
-export default function HelpLink({ href, label, size = 'md', className = '' }: HelpLinkProps) {
+export default function HelpLink({ href, label, size = 'md', className = '', id }: HelpLinkProps) {
   const resolvedHref = href.startsWith('/') ? href : `/help#${href}`;
   const { wrapper, icon } = sizeMap[size];
 
   return (
     <Link
+      id={id}
       href={resolvedHref}
       title={label}
       aria-label={label || 'Help'}
