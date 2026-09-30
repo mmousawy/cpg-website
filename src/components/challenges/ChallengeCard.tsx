@@ -2,10 +2,13 @@
 
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import { RichDescriptionView } from '@/components/shared/RichDescriptionView';
 import StackedAvatarsPopover from '@/components/shared/StackedAvatarsPopover';
 import type { ChallengeWithStats } from '@/types/challenges';
+import { prepareRichDescriptionContent } from '@/utils/richHtmlShared';
 import clsx from 'clsx';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
@@ -94,6 +97,10 @@ export default function ChallengeCard({
   const deadline = formatDeadline(challenge.ends_at, serverNow);
   const deadlineShort = formatDeadlineShort(challenge.ends_at, serverNow);
   const isEnded = deadline === 'Ended' || isPast;
+  const descriptionHtml = useMemo(
+    () => prepareRichDescriptionContent(challenge.prompt, true)?.content ?? '',
+    [challenge.prompt],
+  );
   const photoCount = challenge.accepted_count || 0;
 
   // Transform contributors for StackedAvatarsPopover
@@ -240,6 +247,22 @@ export default function ChallengeCard({
       >
         {coverImageContent}
       </div>
+
+      {descriptionHtml ? (
+        <div
+          className="px-3 pt-3"
+        >
+          <RichDescriptionView
+            html={descriptionHtml}
+            className="text-sm leading-snug text-foreground/75 line-clamp-3 mb-3"
+            disableLinks
+          />
+          <div
+            aria-hidden
+            className="mt-2 h-px bg-border-color"
+          />
+        </div>
+      ) : null}
 
       {/* Footer stats bar */}
       <div

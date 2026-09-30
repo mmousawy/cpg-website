@@ -7,19 +7,92 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { routes } from '@/config/routes';
+import { socialLinks } from '@/config/socials';
 import { useAuth } from '@/hooks/useAuth';
 import { CPGEvent } from '@/types/events';
 import Button from '../shared/Button';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
 import ErrorMessage from '@/components/shared/ErrorMessage';
-import SuccessMessage from '@/components/shared/SuccessMessage';
+import ArrowOutwardSVG from 'public/icons/arrow-outward.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import CheckAddSVG from 'public/icons/check-add.svg';
+import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
+import WhatsAppSVG from 'public/icons/whatsapp.svg';
 import Avatar from './Avatar';
+
+const whatsAppGroupUrl = socialLinks.find((link) => link.name === 'WhatsApp')?.url ?? '';
+
+function RsvpConfirmedContent({ email }: { email: string | undefined }) {
+  return (
+    <div
+      className="flex flex-col gap-4"
+    >
+      <div
+        className="flex gap-3"
+      >
+        <CheckSVG
+          className="mt-0.5 size-5 shrink-0 fill-primary"
+        />
+        <div>
+          <p
+            className="font-semibold leading-6 text-foreground"
+          >
+            You&apos;re signed up
+          </p>
+          <p
+            className="mt-1 text-sm text-foreground/80"
+          >
+            A confirmation email with event details was sent to
+            {' '}
+            {email}
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="rounded-xl border border-border-color bg-background p-4"
+      >
+        <div
+          className="mb-2 flex items-center gap-2"
+        >
+          <WhatsAppSVG
+            className="size-5 shrink-0 fill-[#25D366]"
+          />
+          <p
+            className="font-semibold text-foreground"
+          >
+            WhatsApp
+          </p>
+        </div>
+        <p
+          className="mb-3 text-sm text-foreground/80"
+        >
+          Join the WhatsApp group to stay updated on the event and connect with other attendees.
+        </p>
+        <Button
+          href={whatsAppGroupUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="primary"
+          size="sm"
+          iconRight={(
+            <ArrowOutwardSVG
+              className="size-[18px] fill-current"
+              aria-hidden
+            />
+          )}
+          className="rounded-full"
+        >
+          Join chat
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 type Props = {
   event?: CPGEvent;
@@ -285,20 +358,9 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
         <div
           className="flex flex-col gap-4"
         >
-          <SuccessMessage>
-            <div>
-              <p>
-                You&apos;re signed up for this event!
-              </p>
-              <p
-                className="mt-1 text-sm font-normal text-foreground/80"
-              >
-                A confirmation email was sent to
-                {' '}
-                {user.email}
-              </p>
-            </div>
-          </SuccessMessage>
+          <RsvpConfirmedContent
+            email={user.email}
+          />
 
           <p
             className="text-sm text-foreground/80"
@@ -338,10 +400,10 @@ export default function SignupForm({ event, hasExistingRSVP = false, rsvpUuid, o
         </div>
       )}
 
-      {success && !hasExistingRSVP && (
-        <SuccessMessage>
-          You&apos;re all set! A confirmation email with event details is on its way to your inbox.
-        </SuccessMessage>
+      {success && !hasExistingRSVP && user && (
+        <RsvpConfirmedContent
+          email={user.email}
+        />
       )}
     </div>
   );

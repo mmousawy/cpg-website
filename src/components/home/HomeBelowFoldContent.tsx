@@ -1,5 +1,3 @@
-'use client';
-
 import { HomeAlbumsSection } from '@/components/home/HomeAlbumsSection';
 import { HomeExploreSection } from '@/components/home/HomeExploreSection';
 import { HomeMembersSection } from '@/components/home/HomeMembersSection';
@@ -13,6 +11,7 @@ import type { HomePageData } from '@/lib/data/home';
 import DiscordSVG from 'public/icons/discord.svg';
 import InstagramSVG from 'public/icons/instagram.svg';
 import WhatsAppSVG from 'public/icons/whatsapp.svg';
+import type { CSSProperties } from 'react';
 
 const socialIconMap: Record<string, typeof DiscordSVG> = {
   Discord: DiscordSVG,
@@ -92,7 +91,7 @@ export function HomeBelowFoldContent({
                     style={{
                       '--hover-color': social.color,
                       '--hover-bg': `${social.color}15`,
-                    } as React.CSSProperties}
+                    } as CSSProperties}
                   >
                     <Icon
                       className="size-6 shrink-0 transition-colors group-hover:fill-(--hover-color)"

@@ -6,8 +6,8 @@ import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
-import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -164,6 +164,7 @@ export async function POST(request: NextRequest) {
         subject: 'Verify your email - Creative Photography Group',
         html: await render(
           VerifyEmailTemplate({
+            recipientEmail: email,
             verifyLink,
           }),
         ),

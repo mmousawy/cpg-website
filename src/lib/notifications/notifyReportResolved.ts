@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
 import { ReportResolvedEmail } from '@/emails/report-resolved';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
@@ -156,6 +156,7 @@ export async function notifyReportResolved(
       const html = await render(
         ReportResolvedEmail({
           reporterName: reporterName || 'User',
+          recipientEmail: reporterEmail,
           reporterNickname,
           reporterAvatarUrl,
           entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',

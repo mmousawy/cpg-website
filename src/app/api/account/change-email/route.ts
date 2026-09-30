@@ -4,9 +4,9 @@ import { Resend } from 'resend';
 
 import ChangeEmailTemplate from '@/emails/auth/change-email';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
-import { render } from '@react-email/render';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -137,6 +137,7 @@ export async function POST(request: NextRequest) {
         html: await render(
           ChangeEmailTemplate({
             fullName: profile?.full_name || undefined,
+            recipientEmail: currentEmail,
             newEmail: newEmail,
             verifyLink,
           }),

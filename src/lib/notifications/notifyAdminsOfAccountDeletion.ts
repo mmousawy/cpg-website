@@ -78,6 +78,7 @@ export async function notifyAdminsOfAccountDeletion(
         MemberNotificationEmail({
           kind: 'deleted',
           adminName: admin.full_name || 'Admin',
+          recipientEmail: admin.email,
           memberName,
           memberNickname: profile.nickname,
           memberEmail: profile.email,

@@ -302,7 +302,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
       <PageContainer
         className={clsx(
-          event.cover_image ? 'pt-6! sm:pt-8!' : '',
+          event.cover_image ? 'pt-4! sm:pt-6!' : '',
           'pb-4 sm:pb-8!',
         )}
       >
@@ -518,7 +518,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 variant="secondary"
                 size="sm"
                 className="inline-flex!"
-                icon={<LocationChipSVG className="size-4 shrink-0 fill-current" />}
+                icon={<LocationChipSVG
+                  className="size-4 shrink-0 fill-current"
+                />}
               >
                 See location
               </Button>
@@ -558,7 +560,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       {/* Event Photos - full width grid (right after heading, before SignUpCTA) */}
       {hasEventPhotos(eventAlbum) && eventAlbum && (
         <WidePageContainer
-          className="md:pb-12!"
+          className="pt-0! max-sm:pb-3"
         >
           <EventPhotosSection
             eventId={event.id}
@@ -577,7 +579,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         />
       )}
 
-      <div className="relative">
+      <div
+        className="relative"
+      >
         <PageContainer
           variant="alt"
           className="border-t border-t-border-color"
@@ -586,7 +590,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             aria-hidden
             className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-full bg-linear-to-b from-transparent to-[black]/12 dark:to-[black]/40"
           />
-          <div className="relative z-10">
+          <div
+            className="relative z-10"
+          >
             <EventComments
               eventId={String(event.id)}
             />

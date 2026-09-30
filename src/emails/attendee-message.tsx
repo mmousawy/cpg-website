@@ -1,28 +1,21 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Link, Section } from '@react-email/components';
 
 import { Database } from '@/database.types';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-
+import EmailDivider from './components/EmailDivider';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 import EventDetails from './components/EventDetails';
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
 import RichContent from './components/RichContent';
+import { emailAccentLinkStyle, emailCalloutStyle } from './components/styles';
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export const AttendeeMessageEmail = ({
   preview,
   fullName,
+  recipientEmail,
   event,
   message,
   eventLink,
@@ -30,6 +23,7 @@ export const AttendeeMessageEmail = ({
 }: {
   preview?: boolean;
   fullName: string,
+  recipientEmail?: string,
   event: Database['public']['Tables']['events']['Row'],
   message: string,
   eventLink: string,
@@ -37,6 +31,7 @@ export const AttendeeMessageEmail = ({
 }) => {
   if (preview) {
     fullName = 'John Doe';
+    recipientEmail = 'john.doe@example.com';
     message = '<p>This is a sample message from the event organizers.</p><p>We\'re looking forward to seeing everyone at the meetup! Feel free to <strong>bring your camera</strong> and share your photos.</p>';
 
     event = {
@@ -55,85 +50,56 @@ export const AttendeeMessageEmail = ({
   const previewText = `Message about: ${event?.title}`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={fullName}
+      recipientEmail={recipientEmail}
+      optOutLink={optOutLink}
+      emailType="events"
+    >
+      <EmailHeading>
+        Update about:
+        {' '}
+        {event?.title}
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {fullName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        The organizers of this event have an update for you:
+      </EmailText>
+
+      <Section
+        style={{ ...emailCalloutStyle, margin: '20px 0' }}
+      >
+        <RichContent
+          html={message}
+        />
+      </Section>
+
+      <EmailText>
+        View event details:
+        {' '}
+        <Link
+          href={eventLink}
+          style={emailAccentLinkStyle}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          {eventLink}
+        </Link>
+      </EmailText>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              Update about:
-              {' '}
-              {event?.title}
-            </Heading>
+      <EmailDivider />
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {fullName}
-              ,
-            </Text>
-
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            {/* Custom message from admin */}
-            <div
-              className="my-[20px] rounded-lg bg-[#f7f7f7] p-4"
-            >
-              <RichContent
-                html={message}
-              />
-            </div>
-
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              View event details:
-              {' '}
-              <Link
-                href={eventLink}
-                className="text-blue-600 no-underline"
-              >
-                {eventLink}
-              </Link>
-            </Text>
-
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            <EventDetails
-              event={event}
-              noDescription
-            />
-
-            <Footer
-              fullName={fullName}
-              optOutLink={optOutLink}
-              emailType="events"
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <EventDetails
+        event={event}
+        noDescription
+      />
+    </EmailLayout>
   );
 };
 

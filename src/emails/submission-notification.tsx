@@ -1,27 +1,35 @@
+import { Column, Img, Link, Row, Section, Text } from '@react-email/components';
+
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 import {
-  Body,
-  Column,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+  emailCalloutStyle,
+  emailCalloutTitleStyle,
+  emailMutedTextStyle,
+  emailTextStyle,
+} from './components/styles';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+const avatarPlaceholderStyle = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  backgroundColor: '#5e9b84',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'white',
+  fontSize: '16px',
+  fontWeight: 'bold',
+} as const;
 
 export const SubmissionNotificationEmail = ({
   preview,
   adminName,
+  recipientEmail,
   submitterName,
   submitterNickname,
   submitterAvatarUrl,
@@ -35,6 +43,7 @@ export const SubmissionNotificationEmail = ({
 }: {
   preview?: boolean;
   adminName: string;
+  recipientEmail?: string;
   submitterName: string;
   submitterNickname: string | null;
   submitterAvatarUrl: string | null;
@@ -48,6 +57,7 @@ export const SubmissionNotificationEmail = ({
 }) => {
   if (preview) {
     adminName = 'Admin User';
+    recipientEmail = 'admin@example.com';
     submitterName = 'John Smith';
     submitterNickname = 'johnsmith';
     submitterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
@@ -64,292 +74,256 @@ export const SubmissionNotificationEmail = ({
     reviewLink = `${baseUrl}/admin/challenges/urban-photography/submissions`;
   }
 
-  // Display up to 6 photos in the email
   const displayPhotos = (photoUrls || []).slice(0, 6);
   const remainingPhotos = photoCount - displayPhotos.length;
 
   const previewText = `${submitterName} submitted ${photoCount} photo${photoCount !== 1 ? 's' : ''} to "${challengeTitle}"`;
 
-  return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+  const renderAvatar = () => {
+    if (submitterProfileLink) {
+      return (
+        <Link
+          href={submitterProfileLink}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          {submitterAvatarUrl ? (
+            <Img
+              src={submitterAvatarUrl}
+              width="40"
+              height="40"
+              alt={submitterName}
+              style={{ borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              style={avatarPlaceholderStyle}
+            >
+              {submitterName.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </Link>
+      );
+    }
+    if (submitterAvatarUrl) {
+      return (
+        <Img
+          src={submitterAvatarUrl}
+          width="40"
+          height="40"
+          alt={submitterName}
+          style={{ borderRadius: '50%', objectFit: 'cover' }}
+        />
+      );
+    }
+    return (
+      <div
+        style={avatarPlaceholderStyle}
+      >
+        {submitterName.charAt(0).toUpperCase()}
+      </div>
+    );
+  };
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              New challenge submission
-            </Heading>
+  return (
+    <EmailLayout
+      previewText={previewText}
+      fullName={adminName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        New challenge submission
+      </EmailHeading>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {adminName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              A new submission has been made to one of your challenges and is waiting for review.
-            </Text>
+      <EmailText>
+        Hi
+        {' '}
+        {adminName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        A new submission has been made to one of your challenges and is waiting for review.
+      </EmailText>
 
-            {/* Challenge thumbnail and title */}
-            <Section
-              className="my-[20px]"
-            >
-              <Link
-                href={challengeLink}
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <Link
+          href={challengeLink}
+        >
+          <Row>
+            {challengeThumbnail && (
+              <Column
+                width="64"
               >
-                <Row>
-                  {challengeThumbnail && (
-                    <Column
-                      width="64"
+                <Img
+                  src={challengeThumbnail}
+                  width="64"
+                  height="64"
+                  alt={challengeTitle}
+                  style={{ borderRadius: '6px', objectFit: 'cover' }}
+                />
+              </Column>
+            )}
+            <Column
+              style={{ verticalAlign: 'top', paddingLeft: challengeThumbnail ? '16px' : 0 }}
+            >
+              <Text
+                style={{ ...emailCalloutTitleStyle, fontSize: '15px', lineHeight: '24px', margin: 0 }}
+              >
+                {challengeTitle}
+              </Text>
+            </Column>
+          </Row>
+        </Link>
+      </Section>
+
+      <Section
+        style={emailCalloutStyle}
+      >
+        <Row>
+          <Column
+            width="40"
+            style={{ verticalAlign: 'top' }}
+          >
+            {renderAvatar()}
+          </Column>
+          <Column
+            style={{ verticalAlign: 'top', paddingLeft: '12px' }}
+          >
+            {submitterProfileLink ? (
+              <Link
+                href={submitterProfileLink}
+                style={{ color: emailTextStyle.color, textDecoration: 'none' }}
+              >
+                <Text
+                  style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
+                >
+                  {submitterName}
+                </Text>
+              </Link>
+            ) : (
+              <Text
+                style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
+              >
+                {submitterName}
+              </Text>
+            )}
+            {submitterNickname && (
+              submitterProfileLink ? (
+                <Link
+                  href={submitterProfileLink}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Text
+                    style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
+                  >
+                    @
+                    {submitterNickname}
+                  </Text>
+                </Link>
+              ) : (
+                <Text
+                  style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
+                >
+                  @
+                  {submitterNickname}
+                </Text>
+              )
+            )}
+            <Text
+              style={{ ...emailTextStyle, lineHeight: '20px' }}
+            >
+              Submitted
+              {' '}
+              {photoCount}
+              {' '}
+              photo
+              {photoCount !== 1 ? 's' : ''}
+            </Text>
+          </Column>
+        </Row>
+      </Section>
+
+      {displayPhotos.length > 0 && (
+        <Section
+          style={{ margin: '20px 0' }}
+        >
+          <table
+            cellPadding="0"
+            cellSpacing="4"
+            style={{ borderCollapse: 'separate' }}
+          >
+            <tbody>
+              <tr>
+                {displayPhotos.slice(0, 3).map((url, index) => (
+                  <td
+                    key={index}
+                    style={{ padding: '2px' }}
+                  >
+                    <Img
+                      src={url}
+                      width="120"
+                      height="120"
+                      alt={`Submitted photo ${index + 1}`}
+                      style={{
+                        borderRadius: '4px',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  </td>
+                ))}
+              </tr>
+              {displayPhotos.length > 3 && (
+                <tr>
+                  {displayPhotos.slice(3, 6).map((url, index) => (
+                    <td
+                      key={index}
+                      style={{ padding: '2px' }}
                     >
                       <Img
-                        src={challengeThumbnail}
-                        width="64"
-                        height="64"
-                        alt={challengeTitle}
-                        className="rounded-md object-cover"
+                        src={url}
+                        width="120"
+                        height="120"
+                        alt={`Submitted photo ${index + 4}`}
+                        style={{
+                          borderRadius: '4px',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
                       />
-                    </Column>
-                  )}
-                  <Column
-                    className={challengeThumbnail ? 'pl-4 align-top' : 'align-top'}
-                  >
-                    <Text
-                      className="mt-0! text-[15px] font-semibold leading-[24px] text-[#171717]"
-                    >
-                      {challengeTitle}
-                    </Text>
-                  </Column>
-                </Row>
-              </Link>
-            </Section>
-
-            {/* Submitter info */}
-            <Section
-              className="my-[20px] rounded-lg border border-[#e5e7ea] bg-[#f7f7f7] p-4"
+                    </td>
+                  ))}
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {remainingPhotos > 0 && (
+            <Text
+              style={{ ...emailMutedTextStyle, marginTop: '8px' }}
             >
-              <Row>
-                <Column
-                  width="40"
-                  className="align-top"
-                >
-                  {submitterProfileLink ? (
-                    <Link
-                      href={submitterProfileLink}
-                    >
-                      {submitterAvatarUrl ? (
-                        <Img
-                          src={submitterAvatarUrl}
-                          width="40"
-                          height="40"
-                          alt={submitterName}
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: '#5e9b84',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          {submitterName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </Link>
-                  ) : submitterAvatarUrl ? (
-                    <Img
-                      src={submitterAvatarUrl}
-                      width="40"
-                      height="40"
-                      alt={submitterName}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: '#5e9b84',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {submitterName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </Column>
-                <Column
-                  className="pl-3 align-top"
-                >
-                  {submitterProfileLink ? (
-                    <Link
-                      href={submitterProfileLink}
-                      className="text-[#171717] no-underline"
-                    >
-                      <Text
-                        className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
-                      >
-                        {submitterName}
-                      </Text>
-                    </Link>
-                  ) : (
-                    <Text
-                      className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
-                    >
-                      {submitterName}
-                    </Text>
-                  )}
-                  {submitterNickname && (
-                    submitterProfileLink ? (
-                      <Link
-                        href={submitterProfileLink}
-                        className="text-[#666666] no-underline"
-                      >
-                        <Text
-                          className="my-0! mb-2! text-[12px] leading-[16px] text-[#666666]"
-                        >
-                          @
-                          {submitterNickname}
-                        </Text>
-                      </Link>
-                    ) : (
-                      <Text
-                        className="my-0! mb-2! text-[12px] leading-[16px] text-[#666666]"
-                      >
-                        @
-                        {submitterNickname}
-                      </Text>
-                    )
-                  )}
-                  <Text
-                    className="my-0! text-[14px] leading-[20px] text-[#171717]"
-                  >
-                    Submitted
-                    {' '}
-                    {photoCount}
-                    {' '}
-                    photo
-                    {photoCount !== 1 ? 's' : ''}
-                  </Text>
-                </Column>
-              </Row>
-            </Section>
+              +
+              {remainingPhotos}
+              {' '}
+              more photo
+              {remainingPhotos !== 1 ? 's' : ''}
+            </Text>
+          )}
+        </Section>
+      )}
 
-            {/* Submitted photos grid */}
-            {displayPhotos.length > 0 && (
-              <Section
-                className="my-[20px]"
-              >
-                <table
-                  cellPadding="0"
-                  cellSpacing="4"
-                  style={{ borderCollapse: 'separate' }}
-                >
-                  <tbody>
-                    <tr>
-                      {displayPhotos.slice(0, 3).map((url, index) => (
-                        <td
-                          key={index}
-                          style={{ padding: '2px' }}
-                        >
-                          <Img
-                            src={url}
-                            width="120"
-                            height="120"
-                            alt={`Submitted photo ${index + 1}`}
-                            style={{
-                              borderRadius: '4px',
-                              objectFit: 'cover',
-                              display: 'block',
-                            }}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                    {displayPhotos.length > 3 && (
-                      <tr>
-                        {displayPhotos.slice(3, 6).map((url, index) => (
-                          <td
-                            key={index}
-                            style={{ padding: '2px' }}
-                          >
-                            <Img
-                              src={url}
-                              width="120"
-                              height="120"
-                              alt={`Submitted photo ${index + 4}`}
-                              style={{
-                                borderRadius: '4px',
-                                objectFit: 'cover',
-                                display: 'block',
-                              }}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                {remainingPhotos > 0 && (
-                  <Text
-                    className="mt-2! text-[12px] text-[#666666]"
-                  >
-                    +
-                    {remainingPhotos}
-                    {' '}
-                    more photo
-                    {remainingPhotos !== 1 ? 's' : ''}
-                  </Text>
-                )}
-              </Section>
-            )}
-
-            <div
-              className="my-[20px]"
-            >
-              <Link
-                href={reviewLink}
-                className="inline-block rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-              >
-                Review submission
-              </Link>
-            </div>
-
-            <Footer
-              fullName={adminName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={reviewLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          Review submission
+        </EmailButton>
+      </Section>
+    </EmailLayout>
   );
 };
 

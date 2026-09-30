@@ -1,41 +1,35 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Link, Section } from '@react-email/components';
 
 import { Database } from '@/database.types';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-
+import EmailButton from './components/EmailButton';
+import EmailDivider from './components/EmailDivider';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 import EventDetails from './components/EventDetails';
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+import { emailAccentLinkStyle } from './components/styles';
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export const EventAnnouncementEmail = ({
   preview,
   fullName,
+  recipientEmail,
   event,
   eventLink,
   optOutLink,
 }: {
   preview?: boolean;
   fullName: string,
+  recipientEmail?: string,
   event: Database['public']['Tables']['events']['Row'],
   eventLink: string,
   optOutLink?: string,
 }) => {
   if (preview) {
     fullName = 'John Doe';
+    recipientEmail = 'john.doe@example.com';
 
     event = {
       title: 'Contours, compositions and cropping',
@@ -53,82 +47,58 @@ export const EventAnnouncementEmail = ({
   const previewText = `New event: ${event?.title}`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={fullName}
+      recipientEmail={recipientEmail}
+      optOutLink={optOutLink}
+      emailType="events"
+    >
+      <EmailHeading>
+        New event:
+        {' '}
+        {event?.title}
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {fullName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        We&apos;re excited to announce a new photography meetup! Join us for an inspiring session with fellow photographers.
+      </EmailText>
+
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={eventLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          View event details
+        </EmailButton>
+      </Section>
+      <EmailText>
+        or copy and paste this URL into your browser:
+        {' '}
+        <Link
+          href={eventLink}
+          style={emailAccentLinkStyle}
+        >
+          {eventLink}
+        </Link>
+      </EmailText>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              New event:
-              {' '}
-              {event?.title}
-            </Heading>
+      <EmailDivider />
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {fullName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              We&apos;re excited to announce a new photography meetup! Join us for an inspiring session with fellow photographers.
-            </Text>
-
-            <Section
-              className="my-[20px]"
-            >
-              <Button
-                className="rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-                href={eventLink}
-              >
-                View event details
-              </Button>
-            </Section>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              or copy and paste this URL into your browser:
-              {' '}
-              <Link
-                href={eventLink}
-                className="text-blue-600 no-underline"
-              >
-                {eventLink}
-              </Link>
-            </Text>
-
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            <EventDetails
-              event={event}
-            />
-
-            <Footer
-              fullName={fullName}
-              optOutLink={optOutLink}
-              emailType="events"
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <EventDetails
+        event={event}
+      />
+    </EmailLayout>
   );
 };
 

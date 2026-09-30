@@ -1,12 +1,12 @@
-import { NextResponse, after } from 'next/server';
-import { Resend } from 'resend';
-import { render } from '@react-email/render';
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/utils/supabase/admin';
-import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { revalidateAll } from '@/app/actions/revalidate';
+import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
+import { render } from '@react-email/render';
+import { NextResponse, after } from 'next/server';
+import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -79,6 +79,7 @@ export async function POST() {
         const html = await render(
           AccountDeletionEmail({
             fullName: profile.full_name || email,
+            recipientEmail: email,
             deletionDate: deletionDate.toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',

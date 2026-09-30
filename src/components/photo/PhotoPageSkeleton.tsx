@@ -1,9 +1,9 @@
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DetailSidebar, {
   DetailSidebarAuthor,
   DetailSidebarFooter,
   DetailSidebarMeta,
 } from '@/components/shared/DetailSidebar';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 function SkeletonBar({
   className,
@@ -70,7 +70,7 @@ export default function PhotoPageSkeleton({ variant = 'page' }: { variant?: 'pag
 
   return (
     <div
-      className="w-full px-4 pt-4 md:flex md:min-h-0 md:gap-4 md:p-4 md:items-stretch lg:p-8 lg:gap-8"
+      className="w-full px-4 pt-4 max-md:px-3 max-md:pt-3 md:flex md:min-h-0 md:gap-4 md:p-4 md:items-stretch lg:p-8 lg:gap-8"
     >
       <div
         className={photoColumnClass}

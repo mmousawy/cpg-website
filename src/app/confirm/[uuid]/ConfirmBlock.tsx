@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
-import clsx from 'clsx';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import AddToCalendar from '@/components/events/AddToCalendar';
 import Button from '@/components/shared/Button';
@@ -12,13 +11,13 @@ import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { Database } from '@/database.types';
 import { CPGEvent } from '@/types/events';
 
+import SuccessMessage from '@/components/shared/SuccessMessage';
+import CalendarSVG from 'public/icons/calendar2.svg';
+import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
 import CloseSVG from 'public/icons/close.svg';
-import CalendarSVG from 'public/icons/calendar2.svg';
 import LocationSVG from 'public/icons/location.svg';
-import CancelSVG from 'public/icons/cancel.svg';
 import TimeSVG from 'public/icons/time.svg';
-import SuccessMessage from '@/components/shared/SuccessMessage';
 
 type Props = {
   event: CPGEvent;
@@ -201,7 +200,7 @@ export default function ConfirmBlock({ event, rsvp }: Props) {
               >
                 Thank you for confirming your RSVP.
                 <br />
-                We look forward to seeing you at the meetup!
+                We look forward to seeing you there!
               </SuccessMessage>
 
               <AddToCalendar

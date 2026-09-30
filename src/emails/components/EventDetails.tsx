@@ -1,6 +1,5 @@
 import {
   Column,
-  Heading,
   Img,
   Link,
   Row,
@@ -12,9 +11,34 @@ import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { CPGEvent } from '@/types/events';
 import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 
+import EmailHeading from './EmailHeading';
 import RichContent from './RichContent';
+import { emailAccentLinkStyle, emailColors } from './styles';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+
+const eventMetaLineStyle = {
+  margin: '8px 0 0 0',
+  fontSize: '14px',
+  fontWeight: 600,
+  lineHeight: '24px',
+  color: emailColors.text,
+} as const;
+
+const eventTitleStyle = {
+  margin: 0,
+  fontSize: '15px',
+  fontWeight: 600,
+  lineHeight: '24px',
+  color: emailColors.text,
+  marginBottom: '8px',
+} as const;
+
+const iconInlineStyle = {
+  margin: '0 8px 0 0',
+  display: 'inline',
+  verticalAlign: 'top',
+} as const;
 
 export default function EventDetails({ event, noDescription }: { event: CPGEvent, noDescription?: boolean }) {
   const eventLocationLines = event.location
@@ -24,34 +48,34 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
 
   return (
     <Section
-      className="my-5"
+      style={{ margin: '20px 0' }}
     >
-      <Heading
-        as="h2"
-        className="m-0 mb-7.5 p-0 text-[16px] font-semibold text-[#171717]"
+      <EmailHeading
+        variant="subsection"
       >
         Event details
-      </Heading>
+      </EmailHeading>
 
       <Row>
         <Column
-          className="align-top"
+          style={{ verticalAlign: 'top' }}
         >
           <Text
-            className="mt-0! text-[15px] font-semibold leading-6 text-[#171717]"
+            style={eventTitleStyle}
           >
             {event.title}
           </Text>
 
           <Row>
             <Text
-              className="my-0! text-[14px] font-semibold leading-6 text-[#171717]"
+              style={{ ...eventMetaLineStyle, margin: 0 }}
             >
               <Img
                 src={`${baseUrl}/icons/calendar2.png`}
                 width="24"
                 height="24"
-                className="mx-auto my-0 mr-2 inline align-top"
+                alt=""
+                style={iconInlineStyle}
               />
               {formatEventDate(event.date!, { includeYear: true })}
             </Text>
@@ -59,13 +83,14 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
 
           <Row>
             <Text
-              className="my-0! mt-2! text-[14px] font-semibold leading-6 text-[#171717]"
+              style={eventMetaLineStyle}
             >
               <Img
                 src={`${baseUrl}/icons/time.png`}
                 width="24"
                 height="24"
-                className="mx-auto my-0 mr-2 inline align-top"
+                alt=""
+                style={iconInlineStyle}
               />
               {event.time ? formatEventTime(event.time) : ''}
             </Text>
@@ -76,18 +101,19 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
               key={index}
             >
               <Text
-                className={
-                  index === 0
-                    ? 'mb-0! mt-2! text-[14px] font-semibold leading-6 text-[#171717]'
-                    : 'my-0! pl-8 text-[14px] font-semibold leading-6 text-[#171717]'
-                }
+                style={{
+                  ...eventMetaLineStyle,
+                  margin: index === 0 ? '8px 0 0 0' : 0,
+                  paddingLeft: index === 0 ? 0 : '32px',
+                }}
               >
                 {index === 0 && (
                   <Img
                     src={`${baseUrl}/icons/location.png`}
                     width="24"
                     height="24"
-                    className="mx-auto my-0 mr-2 inline align-top"
+                    alt=""
+                    style={iconInlineStyle}
                   />
                 )}
                 {line}
@@ -98,11 +124,11 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
           {event.location && (
             <Row>
               <Text
-                className="my-0! mt-1! pl-8 text-[14px] font-semibold leading-6"
+                style={{ ...eventMetaLineStyle, margin: '4px 0 0 0', paddingLeft: '32px' }}
               >
                 <Link
                   href={getGoogleMapsSearchUrl(event.location)}
-                  className="text-[#38785f] underline"
+                  style={emailAccentLinkStyle}
                 >
                   See location on Google Maps
                 </Link>
@@ -112,21 +138,27 @@ export default function EventDetails({ event, noDescription }: { event: CPGEvent
         </Column>
 
         <Column
-          className="pl-4 text-right align-top"
+          style={{ paddingLeft: '16px', textAlign: 'right', verticalAlign: 'top' }}
         >
           <Img
             src={event.cover_image!}
             width="128"
             height="128"
             alt="Event cover image"
-            className="inline size-32 rounded-md object-cover"
+            style={{
+              display: 'inline-block',
+              width: '128px',
+              height: '128px',
+              borderRadius: '6px',
+              objectFit: 'cover',
+            }}
           />
         </Column>
       </Row>
 
       {!noDescription && event.description && (
         <Section
-          className="mt-6"
+          style={{ marginTop: '24px' }}
         >
           <RichContent
             html={event.description}

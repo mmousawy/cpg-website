@@ -38,10 +38,11 @@ const nextConfig: NextConfig = {
       revalidate: 300,
       expire: 3600,
     },
-    // Homepage composite — serve stale while revalidating after tag invalidation
+    // Homepage shell. `stale` is 5 minutes so the prerender can include it.
+    // The server does not regenerate on a timer; expire the `home` tag to rerender.
     home: {
       stale: 300,
-      revalidate: 3600,
+      revalidate: 2592000,
       expire: 2592000,
     },
     // High-traffic listing pages — SWR after tag invalidation

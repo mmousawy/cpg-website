@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import { createAdminClient } from '@/utils/supabase/admin';
 import ResetPasswordTemplate from '@/emails/auth/reset-password';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
         html: await render(
           ResetPasswordTemplate({
             fullName: profile?.full_name || email.split('@')[0],
+            recipientEmail: email,
             resetLink,
           }),
         ),
