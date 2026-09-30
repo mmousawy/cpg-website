@@ -117,7 +117,10 @@ function ContactForm() {
         description="Have a question or want to get in touch? Fill out the form below and we'll respond as soon as we can."
       />
 
-      <Container variant="form" className="flex flex-col gap-6 sm:gap-8">
+      <Container
+        variant="form"
+        className="flex flex-col gap-6 sm:gap-8"
+      >
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-4"
@@ -236,18 +239,29 @@ function ContactForm() {
           </Button>
         </form>
 
-        <div className="border-t border-border-color" role="presentation" />
+        <div
+          className="border-t border-border-color"
+          role="presentation"
+        />
 
-        <section className="flex flex-col gap-3">
+        <section
+          className="flex flex-col gap-3"
+        >
           <div>
-            <h2 className="text-lg font-semibold">
+            <h2
+              className="text-lg font-semibold"
+            >
               Connect with us
             </h2>
-            <p className="mt-1 text-sm text-foreground/80">
+            <p
+              className="mt-1 text-sm text-foreground/80"
+            >
               For community chat, updates, and meetup info, join us on Discord, Instagram, or WhatsApp.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div
+            className="flex flex-wrap gap-3"
+          >
             {socialLinks.map((social) => {
               const Icon = socialIconMap[social.name];
               return (

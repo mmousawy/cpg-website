@@ -20,7 +20,9 @@ export default function ClientShellExtras() {
       >
         <DocumentRouteState />
       </Suspense>
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={null}
+      >
         <MobilePullToRefresh />
       </Suspense>
       <Suspense

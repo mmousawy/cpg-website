@@ -460,7 +460,9 @@ export default async function SceneEventDetailPage({
         event={event}
       />
 
-      <div className="relative">
+      <div
+        className="relative"
+      >
         <PageContainer
           variant="alt"
           className="border-t border-t-border-color"

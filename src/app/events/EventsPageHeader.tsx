@@ -7,7 +7,9 @@ export default function EventsPageHeader() {
   return (
     <PageHeading
       title="Events"
-      subnav={<SectionSubtabs items={eventsSectionSubtabs} />}
+      subnav={<SectionSubtabs
+        items={eventsSectionSubtabs}
+      />}
       description="Join our upcoming meetups or explore past events"
       aside={
         <HelpLink

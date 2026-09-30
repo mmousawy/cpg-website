@@ -25,10 +25,14 @@ export default function OnboardingFinishSection({
 }: OnboardingFinishSectionProps) {
   return (
     <div>
-      <OnboardingSectionTitle icon={GavelSVG}>
+      <OnboardingSectionTitle
+        icon={GavelSVG}
+      >
         One last step
       </OnboardingSectionTitle>
-      <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
+      <Container
+        className="onboarding-rise-in onboarding-rise-in-delay-1"
+      >
         <div
           className="space-y-4"
         >
@@ -83,7 +87,9 @@ export default function OnboardingFinishSection({
           )}
 
           {isPreviewMode ? (
-            <p className="text-xs text-foreground/80">
+            <p
+              className="text-xs text-foreground/80"
+            >
               Use Join the group below to run validation in preview mode.
             </p>
           ) : null}

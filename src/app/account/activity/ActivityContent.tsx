@@ -109,7 +109,9 @@ export default function ActivityContent() {
   const hasNotifications = notifications.length > 0;
 
   const activityHeaderActions = (
-    <div className="flex items-center gap-4">
+    <div
+      className="flex items-center gap-4"
+    >
       {isAdmin && (
         <button
           onClick={handleCreateMocks}

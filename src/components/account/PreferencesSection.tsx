@@ -35,8 +35,12 @@ export default function PreferencesSection({
         <div
           className="space-y-6"
         >
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Theme</label>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+            >Theme</label>
             <Controller
               name="theme"
               control={control}
@@ -50,13 +54,20 @@ export default function PreferencesSection({
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Album card style</label>
+          <div
+            className="flex flex-col gap-2"
+          >
+            <label
+              className="text-sm font-medium"
+            >Album card style</label>
             <Controller
               name="albumCardStyle"
               control={control}
               render={({ field }) => (
-                <AlbumCardStylePicker value={field.value} onChange={field.onChange} />
+                <AlbumCardStylePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               )}
             />
           </div>

@@ -31,7 +31,7 @@ export function getOnboardingCookieOptions(): {
   sameSite: 'lax';
   secure: boolean;
   maxAge: number;
-} {
+  } {
   return {
     httpOnly: true,
     path: '/',

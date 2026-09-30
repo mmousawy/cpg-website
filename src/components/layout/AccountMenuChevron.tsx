@@ -17,7 +17,12 @@ export default function AccountMenuChevron({
       stroke="currentColor"
       aria-hidden
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d={path}
+      />
     </svg>
   );
 }

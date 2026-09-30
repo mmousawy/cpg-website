@@ -105,8 +105,8 @@ export default function AccountStatsClient() {
       <div
         className="space-y-12"
       >
-      <StatsKpiGrid
-        items={[
+        <StatsKpiGrid
+          items={[
           { label: 'Photos', value: lifetime.photos },
           { label: 'Albums', value: lifetime.albums },
           { label: 'Views received', value: lifetime.viewsReceived },
@@ -123,30 +123,33 @@ export default function AccountStatsClient() {
           { label: 'Photos accepted', value: lifetime.challengePhotosAccepted },
           { label: 'Public photos', value: `${publicPct}%`, format: 'text' },
           { label: 'Shared albums', value: detail.sharedAlbumsJoined },
-        ]}
-      />
+          ]}
+        />
 
-      <StatsSection
-        title="Activity over time"
-        action={(
-          <div
-            className="flex flex-wrap items-center gap-3"
-          >
-            <StatsChartTypeToggle
-              value={chartType}
-              onChange={setChartType}
-            />
-            <StatsRangeTabs value={range} onChange={setRange} />
-          </div>
-        )}
-        description="How your content performed in the selected period"
-      >
-        {isLoading ? (
-          <div
-            className="flex justify-center py-8"
-          >
-            <LoadingSpinner />
-          </div>
+        <StatsSection
+          title="Activity over time"
+          action={(
+            <div
+              className="flex flex-wrap items-center gap-3"
+            >
+              <StatsChartTypeToggle
+                value={chartType}
+                onChange={setChartType}
+              />
+              <StatsRangeTabs
+                value={range}
+                onChange={setRange}
+              />
+            </div>
+          )}
+          description="How your content performed in the selected period"
+        >
+          {isLoading ? (
+            <div
+              className="flex justify-center py-8"
+            >
+              <LoadingSpinner />
+            </div>
         ) : (
           <div
             className="grid gap-8 lg:grid-cols-2"
@@ -170,42 +173,51 @@ export default function AccountStatsClient() {
             ))}
           </div>
         )}
-      </StatsSection>
-
-      <div
-        className="grid gap-8 lg:grid-cols-2"
-      >
-        <StatsRankedList
-          title="Top photos by views"
-          items={detail.topPhotosByViews}
-          valueLabel="Views"
-        />
-        <StatsRankedList
-          title="Top photos by likes"
-          items={detail.topPhotosByLikes}
-          valueLabel="Likes"
-        />
-        <StatsRankedList
-          title="Largest files"
-          items={detail.largestPhotos}
-          valueLabel="Size"
-          formatValue={formatBytesRanked}
-        />
-      </div>
-
-      {(detail.mimeTypes.length > 0 || detail.licenses.length > 0 || detail.topTags.length > 0) && (
-        <StatsSection
-          title="Your uploads"
-          description="Format, license, and tag breakdown"
-        >
-          <div
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-          >
-            <StatsDonutChart title="File formats" items={detail.mimeTypes} />
-            <StatsDonutChart title="Licenses" items={detail.licenses} />
-            <StatsDonutChart title="Top tags" items={detail.topTags} />
-          </div>
         </StatsSection>
+
+        <div
+          className="grid gap-8 lg:grid-cols-2"
+        >
+          <StatsRankedList
+            title="Top photos by views"
+            items={detail.topPhotosByViews}
+            valueLabel="Views"
+          />
+          <StatsRankedList
+            title="Top photos by likes"
+            items={detail.topPhotosByLikes}
+            valueLabel="Likes"
+          />
+          <StatsRankedList
+            title="Largest files"
+            items={detail.largestPhotos}
+            valueLabel="Size"
+            formatValue={formatBytesRanked}
+          />
+        </div>
+
+        {(detail.mimeTypes.length > 0 || detail.licenses.length > 0 || detail.topTags.length > 0) && (
+          <StatsSection
+            title="Your uploads"
+            description="Format, license, and tag breakdown"
+          >
+            <div
+              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            >
+              <StatsDonutChart
+                title="File formats"
+                items={detail.mimeTypes}
+              />
+              <StatsDonutChart
+                title="Licenses"
+                items={detail.licenses}
+              />
+              <StatsDonutChart
+                title="Top tags"
+                items={detail.topTags}
+              />
+            </div>
+          </StatsSection>
       )}
       </div>
     </PageContainer>

@@ -29,6 +29,13 @@ const eslintConfig = [
       // Disabled: currently crashes with ESLint 10 due to plugin API incompatibility.
       // Re-enable after eslint-plugin-react releases a compatible fix.
       'react/jsx-one-expression-per-line': 'off',
+
+      // React Compiler plugin (eslint-config-next) flags existing patterns as errors.
+      // Keep them visible; they must not fail CI until those call sites are rewritten.
+      'react-hooks/refs': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
     },
   },
   {

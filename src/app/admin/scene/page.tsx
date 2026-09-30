@@ -14,10 +14,10 @@ import EmptyState from '@/components/shared/EmptyState';
 import { useDeleteSceneEvent } from '@/hooks/useSceneEvents';
 import { useSupabase } from '@/hooks/useSupabase';
 import {
-    getSceneCategoryStyle,
-    SCENE_EVENT_CATEGORIES,
-    type SceneEvent,
-    type SceneEventCategory,
+  getSceneCategoryStyle,
+  SCENE_EVENT_CATEGORIES,
+  type SceneEvent,
+  type SceneEventCategory,
 } from '@/types/scene';
 import { formatLocation } from '@/utils/formatLocation';
 import { formatPrice } from '@/utils/formatPrice';

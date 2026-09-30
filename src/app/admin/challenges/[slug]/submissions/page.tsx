@@ -17,9 +17,9 @@ import GridCheckbox from '@/components/shared/GridCheckbox';
 import StickyActionBar from '@/components/shared/StickyActionBar';
 import { useChallengeBySlug } from '@/hooks/useChallenges';
 import {
-    useBulkReviewSubmissions,
-    useReviewSubmission,
-    useSubmissionsForReview,
+  useBulkReviewSubmissions,
+  useReviewSubmission,
+  useSubmissionsForReview,
 } from '@/hooks/useChallengeSubmissions';
 import type { SubmissionForReview } from '@/types/challenges';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';

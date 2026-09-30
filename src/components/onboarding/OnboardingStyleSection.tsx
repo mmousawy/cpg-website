@@ -73,22 +73,46 @@ export default function OnboardingStyleSection({
   onAlbumCardStyleChange,
 }: OnboardingStyleSectionProps) {
   return (
-    <div className="space-y-8">
+    <div
+      className="space-y-8"
+    >
       <div>
-        <OnboardingSectionTitle icon={PaletteSVG}>
+        <OnboardingSectionTitle
+          icon={PaletteSVG}
+        >
           Theme
         </OnboardingSectionTitle>
-        <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
-          <div className="space-y-6">
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Color scheme</span>
-              <ThemePreferencePicker value={theme} onChange={onThemeChange} />
+        <Container
+          className="onboarding-rise-in onboarding-rise-in-delay-1"
+        >
+          <div
+            className="space-y-6"
+          >
+            <div
+              className="flex flex-col gap-2"
+            >
+              <span
+                className="text-sm font-medium"
+              >Color scheme</span>
+              <ThemePreferencePicker
+                value={theme}
+                onChange={onThemeChange}
+              />
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Album card style</span>
-              <AlbumCardStylePicker value={albumCardStyle} onChange={onAlbumCardStyleChange} />
+            <div
+              className="flex flex-col gap-2"
+            >
+              <span
+                className="text-sm font-medium"
+              >Album card style</span>
+              <AlbumCardStylePicker
+                value={albumCardStyle}
+                onChange={onAlbumCardStyleChange}
+              />
             </div>
-            <p className="text-xs text-foreground/80">
+            <p
+              className="text-xs text-foreground/80"
+            >
               You can change these preferences anytime in account settings.
             </p>
           </div>
@@ -96,10 +120,14 @@ export default function OnboardingStyleSection({
       </div>
 
       <div>
-        <OnboardingSectionTitle icon={ImageSVG}>
+        <OnboardingSectionTitle
+          icon={ImageSVG}
+        >
           Profile images
         </OnboardingSectionTitle>
-        <Container className="onboarding-rise-in onboarding-rise-in-delay-2 overflow-hidden">
+        <Container
+          className="onboarding-rise-in onboarding-rise-in-delay-2 overflow-hidden"
+        >
           <ProfileImageUploadSections
             profileId={profileId}
             nickname={nickname || null}
@@ -129,7 +157,9 @@ export default function OnboardingStyleSection({
             heroVariant="standalone"
             showOptionalLabels
           />
-          <p className="mt-4 text-xs text-foreground/80">
+          <p
+            className="mt-4 text-xs text-foreground/80"
+          >
             You can update your profile picture and banner later in your account settings.
           </p>
         </Container>

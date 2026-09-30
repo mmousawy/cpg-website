@@ -88,9 +88,14 @@ export default function StatsRankedList({
             );
 
             return (
-              <li key={item.id}>
+              <li
+                key={item.id}
+              >
                 {item.href ? (
-                  <Link href={item.href} className="block">
+                  <Link
+                    href={item.href}
+                    className="block"
+                  >
                     {content}
                   </Link>
                 ) : content}

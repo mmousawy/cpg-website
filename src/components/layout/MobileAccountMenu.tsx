@@ -90,7 +90,11 @@ function MobileAccountMenuContent({
 
   return (
     <>
-      <div ref={rootRef} className="relative w-full" data-account-menu>
+      <div
+        ref={rootRef}
+        className="relative w-full"
+        data-account-menu
+      >
         <button
           type="button"
           onClick={() => setOpen(!accountOpen)}
@@ -114,7 +118,9 @@ function MobileAccountMenuContent({
               fullName={fullName}
               usePersonIconFallback
             />
-            {user && <NotificationBadge count={unseenCount} />}
+            {user && <NotificationBadge
+              count={unseenCount}
+            />}
           </span>
         </button>
 
@@ -154,7 +160,9 @@ export default function MobileAccountMenu(props: MobileAccountMenuProps) {
         />
       )}
     >
-      <MobileAccountMenuContent {...props} />
+      <MobileAccountMenuContent
+        {...props}
+      />
     </Suspense>
   );
 }

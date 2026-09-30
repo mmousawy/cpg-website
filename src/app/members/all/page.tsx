@@ -81,13 +81,15 @@ export default async function AllMembersPage() {
               in our community
             </div>
 
-            <div className="mt-4">
-            <ArrowLink
-              href="/members"
-              direction="left"
+            <div
+              className="mt-4"
             >
-              Back to members
-            </ArrowLink>
+              <ArrowLink
+                href="/members"
+                direction="left"
+              >
+                Back to members
+              </ArrowLink>
             </div>
           </>
         }

@@ -263,11 +263,17 @@ export default function EventSignupBar(props: EventSignupBarProps) {
   const { isLoggedIn } = useSession();
 
   return (
-    <StickyActionBar constrainWidth>
+    <StickyActionBar
+      constrainWidth
+    >
       {isLoggedIn ? (
-        <EventSignupBarAuthenticated {...props} />
+        <EventSignupBarAuthenticated
+          {...props}
+        />
       ) : (
-        <EventSignupBarGuest {...props} />
+        <EventSignupBarGuest
+          {...props}
+        />
       )}
     </StickyActionBar>
   );

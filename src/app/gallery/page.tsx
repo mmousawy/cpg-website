@@ -22,7 +22,11 @@ export const metadata = createMetadata({
 
 export default function GalleryPage() {
   return (
-    <Suspense fallback={<CachedGalleryPage includeTestContent={false} />}>
+    <Suspense
+      fallback={<CachedGalleryPage
+        includeTestContent={false}
+      />}
+    >
       <GalleryPageWithE2EFlag />
     </Suspense>
   );
@@ -30,7 +34,9 @@ export default function GalleryPage() {
 
 async function GalleryPageWithE2EFlag() {
   const includeTestContent = await getIncludeTestContent();
-  return <CachedGalleryPage includeTestContent={includeTestContent} />;
+  return <CachedGalleryPage
+    includeTestContent={includeTestContent}
+  />;
 }
 
 async function CachedGalleryPage({ includeTestContent }: { includeTestContent: boolean }) {
@@ -47,7 +53,9 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
   } = await getGalleryPageData(includeTestContent);
 
   return (
-    <div className="px-3 pt-0 sm:pt-8 md:px-12 md:pt-12">
+    <div
+      className="px-3 pt-0 sm:pt-8 md:px-12 md:pt-12"
+    >
       <GalleryPageHeader />
 
       <div

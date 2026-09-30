@@ -24,7 +24,9 @@ export default function OnboardingHeader() {
     modalContext.setFooter(null);
     modalContext.setTitle(setupProfileHelpItem.title);
     modalContext.setContent(
-      <div className={helpArticleClassName}>
+      <div
+        className={helpArticleClassName}
+      >
         {setupProfileHelpItem.content}
       </div>,
     );
@@ -32,13 +34,19 @@ export default function OnboardingHeader() {
   }, [modalContext]);
 
   return (
-    <header className="onboarding-header-slide-in sticky top-0 z-40 border-b border-b-border-color bg-background-light px-3 py-2 text-foreground shadow-md shadow-[#00000005]">
-      <div className={`${onboardingChromeInnerClassName} flex items-center gap-3`}>
+    <header
+      className="onboarding-header-slide-in sticky top-0 z-40 border-b border-b-border-color bg-background-light px-3 py-2 text-foreground shadow-md shadow-[#00000005]"
+    >
+      <div
+        className={`${onboardingChromeInnerClassName} flex items-center gap-3`}
+      >
         <LogoSVG
           className="block size-12 shrink-0 sm:size-14"
           aria-hidden
         />
-        <h1 className="min-w-0 flex-1 truncate font-heading text-lg font-bold sm:text-2xl">
+        <h1
+          className="min-w-0 flex-1 truncate font-heading text-lg font-bold sm:text-2xl"
+        >
           Creative Photography Group
         </h1>
         <button
@@ -47,7 +55,10 @@ export default function OnboardingHeader() {
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-1 py-1 text-sm font-medium text-foreground/50 transition-colors hover:text-primary focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           aria-label="Help with profile setup"
         >
-          <QuestionMarkCircleSVG className="size-4.5" aria-hidden />
+          <QuestionMarkCircleSVG
+            className="size-4.5"
+            aria-hidden
+          />
           Help
         </button>
       </div>

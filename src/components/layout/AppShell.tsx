@@ -20,7 +20,9 @@ export default function AppShell({ children }: AppShellProps) {
         <Layout>
           {children}
         </Layout>
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={null}
+        >
           <HideOnOnboarding>
             <SiteSearch />
           </HideOnOnboarding>

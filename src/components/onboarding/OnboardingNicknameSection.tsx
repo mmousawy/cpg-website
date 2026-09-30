@@ -28,10 +28,14 @@ export default function OnboardingNicknameSection({
 
   return (
     <div>
-      <OnboardingSectionTitle icon={AlternateEmailSVG}>
+      <OnboardingSectionTitle
+        icon={AlternateEmailSVG}
+      >
         Your nickname
       </OnboardingSectionTitle>
-      <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
+      <Container
+        className="onboarding-rise-in onboarding-rise-in-delay-1"
+      >
         <div
           className="flex flex-col gap-2"
         >

@@ -44,7 +44,9 @@ export default function ConfirmModal() {
       : options?.confirmIcon !== undefined
         ? options.confirmIcon
         : isDanger
-          ? <TrashSVG className="size-4 -ml-0.5" />
+          ? <TrashSVG
+              className="size-4 -ml-0.5"
+          />
           : undefined;
 
   return (

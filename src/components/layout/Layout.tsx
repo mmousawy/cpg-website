@@ -16,7 +16,9 @@ export default function Layout({ children }: LayoutProps) {
       className="app-shell flex min-h-full max-sm:min-h-0 flex-col"
     >
       <SkipToContent />
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={null}
+      >
         <OnboardingAwareHeader />
       </Suspense>
       <main
@@ -26,12 +28,16 @@ export default function Layout({ children }: LayoutProps) {
       >
         {children}
       </main>
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={null}
+      >
         <HideOnOnboarding>
           <Footer />
         </HideOnOnboarding>
       </Suspense>
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={null}
+      >
         <MobileTabBar />
       </Suspense>
     </div>

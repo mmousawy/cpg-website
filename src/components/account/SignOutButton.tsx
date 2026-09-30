@@ -35,8 +35,15 @@ export default function SignOutButton() {
         }
       }}
     >
-      <input type="hidden" name="redirectTo" value={pathname} />
-      <Button type="submit" variant="secondary">
+      <input
+        type="hidden"
+        name="redirectTo"
+        value={pathname}
+      />
+      <Button
+        type="submit"
+        variant="secondary"
+      >
         Sign out
       </Button>
     </form>

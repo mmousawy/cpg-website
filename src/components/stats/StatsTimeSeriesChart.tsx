@@ -226,7 +226,9 @@ export default function StatsTimeSeriesChart({
   const canZoom = data.length >= 2;
 
   return (
-    <div className={className}>
+    <div
+      className={className}
+    >
       <div
         className="mb-3 flex items-center justify-between gap-3"
       >
@@ -286,54 +288,74 @@ export default function StatsTimeSeriesChart({
         <div
           className="h-56 w-full"
         >
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart
-            data={data}
-            margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-            onMouseDown={canZoom ? onPointerDown : undefined}
-            onMouseMove={canZoom ? onPointerMove : undefined}
-            onTouchStart={canZoom ? onPointerDown : undefined}
-            onTouchMove={canZoom ? onPointerMove : undefined}
-            onDoubleClick={resetZoom}
-            style={{ cursor: canZoom ? 'crosshair' : 'default' }}
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
           >
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border-color" />
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 11 }}
-              interval="preserveStartEnd"
-              tickFormatter={(date: string) => formatChartDateLabel(date, displayBucket)}
-            />
-            <YAxis
-              tick={{ fontSize: 11 }}
-              width={40}
-              tickFormatter={(v) => valueFormatter(Number(v))}
-            />
-            <Tooltip
-              active={selection || isZoomLoading ? false : undefined}
-              cursor={selection ? false : { stroke: 'var(--primary)', strokeOpacity: 0.35 }}
-              isAnimationActive={false}
-              wrapperStyle={STATS_CHART_TOOLTIP_WRAPPER_STYLE}
-              content={
-                <StatsChartTooltip
-                  labelFormatter={(date) => formatChartDateLabel(date, displayBucket)}
-                  valueFormatter={valueFormatter}
-                />
-              }
-            />
-            {chartType === 'bar' ? (
-              <Bar
-                dataKey="value"
-                fill="var(--primary)"
-                isAnimationActive={false}
-                maxBarSize={28}
+            <ComposedChart
+              data={data}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              onMouseDown={canZoom ? onPointerDown : undefined}
+              onMouseMove={canZoom ? onPointerMove : undefined}
+              onTouchStart={canZoom ? onPointerDown : undefined}
+              onTouchMove={canZoom ? onPointerMove : undefined}
+              onDoubleClick={resetZoom}
+              style={{ cursor: canZoom ? 'crosshair' : 'default' }}
+            >
+              <defs>
+                <linearGradient
+                  id={gradientId}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor="var(--primary)"
+                    stopOpacity={0.35}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--primary)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-border-color"
               />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11 }}
+                interval="preserveStartEnd"
+                tickFormatter={(date: string) => formatChartDateLabel(date, displayBucket)}
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                width={40}
+                tickFormatter={(v) => valueFormatter(Number(v))}
+              />
+              <Tooltip
+                active={selection || isZoomLoading ? false : undefined}
+                cursor={selection ? false : { stroke: 'var(--primary)', strokeOpacity: 0.35 }}
+                isAnimationActive={false}
+                wrapperStyle={STATS_CHART_TOOLTIP_WRAPPER_STYLE}
+                content={
+                  <StatsChartTooltip
+                    labelFormatter={(date) => formatChartDateLabel(date, displayBucket)}
+                    valueFormatter={valueFormatter}
+                  />
+              }
+              />
+              {chartType === 'bar' ? (
+                <Bar
+                  dataKey="value"
+                  fill="var(--primary)"
+                  isAnimationActive={false}
+                  maxBarSize={28}
+                />
             ) : (
               <Area
                 type="monotone"
@@ -344,18 +366,18 @@ export default function StatsTimeSeriesChart({
                 isAnimationActive={false}
               />
             )}
-            {selectX1 && selectX2 && selectX1 !== selectX2 ? (
-              <ReferenceArea
-                x1={selectX1}
-                x2={selectX2}
-                stroke="var(--primary)"
-                strokeOpacity={0.4}
-                fill="var(--primary)"
-                fillOpacity={0.12}
-              />
+              {selectX1 && selectX2 && selectX1 !== selectX2 ? (
+                <ReferenceArea
+                  x1={selectX1}
+                  x2={selectX2}
+                  stroke="var(--primary)"
+                  strokeOpacity={0.4}
+                  fill="var(--primary)"
+                  fillOpacity={0.12}
+                />
             ) : null}
-          </ComposedChart>
-        </ResponsiveContainer>
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

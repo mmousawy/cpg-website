@@ -31,10 +31,18 @@ export default function HeaderSiteSearch() {
           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
         />
       </svg>
-      <span className="hidden lg:inline text-foreground/60">Search</span>
-      <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50 [word-spacing:-0.25em]">
-        <span className="hidden in-data-[platform=mac]:inline">⌘</span>
-        <span className="inline in-data-[platform=mac]:hidden">Ctrl</span>
+      <span
+        className="hidden lg:inline text-foreground/60"
+      >Search</span>
+      <kbd
+        className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50 [word-spacing:-0.25em]"
+      >
+        <span
+          className="hidden in-data-[platform=mac]:inline"
+        >⌘</span>
+        <span
+          className="inline in-data-[platform=mac]:hidden"
+        >Ctrl</span>
         {' + '}
         K
       </kbd>

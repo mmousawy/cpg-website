@@ -29,10 +29,14 @@ export default function OnboardingAboutYouSection({
 }: OnboardingAboutYouSectionProps) {
   return (
     <div>
-      <OnboardingSectionTitle icon={PersonSVG}>
+      <OnboardingSectionTitle
+        icon={PersonSVG}
+      >
         About you
       </OnboardingSectionTitle>
-      <Container className="onboarding-rise-in onboarding-rise-in-delay-2">
+      <Container
+        className="onboarding-rise-in onboarding-rise-in-delay-2"
+      >
         <div
           className="space-y-4"
         >

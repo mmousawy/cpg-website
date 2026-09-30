@@ -160,7 +160,10 @@ export default function AdminStatsClient() {
                   value={chartType}
                   onChange={setChartType}
                 />
-                <StatsRangeTabs value={range} onChange={setRange} />
+                <StatsRangeTabs
+                  value={range}
+                  onChange={setRange}
+                />
               </div>
             )}
           >
@@ -195,15 +198,32 @@ export default function AdminStatsClient() {
             )}
           </StatsSection>
 
-          <StatsSection title="Preference breakdowns">
+          <StatsSection
+            title="Preference breakdowns"
+          >
             <div
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
-              <StatsDonutChart title="Themes" items={overview.preferences.themes} />
-              <StatsDonutChart title="Album card style" items={overview.preferences.albumCardStyles} />
-              <StatsDonutChart title="Default license" items={overview.preferences.defaultLicenses} />
-              <StatsDonutChart title="Top interests" items={overview.preferences.topInterests} />
-              <StatsDonutChart title="Email opt-outs" items={overview.preferences.emailOptOuts} />
+              <StatsDonutChart
+                title="Themes"
+                items={overview.preferences.themes}
+              />
+              <StatsDonutChart
+                title="Album card style"
+                items={overview.preferences.albumCardStyles}
+              />
+              <StatsDonutChart
+                title="Default license"
+                items={overview.preferences.defaultLicenses}
+              />
+              <StatsDonutChart
+                title="Top interests"
+                items={overview.preferences.topInterests}
+              />
+              <StatsDonutChart
+                title="Email opt-outs"
+                items={overview.preferences.emailOptOuts}
+              />
             </div>
             <div
               className="mt-4 grid grid-cols-3 gap-4 text-sm"

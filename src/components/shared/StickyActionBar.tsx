@@ -93,7 +93,10 @@ export default function StickyActionBar({
         >
           {inner}
         </AnimatedStickyBarSlide>
-        <div className={mobileStickyBarSettleGapClassName} aria-hidden />
+        <div
+          className={mobileStickyBarSettleGapClassName}
+          aria-hidden
+        />
       </>
     );
   }

@@ -118,11 +118,26 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
       <div
         className="mb-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3"
       >
-        <StatsDonutChart title="Theme" items={preferenceCharts.themes} />
-        <StatsDonutChart title="Album card style" items={preferenceCharts.albumCardStyles} />
-        <StatsDonutChart title="Default license" items={preferenceCharts.defaultLicenses} />
-        <StatsDonutChart title="Top interests" items={preferenceCharts.topInterests} />
-        <StatsDonutChart title="Email opt-outs" items={preferenceCharts.emailOptOuts} />
+        <StatsDonutChart
+          title="Theme"
+          items={preferenceCharts.themes}
+        />
+        <StatsDonutChart
+          title="Album card style"
+          items={preferenceCharts.albumCardStyles}
+        />
+        <StatsDonutChart
+          title="Default license"
+          items={preferenceCharts.defaultLicenses}
+        />
+        <StatsDonutChart
+          title="Top interests"
+          items={preferenceCharts.topInterests}
+        />
+        <StatsDonutChart
+          title="Email opt-outs"
+          items={preferenceCharts.emailOptOuts}
+        />
       </div>
     );
   }, [preferenceCharts]);
@@ -174,7 +189,9 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
               className="bg-background-light text-left text-xs font-medium text-foreground/70"
             >
               <tr>
-                <th className="p-3">Member</th>
+                <th
+                  className="p-3"
+                >Member</th>
                 <th
                   className="p-3 cursor-pointer hover:text-primary"
                   onClick={() => handleSort('photo_count')}
@@ -193,15 +210,21 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
                 >
                   Views{sortIndicator('views_received')}
                 </th>
-                <th className="p-3">Likes</th>
+                <th
+                  className="p-3"
+                >Likes</th>
                 <th
                   className="p-3 cursor-pointer hover:text-primary"
                   onClick={() => handleSort('followers')}
                 >
                   Followers{sortIndicator('followers')}
                 </th>
-                <th className="p-3">Theme</th>
-                <th className="p-3">Newsletter</th>
+                <th
+                  className="p-3"
+                >Theme</th>
+                <th
+                  className="p-3"
+                >Newsletter</th>
                 <th
                   className="p-3 cursor-pointer hover:text-primary"
                   onClick={() => handleSort('last_logged_in')}
@@ -216,7 +239,9 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
                   key={member.id}
                   className="border-t border-border-color hover:bg-background-light/50"
                 >
-                  <td className="p-3">
+                  <td
+                    className="p-3"
+                  >
                     {member.nickname ? (
                       <Link
                         href={`/@${member.nickname}`}
@@ -235,14 +260,30 @@ export default function MemberStatsExplorer({ preferenceCharts }: MemberStatsExp
                       </span>
                     )}
                   </td>
-                  <td className="p-3">{member.photo_count}</td>
-                  <td className="p-3">{formatFileSize(member.storage_bytes)}</td>
-                  <td className="p-3">{member.views_received.toLocaleString()}</td>
-                  <td className="p-3">{member.likes_received.toLocaleString()}</td>
-                  <td className="p-3">{member.followers.toLocaleString()}</td>
-                  <td className="p-3">{member.theme ?? 'system'}</td>
-                  <td className="p-3">{member.newsletter_opt_in ? 'Yes' : 'No'}</td>
-                  <td className="p-3 text-foreground/70">
+                  <td
+                    className="p-3"
+                  >{member.photo_count}</td>
+                  <td
+                    className="p-3"
+                  >{formatFileSize(member.storage_bytes)}</td>
+                  <td
+                    className="p-3"
+                  >{member.views_received.toLocaleString()}</td>
+                  <td
+                    className="p-3"
+                  >{member.likes_received.toLocaleString()}</td>
+                  <td
+                    className="p-3"
+                  >{member.followers.toLocaleString()}</td>
+                  <td
+                    className="p-3"
+                  >{member.theme ?? 'system'}</td>
+                  <td
+                    className="p-3"
+                  >{member.newsletter_opt_in ? 'Yes' : 'No'}</td>
+                  <td
+                    className="p-3 text-foreground/70"
+                  >
                     {member.last_logged_in
                       ? new Date(member.last_logged_in).toLocaleDateString()
                       : '—'}

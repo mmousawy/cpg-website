@@ -154,7 +154,9 @@ export default function AdminDashboardPage() {
 
   return (
     <PageContainer>
-      <PageHeading title="Admin dashboard" />
+      <PageHeading
+        title="Admin dashboard"
+      />
 
       <div
         className="grid gap-3 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"

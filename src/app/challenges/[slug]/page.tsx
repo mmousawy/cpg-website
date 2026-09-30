@@ -236,23 +236,23 @@ export default async function ChallengePage({
                 <div
                   className="flex flex-wrap items-center gap-2"
                 >
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
-                >
-                  <AwardStarMiniSVG
-                    className="h-4 w-4 fill-current"
-                  />
-                  Challenge
-                </span>
-                {isEnded ? (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-black/50 bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
                   >
-                    <ClockMiniSVG
-                      className="h-4 w-4 -ml-0.5 fill-current"
+                    <AwardStarMiniSVG
+                      className="h-4 w-4 fill-current"
                     />
-                    Ended
+                    Challenge
                   </span>
+                  {isEnded ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full border border-black/50 bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                    >
+                      <ClockMiniSVG
+                        className="h-4 w-4 -ml-0.5 fill-current"
+                      />
+                      Ended
+                    </span>
                 ) : deadline && deadline !== 'Ended' ? (
                   <span
                     className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white border border-amber-500/90"
@@ -297,23 +297,23 @@ export default async function ChallengePage({
                 <div
                   className="flex flex-wrap items-center gap-2"
                 >
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge px-2 py-1 text-xs font-medium text-white"
-                >
-                  <AwardStarMiniSVG
-                    className="h-4 w-4 fill-current"
-                  />
-                  Challenge
-                </span>
-                {isEnded ? (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-2 py-1 text-xs font-medium"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge px-2 py-1 text-xs font-medium text-white"
                   >
-                    <ClockMiniSVG
-                      className="h-4 w-4 -ml-0.5 fill-current"
+                    <AwardStarMiniSVG
+                      className="h-4 w-4 fill-current"
                     />
-                    Ended
+                    Challenge
                   </span>
+                  {isEnded ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-2 py-1 text-xs font-medium"
+                    >
+                      <ClockMiniSVG
+                        className="h-4 w-4 -ml-0.5 fill-current"
+                      />
+                      Ended
+                    </span>
                 ) : deadline && deadline !== 'Ended' ? (
                   <span
                     className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-2 py-1 text-xs font-semibold text-white"

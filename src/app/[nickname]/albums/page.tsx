@@ -2,15 +2,15 @@ import AlbumGrid from '@/components/album/AlbumGrid';
 
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import {
-    ProfileBackToProfileLink,
-    ProfileHeroBanner,
+  ProfileBackToProfileLink,
+  ProfileHeroBanner,
 } from '@/components/profile/ProfileHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import {
-    getProfileByNickname,
+  getProfileByNickname,
 } from '@/lib/data/profiles';
 import { createMetadata, formatProfileDisplayName } from '@/utils/metadata';
 import { notFound } from 'next/navigation';

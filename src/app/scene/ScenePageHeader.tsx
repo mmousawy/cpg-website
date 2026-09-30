@@ -8,7 +8,9 @@ export default function ScenePageHeader() {
   return (
     <PageHeading
       title="Scene"
-      subnav={<SectionSubtabs items={eventsSectionSubtabs} />}
+      subnav={<SectionSubtabs
+        items={eventsSectionSubtabs}
+      />}
       description={
         <>
           A community-curated guide to photography events.
