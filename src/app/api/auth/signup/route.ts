@@ -6,8 +6,9 @@ import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOfMemberSignedUp';
-import { render } from '@react-email/render';
+import { isStagingDeployment } from '@/utils/siteEnvironment';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -26,6 +27,13 @@ export async function POST(request: NextRequest) {
     const { email, password, bypassToken } = await request.json();
 
     const supabase = createAdminClient();
+
+    if (isStagingDeployment() && !bypassToken) {
+      return NextResponse.json(
+        { message: 'Signup on staging requires an invite link' },
+        { status: 403 },
+      );
+    }
 
     // Validate bypass token if provided (hashed at rest)
     if (bypassToken) {

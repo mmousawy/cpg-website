@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { generateTestEmail, isStagingE2ETarget, trackTestEmail } from './test-utils';
+import { generateTestEmail, getSignupPagePath, trackTestEmail } from './test-utils';
 
-const describeSignup = isStagingE2ETarget() ? test.describe.skip : test.describe;
-
-describeSignup('Signup Flow', () => {
+test.describe('Signup Flow', () => {
   let testEmail: string;
+  let signupPath: string;
 
-  test.beforeEach(() => {
+  test.beforeEach(async ({ request }) => {
     testEmail = generateTestEmail();
+    signupPath = await getSignupPagePath(request);
   });
 
   test('should complete signup flow with email and password', async ({ page }) => {
@@ -15,7 +15,7 @@ describeSignup('Signup Flow', () => {
     trackTestEmail(testEmail);
 
     // Navigate to signup page
-    await page.goto('/signup');
+    await page.goto(signupPath);
 
     // Wait for page to load
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
@@ -49,7 +49,7 @@ describeSignup('Signup Flow', () => {
   });
 
   test('should show error when passwords do not match', async ({ page }) => {
-    await page.goto('/signup');
+    await page.goto(signupPath);
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
     const emailInput = page.locator('input[type="email"]').first();
@@ -71,7 +71,7 @@ describeSignup('Signup Flow', () => {
   });
 
   test('should show error for weak password', async ({ page }) => {
-    await page.goto('/signup');
+    await page.goto(signupPath);
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
     const emailInput = page.locator('input[type="email"]').first();
@@ -93,7 +93,7 @@ describeSignup('Signup Flow', () => {
   });
 
   test('should show error for invalid email format', async ({ page }) => {
-    await page.goto('/signup');
+    await page.goto(signupPath);
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
     const emailInput = page.locator('input[type="email"]').first();

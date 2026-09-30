@@ -30,12 +30,13 @@ Full setup: [infra/supabase-staging/README.md](../supabase-staging/README.md).
 - [ ] `NEXT_PUBLIC_SITE_URL` and `EMAIL_ASSETS_URL` = `https://staging.creativephotography.group` (rebuild after change)
 - [ ] Browser Network tab: requests go to `db-staging.creativephotography.group`, not `db.creativephotography.group`
 - [ ] Coolify **scheduled tasks disabled** on staging (or Resend test key only)
-- [ ] Staging GoTrue: signup disabled; Site URL = staging site
+- [ ] Staging GoTrue: public signup disabled (`GOTRUE_DISABLE_SIGNUP=true`); Site URL = staging site
 
 ## Smoke tests (admin login required)
 
 - [ ] Non-admin / anonymous users redirected to login on staging
-- [ ] `/signup` redirects to login on staging
+- [ ] `/signup` without `?bypass=` redirects to login
+- [ ] `/signup?bypass=` (admin generator or E2E `/api/test/signup-bypass`) can create an account
 - [ ] Login with Google / Discord as promoted admin
 - [ ] Homepage, gallery, events, challenges load (empty until seeded)
 - [ ] Upload a photo — lands in **staging** storage only
