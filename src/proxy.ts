@@ -51,6 +51,7 @@ const KNOWN_ROUTES = new Set([
 
 const stagingPublicPaths = [
   '/login',
+  '/signup',
   '/auth-callback',
   '/auth/',
   '/api/auth/',
@@ -153,8 +154,9 @@ export default async function proxy(request: NextRequest) {
   }
 
   // Staging is admin-only: no public signup or anonymous browsing.
+  // Invite links (`/signup?bypass=`) stay available for E2E and admins.
   if (stagingSite) {
-    if (matchesRoute('/signup')) {
+    if (matchesRoute('/signup') && !request.nextUrl.searchParams.get('bypass')) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('error', 'staging_no_signup');

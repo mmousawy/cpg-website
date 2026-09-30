@@ -4,7 +4,7 @@ import path from 'path';
 import {
   cleanupTestUsers,
   createTestUser,
-  isStagingE2ETarget,
+  getSignupPagePath,
   loginTestUser,
   type TestUser,
 } from './test-utils';
@@ -108,10 +108,8 @@ test.describe('Onboarding Flow', () => {
     await removeProfileImage(page, 'banner-image-section', /remove banner/i);
   });
 
-  test('should have proper navigation from signup to onboarding flow', async ({ page }) => {
-    test.skip(isStagingE2ETarget(), 'Staging blocks public signup');
-    // Navigate to signup page
-    await page.goto('/signup');
+  test('should have proper navigation from signup to onboarding flow', async ({ page, request }) => {
+    await page.goto(await getSignupPagePath(request));
 
     // Verify signup page loads
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();

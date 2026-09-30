@@ -37,7 +37,7 @@ function LoginForm() {
     if (queryError === 'staging_admin_only') {
       setError('Staging is limited to admin accounts. Sign in with a promoted admin user.');
     } else if (queryError === 'staging_no_signup') {
-      setError('Sign-up is disabled on staging. Use an existing admin account.');
+      setError('Sign-up is invite-only on staging. Use an admin account or a bypass link.');
     }
   }, [queryError]);
 

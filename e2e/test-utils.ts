@@ -6,7 +6,7 @@ const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.j
 
 const STAGING_HOST = 'staging.creativephotography.group';
 
-/** True when E2E targets the Coolify staging site (admin-gated, no public signup). */
+/** True when E2E targets the Coolify staging site (admin-gated, invite-only signup). */
 export function isStagingE2ETarget(): boolean {
   const baseUrl = process.env.BASE_URL ?? '';
   try {
@@ -93,6 +93,41 @@ export function trackTestEmail(email: string): void {
   } catch (error) {
     console.error('Failed to track test email:', error);
   }
+}
+
+export async function createSignupBypassPath(
+  apiRequest: APIRequestContext,
+): Promise<string> {
+  if (!getInternalApiSecret()) {
+    throw new Error(
+      'INTERNAL_API_SECRET or CRON_SECRET must be set to mint a staging signup invite.',
+    );
+  }
+
+  const response = await apiRequest.post('/api/test/signup-bypass', {
+    headers: withInternalApiHeaders(),
+  });
+
+  if (!response.ok()) {
+    throw new Error(
+      `Failed to create signup bypass: HTTP ${response.status()} ${await response.text()}`,
+    );
+  }
+
+  const data = await response.json() as { bypassToken?: string };
+  if (!data.bypassToken) {
+    throw new Error('Signup bypass response missing bypassToken');
+  }
+
+  return `/signup?bypass=${data.bypassToken}`;
+}
+
+/** Public `/signup` locally; staging requires a one-time invite query param. */
+export async function getSignupPagePath(
+  apiRequest: APIRequestContext,
+): Promise<string> {
+  if (!isStagingE2ETarget()) return '/signup';
+  return createSignupBypassPath(apiRequest);
 }
 
 export interface TestUser {

@@ -1,12 +1,9 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
-import { createClient } from '@/utils/supabase/server';
+import { createSignupBypassLink } from '@/lib/auth/signupBypass';
 import { createAdminClient } from '@/utils/supabase/admin';
-
-const generateToken = () => crypto.randomBytes(24).toString('hex');
-const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
+import { createClient } from '@/utils/supabase/server';
 
 // GET - List all bypass tokens
 export async function GET(request: NextRequest) {
@@ -98,29 +95,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Generate bypass token (hashed at rest)
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    const adminSupabase = createAdminClient();
-    const { error: tokenError } = await adminSupabase.from('auth_tokens').insert({
-      email: '',
-      token_hash: hashToken(token),
-      token_type: 'signup_bypass',
-      expires_at: expiresAt.toISOString(),
-    });
-
-    if (tokenError) {
-      console.error('Error storing bypass token:', tokenError);
-      return NextResponse.json(
-        { error: 'Failed to generate bypass link' },
-        { status: 500 },
-      );
-    }
-
-    // Generate the full signup URL with bypass token
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const bypassUrl = `${siteUrl}/signup?bypass=${token}`;
+    const { bypassUrl, expiresAt } = await createSignupBypassLink();
 
     return NextResponse.json(
       {
