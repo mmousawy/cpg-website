@@ -30,6 +30,9 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+# Coolify injects SOURCE_COMMIT as a build-arg; keep it at runtime so /api/health can report the SHA.
+ARG SOURCE_COMMIT
+ENV SOURCE_COMMIT=$SOURCE_COMMIT
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends curl \

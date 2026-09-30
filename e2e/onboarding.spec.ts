@@ -1,7 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import path from 'path';
 
-import { cleanupTestUsers, createTestUser, loginTestUser, type TestUser } from './test-utils';
+import {
+  cleanupTestUsers,
+  createTestUser,
+  isStagingE2ETarget,
+  loginTestUser,
+  type TestUser,
+} from './test-utils';
 
 const TEST_AVATAR_PATH = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_39kB.jpg');
 const TEST_BANNER_PATH = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
@@ -103,6 +109,7 @@ test.describe('Onboarding Flow', () => {
   });
 
   test('should have proper navigation from signup to onboarding flow', async ({ page }) => {
+    test.skip(isStagingE2ETarget(), 'Staging blocks public signup');
     // Navigate to signup page
     await page.goto('/signup');
 

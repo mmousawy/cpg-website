@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { generateTestEmail, trackTestEmail } from './test-utils';
+import { generateTestEmail, isStagingE2ETarget, trackTestEmail } from './test-utils';
 
-test.describe('Signup Flow', () => {
+const describeSignup = isStagingE2ETarget() ? test.describe.skip : test.describe;
+
+describeSignup('Signup Flow', () => {
   let testEmail: string;
 
   test.beforeEach(() => {

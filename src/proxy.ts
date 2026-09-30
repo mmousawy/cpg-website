@@ -21,7 +21,7 @@ import {
   needsProxyOwnProfile,
 } from '@/utils/proxyAuth';
 import { isStagingDeployment } from '@/utils/siteEnvironment';
-import { hasSupabaseAuthCookies, expireLegacyHostedSupabaseAuthCookies } from '@/utils/supabase/authCookie';
+import { expireLegacyHostedSupabaseAuthCookies, hasSupabaseAuthCookies } from '@/utils/supabase/authCookie';
 import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -55,6 +55,7 @@ const stagingPublicPaths = [
   '/auth/',
   '/api/auth/',
   '/api/health',
+  '/api/test',
   '/forgot-password',
   '/reset-password',
 ];

@@ -21,15 +21,13 @@ export function verifyInternalApiRequest(request: NextRequest): NextResponse | n
 }
 
 /**
- * Allow E2E test APIs in local/dev, CI servers, and Vercel preview deployments.
- * Production (`VERCEL_ENV=production`) stays blocked.
- *
- * Note: `process.env.CI` is set on the GitHub Actions runner, not on the Vercel
- * preview that serves `/api/test/*`. Preview E2E therefore needs `VERCEL_ENV`.
+ * Allow E2E test APIs in local/dev, on the GitHub Actions runner (`CI`), and on
+ * Coolify staging when `ALLOW_TEST_API=true`. Production must not set that flag.
  */
 export function isTestApiEnvironmentAllowed(): boolean {
   if (process.env.NODE_ENV !== 'production') return true;
   if (process.env.CI) return true;
+  if (process.env.ALLOW_TEST_API === 'true') return true;
   if (process.env.VERCEL_ENV === 'preview') return true;
   return false;
 }

@@ -14,5 +14,7 @@ function chunkEslint(filenames) {
 
 /** @type {import('lint-staged').Configuration} */
 export default {
-  '*.{ts,tsx}': chunkEslint,
+  'src/**/*.{ts,tsx}': chunkEslint,
+  'e2e/**/*.{ts,tsx}': chunkEslint,
 };
+
