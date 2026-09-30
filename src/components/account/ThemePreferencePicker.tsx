@@ -15,7 +15,12 @@ const THEME_OPTIONS: {
     value: 'system',
     label: 'Auto',
     icon: (
-      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg
+        className="size-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -29,7 +34,12 @@ const THEME_OPTIONS: {
     value: 'light',
     label: 'Light',
     icon: (
-      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg
+        className="size-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -43,7 +53,12 @@ const THEME_OPTIONS: {
     value: 'dark',
     label: 'Dark',
     icon: (
-      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg
+        className="size-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -57,7 +72,12 @@ const THEME_OPTIONS: {
     value: 'midnight',
     label: 'Midnight',
     icon: (
-      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg
+        className="size-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -114,8 +134,12 @@ export default function ThemePreferencePicker({
   })();
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div
+      className="flex flex-col gap-2"
+    >
+      <div
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
         {THEME_OPTIONS.map((option) => (
           <button
             key={option.value}
@@ -133,7 +157,9 @@ export default function ThemePreferencePicker({
           </button>
         ))}
       </div>
-      <p className="text-xs text-foreground/80">
+      <p
+        className="text-xs text-foreground/80"
+      >
         {themeHint}
       </p>
     </div>

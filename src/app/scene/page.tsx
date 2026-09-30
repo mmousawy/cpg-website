@@ -4,18 +4,18 @@ import ScenePageHeader from '@/app/scene/ScenePageHeader';
 import { createMetadata } from '@/utils/metadata';
 
 import {
-    getCpgPastSceneEvents,
-    getCpgUpcomingSceneEvents,
-    mergePastWithCpg,
-    mergeUpcomingWithCpg,
+  getCpgPastSceneEvents,
+  getCpgUpcomingSceneEvents,
+  mergePastWithCpg,
+  mergeUpcomingWithCpg,
 } from '@/data/cpg-scene-events';
 import { getServerNow } from '@/lib/cache/serverNow';
 import { cpgEventToSceneEvent } from '@/lib/data/cpg-events-to-scene';
 import { getPastEvents, getUpcomingEvents } from '@/lib/data/events';
 import {
-    getPastSceneEvents,
-    getSceneEventInterests,
-    getUpcomingSceneEvents,
+  getPastSceneEvents,
+  getSceneEventInterests,
+  getUpcomingSceneEvents,
 } from '@/lib/data/scene';
 import { getAmsterdamDateString } from '@/lib/events/status';
 

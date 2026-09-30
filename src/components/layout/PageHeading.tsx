@@ -37,7 +37,9 @@ export default function PageHeading({
 
   return (
     <>
-      <StickyScrollHeader className={className}>
+      <StickyScrollHeader
+        className={className}
+      >
         <div
           className={clsx(
             'flex w-full items-center gap-2',
@@ -70,7 +72,9 @@ export default function PageHeading({
               {aside}
             </div>
             {subnav ? (
-              <div className="hidden min-w-0 shrink-0 max-sm:block">{subnav}</div>
+              <div
+                className="hidden min-w-0 shrink-0 max-sm:block"
+              >{subnav}</div>
             ) : null}
           </div>
           {showMobileSearch ? (
@@ -95,14 +99,20 @@ export default function PageHeading({
           )}
         >
           {description && (
-            <div className="text-base text-foreground/80 sm:text-lg">
+            <div
+              className="text-base text-foreground/80 sm:text-lg"
+            >
               {description}
             </div>
           )}
-          {actions && <div className="shrink-0">{actions}</div>}
+          {actions && <div
+            className="shrink-0"
+          >{actions}</div>}
         </div>
       ) : (
-        <div className={clsx('mb-8', className)} />
+        <div
+          className={clsx('mb-8', className)}
+        />
       )}
     </>
   );

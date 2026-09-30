@@ -43,7 +43,9 @@ const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 export default function PhotosPaginated(props: PhotosPaginatedProps) {
   return (
     <Suspense
-      fallback={<PhotosPaginatedFallback {...props} />}
+      fallback={<PhotosPaginatedFallback
+        {...props}
+      />}
     >
       <PhotosPaginatedInner
         {...props}

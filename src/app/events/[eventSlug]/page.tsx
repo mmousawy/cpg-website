@@ -514,7 +514,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 event={event}
               />
             )}
-            
+
             <ShareButton
               url={eventUrl}
               title={eventShareTitle}
@@ -561,7 +561,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       />}
 
       {/* Comments Section */}
-      <div className="relative">
+      <div
+        className="relative"
+      >
         <PageContainer
           variant="alt"
           className="border-t border-t-border-color"
@@ -570,7 +572,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             aria-hidden
             className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-50 bg-linear-to-b from-transparent to-background md:hidden"
           />
-          <div className="relative z-10">
+          <div
+            className="relative z-10"
+          >
             <EventComments
               eventId={String(event.id)}
             />

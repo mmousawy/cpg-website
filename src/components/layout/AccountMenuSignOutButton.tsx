@@ -46,9 +46,22 @@ export default function AccountMenuSignOutButton({
         }
       }}
     >
-      <input type="hidden" name="redirectTo" value={pathname} />
-      <button type="submit" className={className}>
-        <svg className="mr-3 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+      <input
+        type="hidden"
+        name="redirectTo"
+        value={pathname}
+      />
+      <button
+        type="submit"
+        className={className}
+      >
+        <svg
+          className="mr-3 h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

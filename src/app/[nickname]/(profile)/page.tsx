@@ -17,11 +17,11 @@ import { getUserPublicAlbums } from '@/lib/data/albums';
 import { getProfileFollowCounts } from '@/lib/data/follows';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import {
-    getAllProfileNicknames,
-    getProfileByNickname,
-    getProfileStats,
-    getUserPublicPhotoCount,
-    getUserPublicPhotos,
+  getAllProfileNicknames,
+  getProfileByNickname,
+  getProfileStats,
+  getUserPublicPhotoCount,
+  getUserPublicPhotos,
 } from '@/lib/data/profiles';
 import { ensureStaticParams } from '@/lib/staticParams';
 import { createMetadata, formatProfileDisplayName, getAbsoluteUrl } from '@/utils/metadata';

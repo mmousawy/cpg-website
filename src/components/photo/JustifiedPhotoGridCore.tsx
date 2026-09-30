@@ -1,18 +1,18 @@
 'use client';
 
 import { useHasHover } from '@/hooks/useHasHover';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
 import { GRID_THUMBNAIL_QUALITY, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
-import HoverPrefetchLink from '../shared/HoverPrefetchLink';
+import ImageSVG from 'public/icons/image.svg';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import Avatar from '../auth/Avatar';
 import BlurImage from '../shared/BlurImage';
 import CardLikes from '../shared/CardLikes';
 import EmptyState from '../shared/EmptyState';
+import HoverPrefetchLink from '../shared/HoverPrefetchLink';
 import type { JustifiedPhotoGridCoreProps } from './justifiedPhotoGridTypes';
-import ImageSVG from 'public/icons/image.svg';
 
 const MOBILE_WIDTH = 400;
 const TABLET_WIDTH = 600;
@@ -134,17 +134,6 @@ export default function JustifiedPhotoGridCore({
     gap: 8,
   });
 
-  if (photos.length === 0) {
-    return (
-      <EmptyState
-        icon={<ImageSVG
-          className="size-10 inline-block"
-        />}
-        title="No photos yet."
-      />
-    );
-  }
-
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));
   const hasHover = useHasHover();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -187,6 +176,17 @@ export default function JustifiedPhotoGridCore({
     observer.observe(el);
     return () => observer.disconnect();
   }, [measureBreakpoint]);
+
+  if (photos.length === 0) {
+    return (
+      <EmptyState
+        icon={<ImageSVG
+          className="size-10 inline-block"
+        />}
+        title="No photos yet."
+      />
+    );
+  }
 
   const sharedPhotoRowsProps = {
     photoMap,

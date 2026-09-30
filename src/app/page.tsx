@@ -40,7 +40,9 @@ export default function Home() {
   return (
     <>
       <HomeHeroSection />
-      <Suspense fallback={<HomeBelowFoldSkeleton />}>
+      <Suspense
+        fallback={<HomeBelowFoldSkeleton />}
+      >
         <HomePageWithE2EFlag />
       </Suspense>
     </>
@@ -49,7 +51,9 @@ export default function Home() {
 
 async function HomePageWithE2EFlag() {
   const includeTestContent = await getIncludeTestContent();
-  return <CachedHomeBelowFold includeTestContent={includeTestContent} />;
+  return <CachedHomeBelowFold
+    includeTestContent={includeTestContent}
+  />;
 }
 
 async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent: boolean }) {
@@ -72,53 +76,53 @@ async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent:
     <div
       className="grid min-w-0 gap-10 md:gap-12 pt-10 pb-0 sm:pt-12 *:min-w-0 sm:pb-12"
     >
-        <HomeExploreSection
-          events={events}
-          attendeesByEvent={attendeesByEvent}
-          challenges={challenges}
-          serverNow={serverNow}
-        />
-        <HomeAlbumsSection
-          albums={albums}
-        />
-        <HomeRecentPhotosSection
-          photos={photos}
-        />
+      <HomeExploreSection
+        events={events}
+        attendeesByEvent={attendeesByEvent}
+        challenges={challenges}
+        serverNow={serverNow}
+      />
+      <HomeAlbumsSection
+        albums={albums}
+      />
+      <HomeRecentPhotosSection
+        photos={photos}
+      />
 
-        <PageContainer
-          className="py-0!"
-        >
-          <Container>
-            <h2
-              className="text-2xl font-bold mb-2 font-heading"
-            >
-              What&apos;s Creative Photography Group?
-            </h2>
+      <PageContainer
+        className="py-0!"
+      >
+        <Container>
+          <h2
+            className="text-2xl font-bold mb-2 font-heading"
+          >
+            What&apos;s Creative Photography Group?
+          </h2>
 
-            <p
-              className="max-w-[50ch] text-foreground/90 leading-relaxed mb-4"
-            >
-              We are a community of photographers who love to create and share our work with others.
-              Our goal is to inspire and support each other in our photographic journeys.
-              We welcome photographers of all skill levels and backgrounds to join us!
-            </p>
-            <p
-              className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6"
-            >
-              Join our community for monthly meetups, photo challenges, skill-sharing talks, and more.
-              Whether you&apos;re just starting out or have been shooting for years, you&apos;ll find a welcoming space here.
-            </p>
+          <p
+            className="max-w-[50ch] text-foreground/90 leading-relaxed mb-4"
+          >
+            We are a community of photographers who love to create and share our work with others.
+            Our goal is to inspire and support each other in our photographic journeys.
+            We welcome photographers of all skill levels and backgrounds to join us!
+          </p>
+          <p
+            className="max-w-[50ch] text-foreground/90 leading-relaxed mb-6"
+          >
+            Join our community for monthly meetups, photo challenges, skill-sharing talks, and more.
+            Whether you&apos;re just starting out or have been shooting for years, you&apos;ll find a welcoming space here.
+          </p>
 
-            <div>
-              <h3
-                className="text-lg font-semibold mb-4"
-              >
-                Connect with us
-              </h3>
-              <div
-                className="flex flex-wrap gap-3"
-              >
-                {socialLinks.map((social) => {
+          <div>
+            <h3
+              className="text-lg font-semibold mb-4"
+            >
+              Connect with us
+            </h3>
+            <div
+              className="flex flex-wrap gap-3"
+            >
+              {socialLinks.map((social) => {
                   const Icon = socialIconMap[social.name];
                   return (
                     <a
@@ -141,25 +145,25 @@ async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent:
                     </a>
                   );
                 })}
-              </div>
             </div>
-          </Container>
-        </PageContainer>
+          </div>
+        </Container>
+      </PageContainer>
 
-        <SignUpCTA
-          variant="banner"
-        />
+      <SignUpCTA
+        variant="banner"
+      />
 
-        <PageContainer
-          className="py-0!"
+      <PageContainer
+        className="py-0!"
+      >
+        <h2
+          className="text-2xl text-center font-bold mb-6 px-2 sm:px-4 font-heading"
         >
-          <h2
-            className="text-2xl text-center font-bold mb-6 px-2 sm:px-4 font-heading"
-          >
-            What keeps us clicking
-          </h2>
-          <ActivitiesSliderWrapper />
-        </PageContainer>
+          What keeps us clicking
+        </h2>
+        <ActivitiesSliderWrapper />
+      </PageContainer>
 
       <HomeMembersSection
         organizers={organizers}

@@ -26,16 +26,24 @@ function HelpStep({
   children: ReactNode;
 }) {
   return (
-    <div className="flex gap-3">
+    <div
+      className="flex gap-3"
+    >
       <Icon
         className="mt-0.5 size-5 shrink-0"
         aria-hidden
       />
-      <div className="min-w-0">
-        <p className="mb-0.5 font-medium text-foreground">
+      <div
+        className="min-w-0"
+      >
+        <p
+          className="mb-0.5 font-medium text-foreground"
+        >
           {title}
         </p>
-        <div className="space-y-1.5">
+        <div
+          className="space-y-1.5"
+        >
           {children}
         </div>
       </div>
@@ -91,36 +99,58 @@ export const gettingStartedFAQ: FAQSection = {
       title: 'Setting up your profile',
       content: (
         <>
-          <p className="mb-4">
+          <p
+            className="mb-4"
+          >
             A few screens, then you&apos;re in. Skip anything marked optional — you can fill it in later from Account.
           </p>
-          <div className="space-y-4">
-            <HelpStep icon={AlternateEmailSVG} title="Your nickname">
+          <div
+            className="space-y-4"
+          >
+            <HelpStep
+              icon={AlternateEmailSVG}
+              title="Your nickname"
+            >
               <p>
                 This is the unique handle in your profile URL, like @janedoe. Lowercase letters, numbers, and hyphens; 3–30 characters. You can change it later from Account, with an email confirm, once every 60 days.
               </p>
             </HelpStep>
-            <HelpStep icon={PersonSVG} title="About you">
+            <HelpStep
+              icon={PersonSVG}
+              title="About you"
+            >
               <p>
                 Screen name is what people see on your profile (at least 2 characters)—it doesn&apos;t have to be your real name. Bio and interests are optional. Interests (up to 10) help others find you.
               </p>
             </HelpStep>
-            <HelpStep icon={PaletteSVG} title="Theme">
+            <HelpStep
+              icon={PaletteSVG}
+              title="Theme"
+            >
               <p>
                 Color scheme: Auto follows your device; Light, Dark, and Midnight stay put. Album cards can be Large (details under the photo) or Compact. Both live in Account if you change your mind.
               </p>
             </HelpStep>
-            <HelpStep icon={ImageSVG} title="Profile images">
+            <HelpStep
+              icon={ImageSVG}
+              title="Profile images"
+            >
               <p>
                 A profile picture and a banner, if you have them. You can skip this and add them later.
               </p>
             </HelpStep>
-            <HelpStep icon={MailSVG} title="Email preferences">
+            <HelpStep
+              icon={MailSVG}
+              title="Email preferences"
+            >
               <p>
                 Tick the kinds of email you actually want — events, comments, challenges, and so on. Unchecked stays off. You can flip these anytime in Account → Preferences.
               </p>
             </HelpStep>
-            <HelpStep icon={GavelSVG} title="One last step">
+            <HelpStep
+              icon={GavelSVG}
+              title="One last step"
+            >
               <p>
                 Agree to the Terms and confirm you&apos;ve read the Privacy Policy. You keep copyright on your photos. Then hit Join the group.
               </p>

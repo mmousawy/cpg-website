@@ -151,7 +151,9 @@ export default function StatsDonutChart({ title, items, className }: StatsDonutC
 
   if (!items.length) {
     return (
-      <div className={className}>
+      <div
+        className={className}
+      >
         <h3
           className="mb-3 text-base font-semibold font-heading text-foreground"
         >
@@ -167,7 +169,9 @@ export default function StatsDonutChart({ title, items, className }: StatsDonutC
   }
 
   return (
-    <div className={className}>
+    <div
+      className={className}
+    >
       <h3
         className="mb-3 text-base font-semibold font-heading text-foreground"
       >
@@ -176,7 +180,10 @@ export default function StatsDonutChart({ title, items, className }: StatsDonutC
       <div
         className="mx-auto h-44 w-full rounded-lg bg-background p-3"
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
           <PieChart>
             <Pie
               data={items}

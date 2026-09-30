@@ -7,7 +7,9 @@ export default function ChallengesPageHeader() {
   return (
     <PageHeading
       title="Photo challenges"
-      subnav={<SectionSubtabs items={gallerySectionSubtabs} />}
+      subnav={<SectionSubtabs
+        items={gallerySectionSubtabs}
+      />}
       description="Join our themed challenges and showcase your photography skills"
       aside={
         <HelpLink

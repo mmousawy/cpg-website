@@ -584,7 +584,9 @@ function PhotoFilmstripShellInner({
 export default function PhotoFilmstripShell(props: PhotoFilmstripShellProps) {
   return (
     <PhotoNavigationProvider>
-      <PhotoFilmstripShellInner {...props} />
+      <PhotoFilmstripShellInner
+        {...props}
+      />
     </PhotoNavigationProvider>
   );
 }

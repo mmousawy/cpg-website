@@ -58,7 +58,7 @@ jobs:
 
           for i in $(seq 1 90); do
             BODY=$(mktemp)
-            HTTP_CODE=$(curl -sS -o "$BODY" -w "%{http_code}" "${STAGING_SITE_URL}/api/health" || echo "000")
+            HTTP_CODE=$(curl -sS -A "CPG-CI/1.0" -o "$BODY" -w "%{http_code}" "${STAGING_SITE_URL}/api/health" || echo "000")
             COMMIT=$(jq -r '.commit // empty' "$BODY" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
             rm -f "$BODY"
 

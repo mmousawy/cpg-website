@@ -26,10 +26,14 @@ export default function OnboardingEmailPreferencesSection({
 }: OnboardingEmailPreferencesSectionProps) {
   return (
     <div>
-      <OnboardingSectionTitle icon={MailSVG}>
+      <OnboardingSectionTitle
+        icon={MailSVG}
+      >
         Email preferences
       </OnboardingSectionTitle>
-      <Container className="onboarding-rise-in onboarding-rise-in-delay-1">
+      <Container
+        className="onboarding-rise-in onboarding-rise-in-delay-1"
+      >
         <p
           className="text-xs text-foreground/80 mb-4"
         >

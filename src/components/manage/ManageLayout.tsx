@@ -129,7 +129,9 @@ export default function ManageLayout({
                     >
                       {displayPhotoCount}
                     </div>
-                    <Suspense fallback={null}>
+                    <Suspense
+                      fallback={null}
+                    >
                       <ManageTabActiveMarker
                         href="/account/photos"
                       />
@@ -153,7 +155,9 @@ export default function ManageLayout({
                     >
                       {displayAlbumCount}
                     </div>
-                    <Suspense fallback={null}>
+                    <Suspense
+                      fallback={null}
+                    >
                       <ManageTabActiveMarker
                         href="/account/albums"
                         prefix

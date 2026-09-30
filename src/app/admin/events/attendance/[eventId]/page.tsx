@@ -209,62 +209,62 @@ export default function AdminEventAttendancePage() {
           >
             {event.title}
           </h2>
-            <div
-              className="flex flex-wrap gap-4 text-sm text-foreground/80"
+          <div
+            className="flex flex-wrap gap-4 text-sm text-foreground/80"
+          >
+            <span
+              className="flex items-center gap-1"
             >
-              <span
-                className="flex items-center gap-1"
-              >
-                <CalendarSVG
-                  className="h-4 w-4 fill-foreground/70"
-                />
-                {event.date ? (() => { const d = new Date(event.date); return d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })() : 'Date TBD'}
-              </span>
-              <span
-                className="flex items-center gap-1"
-              >
-                <TimeSVG
-                  className="h-4 w-4 fill-foreground/70"
-                />
-                {event.time?.substring(0, 5)}
-              </span>
-              <span
-                className="flex items-center gap-1"
-              >
-                <LocationSVG
-                  className="h-4 w-4 fill-foreground/70"
-                />
-                {event.location}
-              </span>
-            </div>
-            <div
-              className="mt-4 flex gap-4 text-sm"
+              <CalendarSVG
+                className="h-4 w-4 fill-foreground/70"
+              />
+              {event.date ? (() => { const d = new Date(event.date); return d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }); })() : 'Date TBD'}
+            </span>
+            <span
+              className="flex items-center gap-1"
             >
-              <span
-                className="font-medium text-foreground"
-              >
-                {confirmedRSVPs.length}
-                {' '}
-                confirmed
-              </span>
-              <span
-                className="font-medium text-green-600"
-              >
-                {attendedRSVPs.length}
-                {' '}
-                attended
-              </span>
-              {noShowRSVPs.length > 0 && (
-                <span
-                  className="font-medium text-red-500"
-                >
-                  {noShowRSVPs.length}
-                  {' '}
-                  no-show
-                </span>
-              )}
-            </div>
+              <TimeSVG
+                className="h-4 w-4 fill-foreground/70"
+              />
+              {event.time?.substring(0, 5)}
+            </span>
+            <span
+              className="flex items-center gap-1"
+            >
+              <LocationSVG
+                className="h-4 w-4 fill-foreground/70"
+              />
+              {event.location}
+            </span>
           </div>
+          <div
+            className="mt-4 flex gap-4 text-sm"
+          >
+            <span
+              className="font-medium text-foreground"
+            >
+              {confirmedRSVPs.length}
+              {' '}
+              confirmed
+            </span>
+            <span
+              className="font-medium text-green-600"
+            >
+              {attendedRSVPs.length}
+              {' '}
+              attended
+            </span>
+            {noShowRSVPs.length > 0 && (
+              <span
+                className="font-medium text-red-500"
+              >
+                {noShowRSVPs.length}
+                {' '}
+                no-show
+              </span>
+              )}
+          </div>
+        </div>
       )}
 
       <div>

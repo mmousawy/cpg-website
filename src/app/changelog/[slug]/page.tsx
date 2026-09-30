@@ -159,7 +159,9 @@ export default async function ChangelogDetailPage({ params }: ChangelogDetailPag
       <PageHeading
         title={summary || `Release ${slug}`}
         description={
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex flex-wrap items-center gap-2"
+          >
             {version && (
               <span
                 className="rounded-full border border-border-color bg-background px-3 py-1 text-xs font-medium text-foreground/80"

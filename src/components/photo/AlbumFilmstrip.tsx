@@ -238,7 +238,7 @@ export default function AlbumFilmstrip({
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-2 py-2 px-1 min-w-0"
           >
-          {photos.map((photo, index) => {
+            {photos.map((photo, index) => {
             const isSelected = photo.shortId === selectedShortId;
             const isPending = photo.shortId === pendingShortId && pendingShortId !== currentPhotoShortId;
             const thumbnailUrl = getSquareThumbnailUrl(photo.url, 48, 75) || photo.url;

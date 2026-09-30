@@ -146,7 +146,11 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
 
   return (
     <>
-      <div ref={flowRef} className="max-sm:h-0" aria-hidden />
+      <div
+        ref={flowRef}
+        className="max-sm:h-0"
+        aria-hidden
+      />
       <div
         ref={stickyRef}
         className={clsx(

@@ -18,7 +18,9 @@ export function PhotoNavigationProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PhotoNavigationContext.Provider value={value}>
+    <PhotoNavigationContext.Provider
+      value={value}
+    >
       {children}
     </PhotoNavigationContext.Provider>
   );

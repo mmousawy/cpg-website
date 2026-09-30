@@ -8,7 +8,9 @@ export default function GalleryPageHeader() {
     <PageHeading
       className="mx-auto w-full max-w-screen-md"
       title="Photo gallery"
-      subnav={<SectionSubtabs items={gallerySectionSubtabs} />}
+      subnav={<SectionSubtabs
+        items={gallerySectionSubtabs}
+      />}
       description="Explore beautiful photos from the community"
       aside={
         <HelpLink

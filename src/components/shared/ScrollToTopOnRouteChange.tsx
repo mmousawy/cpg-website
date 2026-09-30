@@ -32,7 +32,9 @@ function ScrollToTopOnRouteChangeInner() {
 
 export default function ScrollToTopOnRouteChange() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={null}
+    >
       <ScrollToTopOnRouteChangeInner />
     </Suspense>
   );

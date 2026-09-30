@@ -56,7 +56,9 @@ async function CancelContent({
 
   return (
     <PageContainer>
-      <PageHeading title="Cancel your RSVP" />
+      <PageHeading
+        title="Cancel your RSVP"
+      />
       <Container>
         {(!event || !rsvp || !rsvp.email) && (
           <ErrorMessage>

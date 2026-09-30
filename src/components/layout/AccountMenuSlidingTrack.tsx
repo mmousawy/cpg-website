@@ -141,7 +141,9 @@ export default function AccountMenuSlidingTrack({
           aria-hidden={view !== 'root'}
           inert={view !== 'root'}
         >
-          <div ref={rootInnerRef}>
+          <div
+            ref={rootInnerRef}
+          >
             {root}
           </div>
         </div>
@@ -150,7 +152,9 @@ export default function AccountMenuSlidingTrack({
           aria-hidden={view !== 'site'}
           inert={view !== 'site'}
         >
-          <div ref={siteInnerRef}>
+          <div
+            ref={siteInnerRef}
+          >
             {site}
           </div>
         </div>

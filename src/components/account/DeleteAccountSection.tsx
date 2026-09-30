@@ -169,18 +169,31 @@ export default function DeleteAccountSection({ stats }: DeleteAccountSectionProp
       >
         Danger zone
       </h2>
-      <Container className="space-y-6">
-        <div className="space-y-3">
-          <p className="text-sm text-foreground/80">
+      <Container
+        className="space-y-6"
+      >
+        <div
+          className="space-y-3"
+        >
+          <p
+            className="text-sm text-foreground/80"
+          >
             Sign out of your account on this device. You can sign back in at any time.
           </p>
           <SignOutButton />
         </div>
 
-        <div className="border-t border-border-color" role="presentation" />
+        <div
+          className="border-t border-border-color"
+          role="presentation"
+        />
 
-        <div className="space-y-3">
-          <p className="text-sm text-foreground/80">
+        <div
+          className="space-y-3"
+        >
+          <p
+            className="text-sm text-foreground/80"
+          >
             Permanently delete your account and all associated content. This action schedules your account for deletion - your content will be permanently removed within 30 days.
           </p>
           <Button
