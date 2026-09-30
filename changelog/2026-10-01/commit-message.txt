@@ -1,0 +1,42 @@
+ci: run E2E on Coolify staging and drop Vercel from GitHub Actions
+
+CI / Coolify:
+- Lint, typecheck, and Vitest run on PRs to staging and main
+- Push to staging (and staging → main PRs) wait until /api/health reports that git SHA, then run Playwright against staging.creativephotography.group
+- Release Please still versions main; a GitHub release triggers the Coolify production webhook only (no vercel promote)
+- Staging and production deploys share the vps-docker-build concurrency group so the VPS does not build two images at once
+
+App (staging E2E):
+- /api/health returns Coolify SOURCE_COMMIT so CI does not need a Coolify API token
+- ALLOW_TEST_API unlocks /api/test/* on the staging container; /api/test is not redirected to login
+- E2E skips public signup on staging; test users are created as admin so the admin-only gate lets them through
+
+Tooling:
+- Vitest ignores .next/standalone so Next's own Jest files are not executed
+- lint-staged only lints src and e2e
+- typescript package is the 6.x API for ESLint; tsc stays TypeScript 7 via @typescript/native
+
+Files changed (21):
+
+Modified (21):
+- .env.example
+- .github/workflows/ci.yml
+- .github/workflows/release-please.yml
+- .lintstagedrc.mjs
+- Dockerfile
+- README.md
+- docs/deployment/coolify.md
+- e2e/login.spec.ts
+- e2e/onboarding.spec.ts
+- e2e/signup.spec.ts
+- e2e/test-utils.ts
+- infra/coolify/production-checklist.md
+- infra/coolify/production-cutover.md
+- infra/imgproxy-color-profiles.md
+- package.json
+- pnpm-lock.yaml
+- src/app/api/health/route.ts
+- src/lib/auth/verifyInternalApi.test.ts
+- src/lib/auth/verifyInternalApi.ts
+- src/proxy.ts
+- vitest.config.ts
