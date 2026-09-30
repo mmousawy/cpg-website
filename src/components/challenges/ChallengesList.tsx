@@ -1,5 +1,5 @@
-import type { ChallengeWithStats } from '@/types/challenges';
 import EmptyState from '@/components/shared/EmptyState';
+import type { ChallengeWithStats } from '@/types/challenges';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import ChallengeCard from './ChallengeCard';
 type ChallengesListProps = {

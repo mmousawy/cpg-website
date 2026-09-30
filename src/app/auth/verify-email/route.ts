@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
-import { createAdminClient } from '@/utils/supabase/admin';
 import WelcomeTemplate from '@/emails/auth/welcome';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       to: userEmail,
       replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
       subject: 'Welcome to Creative Photography Group! 📸',
-      html: await render(WelcomeTemplate({ fullName })),
+      html: await render(WelcomeTemplate({ fullName, recipientEmail: userEmail })),
     });
 
     if (emailResult.error) {

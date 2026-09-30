@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
 import { CommentNotificationEmail, getCommentNotificationSubject } from '@/emails/comment-notification';
 import { getEmailSiteUrl, toAbsoluteEmailUrl } from '@/emails/utils/siteUrl';
@@ -189,6 +189,7 @@ export async function flushPendingNotificationEmails(): Promise<FlushPendingNoti
         html: await render(
           CommentNotificationEmail({
             ownerName,
+            recipientEmail: profile.email,
             items,
             optOutLink,
           }),

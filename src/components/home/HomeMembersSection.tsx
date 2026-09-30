@@ -66,14 +66,14 @@ export function HomeMembersSection({ organizers, recentMembers }: HomeMembersSec
                     </p>
                     {organizer.nickname && (
                       <p
-                        className="text-sm opacity-80 group-hover:text-primary transition-colors"
+                        className="text-sm opacity-70 group-hover:text-primary transition-colors"
                       >
                         {`@${organizer.nickname}`}
                       </p>
                     )}
                     {organizer.bio && (
                       <p
-                        className="mt-4 text-sm text-foreground/80 line-clamp-2"
+                        className="mt-2 text-sm text-foreground/90 line-clamp-2"
                       >
                         {organizer.bio}
                       </p>

@@ -1,11 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/utils/supabase/client';
 import type {
   Challenge,
   ChallengePhoto,
   ChallengeWithStats,
-  SubmissionWithDetails,
 } from '@/types/challenges';
+import { supabase } from '@/utils/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Fetch active challenges (accepting submissions)
@@ -26,34 +25,86 @@ async function fetchActiveChallenges(): Promise<ChallengeWithStats[]> {
 
   const challenges = (data || []) as Challenge[];
 
-  // Get submission counts
   const challengeIds = challenges.map((c) => c.id);
   if (challengeIds.length === 0) return [];
 
   const { data: submissions } = await supabase
     .from('challenge_submissions')
-    .select('challenge_id, status')
+    .select('challenge_id, status, user_id')
     .in('challenge_id', challengeIds);
 
-  const countsMap = (submissions || []).reduce(
-    (acc, sub) => {
-      if (!acc[sub.challenge_id]) {
-        acc[sub.challenge_id] = { total: 0, accepted: 0, pending: 0 };
-      }
-      acc[sub.challenge_id].total++;
-      if (sub.status === 'accepted') acc[sub.challenge_id].accepted++;
-      if (sub.status === 'pending') acc[sub.challenge_id].pending++;
-      return acc;
-    },
-    {} as Record<string, { total: number; accepted: number; pending: number }>,
-  );
+  const statsMap: Record<string, {
+    total: number;
+    accepted: number;
+    pending: number;
+    acceptedUserIds: Set<string>;
+  }> = {};
 
-  return challenges.map((challenge) => ({
-    ...challenge,
-    submission_count: countsMap[challenge.id]?.total || 0,
-    accepted_count: countsMap[challenge.id]?.accepted || 0,
-    pending_count: countsMap[challenge.id]?.pending || 0,
-  }));
+  for (const sub of submissions || []) {
+    if (!statsMap[sub.challenge_id]) {
+      statsMap[sub.challenge_id] = {
+        total: 0,
+        accepted: 0,
+        pending: 0,
+        acceptedUserIds: new Set(),
+      };
+    }
+    statsMap[sub.challenge_id].total++;
+    if (sub.status === 'accepted') {
+      statsMap[sub.challenge_id].accepted++;
+      statsMap[sub.challenge_id].acceptedUserIds.add(sub.user_id);
+    }
+    if (sub.status === 'pending') statsMap[sub.challenge_id].pending++;
+  }
+
+  const allUserIds = new Set<string>();
+  for (const stats of Object.values(statsMap)) {
+    for (const id of stats.acceptedUserIds) {
+      allUserIds.add(id);
+    }
+  }
+
+  const profilesMap = new Map<string, {
+    id: string;
+    nickname: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+  }>();
+
+  if (allUserIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, nickname, full_name, avatar_url, suspended_at, deletion_scheduled_at')
+      .in('id', Array.from(allUserIds));
+
+    for (const profile of profiles || []) {
+      if (!profile.suspended_at && !profile.deletion_scheduled_at) {
+        profilesMap.set(profile.id, {
+          id: profile.id,
+          nickname: profile.nickname,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+        });
+      }
+    }
+  }
+
+  return challenges.map((challenge) => {
+    const stats = statsMap[challenge.id];
+    const contributors = stats
+      ? Array.from(stats.acceptedUserIds)
+        .map((id) => profilesMap.get(id))
+        .filter((p): p is NonNullable<typeof p> => !!p)
+      : [];
+
+    return {
+      ...challenge,
+      submission_count: stats?.total || 0,
+      accepted_count: stats?.accepted || 0,
+      pending_count: stats?.pending || 0,
+      contributors,
+    };
+  });
 }
 
 /**

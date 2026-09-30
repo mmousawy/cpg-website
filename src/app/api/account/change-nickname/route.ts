@@ -1,7 +1,7 @@
+import { render } from '@react-email/render';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { render } from '@react-email/render';
 
 import ChangeNicknameTemplate from '@/emails/auth/change-nickname';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
         html: await render(
           ChangeNicknameTemplate({
             fullName: profile.full_name || undefined,
+            recipientEmail: currentEmail,
             currentNickname,
             newNickname,
             verifyLink,

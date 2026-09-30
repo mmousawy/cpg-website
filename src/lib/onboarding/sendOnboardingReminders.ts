@@ -1,9 +1,9 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
-import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { OnboardingReminderEmail } from '@/emails/onboarding-reminder';
 import { getEmailSiteUrl } from '@/emails/utils/siteUrl';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { adminSupabase } from '@/utils/supabase/admin';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -60,6 +60,7 @@ export async function sendOnboardingReminders(): Promise<OnboardingReminderResul
       const html = await render(
         OnboardingReminderEmail({
           fullName: profile.full_name,
+          recipientEmail: email,
           onboardingLink,
           contactLink,
         }),

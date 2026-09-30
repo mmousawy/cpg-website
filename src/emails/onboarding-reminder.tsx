@@ -1,29 +1,22 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Link, Section } from '@react-email/components';
 
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
+import { emailAccentLinkStyle } from './components/styles';
 import { getEmailSiteUrl } from './utils/siteUrl';
 
 export const OnboardingReminderEmail = ({
   preview,
   fullName,
+  recipientEmail,
   onboardingLink,
   contactLink,
 }: {
   preview?: boolean;
   fullName?: string | null;
+  recipientEmail?: string;
   onboardingLink?: string;
   contactLink?: string;
 }) => {
@@ -31,6 +24,7 @@ export const OnboardingReminderEmail = ({
 
   if (preview) {
     fullName = 'Jane';
+    recipientEmail = 'jane.doe@example.com';
     onboardingLink = `${siteUrl}/onboarding`;
     contactLink = `${siteUrl}/contact`;
   }
@@ -42,68 +36,46 @@ export const OnboardingReminderEmail = ({
   const resolvedContactLink = contactLink || `${siteUrl}/contact`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={greetingName || undefined}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        Finish setting up your profile
+      </EmailHeading>
+
+      <EmailText>
+        {greeting}
+      </EmailText>
+      <br />
+      <EmailText>
+        We&apos;ve noticed you haven&apos;t finished setting up your profile. You can still do so by clicking the button below.
+      </EmailText>
+      <EmailText>
+        If you have any questions, don&apos;t hesitate to
+        {' '}
+        <Link
+          href={resolvedContactLink}
+          style={{ ...emailAccentLinkStyle, textDecoration: 'none', fontWeight: 500 }}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          reach out
+        </Link>
+        .
+      </EmailText>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              Finish setting up your profile
-            </Heading>
-
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              {greeting}
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              We&apos;ve noticed you haven&apos;t finished setting up your profile. You can still do so by clicking the button below.
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              If you have any questions, don&apos;t hesitate to
-              {' '}
-              <Link
-                href={resolvedContactLink}
-                className="text-[#38785f] no-underline font-medium"
-              >
-                reach out
-              </Link>
-              .
-            </Text>
-
-            <Section
-              className="my-[20px]"
-            >
-              <Button
-                className="rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-                href={resolvedOnboardingLink}
-              >
-                Finish setting up your profile
-              </Button>
-            </Section>
-
-            <Footer
-              fullName={greetingName || undefined}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={resolvedOnboardingLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          Finish setting up your profile
+        </EmailButton>
+      </Section>
+    </EmailLayout>
   );
 };
 

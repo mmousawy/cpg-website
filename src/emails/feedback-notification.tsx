@@ -1,23 +1,25 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Link, Section, Text } from '@react-email/components';
 
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
 import { FEEDBACK_SUBJECTS } from '@/types/feedback';
+
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
+import {
+  emailAccentLinkStyle,
+  emailCalloutLabelStyle,
+  emailCalloutPlainStyle,
+  emailCalloutStyle,
+  emailCalloutTitleStyle,
+  emailMutedTextStyle,
+  emailTextStyle,
+} from './components/styles';
 
 export const FeedbackNotificationEmail = ({
   preview,
   adminName,
+  recipientEmail,
   submitterName,
   submitterEmail,
   subject,
@@ -27,6 +29,7 @@ export const FeedbackNotificationEmail = ({
 }: {
   preview?: boolean;
   adminName: string;
+  recipientEmail?: string;
   submitterName: string;
   submitterEmail: string | null;
   subject: string;
@@ -36,6 +39,7 @@ export const FeedbackNotificationEmail = ({
 }) => {
   if (preview) {
     adminName = 'Admin User';
+    recipientEmail = 'admin@example.com';
     submitterName = 'John Smith';
     submitterEmail = 'john@example.com';
     subject = 'general';
@@ -47,131 +51,107 @@ export const FeedbackNotificationEmail = ({
   const previewText = `New feedback from ${submitterName}: ${subjectLabel}`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={adminName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        New feedback received
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {adminName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        New feedback has been submitted and is waiting for review.
+      </EmailText>
+
+      <Section
+        style={emailCalloutStyle}
+      >
+        <Text
+          style={emailCalloutLabelStyle}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
+          From
+        </Text>
+        <Text
+          style={emailCalloutTitleStyle}
+        >
+          {submitterName}
+        </Text>
+        {submitterEmail && (
+          <Text
+            style={{ ...emailMutedTextStyle, lineHeight: '16px' }}
           >
-            <EmailHeader />
+            {submitterEmail}
+          </Text>
+        )}
+      </Section>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              New feedback received
-            </Heading>
-
+      <Section
+        style={emailCalloutPlainStyle}
+      >
+        <Text
+          style={emailCalloutLabelStyle}
+        >
+          Subject
+        </Text>
+        <Text
+          style={{ ...emailCalloutTitleStyle, marginBottom: '16px' }}
+        >
+          {subjectLabel}
+        </Text>
+        <Text
+          style={emailCalloutLabelStyle}
+        >
+          Message
+        </Text>
+        <Text
+          style={{ ...emailTextStyle, lineHeight: '20px', whiteSpace: 'pre-wrap' }}
+        >
+          {message}
+        </Text>
+        {screenshots && screenshots.length > 0 && (
+          <div
+            style={{ marginTop: '16px' }}
+          >
             <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
+              style={{ ...emailCalloutLabelStyle, marginBottom: '8px' }}
             >
-              Hi
-              {' '}
-              {adminName}
-              ,
+              Screenshots
             </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              New feedback has been submitted and is waiting for review.
-            </Text>
-
-            <Section
-              className="my-[20px] rounded-lg border border-[#e5e7ea] bg-[#f7f7f7] p-4"
-            >
-              <Text
-                className="my-0! mb-1! text-[12px] font-semibold uppercase leading-[16px] text-[#666666]"
-              >
-                From
-              </Text>
-              <Text
-                className="my-0! mb-2! text-[14px] font-semibold leading-[20px] text-[#171717]"
-              >
-                {submitterName}
-              </Text>
-              {submitterEmail && (
-                <Text
-                  className="my-0! text-[12px] leading-[16px] text-[#666666]"
-                >
-                  {submitterEmail}
-                </Text>
-              )}
-            </Section>
-
-            <Section
-              className="my-[20px] rounded-lg border border-[#e5e7ea] p-4"
-            >
-              <Text
-                className="my-0! mb-1! text-[12px] font-semibold uppercase leading-[16px] text-[#666666]"
-              >
-                Subject
-              </Text>
-              <Text
-                className="my-0! mb-4! text-[14px] font-semibold leading-[20px] text-[#171717]"
-              >
-                {subjectLabel}
-              </Text>
-              <Text
-                className="my-0! mb-2! text-[12px] font-semibold uppercase leading-[16px] text-[#666666]"
-              >
-                Message
-              </Text>
-              <Text
-                className="my-0! whitespace-pre-wrap text-[14px] leading-[20px] text-[#171717]"
-              >
-                {message}
-              </Text>
-              {screenshots && screenshots.length > 0 && (
-                <div
-                  className="mt-4"
-                >
-                  <Text
-                    className="my-0! mb-2! text-[12px] font-semibold uppercase leading-[16px] text-[#666666]"
-                  >
-                    Screenshots
-                  </Text>
-                  <div
-                    className="flex gap-2 flex-wrap"
-                  >
-                    {screenshots.map((url, i) => (
-                      <Link
-                        key={url}
-                        href={url}
-                        className="text-[12px] text-[#38785f] underline"
-                      >
-                        Screenshot
-                        {' '}
-                        {i + 1}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Section>
-
-            <div
-              className="my-[20px]"
-            >
+            {screenshots.map((url, i) => (
               <Link
-                href={reviewLink}
-                className="inline-block rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
+                key={url}
+                href={url}
+                style={{ ...emailAccentLinkStyle, fontSize: '12px', display: 'block', marginBottom: '4px' }}
               >
-                Review feedback
+                Screenshot
+                {' '}
+                {i + 1}
               </Link>
-            </div>
+            ))}
+          </div>
+        )}
+      </Section>
 
-            <Footer
-              fullName={adminName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={reviewLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          Review feedback
+        </EmailButton>
+      </Section>
+    </EmailLayout>
   );
 };
 

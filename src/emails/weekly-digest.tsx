@@ -1,23 +1,18 @@
-import {
-  Body,
-  Column,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Column, Img, Link, Row, Section, Text } from '@react-email/components';
 
 import type { NotificationWithActor } from '@/types/notifications';
 import { getSupabaseStorageHosts } from '@/utils/supabaseHosts';
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
+import {
+  emailCalloutTitleStyle,
+  emailDigestItemDividerStyle,
+  emailMutedTextStyle,
+  emailTextStyle,
+} from './components/styles';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
@@ -86,10 +81,8 @@ const notificationMessages: Record<string, (actor: string | null, data?: Notific
   member_deleted: (actor) => `${actor || 'Someone'} scheduled their account for deletion`,
 };
 
-// Supabase storage domains for image transformation
 const SUPABASE_DOMAINS = getSupabaseStorageHosts();
 
-// Get resized thumbnail URL for Supabase images
 function getResizedThumbnail(src: string | null | undefined, width = 96, quality = 80): string | undefined {
   if (!src) return undefined;
 
@@ -98,7 +91,6 @@ function getResizedThumbnail(src: string | null | undefined, width = 96, quality
   if (isSupabase) {
     try {
       const url = new URL(src);
-      // Convert object URL to render/image URL for transformations
       url.pathname = url.pathname.replace(
         '/storage/v1/object/public/',
         '/storage/v1/render/image/public/',
@@ -127,7 +119,6 @@ function getWeeklyDigestPreview(totalCount: number): string {
   return `Your weekly reminder — ${formatUnreadCount(totalCount)} from the past week`;
 }
 
-// Format date in Amsterdam time: "Sat, Jan 31 at 14:25"
 function formatNotificationDate(dateString: string | null): string {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -152,6 +143,7 @@ function formatNotificationDate(dateString: string | null): string {
 export const WeeklyDigestEmail = ({
   preview,
   recipientName,
+  recipientEmail,
   notifications,
   totalCount,
   activityPageUrl,
@@ -159,6 +151,7 @@ export const WeeklyDigestEmail = ({
 }: {
   preview?: boolean;
   recipientName: string;
+  recipientEmail?: string;
   notifications: NotificationWithActor[];
   totalCount: number;
   activityPageUrl: string;
@@ -166,6 +159,7 @@ export const WeeklyDigestEmail = ({
 }) => {
   if (preview) {
     recipientName = 'Jane Doe';
+    recipientEmail = 'jane.doe@example.com';
     notifications = [
       {
         id: '1',
@@ -201,181 +195,150 @@ export const WeeklyDigestEmail = ({
 
   const previewText = getWeeklyDigestPreview(totalCount);
 
-  return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+  const renderNotificationContent = (
+    message: string,
+    title: string | undefined,
+    formattedDate: string,
+  ) => (
+    <>
+      <Text
+        style={{ ...emailCalloutTitleStyle, marginBottom: '4px', lineHeight: '20px' }}
+      >
+        {message}
+      </Text>
+      {title && (
+        <Text
+          style={{ ...emailMutedTextStyle, marginBottom: '4px', fontSize: '13px', lineHeight: '18px' }}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          {title}
+        </Text>
+      )}
+      <Text
+        style={{ ...emailMutedTextStyle, fontSize: '12px', lineHeight: '16px', color: '#999999' }}
+      >
+        {formattedDate}
+      </Text>
+    </>
+  );
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              Weekly digest
-            </Heading>
+  return (
+    <EmailLayout
+      previewText={previewText}
+      fullName={recipientName}
+      recipientEmail={recipientEmail}
+      optOutLink={unsubscribeUrl}
+      emailType="notifications"
+    >
+      <EmailHeading>
+        Weekly digest
+      </EmailHeading>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {recipientName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              You have
-              {' '}
-              {formatUnreadCount(totalCount)}
-              {' '}
-              from the past week. Here&apos;s a summary:
-            </Text>
+      <EmailText>
+        Hi
+        {' '}
+        {recipientName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        You have
+        {' '}
+        {formatUnreadCount(totalCount)}
+        {' '}
+        from the past week. Here&apos;s a summary:
+      </EmailText>
 
-            {/* Notifications list */}
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        {notifications.map((notification, index) => {
+          const actorName = notification.actor?.full_name
+            || notification.actor?.nickname
+            || (notification.data?.actorName as string | undefined)
+            || null;
+          const messageText = notificationMessages[notification.type]?.(actorName, notification.data) || 'New notification';
+          const icon = notificationIcons[notification.type] || '🔔';
+          const message = `${icon} ${messageText}`;
+          const title = notification.data?.title as string | undefined;
+          const thumbnail = getResizedThumbnail(notification.data?.thumbnail as string | undefined);
+          const link = notification.data?.link as string | undefined;
+          const formattedDate = formatNotificationDate(notification.created_at);
+
+          return (
             <Section
-              className="my-[20px]"
+              key={notification.id}
+              style={index > 0 ? emailDigestItemDividerStyle : undefined}
             >
-              {notifications.map((notification, index) => {
-                const actorName = notification.actor?.full_name
-                  || notification.actor?.nickname
-                  || (notification.data?.actorName as string | undefined)
-                  || null;
-                const message = notificationMessages[notification.type]?.(actorName, notification.data) || 'New notification';
-                const icon = notificationIcons[notification.type] || '🔔';
-                const title = notification.data?.title as string | undefined;
-                const thumbnail = getResizedThumbnail(notification.data?.thumbnail as string | undefined);
-                const link = notification.data?.link as string | undefined;
-                const formattedDate = formatNotificationDate(notification.created_at);
-
-                return (
-                  <Section
-                    key={notification.id}
-                    className={index > 0 ? 'mt-4 border-t border-[#e5e7ea] pt-4' : ''}
+              <Row>
+                {thumbnail && (
+                  <Column
+                    width="48"
                   >
-                    <Row>
-                      {thumbnail && (
-                        <Column
-                          width="48"
-                        >
-                          <Img
-                            src={thumbnail}
-                            width="48"
-                            height="48"
-                            alt={title || ''}
-                            className="rounded-md object-cover"
-                          />
-                        </Column>
-                      )}
-                      <Column
-                        className={thumbnail ? 'pl-3 align-top' : 'align-top'}
-                      >
-                        {link ? (
-                          <Link
-                            href={link}
-                            className="no-underline"
-                          >
-                            <Text
-                              className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
-                            >
-                              {icon}
-                              {' '}
-                              {message}
-                            </Text>
-                            {title && (
-                              <Text
-                                className="my-0! mb-1! text-[13px] leading-[18px] text-[#666666]"
-                              >
-                                {title}
-                              </Text>
-                            )}
-                            <Text
-                              className="my-0! text-[12px] leading-[16px] text-[#999999]"
-                            >
-                              {formattedDate}
-                            </Text>
-                          </Link>
-                        ) : (
-                          <>
-                            <Text
-                              className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
-                            >
-                              {icon}
-                              {' '}
-                              {message}
-                            </Text>
-                            {title && (
-                              <Text
-                                className="my-0! mb-1! text-[13px] leading-[18px] text-[#666666]"
-                              >
-                                {title}
-                              </Text>
-                            )}
-                            <Text
-                              className="my-0! text-[12px] leading-[16px] text-[#999999]"
-                            >
-                              {formattedDate}
-                            </Text>
-                          </>
-                        )}
-                      </Column>
-                    </Row>
-                  </Section>
-                );
-              })}
+                    <Img
+                      src={thumbnail}
+                      width="48"
+                      height="48"
+                      alt={title || ''}
+                      style={{ borderRadius: '6px', objectFit: 'cover' }}
+                    />
+                  </Column>
+                )}
+                <Column
+                  style={{ verticalAlign: 'top', paddingLeft: thumbnail ? '12px' : 0 }}
+                >
+                  {link ? (
+                    <Link
+                      href={link}
+                      style={{ textDecoration: 'none', color: emailTextStyle.color }}
+                    >
+                      {renderNotificationContent(message, title, formattedDate)}
+                    </Link>
+                  ) : (
+                    renderNotificationContent(message, title, formattedDate)
+                  )}
+                </Column>
+              </Row>
             </Section>
+          );
+        })}
+      </Section>
 
-            {/* More notifications indicator */}
-            {totalCount > notifications.length && (
-              <Text
-                className="text-[14px] leading-[24px] text-[#666666]"
-              >
-                ... and
-                {' '}
-                {totalCount - notifications.length}
-                {' '}
-                more notification
-                {totalCount - notifications.length === 1 ? '' : 's'}
-              </Text>
-            )}
+      {totalCount > notifications.length && (
+        <EmailText
+          variant="muted"
+          style={{ fontSize: '14px', lineHeight: '24px' }}
+        >
+          ... and
+          {' '}
+          {totalCount - notifications.length}
+          {' '}
+          more notification
+          {totalCount - notifications.length === 1 ? '' : 's'}
+        </EmailText>
+      )}
 
-            {/* CTA Button */}
-            <div
-              className="my-[20px]"
-            >
-              <Link
-                href={activityPageUrl}
-                className="inline-block rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-              >
-                {
-                  totalCount === 1 ? 'View all notifications' : <>
-                    View all
-                    {' '}
-                    {totalCount}
-                    {' '}
-                    notifications
-                  </>
-                }
-              </Link>
-            </div>
-
-            <Footer
-              fullName={recipientName}
-              optOutLink={unsubscribeUrl}
-              emailType="notifications"
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={activityPageUrl}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          {totalCount === 1 ? (
+            'View all notifications'
+          ) : (
+            <>
+              View all
+              {' '}
+              {totalCount}
+              {' '}
+              notifications
+            </>
+          )}
+        </EmailButton>
+      </Section>
+    </EmailLayout>
   );
 };
 

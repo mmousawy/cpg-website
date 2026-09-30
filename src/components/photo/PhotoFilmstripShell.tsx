@@ -5,8 +5,8 @@ import {
   PhotoNavigationProvider,
   usePhotoNavigation,
 } from '@/components/photo/PhotoNavigationContext';
-import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import type { SiblingPhoto } from '@/components/photo/PhotoPageContent';
+import { useCollectionPhotoNavigation } from '@/components/photo/useCollectionPhotoNavigation';
 import BlurImage from '@/components/shared/BlurImage';
 import { useHorizontalSwipe } from '@/hooks/useHorizontalSwipe';
 import { prefersReducedMotion } from '@/utils/reduceMotion';
@@ -432,10 +432,14 @@ function PhotoFilmstripShellInner({
     const photo = siblingPhotos.find((p) => p.shortId === pendingShortId);
     if (!photo) {
       resetSwipeTransforms();
-      setPeekShortId(null);
-      setSwipeLocked(false);
-      setPendingShortId(null);
-      return;
+      // Defer so this isn't a synchronous setState in the effect body. The
+      // committed photo left the sibling list, so drop the overlay lock.
+      const frameId = requestAnimationFrame(() => {
+        setPeekShortId(null);
+        setSwipeLocked(false);
+        setPendingShortId(null);
+      });
+      return () => cancelAnimationFrame(frameId);
     }
 
     let cancelled = false;
@@ -499,7 +503,7 @@ function PhotoFilmstripShellInner({
 
   return (
     <div
-      className="w-full px-4 pt-4 md:p-4 md:flex md:gap-4 md:items-stretch lg:p-8 lg:gap-8"
+      className="w-full px-4 pt-4 max-md:px-3 max-md:pt-3 md:p-4 md:flex md:gap-4 md:items-stretch lg:p-8 lg:gap-8"
     >
       <div
         className="md:flex-1 md:sticky md:self-start md:top-[90px] md:h-[calc(100vh-106px)] lg:top-[106px] lg:h-[calc(100vh-138px)] md:flex md:flex-col"
@@ -591,7 +595,9 @@ function PhotoFilmstripShellInner({
 export default function PhotoFilmstripShell(props: PhotoFilmstripShellProps) {
   return (
     <PhotoNavigationProvider>
-      <PhotoFilmstripShellInner {...props} />
+      <PhotoFilmstripShellInner
+        {...props}
+      />
     </PhotoNavigationProvider>
   );
 }

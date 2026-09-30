@@ -1,6 +1,11 @@
-import HomeBelowFoldLoader from '@/components/home/HomeBelowFoldLoader';
+import { HomeBelowFoldContent } from '@/components/home/HomeBelowFoldContent';
+import { HomeBelowFoldE2ESwap } from '@/components/home/HomeBelowFoldE2ESwap';
 import { HomeHeroSection } from '@/components/home/HomeHeroSection';
+import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
+import { getHomePageData } from '@/lib/data/home';
 import { createMetadata } from '@/utils/metadata';
+import { cacheLife, cacheTag } from 'next/cache';
+import { Suspense } from 'react';
 
 export const metadata = {
   ...createMetadata({
@@ -18,7 +23,45 @@ export default function Home() {
   return (
     <>
       <HomeHeroSection />
-      <HomeBelowFoldLoader />
+      <div
+        id="home-below-fold"
+      >
+        <CachedHomeBelowFold
+          includeTestContent={false}
+        />
+      </div>
+      {/* Header read stays outside the cached shell so `/` can prerender. */}
+      <Suspense
+        fallback={null}
+      >
+        <HomeBelowFoldE2E />
+      </Suspense>
     </>
+  );
+}
+
+async function HomeBelowFoldE2E() {
+  const includeTestContent = await getIncludeTestContent();
+  if (!includeTestContent) return null;
+
+  return (
+    <HomeBelowFoldE2ESwap>
+      <CachedHomeBelowFold
+        includeTestContent
+      />
+    </HomeBelowFoldE2ESwap>
+  );
+}
+
+async function CachedHomeBelowFold({ includeTestContent }: { includeTestContent: boolean }) {
+  'use cache';
+  cacheLife('home');
+  cacheTag('home');
+
+  const data = await getHomePageData(includeTestContent);
+  return (
+    <HomeBelowFoldContent
+      {...data}
+    />
   );
 }

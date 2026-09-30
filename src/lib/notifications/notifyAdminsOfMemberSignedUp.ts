@@ -57,6 +57,7 @@ export async function notifyAdminsOfMemberSignedUp(userId: string): Promise<void
         MemberNotificationEmail({
           kind: 'signed_up',
           adminName: admin.full_name || 'Admin',
+          recipientEmail: admin.email,
           memberName,
           memberNickname: profile.nickname,
           memberEmail: profile.email,

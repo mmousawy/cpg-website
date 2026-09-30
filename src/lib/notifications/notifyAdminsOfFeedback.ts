@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
 import { FeedbackNotificationEmail } from '@/emails/feedback-notification';
 import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
@@ -87,6 +87,7 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
         const html = await render(
           FeedbackNotificationEmail({
             adminName: admin.full_name || 'Admin',
+            recipientEmail: admin.email || undefined,
             submitterName,
             submitterEmail: feedback.email,
             subject: feedback.subject,

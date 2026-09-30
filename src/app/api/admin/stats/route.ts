@@ -62,7 +62,11 @@ export async function GET(request: NextRequest) {
     const { bucket, series } = await getAdminTimeSeries(range);
     return NextResponse.json({ overview, range, bucket, series });
   } catch (error) {
-    console.error('admin stats API:', error);
+    // Don't log prerendering errors (expected during build)
+    const isPrerender = error instanceof Error && error.message.includes('prerender');
+    if (!isPrerender) {
+      console.error('admin stats API:', error);
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

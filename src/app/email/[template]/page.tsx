@@ -1,38 +1,13 @@
 import { render } from '@react-email/render';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 
+import { getEmailAssetsUrl } from '@/emails/utils/siteUrl';
+
+import { emailTemplateLoaders, emailTemplateSlugs, isEmailPreviewDev } from '../emailTemplates';
 import EmailLoading from './loading';
-
-// Email template mapping
-type EmailTemplateComponent = React.ComponentType<{ preview?: boolean; [key: string]: unknown }>;
-type EmailModule = { default: EmailTemplateComponent };
-
-const templates: Record<string, () => Promise<EmailModule>> = {
-  'signup': () => import('../../../emails/signup') as unknown as Promise<EmailModule>,
-  'confirm': () => import('../../../emails/confirm') as unknown as Promise<EmailModule>,
-  'cancel': () => import('../../../emails/cancel') as unknown as Promise<EmailModule>,
-  'verify-email': () => import('../../../emails/auth/verify-email') as unknown as Promise<EmailModule>,
-  'reset-password': () => import('../../../emails/auth/reset-password') as unknown as Promise<EmailModule>,
-  'change-email': () => import('../../../emails/auth/change-email') as unknown as Promise<EmailModule>,
-  'change-nickname': () => import('../../../emails/auth/change-nickname') as unknown as Promise<EmailModule>,
-  'welcome': () => import('../../../emails/auth/welcome') as unknown as Promise<EmailModule>,
-  'event-announcement': () => import('../../../emails/event-announcement') as unknown as Promise<EmailModule>,
-  'attendee-message': () => import('../../../emails/attendee-message') as unknown as Promise<EmailModule>,
-  'newsletter': () => import('../../../emails/newsletter') as unknown as Promise<EmailModule>,
-  'comment-notification': () => import('../../../emails/comment-notification') as unknown as Promise<EmailModule>,
-  'weekly-digest': () => import('../../../emails/weekly-digest') as unknown as Promise<EmailModule>,
-  'member-joined': () => import('../../../emails/member-notification').then((mod) => ({
-    default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'joined' }),
-  })) as unknown as Promise<EmailModule>,
-  'member-signed-up': () => import('../../../emails/member-notification').then((mod) => ({
-    default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'signed_up' }),
-  })) as unknown as Promise<EmailModule>,
-  'member-deleted': () => import('../../../emails/member-notification').then((mod) => ({
-    default: (props: { preview?: boolean }) => mod.MemberNotificationEmail({ ...props, kind: 'deleted' }),
-  })) as unknown as Promise<EmailModule>,
-  'onboarding-reminder': () => import('../../../emails/onboarding-reminder') as unknown as Promise<EmailModule>,
-};
 
 export default function Email({
   params,
@@ -55,44 +30,53 @@ async function EmailContent({
 }: {
   params: Promise<{ template: string }>
 }) {
+  if (!isEmailPreviewDev()) {
+    notFound();
+  }
+
   await connection();
 
   const { template } = await params;
 
-  const templateLoader = templates[template];
+  const templateLoader = emailTemplateLoaders[template];
 
   if (!templateLoader) {
     return (
       <div
-        className="flex items-center justify-center h-screen"
+        className="flex min-h-screen items-center justify-center p-6"
       >
         <div
           className="text-center"
         >
           <h1
-            className="text-2xl font-bold mb-4"
+            className="mb-4 text-2xl font-bold"
           >
             Template not found:
             {template}
           </h1>
           <p
-            className="text-gray-600"
+            className="mb-2 text-gray-600"
           >
-            Available templates:
+            <Link
+              href="/email"
+              className="text-[#38785f] underline"
+            >
+              Back to all emails
+            </Link>
           </p>
           <ul
-            className="mt-2"
+            className="mt-2 text-sm"
           >
-            {Object.keys(templates).map((t) => (
+            {emailTemplateSlugs.map((t) => (
               <li
                 key={t}
               >
-                <a
+                <Link
                   href={`/email/${t}`}
-                  className="text-blue-500 hover:underline"
+                  className="text-[#38785f] underline"
                 >
                   {t}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -105,11 +89,13 @@ async function EmailContent({
   const renderedTemplate = await render(<EmailComponent
     preview
   />);
+  const previewHtml = renderedTemplate.replaceAll(`${getEmailAssetsUrl()}/email/`, '/email/');
 
   return (
     <iframe
       className="min-h-screen w-full"
-      srcDoc={renderedTemplate}
+      srcDoc={previewHtml}
+      title={`Email preview: ${template}`}
     />
   );
 }

@@ -3,14 +3,14 @@ import { Resend } from 'resend';
 
 import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { createNotification } from '@/lib/notifications/create';
 import { flushPendingNotificationEmails } from '@/lib/notifications/flushPendingNotificationEmails';
 import { flushPendingNotifications } from '@/lib/notifications/schedule';
 import { sendOnboardingReminders } from '@/lib/onboarding/sendOnboardingReminders';
-import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { encrypt } from '@/utils/encrypt';
-import { render } from '@react-email/render';
 import { createClient } from '@/utils/supabase/server';
-import { createNotification } from '@/lib/notifications/create';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -195,6 +195,7 @@ export async function GET(request: NextRequest) {
                   html: await render(
                     RsvpReminderEmail({
                       fullName: recipient.name,
+                      recipientEmail: recipient.email,
                       event,
                       eventLink,
                       optOutLink,
@@ -354,6 +355,7 @@ export async function GET(request: NextRequest) {
                   html: await render(
                     AttendeeReminderEmail({
                       fullName: recipientName,
+                      recipientEmail: rsvp.email || undefined,
                       event,
                       cancellationLink,
                     }),

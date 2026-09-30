@@ -88,7 +88,7 @@ export default async function AlbumContent({ album, nickname, albumSlug }: Album
       <div
         className={clsx(
           'flex w-full min-h-svh flex-col',
-          'px-4 pt-4',
+          'px-4 pt-4 max-md:px-3 max-md:pt-3',
           // Desktop: page-level scroll; gallery grows with the grid
           'md:min-h-[calc(100svh-74px)] md:flex-row md:items-start md:gap-4 md:p-4',
           'lg:gap-8 lg:p-8',

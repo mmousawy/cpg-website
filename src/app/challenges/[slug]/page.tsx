@@ -236,23 +236,23 @@ export default async function ChallengePage({
                 <div
                   className="flex flex-wrap items-center gap-2"
                 >
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
-                >
-                  <AwardStarMiniSVG
-                    className="h-4 w-4 fill-current"
-                  />
-                  Challenge
-                </span>
-                {isEnded ? (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-black/50 bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-medium text-white border border-challenge-badge/90"
                   >
-                    <ClockMiniSVG
-                      className="h-4 w-4 -ml-0.5 fill-current"
+                    <AwardStarMiniSVG
+                      className="h-4 w-4 fill-current"
                     />
-                    Ended
+                    Challenge
                   </span>
+                  {isEnded ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full border border-black/50 bg-black/50 px-2 py-1 text-xs font-medium text-white/90 backdrop-blur-sm"
+                    >
+                      <ClockMiniSVG
+                        className="h-4 w-4 -ml-0.5 fill-current"
+                      />
+                      Ended
+                    </span>
                 ) : deadline && deadline !== 'Ended' ? (
                   <span
                     className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/70 text-shadow-sm backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white border border-amber-500/90"
@@ -282,7 +282,11 @@ export default async function ChallengePage({
       )}
 
       <PageContainer
-        className={challenge.cover_image_url ? 'pt-6! sm:pt-8! pb-4 sm:pb-8!' : ''}
+        className={
+          challenge.cover_image_url
+            ? 'pt-4! sm:pt-6! pb-4 sm:pb-8!'
+            : 'pb-4 sm:pb-8!'
+        }
       >
         <Container>
           {/* Title (if no cover image) */}
@@ -297,23 +301,23 @@ export default async function ChallengePage({
                 <div
                   className="flex flex-wrap items-center gap-2"
                 >
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge px-2 py-1 text-xs font-medium text-white"
-                >
-                  <AwardStarMiniSVG
-                    className="h-4 w-4 fill-current"
-                  />
-                  Challenge
-                </span>
-                {isEnded ? (
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-2 py-1 text-xs font-medium"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-challenge-badge px-2 py-1 text-xs font-medium text-white"
                   >
-                    <ClockMiniSVG
-                      className="h-4 w-4 -ml-0.5 fill-current"
+                    <AwardStarMiniSVG
+                      className="h-4 w-4 fill-current"
                     />
-                    Ended
+                    Challenge
                   </span>
+                  {isEnded ? (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-2 py-1 text-xs font-medium"
+                    >
+                      <ClockMiniSVG
+                        className="h-4 w-4 -ml-0.5 fill-current"
+                      />
+                      Ended
+                    </span>
                 ) : deadline && deadline !== 'Ended' ? (
                   <span
                     className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-2 py-1 text-xs font-semibold text-white"
@@ -496,7 +500,7 @@ export default async function ChallengePage({
       {/* Photo Gallery - full width only when we have photos */}
       {photos.length > 0 && (
         <WidePageContainer
-          className="pt-0!"
+          className="pt-0! max-sm:pb-3"
         >
           <ChallengeGallery
             photos={photos}
@@ -508,14 +512,26 @@ export default async function ChallengePage({
       <SignUpCTASection />
 
       {/* Comments Section */}
-      <PageContainer
-        variant="alt"
-        className="border-t border-t-border-color"
+      <div
+        className="relative"
       >
-        <ChallengeComments
-          challengeId={challenge.id}
-        />
-      </PageContainer>
+        <PageContainer
+          variant="alt"
+          className="border-t border-t-border-color"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-50 bg-linear-to-b from-transparent to-background md:hidden"
+          />
+          <div
+            className="relative z-10"
+          >
+            <ChallengeComments
+              challengeId={challenge.id}
+            />
+          </div>
+        </PageContainer>
+      </div>
     </>
   );
 }
