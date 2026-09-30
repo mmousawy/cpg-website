@@ -15,7 +15,8 @@ Run after [production-cutover.md](./production-cutover.md) DNS points at the VPS
 
 ## Coolify app
 
-- [ ] Branch `main` (or deploy-only via release webhook)
+- [ ] Git source branch `main`, **auto-deploy on push disabled**
+- [ ] Deploy webhook URL in GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL`; prod ships after a Release Please GitHub release
 - [ ] `NEXT_PUBLIC_SITE_URL=https://creativephotography.group` (rebuild after change)
 - [ ] `NEXT_PUBLIC_SUPABASE_URL=https://db.creativephotography.group` (production Supabase)
 - [ ] Production anon + service role keys (not staging)

@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: vps-docker-build
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
@@ -27,74 +31,22 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   deploy-production:
-    runs-on: ubuntu-latest
+    name: Deploy production
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-
-      - name: Deploy production (Coolify or Vercel)
+      - name: Trigger Coolify production deploy
         env:
           COOLIFY_PRODUCTION_WEBHOOK_URL: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK_URL }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
 
-          # Prefer Coolify when COOLIFY_PRODUCTION_WEBHOOK_URL is set (self-hosted production).
-          # Copy the webhook URL from Coolify → production app → Webhooks.
-          if [ -n "${COOLIFY_PRODUCTION_WEBHOOK_URL:-}" ]; then
-            echo "Triggering Coolify production deploy..."
-            curl -fsS -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL"
-            echo "Coolify deploy triggered."
-            exit 0
-          fi
-
-          echo "COOLIFY_PRODUCTION_WEBHOOK_URL not set — falling back to Vercel promote."
-
-          if [ -z "${VERCEL_TOKEN:-}" ]; then
-            echo "::error::Set COOLIFY_PRODUCTION_WEBHOOK_URL or VERCEL_TOKEN for production deploy."
+          if [ -z "${COOLIFY_PRODUCTION_WEBHOOK_URL:-}" ]; then
+            echo "::error::COOLIFY_PRODUCTION_WEBHOOK_URL is not set. Copy the webhook URL from Coolify → production app → Webhooks."
             exit 1
           fi
 
-          npm install -g vercel
-
-          SHAS_TO_TRY=()
-          if git cat-file -e HEAD^2 2>/dev/null; then
-            SHAS_TO_TRY+=("$(git rev-parse HEAD^2)")
-          fi
-          if git cat-file -e HEAD^1^2 2>/dev/null; then
-            SHAS_TO_TRY+=("$(git rev-parse HEAD^1^2)")
-          fi
-          SHAS_TO_TRY+=("${{ github.sha }}")
-
-          DEPLOYMENT_UID=""
-          for PR_HEAD_SHA in "${SHAS_TO_TRY[@]}"; do
-            echo "Looking up Vercel preview deployment for SHA: $PR_HEAD_SHA"
-            API_RESPONSE=$(curl -s \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA")
-            DEPLOYMENT_UID=$(echo "$API_RESPONSE" | \
-              jq -r '.deployments[] | select(.target != "production") | .uid' | head -1)
-
-            if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
-              break
-            fi
-          done
-
-          if [ -n "$DEPLOYMENT_UID" ] && [ "$DEPLOYMENT_UID" != "null" ]; then
-            echo "Promoting tested preview to production (UID: $DEPLOYMENT_UID)..."
-            vercel promote "$DEPLOYMENT_UID" --scope="$VERCEL_ORG_ID" --yes --token="$VERCEL_TOKEN"
-          else
-            echo "No preview deployment found for candidate SHAs: ${SHAS_TO_TRY[*]}"
-            echo "Production deploy skipped — merge a PR with a successful Vercel preview first."
-            exit 1
-          fi
+          echo "Triggering Coolify production deploy..."
+          curl -fsS -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL"
+          echo "Coolify deploy triggered."

@@ -4,15 +4,15 @@ import path from 'path';
 
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
-export function getVercelBypassToken(explicit?: string): string | undefined {
-  if (explicit) return explicit;
-  if (process.env.VERCEL_BYPASS_TOKEN) return process.env.VERCEL_BYPASS_TOKEN;
-  const baseUrlWithToken = process.env.BASE_URL;
-  if (!baseUrlWithToken) return undefined;
+const STAGING_HOST = 'staging.creativephotography.group';
+
+/** True when E2E targets the Coolify staging site (admin-gated, no public signup). */
+export function isStagingE2ETarget(): boolean {
+  const baseUrl = process.env.BASE_URL ?? '';
   try {
-    return new URL(baseUrlWithToken).searchParams.get('x-vercel-protection-bypass') || undefined;
+    return new URL(baseUrl).hostname === STAGING_HOST;
   } catch {
-    return undefined;
+    return baseUrl.includes(STAGING_HOST);
   }
 }
 
@@ -21,39 +21,16 @@ export function getInternalApiSecret(): string | undefined {
   return process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET || undefined;
 }
 
-export function withVercelBypassHeaders(
-  headers: Record<string, string> = {},
-  bypassToken?: string,
-): Record<string, string> {
-  const token = getVercelBypassToken(bypassToken);
-  if (!token) return headers;
-  return {
-    ...headers,
-    'x-vercel-protection-bypass': token,
-    'x-vercel-set-bypass-cookie': 'true',
-  };
-}
-
-/** Headers for /api/test/* — Vercel bypass + internal API bearer. */
+/** Headers for /api/test/* — internal API bearer. */
 export function withInternalApiHeaders(
   headers: Record<string, string> = {},
-  bypassToken?: string,
 ): Record<string, string> {
-  const withBypass = withVercelBypassHeaders(headers, bypassToken);
   const secret = getInternalApiSecret();
-  if (!secret) return withBypass;
+  if (!secret) return headers;
   return {
-    ...withBypass,
+    ...headers,
     Authorization: `Bearer ${secret}`,
   };
-}
-
-export function withVercelBypassQuery(url: string, bypassToken?: string): string {
-  const token = getVercelBypassToken(bypassToken);
-  if (!token) return url;
-  const parsed = new URL(url);
-  parsed.searchParams.set('x-vercel-protection-bypass', token);
-  return parsed.toString();
 }
 
 /** Same header Playwright sends so e2e users appear on public pages. */
@@ -77,11 +54,11 @@ export function getPlaywrightApiContextOptions(): {
   } {
   const baseUrlWithToken = process.env.BASE_URL || 'http://localhost:3000';
   const [baseUrl] = baseUrlWithToken.split('?');
-  const bypassHeaders = withE2EIncludeTestHeaders(withVercelBypassHeaders({}));
+  const headers = withE2EIncludeTestHeaders({});
 
   return {
     baseURL: baseUrl,
-    extraHTTPHeaders: bypassHeaders,
+    extraHTTPHeaders: headers,
   };
 }
 
@@ -132,23 +109,31 @@ export type CreateTestUserOptions = {
   asAdmin?: boolean;
 };
 
+function resolveCreateTestUserOptions(options: CreateTestUserOptions): CreateTestUserOptions {
+  if (isStagingE2ETarget() && options.asAdmin !== false) {
+    return { ...options, asAdmin: true };
+  }
+  return options;
+}
+
 /**
  * Create a fully verified test user via the test setup API.
- * Uses Playwright's request context so Vercel bypass headers match browser tests.
+ * Uses Playwright's request context so auth headers match browser tests.
  */
 export async function createTestUser(
   apiRequest: APIRequestContext,
   options: CreateTestUserOptions = {},
 ): Promise<TestUser> {
+  const resolved = resolveCreateTestUserOptions(options);
   const email = generateTestEmail();
   const password = 'TestPassword123!';
   const nickname = `test-${Date.now()}`;
-  const completeOnboarding = options.completeOnboarding !== false;
-  const asAdmin = options.asAdmin === true;
+  const completeOnboarding = resolved.completeOnboarding !== false;
+  const asAdmin = resolved.asAdmin === true;
 
   if (!getInternalApiSecret()) {
     throw new Error(
-      'INTERNAL_API_SECRET or CRON_SECRET must be set to call /api/test/setup (matches the preview env).',
+      'INTERNAL_API_SECRET or CRON_SECRET must be set to call /api/test/setup (matches the deployed app).',
     );
   }
 
@@ -162,10 +147,7 @@ export async function createTestUser(
     const contentType = response.headers()['content-type'] ?? '';
     if (!contentType.includes('application/json')) {
       const text = await response.text();
-      const looksLikeProtectionPage = /vercel|authentication required|deployment protection|password/i.test(text);
-      const reasonHint = looksLikeProtectionPage
-        ? 'Likely Vercel deployment protection. Ensure VERCEL_BYPASS_TOKEN is set in CI.'
-        : 'Server may not be ready yet.';
+      const reasonHint = 'Server may not be ready yet or /api/test is blocked on the target.';
       const msg = `Attempt ${attempt}/${maxAttempts}: Expected JSON from /api/test/setup but got "${contentType}" (HTTP ${response.status()}). ${reasonHint}`;
       console.warn(msg, '\nResponse preview:', text.slice(0, 200));
       if (attempt < maxAttempts) {
@@ -178,7 +160,7 @@ export async function createTestUser(
     if (!response.ok()) {
       const error = await response.json();
       const hint = response.status() === 401
-        ? ' Check that INTERNAL_API_SECRET/CRON_SECRET in CI matches the Vercel preview env.'
+        ? ' Check that INTERNAL_API_SECRET/CRON_SECRET in CI matches the staging app env.'
         : '';
       throw new Error(`Failed to create test user: ${error.error || response.statusText()}${hint}`);
     }

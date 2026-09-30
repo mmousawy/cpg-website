@@ -6,7 +6,7 @@ Setting `IMGPROXY_STRIP_COLOR_PROFILE=false` tells imgproxy to keep the source I
 
 ## Coolify auto-deploy vs imgproxy (important)
 
-Coolify **does** auto-deploy the Next.js app when you push to `main` (or when Release Please hits `COOLIFY_PRODUCTION_WEBHOOK_URL`). That rebuilds the **Coolify application container** only.
+Coolify rebuilds the Next.js app when **staging** is pushed (staging auto-deploy) or when **production** receives a deploy from `COOLIFY_PRODUCTION_WEBHOOK_URL` after a Release Please GitHub release (production auto-deploy on `main` is off). That rebuilds the **Coolify application container** only.
 
 **imgproxy is not part of that deploy.** It runs in the separate Supabase Docker Compose stacks on the same VPS. Merging this PR and letting Coolify deploy will **not** change imgproxy behavior — there is no Next.js code path for this setting.
 
@@ -18,7 +18,7 @@ Coolify **does** auto-deploy the Next.js app when you push to `main` (or when Re
 
 ### After this PR merges
 
-1. **Coolify** — let the normal auto-deploy run (or trigger manually). Nothing extra in the Coolify app UI.
+1. **Coolify** — staging auto-deploys `staging`; production deploys after the Release Please GitHub release webhook (or trigger production manually in Coolify if needed). Nothing extra in the Coolify app UI for imgproxy.
 2. **Supabase imgproxy** — once per environment, on the VPS (Coolify **server terminal** or SSH):
 
 ```bash

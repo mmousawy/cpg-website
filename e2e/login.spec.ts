@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { isStagingE2ETarget } from './test-utils';
+
 test.describe('Login Flow', () => {
   test('should display login form', async ({ page }) => {
     await page.goto('/login');
@@ -21,8 +23,9 @@ test.describe('Login Flow', () => {
       ),
     ).toBeVisible();
 
-    // Check for signup link
-    await expect(page.getByRole('link', { name: /sign up|create.*account|register/i })).toBeVisible();
+    if (!isStagingE2ETarget()) {
+      await expect(page.getByRole('link', { name: /sign up|create.*account|register/i })).toBeVisible();
+    }
   });
 
   test('should show error for invalid credentials', async ({ page }) => {
@@ -48,6 +51,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should navigate to signup page', async ({ page }) => {
+    test.skip(isStagingE2ETarget(), 'Staging redirects /signup to login');
     await page.goto('/login');
 
     // Click signup link

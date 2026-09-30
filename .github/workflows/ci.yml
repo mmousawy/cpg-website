@@ -3,23 +3,23 @@ name: CI
 on:
   pull_request:
     branches:
+      - staging
       - main
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  STAGING_SITE_URL: https://staging.creativephotography.group
 
 jobs:
-  e2e-tests:
-    name: E2E Tests
+  check:
+    name: Lint, typecheck, and unit tests
     runs-on: ubuntu-latest
-    env:
-      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
-      INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
-      CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
       - uses: actions/checkout@v5
 
@@ -32,128 +32,69 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Resolve E2E target URL
-        id: preview
+      - run: pnpm run check
+
+  staging-e2e:
+    name: Staging deploy and E2E
+    if: >
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       github.base_ref == 'main' &&
+       !startsWith(github.head_ref, 'release-please--'))
+    runs-on: ubuntu-latest
+    concurrency:
+      group: vps-docker-build
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Wait for staging to serve this commit
         env:
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
 
-          echo "Installing Playwright browsers in parallel with deploy wait..."
-          pnpm exec playwright install --with-deps chromium &
-          PLAYWRIGHT_INSTALL_PID=$!
+          TARGET_SHA="$(echo "$TARGET_SHA" | tr '[:upper:]' '[:lower:]')"
 
-          wait_for_playwright() {
-            if kill -0 "$PLAYWRIGHT_INSTALL_PID" 2>/dev/null; then
-              if ! wait "$PLAYWRIGHT_INSTALL_PID"; then
-                echo "::error::Playwright install failed"
-                exit 1
-              fi
-              echo "Playwright install complete"
-            fi
-          }
+          for i in $(seq 1 90); do
+            BODY=$(mktemp)
+            HTTP_CODE=$(curl -sS -o "$BODY" -w "%{http_code}" "${STAGING_SITE_URL}/api/health" || echo "000")
+            COMMIT=$(jq -r '.commit // empty' "$BODY" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
+            rm -f "$BODY"
 
-          if [ -n "${E2E_BASE_URL:-}" ]; then
-            echo "Using E2E_BASE_URL (Coolify or fixed staging): $E2E_BASE_URL"
-            URL="${E2E_BASE_URL%/}"
-
-            for i in $(seq 1 30); do
-              HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" "$URL/api/health" || echo "000")
-              if [ "$HTTP_CODE" = "200" ]; then
-                echo "Target reachable: $URL"
-                wait_for_playwright
-                echo "url=$URL" >> "$GITHUB_OUTPUT"
-                echo "use_vercel_bypass=false" >> "$GITHUB_OUTPUT"
+            if [ "$HTTP_CODE" = "200" ] && [ -n "$COMMIT" ]; then
+              if [ "$COMMIT" = "$TARGET_SHA" ] || [ "$TARGET_SHA" = "$COMMIT" ] \
+                || [[ "$TARGET_SHA" == "$COMMIT"* ]] || [[ "$COMMIT" == "$TARGET_SHA"* ]]; then
+                echo "Staging is serving $COMMIT"
                 exit 0
               fi
-              echo "Reachability $i/30: HTTP $HTTP_CODE"
-              sleep 10
-            done
-
-            echo "::error::E2E_BASE_URL not reachable after 5 minutes: $URL"
-            exit 1
-          fi
-
-          echo "E2E_BASE_URL not set — waiting for Vercel preview..."
-
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::Set E2E_BASE_URL or VERCEL_TOKEN for E2E tests."
-            exit 1
-          fi
-          if [ -z "$BYPASS_TOKEN" ]; then
-            echo "::error::VERCEL_BYPASS_TOKEN is not set. Copy the secret from Vercel → Settings → Deployment Protection → Protection Bypass for Automation."
-            exit 1
-          fi
-          if [ -z "${INTERNAL_API_SECRET:-}" ] && [ -z "${CRON_SECRET:-}" ]; then
-            echo "::error::Set INTERNAL_API_SECRET or CRON_SECRET in GitHub Actions secrets to match the preview env (required for /api/test/* Bearer auth)."
-            exit 1
-          fi
-
-          DEPLOYMENT_URL=""
-          for i in $(seq 1 90); do
-            RESPONSE=$(curl -s \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&meta-githubCommitSha=$PR_HEAD_SHA&limit=1")
-
-            DEPLOYMENT_URL=$(echo "$RESPONSE" | jq -r '.deployments[0].url // empty')
-            DEPLOYMENT_STATE=$(echo "$RESPONSE" | jq -r '.deployments[0].state // .deployments[0].readyState // empty')
-
-            if [ "$DEPLOYMENT_STATE" = "ERROR" ] || [ "$DEPLOYMENT_STATE" = "CANCELED" ]; then
-              echo "::error::Vercel preview build $DEPLOYMENT_STATE for commit $PR_HEAD_SHA"
-              exit 1
             fi
 
-            if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_STATE" = "READY" ]; then
-              echo "Vercel deployment READY: https://$DEPLOYMENT_URL"
-              break
-            fi
-
-            echo "Build $i/90: state=${DEPLOYMENT_STATE:-none} url=${DEPLOYMENT_URL:-pending}"
+            echo "Wait $i/90: HTTP $HTTP_CODE commit=${COMMIT:-none} want=$TARGET_SHA"
             sleep 10
           done
 
-          if [ -z "$DEPLOYMENT_URL" ] || [ "$DEPLOYMENT_STATE" != "READY" ]; then
-            echo "::error::Vercel preview not READY after 15 minutes for commit $PR_HEAD_SHA"
-            exit 1
-          fi
-
-          URL="https://$DEPLOYMENT_URL"
-          COOKIE_JAR=$(mktemp)
-
-          for i in $(seq 1 30); do
-            PROBE_BODY=$(mktemp)
-            HTTP_CODE=$(curl -sS -c "$COOKIE_JAR" -b "$COOKIE_JAR" --max-redirs 5 \
-              -o "$PROBE_BODY" -w "%{http_code}" \
-              -H "x-vercel-protection-bypass: $BYPASS_TOKEN" \
-              -H "x-vercel-set-bypass-cookie: true" \
-              "$URL/api/health" || echo "000")
-
-            if [ "$HTTP_CODE" = "200" ] && grep -q '"status"' "$PROBE_BODY"; then
-              echo "Preview reachable with bypass: $URL"
-              rm -f "$PROBE_BODY" "$COOKIE_JAR"
-              wait_for_playwright
-              echo "url=$URL" >> "$GITHUB_OUTPUT"
-              echo "use_vercel_bypass=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-
-            BODY_PREVIEW=$(head -c 200 "$PROBE_BODY" | tr -d '\n')
-            echo "Reachability $i/30: HTTP $HTTP_CODE body=$BODY_PREVIEW"
-            rm -f "$PROBE_BODY"
-            sleep 10
-          done
-
-          rm -f "$COOKIE_JAR"
-
-          echo "::error::Preview deployment is READY but not reachable with bypass token after 5 minutes."
-          echo "Check VERCEL_BYPASS_TOKEN matches Vercel → Deployment Protection → Protection Bypass for Automation."
+          echo "::error::Staging did not serve commit $TARGET_SHA within 15 minutes."
+          echo "Confirm Coolify staging auto-deployed this push and /api/health returns { commit: \"<sha>\" }."
           exit 1
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: E2E tests
         run: pnpm run test:e2e
         env:
-          BASE_URL: ${{ steps.preview.outputs.use_vercel_bypass == 'true' && format('{0}?x-vercel-protection-bypass={1}', steps.preview.outputs.url, secrets.VERCEL_BYPASS_TOKEN) || steps.preview.outputs.url }}
-          VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+          BASE_URL: ${{ env.STAGING_SITE_URL }}
           INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
 

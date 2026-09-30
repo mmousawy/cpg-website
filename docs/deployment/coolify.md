@@ -47,7 +47,7 @@ Dashboard: `https://coolify.creativephotography.group` (Nginx → `127.0.0.1:900
 
 ## 2. Staging application
 
-1. **Sources → GitHub App** → `mmousawy/cpg-website`, branch **`main`**.
+1. **Sources → GitHub App** → `mmousawy/cpg-website`, branch **`staging`** (auto-deploy on push).
 2. **Build pack:** Dockerfile, container port **3000**.
 3. **Ports mappings:** `127.0.0.1:2000:3000` (host **2000** = prod 3000 − 1000).
 4. Nginx: [nginx-staging.conf](../../infra/coolify/nginx-staging.conf) → `proxy_pass http://127.0.0.1:2000`.
@@ -60,6 +60,8 @@ Dashboard: `https://coolify.creativephotography.group` (Nginx → `127.0.0.1:900
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | `https://db-staging.creativephotography.group` |
 | `NEXT_PUBLIC_SITE_URL` | Yes | `https://staging.creativephotography.group` |
 | `SUPABASE_SERVICE_ROLE_KEY` | No | staging keys |
+| `ALLOW_TEST_API` | No | `true` — enables `/api/test/*` for staging E2E (never on production) |
+| `INTERNAL_API_SECRET` or `CRON_SECRET` | No | Must match GitHub secret `INTERNAL_API_SECRET` for CI |
 
 Staging Supabase: [infra/supabase-staging/README.md](../../infra/supabase-staging/README.md).
 
@@ -71,12 +73,13 @@ See [production-cutover.md](../../infra/coolify/production-cutover.md) and [prod
 
 Summary:
 
-- Coolify app on `main`, port mapping `127.0.0.1:3000:3000` (default).
+- Coolify app tracks git branch **`main`**, but **auto-deploy on push must be off**. Deploy only when [release-please.yml](../../.github/workflows/release-please.yml) calls `COOLIFY_PRODUCTION_WEBHOOK_URL` after a GitHub release.
+- Port mapping `127.0.0.1:3000:3000` (default).
 - Nginx: [nginx-production.conf](../../infra/coolify/nginx-production.conf).
 - `NEXT_PUBLIC_SITE_URL=https://creativephotography.group`.
 - `NEXT_PUBLIC_SUPABASE_URL=https://db.creativephotography.group`.
 - Crons: [scheduled-tasks.md](../../infra/coolify/scheduled-tasks.md).
-- Releases: GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL`.
+- Releases: GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL` (Release Please after a GitHub release).
 - Google / Discord: Coolify env does not enable providers — [supabase-oauth.md](../../infra/supabase-oauth.md).
 
 ## 4. Scheduled tasks
@@ -89,8 +92,8 @@ Summary:
 | --- | --- |
 | Hosting | Docker on VPS |
 | `vercel.json` crons | Coolify scheduled tasks |
-| `vercel promote` on release | `COOLIFY_PRODUCTION_WEBHOOK_URL` |
-| PR preview E2E | Optional `E2E_BASE_URL` → staging, or keep Vercel previews temporarily |
+| `vercel promote` on release | Release Please webhook (`COOLIFY_PRODUCTION_WEBHOOK_URL`; prod auto-deploy **off**) |
+| PR / preview E2E | Push to `staging` → Coolify auto-deploy → Playwright. Promote with PR `staging` → `main`, then merge the Release Please version PR |
 | Vercel Analytics | Off by default; set `NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS=true` only on Vercel |
 
 `vercel.json` remains in the repo for reference; `git.deploymentEnabled.main` is `false`.
@@ -111,7 +114,7 @@ docker run -p 3000:3000 --env-file .env.local cpg-website
 
 Album grids use Supabase `/render/image/` (imgproxy inside the **Supabase compose stack**, not Coolify).
 
-**Coolify auto-deploy does not configure imgproxy.** Pushing to `main` rebuilds the Next.js container only. After merging the ICC runbook changes, run the one-time imgproxy script on the VPS (Coolify server terminal), then purge Cloudflare — see [infra/imgproxy-color-profiles.md](../../infra/imgproxy-color-profiles.md).
+**Coolify auto-deploy does not configure imgproxy.** Staging rebuilds when git branch `staging` changes; production rebuilds only after a Release Please GitHub release hits the deploy webhook. After merging the ICC runbook changes, run the one-time imgproxy script on the VPS (Coolify server terminal), then purge Cloudflare — see [infra/imgproxy-color-profiles.md](../../infra/imgproxy-color-profiles.md).
 
 Verify: `pnpm verify:image-icc -- "<object-public-url>"`
 

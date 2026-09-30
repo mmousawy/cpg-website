@@ -381,22 +381,18 @@ Quick reference:
 
 | Secret | Purpose |
 | --- | --- |
-| `COOLIFY_PRODUCTION_WEBHOOK_URL` | Release Please triggers Coolify production deploy |
-| `E2E_BASE_URL` | Optional fixed URL for PR E2E (e.g. staging); omit to keep Vercel previews |
+| `COOLIFY_PRODUCTION_WEBHOOK_URL` | Release Please triggers Coolify production after a GitHub release |
+| `INTERNAL_API_SECRET` | Bearer auth for `/api/test/*` in CI (match staging app env) |
 
-### Vercel (optional — PR previews only)
+**Deployment strategy** (see `.github/workflows/ci.yml` and `.github/workflows/release-please.yml`):
 
-You can keep Vercel for PR preview E2E until staging supports public tests, or set `E2E_BASE_URL` to a Coolify deploy.
+1. Work on `staging` (or merge feature PRs into `staging`)
+2. Coolify staging auto-deploys; CI waits and runs Playwright E2E (lint/typecheck/Vitest run on every PR)
+3. Open a PR **`staging` → `main`**. Required checks run again against that SHA on staging
+4. Merge to `main`. Release Please opens (or updates) the version/changelog PR
+5. Merge the Release Please PR → GitHub release → production webhook (`COOLIFY_PRODUCTION_WEBHOOK_URL`)
 
-1. Connect repository (preview deployments only; disable production deploys on `main`)
-2. Set environment variables (including `CRON_SECRET` for reminder emails)
-3. Cron jobs in `vercel.json` are **inactive** once production runs on Coolify — use Coolify scheduled tasks instead
-
-**Deployment strategy:**
-
-- PR E2E: `E2E_BASE_URL` if set, else Vercel preview (see `.github/workflows/ci.yml`)
-- Release Please creates releases from `main`
-- Production: Coolify webhook when `COOLIFY_PRODUCTION_WEBHOOK_URL` is set; otherwise falls back to `vercel promote`
+Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). Production stays on **`main`** with auto-deploy **off**. Do not merge random feature branches straight to `main` — staging will not have that commit.
 
 ## Roadmap
 
