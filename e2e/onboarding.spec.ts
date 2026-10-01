@@ -143,9 +143,7 @@ test.describe('Onboarding after login from a public page', () => {
 
     await page.locator('input[type="email"]').first().fill(testUser.email);
     await page.locator('input[type="password"]').first().fill(testUser.password);
-    const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /log in|sign in/i }),
-    );
+    const submitButton = page.getByRole('button', { name: 'Log in', exact: true });
     await submitButton.click();
 
     await expect(page).toHaveURL(/\/onboarding/, { timeout: 15000 });
@@ -195,7 +193,7 @@ test.describe('Onboarding profile images', () => {
     const completeButton = page.getByRole('button', { name: /join the group/i });
     await expect(completeButton).toBeEnabled();
     await completeButton.click();
-    await expect(completeButton).toBeHidden({ timeout: 45000 });
+    await expect(page).toHaveURL(/\/account/, { timeout: 45000 });
 
     await page.goto('/account');
     await expect(page.getByRole('heading', { name: /account settings/i })).toBeVisible();

@@ -76,7 +76,14 @@ test.describe('Revalidation smoke', () => {
     const signup = await memberPage.request.post('/api/signup', {
       data: { event_id: event.id },
     });
-    expect(signup.ok()).toBeTruthy();
+    if (!signup.ok()) {
+      const body = await signup.json().catch(() => ({})) as { message?: string };
+      // Staging promotes E2E users to admin; creating an event auto-RSVPs all admins.
+      const alreadyIn = signup.status() === 400
+        && typeof body.message === 'string'
+        && /already signed up/i.test(body.message);
+      expect(alreadyIn, `RSVP failed: HTTP ${signup.status()} ${JSON.stringify(body)}`).toBeTruthy();
+    }
 
     const detail = await page.request.get(`/events/${event.slug}`);
     expect(detail.ok()).toBeTruthy();

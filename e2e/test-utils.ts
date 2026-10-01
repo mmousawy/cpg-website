@@ -238,14 +238,10 @@ export async function loginTestUser(page: Page, email: string, password: string)
   const emailInput = page.locator('input[type="email"]').first();
   await emailInput.fill(email);
 
-  const passwordInput = page.locator('input[type="password"]').first();
-  await passwordInput.fill(password);
+  await page.locator('input[type="password"]').first().fill(password);
 
-  // Submit
-  const submitButton = page.locator('button[type="submit"]').or(
-    page.getByRole('button', { name: /log in|sign in/i }),
-  );
-  await submitButton.click();
+  // Exact name avoids the mobile tab-bar "Log in or sign up" control.
+  await page.getByRole('button', { name: 'Log in', exact: true }).click();
 
   // Wait for redirect to the authenticated area, including onboarding if the profile is incomplete.
   await page.waitForURL(/\/(account|onboarding|$)/, { timeout: 15000 });

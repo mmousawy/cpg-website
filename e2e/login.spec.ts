@@ -18,9 +18,7 @@ test.describe('Login Flow', () => {
 
     // Check for submit button
     await expect(
-      page.locator('button[type="submit"]').or(
-        page.getByRole('button', { name: /log in|sign in/i }),
-      ),
+      page.getByRole('button', { name: 'Log in', exact: true }),
     ).toBeVisible();
 
     if (!isStagingE2ETarget()) {
@@ -39,9 +37,7 @@ test.describe('Login Flow', () => {
     await passwordInput.fill('wrongpassword123');
 
     // Submit the form
-    const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /log in|sign in/i }),
-    );
+    const submitButton = page.getByRole('button', { name: 'Log in', exact: true });
     await submitButton.click();
 
     // Should show error message
