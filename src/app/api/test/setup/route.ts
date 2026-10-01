@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database, TablesInsert } from '@/database.types';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { isTestApiEnvironmentAllowed, verifyInternalApiRequest } from '@/lib/auth/verifyInternalApi';
 
@@ -42,6 +42,7 @@ function buildTestProfileRow({
     avatar_url: null,
     banner_url: null,
     banner_blurhash: null,
+    is_admin: isAdmin ? true : undefined,
   };
 }
 

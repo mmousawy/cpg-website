@@ -29,7 +29,14 @@ test.describe('Account mobile section nav', () => {
     // so all section elements are in the DOM before we interact with the nav.
     await page.locator('#copyright').waitFor({ state: 'attached', timeout: 15000 });
 
-    const startingScrollY = await page.evaluate(() => window.scrollY);
+    const readScrollTop = () => page.evaluate(() => {
+      const pinned = document.documentElement.classList.contains('mobile-pinned-shell');
+      const main = document.getElementById('main-content');
+      if (pinned && main) return main.scrollTop;
+      return window.scrollY;
+    });
+
+    const startingScrollY = await readScrollTop();
 
     await page.getByRole('button', { name: /open sections/i }).click();
     const targetId = 'copyright';
@@ -45,7 +52,7 @@ test.describe('Account mobile section nav', () => {
       (element) => Math.round(element.getBoundingClientRect().top),
     )).toBeLessThan(220);
 
-    const endingScrollY = await page.evaluate(() => window.scrollY);
+    const endingScrollY = await readScrollTop();
     expect(endingScrollY).toBeGreaterThan(startingScrollY + 100);
   });
 });
