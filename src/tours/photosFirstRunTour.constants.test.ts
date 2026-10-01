@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-    isPhotosManageTourMockMode,
-    isPhotosTourMockMode,
-    PHOTOS_MANAGE_TOUR_QUERY_VALUE,
-    PHOTOS_TOUR_QUERY_PARAM,
-    PHOTOS_TOUR_QUERY_VALUE,
+  isPhotosManageTourMockMode,
+  isPhotosTourMockMode,
+  PHOTOS_MANAGE_TOUR_QUERY_VALUE,
+  PHOTOS_TOUR_QUERY_PARAM,
+  PHOTOS_TOUR_QUERY_VALUE,
 } from '@/tours/photosFirstRunTour.constants';
 
 describe('isPhotosTourMockMode', () => {

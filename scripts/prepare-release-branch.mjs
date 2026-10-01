@@ -10,6 +10,7 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const { Manifest } = require('release-please/build/src/manifest.js');
 const { GitHub } = require('release-please/build/src/github.js');
+const { LocalGitHub } = require('release-please/build/src/local-github.js');
 
 const ROOT = process.cwd();
 const CONFIG_FILE = 'release-please-config.json';
@@ -29,12 +30,14 @@ function parseRepo() {
 
 async function applyUpdates(github, updates, baseBranch) {
   const changes = await github.buildChangeSet(updates, baseBranch);
-  for (const update of updates) {
-    const change = changes.get(update.path);
+  if (changes.size === 0) {
+    throw new Error('release-please produced no file changes');
+  }
+  for (const [relPath, change] of changes) {
     if (!change?.content) {
-      throw new Error(`release-please produced no content for ${update.path}`);
+      throw new Error(`release-please produced no content for ${relPath}`);
     }
-    const filePath = path.join(ROOT, update.path);
+    const filePath = path.join(ROOT, relPath);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, change.content, 'utf8');
   }
@@ -47,7 +50,9 @@ async function main() {
   }
 
   const { owner, repo } = parseRepo();
-  const github = await GitHub.create({ owner, repo, token });
+  const github = process.env.GITHUB_ACTIONS
+    ? await LocalGitHub.create({ owner, repo, token, localRepoPath: ROOT })
+    : await GitHub.create({ owner, repo, token });
 
   const manifest = await Manifest.fromManifest(
     github,

@@ -1,8 +1,8 @@
 import type { Profile } from '@/context/AuthContext';
 import type { Json } from '@/database.types';
 import {
-    PHOTOS_MANAGE_TOUR_QUERY_VALUE,
-    PHOTOS_TOUR_QUERY_VALUE,
+  PHOTOS_MANAGE_TOUR_QUERY_VALUE,
+  PHOTOS_TOUR_QUERY_VALUE,
 } from '@/tours/photosFirstRunTour.constants';
 
 export type TourEntry = {

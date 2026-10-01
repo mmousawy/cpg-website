@@ -449,7 +449,9 @@ function RsvpEventCard({
                 rel="noopener noreferrer"
                 variant="secondary"
                 size="sm"
-                icon={<LocationChipSVG className="size-5" />}
+                icon={<LocationChipSVG
+                  className="size-5"
+                />}
               >
                 See location
               </Button>
