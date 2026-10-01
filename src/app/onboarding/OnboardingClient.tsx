@@ -1,6 +1,5 @@
 'use client';
 import { ModalContext } from '@/app/providers/ModalProvider';
-import type { AlbumCardStyle } from '@/components/account/AlbumCardStylePicker';
 import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
 import PageContainer from '@/components/layout/PageContainer';
@@ -22,8 +21,14 @@ import type { AppThemeSelection } from '@/hooks/useAppTheme';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
+import {
+  DISPLAY_PREF_STORAGE_KEYS,
+  parseMotionPreference,
+  type MotionPreference,
+} from '@/utils/displayPreferences';
 import { getEmailTypes, updateEmailPreferences, type EmailTypeData } from '@/utils/emailPreferencesClient';
 import { generateBlurhash } from '@/utils/generateBlurhash';
+import { scrollBehavior } from '@/utils/reduceMotion';
 import { validateImage } from '@/utils/imageValidation';
 import {
   createOnboardingSchema,
@@ -56,11 +61,9 @@ function parseProfileTheme(theme: string | null | undefined): AppThemeSelection 
   }
   return 'system';
 }
-function parseAlbumCardStyle(style: string | null | undefined): AlbumCardStyle {
-  if (style === 'large' || style === 'compact') {
-    return style;
-  }
-  return 'large';
+function applyMotionPreference(motion: MotionPreference) {
+  localStorage.setItem(DISPLAY_PREF_STORAGE_KEYS.motion, motion);
+  window.dispatchEvent(new Event('display-preferences-changed'));
 }
 export default function OnboardingClient() {
   const { user, profile, isLoading, refreshProfile } = useAuth();
@@ -80,7 +83,7 @@ export default function OnboardingClient() {
   stepRef.current = step;
   const [previewNoticeDismissed, setPreviewNoticeDismissed] = useState(false);
   const [themeSelection, setThemeSelection] = useState<AppThemeSelection>('system');
-  const [albumCardStyle, setAlbumCardStyle] = useState<AlbumCardStyle>('large');
+  const [motionPreference, setMotionPreference] = useState<MotionPreference>('system');
   const [themeInitialized, setThemeInitialized] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -166,14 +169,16 @@ export default function OnboardingClient() {
     if (themeInitialized) return;
     const initialTheme = parseProfileTheme(profile?.theme);
     setThemeSelection(initialTheme);
-    setAlbumCardStyle(parseAlbumCardStyle(profile?.album_card_style));
+    const initialMotion = parseMotionPreference(profile?.motion) ?? 'system';
+    setMotionPreference(initialMotion);
+    applyMotionPreference(initialMotion);
     if (initialTheme === 'system') {
       setTheme('system');
     } else {
       setTheme(initialTheme);
     }
     setThemeInitialized(true);
-  }, [profile?.album_card_style, profile?.theme, setTheme, themeInitialized]);
+  }, [profile?.motion, profile?.theme, setTheme, themeInitialized]);
   // Load email types on mount
   useEffect(() => {
     const loadEmailTypes = async () => {
@@ -244,7 +249,7 @@ export default function OnboardingClient() {
   );
   const nicknameCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior('smooth') });
   };
   const goBack = () => {
     if (step <= 0) return;
@@ -576,7 +581,7 @@ export default function OnboardingClient() {
         newsletter_opt_in: boolean;
         terms_accepted_at: string;
         theme: AppThemeSelection;
-        album_card_style: AlbumCardStyle;
+        motion: MotionPreference;
       } = {
         nickname: data.nickname,
         full_name: data.fullName || null,
@@ -587,7 +592,7 @@ export default function OnboardingClient() {
         newsletter_opt_in: data.emailPreferences['newsletter'] ?? true,
         terms_accepted_at: new Date().toISOString(),
         theme: themeSelection,
-        album_card_style: albumCardStyle,
+        motion: motionPreference,
       };
       // Only update email if OAuth user and email is provided
       if (isOAuthUser && data.email) {
@@ -772,14 +777,7 @@ export default function OnboardingClient() {
     (isCheckingNickname || !profileStepReady || nicknameAvailable !== true);
   const completeDisabled = isSaving || !watchedTermsAccepted;
   const primaryAction = step === 0 ? (
-    <Button
-      key="intro"
-      type="button"
-      onClick={() => void goNext()}
-      iconRight={<ArrowRightFillSVG
-        className="size-4 -mr-1"
-      />}
-    >
+    <Button key="intro" type="button" onClick={() => void goNext()} iconRight={<ArrowRightFillSVG className="size-4 -mr-1" />}>
       Let&apos;s go!
     </Button>
   ) : step === LAST_ONBOARDING_STEP ? (
@@ -798,9 +796,7 @@ export default function OnboardingClient() {
       type="button"
       onClick={() => void goNext()}
       disabled={continueDisabled}
-      iconRight={<ArrowRightFillSVG
-        className="size-4 -mr-1"
-      />}
+      iconRight={<ArrowRightFillSVG className="size-4 -mr-1" />}
     >
       Continue
     </Button>
@@ -809,63 +805,54 @@ export default function OnboardingClient() {
     <>
       {step > 0 ? <OnboardingHeader /> : null}
       <PageContainer>
-        <div
-          className={onboardingChromeInnerClassName}
+        <div className={onboardingChromeInnerClassName}>
+        <form
+          ref={stepFrameRef}
+          onSubmit={handleFormSubmit}
+          noValidate
+          className="flex flex-col py-8 text-sm sm:py-0 sm:text-base"
         >
-          <form
-            ref={stepFrameRef}
-            onSubmit={handleFormSubmit}
-            noValidate
-            className="flex flex-col py-8 text-sm sm:py-0 sm:text-base"
-          >
-            <div
-              className="flex flex-1 flex-col justify-center"
-            >
-              {step === 0 ? (
-                <OnboardingPageHeader
-                  titleLine1="Welcome to"
-                  titleLine2="Creative Photography Group!"
-                />
+          <div className="flex flex-1 flex-col justify-center">
+            {step === 0 ? (
+              <OnboardingPageHeader
+                titleLine1="Welcome to"
+                titleLine2="Creative Photography Group!"
+              />
             ) : null}
-              {isPreviewMode && !previewNoticeDismissed && (
-                <div
-                  className="onboarding-rise-in mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
-                  role="status"
-                >
-                  <p
-                    className="mb-3"
-                  >
-                    <strong>
-                      Preview mode:
-                    </strong>
-                    {' '}
-                    Auth and profile-completion redirects are disabled. Form validation
-                    works, but submission will not save your profile.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setPreviewNoticeDismissed(true)}
-                  >
-                    Got it
-                  </Button>
-                </div>
-            )}
+            {isPreviewMode && !previewNoticeDismissed && (
               <div
-                key={step}
-                className="space-y-8"
+                className="onboarding-rise-in mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
+                role="status"
               >
-                {step === 0 && <OnboardingIntroSection />}
-                {step === 1 && (
-                  <>
-                    <OnboardingNicknameSection
-                      register={register}
-                      errors={errors}
-                      watchedNickname={watchedNickname}
-                      isCheckingNickname={isCheckingNickname}
-                      nicknameAvailable={nicknameAvailable}
-                      onNicknameChange={(value) => {
+                <p className="mb-3">
+                  <strong>
+                    Preview mode:
+                  </strong>
+                  {' '}
+                  Auth and profile-completion redirects are disabled. Form validation
+                  works, but submission will not save your profile.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setPreviewNoticeDismissed(true)}
+                >
+                  Got it
+                </Button>
+              </div>
+            )}
+            <div key={step} className="space-y-8">
+            {step === 0 && <OnboardingIntroSection />}
+            {step === 1 && (
+              <>
+                <OnboardingNicknameSection
+                  register={register}
+                  errors={errors}
+                  watchedNickname={watchedNickname}
+                  isCheckingNickname={isCheckingNickname}
+                  nicknameAvailable={nicknameAvailable}
+                  onNicknameChange={(value) => {
                     setNicknameAvailable(null);
                     if (nicknameCheckTimeoutRef.current) {
                       clearTimeout(nicknameCheckTimeoutRef.current);
@@ -873,78 +860,81 @@ export default function OnboardingClient() {
                     nicknameCheckTimeoutRef.current = setTimeout(() => {
                       checkNicknameAvailability(value);
                     }, 500);
-                      }}
-                    />
-                    <OnboardingAboutYouSection
-                      register={register}
-                      errors={errors}
-                      isOAuthUser={isOAuthUser}
-                      watch={watch}
-                      setValue={setValue}
-                      isSaving={isSaving}
-                    />
-                  </>
+                  }}
+                />
+                <OnboardingAboutYouSection
+                  register={register}
+                  errors={errors}
+                  isOAuthUser={isOAuthUser}
+                  watch={watch}
+                  setValue={setValue}
+                  isSaving={isSaving}
+                />
+              </>
             )}
-                {step === 2 && (
-                  <OnboardingStyleSection
-                    profileId={profile?.id ?? user?.id ?? ''}
-                    nickname={watchedNickname}
-                    fullName={watchedFullName}
-                    displayBannerUrl={displayBannerUrl}
-                    displayBannerBlurhash={displayBannerBlurhash}
-                    displayAvatarUrl={displayAvatarUrl}
-                    savedBannerUrl={savedBannerUrl}
-                    savedAvatarUrl={savedAvatarUrl}
-                    pendingBannerFile={pendingBannerFile}
-                    pendingAvatarFile={pendingAvatarFile}
-                    pendingBannerRemove={pendingBannerRemove}
-                    pendingAvatarRemove={pendingAvatarRemove}
-                    hasBannerChanges={hasBannerChanges}
-                    hasAvatarChanges={hasAvatarChanges}
-                    bannerError={bannerError}
-                    avatarError={avatarError}
-                    isSaving={isSaving}
-                    fileInputRef={fileInputRef}
-                    bannerInputRef={bannerInputRef}
-                    handleBannerUpload={handleBannerUpload}
-                    handleRemoveBanner={handleRemoveBanner}
-                    handleCancelBannerChange={handleCancelBannerChange}
-                    handleAvatarUpload={handleAvatarUpload}
-                    handleRemoveAvatar={handleRemoveAvatar}
-                    handleCancelAvatarChange={handleCancelAvatarChange}
-                    theme={themeSelection}
-                    onThemeChange={setThemeSelection}
-                    albumCardStyle={albumCardStyle}
-                    onAlbumCardStyleChange={setAlbumCardStyle}
-                  />
+            {step === 2 && (
+              <OnboardingStyleSection
+                profileId={profile?.id ?? user?.id ?? ''}
+                nickname={watchedNickname}
+                fullName={watchedFullName}
+                displayBannerUrl={displayBannerUrl}
+                displayBannerBlurhash={displayBannerBlurhash}
+                displayAvatarUrl={displayAvatarUrl}
+                savedBannerUrl={savedBannerUrl}
+                savedAvatarUrl={savedAvatarUrl}
+                pendingBannerFile={pendingBannerFile}
+                pendingAvatarFile={pendingAvatarFile}
+                pendingBannerRemove={pendingBannerRemove}
+                pendingAvatarRemove={pendingAvatarRemove}
+                hasBannerChanges={hasBannerChanges}
+                hasAvatarChanges={hasAvatarChanges}
+                bannerError={bannerError}
+                avatarError={avatarError}
+                isSaving={isSaving}
+                fileInputRef={fileInputRef}
+                bannerInputRef={bannerInputRef}
+                handleBannerUpload={handleBannerUpload}
+                handleRemoveBanner={handleRemoveBanner}
+                handleCancelBannerChange={handleCancelBannerChange}
+                handleAvatarUpload={handleAvatarUpload}
+                handleRemoveAvatar={handleRemoveAvatar}
+                handleCancelAvatarChange={handleCancelAvatarChange}
+                theme={themeSelection}
+                onThemeChange={setThemeSelection}
+                motion={motionPreference}
+                onMotionChange={(motion) => {
+                  setMotionPreference(motion);
+                  applyMotionPreference(motion);
+                }}
+              />
             )}
-                {step === 3 && (
-                  <OnboardingEmailPreferencesSection
-                    control={control}
-                    watch={watch}
-                    setValue={setValue}
-                    emailTypes={emailTypes}
-                    isLoadingEmailTypes={isLoadingEmailTypes}
-                  />
+            {step === 3 && (
+              <OnboardingEmailPreferencesSection
+                control={control}
+                watch={watch}
+                setValue={setValue}
+                emailTypes={emailTypes}
+                isLoadingEmailTypes={isLoadingEmailTypes}
+              />
             )}
-                {step === 4 && (
-                  <OnboardingFinishSection
-                    register={register}
-                    errors={errors}
-                    submitError={submitError}
-                    isPreviewMode={isPreviewMode}
-                  />
+            {step === 4 && (
+              <OnboardingFinishSection
+                register={register}
+                errors={errors}
+                submitError={submitError}
+                isPreviewMode={isPreviewMode}
+              />
             )}
-              </div>
             </div>
-            <OnboardingProgress
-              ref={progressRef}
-              step={step}
-              showBack={step > 0}
-              onBack={goBack}
-              primaryAction={primaryAction}
-            />
-          </form>
+          </div>
+          <OnboardingProgress
+            ref={progressRef}
+            step={step}
+            showBack={step > 0}
+            onBack={goBack}
+            primaryAction={primaryAction}
+          />
+        </form>
         </div>
       </PageContainer>
     </>

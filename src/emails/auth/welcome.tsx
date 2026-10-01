@@ -1,155 +1,127 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Link, Section } from '@react-email/components';
 
-import Footer from '../components/Footer';
-import EmailHeader from '../components/Header';
+import EmailButton from '../components/EmailButton';
+import EmailHeading from '../components/EmailHeading';
+import EmailLayout from '../components/EmailLayout';
+import EmailText from '../components/EmailText';
+import { emailInlineLinkStyle, emailListItemStyle, emailListStyle } from '../components/styles';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export const WelcomeTemplate = ({
   preview,
   fullName,
+  recipientEmail,
 }: {
   preview?: boolean;
   fullName: string;
+  recipientEmail?: string;
 }) => {
   if (preview) {
     fullName = 'John Doe';
+    recipientEmail = 'john.doe@example.com';
   }
 
   const previewText = 'Welcome to Creative Photography Group!';
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={fullName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        Welcome to Creative Photography Group! 📸
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {fullName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        Your email has been verified and your account is now active. Welcome to our community of photography enthusiasts!
+      </EmailText>
+
+      <EmailText>
+        Here&apos;s what you can do next:
+      </EmailText>
+
+      <br />
+
+      <ul
+        style={emailListStyle}
+      >
+        <li
+          style={emailListItemStyle}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
+          Browse upcoming{' '}
+          <Link
+            href={`${baseUrl}/events`}
+            style={emailInlineLinkStyle}
           >
-            <EmailHeader />
+            events and meetups
+          </Link>
+        </li>
+        <li
+          style={emailListItemStyle}
+        >
+          Explore{' '}
+          <Link
+            href={`${baseUrl}/galleries`}
+            style={emailInlineLinkStyle}
+          >
+            photo galleries
+          </Link>
+          {' '}
+          from the community
+        </li>
+        <li
+          style={emailListItemStyle}
+        >
+          Set up your{' '}
+          <Link
+            href={`${baseUrl}/account`}
+            style={emailInlineLinkStyle}
+          >
+            profile
+          </Link>
+          {' '}
+          and create your first album
+        </li>
+        <li
+          style={emailListItemStyle}
+        >
+          Join our{' '}
+          <Link
+            href="https://discord.gg/cWQK8udb6p"
+            style={emailInlineLinkStyle}
+          >
+            Discord server
+          </Link>
+          {' '}
+          to connect with other photographers
+        </li>
+      </ul>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              Welcome to Creative Photography Group! 📸
-            </Heading>
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={`${baseUrl}/events`}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          Browse upcoming events
+        </EmailButton>
+      </Section>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {fullName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Your email has been verified and your account is now active. Welcome to our community of photography enthusiasts!
-            </Text>
-
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Here&apos;s what you can do next:
-            </Text>
-
-            <ul
-              className="text-[14px] leading-[24px] text-[#171717] pl-4"
-            >
-              <li
-                className="mb-2"
-              >
-                Browse upcoming{' '}
-                <Link
-                  href={`${baseUrl}/events`}
-                  className="text-[#38785f] no-underline font-medium"
-                >
-                  events and meetups
-                </Link>
-              </li>
-              <li
-                className="mb-2"
-              >
-                Explore{' '}
-                <Link
-                  href={`${baseUrl}/galleries`}
-                  className="text-[#38785f] no-underline font-medium"
-                >
-                  photo galleries
-                </Link>
-                {' '}
-                from the community
-              </li>
-              <li
-                className="mb-2"
-              >
-                Set up your{' '}
-                <Link
-                  href={`${baseUrl}/account`}
-                  className="text-[#38785f] no-underline font-medium"
-                >
-                  profile
-                </Link>
-                {' '}
-                and create your first album
-              </li>
-              <li
-                className="mb-2"
-              >
-                Join our{' '}
-                <Link
-                  href="https://discord.gg/cWQK8udb6p"
-                  className="text-[#38785f] no-underline font-medium"
-                >
-                  Discord server
-                </Link>
-                {' '}
-                to connect with other photographers
-              </li>
-            </ul>
-
-            <Section
-              className="my-[20px]"
-            >
-              <Button
-                className="rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-                href={`${baseUrl}/events`}
-              >
-                Browse upcoming events
-              </Button>
-            </Section>
-
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              We&apos;re excited to have you join us!
-            </Text>
-
-            <Footer
-              fullName={fullName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <EmailText>
+        We&apos;re excited to have you join us!
+      </EmailText>
+    </EmailLayout>
   );
 };
 

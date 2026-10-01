@@ -25,6 +25,8 @@ type StickyActionBarProps = {
   sticky?: boolean
   /** Reserve scroll padding because later content scrolls under this bar (e.g. comments below) */
   overlaysContent?: boolean
+  /** `flush` is a square bar with only a top border (bottom sheets, sidebars). */
+  edges?: 'pill' | 'flush'
 }
 
 export default function StickyActionBar({
@@ -35,6 +37,7 @@ export default function StickyActionBar({
   variant = 'default',
   sticky = true,
   overlaysContent = false,
+  edges = 'pill',
 }: StickyActionBarProps) {
   const isBottomSticky = sticky && position === 'bottom';
   const rootRef = useRef<HTMLDivElement>(null);
@@ -53,12 +56,14 @@ export default function StickyActionBar({
       />
       <div
         className={clsx(
-          mobileFloatingPillClassName,
-          'max-sm:overflow-hidden',
-          'bg-background-light bg-no-noise sm:border-border-color-strong',
+          edges === 'pill' && mobileFloatingPillClassName,
+          edges === 'pill' && 'max-sm:overflow-hidden',
+          'bg-background-light bg-no-noise',
+          edges === 'pill' && 'sm:border-border-color-strong',
+          edges === 'pill' && (position === 'bottom' ? 'sm:border-t' : 'sm:border-b'),
+          edges === 'flush' && 'rounded-none border-t border-border-color-strong shadow-none',
           variant === 'compact' ? 'px-3 py-2.5' : 'px-3 py-3',
-          position === 'bottom' ? 'sm:border-t' : 'sm:border-b',
-          'md:px-12 md:py-4',
+          edges === 'pill' && 'md:px-12 md:py-4',
         )}
       >
         <div

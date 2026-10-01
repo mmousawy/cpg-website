@@ -15,7 +15,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import CheckSVG from 'public/icons/check.svg';
-import CloseSVG from 'public/icons/close.svg';
+import EditSquareSVG from 'public/icons/edit-square.svg';
 
 type EventSignupBarProps = {
   event: CPGEvent
@@ -56,11 +56,11 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
         </p>
 
         <div
-          className="flex-1 min-w-0"
+          className="min-w-0 shrink-0"
         >
           {spotsLeft !== null && spotsLeft > 0 ? (
             <p
-              className="text-sm text-foreground/80 max-sm:text-xs max-sm:truncate"
+              className="text-sm text-foreground/80 max-sm:text-xs max-sm:truncate sm:h-5 sm:min-h-5 sm:leading-5"
             >
               {spotsLeft}
               {' '}
@@ -70,13 +70,13 @@ function EventSignupBarGuest({ event, confirmedAttendeeCount }: EventSignupBarPr
             </p>
           ) : spotsLeft === 0 ? (
             <p
-              className="text-sm text-foreground/80"
+              className="h-5 min-h-5 text-sm leading-5 text-foreground/80"
             >
               Event is full
             </p>
           ) : (
             <p
-              className="text-sm text-foreground/80"
+              className="h-5 min-h-5 text-sm leading-5 text-foreground/80"
             >
               Reserve your spot
             </p>
@@ -142,20 +142,23 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
   }, [user, event, supabase]);
 
   useEffect(() => {
-    const checkRSVP = async () => {
-      if (authLoading) return;
-      if (!user || !event) {
-        setIsLoading(false);
-        return;
-      }
+    if (authLoading || !user || !event) return;
 
+    let cancelled = false;
+
+    const checkRSVP = async () => {
       const status = await loadRSVPStatus();
+      if (cancelled) return;
       setHasRSVP(status.hasRSVP);
       setRsvpUuid(status.rsvpUuid);
       setIsLoading(false);
     };
 
     checkRSVP();
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user, event, loadRSVPStatus]);
 
   const handleRSVPChange = useCallback(async (nextHasRSVP: boolean) => {
@@ -199,15 +202,15 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
         </p>
 
         <div
-          className="min-w-0 flex-1 mt-1"
+          className="mt-1 min-w-0 shrink-0"
         >
           {isLoading ? (
             <div
-              className="h-4 w-24 animate-pulse rounded bg-border-color"
+              className="h-5 w-24 shrink-0 animate-pulse rounded bg-border-color"
             />
           ) : hasRSVP ? (
             <p
-              className="flex items-center text-sm font-medium text-primary max-sm:text-xs"
+              className="flex h-5 min-h-5 items-center text-sm font-medium leading-5 text-primary max-sm:text-xs"
             >
               <CheckSVG
                 className="size-4 fill-current inline-block mr-1.5 align-top max-sm:mr-1 max-sm:size-3.5"
@@ -216,7 +219,7 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
             </p>
           ) : spotsLeft !== null && spotsLeft > 0 ? (
             <p
-              className="text-sm text-foreground/80 max-sm:text-xs max-sm:truncate"
+              className="text-sm text-foreground/80 max-sm:text-xs max-sm:truncate sm:h-5 sm:min-h-5 sm:leading-5"
             >
               {spotsLeft}
               {' '}
@@ -226,13 +229,13 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
             </p>
           ) : spotsLeft === 0 ? (
             <p
-              className="text-sm text-foreground/80"
+              className="h-5 min-h-5 text-sm leading-5 text-foreground/80"
             >
               Event is full
             </p>
           ) : (
             <p
-              className="text-sm text-foreground/80"
+              className="h-5 min-h-5 text-sm leading-5 text-foreground/80"
             >
               Reserve your spot
             </p>
@@ -243,16 +246,16 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
       <Button
         onClick={openModal}
         disabled={isLoading || (spotsLeft === 0 && !hasRSVP)}
-        icon={hasRSVP ? <CloseSVG
-          className="size-4 -ml-0.5 fill-current"
+        icon={hasRSVP ? <EditSquareSVG
+          className="size-5 -ml-0.5 fill-current"
         /> : <CheckSVG
-          className="size-4 -ml-0.5 fill-current"
+          className="size-5 -ml-0.5 fill-current"
         />}
         variant={hasRSVP ? 'secondary' : 'primary'}
         size="md"
         className="shrink-0 rounded-full max-sm:px-3 max-sm:text-sm"
       >
-        {isLoading ? '...' : hasRSVP ? 'Cancel RSVP' : 'Join event'}
+        {isLoading ? '...' : hasRSVP ? 'Edit RSVP' : 'Join event'}
 
       </Button>
     </>
@@ -260,20 +263,19 @@ function EventSignupBarAuthenticated({ event, confirmedAttendeeCount }: EventSig
 }
 
 export default function EventSignupBar(props: EventSignupBarProps) {
-  const { isLoggedIn } = useSession();
+  const { isLoggedIn, isSessionReady } = useSession();
+  const { user, isLoading: authLoading } = useAuth();
+  // Session context stays logged-out until the profile fetch finishes, so
+  // isLoggedIn alone paints the guest copy before the RSVP check can run.
+  const authPending = !isSessionReady || authLoading;
+  const loggedIn = isLoggedIn || !!user;
 
   return (
-    <StickyActionBar
-      constrainWidth
-    >
-      {isLoggedIn ? (
-        <EventSignupBarAuthenticated
-          {...props}
-        />
+    <StickyActionBar constrainWidth overlaysContent>
+      {authPending || loggedIn ? (
+        <EventSignupBarAuthenticated {...props} />
       ) : (
-        <EventSignupBarGuest
-          {...props}
-        />
+        <EventSignupBarGuest {...props} />
       )}
     </StickyActionBar>
   );

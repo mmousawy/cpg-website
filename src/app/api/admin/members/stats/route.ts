@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('admin members stats API:', error);
+    // Don't log prerendering errors (expected during build)
+    const isPrerender = error instanceof Error && error.message.includes('prerender');
+    if (!isPrerender) {
+      console.error('admin members stats API:', error);
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

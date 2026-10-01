@@ -1,5 +1,6 @@
 'use client';
 
+import { prefersReducedMotion } from '@/utils/reduceMotion';
 import {
   useCallback,
   useEffect,
@@ -35,11 +36,15 @@ export default function AccountMenuSlidingTrack({
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
+    const update = () => setReduceMotion(prefersReducedMotion());
+    update();
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduceMotion(mq.matches);
-    const handler = () => setReduceMotion(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    mq.addEventListener('change', update);
+    window.addEventListener('display-preferences-changed', update);
+    return () => {
+      mq.removeEventListener('change', update);
+      window.removeEventListener('display-preferences-changed', update);
+    };
   }, []);
 
   const measureView = useCallback((target: 'root' | 'site') => {

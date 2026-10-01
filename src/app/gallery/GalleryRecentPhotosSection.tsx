@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import type { StreamPhoto } from '@/lib/data/gallery';
@@ -12,7 +12,7 @@ export function GalleryRecentPhotosSection({ photos }: { photos: StreamPhoto[] }
 
   return (
     <div>
-      <JustifiedPhotoGrid
+      <DensityAwarePhotoGrid
         photos={photos}
         showAttribution
         liveLikeCounts={false}

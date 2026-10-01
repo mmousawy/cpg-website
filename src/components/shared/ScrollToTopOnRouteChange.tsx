@@ -3,6 +3,10 @@
 import { usePathname } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
 
+import {
+  restoreCachedRouteScrollPosition,
+  shouldSkipScrollToTopOnRouteChange,
+} from '@/utils/routeScrollNavigation';
 import { scrollContainerTo } from '@/utils/scrollContainer';
 
 /**
@@ -15,6 +19,14 @@ function ScrollToTopOnRouteChangeInner() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.location.hash) return;
+    if (shouldSkipScrollToTopOnRouteChange()) {
+      const restore = () => {
+        restoreCachedRouteScrollPosition();
+      };
+      restore();
+      const rafId = requestAnimationFrame(restore);
+      return () => cancelAnimationFrame(rafId);
+    }
 
     const scrollToTop = () => {
       scrollContainerTo(0, 'auto');

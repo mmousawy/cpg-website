@@ -1,21 +1,52 @@
 import {
-  Hr,
+  Img,
   Link,
+  Section,
   Text,
 } from '@react-email/components';
 
-import { getEmailReplyToAddress, getEmailSiteUrl } from '@/emails/utils/siteUrl';
+import { socialLinks } from '@/config/socials';
+import { getEmailAssetsUrl, getEmailSiteUrl } from '@/emails/utils/siteUrl';
+
+import EmailDivider from './EmailDivider';
+import EmailText from './EmailText';
+import {
+  emailMutedLinkStyle,
+  emailSocialButtonStyle,
+  emailSocialSectionStyle,
+  emailTextStyle,
+} from './styles';
+
+const emailSocialIcons: Record<string, string> = {
+  Discord: 'discord.png',
+  Instagram: 'instagram.png',
+  WhatsApp: 'whatsapp.png',
+};
+
+const emailSocials = socialLinks.flatMap((social) => {
+  const iconFile = emailSocialIcons[social.name];
+  if (!iconFile) {
+    return [];
+  }
+
+  return [{
+    name: social.name,
+    url: social.url,
+    iconFile,
+  }];
+});
 
 export default function Footer({
   fullName,
+  recipientEmail,
   optOutLink,
   emailType,
 }: {
   fullName?: string;
+  recipientEmail?: string;
   optOutLink?: string;
   emailType?: 'events' | 'notifications' | 'newsletter' | 'photo_challenges';
 }) {
-  const replyToAddress = getEmailReplyToAddress();
   const contactUrl = `${getEmailSiteUrl()}/contact`;
 
   const getUnsubscribeText = () => {
@@ -35,72 +66,94 @@ export default function Footer({
 
   return (
     <>
-      <Hr
-        className="mx-0 my-5 w-full border border-solid border-[#e5e7ea]"
-      />
-      <Text
-        className="mb-0! text-[12px] leading-6 text-[#666666]"
+      <EmailDivider />
+      <EmailText
+        variant="muted"
       >
-        {fullName ? (
+        {fullName || recipientEmail ? (
           <>
-            This message was intended for
+            This email is for
             {' '}
-            <span
-              className="text-[#171717]"
-            >
-              {fullName}
-            </span>
+            {fullName && (
+              <span
+                style={{ color: emailTextStyle.color }}
+              >
+                {fullName}
+              </span>
+            )}
+            {recipientEmail && (
+              <>
+                {fullName ? ' ' : null}
+                <span
+                  style={{ color: emailTextStyle.color }}
+                >
+                  (
+                  {recipientEmail}
+                  )
+                </span>
+              </>
+            )}
             .
           </>
         ) : (
           <>This message was sent by Creative Photography Group.</>
         )}
         {' '}
-        If you were not expecting this email, you can ignore it.
-      </Text>
-      <Text
-        className="mt-2! mb-0! text-[12px] leading-6 text-[#666666]"
+        If that isn&apos;t you, please reply and let us know.
+      </EmailText>
+      <EmailText
+        variant="mutedSpaced"
       >
         Questions or feedback?
         {' '}
-        {replyToAddress ? (
-          <>
-            Reply to this email or contact us at
-            {' '}
-            <Link
-              href={`mailto:${replyToAddress}`}
-              className="text-[#666666] underline"
-            >
-              {replyToAddress}
-            </Link>
-            .
-          </>
-        ) : (
-          <>
-            Reply to this email or
-            {' '}
-            <Link
-              href={contactUrl}
-              className="text-[#666666] underline"
-            >
-              contact us on the website
-            </Link>
-            .
-          </>
-        )}
-      </Text>
+        Reply to this email or
+        {' '}
+        <Link
+          href={contactUrl}
+          style={emailMutedLinkStyle}
+        >
+          contact us here
+        </Link>
+        .
+      </EmailText>
       {optOutLink && (
         <Text
-          className="mt-2! mb-0! text-[12px] leading-6 text-[#666666]"
+          style={{ margin: '8px 0 0 0', fontSize: '12px', lineHeight: '24px', color: emailMutedLinkStyle.color }}
         >
           <Link
             href={optOutLink}
-            className="text-[#666666] underline"
+            style={emailMutedLinkStyle}
           >
             {getUnsubscribeText()}
           </Link>
         </Text>
       )}
     </>
+  );
+}
+
+export function EmailSocialLinks() {
+  const assetsUrl = getEmailAssetsUrl();
+
+  return (
+    <Section
+      style={emailSocialSectionStyle}
+    >
+      {emailSocials.map((social) => (
+        <Link
+          key={social.name}
+          href={social.url}
+          style={emailSocialButtonStyle}
+        >
+          <Img
+            src={`${assetsUrl}/email/${social.iconFile}`}
+            width="20"
+            height="20"
+            alt={social.name}
+            style={{ display: 'block' }}
+          />
+        </Link>
+      ))}
+    </Section>
   );
 }

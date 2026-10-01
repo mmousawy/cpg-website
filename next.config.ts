@@ -38,10 +38,11 @@ const nextConfig: NextConfig = {
       revalidate: 300,
       expire: 3600,
     },
-    // Homepage composite — serve stale while revalidating after tag invalidation
+    // Homepage shell. `stale` is 5 minutes so the prerender can include it.
+    // The server does not regenerate on a timer; expire the `home` tag to rerender.
     home: {
       stale: 300,
-      revalidate: 3600,
+      revalidate: 2592000,
       expire: 2592000,
     },
     // High-traffic listing pages — SWR after tag invalidation
@@ -72,6 +73,8 @@ const nextConfig: NextConfig = {
     useTypeScriptCli: true,
     webpackMemoryOptimizations: true,
     optimizeCss: true,
+    // App Router: inline imported CSS in HTML to avoid render-blocking stylesheet requests.
+    inlineCss: true,
     staleTimes: {
       dynamic: 0,
       static: 30,
@@ -84,7 +87,8 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 192, 256, 320, 384, 480, 512],
     // Cap at the custom loader's max (2400). Default 3840 would only produce a
     // duplicate 2400 URL in srcset.
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2400],
+    // 704 sits between 640 and 750 so ~386px slots at 1.75 DPR (~675px) don't jump to 750.
+    deviceSizes: [640, 704, 750, 828, 1080, 1200, 1920, 2048, 2400],
     // Cache transformed images for 31 days (reduces re-transformations)
     minimumCacheTTL: 2678400,
     // Single format reduces variants (Supabase auto-serves WebP via /render/image)

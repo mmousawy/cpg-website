@@ -55,7 +55,7 @@ async function fetchAllMySubmissions(userId: string): Promise<SubmissionWithDeta
       `
       *,
       photo:photos (id, short_id, url, width, height, title, blurhash),
-      challenge:challenges (id, slug, title, cover_image_url, image_blurhash, ends_at, is_active),
+      challenge:challenges (id, slug, title, prompt, cover_image_url, image_blurhash, ends_at, is_active),
       user:profiles!challenge_submissions_user_id_fkey (nickname, full_name, avatar_url)
     `,
     )

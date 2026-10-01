@@ -2,6 +2,7 @@
 
 import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
+  mobileFixedBottomChromeClassName,
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
   mobileStickyChromeZClassName,
@@ -47,27 +48,17 @@ export default function MobileActionBar({
       open={isOpen}
       innerRef={rootRef}
       className={clsx(
-        'md:hidden fixed inset-x-0',
+        'md:hidden pointer-events-none',
+        mobileFixedBottomChromeClassName,
         mobileFloatingPillInsetClassName,
         mobileStickyChromeZClassName,
-        'max-sm:pb-1',
       )}
     >
-      <div
-        className={clsx(mobileFloatingPillClassName, 'overflow-hidden')}
-      >
-        <div
-          className="px-3 py-2.5"
-        >
-          <div
-            className="flex items-center justify-between gap-3"
-          >
-            <div
-              className="flex min-w-0 items-center gap-2"
-            >
-              <span
-                className="truncate text-sm font-medium text-foreground/80"
-              >
+      <div className={clsx(mobileFloatingPillClassName, 'pointer-events-auto overflow-hidden')}>
+        <div className="px-3 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-sm font-medium text-foreground/80">
                 {selectedCount}
                 {' '}
                 {selectedCount === 1 ? 'item' : 'items'}
@@ -79,28 +70,21 @@ export default function MobileActionBar({
                 className="flex shrink-0 items-center justify-center rounded-full border border-border-color p-1 hover:bg-background transition-colors"
                 aria-label="Clear selection"
               >
-                <CloseMiniSVG
-                  className="size-4 fill-foreground"
-                />
+                <CloseMiniSVG className="size-4 fill-foreground" />
               </button>
             </div>
 
-            <div
-              className="flex shrink-0 items-center gap-2"
-            >
+            <div className="flex shrink-0 items-center gap-2">
               {actions}
               {!hideEdit && (
                 <Button
+                  id="photos-tour-mobile-edit"
                   onClick={onEdit}
                   variant="primary"
                   size="sm"
-                  icon={<EditMiniSVG
-                    className="size-5 -ml-0.5"
-                  />}
+                  icon={<EditMiniSVG className="size-5 -ml-0.5" />}
                 >
-                  <span
-                    className="hidden md:inline-block"
-                  >Edit</span>
+                  <span className="hidden md:inline-block">Edit</span>
                 </Button>
               )}
             </div>

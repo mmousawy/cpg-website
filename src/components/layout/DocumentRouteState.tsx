@@ -3,12 +3,21 @@
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef } from 'react';
 
+import { resetMobileStickyChromeDocumentState } from '@/hooks/useReportMobileStickyChromeHeight';
 import { resetBodyScrollLock } from '@/lib/bodyScrollLock';
 import { dispatchRouteChange } from '@/lib/routeChange';
 import { isManagePagePath } from '@/utils/managePage';
 import { isMobilePinnedShellPath } from '@/utils/mobilePinnedShell';
+import { isMobileTerminalStickySettlePath } from '@/utils/mobileTerminalStickySettle';
+import {
+  consumeHistoryTraversal,
+  ensureRouteScrollNavigationTracking,
+  restoreCachedRouteScrollPosition,
+} from '@/utils/routeScrollNavigation';
 import { refreshScrollContainerBinding, resetScrollContainer, resetWindowScroll } from '@/utils/scrollContainer';
 import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
+
+ensureRouteScrollNavigationTracking();
 
 /**
  * Keeps document-level scroll chrome in sync with the active route.
@@ -27,11 +36,18 @@ export default function DocumentRouteState() {
     const isManage = isManagePagePath(pathname);
     document.documentElement.classList.toggle('manage-page', isManage);
     document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
+    document.documentElement.classList.toggle(
+      'mobile-terminal-sticky-settle',
+      isMobileTerminalStickySettlePath(pathname),
+    );
+    const isHistoryTraversal = consumeHistoryTraversal();
     if (pinnedMobileShell && window.matchMedia('(max-width: 639px)').matches) {
       if (history.scrollRestoration) {
         history.scrollRestoration = 'manual';
       }
-      resetWindowScroll();
+      if (!isHistoryTraversal) {
+        resetWindowScroll();
+      }
     }
     resetBodyScrollLock();
     closeOpenPhotoSwipes();
@@ -40,20 +56,23 @@ export default function DocumentRouteState() {
     const pathChanged = prevPathnameRef.current !== pathname;
     if (pathChanged) {
       dispatchRouteChange();
+      resetMobileStickyChromeDocumentState();
     }
-    if (!window.location.hash && (pathChanged || pinnedMobileShell)) {
-      resetScrollContainer();
+    if (!window.location.hash) {
+      if (isHistoryTraversal) {
+        const restore = () => {
+          const restored = restoreCachedRouteScrollPosition();
+          if (!restored) {
+            resetScrollContainer();
+          }
+        };
+        restore();
+        requestAnimationFrame(restore);
+      } else if (pathChanged || pinnedMobileShell) {
+        resetScrollContainer();
+      }
     }
     prevPathnameRef.current = pathname;
-
-    return () => {
-      if (isManage) {
-        document.documentElement.classList.remove('manage-page');
-      }
-      if (pinnedMobileShell) {
-        document.documentElement.classList.remove('mobile-pinned-shell');
-      }
-    };
   }, [pathname, pinnedMobileShell]);
 
   return null;

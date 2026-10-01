@@ -8,25 +8,20 @@ import { scrollToIdWithStickyHeaderOffset } from '@/utils/scrollWithStickyHeader
 /**
  * Intercepts anchor link clicks and scrolls to targets with smooth behavior.
  * Works for same-page hashes (#section) and same-path hashes (/help#section).
- * Also scrolls to hash on initial load / client navigation (e.g. /help#section).
- * scroll-padding-top in globals.css handles header offset.
+ * On load or client navigation, waits until the hashed element is mounted and
+ * jumps to it without animation.
  */
 export default function SmoothScrollProvider() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Scroll to hash on route change (client navigation to page with hash)
-    const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    if (hash) {
-      const id = hash.slice(1);
-      const target = document.getElementById(id);
-      if (target) {
-        // Small delay so layout is ready
-        requestAnimationFrame(() => {
-          scrollToIdWithStickyHeaderOffset(id);
-        });
-      }
-    }
+    const hash = window.location.hash;
+    if (!hash || hash === '#') return;
+
+    const id = decodeURIComponent(hash.slice(1));
+    if (!id) return;
+
+    scrollToIdWithStickyHeaderOffset(id, 'auto');
   }, [pathname]);
 
   useEffect(() => {

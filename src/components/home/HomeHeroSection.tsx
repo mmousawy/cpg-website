@@ -1,12 +1,13 @@
 import HeroImage from '@/components/shared/HeroImage';
 import { HERO_IMAGES } from '@/config/heroImages';
-import { cacheLife } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 
 const heroImages = HERO_IMAGES;
 
 async function getHeroDayOfYear() {
   'use cache';
-  cacheLife({ stale: 300, revalidate: 86400, expire: 86400 });
+  cacheLife('home');
+  cacheTag('home');
   const now = Date.now();
   const yearStart = new Date(new Date(now).getFullYear(), 0, 0).getTime();
   return Math.floor((now - yearStart) / (1000 * 60 * 60 * 24));

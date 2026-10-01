@@ -1,38 +1,31 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Tailwind,
-  Text,
-} from '@react-email/components';
-
+import AddToCalendar from '@/components/events/AddToCalendar';
 import { CPGEvent } from '@/types/events';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-
-import AddToCalendar from '@/components/events/AddToCalendar';
+import EmailButton from './components/EmailButton';
+import EmailDivider from './components/EmailDivider';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 import EventDetails from './components/EventDetails';
-import EmailHeader from './components/Header';
-import Footer from './components/Footer';
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export const AttendeeReminderEmail = ({
   preview,
   fullName,
+  recipientEmail,
   event,
   cancellationLink,
 }: {
   preview?: boolean;
   fullName: string,
+  recipientEmail?: string,
   event: CPGEvent,
   cancellationLink: string,
 }) => {
   if (preview) {
     fullName = 'John Doe';
+    recipientEmail = 'john.doe@example.com';
 
     event = {
       title: 'Contours, compositions and cropping',
@@ -49,76 +42,53 @@ export const AttendeeReminderEmail = ({
   const previewText = `See you tomorrow! ${event?.title}`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={fullName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        See you tomorrow!
+        {' '}
+        {event?.title}
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {fullName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        Just a friendly reminder that the event you RSVP&apos;d for is happening tomorrow! We look forward to seeing you there.
+      </EmailText>
+
+      <br />
+
+      <EmailText>
+        Need to cancel your RSVP? You can do that by clicking here:
+        <br />
+        <EmailButton
+          href={cancellationLink}
+          variant="secondary"
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          Cancel RSVP
+        </EmailButton>
+      </EmailText>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              See you tomorrow!
-              {' '}
-              {event?.title}
-            </Heading>
+      <EmailDivider />
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {fullName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Just a friendly reminder that the event you RSVP&apos;d for is happening tomorrow! We look forward to seeing you there.
-            </Text>
+      <EventDetails
+        event={event}
+        noDescription
+      />
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Need to cancel your RSVP? You can do that by clicking here:
-              <br />
-              <Link
-                href={cancellationLink}
-                className="mt-2 inline-block rounded-full border-[0.0625rem] border-[#e5e7ea] bg-[#f7f7f7] px-4 py-2 font-mono text-[14px] font-semibold leading-none text-[#171717] no-underline"
-              >
-                Cancel RSVP
-              </Link>
-            </Text>
-
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            <EventDetails
-              event={event}
-              noDescription
-            />
-
-            <AddToCalendar
-              event={event}
-              render="email"
-            />
-
-            <Footer
-              fullName={fullName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <AddToCalendar
+        event={event}
+        render="email"
+      />
+    </EmailLayout>
   );
 };
 

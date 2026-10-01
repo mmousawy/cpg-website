@@ -39,28 +39,26 @@ export default function Tooltip({
     // If tooltip hasn't rendered yet, skip positioning
     if (tooltipRect.width === 0 || tooltipRect.height === 0) return;
 
-    const scrollX = window.scrollX || window.pageXOffset;
-    const scrollY = window.scrollY || window.pageYOffset;
-
+    // Portaled tooltip uses `position: fixed` — use viewport coords from getBoundingClientRect()
     let top = 0;
     let left = 0;
 
     switch (position) {
       case 'top':
-        top = triggerRect.top + scrollY - tooltipRect.height - 8;
-        left = triggerRect.left + scrollX + triggerRect.width / 2 - tooltipRect.width / 2;
+        top = triggerRect.top - tooltipRect.height - 8;
+        left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
         break;
       case 'bottom':
-        top = triggerRect.bottom + scrollY + 8;
-        left = triggerRect.left + scrollX + triggerRect.width / 2 - tooltipRect.width / 2;
+        top = triggerRect.bottom + 8;
+        left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
         break;
       case 'left':
-        top = triggerRect.top + scrollY + triggerRect.height / 2 - tooltipRect.height / 2;
-        left = triggerRect.left + scrollX - tooltipRect.width - 8;
+        top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+        left = triggerRect.left - tooltipRect.width - 8;
         break;
       case 'right':
-        top = triggerRect.top + scrollY + triggerRect.height / 2 - tooltipRect.height / 2;
-        left = triggerRect.right + scrollX + 8;
+        top = triggerRect.top + triggerRect.height / 2 - tooltipRect.height / 2;
+        left = triggerRect.right + 8;
         break;
     }
 
@@ -72,10 +70,10 @@ export default function Tooltip({
     }
     if (top < padding) {
       // If top doesn't fit, try bottom
-      top = triggerRect.bottom + scrollY + 8;
+      top = triggerRect.bottom + 8;
     }
-    if (top + tooltipRect.height > window.innerHeight + scrollY - padding) {
-      top = triggerRect.top + scrollY - tooltipRect.height - 8;
+    if (top + tooltipRect.height > window.innerHeight - padding) {
+      top = triggerRect.top - tooltipRect.height - 8;
     }
 
     setTooltipPosition({ top, left });

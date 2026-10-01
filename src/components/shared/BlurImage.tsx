@@ -9,6 +9,9 @@ import { getBlurPlaceholderUrl, getRawObjectUrl, isSupabaseUrl } from '@/utils/s
 // SPA-level cache: tracks image src strings that have been fully loaded during
 // this JS context. Once an image loads, subsequent renders (e.g. navigating back)
 // can skip the fade because the browser will serve it from memory/disk cache.
+// Entries are recorded after paint. Writing them in useLayoutEffect lets a
+// same-frame remount (grid breakpoint swap, Strict Mode's second layout pass)
+// treat the first appearance as already shown and skip the fade.
 const loadedImages = typeof window !== 'undefined' ? new Set<string>() : null;
 
 type BlurImageCacheOptions = {
@@ -159,7 +162,6 @@ export default function BlurImage({
     const img = imgRef.current;
     if (img && img.complete && img.naturalWidth > 0) {
       hasCalledOnLoad.current = true;
-      if (cacheKey) loadedImages?.add(cacheKey);
       setLoadState('fade-in');
       onLoadPropRef.current?.();
       return;
@@ -168,6 +170,16 @@ export default function BlurImage({
     // Image not ready yet — reset and wait for onLoad handler.
     hasCalledOnLoad.current = false;
   }, [currentSrc, cacheKey, fadeIn]);
+
+  // Remember loaded images for later navigations, but only once this instance
+  // has survived the pre-paint remounts that would otherwise skip the fade.
+  useEffect(() => {
+    if (loadState === 'loading' || !cacheKey) return;
+    const frame = requestAnimationFrame(() => {
+      loadedImages?.add(cacheKey);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loadState, cacheKey]);
 
   // Handler for image load - fires when the <img> element actually finishes loading.
   const handleImageLoad = useCallback(() => {
@@ -178,14 +190,11 @@ export default function BlurImage({
     }
     hasCalledOnLoad.current = true;
 
-    // Remember this image for future navigations
-    if (cacheKey) loadedImages?.add(cacheKey);
-
     setLoadState(fadeIn ? 'fade-in' : 'visible');
 
     // Call external onLoad callback
     onLoadProp?.();
-  }, [cacheKey, fadeIn, onLoadProp]);
+  }, [fadeIn, onLoadProp]);
 
   // Transition to 'visible' once the fade-in animation completes.
   // This lets us safely remove the blurhash background after the fade finishes,

@@ -1,30 +1,23 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Tailwind,
-  Text,
-} from '@react-email/components';
-
 import { Database } from '@/database.types';
 
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 
 export const CancelEmail = ({
   preview,
   fullName,
+  recipientEmail,
   event,
 }: {
   preview?: boolean;
   fullName: string,
+  recipientEmail?: string,
   event: Database['public']['Tables']['events']['Row'],
 }) => {
   if (preview) {
     fullName = 'John Doe';
+    recipientEmail = 'john.doe@example.com';
 
     event = {
       title: 'Contours, compositions and cropping',
@@ -39,60 +32,38 @@ export const CancelEmail = ({
   const previewText = 'You\'ve canceled your RSVP';
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
-        >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+    <EmailLayout
+      previewText={previewText}
+      fullName={fullName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        Canceled RSVP:
+        {' '}
+        {event?.title}
+      </EmailHeading>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              Canceled RSVP:
-              {' '}
-              {event?.title}
-            </Heading>
+      <EmailText>
+        Hi
+        {' '}
+        {fullName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        You&apos;ve canceled your RSVP for the meetup &quot;{event.title}&quot;
+        {' '}
+        on
+        {' '}
+        {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+        . We&apos;ll be missing you!
+      </EmailText>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {fullName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              You&apos;ve canceled your RSVP for the meetup &quot;
-              {event.title}
-              &quot; on
-              {' '}
-              {new Date(event.date!).toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-              . We&apos;ll be missing you!
-            </Text>
-
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              If you change your mind, you can always sign up again.
-            </Text>
-
-            <Footer
-              fullName={fullName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <br />
+      <EmailText>
+        If you change your mind, you can always sign up again.
+      </EmailText>
+    </EmailLayout>
   );
 };
 

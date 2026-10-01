@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import { createAdminClient } from '@/utils/supabase/admin';
-import { ConfirmEmail } from '../../../emails/confirm';
-import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
-import { render } from '@react-email/render';
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
+import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { render } from '@react-email/render';
+import { ConfirmEmail } from '../../../emails/confirm';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       to: recipientEmail,
       replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
       subject: `Confirmed RSVP: ${event.title as string}`,
-      html: await render(ConfirmEmail({ fullName: recipientName, event: event as never, cancellationLink })),
+      html: await render(ConfirmEmail({ fullName: recipientName, recipientEmail, event: event as never, cancellationLink })),
     });
 
     if (emailResult.error) {

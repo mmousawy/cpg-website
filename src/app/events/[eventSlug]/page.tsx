@@ -7,6 +7,7 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
+import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
 import ShareButton from '@/components/shared/ShareButton';
@@ -34,6 +35,7 @@ import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@
 import { stripHtml } from '@/utils/stripHtml';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
+import LocationChipSVG from 'public/icons/location-chip.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
@@ -300,7 +302,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
       <PageContainer
         className={clsx(
-          event.cover_image ? 'pt-6! sm:pt-8!' : '',
+          event.cover_image ? 'pt-4! sm:pt-6!' : '',
           'pb-4 sm:pb-8!',
         )}
       >
@@ -473,7 +475,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                     />
                     <div>
                       <p
-                        className="font-medium group-hover:text-primary transition-colors"
+                        className="font-medium group-hover:text-primary transition-colors leading-tight"
                       >
                         {host.full_name || 'Host'}
                       </p>
@@ -506,8 +508,24 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           </div>
 
           <div
-            className="flex items-center gap-4 mt-8"
+            className="flex flex-wrap items-center gap-4 mt-8"
           >
+            {event.location && (
+              <Button
+                href={getGoogleMapsSearchUrl(event.location)}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+                size="sm"
+                className="inline-flex!"
+                icon={<LocationChipSVG
+                  className="size-4 shrink-0 fill-current"
+                />}
+              >
+                See location
+              </Button>
+            )}
+
             {/* Add to Calendar */}
             {!isPastEvent && (
               <AddToCalendar
@@ -542,7 +560,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       {/* Event Photos - full width grid (right after heading, before SignUpCTA) */}
       {hasEventPhotos(eventAlbum) && eventAlbum && (
         <WidePageContainer
-          className="md:pb-12!"
+          className="pt-0! max-sm:pb-3"
         >
           <EventPhotosSection
             eventId={event.id}
@@ -554,13 +572,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
 
       <SignUpCTASection />
 
-      {/* Sticky Action Bar - only show for upcoming events */}
-      {!isPastEvent && <EventSignupBar
-        event={event}
-        confirmedAttendeeCount={attendees.length}
-      />}
+      {!isPastEvent && (
+        <EventSignupBar
+          event={event}
+          confirmedAttendeeCount={attendees.length}
+        />
+      )}
 
-      {/* Comments Section */}
       <div
         className="relative"
       >
@@ -570,7 +588,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         >
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-50 bg-linear-to-b from-transparent to-background md:hidden"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-full bg-linear-to-b from-transparent to-[black]/12 dark:to-[black]/40"
           />
           <div
             className="relative z-10"
@@ -580,7 +598,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             />
           </div>
         </PageContainer>
-
       </div>
 
     </>

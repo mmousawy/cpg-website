@@ -2,6 +2,7 @@
 
 import StatsChartTooltip, { STATS_CHART_TOOLTIP_WRAPPER_STYLE } from '@/components/stats/StatsChartTooltip';
 import type { StatsBreakdownItem } from '@/types/stats';
+import { prefersReducedMotion } from '@/utils/reduceMotion';
 import clsx from 'clsx';
 import {
   useCallback,
@@ -88,6 +89,19 @@ export default function StatsDonutChart({ title, items, className }: StatsDonutC
         opacity: visual.opacity,
         outerRadius: visual.outerRadius,
       });
+    }
+
+    if (prefersReducedMotion()) {
+      for (const [index, visual] of sectorVisualsRef.current) {
+        const target = sectorTarget(activeIndex, index, visual.baseOuterRadius);
+        sectorVisualsRef.current.set(index, {
+          baseOuterRadius: visual.baseOuterRadius,
+          opacity: target.opacity,
+          outerRadius: target.outerRadius,
+        });
+      }
+      rerender();
+      return;
     }
 
     const start = performance.now();

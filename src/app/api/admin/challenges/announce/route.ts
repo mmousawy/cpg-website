@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-import { ChallengeAnnouncementEmail } from '@/emails/challenge-announcement';
 import { revalidateChallenge } from '@/app/actions/revalidate';
-import { encrypt } from '@/utils/encrypt';
-import { render } from '@react-email/render';
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/utils/supabase/admin';
+import { ChallengeAnnouncementEmail } from '@/emails/challenge-announcement';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { createNotification } from '@/lib/notifications/create';
+import { encrypt } from '@/utils/encrypt';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -159,6 +159,7 @@ export async function POST(request: NextRequest) {
           html: await render(
             ChallengeAnnouncementEmail({
               fullName,
+              recipientEmail: subscriber.email || undefined,
               challenge: {
                 title: challenge.title,
                 prompt: challenge.prompt,

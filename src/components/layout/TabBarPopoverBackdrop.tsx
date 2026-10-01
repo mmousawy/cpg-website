@@ -1,5 +1,6 @@
 'use client';
 
+import { motionDuration } from '@/utils/reduceMotion';
 import { useEffect, useState } from 'react';
 
 import { POPOVER_ANIMATION_MS } from '../shared/AnimatedPopoverPanel';
@@ -31,7 +32,7 @@ export default function TabBarPopoverBackdrop({
       }, 0);
     } else {
       closeTimer = setTimeout(() => setIsVisible(false), 0);
-      unmountTimer = setTimeout(() => setShouldRender(false), POPOVER_ANIMATION_MS);
+      unmountTimer = setTimeout(() => setShouldRender(false), motionDuration(POPOVER_ANIMATION_MS));
     }
 
     return () => {

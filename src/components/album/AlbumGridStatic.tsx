@@ -1,6 +1,6 @@
 'use client';
 
-import type { AlbumWithPhotos } from '@/types/albums';
+import { useAuth } from '@/hooks/useAuth';
 import { useSyncExternalStore } from 'react';
 import AlbumCard, { type AlbumCardVariant } from './AlbumCard';
 import type { AlbumGridProps } from './albumGridTypes';
@@ -34,14 +34,21 @@ export default function AlbumGridStatic({
   className = 'grid gap-2 sm:gap-4 grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]',
   onAlbumClick,
   prefetchLinks = true,
+  coverImageSizes,
 }: AlbumGridStaticProps) {
+  const { profile } = useAuth();
+
   const localPreference = useSyncExternalStore(
     subscribeToStorage,
     getStoredPreference,
     getServerSnapshot,
   );
 
-  const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? 'large';
+  const profileVariant = profile?.album_card_style === 'large' || profile?.album_card_style === 'compact'
+    ? profile.album_card_style
+    : undefined;
+
+  const effectiveVariant: AlbumCardVariant = variant ?? localPreference ?? profileVariant ?? 'large';
 
   return (
     <div
@@ -56,6 +63,7 @@ export default function AlbumGridStatic({
           onClick={onAlbumClick}
           likesCount={album.likes_count ?? 0}
           prefetch={prefetchLinks}
+          coverImageSizes={coverImageSizes}
         />
       ))}
     </div>

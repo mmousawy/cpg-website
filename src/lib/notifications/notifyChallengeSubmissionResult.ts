@@ -1,9 +1,9 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
 import SubmissionResultEmail from '@/emails/submission-result';
-import { createNotification } from '@/lib/notifications/create';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { createNotification } from '@/lib/notifications/create';
 import { encrypt } from '@/utils/encrypt';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -154,6 +154,7 @@ export async function notifyChallengeSubmissionResult(params: {
         const emailHtml = await render(
           SubmissionResultEmail({
             userName: submissionUser.full_name || submissionUser.nickname || 'there',
+            recipientEmail: submissionUser.email || undefined,
             status,
             photos: photos.map((p) => ({ url: p.url, title: p.title })),
             challengeTitle: challenge.title,

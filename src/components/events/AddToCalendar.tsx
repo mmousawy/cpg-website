@@ -1,15 +1,20 @@
 import { CPGEvent } from '@/types/events';
 
 import {
-  Button as EmailButton,
+  Link,
   Section,
-  Text,
 } from '@react-email/components';
 
 import AddToCalendarDropdown from '@/components/events/AddToCalendarDropdown';
+import EmailHeading from '@/emails/components/EmailHeading';
+import EmailText from '@/emails/components/EmailText';
+import { emailCalendarButtonStyle } from '@/emails/components/styles';
 import { getCalendarDateTimes } from '@/lib/events/calendarTime';
 import { EVENT_TIMEZONE } from '@/lib/events/status';
 import { stripHtml } from '@/utils/stripHtml';
+import AppleCalendarSVG from 'public/icons/apple-calendar.svg';
+import GoogleCalendarSVG from 'public/icons/google-calendar.svg';
+import OutlookCalendarSVG from 'public/icons/outlook-calendar.svg';
 
 type CalendarLinkKey = 'google' | 'outlook' | 'apple';
 
@@ -24,8 +29,11 @@ const calendarOptions: Array<{
   { id: 'apple', label: 'Apple Calendar', download: true },
 ];
 
-const emailButtonStyle =
-  'inline-block rounded-full bg-[#f7f7f7] text-[#171717] border-[0.0625rem] border-[#e5e7ea] px-4 py-1 font-mono text-[14px] font-semibold no-underline';
+const calendarIcons = {
+  google: GoogleCalendarSVG,
+  outlook: OutlookCalendarSVG,
+  apple: AppleCalendarSVG,
+} as const;
 
 export default function AddToCalendar({ event, render }: { event: CPGEvent, render?: 'email' }) {
   const calendarDate = getCalendarDateTimes(event.date, event.time);
@@ -59,27 +67,42 @@ export default function AddToCalendar({ event, render }: { event: CPGEvent, rend
   if (render === 'email') {
     return (
       <Section
-        className="mt-7.5"
+        style={{ marginTop: '28px' }}
       >
-        <Text
-          className="mt-0! text-[14px] leading-6 text-[#171717]"
+        <EmailHeading
+          variant="section"
+          style={{ margin: '0 0 4px 0' }}
         >
-          Add this event to your calendar:
-        </Text>
+          Add to calendar
+        </EmailHeading>
 
-        <div
-          className="flex flex-col items-start gap-2"
+        <EmailText
+          style={{ marginBottom: '16px' }}
         >
-          {calendarOptions.map(({ id, label, download }) => (
-            <EmailButton
-              key={id}
-              href={calendarLinks[id]}
-              className={emailButtonStyle}
-              {...(download && { download: appleDownloadName })}
-            >
-              {label}
-            </EmailButton>
-          ))}
+          Remind yourself to attend this event by adding it to your calendar.
+        </EmailText>
+
+        <div>
+          {calendarOptions.map(({ id, label, download }) => {
+            const Icon = calendarIcons[id];
+
+            return (
+              <Link
+                key={id}
+                href={calendarLinks[id]}
+                style={emailCalendarButtonStyle}
+                {...(download && { download: appleDownloadName })}
+              >
+                <Icon
+                  width="16"
+                  height="16"
+                  aria-hidden="true"
+                  style={{ display: 'inline-block', marginRight: '4px', verticalAlign: 'middle' }}
+                />
+                {label.replace(/ Calendar$/, '')}
+              </Link>
+            );
+          })}
         </div>
       </Section>
     );

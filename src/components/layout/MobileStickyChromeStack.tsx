@@ -1,12 +1,12 @@
 'use client';
 
 import clsx from 'clsx';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
   mobileFloatingPillInsetClassName,
-  mobileStickyBarSettleGapClassName,
+  mobileStickyBarTerminalSettleGapClassName,
   mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
@@ -39,6 +39,34 @@ export default function MobileStickyChromeStack({
   navOpenRef.current = navOpen;
   actionOpenRef.current = actionOpen;
 
+  const lastGridHeightRef = useRef(0);
+  const [handoffMinHeight, setHandoffMinHeight] = useState<number | undefined>();
+
+  const syncGridHandoffMinHeight = () => {
+    const node = ref.current;
+    if (!node) return;
+    const height = node.getBoundingClientRect().height;
+    if (height > 1) {
+      lastGridHeightRef.current = height;
+    }
+    const hasSlide = node.querySelector('.mobile-sticky-bar-slide') != null;
+    if (!hasSlide && lastGridHeightRef.current > 0) {
+      setHandoffMinHeight(lastGridHeightRef.current);
+    } else {
+      setHandoffMinHeight(undefined);
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (hidden) return;
+    syncGridHandoffMinHeight();
+    const node = ref.current;
+    if (!node) return;
+    const observer = new ResizeObserver(syncGridHandoffMinHeight);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hidden, navOpen, actionOpen]);
+
   useEffect(() => {
     if (hidden) return;
 
@@ -66,15 +94,17 @@ export default function MobileStickyChromeStack({
       <div
         ref={ref}
         className={clsx(
-          'md:hidden mt-3.5 grid',
+          'md:hidden grid mt-3.5 md:mt-0',
           mobileStickyBottomWithGapClassName,
           mobileStickyChromeZClassName,
           mobileFloatingPillInsetClassName,
           className,
         )}
+        style={handoffMinHeight ? { minHeight: handoffMinHeight } : undefined}
         hidden={hidden || undefined}
       >
         <AnimatedStickyBarSlide
+          alwaysAnimate
           open={navOpen}
           onExited={() => {
             if (pendingRef.current === 'action') setActionOpen(true);
@@ -84,6 +114,7 @@ export default function MobileStickyChromeStack({
         </AnimatedStickyBarSlide>
         {action != null && (
           <AnimatedStickyBarSlide
+            alwaysAnimate
             open={actionOpen}
             onExited={() => {
               if (pendingRef.current === 'nav') setNavOpen(true);
@@ -94,7 +125,7 @@ export default function MobileStickyChromeStack({
         )}
       </div>
       <div
-        className={mobileStickyBarSettleGapClassName}
+        className={mobileStickyBarTerminalSettleGapClassName}
         hidden={hidden || undefined}
         aria-hidden
       />

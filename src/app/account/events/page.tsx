@@ -1,28 +1,30 @@
 'use client';
 
+import clsx from 'clsx';
 import dayjs from 'dayjs';
+import Link from 'next/link';
 import { startTransition, useEffect, useState } from 'react';
 
+import EventsSectionHeading from '@/components/events/EventsSectionHeading';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
+import { routes } from '@/config/routes';
 import type { Tables } from '@/database.types';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabase } from '@/hooks/useSupabase';
 import { formatEventDate, formatEventTime, getDateSortValue } from '@/lib/events/format';
 import { isEventPast } from '@/lib/events/status';
-import Link from 'next/link';
-
-import { routes } from '@/config/routes';
-import { formatEventLocation } from '@/utils/formatLocation';
-import { stripHtml } from '@/utils/stripHtml';
+import { formatEventLocation, getGoogleMapsSearchUrl } from '@/utils/formatLocation';
+import { THUMBNAIL_IMAGE_QUALITY, getCroppedThumbnailUrl } from '@/utils/supabaseImageLoader';
 import ArrowRightSVG from 'public/icons/arrow-right.svg';
 import CalendarSVG from 'public/icons/calendar2.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
+import LocationChipSVG from 'public/icons/location-chip.svg';
 import LocationSVG from 'public/icons/location.svg';
 import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
@@ -95,14 +97,17 @@ export default function MyEventsPage() {
     loadRSVPs();
   }, [user, supabase]);
 
-  // Sort: upcoming (soonest first), past (most recent first)
   const upcomingRSVPs = rsvps
     .filter(r => now != null && !r.canceled_at && r.events && !isEventPast(r.events.date, now, r.events.time))
     .sort((a, b) => getDateSortValue(a.events.date) - getDateSortValue(b.events.date));
+
   const pastRSVPs = rsvps
-    .filter(r => now != null && !r.canceled_at && r.events && isEventPast(r.events.date, now, r.events.time))
+    .filter(r => {
+      if (now == null || !r.events) return false;
+      if (r.canceled_at) return true;
+      return isEventPast(r.events.date, now, r.events.time);
+    })
     .sort((a, b) => getDateSortValue(b.events.date) - getDateSortValue(a.events.date));
-  const canceledRSVPs = rsvps.filter(r => r.canceled_at);
 
   return (
     <PageContainer>
@@ -141,97 +146,71 @@ export default function MyEventsPage() {
       </noscript>
 
       <div
-        className="space-y-8"
+        className="space-y-6 sm:space-y-10"
       >
-        {/* Upcoming Events */}
         <section>
-          <h2
-            className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-80"
+          <EventsSectionHeading>
+            Upcoming events &mdash; {upcomingRSVPs.length}
+          </EventsSectionHeading>
+          <div
+            className="grid gap-3 sm:gap-6"
           >
-            Your upcoming events &mdash; {upcomingRSVPs.length}
-          </h2>
-          {isLoading ? (
-            <div
-              className="text-center animate-pulse js-loading py-12"
-            >
-              <p
-                className="text-foreground/50"
+            {isLoading ? (
+              <div
+                className="text-center animate-pulse js-loading py-12"
               >
-                Loading your events...
-              </p>
-            </div>
-          ) : upcomingRSVPs.length === 0 ? (
-            <EmptyState
-              icon={<SadSVG
-                className="size-10 fill-foreground/80 inline-block"
-              />}
-              title="No upcoming events"
-              action={(
-                <Button
-                  href={routes.events.url}
-                  size='sm'
-                  iconRight={<ArrowRightSVG
-                    className="-mr-1.5"
-                  />}
-                  className="rounded-full"
+                <p
+                  className="text-foreground/50"
                 >
-                  Browse events
-                </Button>
-              )}
-            />
-          ) : (
-            <div
-              className="space-y-3"
-            >
-              {upcomingRSVPs.map((rsvp) => (
+                  Loading your events...
+                </p>
+              </div>
+            ) : upcomingRSVPs.length === 0 ? (
+              <EmptyState
+                icon={<SadSVG
+                  className="size-10 fill-foreground/80 inline-block"
+                />}
+                title="No upcoming events"
+                action={(
+                  <Button
+                    href={routes.events.url}
+                    size='sm'
+                    iconRight={<ArrowRightSVG
+                      className="-mr-1.5"
+                    />}
+                    className="rounded-full"
+                  >
+                    Browse events
+                  </Button>
+                )}
+              />
+            ) : (
+              upcomingRSVPs.map((rsvp) => (
                 <RsvpEventCard
                   key={rsvp.id}
                   rsvp={rsvp}
+                  serverNow={now ?? Date.now()}
+                  sevenDaysAgo={sevenDaysAgo}
                 />
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </section>
 
-        {/* Past Events */}
         {pastRSVPs.length > 0 && (
           <section>
-            <h2
-              className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-80"
-            >
+            <EventsSectionHeading>
               Past events &mdash; {pastRSVPs.length}
-            </h2>
+            </EventsSectionHeading>
             <div
-              className="space-y-3"
+              className="grid gap-3 sm:gap-6"
             >
               {pastRSVPs.map((rsvp) => (
                 <RsvpEventCard
                   key={rsvp.id}
                   rsvp={rsvp}
-                  isPast
+                  serverNow={now ?? Date.now()}
                   sevenDaysAgo={sevenDaysAgo}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Canceled Events */}
-        {canceledRSVPs.length > 0 && (
-          <section>
-            <h2
-              className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-80"
-            >
-              Canceled RSVPs
-            </h2>
-            <div
-              className="space-y-3"
-            >
-              {canceledRSVPs.map((rsvp) => (
-                <RsvpEventCard
-                  key={rsvp.id}
-                  rsvp={rsvp}
-                  isCanceled
                 />
               ))}
             </div>
@@ -242,191 +221,275 @@ export default function MyEventsPage() {
   );
 }
 
+type RsvpBadgeVariant = 'going' | 'attended' | 'pending' | 'not_attended' | 'canceled';
+
+function getRsvpBadgeVariant(
+  rsvp: RSVP,
+  serverNow: number,
+  sevenDaysAgo: number | undefined,
+): RsvpBadgeVariant {
+  const event = rsvp.events;
+  if (!event) return 'not_attended';
+  if (rsvp.canceled_at) return 'canceled';
+  if (!isEventPast(event.date, serverNow, event.time)) return 'going';
+  if (rsvp.attended_at) return 'attended';
+  if (sevenDaysAgo && dayjs(event.date).isAfter(dayjs(sevenDaysAgo))) {
+    return 'pending';
+  }
+  return 'not_attended';
+}
+
+function rsvpBadgeLabel(variant: RsvpBadgeVariant): string {
+  switch (variant) {
+    case 'going':
+      return "You're going";
+    case 'attended':
+      return 'Attended';
+    case 'pending':
+      return 'Pending confirmation';
+    case 'not_attended':
+      return 'Not attended';
+    case 'canceled':
+      return 'Canceled';
+  }
+}
+
+function RsvpStatusBadge({
+  variant,
+  onImage,
+}: {
+  variant: RsvpBadgeVariant
+  onImage: boolean
+}) {
+  const label = rsvpBadgeLabel(variant);
+
+  if (onImage) {
+    return (
+      <span
+        className={clsx(
+          'absolute top-3 right-3 z-5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap shadow-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]',
+          variant === 'going' && 'bg-green-600/80 text-white backdrop-blur-sm',
+          variant === 'attended' && 'bg-primary/80 text-white backdrop-blur-sm',
+          variant === 'pending' && 'bg-orange-500/85 text-white backdrop-blur-sm',
+          variant === 'not_attended' && 'bg-black/50 text-white backdrop-blur-sm',
+          variant === 'canceled' && 'bg-red-600/85 text-white backdrop-blur-sm',
+        )}
+      >
+        {variant === 'going' || variant === 'attended' ? (
+          <CheckSVG
+            className="size-3 shrink-0 fill-current"
+          />
+        ) : null}
+        {variant === 'canceled' ? (
+          <CancelSVG
+            className="size-3 shrink-0 fill-current"
+          />
+        ) : null}
+        {label}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={clsx(
+        'mb-3 inline-flex w-fit items-center gap-1 rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap',
+        variant === 'going' && 'bg-green-600/10 text-green-700 dark:text-green-500',
+        variant === 'attended' && 'bg-primary/10 text-primary',
+        variant === 'pending' && 'bg-orange-500/10 text-orange-600',
+        variant === 'not_attended' && 'bg-foreground/10 text-foreground/60',
+        variant === 'canceled' && 'bg-red-600/10 text-red-600',
+      )}
+    >
+      {variant === 'going' || variant === 'attended' ? (
+        <CheckSVG
+          className={clsx(
+            'size-3 shrink-0 fill-current',
+            variant === 'going' && 'fill-green-700 dark:fill-green-500',
+          )}
+        />
+      ) : null}
+      {variant === 'canceled' ? (
+        <CancelSVG
+          className="size-3 shrink-0 fill-red-600"
+        />
+      ) : null}
+      {label}
+    </span>
+  );
+}
+
 function RsvpEventCard({
   rsvp,
-  isPast,
-  isCanceled,
+  serverNow,
   sevenDaysAgo,
 }: {
   rsvp: RSVP
-  isPast?: boolean
-  isCanceled?: boolean
+  serverNow: number
   sevenDaysAgo?: number
 }) {
   const event = rsvp.events;
 
   if (!event) return null;
 
-  // Check if event is within 7 days of now (for pending confirmation display)
-  const isWithinSevenDays = sevenDaysAgo
-    ? dayjs(event.date).isAfter(dayjs(sevenDaysAgo))
-    : false;
+  const href = event.slug ? `/events/${event.slug}` : '#';
+  const isPastEvent = isEventPast(event.date, serverNow, event.time);
+  const badgeVariant = getRsvpBadgeVariant(rsvp, serverNow, sevenDaysAgo);
+  const coverSrc = event.cover_image
+    ? getCroppedThumbnailUrl(event.cover_image, 640, 360) || event.cover_image
+    : null;
 
-  // Determine the status badge - only show for past events (attended/not attended) or canceled
-  const statusBadge = isCanceled ? (
-    <span
-      className="flex items-center gap-1 w-fit rounded-full bg-red-600/10 px-3 py-1 text-xs font-medium text-red-600 whitespace-nowrap"
-    >
-      <CancelSVG
-        className="h-3 w-3 fill-red-600"
-      />
-      Canceled
-    </span>
-  ) : isPast ? (
-    rsvp.attended_at ? (
-      <span
-        className="flex w-fit items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary whitespace-nowrap"
-      >
-        <CheckSVG
-          className="h-3 w-3 fill-primary"
-        />
-        Attended
-      </span>
-    ) : isWithinSevenDays ? (
-      <span
-        className="flex items-center gap-1 w-fit rounded-full bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 whitespace-nowrap"
-      >
-        Pending confirmation
-      </span>
-    ) : (
-      <span
-        className="flex items-center gap-1 w-fit rounded-full bg-foreground/10 px-3 py-1 text-xs font-medium text-foreground/60 whitespace-nowrap"
-      >
-        Not attended
-      </span>
-    )
-  ) : (
-    <span
-      className="flex items-center gap-1 w-fit rounded-full bg-green-600/10 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-500 whitespace-nowrap"
-    >
-      <CheckSVG
-        className="h-3 w-3 fill-green-700 dark:fill-green-500"
-      />
-      You&apos;re going!
-    </span>
-  );
-
-  const cardClassName = 'rounded-lg border border-border-color bg-background-light p-4 transition-colors hover:border-primary overflow-hidden';
-
-  // Consistent card layout for all states
   return (
     <div
-      className={cardClassName}
+      className="rounded-xl border bg-background-light border-border-color overflow-hidden"
     >
-      <Link
-        href={event.slug ? `/events/${event.slug}` : '#'}
-        className="block group"
+      {coverSrc && (
+        <Link
+          href={href}
+          className="relative block sm:hidden aspect-21/9"
+          tabIndex={-1}
+        >
+          <BlurImage
+            fill
+            sizes="calc(100vw - 1.5rem)"
+            loading="lazy"
+            quality={THUMBNAIL_IMAGE_QUALITY}
+            alt={event.title || 'Event cover image'}
+            className="object-cover rounded-t-xl hover:brightness-90 transition-all duration-200"
+            src={coverSrc}
+          />
+          <RsvpStatusBadge
+            variant={badgeVariant}
+            onImage
+          />
+        </Link>
+      )}
+
+      <div
+        className="flex sm:flex-row flex-col"
       >
         <div
-          className="sm:flex sm:items-start sm:gap-4"
+          className="flex-1 min-w-0 p-4 sm:p-6"
         >
-          {/* Content */}
+          {!coverSrc && (
+            <RsvpStatusBadge
+              variant={badgeVariant}
+              onImage={false}
+            />
+          )}
+
           <div
-            className="sm:flex-1 sm:min-w-0"
+            className="mb-4 sm:mb-5"
           >
-            {/* Mobile: float badge and thumbnail to the right */}
-            {(statusBadge || event.cover_image) && (
-              <div
-                className="sm:hidden float-right ml-2 mb-2 flex flex-col items-end gap-1.5"
-              >
-                {statusBadge}
-                {event.cover_image && (
-                  <div
-                    className="relative aspect-video w-18 overflow-hidden rounded-md bg-background"
-                  >
-                    <BlurImage
-                      src={event.cover_image}
-                      alt={event.title || 'Event cover'}
-                      sizes="72px"
-                      loading="lazy"
-                      quality={92}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-            <div
-              className="mb-3"
+            <Link
+              href={href}
+              className="group"
             >
-              <h4
-                className="font-semibold group-hover:text-primary transition-colors leading-tight line-clamp-3"
+              <h3
+                className={clsx(
+                  'text-xl sm:text-2xl font-bold transition-colors md:max-w-140',
+                  isPastEvent || rsvp.canceled_at
+                    ? 'text-foreground/80 group-hover:text-foreground/90'
+                    : 'group-hover:text-primary',
+                )}
               >
                 {event.title}
-              </h4>
-            </div>
-            <div
-              className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 mb-0 text-sm font-semibold text-foreground/80"
+              </h3>
+            </Link>
+          </div>
+
+          <div>
+            <span
+              className="mb-1 sm:mb-2 flex flex-wrap gap-x-5 sm:gap-x-4 gap-y-1 text-[15px] font-semibold leading-6"
             >
               {event.date && (
                 <span
-                  className="flex items-center gap-1"
+                  className="flex gap-2"
                 >
                   <CalendarSVG
-                    className="size-3.5 fill-foreground/80"
+                    className="shrink-0 fill-foreground"
                   />
-                  {formatEventDate(event.date)}
+                  {formatEventDate(event.date, { includeYear: true, now: serverNow })}
                 </span>
               )}
               {event.time && (
                 <span
-                  className="flex items-center gap-1"
+                  className="flex gap-2"
                 >
                   <TimeSVG
-                    className="size-3.5 fill-foreground/80"
+                    className="shrink-0 fill-foreground"
                   />
                   {formatEventTime(event.time)}
                 </span>
               )}
-              {event.location && (
-                <span
-                  className="flex items-center gap-1"
-                >
-                  <LocationSVG
-                    className="size-3.5 fill-foreground/80"
-                  />
-                  <span
-                    className="line-clamp-1"
-                  >
-                    {formatEventLocation(event.location)}
-                  </span>
-                </span>
-              )}
-            </div>
-            {event.description && (
-              <p
-                className="max-sm:hidden max-w-[50ch] text-foreground/90 text-sm line-clamp-3 mt-2"
+            </span>
+            {event.location && (
+              <span
+                className="flex items-start gap-2 text-[15px] font-semibold leading-6"
               >
-                {stripHtml(event.description)}
-              </p>
+                <LocationSVG
+                  className="shrink-0 fill-foreground"
+                />
+                <span
+                  className="line-clamp-1"
+                >
+                  {formatEventLocation(event.location)}
+                </span>
+              </span>
             )}
           </div>
-          {/* Right side: badge above thumbnail */}
-          {(statusBadge || event.cover_image) && (
-            <div
-              className="hidden sm:flex sm:flex-col sm:items-end shrink-0 gap-1.5"
+
+          <div
+            className="mt-5 sm:mt-6 flex items-end justify-between gap-4"
+          >
+            {event.location ? (
+              <Button
+                href={getGoogleMapsSearchUrl(event.location)}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+                size="sm"
+                icon={<LocationChipSVG className="size-5" />}
+              >
+                See location
+              </Button>
+            ) : (
+              <span />
+            )}
+            <Button
+              href={href}
+              variant={isPastEvent || rsvp.canceled_at ? 'secondary' : 'primary'}
+              size="sm"
+              className="ml-2 self-end"
+              aria-label={`View event: ${event.title}`}
             >
-              {statusBadge}
-              {event.cover_image && (
-                <div
-                  className="relative aspect-video w-44 overflow-hidden rounded-md bg-background"
-                >
-                  <BlurImage
-                    src={event.cover_image}
-                    alt={event.title || 'Event cover'}
-                    sizes="176px"
-                    loading="lazy"
-                    quality={92}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-            </div>
-          )}
+              View event
+            </Button>
+          </div>
         </div>
-      </Link>
+
+        {coverSrc && (
+          <Link
+            href={href}
+            className="relative w-56 lg:w-72 shrink-0 max-sm:hidden self-stretch min-h-32"
+            tabIndex={-1}
+          >
+            <BlurImage
+              fill
+              sizes="(min-width: 1024px) 576px, 448px"
+              loading="lazy"
+              quality={THUMBNAIL_IMAGE_QUALITY}
+              alt={event.title || 'Event cover image'}
+              className="object-cover rounded-r-xl hover:brightness-90 transition-all duration-200"
+              src={coverSrc}
+            />
+            <RsvpStatusBadge
+              variant={badgeVariant}
+              onImage
+            />
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

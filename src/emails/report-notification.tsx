@@ -1,27 +1,36 @@
+import { Column, Img, Link, Row, Section, Text } from '@react-email/components';
+
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 import {
-  Body,
-  Column,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+  emailCalloutLabelStyle,
+  emailCalloutStyle,
+  emailCalloutTitleStyle,
+  emailMutedTextStyle,
+  emailTextStyle,
+} from './components/styles';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+const avatarPlaceholderStyle = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  backgroundColor: '#5e9b84',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'white',
+  fontSize: '16px',
+  fontWeight: 'bold',
+} as const;
 
 export const ReportNotificationEmail = ({
   preview,
   adminName,
+  recipientEmail,
   reporterName,
   reporterNickname,
   reporterEmail,
@@ -38,6 +47,7 @@ export const ReportNotificationEmail = ({
 }: {
   preview?: boolean;
   adminName: string;
+  recipientEmail?: string;
   reporterName: string;
   reporterNickname: string | null;
   reporterEmail: string | null;
@@ -54,6 +64,7 @@ export const ReportNotificationEmail = ({
 }) => {
   if (preview) {
     adminName = 'Admin User';
+    recipientEmail = 'admin@example.com';
     reporterName = 'John Smith';
     reporterNickname = 'johnsmith';
     reporterEmail = 'john@example.com';
@@ -78,288 +89,236 @@ export const ReportNotificationEmail = ({
     comment: 'Comment',
   }[entityType];
 
-  return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
-        >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
+  const renderEntityRow = (wrapLink: boolean) => {
+    const row = (
+      <Row>
+        {entityThumbnail && (
+          <Column
+            width="64"
           >
-            <EmailHeader />
+            <Img
+              src={entityThumbnail}
+              width="64"
+              height="64"
+              alt={entityTitle}
+              style={{ borderRadius: '6px', objectFit: 'cover' }}
+            />
+          </Column>
+        )}
+        <Column
+          style={{ verticalAlign: 'top', paddingLeft: entityThumbnail ? '16px' : 0 }}
+        >
+          <Text
+            style={{ ...emailMutedTextStyle, margin: 0, lineHeight: '16px' }}
+          >
+            {entityTypeLabel}
+          </Text>
+          <Text
+            style={{ ...emailCalloutTitleStyle, fontSize: '15px', lineHeight: '24px', margin: 0 }}
+          >
+            {entityTitle}
+          </Text>
+        </Column>
+      </Row>
+    );
+    if (wrapLink && entityLink) {
+      return (
+        <Link
+          href={entityLink}
+        >
+          {row}
+        </Link>
+      );
+    }
+    return row;
+  };
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
+  const renderReporterAvatar = () => {
+    if (reporterProfileLink) {
+      return (
+        <Link
+          href={reporterProfileLink}
+        >
+          {reporterAvatarUrl ? (
+            <Img
+              src={reporterAvatarUrl}
+              width="40"
+              height="40"
+              alt={reporterName}
+              style={{ borderRadius: '50%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              style={avatarPlaceholderStyle}
             >
-              New content report
-            </Heading>
+              {reporterName.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </Link>
+      );
+    }
+    if (reporterAvatarUrl) {
+      return (
+        <Img
+          src={reporterAvatarUrl}
+          width="40"
+          height="40"
+          alt={reporterName}
+          style={{ borderRadius: '50%', objectFit: 'cover' }}
+        />
+      );
+    }
+    return (
+      <div
+        style={avatarPlaceholderStyle}
+      >
+        {reporterName.charAt(0).toUpperCase()}
+      </div>
+    );
+  };
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {adminName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              A new report has been submitted and is waiting for review.
-            </Text>
+  return (
+    <EmailLayout
+      previewText={previewText}
+      fullName={adminName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        New content report
+      </EmailHeading>
 
-            {/* Reported content */}
-            <Section
-              className="my-[20px]"
-            >
-              {entityLink ? (
-                <Link
-                  href={entityLink}
+      <EmailText>
+        Hi
+        {' '}
+        {adminName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        A new report has been submitted and is waiting for review.
+      </EmailText>
+
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        {renderEntityRow(!!entityLink)}
+      </Section>
+
+      <Section
+        style={emailCalloutStyle}
+      >
+        <Row>
+          <Column
+            width="40"
+            style={{ verticalAlign: 'top' }}
+          >
+            {renderReporterAvatar()}
+          </Column>
+          <Column
+            style={{ verticalAlign: 'top', paddingLeft: '12px' }}
+          >
+            {reporterProfileLink ? (
+              <Link
+                href={reporterProfileLink}
+                style={{ textDecoration: 'none', color: emailTextStyle.color }}
+              >
+                <Text
+                  style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
                 >
-                  <Row>
-                    {entityThumbnail && (
-                      <Column
-                        width="64"
-                      >
-                        <Img
-                          src={entityThumbnail}
-                          width="64"
-                          height="64"
-                          alt={entityTitle}
-                          className="rounded-md object-cover"
-                        />
-                      </Column>
-                    )}
-                    <Column
-                      className={entityThumbnail ? 'pl-4 align-top' : 'align-top'}
-                    >
-                      <Text
-                        className="mt-0! text-[12px] leading-[16px] text-[#666666]"
-                      >
-                        {entityTypeLabel}
-                      </Text>
-                      <Text
-                        className="mt-0! text-[15px] font-semibold leading-[24px] text-[#171717]"
-                      >
-                        {entityTitle}
-                      </Text>
-                    </Column>
-                  </Row>
+                  {reporterName}
+                </Text>
+              </Link>
+            ) : (
+              <Text
+                style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
+              >
+                {reporterName}
+              </Text>
+            )}
+            {isAnonymous && (
+              <Text
+                style={{ ...emailMutedTextStyle, marginBottom: '4px', lineHeight: '16px' }}
+              >
+                Anonymous reporter
+              </Text>
+            )}
+            {reporterNickname && !isAnonymous && (
+              reporterProfileLink ? (
+                <Link
+                  href={reporterProfileLink}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <Text
+                    style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
+                  >
+                    @
+                    {reporterNickname}
+                  </Text>
                 </Link>
               ) : (
-                <Row>
-                  {entityThumbnail && (
-                    <Column
-                      width="64"
-                    >
-                      <Img
-                        src={entityThumbnail}
-                        width="64"
-                        height="64"
-                        alt={entityTitle}
-                        className="rounded-md object-cover"
-                      />
-                    </Column>
-                  )}
-                  <Column
-                    className={entityThumbnail ? 'pl-4 align-top' : 'align-top'}
-                  >
-                    <Text
-                      className="mt-0! text-[12px] leading-[16px] text-[#666666]"
-                    >
-                      {entityTypeLabel}
-                    </Text>
-                    <Text
-                      className="mt-0! text-[15px] font-semibold leading-[24px] text-[#171717]"
-                    >
-                      {entityTitle}
-                    </Text>
-                  </Column>
-                </Row>
-              )}
-            </Section>
-
-            {/* Reporter info */}
-            <Section
-              className="my-[20px] rounded-lg border border-[#e5e7ea] bg-[#f7f7f7] p-4"
-            >
-              <Row>
-                <Column
-                  width="40"
-                  className="align-top"
+                <Text
+                  style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
                 >
-                  {reporterProfileLink ? (
-                    <Link
-                      href={reporterProfileLink}
-                    >
-                      {reporterAvatarUrl ? (
-                        <Img
-                          src={reporterAvatarUrl}
-                          width="40"
-                          height="40"
-                          alt={reporterName}
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            backgroundColor: '#5e9b84',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          {reporterName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </Link>
-                  ) : reporterAvatarUrl ? (
-                    <Img
-                      src={reporterAvatarUrl}
-                      width="40"
-                      height="40"
-                      alt={reporterName}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        backgroundColor: '#5e9b84',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {reporterName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </Column>
-                <Column
-                  className="pl-3 align-top"
-                >
-                  {reporterProfileLink ? (
-                    <Link
-                      href={reporterProfileLink}
-                      className="text-[#171717] no-underline"
-                    >
-                      <Text
-                        className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
-                      >
-                        {reporterName}
-                      </Text>
-                    </Link>
-                  ) : (
-                    <Text
-                      className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
-                    >
-                      {reporterName}
-                    </Text>
-                  )}
-                  {isAnonymous && (
-                    <Text
-                      className="my-0! mb-1! text-[12px] leading-[16px] text-[#666666]"
-                    >
-                      Anonymous reporter
-                    </Text>
-                  )}
-                  {reporterNickname && !isAnonymous && (
-                    reporterProfileLink ? (
-                      <Link
-                        href={reporterProfileLink}
-                        className="text-[#666666] no-underline"
-                      >
-                        <Text
-                          className="my-0! mb-2! text-[12px] leading-[16px] text-[#666666]"
-                        >
-                          @
-                          {reporterNickname}
-                        </Text>
-                      </Link>
-                    ) : (
-                      <Text
-                        className="my-0! mb-2! text-[12px] leading-[16px] text-[#666666]"
-                      >
-                        @
-                        {reporterNickname}
-                      </Text>
-                    )
-                  )}
-                  {reporterEmail && isAnonymous && (
-                    <Text
-                      className="my-0! mb-2! text-[12px] leading-[16px] text-[#666666]"
-                    >
-                      {reporterEmail}
-                    </Text>
-                  )}
-                </Column>
-              </Row>
-            </Section>
-
-            {/* Report reason */}
-            <Section
-              className="my-[20px] rounded-lg border border-[#e5e7ea] bg-[#fff5f5] p-4"
-            >
+                  @
+                  {reporterNickname}
+                </Text>
+              )
+            )}
+            {reporterEmail && isAnonymous && (
               <Text
-                className="my-0! mb-2! text-[12px] font-semibold uppercase leading-[16px] text-[#666666]"
+                style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
               >
-                Reason
+                {reporterEmail}
               </Text>
-              <Text
-                className="my-0! text-[14px] leading-[20px] text-[#171717]"
-              >
-                {reason}
-              </Text>
-              {details && (
-                <>
-                  <Text
-                    className="my-0! mb-2! mt-4! text-[12px] font-semibold uppercase leading-[16px] text-[#666666]"
-                  >
-                    Additional Details
-                  </Text>
-                  <Text
-                    className="my-0! text-[14px] leading-[20px] text-[#171717]"
-                  >
-                    {details}
-                  </Text>
-                </>
-              )}
-            </Section>
+            )}
+          </Column>
+        </Row>
+      </Section>
 
-            <div
-              className="my-[20px]"
+      <Section
+        style={{
+          ...emailCalloutStyle,
+          backgroundColor: '#fff5f5',
+        }}
+      >
+        <Text
+          style={{ ...emailCalloutLabelStyle, marginBottom: '8px' }}
+        >
+          Reason
+        </Text>
+        <Text
+          style={{ ...emailTextStyle, lineHeight: '20px' }}
+        >
+          {reason}
+        </Text>
+        {details && (
+          <>
+            <Text
+              style={{ ...emailCalloutLabelStyle, marginTop: '16px', marginBottom: '8px' }}
             >
-              <Link
-                href={reviewLink}
-                className="inline-block rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-              >
-                Review report
-              </Link>
-            </div>
+              Additional Details
+            </Text>
+            <Text
+              style={{ ...emailTextStyle, lineHeight: '20px' }}
+            >
+              {details}
+            </Text>
+          </>
+        )}
+      </Section>
 
-            <Footer
-              fullName={adminName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={reviewLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          Review report
+        </EmailButton>
+      </Section>
+    </EmailLayout>
   );
 };
 
