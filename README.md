@@ -218,11 +218,9 @@ git commit --no-verify -m "message"
 
 ### CI Pipeline
 
-On pull requests, GitHub Actions runs jobs in sequence:
-
-1. **Lint & Type Check** - ESLint and TypeScript validation
-2. **Unit Tests** - Vitest tests (runs after lint/typecheck)
-3. **E2E Tests** - Playwright tests with production build (runs after unit tests)
+- **PRs into `staging`:** lint, typecheck, and unit tests (`pnpm run check`).
+- **PRs into `main`** (the staging promote PR): the same check job plus **Staging deploy and E2E** (Playwright against `https://staging.creativephotography.group` after Coolify serves `origin/staging`).
+- **Push to `staging`:** check only; the promote PR into `main` carries the full gate.
 
 ## Project Structure
 
@@ -388,13 +386,15 @@ Quick reference:
 
 **Deployment strategy** (see `.github/workflows/ci.yml` and `.github/workflows/release-please.yml`):
 
-1. Work on `staging` (or merge feature PRs into `staging`)
-2. Coolify staging auto-deploys; CI waits and runs Playwright E2E (lint/typecheck/Vitest run on every PR)
-3. Open a PR **`staging` → `main`**. Required checks run again against that SHA on staging
-4. Merge to `main`. Release Please opens (or updates) the version/changelog PR
-5. Merge the Release Please PR → GitHub release → production webhook (`COOLIFY_PRODUCTION_WEBHOOK_URL`)
+1. Work on `staging` (merge feature PRs into `staging`). PRs into `staging` run lint, typecheck, and unit tests.
+2. Every push to `staging` auto-deploys Coolify staging and updates **one** open promote PR: `release-please--branches--main` → `main` (staging code plus version/changelog commit). Later staging pushes update the same PR, not a new one.
+3. That PR must pass **Lint, typecheck, and unit tests** and **Staging deploy and E2E** (E2E waits until live staging serves `origin/staging`).
+4. Merge the promote PR into `main` when checks are green.
+5. Push to `main` creates the GitHub release tag and triggers production via `COOLIFY_PRODUCTION_WEBHOOK_URL` (no second version PR).
 
-Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). Production stays on **`main`** with auto-deploy **off**. Do not merge random feature branches straight to `main` — staging will not have that commit.
+On GitHub, require the two status checks above on **`main`** before merge.
+
+Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). Production stays on **`main`** with auto-deploy **off**.
 
 ## Roadmap
 

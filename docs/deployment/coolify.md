@@ -93,7 +93,7 @@ Summary:
 | Hosting | Docker on VPS |
 | `vercel.json` crons | Coolify scheduled tasks |
 | `vercel promote` on release | Release Please webhook (`COOLIFY_PRODUCTION_WEBHOOK_URL`; prod auto-deploy **off**) |
-| PR / preview E2E | Push to `staging` → Coolify auto-deploy → Playwright. Promote with PR `staging` → `main`, then merge the Release Please version PR |
+| PR / preview E2E | Push to `staging` → Coolify deploy + one promote PR (`release-please--branches--main` → `main`). Merge when lint/unit/E2E are green |
 | Vercel Analytics | Off by default; set `NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS=true` only on Vercel |
 
 `vercel.json` remains in the repo for reference; `git.deploymentEnabled.main` is `false`.

@@ -51,3 +51,8 @@ next-env.d.ts
 # heap snapshots from dev:debug
 /.heap
 *.heapsnapshot
+
+# release-please workflow artifacts (local dry runs)
+.release-pr-body.md
+.release-pr-title.txt
+release-notes.md

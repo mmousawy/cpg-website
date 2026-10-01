@@ -95,6 +95,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.5.1",
     "postcss": "^8",
+    "release-please": "17.11.2",
     "supabase": "^2.117.0",
     "tailwindcss": "^4.3.3",
     "typescript": "npm:@typescript/typescript6@~6.0.2",

@@ -36,21 +36,26 @@ jobs:
 
   staging-e2e:
     name: Staging deploy and E2E
-    if: >
-      github.event_name == 'push' ||
-      (github.event_name == 'pull_request' &&
-       github.base_ref == 'main' &&
-       !startsWith(github.head_ref, 'release-please--'))
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     concurrency:
       group: vps-docker-build
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Wait for staging to serve this commit
+      - name: Resolve live staging commit
+        id: staging-sha
+        run: |
+          set -euo pipefail
+          git fetch origin staging
+          echo "sha=$(git rev-parse origin/staging)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for staging to serve origin/staging
         env:
-          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TARGET_SHA: ${{ steps.staging-sha.outputs.sha }}
         run: |
           set -euo pipefail
 
@@ -65,7 +70,7 @@ jobs:
             if [ "$HTTP_CODE" = "200" ] && [ -n "$COMMIT" ]; then
               if [ "$COMMIT" = "$TARGET_SHA" ] || [ "$TARGET_SHA" = "$COMMIT" ] \
                 || [[ "$TARGET_SHA" == "$COMMIT"* ]] || [[ "$COMMIT" == "$TARGET_SHA"* ]]; then
-                echo "Staging is serving $COMMIT"
+                echo "Staging is serving $COMMIT (want $TARGET_SHA)"
                 exit 0
               fi
             fi
@@ -74,8 +79,8 @@ jobs:
             sleep 10
           done
 
-          echo "::error::Staging did not serve commit $TARGET_SHA within 15 minutes."
-          echo "Confirm Coolify staging auto-deployed this push and /api/health returns { commit: \"<sha>\" }."
+          echo "::error::Staging did not serve origin/staging ($TARGET_SHA) within 15 minutes."
+          echo "Confirm Coolify staging auto-deployed the latest staging push and /api/health returns { commit: \"<sha>\" }."
           exit 1
 
       - uses: pnpm/action-setup@v5
