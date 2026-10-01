@@ -2,12 +2,12 @@ import { driver, type DriveStep, type Driver } from 'driver.js';
 
 import type { Profile } from '@/context/AuthContext';
 import {
-    persistPhotosManageTourOutcome,
-    persistPhotosUploadTourOutcome,
+  persistPhotosManageTourOutcome,
+  persistPhotosUploadTourOutcome,
 } from '@/lib/profileTours';
 import {
-    PHOTOS_MANAGE_TOUR_TARGETS,
-    PHOTOS_TOUR_TARGETS,
+  PHOTOS_MANAGE_TOUR_TARGETS,
+  PHOTOS_TOUR_TARGETS,
 } from '@/tours/photosFirstRunTour.constants';
 
 import '@/tours/photosFirstRunTour.css';

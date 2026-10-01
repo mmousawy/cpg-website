@@ -23,7 +23,10 @@ type TabId = 'home' | 'events' | 'gallery' | 'members';
 
 function TabIcon({ children }: { children: React.ReactNode }) {
   return (
-    <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden>
+    <span
+      className="flex size-5 shrink-0 items-center justify-center"
+      aria-hidden
+    >
       {children}
     </span>
   );
@@ -39,26 +42,66 @@ function tabButtonClass(active: boolean) {
 }
 
 const HOME_ICON = (
-  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  <svg
+    className="size-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+    />
   </svg>
 );
 
 const EVENTS_ICON = (
-  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  <svg
+    className="size-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
   </svg>
 );
 
 const GALLERY_ICON = (
-  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  <svg
+    className="size-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
   </svg>
 );
 
 const MEMBERS_ICON = (
-  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+  <svg
+    className="size-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+    />
   </svg>
 );
 
@@ -242,7 +285,9 @@ export default function MobileTabBar() {
         )}
         aria-hidden
       >
-        <div className="mobile-tab-bar-scrim__fade" />
+        <div
+          className="mobile-tab-bar-scrim__fade"
+        />
       </div>
 
       <div
@@ -251,111 +296,134 @@ export default function MobileTabBar() {
           mobileTabBarZClassName,
         )}
       >
-      <div className="mobile-tab-bar pointer-events-none absolute inset-x-0 bottom-0">
-        <TabBarPopoverBackdrop open={accountOpen} onClose={closeAccount} />
+        <div
+          className="mobile-tab-bar pointer-events-none absolute inset-x-0 bottom-0"
+        >
+          <TabBarPopoverBackdrop
+            open={accountOpen}
+            onClose={closeAccount}
+          />
 
-        <div ref={containerRef} className="relative">
-          <nav
-            ref={navRef}
-            aria-label="Main"
-            onPointerDownCapture={handleNavPointerDown}
-            className="pointer-events-auto relative z-10 mx-3 overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-noise shadow-lg backdrop-blur-sm"
+          <div
+            ref={containerRef}
+            className="relative"
           >
-            <div ref={tabListRef} className="relative">
-            {indicator && (
+            <nav
+              ref={navRef}
+              aria-label="Main"
+              onPointerDownCapture={handleNavPointerDown}
+              className="pointer-events-auto relative z-10 mx-3 overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-noise shadow-lg backdrop-blur-sm"
+            >
               <div
-                aria-hidden
-                className={clsx(
+                ref={tabListRef}
+                className="relative"
+              >
+                {indicator && (
+                  <div
+                    aria-hidden
+                    className={clsx(
                   'mobile-tab-indicator pointer-events-none absolute top-0 left-0 z-0 rounded-xl',
                   mobileTabActivePillClassName,
                   indicatorReady && 'is-ready',
-                )}
-                style={{
+                    )}
+                    style={{
                   width: indicator.w,
                   height: indicator.h,
                   transform: `translate(${indicator.x}px, ${indicator.y}px)`,
-                }}
-              />
+                    }}
+                  />
             )}
-            <ul className="relative z-10 grid grid-cols-5 gap-1.5 p-1.5">
-            <li>
-              <Link
-                href={routes.home.url}
-                prefetch={false}
-                aria-current={isHomeActive ? 'page' : undefined}
-                data-mobile-tab="home"
-                onClick={handleHomeClick}
-                className={tabButtonClass(isHomeActive)}
-              >
-                <TabIcon>{HOME_ICON}</TabIcon>
-                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
-                  {routes.home.label}
-                </span>
-              </Link>
-            </li>
+                <ul
+                  className="relative z-10 grid grid-cols-5 gap-1.5 p-1.5"
+                >
+                  <li>
+                    <Link
+                      href={routes.home.url}
+                      prefetch={false}
+                      aria-current={isHomeActive ? 'page' : undefined}
+                      data-mobile-tab="home"
+                      onClick={handleHomeClick}
+                      className={tabButtonClass(isHomeActive)}
+                    >
+                      <TabIcon>{HOME_ICON}</TabIcon>
+                      <span
+                        className="max-w-full truncate text-[0.625rem] font-medium leading-tight"
+                      >
+                        {routes.home.label}
+                      </span>
+                    </Link>
+                  </li>
 
-            <li>
-              <Link
-                href={routes.events.url}
-                prefetch={false}
-                aria-current={isEventsActive ? 'page' : undefined}
-                data-mobile-tab="events"
-                onClick={(e) => handleTabClick(e, 'events', isEventsCurrent)}
-                className={tabButtonClass(isEventsActive)}
-              >
-                <TabIcon>{EVENTS_ICON}</TabIcon>
-                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
-                  {routes.events.label}
-                </span>
-              </Link>
-            </li>
+                  <li>
+                    <Link
+                      href={routes.events.url}
+                      prefetch={false}
+                      aria-current={isEventsActive ? 'page' : undefined}
+                      data-mobile-tab="events"
+                      onClick={(e) => handleTabClick(e, 'events', isEventsCurrent)}
+                      className={tabButtonClass(isEventsActive)}
+                    >
+                      <TabIcon>{EVENTS_ICON}</TabIcon>
+                      <span
+                        className="max-w-full truncate text-[0.625rem] font-medium leading-tight"
+                      >
+                        {routes.events.label}
+                      </span>
+                    </Link>
+                  </li>
 
-            <li>
-              <Link
-                href={routes.gallery.url}
-                prefetch={false}
-                aria-current={isGalleryActive ? 'page' : undefined}
-                data-mobile-tab="gallery"
-                onClick={(e) => handleTabClick(e, 'gallery', isGalleryCurrent)}
-                className={tabButtonClass(isGalleryActive)}
-              >
-                <TabIcon>{GALLERY_ICON}</TabIcon>
-                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
-                  {routes.gallery.label}
-                </span>
-              </Link>
-            </li>
+                  <li>
+                    <Link
+                      href={routes.gallery.url}
+                      prefetch={false}
+                      aria-current={isGalleryActive ? 'page' : undefined}
+                      data-mobile-tab="gallery"
+                      onClick={(e) => handleTabClick(e, 'gallery', isGalleryCurrent)}
+                      className={tabButtonClass(isGalleryActive)}
+                    >
+                      <TabIcon>{GALLERY_ICON}</TabIcon>
+                      <span
+                        className="max-w-full truncate text-[0.625rem] font-medium leading-tight"
+                      >
+                        {routes.gallery.label}
+                      </span>
+                    </Link>
+                  </li>
 
-            <li>
-              <Link
-                href={routes.members.url}
-                prefetch={false}
-                aria-current={isMembersActive ? 'page' : undefined}
-                data-mobile-tab="members"
-                onClick={(e) => handleTabClick(e, 'members', isMembersCurrent)}
-                className={tabButtonClass(isMembersActive)}
-              >
-                <TabIcon>{MEMBERS_ICON}</TabIcon>
-                <span className="max-w-full truncate text-[0.625rem] font-medium leading-tight">
-                  {routes.members.label}
-                </span>
-              </Link>
-            </li>
+                  <li>
+                    <Link
+                      href={routes.members.url}
+                      prefetch={false}
+                      aria-current={isMembersActive ? 'page' : undefined}
+                      data-mobile-tab="members"
+                      onClick={(e) => handleTabClick(e, 'members', isMembersCurrent)}
+                      className={tabButtonClass(isMembersActive)}
+                    >
+                      <TabIcon>{MEMBERS_ICON}</TabIcon>
+                      <span
+                        className="max-w-full truncate text-[0.625rem] font-medium leading-tight"
+                      >
+                        {routes.members.label}
+                      </span>
+                    </Link>
+                  </li>
 
-            <li className="relative flex items-center justify-center">
-              <MobileAccountMenu
-                active={accountOpen}
-                avatarUrl={profile?.avatar_url}
-                fullName={profile?.full_name}
-                open={accountOpen}
-                onOpenChange={setAccountOpen}
-              />
-            </li>
-          </ul>
-            </div>
-          </nav>
+                  <li
+                    className="relative flex items-center justify-center"
+                  >
+                    <MobileAccountMenu
+                      active={accountOpen}
+                      avatarUrl={profile?.avatar_url}
+                      fullName={profile?.full_name}
+                      open={accountOpen}
+                      onOpenChange={setAccountOpen}
+                    />
+                  </li>
+                </ul>
+              </div>
+            </nav>
+          </div>
         </div>
-      </div>
       </div>
     </>
   );

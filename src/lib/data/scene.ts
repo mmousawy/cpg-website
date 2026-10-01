@@ -1,8 +1,8 @@
 import { getServerNow } from '@/lib/cache/serverNow';
 import {
-    filterPastSceneEvents,
-    filterRelatedSceneEvents,
-    filterUpcomingSceneEvents,
+  filterPastSceneEvents,
+  filterRelatedSceneEvents,
+  filterUpcomingSceneEvents,
 } from '@/lib/scene/filters';
 import type { SceneEvent } from '@/types/scene';
 import { createPublicClient } from '@/utils/supabase/server';
