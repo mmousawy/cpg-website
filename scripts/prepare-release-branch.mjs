@@ -1,5 +1,5 @@
 /**
- * Build version/changelog updates from commits on origin/staging (since last tag).
+ * Build version/changelog from commits on staging; apply bumps against main's version files.
  * Writes package.json, CHANGELOG.md, and .release-please-manifest.json in the
  * working tree. Does not push or open PRs — the workflow does that.
  */
@@ -15,7 +15,10 @@ const { LocalGitHub } = require('release-please/build/src/local-github.js');
 const ROOT = process.cwd();
 const CONFIG_FILE = 'release-please-config.json';
 const MANIFEST_FILE = '.release-please-manifest.json';
-const STAGING_BRANCH = 'staging';
+/** Branch release-please treats as the merge base (version files on main). */
+const RELEASE_BASE_BRANCH = 'main';
+/** Branch whose unreleased commits drive the version/changelog. */
+const COMMIT_SOURCE_BRANCH = 'staging';
 const PR_BODY_FILE = path.join(ROOT, '.release-pr-body.md');
 const PR_TITLE_FILE = path.join(ROOT, '.release-pr-title.txt');
 
@@ -56,7 +59,7 @@ async function main() {
 
   const manifest = await Manifest.fromManifest(
     github,
-    STAGING_BRANCH,
+    COMMIT_SOURCE_BRANCH,
     CONFIG_FILE,
     MANIFEST_FILE,
     { alwaysUpdate: true },
@@ -72,7 +75,7 @@ async function main() {
   }
 
   const releasePr = pullRequests[0];
-  await applyUpdates(github, releasePr.updates, STAGING_BRANCH);
+  await applyUpdates(github, releasePr.updates, RELEASE_BASE_BRANCH);
 
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   const version = pkg.version;
