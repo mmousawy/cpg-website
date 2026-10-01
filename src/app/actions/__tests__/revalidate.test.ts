@@ -56,12 +56,13 @@ describe('revalidateAlbumLikes', () => {
     expect(expireTag).toHaveBeenCalledWith('album-likes-a1');
     expect(expireTag).toHaveBeenCalledWith('album-alice-my-album');
     expect(expireTag).toHaveBeenCalledWith('albums');
-    expect(pathCalls()).toEqual(
+    expect(pathCallArgs()).toEqual(
       expect.arrayContaining([
-        '/@alice/album/my-album',
-        '/gallery/albums',
-        '/gallery/photos',
-        '/gallery/recent-likes',
+        ['/@alice/album/my-album', undefined],
+        ['/[nickname]/album/[albumSlug]', 'page'],
+        ['/gallery/albums', undefined],
+        ['/gallery/photos', undefined],
+        ['/gallery/recent-likes', undefined],
       ]),
     );
   });

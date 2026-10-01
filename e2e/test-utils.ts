@@ -1,19 +1,37 @@
 import type { APIRequestContext, Page } from '@playwright/test';
+import { config as loadEnv } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+
+loadEnv({ path: path.join(process.cwd(), '.env.local'), quiet: true });
 
 const TEST_EMAILS_FILE = path.join(process.cwd(), 'test-results', 'test-emails.json');
 
 const STAGING_HOST = 'staging.creativephotography.group';
+const STAGING_SITE_URL = `https://${STAGING_HOST}`;
 
-/** True when E2E targets the Coolify staging site (admin-gated, invite-only signup). */
+/** True when Playwright should talk to the Coolify staging site. */
 export function isStagingE2ETarget(): boolean {
-  const baseUrl = process.env.BASE_URL ?? '';
+  const baseUrl = resolveE2EBaseUrl();
   try {
     return new URL(baseUrl).hostname === STAGING_HOST;
   } catch {
     return baseUrl.includes(STAGING_HOST);
   }
+}
+
+function isLocalEnvPointedAtStagingSupabase(): boolean {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  return supabaseUrl.includes('db-staging.creativephotography.group');
+}
+
+function resolveE2EBaseUrl(): string {
+  const configured = process.env.BASE_URL?.trim();
+  if (configured) return configured.split('?')[0];
+  // Local .env.local can point at staging Auth without staging JWT keys.
+  // Hit the Coolify app, which already has the matching keys.
+  if (isLocalEnvPointedAtStagingSupabase()) return STAGING_SITE_URL;
+  return 'http://localhost:3000';
 }
 
 /** Same secret the app uses in verifyInternalApiRequest (INTERNAL_API_SECRET → CRON_SECRET). */
@@ -52,8 +70,7 @@ export function getPlaywrightApiContextOptions(): {
   baseURL: string;
   extraHTTPHeaders: Record<string, string>;
   } {
-  const baseUrlWithToken = process.env.BASE_URL || 'http://localhost:3000';
-  const [baseUrl] = baseUrlWithToken.split('?');
+  const baseUrl = resolveE2EBaseUrl();
   const headers = withE2EIncludeTestHeaders({});
 
   return {
@@ -145,6 +162,8 @@ export type CreateTestUserOptions = {
 };
 
 function resolveCreateTestUserOptions(options: CreateTestUserOptions): CreateTestUserOptions {
+  // Deployed staging still signs out non-admins. Specs that need a member
+  // pass `{ asAdmin: false }` after that gate is removed.
   if (isStagingE2ETarget() && options.asAdmin !== false) {
     return { ...options, asAdmin: true };
   }

@@ -49,23 +49,6 @@ const KNOWN_ROUTES = new Set([
   '_next',
 ]);
 
-const stagingPublicPaths = [
-  '/login',
-  '/signup',
-  '/onboarding',
-  '/auth-callback',
-  '/auth/',
-  '/api/auth/',
-  '/api/health',
-  '/api/test',
-  '/forgot-password',
-  '/reset-password',
-];
-
-function isStagingPublicPath(pathname: string): boolean {
-  return stagingPublicPaths.some((path) => pathname === path || pathname.startsWith(path));
-}
-
 function withLegacyAuthCookieCleanup(
   request: NextRequest,
   response: NextResponse,
@@ -103,7 +86,6 @@ export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const firstSegment = pathname.split('/')[1];
   const matchesRoute = (path: string) => matchesPath(pathname, path);
-  const stagingSite = isStagingDeployment();
 
   // 301 from old @-nickname URLs to the member's current nickname
   if (firstSegment?.startsWith('@')) {
@@ -154,27 +136,18 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  // Staging is admin-only: no public signup or anonymous browsing.
-  // Invite links (`/signup?bypass=`) stay available for E2E and admins.
-  if (stagingSite) {
-    if (matchesRoute('/signup') && !request.nextUrl.searchParams.get('bypass')) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('error', 'staging_no_signup');
-      return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
-    }
-
-    if (!isStagingPublicPath(pathname) && !hasSupabaseAuthCookies(request.cookies.getAll())) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('redirectTo', pathname);
-      return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
-    }
+  // Staging signup is invite-only. Public pages and member accounts work
+  // like production; `/signup?bypass=` is for E2E and admins minting invites.
+  if (isStagingDeployment() && matchesRoute('/signup') && !request.nextUrl.searchParams.get('bypass')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('error', 'staging_no_signup');
+    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
   }
 
-  // Skip auth check for public API routes (production only paths on staging still need admin gate below)
+  // Skip auth check for public API routes
   const isPublicApiRoute = publicApiPaths.some(path => pathname.startsWith(path));
-  if (isPublicApiRoute && !stagingSite) {
+  if (isPublicApiRoute) {
     return withLegacyAuthCookieCleanup(request, NextResponse.next());
   }
 
@@ -204,9 +177,7 @@ export default async function proxy(request: NextRequest) {
       isDocument: isDocumentNavigation(request.headers),
     });
 
-  const needsAuthSession = stagingSite
-    ? !isStagingPublicPath(pathname) && hasAuthCookie
-    : needsProxyAuthSession(pathname) && hasAuthCookie;
+  const needsAuthSession = needsProxyAuthSession(pathname) && hasAuthCookie;
 
   if (!needsAuthSession && !needsOnboardingClassify) {
     if (isProtectedPath && !hasAuthCookie) {
@@ -261,12 +232,10 @@ export default async function proxy(request: NextRequest) {
     full_name: string | null;
     nickname: string | null;
     terms_accepted_at: string | null;
-    is_admin: boolean | null;
   } | null = null;
 
   const shouldLoadProfile = user && (
-    stagingSite
-    || needsProxyOwnProfile(pathname)
+    needsProxyOwnProfile(pathname)
     || needsOnboardingClassify
   );
 
@@ -281,7 +250,6 @@ export default async function proxy(request: NextRequest) {
         full_name: (ownProfile.full_name as string | null) ?? null,
         nickname: (ownProfile.nickname as string | null) ?? null,
         terms_accepted_at: (ownProfile.terms_accepted_at as string | null) ?? null,
-        is_admin: (ownProfile.is_admin as boolean | null) ?? null,
       };
     }
   }
@@ -293,16 +261,8 @@ export default async function proxy(request: NextRequest) {
         ? ONBOARDING_COOKIE_COMPLETE
         : ONBOARDING_COOKIE_PENDING,
     );
-  } else if (user && (stagingSite || needsProxyOwnProfile(pathname))) {
+  } else if (user && needsProxyOwnProfile(pathname)) {
     applyOnboardingCookie(supabaseResponse, ONBOARDING_COOKIE_PENDING);
-  }
-
-  if (stagingSite && user && !isStagingPublicPath(pathname) && !profile?.is_admin) {
-    await supabase.auth.signOut();
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('error', 'staging_admin_only');
-    return withLegacyAuthCookieCleanup(request, NextResponse.redirect(url));
   }
 
   // Block users whose account is scheduled for deletion

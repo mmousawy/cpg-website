@@ -32,12 +32,13 @@ Full setup: [infra/supabase-staging/README.md](../supabase-staging/README.md).
 - [ ] Coolify **scheduled tasks disabled** on staging (or Resend test key only)
 - [ ] Staging GoTrue: public signup disabled (`GOTRUE_DISABLE_SIGNUP=true`); Site URL = staging site
 
-## Smoke tests (admin login required)
+## Smoke tests (invite-only signup)
 
-- [ ] Non-admin / anonymous users redirected to login on staging
+- [ ] Public pages (home, gallery, events) load without signing in
 - [ ] `/signup` without `?bypass=` redirects to login
-- [ ] `/signup?bypass=` (admin generator or E2E `/api/test/signup-bypass`) can create an account
-- [ ] Login with Google / Discord as promoted admin
+- [ ] `/signup?bypass=` (admin generator or E2E `/api/test/signup-bypass`) can create a member account
+- [ ] Regular (non-admin) members can log in and use `/account`
+- [ ] Login with Google / Discord as promoted admin still reaches `/admin`
 - [ ] Homepage, gallery, events, challenges load (empty until seeded)
 - [ ] Upload a photo — lands in **staging** storage only
 - [ ] Create test event on staging — **not** visible on production

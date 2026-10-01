@@ -1,6 +1,7 @@
-import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
-import { ensureStaticParams } from '@/lib/staticParams';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
+import { getAlbumBySlug, getAllAlbumPaths } from '@/lib/data/albums';
+import { getAlbumLikesCount } from '@/lib/data/likes';
+import { ensureStaticParams } from '@/lib/staticParams';
 import { createMetadata, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 import AlbumContent from './AlbumContent';
@@ -89,9 +90,11 @@ async function CachedAlbumPage({ nickname, albumSlug }: { nickname: string; albu
     notFound();
   }
 
+  const likesCount = await getAlbumLikesCount(album.id);
+
   return (
     <AlbumContent
-      album={album}
+      album={{ ...album, likes_count: likesCount }}
       nickname={nickname}
       albumSlug={albumSlug}
     />

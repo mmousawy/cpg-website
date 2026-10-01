@@ -369,6 +369,8 @@ See **[docs/deployment/coolify.md](./docs/deployment/coolify.md)** for full setu
 
 **Supabase:** production `/home/ubuntu/supabase-project`, staging `/data/supabase-staging` — [infra/supabase-staging/README.md](./infra/supabase-staging/README.md).
 
+**Staging access:** signup is invite-only (`/signup` without `?bypass=` redirects to login). Public pages and member accounts work like production.
+
 Quick reference:
 
 - `Dockerfile` + `output: 'standalone'` in `next.config.ts`
