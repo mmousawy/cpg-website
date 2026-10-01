@@ -1,5 +1,84 @@
 # Changelog
 
+## [1.41.0](https://github.com/mmousawy/cpg-website/compare/v1.40.0...v1.41.0) (2026-10-01)
+
+
+### ✨ Features
+
+* add driver.js dependency and enhance photos management tour features ([17bdc0b](https://github.com/mmousawy/cpg-website/commit/17bdc0bcaceb5b5f0f8e8e047ebb2a39f4c1b12f))
+* add image ICC verification and update documentation ([9282979](https://github.com/mmousawy/cpg-website/commit/92829793949f5fae1d3555a8d3318f221c1793d9))
+* add nginx configuration for large client header buffers ([0347256](https://github.com/mmousawy/cpg-website/commit/0347256ae74c9372bb5a5c9171a94434658b4456))
+* add onboarding path and enhance signup tests with mock implementations ([326ae0c](https://github.com/mmousawy/cpg-website/commit/326ae0cb4f821ec35be9f99590bf75025c9652df))
+* enhance confirmation modal and account menu functionality ([7afd1f3](https://github.com/mmousawy/cpg-website/commit/7afd1f3e277f0d43c5233c275ad5795d33f96c3a))
+* enhance database types and proxy functionality for nickname management ([7b94a62](https://github.com/mmousawy/cpg-website/commit/7b94a62242cbb2ac17b8b7562c605b1a683a3051))
+* enhance deployment configuration for Coolify and update environment settings ([5b03d4e](https://github.com/mmousawy/cpg-website/commit/5b03d4ec7152c7f4f5aff1b22f1818a1a5383469))
+* enhance homepage caching and add new email templates ([18e768c](https://github.com/mmousawy/cpg-website/commit/18e768c47cf566695c7d47c57407a7e9dc6c634f))
+* enhance image handling and layout in album and challenge components ([a8c5903](https://github.com/mmousawy/cpg-website/commit/a8c590314737a6ddbb0fb8841619c329d1b0ddd4))
+* enhance mobile layout and styling for improved user experience ([02fe82a](https://github.com/mmousawy/cpg-website/commit/02fe82a663b2bc24b7862a4b2f35ddaed23acfce))
+* enhance mobile sticky navigation and layout for improved visibility and interaction ([123460c](https://github.com/mmousawy/cpg-website/commit/123460c3c5568e6a6967ef47980afaaccf6352a7))
+* enhance modal animations and mobile sticky navigation for improved user experience ([d2c0f1b](https://github.com/mmousawy/cpg-website/commit/d2c0f1b89cbb5efbf4bd45833f6e9010229a84fd))
+* enhance onboarding experience with new animations and component updates ([0ee2768](https://github.com/mmousawy/cpg-website/commit/0ee2768b8e583e3a197d4afd66e9ab7e7ec50557))
+* enhance onboarding experience with new components and animations ([4885578](https://github.com/mmousawy/cpg-website/commit/4885578af60606ea8a6ab51cf150d535e3ae16fc))
+* enhance onboarding flow and cookie management ([214bc91](https://github.com/mmousawy/cpg-website/commit/214bc916097b8105765f8a05d90a0e198d169a66))
+* enhance photos tour functionality and integrate profile management ([dc2226e](https://github.com/mmousawy/cpg-website/commit/dc2226e73a2daa1c04afd86b951bd3ed977ef1ca))
+* enhance signup and onboarding flow with dynamic path handling ([394ff6a](https://github.com/mmousawy/cpg-website/commit/394ff6a17ed842e7b1ddf98acf90dde3d67e2aee))
+* enhance staging and production deployment configurations ([e9918ca](https://github.com/mmousawy/cpg-website/commit/e9918ca8f0d10425eba105b550b8064df90e6398))
+* enhance staging setup and documentation for Supabase ([b70545f](https://github.com/mmousawy/cpg-website/commit/b70545f56b3dac0c37cfe9c61934bc99f45bf177))
+* enhance staging support and onboarding flow ([b9ba750](https://github.com/mmousawy/cpg-website/commit/b9ba750b1c60cfeefe06f5723c3a80a8c3afa81d))
+* implement ensureStaticParams for improved static parameter handling ([146c387](https://github.com/mmousawy/cpg-website/commit/146c387bae11332d778aa7d3c11d7fc261bbdde5))
+* improve mobile layout and styling for enhanced user experience ([f5b86e5](https://github.com/mmousawy/cpg-website/commit/f5b86e50d3dfaf4d4c1544306f5fd8c64ca74f33))
+* improve user feedback and error handling in data retrieval processes ([b2ccbc9](https://github.com/mmousawy/cpg-website/commit/b2ccbc9db8d97bebb620dd1fab096285e7b8e132))
+* refine mobile sticky navigation and layout for improved user experience ([0c19d9c](https://github.com/mmousawy/cpg-website/commit/0c19d9c079c5fbbdd75df33256d0e4665cbff659))
+* update Dockerfile and package.json for CI integration and dependency management ([4e81c87](https://github.com/mmousawy/cpg-website/commit/4e81c87fe1dae51d8c925a8afad93708c133963a))
+* update Dockerfile and package.json for improved dependency management ([9a23b0a](https://github.com/mmousawy/cpg-website/commit/9a23b0a32e616b8644ac733900f9225058c35447))
+* update environment configuration and CI workflows for improved staging support ([208af0e](https://github.com/mmousawy/cpg-website/commit/208af0e8523a44abedcbaecc1f89557cb7ce4ecc))
+* update ESLint configuration, CI workflows, and enhance user interface components ([a990547](https://github.com/mmousawy/cpg-website/commit/a9905479f187322af198924accc8eba3c2ccaa6c))
+* update image assets and enhance styling for improved user experience ([56e7d7d](https://github.com/mmousawy/cpg-website/commit/56e7d7dd5be994ee29cefac7770b0f4a34620ace))
+* update onboarding intro section with optimized image handling ([ee245bc](https://github.com/mmousawy/cpg-website/commit/ee245bc958ad943c16f216397e98516fe6f5c869))
+
+
+### 🐛 Bug Fixes
+
+* enhance mobile and user menu links with prefetching for performance ([208d643](https://github.com/mmousawy/cpg-website/commit/208d6431e0205653e23de36d75d060d43ae72d2e))
+* enhance OAuth configuration and cookie management for Supabase integration ([440eef1](https://github.com/mmousawy/cpg-website/commit/440eef1fe69fc03e9d0459b6f550f56f879fa62a))
+* introduce DetailSidebar component for enhanced photo and album layouts ([9e31baf](https://github.com/mmousawy/cpg-website/commit/9e31baffbe5f910f8ce50a60756fa8d885f3e676))
+* simplify nginx proxy header script for self-containment ([f8efc2c](https://github.com/mmousawy/cpg-website/commit/f8efc2ce9cd40e634d04366b4bcf3a229fb672ef))
+* streamline login button selection in tests for consistency ([944c8af](https://github.com/mmousawy/cpg-website/commit/944c8af018f7218118b09198422e362e7aa3cbc1))
+* update 502 Bad Gateway troubleshooting steps in coolify documentation ([eeeef11](https://github.com/mmousawy/cpg-website/commit/eeeef11374f7d18c6e118c8dacea97d38532b98d))
+* update image decoding check in PhotoFilmstripShell component ([d8689e7](https://github.com/mmousawy/cpg-website/commit/d8689e704ddee3d19415ade3a543d8ec6560c894))
+* update image sizes and enhance documentation for deployment ([d4c349b](https://github.com/mmousawy/cpg-website/commit/d4c349b9be8a05f175a854e8c142ae0bab6f5de6))
+* update migrate-staging.sh for improved usage instructions and superuser checks ([958e0c5](https://github.com/mmousawy/cpg-website/commit/958e0c501f970d9dd71358cac2a556e90a676b31))
+* update script usage in documentation for imgproxy ICC preservation ([de5bb65](https://github.com/mmousawy/cpg-website/commit/de5bb655b59acd1ec86a5bf581354953c9dd774a))
+* update script usage instructions for imgproxy ICC preservation ([d8c2f5c](https://github.com/mmousawy/cpg-website/commit/d8c2f5cfaab82b9249c3f43e53f7498ccfc1479b))
+
+
+### ♻️ Refactoring
+
+* enhance caching logic and error handling across data retrieval functions ([88c1be2](https://github.com/mmousawy/cpg-website/commit/88c1be2de5c3d4c900e2127502b67b9ef5cee87a))
+* enhance layout and styling consistency across various components ([02ff892](https://github.com/mmousawy/cpg-website/commit/02ff892f04f9276b67d71700af41e88efc353092))
+* enhance photo navigation in AlbumFilmstrip and PhotoFilmstripShell components ([b3ec643](https://github.com/mmousawy/cpg-website/commit/b3ec6435908ea68df85fb42966f32aac1a829360))
+* improve ChallengeMiniCard and AlbumFilmstrip components for better layout and navigation ([fa02da8](https://github.com/mmousawy/cpg-website/commit/fa02da818328dc03c641c0e20222fd9e16c736eb))
+* improve comment date formatting and enhance event detail layout ([2fd7847](https://github.com/mmousawy/cpg-website/commit/2fd7847f12023dc7e272f6a81a43a87ebd179d66))
+* improve layout and functionality of event and user menu components ([9889a85](https://github.com/mmousawy/cpg-website/commit/9889a8597a7c104f577e82142fff26ebfddfc05d))
+* improve scroll handling in account mobile navigation tests ([d966435](https://github.com/mmousawy/cpg-website/commit/d96643503334a12b18c7a9cdb45caae54de9457a))
+* optimize image handling and layout in various components ([3242c75](https://github.com/mmousawy/cpg-website/commit/3242c75062f47f9300d12a2b997ea76954f06516))
+* remove 'format' parameter from image URL generation for cleaner handling ([861afcf](https://github.com/mmousawy/cpg-website/commit/861afcfa2b1e57769c2597bb935677c41823d915))
+* reorganize profile photo stream header for improved layout ([63b5b8a](https://github.com/mmousawy/cpg-website/commit/63b5b8aa99d9038f54c36b2be53d99b001b94072))
+* simplify mobile tab bar height calculations and improve sticky chrome handling ([d4f7ae1](https://github.com/mmousawy/cpg-website/commit/d4f7ae14633ed00d0d3fba514a5b63237b074606))
+* standardize site URL handling in email and nickname verification routes ([3a2f39f](https://github.com/mmousawy/cpg-website/commit/3a2f39fff918fd1db9095ef2099b0c871ee7c047))
+* streamline cache handling and error responses in data retrieval functions ([0f33359](https://github.com/mmousawy/cpg-website/commit/0f333590fa893ac50b51a6a57b96a54efa59bf04))
+* streamline home page structure and improve event card functionality ([f929621](https://github.com/mmousawy/cpg-website/commit/f929621bc8ceef2a791de29b479ec4165301e3c5))
+* update fallback component in Home section for improved loading experience ([2d6de6f](https://github.com/mmousawy/cpg-website/commit/2d6de6f5e72bf5f7b9b7175ef0efcc34ccd81613))
+* update global styles and layout components for improved responsiveness ([7f1e16b](https://github.com/mmousawy/cpg-website/commit/7f1e16bcfe5c9713a2d3d1b3cbf64bd9edf2dd84))
+* update mobile tab bar and not found page for improved layout and user experience ([b40a0be](https://github.com/mmousawy/cpg-website/commit/b40a0be22fe6adae1f2c70dfdf4a1e3050ba476c))
+* wrap MobileMenu in Suspense for improved loading handling ([3652b85](https://github.com/mmousawy/cpg-website/commit/3652b857169f3ffc09233f548eb118954cd3df48))
+
+
+### 🔧 Maintenance
+
+* update .dockerignore and tsconfig.json to exclude Playwright config and e2e tests ([5ec7416](https://github.com/mmousawy/cpg-website/commit/5ec74165dda80a6a8778b41a4e44bbfaee370268))
+* update dependencies and enhance account settings layout ([42915f6](https://github.com/mmousawy/cpg-website/commit/42915f619500916a3a79bc5f4683c366198e4295))
+
 ## [1.40.0](https://github.com/mmousawy/cpg-website/compare/v1.39.5...v1.40.0) (2026-09-02)
 
 
