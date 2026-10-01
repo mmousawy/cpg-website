@@ -3,10 +3,10 @@ import { Resend } from 'resend';
 
 import { getWeeklyDigestSubject, WeeklyDigestEmail } from '@/emails/weekly-digest';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
-import { encrypt } from '@/utils/encrypt';
-import { render } from '@react-email/render';
-import { createAdminClient } from '@/utils/supabase/admin';
 import { isAdminNotificationType, isEventNotificationType, type NotificationWithActor } from '@/types/notifications';
+import { encrypt } from '@/utils/encrypt';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 const BATCH_SIZE = 100;
@@ -202,6 +202,7 @@ export async function GET(request: NextRequest) {
           html: await render(
             WeeklyDigestEmail({
               recipientName: digest.fullName || digest.email.split('@')[0] || 'Friend',
+              recipientEmail: digest.email,
               notifications: digest.notifications,
               totalCount: digest.totalCount,
               activityPageUrl,

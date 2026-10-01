@@ -3,6 +3,7 @@ import ImageSVG from 'public/icons/image.svg';
 export default function PhotoEditEmptyState() {
   return (
     <div
+      id="photos-tour-edit-sidebar"
       className="flex min-h-full flex-col items-center justify-center p-10 text-center"
     >
       <ImageSVG

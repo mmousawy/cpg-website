@@ -1,39 +1,33 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Link,
-  Preview,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Link, Section } from '@react-email/components';
 
 import { Database } from '@/database.types';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-
+import EmailButton from './components/EmailButton';
+import EmailDivider from './components/EmailDivider';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 import EventDetails from './components/EventDetails';
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+import { emailAccentLinkStyle } from './components/styles';
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export const SignupEmail = ({
   preview,
   fullName,
+  recipientEmail,
   event,
   confirmLink,
 }: {
   preview?: boolean;
   fullName: string,
+  recipientEmail?: string,
   event: Database['public']['Tables']['events']['Row'],
   confirmLink: string,
 }) => {
   if (preview) {
     fullName = 'John Doe';
+    recipientEmail = 'john.doe@example.com';
 
     event = {
       title: 'Contours, compositions and cropping',
@@ -50,81 +44,57 @@ export const SignupEmail = ({
   const previewText = 'Confirm your sign up for the meetup';
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={fullName}
+      recipientEmail={recipientEmail}
+    >
+      <EmailHeading>
+        Sign up for:
+        {' '}
+        {event?.title}
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {fullName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        Someone recently signed up for the mentioned meetup with your email address.
+        If this was you, you can confirm or cancel your sign up here:
+      </EmailText>
+
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={confirmLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+          Confirm sign up
+        </EmailButton>
+      </Section>
+      <EmailText>
+        or copy and paste this URL into your browser:
+        {' '}
+        <Link
+          href={confirmLink}
+          style={emailAccentLinkStyle}
+        >
+          {confirmLink}
+        </Link>
+      </EmailText>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              Sign up for:
-              {' '}
-              {event?.title}
-            </Heading>
+      <EmailDivider />
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {fullName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Someone recently signed up for the mentioned meetup with your email address.
-              If this was you, you can confirm or cancel your sign up here:
-            </Text>
-
-            <Section
-              className="my-[20px]"
-            >
-              <Button
-                className="rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
-                href={confirmLink}
-              >
-                Confirm sign up
-              </Button>
-            </Section>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              or copy and paste this URL into your browser:
-              {' '}
-              <Link
-                href={confirmLink}
-                className="text-blue-600 no-underline"
-              >
-                {confirmLink}
-              </Link>
-            </Text>
-
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            <EventDetails
-              event={event}
-            />
-
-            <Footer
-              fullName={fullName}
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <EventDetails
+        event={event}
+      />
+    </EmailLayout>
   );
 };
 

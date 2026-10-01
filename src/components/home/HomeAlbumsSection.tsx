@@ -1,6 +1,7 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
 import ArrowLink from '@/components/shared/ArrowLink';
+import { HOME_ALBUM_COVER_SIZES } from '@/config/homeImageSizes';
 import { routes } from '@/config/routes';
 import type { HomePageData } from '@/lib/data/home';
 
@@ -32,9 +33,9 @@ export function HomeAlbumsSection({ albums }: HomeAlbumsSectionProps) {
       </div>
       <AlbumGrid
         albums={albums}
-        variant="large"
         liveLikeCounts={false}
         prefetchLinks={false}
+        coverImageSizes={HOME_ALBUM_COVER_SIZES}
         className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] sm:[&>:nth-child(n+4)]:hidden"
       />
     </PageContainer>

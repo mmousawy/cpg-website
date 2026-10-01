@@ -296,7 +296,7 @@ export default function PhotoListItem({
   // Check if className overrides items alignment
   const hasItemsOverride = className.includes('items-center') || className.includes('items-end');
   const baseClasses = clsx(
-    'relative flex gap-2 border border-border-color bg-background-medium p-0',
+    'relative flex min-w-0 gap-2 border border-border-color bg-background-medium p-0',
     hasItemsOverride ? '' : 'items-start',
     className,
   );
@@ -473,7 +473,10 @@ export default function PhotoListItem({
       >
         {/* Primary name (title or fallback) */}
         <p
-          className="text-ellipsis overflow-hidden text-sm font-medium leading-tight mr-12"
+          className={clsx(
+            'truncate text-sm font-medium leading-tight',
+            isDetailed && 'mr-12',
+          )}
           title={displayName}
         >
           {displayName}

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
-  mobileStickyBarSettleGapClassName,
+  mobileStickyBarTerminalSettleGapClassName,
   mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
@@ -81,59 +81,57 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
       <div
         className={clsx('flex flex-col overflow-hidden', mobileFloatingPillClassName)}
       >
-        {/* Collapsed trigger */}
-        <button
-          type="button"
-          onClick={() => setIsExpanded((prev) => !prev)}
-          className="relative z-[2] flex items-center justify-between gap-3 px-4 py-3 text-left"
-          aria-expanded={isExpanded}
-          aria-label={isExpanded ? 'Close sections' : 'Open sections'}
+      {/* Collapsed trigger */}
+      <button
+        type="button"
+        onClick={() => setIsExpanded((prev) => !prev)}
+        className="relative z-[2] flex items-center justify-between gap-3 px-4 py-3 text-left"
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? 'Close sections' : 'Open sections'}
+      >
+        <span
+          className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground"
         >
-          <span
-            className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground"
+          <TocSVG
+            className="size-5 shrink-0 fill-current text-foreground/70"
+            aria-hidden
+          />
+          <span className="truncate">
+            {activeSection ? activeSection.title : 'Jump to section'}
+          </span>
+        </span>
+        <span
+          className={`shrink-0 text-foreground/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+        >
+          <svg
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <TocSVG
-              className="size-5 shrink-0 fill-current text-foreground/70"
-              aria-hidden
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 15l7-7 7 7"
             />
-            <span
-              className="truncate"
-            >
-              {activeSection ? activeSection.title : 'Jump to section'}
-            </span>
-          </span>
-          <span
-            className={`shrink-0 text-foreground/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          >
-            <svg
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 15l7-7 7 7"
-              />
-            </svg>
-          </span>
-        </button>
+          </svg>
+        </span>
+      </button>
 
-        {/* Expandable content */}
-        <div
-          className="overflow-hidden transition-[max-height] duration-300 ease-out"
-          style={{ maxHeight: isExpanded ? 280 : 0 }}
+      {/* Expandable content */}
+      <div
+        className="overflow-hidden transition-[max-height] duration-300 ease-out"
+        style={{ maxHeight: isExpanded ? 280 : 0 }}
+      >
+        <nav
+          aria-label={ariaLabel}
+          className="relative z-[2] border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
         >
-          <nav
-            aria-label={ariaLabel}
-            className="relative z-[2] border-t border-border-color overflow-y-auto overscroll-contain max-h-65"
+          <ul
+            className="py-2"
           >
-            <ul
-              className="py-2"
-            >
-              {sections.map((section) => {
+            {sections.map((section) => {
               const isActive = section.id === activeSectionId;
               return (
                 <li
@@ -154,9 +152,9 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
                 </li>
               );
             })}
-            </ul>
-          </nav>
-        </div>
+          </ul>
+        </nav>
+      </div>
       </div>
     </div>
   );
@@ -168,10 +166,7 @@ export default function SectionMobileNav({ sections, ariaLabel = 'Page sections'
   return (
     <>
       {nav}
-      <div
-        className={mobileStickyBarSettleGapClassName}
-        aria-hidden
-      />
+      <div className={mobileStickyBarTerminalSettleGapClassName} aria-hidden />
     </>
   );
 }

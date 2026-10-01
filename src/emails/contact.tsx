@@ -1,16 +1,7 @@
-import {
-  Body,
-  Container,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Preview,
-  Tailwind,
-  Text,
-} from '@react-email/components';
-
-import EmailHeader from './components/Header';
+import EmailDivider from './components/EmailDivider';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
 
 export const ContactEmail = ({
   preview,
@@ -35,85 +26,63 @@ export const ContactEmail = ({
   const previewText = `New contact form submission from ${name}`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
-        >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+    <EmailLayout
+      previewText={previewText}
+      showFooter={false}
+      showSocialLinks={false}
+    >
+      <EmailHeading>
+        New contact form submission
+      </EmailHeading>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              New contact form submission
-            </Heading>
+      <EmailText>
+        <strong>
+          From:
+        </strong>
+        {' '}
+        {name}
+      </EmailText>
+      <EmailText
+        style={{ marginTop: '4px' }}
+      >
+        <strong>
+          Email:
+        </strong>
+        {' '}
+        {email}
+      </EmailText>
+      <EmailText
+        style={{ marginTop: '4px' }}
+      >
+        <strong>
+          Subject:
+        </strong>
+        {' '}
+        {subject}
+      </EmailText>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              <strong>
-                From:
-              </strong>
-              {' '}
-              {name}
-            </Text>
-            <Text
-              className="mt-1! text-[14px] leading-[24px] text-[#171717]"
-            >
-              <strong>
-                Email:
-              </strong>
-              {' '}
-              {email}
-            </Text>
-            <Text
-              className="mt-1! text-[14px] leading-[24px] text-[#171717]"
-            >
-              <strong>
-                Subject:
-              </strong>
-              {' '}
-              {subject}
-            </Text>
+      <EmailDivider />
 
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
+      <EmailText>
+        <strong>
+          Message:
+        </strong>
+      </EmailText>
+      <EmailText
+        style={{ whiteSpace: 'pre-wrap' }}
+      >
+        {message}
+      </EmailText>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              <strong>
-                Message:
-              </strong>
-            </Text>
-            <Text
-              className="whitespace-pre-wrap text-[14px] leading-[24px] text-[#171717]"
-            >
-              {message}
-            </Text>
+      <EmailDivider />
 
-            <Hr
-              className="mx-0 my-[20px] w-full border border-solid border-[#e5e7ea]"
-            />
-
-            <Text
-              className="text-[12px] leading-[24px] text-[#666666]"
-            >
-              This message was sent via the Creative Photography Group contact form.
-              Reply directly to this email to respond to the sender.
-            </Text>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      <EmailText
+        variant="muted"
+      >
+        This message was sent via the Creative Photography Group contact form.
+        Reply directly to this email to respond to the sender.
+      </EmailText>
+    </EmailLayout>
   );
 };
 

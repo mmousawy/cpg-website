@@ -6,6 +6,7 @@ import { startTransition, useEffect, useMemo, useState } from 'react';
 
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import ChallengesList from '@/components/challenges/ChallengesList';
+import ExpandableChallengePrompt from '@/components/challenges/ExpandableChallengePrompt';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import BlurImage from '@/components/shared/BlurImage';
@@ -13,9 +14,10 @@ import Button from '@/components/shared/Button';
 import CardBadges from '@/components/shared/CardBadges';
 import EmptyState from '@/components/shared/EmptyState';
 import HelpLink from '@/components/shared/HelpLink';
+import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import { useAuth } from '@/hooks/useAuth';
 import { useAllMySubmissions, useWithdrawSubmission } from '@/hooks/useChallengeSubmissions';
-import { useActiveChallenges } from '@/hooks/useChallenges';
+import { useActiveChallenges, useChallengeContributors } from '@/hooks/useChallenges';
 import type { ChallengeStatus, SubmissionWithDetails } from '@/types/challenges';
 import { DEFAULT_SUPABASE_IMAGE_QUALITY, getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 
@@ -136,6 +138,7 @@ export default function MyChallengesPage() {
     const pending = groups.filter(groupHasPending);
     const yours = groups.filter((g) => !groupHasPending(g));
     const joinedIds = new Set(groups.map((g) => g.challengeId));
+
     return { pendingGroups: pending, yourGroups: yours, joinedChallengeIds: joinedIds };
   }, [allSubmissions]);
 
@@ -217,7 +220,7 @@ export default function MyChallengesPage() {
             {pendingGroups.length > 0 && (
               <section>
                 <h2
-                  className="mb-4 text-xl font-semibold opacity-80 font-heading"
+                  className="mb-2 sm:mb-4 text-xl font-semibold opacity-80 font-heading"
                 >
                   Pending review
                 </h2>
@@ -240,7 +243,7 @@ export default function MyChallengesPage() {
             {yourGroups.length > 0 && (
               <section>
                 <h2
-                  className="mb-4 text-xl font-semibold opacity-80 font-heading"
+                  className="mb-2 sm:mb-4 text-xl font-semibold opacity-80 font-heading"
                 >
                   Your challenges
                 </h2>
@@ -252,6 +255,7 @@ export default function MyChallengesPage() {
                       key={group.challengeId}
                       group={group}
                       now={now}
+                      expandablePrompt
                       onWithdraw={handleWithdraw}
                       isWithdrawing={withdrawMutation.isPending}
                     />
@@ -263,15 +267,17 @@ export default function MyChallengesPage() {
             {openChallenges.length > 0 && (
               <section>
                 <h2
-                  className="mb-4 text-xl font-semibold opacity-80 font-heading"
+                  className="mb-2 sm:mb-4 text-xl font-semibold opacity-80 font-heading"
                 >
                   Open challenges
                 </h2>
-                <ChallengesList
-                  challenges={openChallenges}
-                  serverNow={now ?? Date.now()}
-                  emptyMessage="No open challenges right now."
-                />
+                {now != null ? (
+                  <ChallengesList
+                    challenges={openChallenges}
+                    serverNow={now}
+                    emptyMessage="No open challenges right now."
+                  />
+                ) : null}
               </section>
             )}
           </>
@@ -282,9 +288,9 @@ export default function MyChallengesPage() {
 }
 
 const statusAccent: Record<ChallengeStatus, string> = {
-  pending: 'border-amber-500/60',
-  accepted: 'border-green-600/60',
-  rejected: 'border-red-700/60',
+  pending: 'border-border-color-strong',
+  accepted: 'border-border-color-strong',
+  rejected: 'border-border-color-strong',
 };
 
 function submissionStatusBadge(status: ChallengeStatus) {
@@ -318,15 +324,19 @@ function submissionStatusBadge(status: ChallengeStatus) {
 function JoinedChallengeCard({
   group,
   now,
+  expandablePrompt = false,
   onWithdraw,
   isWithdrawing,
 }: {
   group: ChallengeGroup;
   now: number | null;
+  expandablePrompt?: boolean;
   onWithdraw: (submission: SubmissionWithDetails) => void;
   isWithdrawing: boolean;
 }) {
+  const { user } = useAuth();
   const { challenge, submissions } = group;
+  const { data: contributors = [] } = useChallengeContributors(challenge.id);
   const challengeLink = `/challenges/${challenge.slug}`;
   const deadline = now != null && challenge.ends_at
     ? formatDeadline(challenge.ends_at, now)
@@ -344,6 +354,19 @@ function JoinedChallengeCard({
   const deadlineLabel = ended
     ? (deadline ?? 'Ended')
     : (deadline ?? (challenge.is_active ? 'Open' : null));
+
+  const promptHtml = challenge.prompt?.trim() ?? '';
+
+  const otherContributorAvatars = useMemo((): AvatarPerson[] => {
+    return contributors
+      .filter((c) => c.user_id !== user?.id)
+      .map((c) => ({
+        id: c.user_id,
+        avatarUrl: c.avatar_url,
+        fullName: c.full_name,
+        nickname: c.nickname,
+      }));
+  }, [contributors, user?.id]);
 
   return (
     <article
@@ -377,49 +400,81 @@ function JoinedChallengeCard({
         )}
 
         <div
-          className="absolute inset-x-0 top-0 z-10 bg-linear-to-b from-black/85 via-black/40 to-transparent p-4 pb-12 sm:p-4 sm:pb-15"
+          className="absolute h-full inset-x-0 top-0 z-10 bg-linear-to-b from-black/85 via-black/20 to-transparent p-4 pb-12 sm:p-4 sm:pb-15"
         >
-          <p
-            className="font-heading text-xl font-semibold leading-tight text-white line-clamp-3 sm:text-xl"
+          <div
+            className="flex items-start justify-between gap-2"
           >
-            {challenge.title}
-          </p>
+            <p
+              className="min-w-0 flex-1 font-heading text-xl font-semibold leading-tight text-white line-clamp-3"
+            >
+              {challenge.title}
+            </p>
+            {deadlineLabel ? (
+              <span
+                className={clsx(
+                  'inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white',
+                  'mt-1 sm:absolute sm:top-auto sm:right-3 sm:bottom-3 sm:mt-0 sm:px-2 sm:py-1 sm:text-xs',
+                  ended
+                    ? 'border-black/90 bg-black/85'
+                    : deadline
+                      ? 'border-amber-500/90 bg-amber-500/85'
+                      : 'border-green-600/90 bg-green-600/85',
+                )}
+              >
+                <ClockMiniSVG
+                  className="size-3 shrink-0 fill-current sm:size-3.5"
+                />
+                <span
+                  className="hidden sm:inline"
+                >
+                  {deadlineLabel}
+                </span>
+                <span
+                  className="sm:hidden"
+                >
+                  {ended ? 'Ended' : (deadlineShort ?? deadlineLabel)}
+                </span>
+              </span>
+            ) : null}
+          </div>
         </div>
-        {deadlineLabel && (
-          <span
-            className={clsx(
-              'absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold text-white sm:bottom-3 sm:right-3 sm:px-2 sm:py-1 sm:text-xs',
-              ended
-                ? 'border-black/90 bg-black/85'
-                : deadline
-                  ? 'border-amber-500/90 bg-amber-500/85'
-                  : 'border-green-600/90 bg-green-600/85',
-            )}
-          >
-            <ClockMiniSVG
-              className="size-3 shrink-0 fill-current sm:size-3.5"
-            />
-            <span
-              className="hidden sm:inline"
-            >
-              {deadlineLabel}
-            </span>
-            <span
-              className="sm:hidden"
-            >
-              {ended ? 'Ended' : (deadlineShort ?? deadlineLabel)}
-            </span>
-          </span>
-        )}
       </Link>
 
       <div
-        className="flex min-w-0 flex-1 flex-col gap-4 p-5 pt-4 sm:px-5 sm:py-4"
+        className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:px-5 sm:py-4"
       >
+        {promptHtml ? (
+          <ExpandableChallengePrompt
+            html={promptHtml}
+            expandable={expandablePrompt}
+          />
+        ) : null}
+
         <div
-          className="flex flex-wrap gap-4 sm:gap-5"
+          className="-mx-4 flex flex-col gap-3 border-t border-b border-border-color-strong dark:border-border-color bg-black/15 p-4 dark:bg-black/20 sm:-mx-5 sm:gap-4 sm:p-5 inset-shadow-[0px_2px_10px_rgba(0,0,0,0.1)]"
         >
-          {sortedSubmissions.map((submission) => {
+          <div
+            className="flex items-center gap-2"
+          >
+            <h3
+              className="text-sm font-semibold text-foreground/90"
+            >
+              Your entries
+            </h3>
+            -
+            <span
+              className="text-sm font-medium tabular-nums text-foreground/65"
+            >
+              {sortedSubmissions.length}
+              {' '}
+              {sortedSubmissions.length === 1 ? 'entry' : 'entries'}
+            </span>
+          </div>
+          <div
+            className="flex flex-wrap gap-4 sm:gap-5"
+          >
+            {sortedSubmissions.map((submission) => {
             const photo = submission.photo;
             const photoHref = submission.user?.nickname && photo?.short_id
               ? `/@${submission.user.nickname}/photo/${photo.short_id}`
@@ -497,20 +552,27 @@ function JoinedChallengeCard({
               </div>
             );
           })}
+          </div>
         </div>
-
-        <hr
-          className="mt-auto border-border-color"
-        />
 
         <div
           className="flex items-center justify-between gap-3 text-xs text-foreground/70"
         >
-          <span>
-            {submissions.length}
-            {' '}
-            {submissions.length === 1 ? 'submission' : 'submissions'}
-          </span>
+          <div
+            className="min-w-0 flex-1"
+          >
+            <StackedAvatarsPopover
+              people={otherContributorAvatars}
+              singularLabel="other contributor"
+              pluralLabel="other contributors"
+              emptyMessage="No other contributors yet"
+              showInlineCount
+              showCountOnMobile={false}
+              maxVisibleAvatars={5}
+              maxVisibleAvatarsMobile={5}
+              avatarSize="xxs"
+            />
+          </div>
           {canSubmitAnother && (
             <Button
               href={challengeLink}
@@ -521,7 +583,7 @@ function JoinedChallengeCard({
                 className="size-3.5 -ml-0.5"
               />}
             >
-              Submit another
+              Submit more
             </Button>
           )}
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
-import type { Photo, PhotoOwnerProfile } from '@/types/photos';
 import { useMounted } from '@/hooks/useMounted';
+import type { Photo, PhotoOwnerProfile } from '@/types/photos';
 import { memo, useCallback, useMemo } from 'react';
 
 import ManagePhotoGridSkeleton from './ManagePhotoGridSkeleton';
@@ -40,6 +40,8 @@ interface PhotoGridProps {
   acceptedIds?: Set<string>;
   /** Map of photo IDs not owned by the current user to their owner profile (shows avatar badge) */
   notOwnedProfiles?: Map<string, PhotoOwnerProfile | null>;
+  /** When true, show the grid skeleton instead of the empty state while data loads */
+  isLoading?: boolean;
 }
 
 function PhotoGrid({
@@ -63,6 +65,7 @@ function PhotoGrid({
   pendingIds,
   acceptedIds,
   notOwnedProfiles,
+  isLoading = false,
 }: PhotoGridProps) {
   const mounted = useMounted();
 
@@ -101,6 +104,8 @@ function PhotoGrid({
     [fullyDisabledIds, onSelectPhoto, onPhotoClick, photos],
   );
 
+  const firstPhotoId = photos[0]?.id;
+
   const renderItem = useCallback(
     (photo: Photo, _isSelected: boolean, isDragging: boolean, _isHovered: boolean) => {
       const isDisabled = disabledIds?.has(photo.id) ?? false;
@@ -111,6 +116,7 @@ function PhotoGrid({
       return (
         <PhotoCard
           photo={photo}
+          tourAnchorId={photo.id === firstPhotoId ? 'photos-tour-select-photo' : undefined}
           isDragging={isDragging}
           sortable={sortable}
           albumCoverUrl={albumCoverUrl}
@@ -134,10 +140,11 @@ function PhotoGrid({
       currentAlbumTitle,
       disabledMessage,
       notOwnedProfiles,
+      firstPhotoId,
     ],
   );
 
-  if (!mounted) {
+  if (!mounted || isLoading) {
     return <ManagePhotoGridSkeleton />;
   }
 

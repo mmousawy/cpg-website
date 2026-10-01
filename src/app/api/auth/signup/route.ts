@@ -172,6 +172,7 @@ export async function POST(request: NextRequest) {
         subject: 'Verify your email - Creative Photography Group',
         html: await render(
           VerifyEmailTemplate({
+            recipientEmail: email,
             verifyLink,
           }),
         ),

@@ -1,3 +1,5 @@
+import { prefersReducedMotion } from '@/utils/reduceMotion';
+
 /** Shared frosted pill styling for mobile bottom chrome (tab bar, action bars). */
 export const mobileFloatingPillClassName =
   'bg-noise max-sm:rounded-2xl max-sm:border max-sm:border-border-color-strong max-sm:bg-background-light/85 max-sm:shadow-lg max-sm:backdrop-blur-xl';
@@ -5,9 +7,13 @@ export const mobileFloatingPillClassName =
 /** Horizontal inset + gap above the tab bar for stacked floating pills. */
 export const mobileFloatingPillInsetClassName = 'max-sm:px-3';
 
-/** Bottom sticky chrome: same screen inset as the tab bar, plus 0.25rem. */
+/** Bottom sticky chrome: pin 0.25rem above the tab bar (or next chrome bar). */
 export const mobileStickyBottomWithGapClassName =
-  'sticky bottom-0 max-sm:pb-1';
+  'sticky max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)] sm:bottom-0';
+
+/** Fixed bottom chrome for overflow-hidden shells (e.g. manage pages) — same pin line as sticky. */
+export const mobileFixedBottomChromeClassName =
+  'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)]';
 
 /**
  * In-flow spacer below a settled sticky bar. Must be a sibling (not a wrapper)
@@ -15,6 +21,10 @@ export const mobileStickyBottomWithGapClassName =
  */
 export const mobileStickyBarSettleGapClassName =
   'mobile-sticky-bar-settle-gap pointer-events-none max-sm:h-[calc(0.875rem-0.25rem)] sm:hidden';
+
+/** Settle gap at the end of scroll content — suppresses duplicate `#main-content` bottom gap. */
+export const mobileStickyBarTerminalSettleGapClassName =
+  `${mobileStickyBarSettleGapClassName} mobile-sticky-bar-settle-gap--terminal`;
 
 /** Bottom sticky chrome flush with the tab bar's screen inset. */
 export const mobileStickyBottomClassName =
@@ -43,7 +53,7 @@ export const STICKY_BAR_SLIDE_MS = 250;
 
 export function getStickyBarSlideDurationMs() {
   if (typeof window === 'undefined') return 0;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
+  if (prefersReducedMotion()) return 0;
   if (!window.matchMedia('(max-width: 639px)').matches) return 0;
   return STICKY_BAR_SLIDE_MS;
 }

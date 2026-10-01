@@ -93,11 +93,11 @@ async function fillProfileStep(page: Page, nickname: string, fullName = ONBOARDI
 }
 
 async function fillStyleStep(page: Page, options?: { keepBanner?: boolean }) {
-  await expect(page.getByRole('heading', { name: /^theme$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^appearance$/i })).toBeVisible();
   await page.getByRole('button', { name: 'Dark', exact: true }).click();
   await expect(page.getByText(/always uses the dark theme/i)).toBeVisible();
-  await page.getByRole('button', { name: /compact/i }).click();
-  await expect(page.getByRole('button', { name: /compact/i })).toHaveClass(/border-primary/);
+  await page.getByRole('button', { name: /^Reduce\b/ }).click();
+  await expect(page.getByRole('button', { name: /^Reduce\b/ })).toHaveClass(/border-primary/);
 
   await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
   await uploadProfileImage(page, 'banner-image-section', /crop banner/i, TEST_BANNER_PATH);
@@ -167,7 +167,7 @@ async function expectPersistedOnboardingOnAccount(page: Page, nickname: string) 
   }
 
   await expect(page.getByText(/always uses the dark theme/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /compact/i })).toHaveClass(/border-primary/);
+  await expect(page.getByRole('button', { name: /^Reduce\b/ })).toHaveClass(/border-primary/);
 
   await expect(page.locator('#emailPref-newsletter')).toBeVisible({ timeout: 15000 });
   await expect(page.locator('#emailPref-newsletter')).not.toBeChecked();

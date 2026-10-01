@@ -38,5 +38,7 @@ export default {
     },
   },
   plugins: [],
-  darkMode: 'class',
+  // Class strategy only matches `.dark`. Midnight is a separate class on <html>,
+  // so include it or `dark:` utilities (and plain `bg-white` behind them) stay light.
+  darkMode: ['variant', '&:is(.dark *, .midnight *)'],
 } satisfies Config;

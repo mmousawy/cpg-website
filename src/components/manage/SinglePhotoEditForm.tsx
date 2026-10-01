@@ -233,6 +233,7 @@ export default function SinglePhotoEditForm({
           )}
           {!readOnly && onAddToAlbum && (
             <Button
+              id="photos-tour-sidebar-album"
               type="button"
               variant="secondary"
               onClick={() => onAddToAlbum?.()}
@@ -339,6 +340,7 @@ export default function SinglePhotoEditForm({
 
       {!readOnly && (
         <form
+          id="photos-tour-edit-form"
           ref={formRef}
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-4"

@@ -41,6 +41,7 @@ export function getRawObjectUrl(src: string): string {
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
     return url.toString();
   } catch {
     return src;
@@ -62,6 +63,7 @@ export function getBlurPlaceholderUrl(src: string | null | undefined): string | 
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
 
     // Convert to render/image endpoint for transformations
     url.pathname = url.pathname.replace(
@@ -104,6 +106,7 @@ export function getCroppedThumbnailUrl(
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
 
     // Convert object URL to render/image URL for transformations
     url.pathname = url.pathname.replace(
@@ -182,6 +185,7 @@ export default function supabaseImageLoader({ src, width, quality }: ImageLoader
     url.searchParams.delete('height');
     url.searchParams.delete('quality');
     url.searchParams.delete('resize');
+    url.searchParams.delete('format');
 
     // Convert object URL to render/image URL for transformations
     // Supabase requires /render/image/public/ endpoint for image transformations

@@ -1,30 +1,39 @@
-import {
-  Body,
-  Column,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Column, Img, Link, Row, Section, Text } from '@react-email/components';
 
-import type { QueuedCommentEmailItem } from '@/lib/notifications/emailQueue';
+import { getEmailSiteUrl, toAbsoluteEmailUrl } from '@/emails/utils/siteUrl';
 import {
   getCommentNotificationHeading,
   getCommentNotificationPreview,
   truncateCommentText,
 } from '@/lib/notifications/commentEmailCopy';
-import { getEmailSiteUrl, toAbsoluteEmailUrl } from '@/emails/utils/siteUrl';
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
+import type { QueuedCommentEmailItem } from '@/lib/notifications/emailQueue';
+
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
+import {
+  emailAccentLinkStyle,
+  emailCalloutStyle,
+  emailCalloutTitleStyle,
+  emailMutedTextStyle,
+  emailTextStyle,
+} from './components/styles';
 
 export { getCommentNotificationSubject } from '@/lib/notifications/commentEmailCopy';
+
+const avatarPlaceholderStyle = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  backgroundColor: '#5e9b84',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'white',
+  fontSize: '16px',
+  fontWeight: 'bold',
+} as const;
 
 function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
   const fullEntityLink = toAbsoluteEmailUrl(item.entityLink);
@@ -35,12 +44,12 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
 
   return (
     <Section
-      className="my-[20px] rounded-lg border border-[#e5e7ea] bg-[#f7f7f7] p-4"
+      style={emailCalloutStyle}
     >
       <Row>
         <Column
           width="40"
-          className="align-top"
+          style={{ verticalAlign: 'top' }}
         >
           {fullCommenterProfileLink ? (
             <Link
@@ -52,22 +61,11 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
                   width="40"
                   height="40"
                   alt={item.commenterName}
-                  className="rounded-full object-cover"
+                  style={{ borderRadius: '50%', objectFit: 'cover' }}
                 />
               ) : (
                 <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: '#5e9b84',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                  }}
+                  style={avatarPlaceholderStyle}
                 >
                   {item.commenterName.charAt(0).toUpperCase()}
                 </div>
@@ -80,22 +78,11 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
                 width="40"
                 height="40"
                 alt={item.commenterName}
-                className="rounded-full object-cover"
+                style={{ borderRadius: '50%', objectFit: 'cover' }}
               />
             ) : (
               <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: '#5e9b84',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                }}
+                style={avatarPlaceholderStyle}
               >
                 {item.commenterName.charAt(0).toUpperCase()}
               </div>
@@ -103,15 +90,15 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
           )}
         </Column>
         <Column
-          className="pl-3 align-top"
+          style={{ verticalAlign: 'top', paddingLeft: '12px' }}
         >
           {fullCommenterProfileLink ? (
             <Link
               href={fullCommenterProfileLink}
-              className="text-[#171717] no-underline"
+              style={{ textDecoration: 'none', color: emailTextStyle.color }}
             >
               <Text
-                className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
+                style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
               >
                 {item.commenterName}
                 {item.isReply ? ' (reply)' : ''}
@@ -119,7 +106,7 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
             </Link>
           ) : (
             <Text
-              className="my-0! mb-1! text-[14px] font-semibold leading-[20px] text-[#171717]"
+              style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
             >
               {item.commenterName}
               {item.isReply ? ' (reply)' : ''}
@@ -127,20 +114,20 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
           )}
           {item.commenterNickname && (
             <Text
-              className="my-0! mb-2! text-[12px] leading-[16px] text-[#666666]"
+              style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
             >
               @
               {item.commenterNickname}
             </Text>
           )}
           <Text
-            className="my-0! text-[14px] leading-[20px] text-[#171717] whitespace-pre-wrap"
+            style={{ ...emailTextStyle, lineHeight: '20px', whiteSpace: 'pre-wrap' }}
           >
             {displayComment}
           </Text>
           <Link
             href={fullEntityLink}
-            className="text-[12px] text-[#38785f] underline"
+            style={{ ...emailAccentLinkStyle, fontSize: '12px' }}
           >
             View
           </Link>
@@ -153,9 +140,9 @@ function CommentItemBlock({ item }: { item: QueuedCommentEmailItem }) {
 export const CommentNotificationEmail = ({
   preview,
   ownerName,
+  recipientEmail,
   items,
   optOutLink,
-  // Legacy single-item props for email preview page
   commenterName,
   commenterNickname,
   commenterAvatarUrl,
@@ -169,6 +156,7 @@ export const CommentNotificationEmail = ({
 }: {
   preview?: boolean;
   ownerName: string;
+  recipientEmail?: string;
   items?: QueuedCommentEmailItem[];
   optOutLink?: string;
   commenterName?: string;
@@ -185,6 +173,7 @@ export const CommentNotificationEmail = ({
   if (preview && (!items || items.length === 0)) {
     const baseUrl = getEmailSiteUrl();
     ownerName = 'Jane Doe';
+    recipientEmail = 'jane.doe@example.com';
     items = [
       {
         commentId: 'preview-1',
@@ -230,98 +219,80 @@ export const CommentNotificationEmail = ({
     : `Here are the latest comments on ${firstItem.entityTitle}:`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>{previewText}</Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
+    <EmailLayout
+      previewText={previewText}
+      fullName={ownerName}
+      recipientEmail={recipientEmail}
+      optOutLink={optOutLink}
+      emailType="notifications"
+    >
+      <EmailHeading>
+        {heading}
+      </EmailHeading>
+
+      <EmailText>
+        Hi
+        {' '}
+        {ownerName}
+        ,
+      </EmailText>
+      <br />
+      <EmailText>
+        {introText}
+      </EmailText>
+
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <Link
+          href={fullEntityLink}
         >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
-
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              {heading}
-            </Heading>
-
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
-              {' '}
-              {ownerName}
-              ,
-            </Text>
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              {introText}
-            </Text>
-
-            <Section
-              className="my-[20px]"
-            >
-              <Link
-                href={fullEntityLink}
+          <Row>
+            {firstItem.entityThumbnail && (
+              <Column
+                width="64"
               >
-                <Row>
-                  {firstItem.entityThumbnail && (
-                    <Column
-                      width="64"
-                    >
-                      <Img
-                        src={firstItem.entityThumbnail}
-                        width="64"
-                        height="64"
-                        alt={firstItem.entityTitle}
-                        className="rounded-md object-cover"
-                      />
-                    </Column>
-                  )}
-                  <Column
-                    className={firstItem.entityThumbnail ? 'pl-4 align-top' : 'align-top'}
-                  >
-                    <Text
-                      className="mt-0! text-[15px] font-semibold leading-[24px] text-[#171717]"
-                    >
-                      {firstItem.entityTitle}
-                    </Text>
-                  </Column>
-                </Row>
-              </Link>
-            </Section>
-
-            {items.map((item) => (
-              <CommentItemBlock
-                key={item.commentId}
-                item={item}
-              />
-            ))}
-
-            <div
-              className="my-[20px]"
+                <Img
+                  src={firstItem.entityThumbnail}
+                  width="64"
+                  height="64"
+                  alt={firstItem.entityTitle}
+                  style={{ borderRadius: '6px', objectFit: 'cover' }}
+                />
+              </Column>
+            )}
+            <Column
+              style={{ verticalAlign: 'top', paddingLeft: firstItem.entityThumbnail ? '16px' : 0 }}
             >
-              <Link
-                href={fullEntityLink}
-                className="inline-block rounded-full bg-[#38785f] px-5 py-3 text-center font-mono text-[14px] font-semibold text-white no-underline"
+              <Text
+                style={{ ...emailCalloutTitleStyle, fontSize: '15px', lineHeight: '24px', margin: 0 }}
               >
-                {items.length === 1 ? 'View comment' : 'View all comments'}
-              </Link>
-            </div>
+                {firstItem.entityTitle}
+              </Text>
+            </Column>
+          </Row>
+        </Link>
+      </Section>
 
-            <Footer
-              fullName={ownerName}
-              optOutLink={optOutLink}
-              emailType="notifications"
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      {items.map((item) => (
+        <CommentItemBlock
+          key={item.commentId}
+          item={item}
+        />
+      ))}
+
+      <Section
+        style={{ margin: '20px 0' }}
+      >
+        <EmailButton
+          href={fullEntityLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          {items.length === 1 ? 'View comment' : 'View all comments'}
+        </EmailButton>
+      </Section>
+    </EmailLayout>
   );
 };
 

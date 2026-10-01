@@ -18,7 +18,7 @@ export type EmailPreference = {
 
 /**
  * Email preference types (from email_types table).
- * Users can opt in/out per type in Account → Preferences.
+ * Users can opt in/out per type in Account → Email preferences.
  *
  * | type_key           | What it controls |
  * |--------------------|------------------|

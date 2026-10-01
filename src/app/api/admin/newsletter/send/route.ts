@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 import { NewsletterEmail } from '@/emails/newsletter';
-import { encrypt } from '@/utils/encrypt';
-import { render } from '@react-email/render';
-import { isTestEmail } from '@/lib/auth/isTestEmail';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
-import { createClient } from '@/utils/supabase/server';
+import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
+import { render } from '@react-email/render';
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
           subject: trimmedSubject,
           body: trimmedBody,
           fullName,
+          recipientEmail: adminEmail,
           optOutLink,
         }),
       );
@@ -223,6 +224,7 @@ export async function POST(request: NextRequest) {
               subject: trimmedSubject,
               body: trimmedBody,
               fullName,
+              recipientEmail: subscriber.email || undefined,
               optOutLink,
             }),
           ),

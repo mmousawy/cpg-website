@@ -6,7 +6,7 @@
   --primary: #38785f;
   --primary-light: #5a9c83;
   --primary-alt: #a6db93;
-  --background: #f0f1f3;
+  --background: #ecedf0;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
   --background-special: #bba5fa;
@@ -20,6 +20,8 @@
   --category-text-shadow: none;
   --mobile-tab-bar-bottom-gap: 0.75rem;
   --mobile-content-bottom-gap: 1rem;
+  /* Fallback until MobileTabBar measures; matches scrim minimum (~4.5rem). */
+  --mobile-nav-offset: 4.5rem;
   /* Scene category colors (light mode) */
   --category-all: #475569;
   --category-exhibition: #b45309;
@@ -67,7 +69,7 @@
   --primary: #38785f;
   --primary-light: #5a9c83;
   --primary-alt: #a6db93;
-  --background: #f0f1f3;
+  --background: #ecedf0;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
   --foreground: #171717;
@@ -288,6 +290,26 @@ html[data-overlay-scroll-lock]:not(.manage-page) body[data-scroll-locked] {
 
 .animate-fade-in-fast {
   animation: fade-in 0.3s ease-in-out both;
+}
+
+/* Entrance for lazily mounted dialogs. A transition has no previous frame
+   on first open, so the overlay and panel appear instantly. */
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-panel-in {
+  from { scale: 0.95; }
+  to { scale: 1; }
+}
+
+.modal-overlay-in {
+  animation: modal-overlay-in 300ms ease-out backwards;
+}
+
+.modal-panel-in {
+  animation: modal-panel-in 300ms ease-out backwards;
 }
 
 @keyframes onboarding-rise-in {
@@ -779,13 +801,16 @@ html.manage-page .app-header-inner {
   }
 }
 
-.mobile-tab-bar-scrim,
-.mobile-tab-bar-scrim__tone {
-  height: var(
-    --mobile-tab-bar-scrim-height,
-    max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem))
-  );
-  transition: height 150ms ease-out;
+.mobile-tab-bar-scrim {
+  --scrim-collapsed: max(4.5rem, calc(var(--mobile-nav-offset, 0px) + 0.5rem));
+  --scrim-expanded: calc(var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1.5rem);
+  overflow: hidden;
+  height: var(--scrim-collapsed);
+  transition: height 250ms ease-out;
+}
+
+html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim {
+  height: var(--scrim-expanded);
 }
 
 @media (max-width: 639px) {
@@ -804,92 +829,77 @@ html.manage-page .app-header-inner {
 
 @media (max-width: 639px) {
   .mobile-sticky-bar-slide {
-    transform: translateY(calc(100% + var(--mobile-tab-bar-bottom-gap, 0.75rem)));
-    transition: transform 250ms ease-out;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 250ms ease-out, opacity 250ms ease-out;
   }
 
   .mobile-sticky-bar-slide[data-open] {
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
+/* OS reduced motion and account "Reduce" preference (html.reduce-motion). */
 @media (prefers-reduced-motion: reduce) {
-  .mobile-tab-indicator.is-ready {
-    transition: none;
-  }
-
-  .mobile-sticky-bar-slide {
-    transition: none;
-  }
-
-  .onboarding-page-title-in,
-  .onboarding-step-title,
-  .onboarding-rise-in,
-  .onboarding-progress-slide-in,
-  .onboarding-header-slide-in {
-    animation: fade-in 0.2s ease-out both;
-    transform: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim,
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone {
-  height: var(
-    --mobile-tab-bar-scrim-height,
-    calc(var(--mobile-nav-offset, 0px) + var(--mobile-sticky-bar-height, 0px) + 1.5rem)
-  );
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 .mobile-tab-bar-scrim__fade {
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     to top,
     var(--background) 15%,
     color-mix(in srgb, var(--background) 70%, transparent) 50%,
     transparent 100%
   );
-}
-
-.mobile-tab-bar-scrim__fade--sticky {
-  background: linear-gradient(
-    to top,
-    var(--background) 15%,
-    color-mix(in srgb, var(--background) 70%, transparent) 50%,
-    transparent 100%
-  );
-}
-
-.mobile-tab-bar-scrim__tone {
-  transition: height 150ms ease-out, opacity 150ms ease-out;
-}
-
-.mobile-tab-bar-scrim__tone--sticky {
-  opacity: 0;
-}
-
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--default {
-  opacity: 0;
-}
-
-html[data-mobile-sticky-chrome-sticky] .mobile-tab-bar-scrim__tone--sticky {
-  opacity: 1;
 }
 
 @media (max-width: 639px) {
-  html:not(.manage-page) .app-shell-main {
-    padding-bottom: calc(
-      max(
-        var(--mobile-nav-offset, 0px),
-        var(--mobile-overlay-chrome-height, 0px)
-      ) + var(--mobile-content-bottom-gap, 0px)
+  :root {
+    --mobile-shell-padding-bottom: calc(
+      max(var(--mobile-nav-offset), var(--mobile-overlay-chrome-height, 0px))
+      + var(--mobile-content-bottom-gap)
     );
   }
 
-  /* In-flow sticky section nav already adds settle gap above tab-bar padding. */
-  html:not(.manage-page) .app-shell-main:has(.mobile-sticky-bar-settle-gap) {
-    padding-bottom: max(
-      var(--mobile-nav-offset, 0px),
-      var(--mobile-overlay-chrome-height, 0px)
+  html:not(.manage-page) .app-shell-main {
+    --mobile-shell-padding-bottom: calc(
+      max(var(--mobile-nav-offset), var(--mobile-overlay-chrome-height, 0px))
+      + var(--mobile-content-bottom-gap)
     );
+  }
+
+  /* In-flow spacer — padding-bottom on the scroller lifts sticky bottom chrome. */
+  html:not(.manage-page) .mobile-main-bottom-spacer {
+    height: var(--mobile-shell-padding-bottom);
+  }
+
+  /* Terminal sticky settle — toggled from pathname (DocumentRouteState), not :has(),
+     because Next.js may keep the previous route in the DOM after navigation. */
+  html.mobile-terminal-sticky-settle:not(.manage-page) .app-shell-main {
+    --mobile-content-bottom-gap: 0px;
+  }
+
+  html.manage-page .mobile-main-bottom-spacer {
+    display: none;
   }
 
   html.manage-page .app-shell-main {

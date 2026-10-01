@@ -97,6 +97,7 @@ export async function notifyAdminsOfChallengeSubmission(params: {
       const html = await render(
         SubmissionNotificationEmail({
           adminName: admin.full_name || 'Admin',
+          recipientEmail: admin.email,
           submitterName,
           submitterNickname,
           submitterAvatarUrl,

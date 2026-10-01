@@ -2,10 +2,13 @@
 
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
+import { RichDescriptionView } from '@/components/shared/RichDescriptionView';
 import StackedAvatarsPopover from '@/components/shared/StackedAvatarsPopover';
 import type { ChallengeWithStats } from '@/types/challenges';
+import { prepareRichDescriptionContent } from '@/utils/richHtmlShared';
 import clsx from 'clsx';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
@@ -24,6 +27,8 @@ type ChallengeCardProps = {
   /** Show admin action buttons (Edit, Review) in footer */
   showAdminActions?: boolean;
   prefetch?: boolean;
+  /** Override next/image sizes for cover (e.g. homepage two-column grid) */
+  coverImageSizes?: string;
 };
 
 /**
@@ -79,16 +84,23 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
+const DEFAULT_COVER_IMAGE_SIZES = '(max-width: 640px) 280px, (max-width: 1024px) 40vw, 320px';
+
 export default function ChallengeCard({
   challenge,
   serverNow,
   isPast = false,
   showAdminActions = false,
   prefetch,
+  coverImageSizes = DEFAULT_COVER_IMAGE_SIZES,
 }: ChallengeCardProps) {
   const deadline = formatDeadline(challenge.ends_at, serverNow);
   const deadlineShort = formatDeadlineShort(challenge.ends_at, serverNow);
   const isEnded = deadline === 'Ended' || isPast;
+  const descriptionHtml = useMemo(
+    () => prepareRichDescriptionContent(challenge.prompt, true)?.content ?? '',
+    [challenge.prompt],
+  );
   const photoCount = challenge.accepted_count || 0;
 
   // Transform contributors for StackedAvatarsPopover
@@ -116,7 +128,7 @@ export default function ChallengeCard({
             fill
             lite
             className="object-cover transition-all duration-200 group-hover:brightness-110"
-            sizes="(max-width: 640px) 280px, (max-width: 1024px) 40vw, 320px"
+            sizes={coverImageSizes}
             blurhash={challenge.image_blurhash}
             quality={THUMBNAIL_IMAGE_QUALITY}
           />
@@ -235,6 +247,22 @@ export default function ChallengeCard({
       >
         {coverImageContent}
       </div>
+
+      {descriptionHtml ? (
+        <div
+          className="px-3 pt-3"
+        >
+          <RichDescriptionView
+            html={descriptionHtml}
+            className="text-sm leading-snug text-foreground/75 line-clamp-3 mb-3"
+            disableLinks
+          />
+          <div
+            aria-hidden
+            className="mt-2 h-px bg-border-color"
+          />
+        </div>
+      ) : null}
 
       {/* Footer stats bar */}
       <div

@@ -19,7 +19,7 @@ export default async function PopularTagsSection({ activeTag }: PopularTagsSecti
 
   return (
     <div
-      className=""
+      className="mb-10 md:mb-12"
     >
       <h2
         className="mb-3 text-xl font-semibold font-heading opacity-80"

@@ -3,6 +3,7 @@
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useCloseOnRouteChange } from '@/hooks/useCloseOnRouteChange';
 import { useMounted } from '@/hooks/useMounted';
+import { motionDuration } from '@/utils/reduceMotion';
 import clsx from 'clsx';
 import { FocusTrap } from 'focus-trap-react';
 import { useEffect, useRef, useState } from 'react';
@@ -81,7 +82,7 @@ export default function BottomSheet({
       // First trigger close animation (use microtask to satisfy linter)
       closeAnimTimer = setTimeout(() => setIsAnimatedOpen(false), 0);
       // Then unmount after animation completes
-      unmountTimer = setTimeout(() => setShouldRender(false), 300);
+      unmountTimer = setTimeout(() => setShouldRender(false), motionDuration(300));
     }
 
     return () => {

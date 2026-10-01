@@ -1,5 +1,5 @@
 import WidePageContainer from '@/components/layout/WidePageContainer';
-import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
+import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import ArrowLink from '@/components/shared/ArrowLink';
 import type { HomePageData } from '@/lib/data/home';
 
@@ -29,7 +29,7 @@ export function HomeRecentPhotosSection({ photos }: HomeRecentPhotosSectionProps
           View all photos
         </ArrowLink>
       </div>
-      <JustifiedPhotoGrid
+      <DensityAwarePhotoGrid
         photos={photos}
         showAttribution
         liveLikeCounts={false}

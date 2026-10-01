@@ -70,6 +70,7 @@ export type SubmissionWithDetails = ChallengeSubmission & {
     id: string;
     slug: string;
     title: string;
+    prompt?: string;
     cover_image_url: string | null;
     image_blurhash: string | null;
     ends_at: string | null;

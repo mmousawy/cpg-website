@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
+import { Resend } from 'resend';
 
 import { ReportNotificationEmail } from '@/emails/report-notification';
 import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
@@ -159,6 +159,7 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
         const html = await render(
           ReportNotificationEmail({
             adminName: admin.full_name || 'Admin',
+            recipientEmail: admin.email || undefined,
             reporterName,
             reporterNickname,
             reporterEmail: report.reporter_email,

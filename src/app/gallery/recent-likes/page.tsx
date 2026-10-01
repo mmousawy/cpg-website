@@ -6,6 +6,10 @@ import { createMetadata } from '@/utils/metadata';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getRecentlyLikedPhotos } from '@/lib/data/gallery';
+import {
+  PHOTO_PAGE_PREFETCH_LIMIT,
+  PHOTO_PAGE_SIZE_COMFORTABLE,
+} from '@/utils/displayPreferences';
 
 export const metadata = createMetadata({
   title: 'Recently liked photos',
@@ -19,9 +23,9 @@ export const instant = false;
 
 export default async function RecentlyLikedPage() {
   const includeTestContent = await getIncludeTestContent();
-  const allPhotos = await getRecentlyLikedPhotos(21, includeTestContent);
-  const photos = allPhotos.slice(0, 20);
-  const hasMore = allPhotos.length > 20;
+  const allPhotos = await getRecentlyLikedPhotos(PHOTO_PAGE_PREFETCH_LIMIT, includeTestContent);
+  const photos = allPhotos.slice(0, PHOTO_PAGE_SIZE_COMFORTABLE);
+  const hasMore = allPhotos.length > PHOTO_PAGE_SIZE_COMFORTABLE;
 
   return (
     <PageContainer
@@ -33,8 +37,9 @@ export default async function RecentlyLikedPage() {
       />
       <PhotosPaginated
         initialPhotos={photos}
+        prefetchedPhotos={allPhotos}
         apiEndpoint="/api/gallery/recent-likes"
-        perPage={20}
+        perPage={PHOTO_PAGE_SIZE_COMFORTABLE}
         initialHasMore={hasMore}
         showSortToggle={false}
       />

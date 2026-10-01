@@ -1,23 +1,12 @@
-import {
-  Body,
-  Column,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Tailwind,
-  Text,
-} from '@react-email/components';
+import { Img, Link, Section, Text } from '@react-email/components';
+
+import EmailButton from './components/EmailButton';
+import EmailHeading from './components/EmailHeading';
+import EmailLayout from './components/EmailLayout';
+import EmailText from './components/EmailText';
+import { emailMutedTextStyle, emailTextStyle } from './components/styles';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-
-import Footer from './components/Footer';
-import EmailHeader from './components/Header';
 
 interface PhotoInfo {
   url: string;
@@ -27,6 +16,7 @@ interface PhotoInfo {
 export const SubmissionResultEmail = ({
   preview,
   userName,
+  recipientEmail,
   status,
   photos,
   challengeTitle,
@@ -36,6 +26,7 @@ export const SubmissionResultEmail = ({
 }: {
   preview?: boolean;
   userName: string;
+  recipientEmail?: string;
   status: 'accepted' | 'rejected';
   photos: PhotoInfo[];
   challengeTitle: string;
@@ -45,6 +36,7 @@ export const SubmissionResultEmail = ({
 }) => {
   if (preview) {
     userName = 'John Smith';
+    recipientEmail = 'john.smith@example.com';
     status = 'accepted';
     photos = [
       { url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg', title: 'Golden Hour' },
@@ -69,231 +61,216 @@ export const SubmissionResultEmail = ({
       : `Update on your submissions to "${challengeTitle}"`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>
-        {previewText}
-      </Preview>
-      <Tailwind>
-        <Body
-          className="m-auto bg-[#f7f7f7] p-2 font-sans"
-        >
-          <Container
-            className="mx-auto max-w-[465px] border-separate rounded-lg border border-solid border-[#e5e7ea] bg-white p-5"
-          >
-            <EmailHeader />
+    <EmailLayout
+      previewText={previewText}
+      fullName={userName}
+      recipientEmail={recipientEmail}
+      optOutLink={optOutLink}
+      emailType="photo_challenges"
+    >
+      <EmailHeading>
+        {isAccepted
+          ? isSingle
+            ? 'Your photo was accepted!'
+            : `${photoCount} photos were accepted!`
+          : isSingle
+            ? 'Update on your submission'
+            : 'Update on your submissions'}
+      </EmailHeading>
 
-            <Heading
-              className="mx-0 mb-[30px] p-0 text-[16px] font-semibold text-[#171717]"
-            >
-              {isAccepted
-                ? isSingle
-                  ? 'Your photo was accepted!'
-                  : `${photoCount} photos were accepted!`
-                : isSingle
-                  ? 'Update on your submission'
-                  : 'Update on your submissions'}
-            </Heading>
+      <EmailText>
+        Hi
+        {' '}
+        {userName}
+        ,
+      </EmailText>
+      <br />
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              Hi
+      <EmailText>
+        {isAccepted ? (
+          isSingle ? (
+            <>
+              Great news! Your photo
+              {photos[0].title ? ` "${photos[0].title}"` : ''}
               {' '}
-              {userName}
-              ,
-            </Text>
+              has been accepted for the
+              {' '}
+              <strong>
+                {challengeTitle}
+              </strong>
+              {' '}
+              challenge and is now visible in the challenge gallery.
+            </>
+          ) : (
+            <>
+              Great news!
+              {' '}
+              {photoCount}
+              {' '}
+              of your photos have been accepted for the
+              {' '}
+              <strong>
+                {challengeTitle}
+              </strong>
+              {' '}
+              challenge and are now visible in the challenge gallery.
+            </>
+          )
+        ) : (
+          isSingle ? (
+            <>
+              Your photo
+              {photos[0].title ? ` "${photos[0].title}"` : ''}
+              {' '}
+              was not accepted for the
+              {' '}
+              <strong>
+                {challengeTitle}
+              </strong>
+              {' '}
+              challenge.
+            </>
+          ) : (
+            <>
+              {photoCount}
+              {' '}
+              of your photos were not accepted for the
+              {' '}
+              <strong>
+                {challengeTitle}
+              </strong>
+              {' '}
+              challenge.
+            </>
+          )
+        )}
+      </EmailText>
 
-            <Text
-              className="text-[14px] leading-[24px] text-[#171717]"
-            >
-              {isAccepted ? (
-                isSingle ? (
-                  <>
-                    Great news! Your photo
-                    {photos[0].title ? ` "${photos[0].title}"` : ''}
-                    {' '}
-                    has been accepted for the
-                    {' '}
-                    <strong>
-                      {challengeTitle}
-                    </strong>
-                    {' '}
-                    challenge and is now visible in the challenge gallery.
-                  </>
-                ) : (
-                  <>
-                    Great news!
-                    {' '}
-                    {photoCount}
-                    {' '}
-                    of your photos have been accepted for the
-                    {' '}
-                    <strong>
-                      {challengeTitle}
-                    </strong>
-                    {' '}
-                    challenge and are now visible in the challenge gallery.
-                  </>
-                )
-              ) : (
-                isSingle ? (
-                  <>
-                    Your photo
-                    {photos[0].title ? ` "${photos[0].title}"` : ''}
-                    {' '}
-                    was not accepted for the
-                    {' '}
-                    <strong>
-                      {challengeTitle}
-                    </strong>
-                    {' '}
-                    challenge.
-                  </>
-                ) : (
-                  <>
-                    {photoCount}
-                    {' '}
-                    of your photos were not accepted for the
-                    {' '}
-                    <strong>
-                      {challengeTitle}
-                    </strong>
-                    {' '}
-                    challenge.
-                  </>
-                )
-              )}
-            </Text>
-
-            {/* Photo thumbnails grid */}
-            <Section
-              className="my-[24px]"
-            >
-              <table
-                cellPadding="0"
-                cellSpacing="4"
-                style={{ borderCollapse: 'separate', margin: '0 auto' }}
-              >
-                <tbody>
-                  <tr>
-                    {photos.slice(0, 3).map((photo, index) => (
-                      <td
-                        key={index}
-                        style={{ padding: '2px' }}
-                      >
-                        <Link
-                          href={challengeLink}
-                        >
-                          <Img
-                            src={photo.url}
-                            alt={photo.title || `Photo ${index + 1}`}
-                            width="120"
-                            height="120"
-                            style={{
-                              borderRadius: '8px',
-                              objectFit: 'cover',
-                              display: 'block',
-                            }}
-                          />
-                        </Link>
-                      </td>
-                    ))}
-                  </tr>
-                  {photos.length > 3 && (
-                    <tr>
-                      {photos.slice(3, 6).map((photo, index) => (
-                        <td
-                          key={index}
-                          style={{ padding: '2px' }}
-                        >
-                          <Link
-                            href={challengeLink}
-                          >
-                            <Img
-                              src={photo.url}
-                              alt={photo.title || `Photo ${index + 4}`}
-                              width="120"
-                              height="120"
-                              style={{
-                                borderRadius: '8px',
-                                objectFit: 'cover',
-                                display: 'block',
-                              }}
-                            />
-                          </Link>
-                        </td>
-                      ))}
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-              {photos.length > 6 && (
-                <Text
-                  className="mt-2! text-center text-[12px] text-[#666666]"
+      <Section
+        style={{ margin: '24px 0' }}
+      >
+        <table
+          cellPadding="0"
+          cellSpacing="4"
+          style={{ borderCollapse: 'separate', margin: '0 auto' }}
+        >
+          <tbody>
+            <tr>
+              {photos.slice(0, 3).map((photo, index) => (
+                <td
+                  key={index}
+                  style={{ padding: '2px' }}
                 >
-                  +
-                  {photos.length - 6}
-                  {' '}
-                  more photo
-                  {photos.length - 6 !== 1 ? 's' : ''}
-                </Text>
-              )}
-            </Section>
-
-            {/* Rejection reason */}
-            {!isAccepted && rejectionReason && (
-              <Section
-                className="my-[24px] rounded-lg bg-[#fef2f2] p-4"
-              >
-                <Text
-                  className="m-0 text-[14px] leading-[24px] text-[#991b1b]"
-                >
-                  <strong>
-                    Reason:
-                  </strong>
-                  {' '}
-                  {rejectionReason}
-                </Text>
-              </Section>
+                  <Link
+                    href={challengeLink}
+                  >
+                    <Img
+                      src={photo.url}
+                      alt={photo.title || `Photo ${index + 1}`}
+                      width="120"
+                      height="120"
+                      style={{
+                        borderRadius: '8px',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  </Link>
+                </td>
+              ))}
+            </tr>
+            {photos.length > 3 && (
+              <tr>
+                {photos.slice(3, 6).map((photo, index) => (
+                  <td
+                    key={index}
+                    style={{ padding: '2px' }}
+                  >
+                    <Link
+                      href={challengeLink}
+                    >
+                      <Img
+                        src={photo.url}
+                        alt={photo.title || `Photo ${index + 4}`}
+                        width="120"
+                        height="120"
+                        style={{
+                          borderRadius: '8px',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
+                    </Link>
+                  </td>
+                ))}
+              </tr>
             )}
+          </tbody>
+        </table>
+        {photos.length > 6 && (
+          <Text
+            style={{ ...emailMutedTextStyle, marginTop: '8px' }}
+          >
+            +
+            {photos.length - 6}
+            {' '}
+            more photo
+            {photos.length - 6 !== 1 ? 's' : ''}
+          </Text>
+        )}
+      </Section>
 
-            {/* CTA Button */}
-            <Section
-              className="mb-[32px] mt-[32px] text-center"
-            >
-              <Link
-                href={challengeLink}
-                className="inline-block rounded-full bg-[#171717] px-[24px] py-[12px] text-center text-[12px] font-semibold text-white no-underline"
-              >
-                {isAccepted ? 'View Challenge Gallery' : 'View Challenge'}
-              </Link>
-            </Section>
+      {!isAccepted && rejectionReason && (
+        <Section
+          style={{
+            margin: '24px 0',
+            borderRadius: '8px',
+            backgroundColor: '#fef2f2',
+            padding: '16px',
+          }}
+        >
+          <Text
+            style={{ ...emailTextStyle, color: '#991b1b' }}
+          >
+            <strong>
+              Reason:
+            </strong>
+            {' '}
+            {rejectionReason}
+          </Text>
+        </Section>
+      )}
 
-            {isAccepted && (
-              <Text
-                className="text-[14px] leading-[24px] text-[#666666]"
-              >
-                Thank you for contributing to the community!
-              </Text>
-            )}
+      <Section
+        style={{ margin: '32px 0' }}
+      >
+        <EmailButton
+          href={challengeLink}
+          variant="primary"
+          style={{ marginTop: 0 }}
+        >
+          {isAccepted ? 'View Challenge Gallery' : 'View Challenge'}
+        </EmailButton>
+      </Section>
 
-            {!isAccepted && (
-              <Text
-                className="text-[14px] leading-[24px] text-[#666666]"
-              >
-                Don&apos;t be discouraged! You can submit other photos to this or future challenges.
-              </Text>
-            )}
+      {isAccepted && (
+        <EmailText
+          variant="muted"
+          style={{ fontSize: '14px', lineHeight: '24px' }}
+        >
+          Thank you for contributing to the community!
+        </EmailText>
+      )}
 
-            <Footer
-              optOutLink={optOutLink}
-              emailType="photo_challenges"
-            />
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+      {!isAccepted && (
+        <EmailText
+          variant="muted"
+          style={{ fontSize: '14px', lineHeight: '24px' }}
+        >
+          Don&apos;t be discouraged! You can submit other photos to this or future challenges.
+        </EmailText>
+      )}
+    </EmailLayout>
   );
 };
 

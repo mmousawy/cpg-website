@@ -1,14 +1,16 @@
-import type { ChallengeWithStats } from '@/types/challenges';
-import type { CPGEvent, EventAttendee } from '@/types/events';
-import type { AlbumWithPhotos } from '@/types/albums';
+import { getServerNow } from '@/lib/cache/serverNow';
 import { filterActiveChallenges } from '@/lib/challenges/filters';
 import { filterUpcomingEvents } from '@/lib/events/filters';
-import { getServerNow } from '@/lib/cache/serverNow';
+import type { AlbumWithPhotos } from '@/types/albums';
+import type { ChallengeWithStats } from '@/types/challenges';
+import type { CPGEvent, EventAttendee } from '@/types/events';
 
+import { PHOTO_SECTION_FETCH_LIMIT } from '@/utils/displayPreferences';
 import { getRecentAlbums } from './albums';
 import { getPublishedChallengesWithStats } from './challenges';
 import { getEventAttendees, getPublishedEvents } from './events';
-import { type StreamPhoto, getPublicPhotostream } from './gallery';
+
+import { getPublicPhotostream, type StreamPhoto } from './gallery';
 import { getOrganizers, getRecentMembers } from './profiles';
 
 export type HomePageData = {
@@ -27,7 +29,7 @@ export type HomePageData = {
  * 1. All independent cached queries at once
  * 2. Attendees after upcoming events are known
  *
- * The `home` cache tag lives on the page so the prerendered RSC is what SWR serves.
+ * The page caches this result with the `home` tag and rerenders only when that tag is expired.
  */
 export async function getHomePageData(includeTestContent = false): Promise<HomePageData> {
   const [
@@ -43,7 +45,7 @@ export async function getHomePageData(includeTestContent = false): Promise<HomeP
     getPublishedEvents(),
     getPublishedChallengesWithStats(),
     getRecentAlbums(4, includeTestContent),
-    getPublicPhotostream(10, 'recent', includeTestContent),
+    getPublicPhotostream(PHOTO_SECTION_FETCH_LIMIT, 'recent', includeTestContent),
     getOrganizers(5),
     getRecentMembers(8, includeTestContent),
   ]);

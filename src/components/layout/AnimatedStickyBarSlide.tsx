@@ -15,6 +15,8 @@ type AnimatedStickyBarSlideProps = {
   children: ReactNode;
   className?: string;
   innerRef?: Ref<HTMLDivElement>;
+  /** Always run the slide-in transition (stack handoffs on the same route). */
+  alwaysAnimate?: boolean;
   /** Called after the hide slide finishes and the bar unmounts. */
   onExited?: () => void;
 };
@@ -24,6 +26,7 @@ export default function AnimatedStickyBarSlide({
   children,
   className,
   innerRef,
+  alwaysAnimate = false,
   onExited,
 }: AnimatedStickyBarSlideProps) {
   const pathname = usePathname();
@@ -49,8 +52,10 @@ export default function AnimatedStickyBarSlide({
       renderedRef.current = true;
       const now = Date.now();
       const lastReveal = recentRevealAt.get(pathname) ?? 0;
-      const skipAppear = now - lastReveal < REVEAL_LOCK_MS;
-      recentRevealAt.set(pathname, now);
+      const skipAppear = !alwaysAnimate && now - lastReveal < REVEAL_LOCK_MS;
+      if (!alwaysAnimate) {
+        recentRevealAt.set(pathname, now);
+      }
 
       if (skipAppear) {
         setIsVisible(true);
@@ -64,7 +69,9 @@ export default function AnimatedStickyBarSlide({
       unmountTimer = setTimeout(() => {
         renderedRef.current = false;
         setShouldRender(false);
-        onExitedRef.current?.();
+        requestAnimationFrame(() => {
+          onExitedRef.current?.();
+        });
       }, getStickyBarSlideDurationMs());
     }
 
@@ -80,15 +87,18 @@ export default function AnimatedStickyBarSlide({
   return (
     <div
       ref={innerRef}
-      className={clsx(
-        'mobile-sticky-bar-slide col-start-1 row-start-1 w-full',
-        !isVisible && 'pointer-events-none',
-        className,
-      )}
-      data-open={isVisible ? '' : undefined}
-      aria-hidden={!isVisible}
+      className={clsx('col-start-1 row-start-1 w-full', className)}
     >
-      {children}
+      <div
+        className={clsx(
+          'mobile-sticky-bar-slide w-full',
+          !isVisible && 'pointer-events-none',
+        )}
+        data-open={isVisible ? '' : undefined}
+        aria-hidden={!isVisible}
+      >
+        {children}
+      </div>
     </div>
   );
 }

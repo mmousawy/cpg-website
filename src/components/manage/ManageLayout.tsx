@@ -3,9 +3,10 @@
 import { ManageScrollContext } from '@/context/ManageScrollContext';
 import { useAuth } from '@/hooks/useAuth';
 import { albumCountQueryKey, photoCountQueryKey, useAlbumCount, usePhotoCount } from '@/hooks/usePhotoCounts';
+import { isPhotosTourMockMode } from '@/tours/photosFirstRunTour.constants';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useTransition } from 'react';
 
 import AlbumSwitcher from '@/components/manage/AlbumSwitcher';
@@ -48,13 +49,45 @@ function ManageTabActiveMarker({
   );
 }
 
-export default function ManageLayout({
+export default function ManageLayout(props: ManageLayoutProps) {
+  return (
+    <Suspense
+      fallback={(
+        <ManageLayoutContent
+          {...props}
+          forceUploadTourPhotoCountZero={false}
+        />
+      )}
+    >
+      <ManageLayoutWithTourMock
+        {...props}
+      />
+    </Suspense>
+  );
+}
+
+function ManageLayoutWithTourMock(props: ManageLayoutProps) {
+  const searchParams = useSearchParams();
+  const forceUploadTourPhotoCountZero = isPhotosTourMockMode(searchParams);
+
+  return (
+    <ManageLayoutContent
+      {...props}
+      forceUploadTourPhotoCountZero={forceUploadTourPhotoCountZero}
+    />
+  );
+}
+
+function ManageLayoutContent({
   children,
   sidebar,
   actions,
   albumDetail,
   mobileActionBar,
-}: ManageLayoutProps) {
+  forceUploadTourPhotoCountZero,
+}: ManageLayoutProps & {
+  forceUploadTourPhotoCountZero: boolean;
+}) {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -71,7 +104,9 @@ export default function ManageLayout({
     ? queryClient.getQueryData<number>(albumCountQueryKey(user.id))
     : undefined;
 
-  const displayPhotoCount = photoCount ?? cachedPhotoCount ?? 0;
+  const displayPhotoCount = forceUploadTourPhotoCountZero
+    ? 0
+    : (photoCount ?? cachedPhotoCount ?? 0);
   const displayAlbumCount = albumCount ?? cachedAlbumCount ?? 0;
 
   const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -89,148 +124,151 @@ export default function ManageLayout({
     <ManageScrollContext.Provider
       value={scrollContainerRef}
     >
-      <div
-        className="flex flex-1 min-h-0 w-full select-none"
-      >
-        {/* Left Panel - Content */}
+      <>
         <div
-          className="flex min-h-0 flex-1 flex-col overflow-hidden border-r border-border-color md:border-r"
+          className="flex flex-1 min-h-0 w-full select-none"
         >
-          {/* Header */}
+          {/* Left Panel - Content */}
           <div
-            className="z-20 shrink-0 border-b border-border-color bg-background-light px-2 py-2"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden border-r border-border-color md:border-r"
           >
+            {/* Header */}
             <div
-              className="flex items-center justify-between gap-4"
+              className="z-20 shrink-0 border-b border-border-color bg-background-light px-2 py-2"
             >
-              {/* Left side: tabs + album title (if album detail) */}
               <div
-                className="flex items-center gap-4"
+                className="flex items-center justify-between gap-4"
               >
-                {/* Tab navigation */}
+                {/* Left side: tabs + album title (if album detail) */}
                 <div
-                  className="flex"
+                  className="flex items-center gap-4"
                 >
-                  <Link
-                    href="/account/photos"
-                    onClick={(e) => handleTabClick(e, '/account/photos')}
-                    className="flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:z-10 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
+                  {/* Tab navigation */}
+                  <div
+                    className="flex"
                   >
-                    <PhotoMicroSVG
-                      className="size-4"
-                    />
-                    <span
-                      className="hidden md:inline"
+                    <Link
+                      href="/account/photos"
+                      onClick={(e) => handleTabClick(e, '/account/photos')}
+                      className="flex items-center gap-1.5 md:gap-2 rounded-tl-full rounded-bl-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:z-10 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                     >
-                      Photos
-                    </span>
-                    <div
-                      className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
-                    >
-                      {displayPhotoCount}
-                    </div>
-                    <Suspense
-                      fallback={null}
-                    >
-                      <ManageTabActiveMarker
-                        href="/account/photos"
+                      <PhotoMicroSVG
+                        className="size-4"
                       />
-                    </Suspense>
-                  </Link>
-                  <Link
-                    href="/account/albums"
-                    onClick={(e) => handleTabClick(e, '/account/albums')}
-                    className="-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
-                  >
-                    <FolderMicroSVG
-                      className="size-4"
-                    />
-                    <span
-                      className="hidden md:inline"
+                      <span
+                        className="hidden md:inline"
+                      >
+                        Photos
+                      </span>
+                      <div
+                        className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
+                      >
+                        {displayPhotoCount}
+                      </div>
+                      <Suspense
+                        fallback={null}
+                      >
+                        <ManageTabActiveMarker
+                          href="/account/photos"
+                        />
+                      </Suspense>
+                    </Link>
+                    <Link
+                      id="photos-tour-albums-tab"
+                      href="/account/albums"
+                      onClick={(e) => handleTabClick(e, '/account/albums')}
+                      className="-ml-[2px] flex items-center gap-1.5 md:gap-2 rounded-tr-full rounded-br-full border-2 px-2 py-1.5 font-[family-name:var(--font-geist-mono)] text-sm font-medium transition-colors border-border-color-strong bg-background text-foreground hover:border-primary hover:bg-primary/5 has-data-active:border-primary has-data-active:bg-primary/10 has-data-active:text-primary has-data-active:hover:border-primary has-data-active:hover:bg-primary/10"
                     >
-                      Albums
-                    </span>
-                    <div
-                      className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
-                    >
-                      {displayAlbumCount}
-                    </div>
-                    <Suspense
-                      fallback={null}
-                    >
-                      <ManageTabActiveMarker
-                        href="/account/albums"
-                        prefix
+                      <FolderMicroSVG
+                        className="size-4"
                       />
-                    </Suspense>
-                  </Link>
+                      <span
+                        className="hidden md:inline"
+                      >
+                        Albums
+                      </span>
+                      <div
+                        className="flex px-1 py-0.5 items-center justify-center rounded-full bg-foreground/10 text-xs"
+                      >
+                        {displayAlbumCount}
+                      </div>
+                      <Suspense
+                        fallback={null}
+                      >
+                        <ManageTabActiveMarker
+                          href="/account/albums"
+                          prefix
+                        />
+                      </Suspense>
+                    </Link>
+                  </div>
+
+                  {/* Loading indicator during tab transition (only when not in album detail, since AlbumSwitcher has its own) */}
+                  {isPending && !albumDetail && (
+                    <div
+                      className="flex items-center"
+                    >
+                      <LoadingSpinner
+                        size="sm"
+                      />
+                    </div>
+              )}
+
+                  {/* Album switcher (only in album detail mode - hidden on mobile) */}
+                  {albumDetail && (
+                    <div
+                      className="hidden md:flex items-center"
+                    >
+                      <AlbumSwitcher
+                        title={albumDetail.title}
+                        slug={albumDetail.slug}
+                      />
+                    </div>
+              )}
                 </div>
 
-                {/* Loading indicator during tab transition (only when not in album detail, since AlbumSwitcher has its own) */}
-                {isPending && !albumDetail && (
-                  <div
-                    className="flex items-center"
-                  >
-                    <LoadingSpinner
-                      size="sm"
-                    />
-                  </div>
-              )}
-
-                {/* Album switcher (only in album detail mode - hidden on mobile) */}
-                {albumDetail && (
-                  <div
-                    className="hidden md:flex items-center"
-                  >
-                    <AlbumSwitcher
-                      title={albumDetail.title}
-                      slug={albumDetail.slug}
-                    />
-                  </div>
-              )}
+                {/* Actions */}
+                {actions && <div
+                  className="flex gap-2 items-center"
+                >
+                  {actions}
+                </div>}
               </div>
 
-              {/* Actions */}
-              {actions && <div
-                className="flex gap-2 items-center"
-              >
-                {actions}
-              </div>}
+              {/* Mobile album detail bar - shown below main header on mobile */}
+              {albumDetail && (
+                <div
+                  className="flex md:hidden items-center mt-2 px-0.5"
+                >
+                  <AlbumSwitcher
+                    title={albumDetail.title}
+                    slug={albumDetail.slug}
+                    compact
+                  />
+                </div>
+          )}
             </div>
 
-            {/* Mobile album detail bar - shown below main header on mobile */}
-            {albumDetail && (
-              <div
-                className="flex md:hidden items-center mt-2 px-0.5"
-              >
-                <AlbumSwitcher
-                  title={albumDetail.title}
-                  slug={albumDetail.slug}
-                  compact
-                />
-              </div>
-          )}
+            {/* Content area — this is the scroll container for infinite scroll sentinels */}
+            <div
+              ref={scrollContainerRef}
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto max-sm:pb-(--mobile-shell-padding-bottom)"
+            >
+              {children}
+            </div>
           </div>
 
-          {/* Content area — this is the scroll container for infinite scroll sentinels */}
+          {/* Right Panel - Sidebar (hidden on mobile). min-h-0 prevents content from expanding past the viewport. */}
           <div
-            ref={scrollContainerRef}
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto max-sm:pb-[calc(max(var(--mobile-nav-offset,0px),var(--mobile-overlay-chrome-height,0px))+var(--mobile-content-bottom-gap,0px))]"
+            className="hidden md:flex w-[400px] shrink-0 min-h-0 flex-col overflow-hidden bg-background-light"
           >
-            {children}
+            {sidebar}
           </div>
         </div>
 
-        {/* Right Panel - Sidebar (hidden on mobile). min-h-0 prevents content from expanding past the viewport. */}
-        <div
-          className="hidden md:flex w-[400px] shrink-0 min-h-0 flex-col overflow-hidden bg-background-light"
-        >
-          {sidebar}
-        </div>
-
-        {/* Mobile action bar (fixed above tab bar when items are selected) */}
+        {/* Mobile selection chrome — fixed above tab bar (manage shell is overflow-hidden). */}
         {mobileActionBar}
-      </div>
+      </>
     </ManageScrollContext.Provider>
   );
 }

@@ -67,7 +67,7 @@ export default function MemberConfirmDialog({
       className={clsx([
         isVisible ? 'visible opacity-100' : 'invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
-        'flex size-full max-h-none max-w-none p-4',
+        'flex size-full max-h-none max-w-none p-3',
         'bg-black/40',
         'transition-[visibility,opacity] duration-300',
       ])}

@@ -31,6 +31,14 @@ import {
   revalidateInterests,
   revalidateProfile,
 } from '@/app/actions/revalidate';
+import { readDisplayPreferencesForForm } from '@/utils/accountDisplayPreferences';
+import {
+  parseMotionPreference,
+  parsePhotoCaptionsMode,
+  parsePhotoGridDensity,
+  parsePhotoGridStyle,
+  persistDisplayPreferencesToLocalStorage,
+} from '@/utils/displayPreferences';
 
 // Zod schema for form validation
 const socialLinkSchema = z.object({
@@ -56,6 +64,10 @@ export const accountFormSchema = z.object({
   socialLinks: z.array(socialLinkSchema).max(3, 'Maximum 3 social links allowed'),
   interests: z.array(z.string()).max(10, 'Maximum 10 interests allowed'),
   albumCardStyle: z.enum(['large', 'compact']),
+  photoGridStyle: z.enum(['justified', 'square']),
+  photoGridDensity: z.enum(['comfortable', 'compact']),
+  photoCaptions: z.enum(['hover', 'always']),
+  motion: z.enum(['system', 'reduce']),
   theme: z.enum(['system', 'light', 'dark', 'midnight']),
   emailPreferences: z.record(z.string(), z.boolean()),
   defaultLicense: licenseTypeSchema,
@@ -88,6 +100,10 @@ export type Profile = Pick<
 > & {
   social_links: SocialLink[] | null;
   album_card_style: 'large' | 'compact' | null;
+  photo_grid_style?: 'justified' | 'square' | null;
+  photo_grid_density?: 'comfortable' | 'compact' | null;
+  photo_captions?: 'hover' | 'always' | null;
+  motion?: 'system' | 'reduce' | null;
   theme?: 'light' | 'dark' | 'midnight' | 'system' | null;
   newsletter_opt_in?: boolean | null;
   default_license?: string | null;
@@ -191,6 +207,10 @@ export function useAccountForm() {
       socialLinks: [],
       interests: [],
       albumCardStyle: 'large',
+      photoGridStyle: 'justified',
+      photoGridDensity: 'comfortable',
+      photoCaptions: 'hover',
+      motion: 'system',
       theme: 'system',
       emailPreferences: {},
       defaultLicense: 'all-rights-reserved',
@@ -338,6 +358,10 @@ export function useAccountForm() {
               newProfile.album_card_style === 'compact'
               ? newProfile.album_card_style
               : null) as 'large' | 'compact' | null,
+                photo_grid_style: parsePhotoGridStyle(newProfile.photo_grid_style),
+                photo_grid_density: parsePhotoGridDensity(newProfile.photo_grid_density),
+                photo_captions: parsePhotoCaptionsMode(newProfile.photo_captions),
+                motion: parseMotionPreference(newProfile.motion),
                 theme: (newProfile.theme &&
               ['light', 'dark', 'midnight', 'system'].includes(newProfile.theme)
               ? newProfile.theme
@@ -363,6 +387,8 @@ export function useAccountForm() {
                   ? newProfile.album_card_style
                   : 'large';
 
+              const displayPrefs = readDisplayPreferencesForForm(newProfile);
+
               // Build email preferences object from loaded preferences
               const emailPrefs: Record<string, boolean> = {};
               types.forEach((type) => {
@@ -385,6 +411,10 @@ export function useAccountForm() {
                 socialLinks: (newProfile.social_links as { label: string; url: string }[]) || [],
                 interests: userInterests,
                 albumCardStyle: albumStyle,
+                photoGridStyle: displayPrefs.photoGridStyle,
+                photoGridDensity: displayPrefs.photoGridDensity,
+                photoCaptions: displayPrefs.photoCaptions,
+                motion: displayPrefs.motion,
                 theme: 'system',
                 emailPreferences: emailPrefs,
                 defaultLicense: (newProfile.default_license as AccountFormData['defaultLicense']) || 'all-rights-reserved',
@@ -435,6 +465,10 @@ export function useAccountForm() {
               socialLinks: [],
               interests: [],
               albumCardStyle: 'large',
+              photoGridStyle: 'justified',
+              photoGridDensity: 'comfortable',
+              photoCaptions: 'hover',
+              motion: 'system',
               theme: 'system',
               emailPreferences: emailPrefs,
               defaultLicense: 'all-rights-reserved',
@@ -456,6 +490,10 @@ export function useAccountForm() {
           data.album_card_style === 'compact'
             ? data.album_card_style
             : null) as 'large' | 'compact' | null,
+            photo_grid_style: parsePhotoGridStyle(data.photo_grid_style),
+            photo_grid_density: parsePhotoGridDensity(data.photo_grid_density),
+            photo_captions: parsePhotoCaptionsMode(data.photo_captions),
+            motion: parseMotionPreference(data.motion),
             theme: (data.theme && ['light', 'dark', 'midnight', 'system'].includes(data.theme)
             ? data.theme
             : null) as 'light' | 'dark' | 'midnight' | 'system' | null | undefined,
@@ -477,6 +515,8 @@ export function useAccountForm() {
             : data.album_card_style === 'large' || data.album_card_style === 'compact'
               ? data.album_card_style
               : 'large';
+
+          const displayPrefs = readDisplayPreferencesForForm(data);
 
           // Get theme from database (don't use useTheme() value as it may be undefined initially)
           const profileTheme: 'system' | 'light' | 'dark' | 'midnight' =
@@ -505,6 +545,10 @@ export function useAccountForm() {
             socialLinks: (data.social_links as { label: string; url: string }[]) || [],
             interests: userInterests,
             albumCardStyle: albumStyle,
+            photoGridStyle: displayPrefs.photoGridStyle,
+            photoGridDensity: displayPrefs.photoGridDensity,
+            photoCaptions: displayPrefs.photoCaptions,
+            motion: displayPrefs.motion,
             theme: profileTheme,
             emailPreferences: emailPrefs,
             defaultLicense: (data.default_license as AccountFormData['defaultLicense']) || 'all-rights-reserved',
@@ -888,6 +932,10 @@ export function useAccountForm() {
           website: data.website || null,
           social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
           album_card_style: data.albumCardStyle,
+          photo_grid_style: data.photoGridStyle,
+          photo_grid_density: data.photoGridDensity,
+          photo_captions: data.photoCaptions,
+          motion: data.motion,
           theme: data.theme,
           newsletter_opt_in: newsletterOptIn,
           avatar_url: newAvatarUrl,
@@ -916,6 +964,10 @@ export function useAccountForm() {
             website: data.website || null,
             social_links: validSocialLinks.length > 0 ? validSocialLinks : null,
             album_card_style: data.albumCardStyle,
+            photo_grid_style: data.photoGridStyle,
+            photo_grid_density: data.photoGridDensity,
+            photo_captions: data.photoCaptions,
+            motion: data.motion,
             theme: data.theme,
             newsletter_opt_in: newsletterOptIn,
             avatar_url: newAvatarUrl,
@@ -952,8 +1004,14 @@ export function useAccountForm() {
         if (data.theme !== theme) {
           setTheme(data.theme);
         }
-        // Save album card style to localStorage
+        // Save display preferences to localStorage
         localStorage.setItem('album-card-style', data.albumCardStyle);
+        persistDisplayPreferencesToLocalStorage({
+          photoGridStyle: data.photoGridStyle,
+          photoGridDensity: data.photoGridDensity,
+          photoCaptions: data.photoCaptions,
+          motion: data.motion,
+        });
 
         // Update saved avatar URL and clear pending changes
         setSavedAvatarUrl(newAvatarUrl);
@@ -1000,6 +1058,10 @@ export function useAccountForm() {
           socialLinks: validSocialLinks,
           interests: newInterestNames,
           albumCardStyle: data.albumCardStyle,
+          photoGridStyle: data.photoGridStyle,
+          photoGridDensity: data.photoGridDensity,
+          photoCaptions: data.photoCaptions,
+          motion: data.motion,
           theme: data.theme,
           emailPreferences: savedEmailPrefs,
           defaultLicense: data.defaultLicense,

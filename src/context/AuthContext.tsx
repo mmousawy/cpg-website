@@ -4,6 +4,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import type { Database } from '@/database.types';
 import { useSession } from '@/context/SessionContext';
+import { afterFirstPaint } from '@/utils/afterFirstPaint';
 import { shouldLoadBrowserSupabase } from '@/utils/supabase/loadBrowserClient';
 import type { ServerAuth } from '@/utils/supabase/getServerAuth';
 
@@ -58,25 +59,32 @@ export function AuthProvider({
       return;
     }
 
+    if (hasInitialAuth) {
+      setIsLoading(false);
+      markSessionReady();
+    }
+
     let cancelled = false;
     let unbind: (() => void) | undefined;
 
-    void import('./authSessionRuntime').then(({ bindAuthSession }) => {
-      if (cancelled) return;
-      unbind = bindAuthSession({
-        initialAuth,
-        hasInitialAuth,
-        setUser,
-        setSessionState,
-        setProfile,
-        setIsLoading,
-        currentUserIdRef,
-        fetchingProfileRef,
-        lastLoggedInUpdatedRef,
-        setSession,
-        clearSession,
-        markSessionReady,
-        refresh: () => router.refresh(),
+    afterFirstPaint(() => {
+      void import('./authSessionRuntime').then(({ bindAuthSession }) => {
+        if (cancelled) return;
+        unbind = bindAuthSession({
+          initialAuth,
+          hasInitialAuth,
+          setUser,
+          setSessionState,
+          setProfile,
+          setIsLoading,
+          currentUserIdRef,
+          fetchingProfileRef,
+          lastLoggedInUpdatedRef,
+          setSession,
+          clearSession,
+          markSessionReady,
+          refresh: () => router.refresh(),
+        });
       });
     });
 

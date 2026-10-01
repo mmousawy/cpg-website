@@ -27,6 +27,10 @@ export default function Layout({ children }: LayoutProps) {
         className="app-shell-main flex grow flex-col outline-none"
       >
         {children}
+        <div
+          className="mobile-main-bottom-spacer pointer-events-none shrink-0 sm:hidden"
+          aria-hidden
+        />
       </main>
       <Suspense
         fallback={null}

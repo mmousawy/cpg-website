@@ -13,6 +13,7 @@ import {
 import ManageLayout from '@/components/manage/ManageLayout';
 import ManageLoadMoreSentinel from '@/components/manage/ManageLoadMoreSentinel';
 import ManagePhotoGridSkeleton from '@/components/manage/ManagePhotoGridSkeleton';
+import ManageSidebarSkeleton from '@/components/manage/ManageSidebarSkeleton';
 import MobileActionBar from '@/components/manage/MobileActionBar';
 import BottomSheet from '@/components/shared/BottomSheet';
 import Button from '@/components/shared/Button';
@@ -32,12 +33,20 @@ import {
 } from '@/hooks/usePhotoMutations';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { usePhotos } from '@/hooks/usePhotos';
+import { usePhotosFirstRunTour } from '@/hooks/usePhotosFirstRunTour';
 import { useSupabase } from '@/hooks/useSupabase';
+import {
+  isPhotosManageTourMockMode,
+  isPhotosTourMockMode,
+} from '@/tours/photosFirstRunTour.constants';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos, confirmUnsavedChanges } from '@/utils/confirmHelpers';
 import { preloadImages } from '@/utils/preloadImages';
 import { useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import {
+  Suspense,
+  startTransition,
   useCallback,
   useContext,
   useDeferredValue,
@@ -45,7 +54,6 @@ import {
   useMemo,
   useRef,
   useState,
-  startTransition,
 } from 'react';
 
 import FolderDownMiniSVG from 'public/icons/folder-down-mini.svg';
@@ -54,12 +62,35 @@ import PlusMiniSVG from 'public/icons/plus-mini.svg';
 import TrashSVG from 'public/icons/trash.svg';
 
 export default function PhotosPage() {
-  const { user, profile } = useAuth();
+  return (
+    <Suspense
+      fallback={<PhotosPageLoadingFallback />}
+    >
+      <PhotosPageContent />
+    </Suspense>
+  );
+}
+
+function PhotosPageLoadingFallback() {
+  return (
+    <ManageLayout
+      sidebar={<ManageSidebarSkeleton />}
+    >
+      <ManagePhotoGridSkeleton />
+    </ManageLayout>
+  );
+}
+
+function PhotosPageContent() {
+  const { user, profile, refreshProfile } = useAuth();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalContext = useContext(ModalContext);
+  const searchParams = useSearchParams();
+  const isPhotosUploadTourMock = isPhotosTourMockMode(searchParams);
+  const isPhotosManageTourMock = isPhotosManageTourMockMode(searchParams);
 
   const photoEditDirtyRef = useRef(false);
   const { setHasUnsavedChanges } = useUnsavedChanges();
@@ -71,6 +102,7 @@ export default function PhotosPage() {
   const {
     photos,
     isPending: photosPending,
+    isFetching: photosFetching,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -276,7 +308,36 @@ export default function PhotosPage() {
   const deferredSelectedPhotos = useDeferredValue(selectedPhotos);
   const selectedCount = selectedPhotoIds.size;
 
-  const showEmptyState = !photosPending && photos.length === 0 && uploadingPhotos.length === 0;
+  const isPhotosGridInitiallyLoading =
+    photos.length === 0 && (photosPending || photosFetching);
+
+  const showRealEmptyState =
+    !isPhotosGridInitiallyLoading && photos.length === 0 && uploadingPhotos.length === 0;
+  const showEmptyState =
+    isPhotosUploadTourMock || (!isPhotosManageTourMock && showRealEmptyState);
+  const manageTourActive =
+    (isPhotosManageTourMock && photos.length > 0) ||
+    (!showEmptyState && photos.length > 0 && !isPhotosGridInitiallyLoading);
+
+  const prepareManageTour = useCallback(() => {
+    if (photos.length === 0) return;
+    setSelectedPhotoIds((prev) => {
+      if (prev.size > 0) return prev;
+      return new Set([photos[0].id]);
+    });
+  }, [photos]);
+
+  usePhotosFirstRunTour({
+    userId: user?.id,
+    profile,
+    refreshProfile,
+    photosPending,
+    uploadTourActive: showEmptyState,
+    isUploadTourMock: isPhotosUploadTourMock,
+    manageTourActive,
+    isManageTourMock: isPhotosManageTourMock,
+    prepareManageTour,
+  });
 
   const handleMobileEdit = () => {
     if (!window.matchMedia('(max-width: 767px)').matches) return;
@@ -311,23 +372,30 @@ export default function PhotosPage() {
         actions={
           <>
             <HelpLink
+              id="photos-tour-help"
               href="upload-photos"
               label="How to upload photos"
               size="sm"
             />
-            <Select
-              value={photoFilter}
-              onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}
-              options={[
-                { value: 'all', label: 'All' },
-                { value: 'public', label: 'Public' },
-                { value: 'private', label: 'Private' },
-              ]}
-              fullWidth={false}
-              mono
+            <div
+              id="photos-tour-filter"
               className="min-w-20 md:min-w-25"
-            />
+            >
+              <Select
+                value={photoFilter}
+                onValueChange={(value) => setPhotoFilter(value as 'all' | 'public' | 'private')}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'public', label: 'Public' },
+                  { value: 'private', label: 'Private' },
+                ]}
+                fullWidth={false}
+                mono
+                className="w-full"
+              />
+            </div>
             <Button
+              id="photos-tour-upload"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               icon={<PlusMiniSVG
@@ -388,6 +456,7 @@ export default function PhotosPage() {
                 )}
                 {selectedCount > 0 && (
                   <Button
+                    id="photos-tour-mobile-album"
                     onClick={() => handleAddToAlbum(Array.from(selectedPhotoIds))}
                     variant="secondary"
                     size="sm"
@@ -410,12 +479,13 @@ export default function PhotosPage() {
         <DropZone
           onDrop={handleUpload}
           disabled={isUploading}
-          className="flex flex-col"
+          className={showEmptyState ? 'flex min-h-0 flex-1 flex-col' : 'flex flex-col'}
           overlayMessage="Drop to upload"
         >
           {showEmptyState ? (
             <EmptyState
-              className="m-4 h-full"
+              id="photos-tour-library"
+              className="m-4 min-h-0 flex-1"
               icon={<ImageSVG
                 className="size-10 inline-block"
               />}
@@ -432,12 +502,13 @@ export default function PhotosPage() {
                 </Button>
               )}
             />
-          ) : photosPending && photos.length === 0 ? (
+          ) : !isPhotosUploadTourMock && !isPhotosManageTourMock && isPhotosGridInitiallyLoading ? (
             <ManagePhotoGridSkeleton />
           ) : (
             <>
               <PhotoGrid
                 photos={photos}
+                isLoading={isPhotosGridInitiallyLoading}
                 selectedPhotoIds={selectedPhotoIds}
                 onSelectPhoto={handleSelectPhoto}
                 onPhotoClick={handlePhotoClick}
