@@ -1,7 +1,7 @@
 'use server';
 
 import { expireTag } from '@/lib/cache/expireTag';
-import { revalidatePath, refresh } from 'next/cache';
+import { refresh, revalidatePath } from 'next/cache';
 
 /**
  * Cache Revalidation Actions
@@ -411,6 +411,7 @@ export async function revalidateAlbumLikes(
   expireTag('gallery');
   expireTag('albums');
   revalidatePath(`/@${ownerNickname}/album/${albumSlug}`);
+  revalidatePath('/[nickname]/album/[albumSlug]', 'page');
   invalidateAlbumListingRoutes();
   invalidateProfileRoutes(ownerNickname);
   finishRevalidation();

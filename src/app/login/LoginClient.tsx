@@ -34,10 +34,8 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (queryError === 'staging_admin_only') {
-      setError('Staging is limited to admin accounts. Sign in with a promoted admin user.');
-    } else if (queryError === 'staging_no_signup') {
-      setError('Sign-up is invite-only on staging. Use an admin account or a bypass link.');
+    if (queryError === 'staging_no_signup') {
+      setError('Sign-up is invite-only on staging. Use a bypass link to create an account.');
     }
   }, [queryError]);
 

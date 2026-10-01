@@ -74,6 +74,25 @@ export async function getPhotoLikes(photoId: string): Promise<{
 }
 
 /**
+ * Live likes_count for an album detail page.
+ *
+ * Not wrapped in `'use cache'`: that cache is in-memory per instance, so
+ * `expireTag` on the likes API instance does not refresh the count on the
+ * instance that serves the next anonymous GET (same reason as
+ * `getProfileFollowCounts`).
+ */
+export async function getAlbumLikesCount(albumId: string): Promise<number> {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from('albums')
+    .select('likes_count')
+    .eq('id', albumId)
+    .maybeSingle();
+
+  return data?.likes_count ?? 0;
+}
+
+/**
  * Get likes for an album with profile information
  * Tagged with profile-{nickname} for cache invalidation
  */

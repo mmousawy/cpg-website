@@ -37,13 +37,11 @@ GitHub secrets needed: `COOLIFY_PRODUCTION_WEBHOOK_URL`, `INTERNAL_API_SECRET` (
 
 ### Test APIs on a production Node container
 
-The Coolify Next container runs `NODE_ENV=production`. `isTestApiEnvironmentAllowed()` now also returns true when `ALLOW_TEST_API=true`. Production must not set that flag. Bearer auth on `/api/test/*` is unchanged.
+The Coolify Next container runs `NODE_ENV=production`. `isTestApiEnvironmentAllowed()` is true when `ALLOW_TEST_API=true` or when the request host is staging. Production must not set that flag. Bearer auth on `/api/test/*` is unchanged.
 
-The staging proxy treated most paths as admin-only, so Playwright could not call setup/cleanup. `/api/test` is now a staging public path, same as `/api/health`.
+### Signup
 
-### Signup and admin gate
-
-Staging redirects `/signup` and anonymous browsers to login. Signup specs skip when `BASE_URL` is the staging host. `createTestUser` defaults to `asAdmin` on that host so logged-in tests pass the admin-only proxy.
+Staging redirects `/signup` without `?bypass=` to login. Public pages and member accounts work like production. Signup specs use a minted bypass token on the staging host. `createTestUser` only sets `asAdmin` when a spec asks for it.
 
 Vercel bypass helpers were removed from `e2e/test-utils.ts`.
 

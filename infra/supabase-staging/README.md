@@ -19,7 +19,7 @@ creativephotography.group          →  Coolify prod (:3000)  →  db.creativeph
 
 - Empty database after migrations (no production data dump).
 - Separate Auth users, storage buckets, JWT keys.
-- Staging site is **admin-only** (enforced in app `proxy.ts` + promote first admin via SQL).
+- Staging signup is **invite-only** (`proxy.ts` + `GOTRUE_DISABLE_SIGNUP`). Members and public pages work like production; promote the first admin via SQL for `/admin`.
 
 See also: [infra/coolify/PORTS.md](../coolify/PORTS.md), [staging-checklist.md](../coolify/staging-checklist.md).
 

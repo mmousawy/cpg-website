@@ -1,0 +1,43 @@
+fix: open staging to members and show album likes without a refresh
+
+Staging:
+- Drop the admin-only proxy gate; public pages and member accounts work like production
+- Keep signup invite-only (`/signup` without `?bypass=` still redirects to login)
+- Login copy only mentions invite-only signup (no more staging_admin_only message)
+
+Album likes:
+- Read likes_count live on album detail instead of the per-instance `'use cache'` snapshot
+- Also revalidate the `/[nickname]/album/[albumSlug]` page type so likes update without a hard refresh
+
+E2E:
+- Onboarding fills every wizard field (bio, interests, theme, album cards, images, email prefs, terms) and asserts them on /account
+- Playwright loads `.env.local` and targets hosted staging when the local env points at db-staging Auth
+- Skip the local webServer when the staging host is the resolved base URL
+- Revalidation cleanup ignores missing users; RSVP still accepts 400 already-signed-up while E2E users are admins
+
+Docs:
+- Staging checklists describe invite-only signup, not an admin-only site
+- Correct the 2026-10-01 files-changed notes to match the new proxy policy
+
+Files changed (17):
+
+New (3):
+- changelog/2026-10-02/sha.txt
+- changelog/2026-10-02/commit-message.txt
+- changelog/2026-10-02/files-changed.md
+
+Modified (14):
+- README.md
+- changelog/2026-10-01/files-changed.md
+- e2e/onboarding.spec.ts
+- e2e/revalidation.spec.ts
+- e2e/test-utils.ts
+- infra/coolify/staging-checklist.md
+- infra/supabase-staging/README.md
+- playwright.config.ts
+- src/app/[nickname]/album/[albumSlug]/page.tsx
+- src/app/actions/__tests__/revalidate.test.ts
+- src/app/actions/revalidate.ts
+- src/app/login/LoginClient.tsx
+- src/lib/data/likes.ts
+- src/proxy.ts

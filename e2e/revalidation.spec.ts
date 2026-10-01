@@ -37,10 +37,10 @@ test.describe('Revalidation smoke', () => {
     }
 
     await cleanupTestUsers(request, [
-      adminUser.email,
-      memberUser.email,
-      secondUser.email,
-    ]);
+      adminUser?.email,
+      memberUser?.email,
+      secondUser?.email,
+    ].filter((email): email is string => !!email));
   });
 
   test('event publish reflects on /events and detail without hard refresh', async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe('Revalidation smoke', () => {
     });
     if (!signup.ok()) {
       const body = await signup.json().catch(() => ({})) as { message?: string };
-      // Staging promotes E2E users to admin; creating an event auto-RSVPs all admins.
+      // Staging currently promotes E2E users to admin; creating an event auto-RSVPs all admins.
       const alreadyIn = signup.status() === 400
         && typeof body.message === 'string'
         && /already signed up/i.test(body.message);
