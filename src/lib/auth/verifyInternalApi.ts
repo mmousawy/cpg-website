@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { safeEqualSecret } from '@/utils/security';
+import { isStagingDeployment } from '@/utils/siteEnvironment';
 
 /** Gate E2E / internal test APIs. Requires INTERNAL_API_SECRET (falls back to CRON_SECRET). */
 export function verifyInternalApiRequest(request: NextRequest): NextResponse | null {
@@ -22,12 +23,13 @@ export function verifyInternalApiRequest(request: NextRequest): NextResponse | n
 
 /**
  * Allow E2E test APIs in local/dev, on the GitHub Actions runner (`CI`), and on
- * Coolify staging when `ALLOW_TEST_API=true`. Production must not set that flag.
+ * Coolify staging. Production must not set `ALLOW_TEST_API`.
  */
 export function isTestApiEnvironmentAllowed(): boolean {
   if (process.env.NODE_ENV !== 'production') return true;
   if (process.env.CI) return true;
   if (process.env.ALLOW_TEST_API === 'true') return true;
   if (process.env.VERCEL_ENV === 'preview') return true;
+  if (isStagingDeployment()) return true;
   return false;
 }

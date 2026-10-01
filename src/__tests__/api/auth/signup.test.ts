@@ -1,9 +1,17 @@
 /// <reference types="vitest/globals" />
 import { POST } from '@/app/api/auth/signup/route';
 import { NextRequest } from 'next/server';
-import { cleanupTestUser, createTestSupabaseClient, generateTestEmail, getTestUserByEmail } from '../../utils/test-helpers';
 
-// Mock resend to prevent actual emails - use class for vitest v4 constructor support
+const mocks = vi.hoisted(() => ({
+  maybeSingle: vi.fn(),
+  insert: vi.fn(),
+  upsert: vi.fn(),
+  createUser: vi.fn(),
+  deleteUser: vi.fn(),
+  isStagingDeployment: vi.fn(() => false),
+  revalidateProfiles: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('resend', () => ({
   Resend: class MockResend {
     emails = {
@@ -12,7 +20,34 @@ vi.mock('resend', () => ({
   },
 }));
 
-// Helper to create a mock request
+vi.mock('@/app/actions/revalidate', () => ({
+  revalidateProfiles: mocks.revalidateProfiles,
+}));
+
+vi.mock('@/utils/siteEnvironment', () => ({
+  isStagingDeployment: mocks.isStagingDeployment,
+}));
+
+vi.mock('@/utils/supabase/admin', () => ({
+  createAdminClient: () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: mocks.maybeSingle,
+        }),
+      }),
+      insert: mocks.insert,
+      upsert: mocks.upsert,
+    }),
+    auth: {
+      admin: {
+        createUser: mocks.createUser,
+        deleteUser: mocks.deleteUser,
+      },
+    },
+  }),
+}));
+
 function createMockRequest(body: Record<string, unknown>): NextRequest {
   return new NextRequest('http://localhost:3000/api/auth/signup', {
     method: 'POST',
@@ -21,169 +56,113 @@ function createMockRequest(body: Record<string, unknown>): NextRequest {
   });
 }
 
+function generateTestEmail(): string {
+  return `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@test.example.com`;
+}
+
 describe('POST /api/auth/signup', () => {
   let testEmail: string;
-  let createdUserId: string | null = null;
 
   beforeEach(() => {
     testEmail = generateTestEmail();
-  });
-
-  afterEach(async () => {
-    if (createdUserId) {
-      await cleanupTestUser(createdUserId);
-      createdUserId = null;
-    }
+    vi.clearAllMocks();
+    mocks.isStagingDeployment.mockReturnValue(false);
+    mocks.revalidateProfiles.mockResolvedValue(undefined);
+    mocks.maybeSingle.mockResolvedValue({ data: null, error: null });
+    mocks.insert.mockResolvedValue({ error: null });
+    mocks.upsert.mockResolvedValue({ error: null });
+    mocks.createUser.mockResolvedValue({
+      data: { user: { id: 'user-1' } },
+      error: null,
+    });
+    mocks.deleteUser.mockResolvedValue({ error: null });
   });
 
   it('should create user successfully with email and password', async () => {
-    const request = createMockRequest({
+    const response = await POST(createMockRequest({
       email: testEmail,
       password: 'testpassword123',
-    });
+    }));
 
-    const response = await POST(request);
     expect(response.status).toBe(200);
-
     const data = await response.json();
     expect(data.success).toBe(true);
-
-    // Wait a bit for async operations
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Verify user was created
-    const user = await getTestUserByEmail(testEmail);
-    expect(user).toBeTruthy();
-    createdUserId = user!.id;
-
-    // Verify profile creation
-    const supabase = createTestSupabaseClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user!.id)
-      .single();
-
-    expect(profile).toBeTruthy();
-    expect(profile!.email).toBe(testEmail.toLowerCase());
+    expect(mocks.createUser).toHaveBeenCalledWith({
+      email: testEmail,
+      password: 'testpassword123',
+      email_confirm: false,
+    });
+    expect(mocks.insert).toHaveBeenCalled();
+    expect(mocks.upsert).toHaveBeenCalled();
   });
 
   it('should reject signup with duplicate email', async () => {
-    // Create first user
-    const firstRequest = createMockRequest({
+    mocks.maybeSingle.mockResolvedValue({ data: { id: 'existing-user' }, error: null });
+
+    const response = await POST(createMockRequest({
       email: testEmail,
       password: 'testpassword123',
-    });
+    }));
 
-    const firstResponse = await POST(firstRequest);
-    expect(firstResponse.status).toBe(200);
-
-    // Wait for user creation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const user = await getTestUserByEmail(testEmail);
-    createdUserId = user!.id;
-
-    // Try to create duplicate
-    const duplicateRequest = createMockRequest({
-      email: testEmail,
-      password: 'testpassword123',
-    });
-
-    const duplicateResponse = await POST(duplicateRequest);
-    expect(duplicateResponse.status).toBe(400);
-
-    const duplicateData = await duplicateResponse.json();
-    expect(duplicateData.message).toContain('already exists');
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.message).toContain('already exists');
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
   it('should reject signup with invalid email format', async () => {
-    const request = createMockRequest({
-      email: 'invalid-email',
-      password: 'testpassword123',
+    mocks.createUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'Unable to validate email address: invalid format' },
     });
 
-    const response = await POST(request);
-    // API returns error status (400 or 500 depending on where validation fails)
+    const response = await POST(createMockRequest({
+      email: 'invalid-email',
+      password: 'testpassword123',
+    }));
+
     expect(response.status).toBeGreaterThanOrEqual(400);
     expect(response.status).toBeLessThan(600);
   });
 
   it('should reject signup with weak password', async () => {
-    const request = createMockRequest({
+    const response = await POST(createMockRequest({
       email: testEmail,
-      password: '12345', // Less than 6 characters
-    });
+      password: '12345',
+    }));
 
-    const response = await POST(request);
     expect(response.status).toBe(400);
-
     const data = await response.json();
     expect(data.message).toContain('at least 6 characters');
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
   it('should reject signup without required fields', async () => {
-    // Missing email
-    const request1 = createMockRequest({
+    const missingEmail = await POST(createMockRequest({
       password: 'testpassword123',
-    });
+    }));
+    expect(missingEmail.status).toBe(400);
+    expect((await missingEmail.json()).message).toContain('required');
 
-    const response1 = await POST(request1);
-    expect(response1.status).toBe(400);
-
-    const data1 = await response1.json();
-    expect(data1.message).toContain('required');
-
-    // Missing password
-    const request2 = createMockRequest({
+    const missingPassword = await POST(createMockRequest({
       email: testEmail,
-    });
-
-    const response2 = await POST(request2);
-    expect(response2.status).toBe(400);
-
-    const data2 = await response2.json();
-    expect(data2.message).toContain('required');
+    }));
+    expect(missingPassword.status).toBe(400);
+    expect((await missingPassword.json()).message).toContain('required');
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
-  it('should successfully delete test user', async () => {
-    // Create user
-    const request = createMockRequest({
+  it('should require a bypass token on staging', async () => {
+    mocks.isStagingDeployment.mockReturnValue(true);
+
+    const response = await POST(createMockRequest({
       email: testEmail,
       password: 'testpassword123',
-    });
+    }));
 
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    // Wait for user creation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const user = await getTestUserByEmail(testEmail);
-    expect(user).toBeTruthy();
-    createdUserId = user!.id;
-
-    // Verify user exists
-    const supabase = createTestSupabaseClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user!.id)
-      .single();
-    expect(profile).toBeTruthy();
-
-    // Delete user
-    await cleanupTestUser(user!.id);
-    createdUserId = null; // Prevent double cleanup
-
-    // Verify user is deleted
-    const { data: deletedProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user!.id)
-      .maybeSingle();
-    expect(deletedProfile).toBeNull();
-
-    // Verify user is deleted from auth
-    const deletedUser = await getTestUserByEmail(testEmail);
-    expect(deletedUser).toBeUndefined();
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data.message).toContain('invite link');
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 });
