@@ -52,10 +52,10 @@ jobs:
           set -euo pipefail
           git add package.json CHANGELOG.md .release-please-manifest.json
           if git diff --staged --quiet; then
-            echo "No file changes after release-please (unexpected)."
-            exit 1
+            echo "Version files already match release-please output; promoting staging without a version commit."
+          else
+            git commit -m "chore(main): release ${{ steps.prepare.outputs.version }}"
           fi
-          git commit -m "chore(main): release ${{ steps.prepare.outputs.version }}"
 
       - name: Push promote branch
         if: steps.prepare.outputs.has_release == 'true'
