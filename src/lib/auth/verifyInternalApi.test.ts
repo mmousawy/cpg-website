@@ -7,6 +7,7 @@ type EnvBag = {
   CI?: string
   VERCEL_ENV?: string
   ALLOW_TEST_API?: string
+  NEXT_PUBLIC_SITE_URL?: string
 };
 
 const env = process.env as EnvBag;
@@ -16,9 +17,10 @@ const ORIGINAL: EnvBag = {
   CI: process.env.CI,
   VERCEL_ENV: process.env.VERCEL_ENV,
   ALLOW_TEST_API: process.env.ALLOW_TEST_API,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 };
 
-function setEnv({ NODE_ENV, CI, VERCEL_ENV, ALLOW_TEST_API }: EnvBag) {
+function setEnv({ NODE_ENV, CI, VERCEL_ENV, ALLOW_TEST_API, NEXT_PUBLIC_SITE_URL }: EnvBag) {
   if (NODE_ENV === undefined) delete env.NODE_ENV;
   else env.NODE_ENV = NODE_ENV;
 
@@ -30,6 +32,9 @@ function setEnv({ NODE_ENV, CI, VERCEL_ENV, ALLOW_TEST_API }: EnvBag) {
 
   if (ALLOW_TEST_API === undefined) delete env.ALLOW_TEST_API;
   else env.ALLOW_TEST_API = ALLOW_TEST_API;
+
+  if (NEXT_PUBLIC_SITE_URL === undefined) delete env.NEXT_PUBLIC_SITE_URL;
+  else env.NEXT_PUBLIC_SITE_URL = NEXT_PUBLIC_SITE_URL;
 }
 
 afterEach(() => {
@@ -60,5 +65,21 @@ describe('isTestApiEnvironmentAllowed', () => {
   it('allows Coolify staging when ALLOW_TEST_API is true', () => {
     setEnv({ NODE_ENV: 'production', ALLOW_TEST_API: 'true' });
     expect(isTestApiEnvironmentAllowed()).toBe(true);
+  });
+
+  it('allows Coolify staging host without ALLOW_TEST_API', () => {
+    setEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_SITE_URL: 'https://staging.creativephotography.group',
+    });
+    expect(isTestApiEnvironmentAllowed()).toBe(true);
+  });
+
+  it('blocks production host', () => {
+    setEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_SITE_URL: 'https://creativephotography.group',
+    });
+    expect(isTestApiEnvironmentAllowed()).toBe(false);
   });
 });

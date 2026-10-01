@@ -52,6 +52,7 @@ const KNOWN_ROUTES = new Set([
 const stagingPublicPaths = [
   '/login',
   '/signup',
+  '/onboarding',
   '/auth-callback',
   '/auth/',
   '/api/auth/',
