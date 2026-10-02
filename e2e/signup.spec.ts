@@ -1,5 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { generateTestEmail, getSignupPagePath, trackTestEmail } from './test-utils';
+
+/** Staging can render two signup forms; use the one that contains the email field we fill. */
+function signupForm(page: Page) {
+  return page.locator('form').filter({ has: page.locator('input[type="email"]') }).first();
+}
 
 test.describe('Signup Flow', () => {
   let testEmail: string;
@@ -21,11 +26,11 @@ test.describe('Signup Flow', () => {
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
     // Find email input
-    const emailInput = page.locator('input[type="email"]').first();
+    const emailInput = signupForm(page).locator('input[type="email"]');
     await emailInput.fill(testEmail);
 
     // Find password inputs - there should be two (password and confirm password)
-    const passwordInputs = page.locator('input[type="password"]');
+    const passwordInputs = signupForm(page).locator('input[type="password"]');
     const passwordCount = await passwordInputs.count();
 
     // Fill first password field
@@ -37,10 +42,7 @@ test.describe('Signup Flow', () => {
     }
 
     // Submit the form
-    const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /sign up|create account/i }),
-    );
-    await submitButton.click();
+    await signupForm(page).locator('button[type="submit"]').click();
 
     // Wait for success message - the page shows "Check your email" heading
     await expect(
@@ -52,21 +54,18 @@ test.describe('Signup Flow', () => {
     await page.goto(signupPath);
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
-    const emailInput = page.locator('input[type="email"]').first();
+    const emailInput = signupForm(page).locator('input[type="email"]');
     await emailInput.fill(testEmail);
 
-    const passwordInputs = page.locator('input[type="password"]');
+    const passwordInputs = signupForm(page).locator('input[type="password"]');
     await passwordInputs.nth(0).fill('TestPassword123!');
     await passwordInputs.nth(1).fill('DifferentPassword456!');
 
-    const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /sign up|create account/i }),
-    );
-    await submitButton.click();
+    await signupForm(page).locator('button[type="submit"]').click();
 
     // Should show password mismatch error
     await expect(
-      page.getByText(/password.*match|passwords.*not.*match/i),
+      signupForm(page).getByText(/password.*match|passwords.*not.*match/i),
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -74,21 +73,18 @@ test.describe('Signup Flow', () => {
     await page.goto(signupPath);
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
-    const emailInput = page.locator('input[type="email"]').first();
+    const emailInput = signupForm(page).locator('input[type="email"]');
     await emailInput.fill(testEmail);
 
-    const passwordInputs = page.locator('input[type="password"]');
+    const passwordInputs = signupForm(page).locator('input[type="password"]');
     await passwordInputs.nth(0).fill('12345'); // Too short
     await passwordInputs.nth(1).fill('12345');
 
-    const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /sign up|create account/i }),
-    );
-    await submitButton.click();
+    await signupForm(page).locator('button[type="submit"]').click();
 
     // Should show password length error
     await expect(
-      page.getByText(/password.*at least|password.*6|password.*too short|password.*required/i),
+      signupForm(page).getByText(/must be at least 6|password.*too short|password.*required/i),
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -96,17 +92,14 @@ test.describe('Signup Flow', () => {
     await page.goto(signupPath);
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();
 
-    const emailInput = page.locator('input[type="email"]').first();
+    const emailInput = signupForm(page).locator('input[type="email"]');
     await emailInput.fill('invalid-email');
 
-    const passwordInputs = page.locator('input[type="password"]');
+    const passwordInputs = signupForm(page).locator('input[type="password"]');
     await passwordInputs.nth(0).fill('TestPassword123!');
     await passwordInputs.nth(1).fill('TestPassword123!');
 
-    const submitButton = page.locator('button[type="submit"]').or(
-      page.getByRole('button', { name: /sign up|create account/i }),
-    );
-    await submitButton.click();
+    await signupForm(page).locator('button[type="submit"]').click();
 
     // Browser's built-in validation prevents submission - verify we're still on signup page
     await expect(page.getByRole('heading', { name: /create an account/i })).toBeVisible();

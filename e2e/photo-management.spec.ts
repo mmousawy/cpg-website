@@ -1,7 +1,39 @@
+import type { Page } from '@playwright/test';
 import path from 'path';
 
 import { expect, test } from './fixtures/member-user';
-import { loginTestUser } from './test-utils';
+import { dismissDriverTour, loginTestUser, photosUploadInput } from './test-utils';
+
+async function waitForPhotoLibrary(page: Page) {
+  const cards = page.locator('[data-testid="photo-card"]');
+  const empty = page.getByRole('heading', { name: /don't have any photos yet/i });
+  await expect(page.getByLabel('Loading photos')).toHaveCount(0, { timeout: 20000 });
+  await expect(empty.or(cards.first())).toBeVisible({ timeout: 20000 });
+  return cards;
+}
+
+async function deleteAllPhotos(page: Page) {
+  const photoCards = await waitForPhotoLibrary(page);
+  if (await photoCards.count() === 0) return;
+
+  await dismissDriverTour(page);
+  await photoCards.first().click();
+  await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
+
+  const count = await photoCards.count();
+  if (count > 1) {
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    for (let i = 1; i < count; i++) {
+      await photoCards.nth(i).click({ modifiers: [modifier] });
+    }
+  }
+
+  await page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i }).click();
+  const confirmDialog = page.locator('dialog[open]');
+  await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+  await confirmDialog.getByRole('button', { name: /delete/i }).click();
+  await expect(photoCards).toHaveCount(0, { timeout: 15000 });
+}
 
 test.describe('Photo Management Flow', () => {
   test('should upload a photo and add it to an album', async ({ page, memberUser }) => {
@@ -21,7 +53,7 @@ test.describe('Photo Management Flow', () => {
     const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
 
     // Find the file input and upload
-    const fileInput = page.locator('input[type="file"]');
+    const fileInput = photosUploadInput(page);
     await fileInput.setInputFiles(testImagePath);
 
     // Wait for upload to complete - look for the photo to appear in the grid
@@ -29,6 +61,8 @@ test.describe('Photo Management Flow', () => {
     await expect(page.locator('[data-testid="photo-card"]').or(
       page.locator('.group').filter({ has: page.locator('img') }),
     ).first()).toBeVisible({ timeout: 30000 });
+
+    await dismissDriverTour(page);
 
     // Click on the uploaded photo to select it
     const photoCard = page.locator('[data-testid="photo-card"]').or(
@@ -110,6 +144,7 @@ test.describe('Photo Management Flow', () => {
     // Return to account photos to clean up
     await page.goto('/account/photos');
     await page.waitForLoadState('load');
+    await dismissDriverTour(page);
     await photoCard.click();
     await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
 
@@ -143,70 +178,30 @@ test.describe('Photo Management Flow', () => {
   });
 
   test('should handle bulk photo selection and add to album', async ({ page, memberUser }) => {
+    test.setTimeout(120_000);
+
     // Login
     await loginTestUser(page, memberUser.email, memberUser.password);
 
     // Navigate to photos management page
     await page.goto('/account/photos');
     await expect(page).toHaveURL(/\/account\/photos/);
-    await page.waitForLoadState('load');
 
-    // Clean up any existing photos from previous tests
-    // This ensures we start with a clean state
+    // The shared member can still have photos from the previous test once the grid finishes loading.
+    await deleteAllPhotos(page);
     const photoCards = page.locator('[data-testid="photo-card"]');
-    const initialCount = await photoCards.count();
-
-    if (initialCount > 0) {
-      console.log(`Cleaning up ${initialCount} leftover photo(s) from previous test`);
-      try {
-        // Select all photos and delete them
-        // First, select the first photo
-        await photoCards.first().click();
-        await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
-
-        // If there are multiple photos, select them all with Ctrl+click
-        if (initialCount > 1) {
-          const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
-          for (let i = 1; i < initialCount; i++) {
-            await photoCards.nth(i).click({ modifiers: [modifier] });
-          }
-        }
-
-        // Delete all selected photos
-        const deleteButton = page.locator('[data-testid="sidebar-panel"]').getByRole('button', { name: /delete/i });
-        await expect(deleteButton).toBeVisible({ timeout: 5000 });
-        await deleteButton.click();
-
-        // Native <dialog> only — avoids matching Next.js error overlay [role=dialog]
-        const confirmDialog = page.locator('dialog[open]');
-        await expect(confirmDialog).toBeVisible({ timeout: 5000 });
-        const confirmButton = confirmDialog.getByRole('button', { name: /delete/i });
-        await confirmButton.click();
-
-        // Wait for all photos to be deleted
-        await expect(photoCards).toHaveCount(0, { timeout: 10000 });
-        await page.waitForLoadState('load');
-
-        // Verify cleanup succeeded
-        const finalCount = await photoCards.count();
-        if (finalCount > 0) {
-          throw new Error(`Failed to clean up photos: ${finalCount} photo(s) still remain`);
-        }
-      } catch (error) {
-        console.error('Failed to clean up leftover photos:', error);
-        throw error;
-      }
-    }
 
     // Upload two test images
     const testImagePath1 = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
     const testImagePath2 = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_39kB.jpg');
 
-    const fileInput = page.locator('input[type="file"]');
+    const fileInput = photosUploadInput(page);
     await fileInput.setInputFiles([testImagePath1, testImagePath2]);
 
     // Wait for both uploads to complete - wait for exactly 2 photo cards
     await expect(photoCards).toHaveCount(2, { timeout: 60000 });
+
+    await dismissDriverTour(page);
 
     // Select first photo with regular click (the first of the 2 newly uploaded photos)
     await photoCards.first().click();
