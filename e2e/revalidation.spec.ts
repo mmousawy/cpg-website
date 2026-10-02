@@ -99,7 +99,7 @@ test.describe('Revalidation smoke', () => {
 
     await loginTestUser(page, memberUser.email, memberUser.password);
     await page.goto('/account/photos');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const testImagePath = path.join(
       process.cwd(),
@@ -161,7 +161,7 @@ test.describe('Revalidation smoke', () => {
 
     await loginTestUser(ownerPage, memberUser.email, memberUser.password);
     await ownerPage.goto('/account/albums');
-    await ownerPage.waitForLoadState('networkidle');
+    await ownerPage.waitForLoadState('load');
 
     const albumTitle = `Revalidation Album ${Date.now()}`;
     // Empty albums page renders the same CTA in the toolbar and empty state.

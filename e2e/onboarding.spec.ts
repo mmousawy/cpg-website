@@ -231,7 +231,9 @@ test.describe('Onboarding Flow', () => {
   });
 });
 
-test.describe('Onboarding after login from a public page', () => {
+test.describe('Onboarding with incomplete profile', () => {
+  test.describe.configure({ mode: 'serial' });
+
   let testUser: TestUser;
 
   test.beforeAll(async ({ request }) => {
@@ -258,24 +260,6 @@ test.describe('Onboarding after login from a public page', () => {
 
     await expect(page).toHaveURL(/\/onboarding/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: /welcome to.*creative photography group/i })).toBeVisible();
-  });
-});
-
-test.describe('Onboarding profile images', () => {
-  let testUser: TestUser;
-
-  test.beforeAll(async ({ request }) => {
-    testUser = await createTestUser(request, { completeOnboarding: false });
-  });
-
-  test.afterAll(async ({ request }) => {
-    if (!testUser) return;
-
-    try {
-      await cleanupTestUsers(request, [testUser.email]);
-    } catch (err) {
-      console.error('Failed to cleanup test user:', err);
-    }
   });
 
   test('should fill every onboarding field and persist them after joining', async ({ page }) => {

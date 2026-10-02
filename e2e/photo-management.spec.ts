@@ -1,38 +1,21 @@
-import { expect, test } from '@playwright/test';
 import path from 'path';
-import { cleanupTestUsers, createTestUser, loginTestUser, type TestUser } from './test-utils';
+
+import { expect, test } from './fixtures/member-user';
+import { loginTestUser } from './test-utils';
 
 test.describe('Photo Management Flow', () => {
-  let testUser: TestUser;
-
-  test.beforeAll(async ({ request }) => {
-    testUser = await createTestUser(request);
-    console.log(`Created test user: ${testUser.email}`);
-  });
-
-  test.afterAll(async ({ request }) => {
-    if (!testUser) return;
-
-    try {
-      await cleanupTestUsers(request, [testUser.email]);
-      console.log(`Cleaned up test user: ${testUser.email}`);
-    } catch (err) {
-      console.error('Failed to cleanup test user:', err);
-    }
-  });
-
-  test('should upload a photo and add it to an album', async ({ page }) => {
+  test('should upload a photo and add it to an album', async ({ page, memberUser }) => {
     test.setTimeout(60_000);
 
     // Login
-    await loginTestUser(page, testUser.email, testUser.password);
+    await loginTestUser(page, memberUser.email, memberUser.password);
 
     // Navigate to photos management page
     await page.goto('/account/photos');
     await expect(page).toHaveURL(/\/account\/photos/);
 
     // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Get the test image path (using dedicated test images)
     const testImagePath = path.join(process.cwd(), 'e2e', 'test-uploads', 'file_example_JPG_100kB.jpg');
@@ -108,16 +91,16 @@ test.describe('Photo Management Flow', () => {
 
     // Public profile shows the uploaded photo (role locator skips CSS-hidden
     // mobile/tablet grid copies that stay opacity-0 because they never load)
-    await page.goto(`/@${testUser.nickname}`);
+    await page.goto(`/@${memberUser.nickname}`);
     await expect(
-      page.getByRole('link', { name: new RegExp(`View photo.*@${testUser.nickname}`) }),
+      page.getByRole('link', { name: new RegExp(`View photo.*@${memberUser.nickname}`) }),
     ).toBeVisible({ timeout: 15000 });
 
     // Homepage Recent photos includes the test user's upload. First paint can be
     // the public Suspense fallback (test photos filtered out); reload once if needed.
     await page.goto('/');
     const homePhotoLink = page.getByRole('link', {
-      name: new RegExp(`View photo.*@${testUser.nickname}`),
+      name: new RegExp(`View photo.*@${memberUser.nickname}`),
     });
     if (!(await homePhotoLink.isVisible())) {
       await page.reload();
@@ -126,7 +109,7 @@ test.describe('Photo Management Flow', () => {
 
     // Return to account photos to clean up
     await page.goto('/account/photos');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
     await photoCard.click();
     await expect(page.locator('[data-testid="sidebar-panel"]').first()).toBeVisible({ timeout: 5000 });
 
@@ -145,7 +128,7 @@ test.describe('Photo Management Flow', () => {
     await expect(photoCardsAfterDelete).toHaveCount(0, { timeout: 10000 });
 
     // Wait for network to be idle to ensure all deletion requests have completed
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Verify count is still 0 (double-check after network settles)
     const finalCount = await photoCardsAfterDelete.count();
@@ -159,14 +142,14 @@ test.describe('Photo Management Flow', () => {
     console.log('✅ Photo management test completed successfully');
   });
 
-  test('should handle bulk photo selection and add to album', async ({ page }) => {
+  test('should handle bulk photo selection and add to album', async ({ page, memberUser }) => {
     // Login
-    await loginTestUser(page, testUser.email, testUser.password);
+    await loginTestUser(page, memberUser.email, memberUser.password);
 
     // Navigate to photos management page
     await page.goto('/account/photos');
     await expect(page).toHaveURL(/\/account\/photos/);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Clean up any existing photos from previous tests
     // This ensures we start with a clean state
@@ -202,7 +185,7 @@ test.describe('Photo Management Flow', () => {
 
         // Wait for all photos to be deleted
         await expect(photoCards).toHaveCount(0, { timeout: 10000 });
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('load');
 
         // Verify cleanup succeeded
         const finalCount = await photoCards.count();
