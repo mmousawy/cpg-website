@@ -5,7 +5,7 @@ import { isStagingE2ETarget } from './test-utils';
 test.describe('Login Flow', () => {
   test('should display login form', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Check for login heading
     await expect(page.getByRole('heading', { name: /log in|sign in|welcome back/i })).toBeVisible();
