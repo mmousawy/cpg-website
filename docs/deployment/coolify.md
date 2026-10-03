@@ -79,7 +79,7 @@ Summary:
 - `NEXT_PUBLIC_SITE_URL=https://creativephotography.group`.
 - `NEXT_PUBLIC_SUPABASE_URL=https://db.creativephotography.group`.
 - Crons: [scheduled-tasks.md](../../infra/coolify/scheduled-tasks.md).
-- Releases: GitHub secrets `COOLIFY_PRODUCTION_WEBHOOK_URL` (Deploy Webhook URL) and `COOLIFY_TOKEN` (API token with the `deploy` permission). The webhook returns 403 without that Bearer token.
+- Releases: GitHub secrets `COOLIFY_PRODUCTION_WEBHOOK_URL` (Deploy Webhook URL) and `COOLIFY_TOKEN` (API token with the `deploy` permission). The webhook returns 403 without that Bearer token. The request uses `User-Agent: CPG-CI/1.0` so the zone WAF rule that blocks `curl` does not intercept it.
 - Google / Discord: Coolify env does not enable providers — [supabase-oauth.md](../../infra/supabase-oauth.md).
 
 ## 4. Scheduled tasks
