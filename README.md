@@ -381,7 +381,8 @@ Quick reference:
 
 | Secret | Purpose |
 | --- | --- |
-| `COOLIFY_PRODUCTION_WEBHOOK_URL` | Release Please triggers Coolify production after a GitHub release |
+| `COOLIFY_PRODUCTION_WEBHOOK_URL` | Coolify production Deploy Webhook URL (`/api/v1/deploy?uuid=…`) |
+| `COOLIFY_TOKEN` | Coolify API token with the `deploy` permission. Sent as `Authorization: Bearer` when triggering production |
 | `INTERNAL_API_SECRET` | Bearer auth for `/api/test/*` in CI (match staging app env) |
 
 **Deployment strategy** (see `.github/workflows/ci.yml` and `.github/workflows/release-please.yml`):
