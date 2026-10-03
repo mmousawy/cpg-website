@@ -1,4 +1,4 @@
-import type { APIRequestContext, Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Page } from '@playwright/test';
 import { config as loadEnv } from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -245,6 +245,26 @@ export async function cleanupTestUsers(
     data: { emails },
     headers: withInternalApiHeaders(),
   });
+}
+
+/**
+ * Header Upload control. The manage chrome can mount that control more than once,
+ * so strict mode must not require a single match.
+ */
+export function photosUploadInput(page: Page) {
+  return page.locator('#photos-tour-upload + input[type="file"]').first();
+}
+
+/** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */
+export async function dismissDriverTour(page: Page): Promise<void> {
+  const close = page.locator('.driver-popover-close-btn');
+  try {
+    await close.first().waitFor({ state: 'visible', timeout: 4000 });
+  } catch {
+    return;
+  }
+  await close.first().click();
+  await expect(page.locator('body')).not.toHaveClass(/driver-active/, { timeout: 5000 });
 }
 
 /**

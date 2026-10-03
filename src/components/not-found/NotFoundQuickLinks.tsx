@@ -36,16 +36,16 @@ export default async function NotFoundQuickLinks() {
 
   const authSpecific: QuickLink[] = user
     ? [
-        ...(profile?.nickname
+      ...(profile?.nickname
           ? [{ href: `/@${profile.nickname}`, label: 'My profile' }]
           : []),
-        { href: routes.accountPhotos.url, label: routes.accountPhotos.label },
-        { href: routes.accountEvents.url, label: routes.accountEvents.label },
-      ]
+      { href: routes.accountPhotos.url, label: routes.accountPhotos.label },
+      { href: routes.accountEvents.url, label: routes.accountEvents.label },
+    ]
     : [
-        { href: routes.login.url, label: routes.login.label },
-        { href: routes.signup.url, label: routes.signup.label },
-      ];
+      { href: routes.login.url, label: routes.login.label },
+      { href: routes.signup.url, label: routes.signup.label },
+    ];
 
   const links = [...authSpecific, ...shared];
 

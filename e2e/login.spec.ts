@@ -5,7 +5,7 @@ import { isStagingE2ETarget } from './test-utils';
 test.describe('Login Flow', () => {
   test('should display login form', async ({ page }) => {
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     // Check for login heading
     await expect(page.getByRole('heading', { name: /log in|sign in|welcome back/i })).toBeVisible();
@@ -74,17 +74,7 @@ test.describe('Login Flow', () => {
     await page.goto('/login');
 
     // Check for Google login button
-    await expect(
-      page.getByRole('button', { name: /google/i }).or(
-        page.locator('button:has-text("Google")'),
-      ),
-    ).toBeVisible();
-
-    // Check for Discord login button
-    await expect(
-      page.getByRole('button', { name: /discord/i }).or(
-        page.locator('button:has-text("Discord")'),
-      ),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /google/i }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /discord/i }).first()).toBeVisible();
   });
 });

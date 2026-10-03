@@ -271,11 +271,18 @@ export default function EventSignupBar(props: EventSignupBarProps) {
   const loggedIn = isLoggedIn || !!user;
 
   return (
-    <StickyActionBar constrainWidth overlaysContent>
+    <StickyActionBar
+      constrainWidth
+      overlaysContent
+    >
       {authPending || loggedIn ? (
-        <EventSignupBarAuthenticated {...props} />
+        <EventSignupBarAuthenticated
+          {...props}
+        />
       ) : (
-        <EventSignupBarGuest {...props} />
+        <EventSignupBarGuest
+          {...props}
+        />
       )}
     </StickyActionBar>
   );

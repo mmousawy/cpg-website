@@ -2,11 +2,11 @@ import type { Profile } from '@/context/AuthContext';
 import { describe, expect, it } from 'vitest';
 
 import {
-    isPhotosManageTourDismissed,
-    isPhotosUploadTourDismissed,
-    parseProfileTours,
-    PHOTOS_MANAGE_TOUR_ID,
-    PHOTOS_UPLOAD_TOUR_ID,
+  isPhotosManageTourDismissed,
+  isPhotosUploadTourDismissed,
+  parseProfileTours,
+  PHOTOS_MANAGE_TOUR_ID,
+  PHOTOS_UPLOAD_TOUR_ID,
 } from '@/lib/profileTours';
 
 function profile(overrides: Partial<Profile> = {}): Profile {

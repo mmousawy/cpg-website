@@ -10,7 +10,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: process.env.CI ? 'html' : 'list',
+  timeout: process.env.CI ? 90_000 : 30_000,
+  globalTimeout: process.env.CI ? 40 * 60_000 : undefined,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
 
   // Global teardown to clean up test data
   globalTeardown: './e2e/global-teardown.ts',

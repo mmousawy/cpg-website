@@ -3,13 +3,13 @@
 import { ModalContext } from '@/app/providers/ModalProvider';
 import type { Profile } from '@/context/AuthContext';
 import {
-    isPhotosManageTourDismissed,
-    isPhotosUploadTourDismissed,
+  isPhotosManageTourDismissed,
+  isPhotosUploadTourDismissed,
 } from '@/lib/profileTours';
 import { startPhotosFirstRunTour, startPhotosManageTour } from '@/tours/photosFirstRunTour';
 import {
-    PHOTOS_MANAGE_TOUR_TARGETS,
-    PHOTOS_TOUR_TARGETS,
+  PHOTOS_MANAGE_TOUR_TARGETS,
+  PHOTOS_TOUR_TARGETS,
 } from '@/tours/photosFirstRunTour.constants';
 import type { Driver } from 'driver.js';
 import { useContext, useEffect, useRef } from 'react';

@@ -19,7 +19,7 @@ Do **not** use Coolify Traefik on 80/443 — Nginx already owns those ports.
 2. **Branch:** `main`.
 3. **Build pack:** Dockerfile, container port **3000**.
 4. **Ports mappings:** `127.0.0.1:3000:3000` (default — production owns host `:3000`).
-5. **Disable auto-deploy on push** (required). Production deploys only after a Release Please GitHub release — see [release-please.yml](../../.github/workflows/release-please.yml).
+5. **Disable auto-deploy on push** (required). Production deploys only after a Release Please GitHub release — see [release-production.yml](../../.github/workflows/release-production.yml).
 6. **Health check:** `/api/health`.
 7. **Domains in Coolify:** leave empty (Nginx handles public hostnames).
 
@@ -86,9 +86,9 @@ Google / Discord: values in `.env` are **not** visible to Auth until compose pas
 
 ## 5. GitHub Actions
 
-Set `COOLIFY_PRODUCTION_WEBHOOK_URL`. Work on `staging` (Coolify auto-deploy + E2E). Promote with a PR **`staging` → `main`**. [release-please.yml](../../.github/workflows/release-please.yml) opens the version PR; merging it creates a GitHub release and triggers production.
+Set `COOLIFY_PRODUCTION_WEBHOOK_URL`. Work on `staging` (Coolify auto-deploy). Each push updates a single promote PR **`release-please--branches--main` → `main`** ([release-please.yml](../../.github/workflows/release-please.yml)). Required checks on that PR: lint/typecheck/unit tests and staging E2E (against live `origin/staging`). Merging creates the GitHub release and triggers production ([release-production.yml](../../.github/workflows/release-production.yml)).
 
-Staging env: `ALLOW_TEST_API=true`. GitHub secret: `INTERNAL_API_SECRET` (same value as staging). Leave the staging Coolify app on branch **`staging`**. CI waits on `https://staging.creativephotography.group/api/health` until `commit` matches the git SHA (Coolify `SOURCE_COMMIT`). No Coolify API token.
+Staging env: `ALLOW_TEST_API=true`. GitHub secret: `INTERNAL_API_SECRET` (same value as staging). Require the two CI jobs on **`main`** in branch protection. Leave the staging Coolify app on branch **`staging`**. E2E waits on `https://staging.creativephotography.group/api/health` until `commit` matches `origin/staging`. No Coolify API token.
 
 ## 6. Retire Vercel
 

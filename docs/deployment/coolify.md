@@ -73,7 +73,7 @@ See [production-cutover.md](../../infra/coolify/production-cutover.md) and [prod
 
 Summary:
 
-- Coolify app tracks git branch **`main`**, but **auto-deploy on push must be off**. Deploy only when [release-please.yml](../../.github/workflows/release-please.yml) calls `COOLIFY_PRODUCTION_WEBHOOK_URL` after a GitHub release.
+- Coolify app tracks git branch **`main`**, but **auto-deploy on push must be off**. Deploy only when [release-production.yml](../../.github/workflows/release-production.yml) calls `COOLIFY_PRODUCTION_WEBHOOK_URL` after a GitHub release.
 - Port mapping `127.0.0.1:3000:3000` (default).
 - Nginx: [nginx-production.conf](../../infra/coolify/nginx-production.conf).
 - `NEXT_PUBLIC_SITE_URL=https://creativephotography.group`.
@@ -93,7 +93,7 @@ Summary:
 | Hosting | Docker on VPS |
 | `vercel.json` crons | Coolify scheduled tasks |
 | `vercel promote` on release | Release Please webhook (`COOLIFY_PRODUCTION_WEBHOOK_URL`; prod auto-deploy **off**) |
-| PR / preview E2E | Push to `staging` → Coolify auto-deploy → Playwright. Promote with PR `staging` → `main`, then merge the Release Please version PR |
+| PR / preview E2E | Push to `staging` → Coolify deploy + one promote PR (`release-please--branches--main` → `main`). Merge when lint/unit/E2E are green |
 | Vercel Analytics | Off by default; set `NEXT_PUBLIC_ENABLE_VERCEL_ANALYTICS=true` only on Vercel |
 
 `vercel.json` remains in the repo for reference; `git.deploymentEnabled.main` is `false`.

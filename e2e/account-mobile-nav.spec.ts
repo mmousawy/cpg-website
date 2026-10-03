@@ -1,27 +1,11 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/member-user';
 
-import { cleanupTestUsers, createTestUser, loginTestUser, type TestUser } from './test-utils';
+import { loginTestUser } from './test-utils';
 
 test.describe('Account mobile section nav', () => {
-  let testUser: TestUser;
-
-  test.beforeAll(async ({ request }) => {
-    testUser = await createTestUser(request);
-  });
-
-  test.afterAll(async ({ request }) => {
-    if (!testUser) return;
-
-    try {
-      await cleanupTestUsers(request, [testUser.email]);
-    } catch (error) {
-      console.error('Failed to cleanup test user:', error);
-    }
-  });
-
-  test('scrolls to the selected section on mobile', async ({ page }) => {
+  test('scrolls to the selected section on mobile', async ({ page, memberUser }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await loginTestUser(page, testUser.email, testUser.password);
+    await loginTestUser(page, memberUser.email, memberUser.password);
 
     await page.goto('/account');
     await expect(page.getByRole('heading', { name: 'Account settings' })).toBeVisible();
