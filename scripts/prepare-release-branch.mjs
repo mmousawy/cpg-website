@@ -10,7 +10,6 @@ import path from 'node:path';
 const require = createRequire(import.meta.url);
 const { Manifest } = require('release-please/build/src/manifest.js');
 const { GitHub } = require('release-please/build/src/github.js');
-const { LocalGitHub } = require('release-please/build/src/local-github.js');
 
 const ROOT = process.cwd();
 const CONFIG_FILE = 'release-please-config.json';
@@ -53,9 +52,10 @@ async function main() {
   }
 
   const { owner, repo } = parseRepo();
-  const github = process.env.GITHUB_ACTIONS
-    ? await LocalGitHub.create({ owner, repo, token, localRepoPath: ROOT })
-    : await GitHub.create({ owner, repo, token });
+  // LocalGitHub checks out the default branch and hard-resets it. That leaves
+  // the version commit off the promote branch, so the PR title says 1.41.0
+  // while package.json stays on the previous release.
+  const github = await GitHub.create({ owner, repo, token });
 
   const manifest = await Manifest.fromManifest(
     github,
