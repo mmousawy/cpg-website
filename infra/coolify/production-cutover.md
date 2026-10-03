@@ -44,7 +44,7 @@ Copy from [scheduled-tasks.md](./scheduled-tasks.md) into the **production** app
 
 ### Deploy webhook
 
-Coolify → **Webhooks** → copy URL → GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL`.
+Coolify → production app → **Configuration → Webhooks** → copy **Deploy Webhook** → GitHub secret `COOLIFY_PRODUCTION_WEBHOOK_URL`. **Keys & Tokens → API Tokens** → token with the `deploy` permission → GitHub secret `COOLIFY_TOKEN`.
 
 ## 2. Nginx + TLS
 
