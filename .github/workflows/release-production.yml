@@ -60,7 +60,7 @@ jobs:
 
           echo "Triggering Coolify production deploy..."
           body=$(mktemp)
-          status=$(curl -sS -o "$body" -w "%{http_code}" -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL" \
+          status=$(curl -sS -o "$body" -w "%{http_code}" -X POST "$COOLIFY_PRODUCTION_WEBHOOK_URL" \
             -A "CPG-CI/1.0" \
             -H "Authorization: Bearer $COOLIFY_TOKEN" \
             -H "Accept: application/json")
