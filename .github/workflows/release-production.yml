@@ -44,14 +44,33 @@ jobs:
       - name: Trigger Coolify production deploy
         env:
           COOLIFY_PRODUCTION_WEBHOOK_URL: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           set -euo pipefail
 
           if [ -z "${COOLIFY_PRODUCTION_WEBHOOK_URL:-}" ]; then
-            echo "::error::COOLIFY_PRODUCTION_WEBHOOK_URL is not set. Copy the webhook URL from Coolify → production app → Webhooks."
+            echo "::error::COOLIFY_PRODUCTION_WEBHOOK_URL is not set. Copy Deploy Webhook from Coolify → production app → Configuration → Webhooks."
+            exit 1
+          fi
+
+          if [ -z "${COOLIFY_TOKEN:-}" ]; then
+            echo "::error::COOLIFY_TOKEN is not set. Create a Coolify API token with the deploy permission (Keys & Tokens → API Tokens) and save it as this GitHub secret."
             exit 1
           fi
 
           echo "Triggering Coolify production deploy..."
-          curl -fsS -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL"
+          body=$(mktemp)
+          status=$(curl -sS -o "$body" -w "%{http_code}" -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Accept: application/json")
+
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Coolify deploy webhook returned HTTP $status"
+            head -c 500 "$body" || true
+            echo
+            rm -f "$body"
+            exit 1
+          fi
+
+          rm -f "$body"
           echo "Coolify deploy triggered."
