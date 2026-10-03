@@ -52,10 +52,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json CHANGELOG.md .release-please-manifest.json
           if git diff --staged --quiet; then
-            echo "Version files already match release-please output; promoting staging without a version commit."
-          else
-            git commit -m "chore(main): release ${{ steps.prepare.outputs.version }}"
+            echo "::error::Release ${{ steps.prepare.outputs.version }} produced no version-file diff. Refusing to promote without the bump."
+            exit 1
           fi
+          git commit -m "chore(main): release ${{ steps.prepare.outputs.version }}"
 
       - name: Push promote branch
         if: steps.prepare.outputs.has_release == 'true'
