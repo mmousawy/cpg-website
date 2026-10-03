@@ -84,14 +84,21 @@ jobs:
         run: |
           set -euo pipefail
           TITLE=$(cat .release-pr-title.txt)
-          EXISTING=$(gh pr list --base main --head "${GITHUB_REPOSITORY_OWNER}:${RELEASE_BRANCH}" --state open --json number --jq '.[0].number // empty')
+          # Same-repo PRs are listed by branch name. owner:branch returns nothing, and create then fails because the PR already exists.
+          EXISTING=$(gh pr list --base main --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number // empty')
           if [ -z "$EXISTING" ]; then
-            gh pr create \
+            if ! gh pr create \
               --base main \
               --head "$RELEASE_BRANCH" \
               --title "$TITLE" \
-              --body-file .release-pr-body.md
-          else
+              --body-file .release-pr-body.md; then
+              EXISTING=$(gh pr list --base main --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number // empty')
+              if [ -z "$EXISTING" ]; then
+                exit 1
+              fi
+            fi
+          fi
+          if [ -n "$EXISTING" ]; then
             gh pr edit "$EXISTING" --title "$TITLE" --body-file .release-pr-body.md
             echo "Updated existing promote PR #$EXISTING"
           fi

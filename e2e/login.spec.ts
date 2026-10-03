@@ -74,17 +74,7 @@ test.describe('Login Flow', () => {
     await page.goto('/login');
 
     // Check for Google login button
-    await expect(
-      page.getByRole('button', { name: /google/i }).or(
-        page.locator('button:has-text("Google")'),
-      ),
-    ).toBeVisible();
-
-    // Check for Discord login button
-    await expect(
-      page.getByRole('button', { name: /discord/i }).or(
-        page.locator('button:has-text("Discord")'),
-      ),
-    ).toBeVisible();
+    await expect(page.getByRole('button', { name: /google/i }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /discord/i }).first()).toBeVisible();
   });
 });

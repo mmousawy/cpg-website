@@ -6,7 +6,8 @@ import { dismissDriverTour, loginTestUser, photosUploadInput } from './test-util
 
 async function waitForPhotoLibrary(page: Page) {
   const cards = page.locator('[data-testid="photo-card"]');
-  const empty = page.getByRole('heading', { name: /don't have any photos yet/i });
+  // EmptyState renders the title in a paragraph, not a heading.
+  const empty = page.getByText(/don't have any photos yet/i);
   await expect(page.getByLabel('Loading photos')).toHaveCount(0, { timeout: 20000 });
   await expect(empty.or(cards.first())).toBeVisible({ timeout: 20000 });
   return cards;
