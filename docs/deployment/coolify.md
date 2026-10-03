@@ -73,7 +73,7 @@ See [production-cutover.md](../../infra/coolify/production-cutover.md) and [prod
 
 Summary:
 
-- Coolify app tracks git branch **`main`**, but **auto-deploy on push must be off**. Deploy only when [release-production.yml](../../.github/workflows/release-production.yml) calls `COOLIFY_PRODUCTION_WEBHOOK_URL` after a GitHub release.
+- Coolify app tracks git branch **`main`**, but **auto-deploy on push must be off**. Every push to `main` runs [release-production.yml](../../.github/workflows/release-production.yml), which calls `COOLIFY_PRODUCTION_WEBHOOK_URL`. A GitHub release is created only when that version tag does not already exist.
 - Port mapping `127.0.0.1:3000:3000` (default).
 - Nginx: [nginx-production.conf](../../infra/coolify/nginx-production.conf).
 - `NEXT_PUBLIC_SITE_URL=https://creativephotography.group`.

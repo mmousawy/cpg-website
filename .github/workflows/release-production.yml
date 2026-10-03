@@ -42,7 +42,6 @@ jobs:
           echo "release_created=true" >> "$GITHUB_OUTPUT"
 
       - name: Trigger Coolify production deploy
-        if: steps.release.outputs.release_created == 'true'
         env:
           COOLIFY_PRODUCTION_WEBHOOK_URL: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK_URL }}
         run: |
