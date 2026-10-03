@@ -49,7 +49,10 @@ export default function UserMenu() {
   }, [pathname]);
 
   return (
-    <div ref={rootRef} className="relative shrink-0">
+    <div
+      ref={rootRef}
+      className="relative shrink-0"
+    >
       <button
         type="button"
         className={clsx(
@@ -81,7 +84,10 @@ export default function UserMenu() {
         origin="top-right"
         className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border-color-strong bg-background-light bg-no-noise shadow-lg"
       >
-        <AccountMenuPanel onClose={closeMenu} showSiteLinks />
+        <AccountMenuPanel
+          onClose={closeMenu}
+          showSiteLinks
+        />
       </AnimatedPopoverPanel>
     </div>
   );

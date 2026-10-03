@@ -6,7 +6,9 @@ import {
   createTestEventAsAdmin,
   createTestUser,
   deleteTestEvent,
+  dismissDriverTour,
   loginTestUser,
+  photosUploadInput,
   type TestEvent,
   type TestUser,
 } from './test-utils';
@@ -99,7 +101,7 @@ test.describe('Revalidation smoke', () => {
 
     await loginTestUser(page, memberUser.email, memberUser.password);
     await page.goto('/account/photos');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const testImagePath = path.join(
       process.cwd(),
@@ -108,13 +110,14 @@ test.describe('Revalidation smoke', () => {
       'file_example_JPG_100kB.jpg',
     );
 
-    const fileInput = page.locator('input[type="file"]');
+    const fileInput = photosUploadInput(page);
     await fileInput.setInputFiles(testImagePath);
 
     const photoCard = page.locator('[data-testid="photo-card"]').or(
       page.locator('.group').filter({ has: page.locator('img') }),
     ).first();
     await expect(photoCard).toBeVisible({ timeout: 30_000 });
+    await dismissDriverTour(page);
     await photoCard.click();
 
     const sidebar = page.locator('[data-testid="sidebar-panel"]').first();
@@ -161,7 +164,7 @@ test.describe('Revalidation smoke', () => {
 
     await loginTestUser(ownerPage, memberUser.email, memberUser.password);
     await ownerPage.goto('/account/albums');
-    await ownerPage.waitForLoadState('networkidle');
+    await ownerPage.waitForLoadState('load');
 
     const albumTitle = `Revalidation Album ${Date.now()}`;
     // Empty albums page renders the same CTA in the toolbar and empty state.

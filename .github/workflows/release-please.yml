@@ -3,50 +3,100 @@ name: Release Please
 on:
   push:
     branches:
-      - main
-
-concurrency:
-  group: vps-docker-build
-  cancel-in-progress: false
+      - staging
 
 permissions:
   contents: write
   pull-requests: write
 
+env:
+  RELEASE_BRANCH: release-please--branches--main
+
 jobs:
-  release-please:
+  promote-pr:
+    name: Update release PR into main
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      - uses: googleapis/release-please-action@v5
-        id: release
-        with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
 
-  deploy-production:
-    name: Deploy production
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Coolify production deploy
-        env:
-          COOLIFY_PRODUCTION_WEBHOOK_URL: ${{ secrets.COOLIFY_PRODUCTION_WEBHOOK_URL }}
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Reset promote branch to staging
         run: |
           set -euo pipefail
+          git fetch origin staging main --tags
+          git checkout -B "$RELEASE_BRANCH" "origin/staging"
 
-          if [ -z "${COOLIFY_PRODUCTION_WEBHOOK_URL:-}" ]; then
-            echo "::error::COOLIFY_PRODUCTION_WEBHOOK_URL is not set. Copy the webhook URL from Coolify → production app → Webhooks."
-            exit 1
+      - name: Apply release-please version files
+        id: prepare
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+        run: node scripts/prepare-release-branch.mjs
+
+      - name: Commit version bump on promote branch
+        if: steps.prepare.outputs.has_release == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json CHANGELOG.md .release-please-manifest.json
+          if git diff --staged --quiet; then
+            echo "Version files already match release-please output; promoting staging without a version commit."
+          else
+            git commit -m "chore(main): release ${{ steps.prepare.outputs.version }}"
           fi
 
-          echo "Triggering Coolify production deploy..."
-          curl -fsS -X GET "$COOLIFY_PRODUCTION_WEBHOOK_URL"
-          echo "Coolify deploy triggered."
+      - name: Push promote branch
+        if: steps.prepare.outputs.has_release == 'true'
+        run: git push --force-with-lease origin "$RELEASE_BRANCH"
+
+      - name: Close legacy component-only release PRs
+        if: steps.prepare.outputs.has_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          for head in "release-please--branches--main--components--cpg-website"; do
+            nums=$(gh pr list --base main --head "${GITHUB_REPOSITORY_OWNER}:${head}" --state open --json number --jq '.[].number' || true)
+            for n in $nums; do
+              echo "Closing legacy PR #$n ($head)"
+              gh pr close "$n" --comment "Superseded by the staging promote PR (${RELEASE_BRANCH} → main)."
+            done
+          done
+
+      - name: Upsert single promote PR
+        if: steps.prepare.outputs.has_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          TITLE=$(cat .release-pr-title.txt)
+          # Same-repo PRs are listed by branch name. owner:branch returns nothing, and create then fails because the PR already exists.
+          EXISTING=$(gh pr list --base main --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$EXISTING" ]; then
+            if ! gh pr create \
+              --base main \
+              --head "$RELEASE_BRANCH" \
+              --title "$TITLE" \
+              --body-file .release-pr-body.md; then
+              EXISTING=$(gh pr list --base main --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number // empty')
+              if [ -z "$EXISTING" ]; then
+                exit 1
+              fi
+            fi
+          fi
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --title "$TITLE" --body-file .release-pr-body.md
+            echo "Updated existing promote PR #$EXISTING"
+          fi

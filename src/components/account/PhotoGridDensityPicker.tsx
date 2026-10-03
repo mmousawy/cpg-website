@@ -17,14 +17,16 @@ export default function PhotoGridDensityPicker({ value, onChange }: PhotoGridDen
         label="Comfortable"
         description="Larger previews"
       >
-          <div className="grid aspect-square w-20 shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded bg-foreground/5 p-1.5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-sm bg-foreground/20"
-              />
+        <div
+          className="grid aspect-square w-20 shrink-0 grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded bg-foreground/5 p-1.5"
+        >
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-sm bg-foreground/20"
+            />
             ))}
-          </div>
+        </div>
       </AppearanceChoice>
 
       <AppearanceChoice
@@ -33,14 +35,16 @@ export default function PhotoGridDensityPicker({ value, onChange }: PhotoGridDen
         label="Compact"
         description="More photos on screen"
       >
-          <div className="grid aspect-square w-20 shrink-0 grid-cols-3 gap-0.5 overflow-hidden rounded bg-foreground/5 p-1.5">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div
-                key={i}
-                className="rounded-sm bg-foreground/20"
-              />
+        <div
+          className="grid aspect-square w-20 shrink-0 grid-cols-3 gap-0.5 overflow-hidden rounded bg-foreground/5 p-1.5"
+        >
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-sm bg-foreground/20"
+            />
             ))}
-          </div>
+        </div>
       </AppearanceChoice>
     </AppearanceChoiceGrid>
   );

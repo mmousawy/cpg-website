@@ -5,16 +5,12 @@ on:
     branches:
       - staging
       - main
-  push:
-    branches:
-      - staging
 
 permissions:
   contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  STAGING_SITE_URL: https://staging.creativephotography.group
 
 jobs:
   check:
@@ -33,75 +29,3 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run check
-
-  staging-e2e:
-    name: Staging deploy and E2E
-    if: >
-      github.event_name == 'push' ||
-      (github.event_name == 'pull_request' &&
-       github.base_ref == 'main' &&
-       !startsWith(github.head_ref, 'release-please--'))
-    runs-on: ubuntu-latest
-    concurrency:
-      group: vps-docker-build
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Wait for staging to serve this commit
-        env:
-          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-
-          TARGET_SHA="$(echo "$TARGET_SHA" | tr '[:upper:]' '[:lower:]')"
-
-          for i in $(seq 1 90); do
-            BODY=$(mktemp)
-            HTTP_CODE=$(curl -sS -A "CPG-CI/1.0" -o "$BODY" -w "%{http_code}" "${STAGING_SITE_URL}/api/health" || echo "000")
-            COMMIT=$(jq -r '.commit // empty' "$BODY" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)
-            rm -f "$BODY"
-
-            if [ "$HTTP_CODE" = "200" ] && [ -n "$COMMIT" ]; then
-              if [ "$COMMIT" = "$TARGET_SHA" ] || [ "$TARGET_SHA" = "$COMMIT" ] \
-                || [[ "$TARGET_SHA" == "$COMMIT"* ]] || [[ "$COMMIT" == "$TARGET_SHA"* ]]; then
-                echo "Staging is serving $COMMIT"
-                exit 0
-              fi
-            fi
-
-            echo "Wait $i/90: HTTP $HTTP_CODE commit=${COMMIT:-none} want=$TARGET_SHA"
-            sleep 10
-          done
-
-          echo "::error::Staging did not serve commit $TARGET_SHA within 15 minutes."
-          echo "Confirm Coolify staging auto-deployed this push and /api/health returns { commit: \"<sha>\" }."
-          exit 1
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: E2E tests
-        run: pnpm run test:e2e
-        env:
-          BASE_URL: ${{ env.STAGING_SITE_URL }}
-          INTERNAL_API_SECRET: ${{ secrets.INTERNAL_API_SECRET }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30

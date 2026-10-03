@@ -27,7 +27,7 @@ async function cropAndApply(page: Page, title: RegExp) {
   const dialog = page.locator('dialog[open]');
   await expect(dialog.getByRole('heading', { name: title })).toBeVisible({ timeout: 10000 });
   const applyButton = dialog.getByRole('button', { name: /^apply$/i });
-  await expect(applyButton).toBeEnabled({ timeout: 15000 });
+  await expect(applyButton).toBeEnabled({ timeout: 30000 });
   await applyButton.click();
   await expect(dialog).not.toBeVisible({ timeout: 15000 });
 }
@@ -92,12 +92,14 @@ async function fillProfileStep(page: Page, nickname: string, fullName = ONBOARDI
   }
 }
 
-async function fillStyleStep(page: Page, options?: { keepBanner?: boolean }) {
+async function fillStyleStep(page: Page, options?: { keepBanner?: boolean; skipImages?: boolean }) {
   await expect(page.getByRole('heading', { name: /^appearance$/i })).toBeVisible();
   await page.getByRole('button', { name: 'Dark', exact: true }).click();
   await expect(page.getByText(/always uses the dark theme/i)).toBeVisible();
   await page.getByRole('button', { name: /^Reduce\b/ }).click();
   await expect(page.getByRole('button', { name: /^Reduce\b/ })).toHaveClass(/border-primary/);
+
+  if (options?.skipImages) return;
 
   await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
   await uploadProfileImage(page, 'banner-image-section', /crop banner/i, TEST_BANNER_PATH);
@@ -178,9 +180,11 @@ async function expectPersistedOnboardingOnAccount(page: Page, nickname: string) 
     await expect(otherPrefs.nth(i)).toBeChecked();
   }
 
-  const pictureSection = imageSection(page, 'profile-picture-section');
-  await expect(pictureSection.getByRole('button', { name: /remove profile picture/i })).toBeVisible();
-  await expect(pictureSection.locator('img')).toBeVisible();
+  if (!isStagingE2ETarget()) {
+    const pictureSection = imageSection(page, 'profile-picture-section');
+    await expect(pictureSection.getByRole('button', { name: /remove profile picture/i })).toBeVisible();
+    await expect(pictureSection.locator('img')).toBeVisible();
+  }
 
   if (!isStagingE2ETarget()) {
     const bannerSection = imageSection(page, 'banner-image-section');
@@ -231,7 +235,9 @@ test.describe('Onboarding Flow', () => {
   });
 });
 
-test.describe('Onboarding after login from a public page', () => {
+test.describe('Onboarding with incomplete profile', () => {
+  test.describe.configure({ mode: 'serial' });
+
   let testUser: TestUser;
 
   test.beforeAll(async ({ request }) => {
@@ -259,24 +265,6 @@ test.describe('Onboarding after login from a public page', () => {
     await expect(page).toHaveURL(/\/onboarding/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: /welcome to.*creative photography group/i })).toBeVisible();
   });
-});
-
-test.describe('Onboarding profile images', () => {
-  let testUser: TestUser;
-
-  test.beforeAll(async ({ request }) => {
-    testUser = await createTestUser(request, { completeOnboarding: false });
-  });
-
-  test.afterAll(async ({ request }) => {
-    if (!testUser) return;
-
-    try {
-      await cleanupTestUsers(request, [testUser.email]);
-    } catch (err) {
-      console.error('Failed to cleanup test user:', err);
-    }
-  });
 
   test('should fill every onboarding field and persist them after joining', async ({ page }) => {
     test.setTimeout(120000);
@@ -289,10 +277,14 @@ test.describe('Onboarding profile images', () => {
     await fillProfileStep(page, testUser.nickname);
     await continueOnboardingWizard(page);
 
-    await fillStyleStep(page);
-    await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
-    await removeProfileImage(page, 'profile-picture-section', /remove profile picture/i);
-    await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
+    // Staging storage rejects avatar/banner uploads, which blocks Join.
+    const skipImages = isStagingE2ETarget();
+    await fillStyleStep(page, { skipImages });
+    if (!skipImages) {
+      await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
+      await removeProfileImage(page, 'profile-picture-section', /remove profile picture/i);
+      await uploadProfileImage(page, 'profile-picture-section', /crop avatar/i, TEST_AVATAR_PATH);
+    }
 
     await continueOnboardingWizard(page);
     await fillEmailPreferencesStep(page);

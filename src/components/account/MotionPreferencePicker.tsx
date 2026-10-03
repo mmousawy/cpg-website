@@ -33,7 +33,9 @@ const MOTION_FRAMES = [
 
 function MotionWireframe({ showMiddle }: { showMiddle: boolean }) {
   return (
-    <div className="relative aspect-square w-20 shrink-0 rounded bg-foreground/5">
+    <div
+      className="relative aspect-square w-20 shrink-0 rounded bg-foreground/5"
+    >
       {MOTION_FRAMES.map((frame) => {
         const ghost = !showMiddle && 'ghost' in frame;
 
@@ -61,7 +63,9 @@ export default function MotionPreferencePicker({ value, onChange }: MotionPrefer
         label="System"
         description="Follow your device motion setting"
       >
-        <MotionWireframe showMiddle />
+        <MotionWireframe
+          showMiddle
+        />
       </AppearanceChoice>
 
       <AppearanceChoice
@@ -70,7 +74,9 @@ export default function MotionPreferencePicker({ value, onChange }: MotionPrefer
         label="Reduce"
         description="Minimize animations and transitions"
       >
-        <MotionWireframe showMiddle={false} />
+        <MotionWireframe
+          showMiddle={false}
+        />
       </AppearanceChoice>
     </AppearanceChoiceGrid>
   );

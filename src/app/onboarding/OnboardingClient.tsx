@@ -777,7 +777,14 @@ export default function OnboardingClient() {
     (isCheckingNickname || !profileStepReady || nicknameAvailable !== true);
   const completeDisabled = isSaving || !watchedTermsAccepted;
   const primaryAction = step === 0 ? (
-    <Button key="intro" type="button" onClick={() => void goNext()} iconRight={<ArrowRightFillSVG className="size-4 -mr-1" />}>
+    <Button
+      key="intro"
+      type="button"
+      onClick={() => void goNext()}
+      iconRight={<ArrowRightFillSVG
+        className="size-4 -mr-1"
+      />}
+    >
       Let&apos;s go!
     </Button>
   ) : step === LAST_ONBOARDING_STEP ? (
@@ -796,7 +803,9 @@ export default function OnboardingClient() {
       type="button"
       onClick={() => void goNext()}
       disabled={continueDisabled}
-      iconRight={<ArrowRightFillSVG className="size-4 -mr-1" />}
+      iconRight={<ArrowRightFillSVG
+        className="size-4 -mr-1"
+      />}
     >
       Continue
     </Button>
@@ -805,54 +814,63 @@ export default function OnboardingClient() {
     <>
       {step > 0 ? <OnboardingHeader /> : null}
       <PageContainer>
-        <div className={onboardingChromeInnerClassName}>
-        <form
-          ref={stepFrameRef}
-          onSubmit={handleFormSubmit}
-          noValidate
-          className="flex flex-col py-8 text-sm sm:py-0 sm:text-base"
+        <div
+          className={onboardingChromeInnerClassName}
         >
-          <div className="flex flex-1 flex-col justify-center">
-            {step === 0 ? (
-              <OnboardingPageHeader
-                titleLine1="Welcome to"
-                titleLine2="Creative Photography Group!"
-              />
+          <form
+            ref={stepFrameRef}
+            onSubmit={handleFormSubmit}
+            noValidate
+            className="flex flex-col py-8 text-sm sm:py-0 sm:text-base"
+          >
+            <div
+              className="flex flex-1 flex-col justify-center"
+            >
+              {step === 0 ? (
+                <OnboardingPageHeader
+                  titleLine1="Welcome to"
+                  titleLine2="Creative Photography Group!"
+                />
             ) : null}
-            {isPreviewMode && !previewNoticeDismissed && (
-              <div
-                className="onboarding-rise-in mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
-                role="status"
-              >
-                <p className="mb-3">
-                  <strong>
-                    Preview mode:
-                  </strong>
-                  {' '}
-                  Auth and profile-completion redirects are disabled. Form validation
-                  works, but submission will not save your profile.
-                </p>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPreviewNoticeDismissed(true)}
+              {isPreviewMode && !previewNoticeDismissed && (
+                <div
+                  className="onboarding-rise-in mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
+                  role="status"
                 >
-                  Got it
-                </Button>
-              </div>
+                  <p
+                    className="mb-3"
+                  >
+                    <strong>
+                      Preview mode:
+                    </strong>
+                    {' '}
+                    Auth and profile-completion redirects are disabled. Form validation
+                    works, but submission will not save your profile.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setPreviewNoticeDismissed(true)}
+                  >
+                    Got it
+                  </Button>
+                </div>
             )}
-            <div key={step} className="space-y-8">
-            {step === 0 && <OnboardingIntroSection />}
-            {step === 1 && (
-              <>
-                <OnboardingNicknameSection
-                  register={register}
-                  errors={errors}
-                  watchedNickname={watchedNickname}
-                  isCheckingNickname={isCheckingNickname}
-                  nicknameAvailable={nicknameAvailable}
-                  onNicknameChange={(value) => {
+              <div
+                key={step}
+                className="space-y-8"
+              >
+                {step === 0 && <OnboardingIntroSection />}
+                {step === 1 && (
+                  <>
+                    <OnboardingNicknameSection
+                      register={register}
+                      errors={errors}
+                      watchedNickname={watchedNickname}
+                      isCheckingNickname={isCheckingNickname}
+                      nicknameAvailable={nicknameAvailable}
+                      onNicknameChange={(value) => {
                     setNicknameAvailable(null);
                     if (nicknameCheckTimeoutRef.current) {
                       clearTimeout(nicknameCheckTimeoutRef.current);
@@ -860,81 +878,81 @@ export default function OnboardingClient() {
                     nicknameCheckTimeoutRef.current = setTimeout(() => {
                       checkNicknameAvailability(value);
                     }, 500);
-                  }}
-                />
-                <OnboardingAboutYouSection
-                  register={register}
-                  errors={errors}
-                  isOAuthUser={isOAuthUser}
-                  watch={watch}
-                  setValue={setValue}
-                  isSaving={isSaving}
-                />
-              </>
+                      }}
+                    />
+                    <OnboardingAboutYouSection
+                      register={register}
+                      errors={errors}
+                      isOAuthUser={isOAuthUser}
+                      watch={watch}
+                      setValue={setValue}
+                      isSaving={isSaving}
+                    />
+                  </>
             )}
-            {step === 2 && (
-              <OnboardingStyleSection
-                profileId={profile?.id ?? user?.id ?? ''}
-                nickname={watchedNickname}
-                fullName={watchedFullName}
-                displayBannerUrl={displayBannerUrl}
-                displayBannerBlurhash={displayBannerBlurhash}
-                displayAvatarUrl={displayAvatarUrl}
-                savedBannerUrl={savedBannerUrl}
-                savedAvatarUrl={savedAvatarUrl}
-                pendingBannerFile={pendingBannerFile}
-                pendingAvatarFile={pendingAvatarFile}
-                pendingBannerRemove={pendingBannerRemove}
-                pendingAvatarRemove={pendingAvatarRemove}
-                hasBannerChanges={hasBannerChanges}
-                hasAvatarChanges={hasAvatarChanges}
-                bannerError={bannerError}
-                avatarError={avatarError}
-                isSaving={isSaving}
-                fileInputRef={fileInputRef}
-                bannerInputRef={bannerInputRef}
-                handleBannerUpload={handleBannerUpload}
-                handleRemoveBanner={handleRemoveBanner}
-                handleCancelBannerChange={handleCancelBannerChange}
-                handleAvatarUpload={handleAvatarUpload}
-                handleRemoveAvatar={handleRemoveAvatar}
-                handleCancelAvatarChange={handleCancelAvatarChange}
-                theme={themeSelection}
-                onThemeChange={setThemeSelection}
-                motion={motionPreference}
-                onMotionChange={(motion) => {
+                {step === 2 && (
+                  <OnboardingStyleSection
+                    profileId={profile?.id ?? user?.id ?? ''}
+                    nickname={watchedNickname}
+                    fullName={watchedFullName}
+                    displayBannerUrl={displayBannerUrl}
+                    displayBannerBlurhash={displayBannerBlurhash}
+                    displayAvatarUrl={displayAvatarUrl}
+                    savedBannerUrl={savedBannerUrl}
+                    savedAvatarUrl={savedAvatarUrl}
+                    pendingBannerFile={pendingBannerFile}
+                    pendingAvatarFile={pendingAvatarFile}
+                    pendingBannerRemove={pendingBannerRemove}
+                    pendingAvatarRemove={pendingAvatarRemove}
+                    hasBannerChanges={hasBannerChanges}
+                    hasAvatarChanges={hasAvatarChanges}
+                    bannerError={bannerError}
+                    avatarError={avatarError}
+                    isSaving={isSaving}
+                    fileInputRef={fileInputRef}
+                    bannerInputRef={bannerInputRef}
+                    handleBannerUpload={handleBannerUpload}
+                    handleRemoveBanner={handleRemoveBanner}
+                    handleCancelBannerChange={handleCancelBannerChange}
+                    handleAvatarUpload={handleAvatarUpload}
+                    handleRemoveAvatar={handleRemoveAvatar}
+                    handleCancelAvatarChange={handleCancelAvatarChange}
+                    theme={themeSelection}
+                    onThemeChange={setThemeSelection}
+                    motion={motionPreference}
+                    onMotionChange={(motion) => {
                   setMotionPreference(motion);
                   applyMotionPreference(motion);
-                }}
-              />
+                    }}
+                  />
             )}
-            {step === 3 && (
-              <OnboardingEmailPreferencesSection
-                control={control}
-                watch={watch}
-                setValue={setValue}
-                emailTypes={emailTypes}
-                isLoadingEmailTypes={isLoadingEmailTypes}
-              />
+                {step === 3 && (
+                  <OnboardingEmailPreferencesSection
+                    control={control}
+                    watch={watch}
+                    setValue={setValue}
+                    emailTypes={emailTypes}
+                    isLoadingEmailTypes={isLoadingEmailTypes}
+                  />
             )}
-            {step === 4 && (
-              <OnboardingFinishSection
-                register={register}
-                errors={errors}
-                submitError={submitError}
-                isPreviewMode={isPreviewMode}
-              />
+                {step === 4 && (
+                  <OnboardingFinishSection
+                    register={register}
+                    errors={errors}
+                    submitError={submitError}
+                    isPreviewMode={isPreviewMode}
+                  />
             )}
+              </div>
             </div>
-          </div>
-          <OnboardingProgress
-            ref={progressRef}
-            step={step}
-            showBack={step > 0}
-            onBack={goBack}
-            primaryAction={primaryAction}
-          />
-        </form>
+            <OnboardingProgress
+              ref={progressRef}
+              step={step}
+              showBack={step > 0}
+              onBack={goBack}
+              primaryAction={primaryAction}
+            />
+          </form>
         </div>
       </PageContainer>
     </>
