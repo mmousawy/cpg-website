@@ -247,9 +247,12 @@ export async function cleanupTestUsers(
   });
 }
 
-/** The photos page renders several hidden file inputs; this is the header Upload control. */
+/**
+ * Header Upload control. The manage chrome can mount that control more than once,
+ * so strict mode must not require a single match.
+ */
 export function photosUploadInput(page: Page) {
-  return page.locator('#photos-tour-upload + input[type="file"]');
+  return page.locator('#photos-tour-upload + input[type="file"]').first();
 }
 
 /** First-run driver.js overlay blocks clicks on the photo grid until it is closed. */
