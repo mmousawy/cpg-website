@@ -9,13 +9,14 @@ import { dispatchRouteChange } from '@/lib/routeChange';
 import { isManagePagePath } from '@/utils/managePage';
 import { isMobilePinnedShellPath } from '@/utils/mobilePinnedShell';
 import { isMobileTerminalStickySettlePath } from '@/utils/mobileTerminalStickySettle';
+import { isOnboardingPath } from '@/utils/onboardingPath';
+import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 import {
   consumeHistoryTraversal,
   ensureRouteScrollNavigationTracking,
   restoreCachedRouteScrollPosition,
 } from '@/utils/routeScrollNavigation';
 import { refreshScrollContainerBinding, resetScrollContainer, resetWindowScroll } from '@/utils/scrollContainer';
-import { closeOpenPhotoSwipes } from '@/utils/photoswipe';
 
 ensureRouteScrollNavigationTracking();
 
@@ -35,6 +36,7 @@ export default function DocumentRouteState() {
   useLayoutEffect(() => {
     const isManage = isManagePagePath(pathname);
     document.documentElement.classList.toggle('manage-page', isManage);
+    document.documentElement.classList.toggle('onboarding-page', isOnboardingPath(pathname));
     document.documentElement.classList.toggle('mobile-pinned-shell', pinnedMobileShell);
     document.documentElement.classList.toggle(
       'mobile-terminal-sticky-settle',
