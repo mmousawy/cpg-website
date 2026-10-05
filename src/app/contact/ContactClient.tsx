@@ -277,7 +277,7 @@ function ContactForm() {
                   } as React.CSSProperties}
                 >
                   <Icon
-                    className="size-6 shrink-0 transition-colors group-hover:fill-(--hover-color)"
+                    className="size-5 shrink-0 transition-colors group-hover:fill-(--hover-color)"
                   />
                   <span>
                     {social.name}
