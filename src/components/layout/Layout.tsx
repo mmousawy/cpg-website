@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 
 import Footer from './Footer';
-import { HideOnOnboarding, OnboardingAwareHeader } from './OnboardingAwareChrome';
+import Header from './Header';
 import MobileTabBar from './MobileTabBar';
+import { HideOnOnboarding } from './OnboardingAwareChrome';
 import SkipToContent from './SkipToContent';
 
 type LayoutProps = {
@@ -16,11 +17,7 @@ export default function Layout({ children }: LayoutProps) {
       className="app-shell flex min-h-full max-sm:min-h-0 flex-col"
     >
       <SkipToContent />
-      <Suspense
-        fallback={null}
-      >
-        <OnboardingAwareHeader />
-      </Suspense>
+      <Header />
       <main
         id="main-content"
         tabIndex={-1}

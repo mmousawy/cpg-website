@@ -7,6 +7,11 @@ export default function OnboardingLayout({
 }) {
   return (
     <AuthRouteProvidersLayout>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: "document.documentElement.classList.add('onboarding-page')",
+        }}
+      />
       {children}
     </AuthRouteProvidersLayout>
   );
