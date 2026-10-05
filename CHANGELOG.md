@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.1](https://github.com/mmousawy/cpg-website/compare/v1.41.0...v1.41.1) (2026-10-05)
+
+
+### ♻️ Refactoring
+
+* enhance event detail page with Google Maps embed and update photo metadata display ([23dabb9](https://github.com/mmousawy/cpg-website/commit/23dabb97cc0d128b51b4e3071ccc093c72840a1a))
+
 ## [1.41.0](https://github.com/mmousawy/cpg-website/compare/v1.40.0...v1.41.0) (2026-10-03)
 
 
