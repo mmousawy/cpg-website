@@ -2,6 +2,7 @@ import AlbumMiniCard from '@/components/album/AlbumMiniCard';
 import ChallengeMiniCard from '@/components/challenges/ChallengeMiniCard';
 import EventMiniCard from '@/components/events/EventMiniCard';
 import AlbumFilmstrip from '@/components/photo/AlbumFilmstrip';
+import PhotoExifDetails from '@/components/photo/PhotoExifDetails';
 import PhotoWithLightbox from '@/components/photo/PhotoWithLightbox';
 import AuthorRow from '@/components/shared/AuthorRow';
 import Comments from '@/components/shared/Comments';
@@ -16,14 +17,13 @@ import PhotoActionsPopover from '@/components/shared/PhotoActionsPopover';
 import TagsSection from '@/components/shared/TagsSection';
 import ViewTracker from '@/components/shared/ViewTracker';
 import type { Photo, SimpleTag } from '@/types/photos';
-import { getExifSummary } from '@/utils/exif';
+import { getFormattedExif } from '@/utils/exif';
 import { formatFileSize } from '@/utils/formatFileSize';
 import { getLicenseInfo } from '@/utils/licenses';
 import { formatPhotoPageTitle, formatProfileDisplayName, getAbsoluteUrl, getSocialImageUrl } from '@/utils/metadata';
 import { getPhotoSharePath } from '@/utils/share';
 import Link from 'next/link';
 import CalendarTodayIcon from 'public/icons/calendar-today.svg';
-import CameraApertureIcon from 'public/icons/camera-aperture.svg';
 import CreativeCommonsIcon from 'public/icons/licenses/cc.svg';
 import CopyrightIcon from 'public/icons/licenses/copyright-outline.svg';
 
@@ -142,7 +142,10 @@ export function PhotoMetadataColumn({
   currentEvent,
   tightTopMargin = false,
 }: PhotoMetadataColumnProps) {
-  const exifString = getExifSummary(photo.exif_data as Record<string, unknown> | null);
+  const exif = getFormattedExif(photo.exif_data as Record<string, unknown> | null);
+  const fileSizeLabel = formatFileSize(photo.file_size);
+  const dimensionLabel = photo.width && photo.height ? `${photo.width} × ${photo.height}` : null;
+  const fileInfo = [dimensionLabel, fileSizeLabel].filter(Boolean).join(' · ') || null;
   const nickname = profile.nickname;
   const photoCreatedLabel = new Date(photo.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -294,10 +297,10 @@ export function PhotoMetadataColumn({
             className="flex items-center gap-1.5"
           >
             <CalendarTodayIcon
-              className="size-4 text-foreground/60 shrink-0 -mt-0.5"
+              className="size-4 text-foreground/70 shrink-0 -mt-0.5"
             />
             <p
-              className="text-xs text-foreground/60"
+              className="text-xs text-foreground/70"
             >
               {photoCreatedLabel}
             </p>
@@ -309,39 +312,12 @@ export function PhotoMetadataColumn({
           />
         </div>
 
-        {exifString && (
-          <div
-            className="flex items-start gap-1.5"
-          >
-            <CameraApertureIcon
-              className="size-4 text-foreground/60 shrink-0 -mt-px"
-            />
-            <p
-              className="text-xs text-foreground/60"
-            >
-              {exifString}
-              {(photo.width && photo.height) && (<>
-                {' '}
-                ·
-                {' '}
-                {photo.width}
-                {' '}
-                ×
-                {' '}
-                {photo.height}
-              </>)}
-
-              {formatFileSize(photo.file_size) && (
-                <>
-                  {' '}
-                  ·
-                  {' '}
-                  {formatFileSize(photo.file_size)}
-                </>
-              )}
-            </p>
-          </div>
-        )}
+        <PhotoExifDetails
+          camera={exif?.camera}
+          lens={exif?.lens}
+          settings={exif?.settingsLine}
+          fileInfo={fileInfo}
+        />
 
         {(() => {
           const license = photo.license || 'all-rights-reserved';
@@ -353,11 +329,11 @@ export function PhotoMetadataColumn({
               className="flex items-start gap-1.5"
             >
               <IconComponent
-                className="size-4 text-foreground/60 shrink-0"
+                className="size-4 text-foreground/70 shrink-0"
               />
               <Link
                 href="/help/licenses"
-                className="text-xs text-foreground/60 hover:text-primary hover:underline underline-offset-2"
+                className="text-xs text-foreground/70 hover:text-primary hover:underline underline-offset-2"
               >
                 {photo.copyright_notice || info.shortName}
               </Link>

@@ -55,12 +55,12 @@ export default function SignUpCTA({ variant = 'inline', className }: SignUpCTAPr
             <h2
               className="text-2xl font-bold text-white sm:text-3xl md:text-4xl font-heading"
             >
-              Photography is better together
+              Step out from behind the lens
             </h2>
             <p
               className="text-base text-white/90 sm:text-lg max-w-[50ch]"
             >
-              Join us for monthly meetups, themed photo challenges, and skill-sharing talks. Create a free account to RSVP for events, build your photo portfolio with albums, enter challenges to get featured, and discover work from other photographers in the community.
+              We meet up every month to shoot, share, and learn from each other. Take on a themed challenge, catch a talk from a fellow photographer, or just come along for the walk. Create a free account to RSVP for events, collect your best shots in albums, and share your work with people who love photography as much as you do.
             </p>
             <div
               className="flex flex-wrap gap-3 pt-2"

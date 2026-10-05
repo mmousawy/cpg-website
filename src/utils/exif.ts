@@ -246,29 +246,27 @@ export function formatExifData(data: ExifData | null): FormattedExif | null {
   // Build camera line
   formatted.cameraLine = formatted.camera;
 
-  // Build settings line - avoid duplicates from lens model
+  // Exposure, ISO, aperture, then focal length. Skip values already written into the lens name.
   const settings: string[] = [];
-
-  if (formatted.iso) {
-    settings.push(formatted.iso);
-  }
-
-  // Only add aperture if lens model doesn't already contain it
-  if (formatted.aperture && (!data.lensModel || !lensModelContainsAperture(data.lensModel))) {
-    settings.push(formatted.aperture);
-  }
 
   if (formatted.exposure) {
     settings.push(formatted.exposure);
   }
 
-  // Only add focal length if lens model doesn't already contain it
+  if (formatted.iso) {
+    settings.push(formatted.iso);
+  }
+
+  if (formatted.aperture && (!data.lensModel || !lensModelContainsAperture(data.lensModel))) {
+    settings.push(formatted.aperture);
+  }
+
   if (formatted.focalLength && (!data.lensModel || !lensModelContainsFocalLength(data.lensModel))) {
     settings.push(formatted.focalLength);
   }
 
   if (settings.length > 0) {
-    formatted.settingsLine = settings.join(' · ');
+    formatted.settingsLine = settings.join(', ');
   }
 
   // Build summary: Camera · Lens · Settings

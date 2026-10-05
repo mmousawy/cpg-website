@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.41.0",
+  "version": "1.41.1",
   "private": true,
   "packageManager": "pnpm@11.27.1",
   "engines": {

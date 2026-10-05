@@ -14,9 +14,29 @@ function locationLines(location: string): string[] {
     .filter(Boolean);
 }
 
+function googleMapsQuery(location: string): string {
+  return locationLines(location).join(', ');
+}
+
 export function getGoogleMapsSearchUrl(location: string): string {
-  const query = locationLines(location).join(', ');
+  const query = googleMapsQuery(location);
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/** Google Maps share embed. Uses the address text and does not need an API key. */
+export function getGoogleMapsEmbedUrl(location: string): string | null {
+  const query = googleMapsQuery(location);
+  if (!query) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    q: query,
+    z: '15',
+    output: 'embed',
+  });
+
+  return `https://www.google.com/maps?${params.toString()}`;
 }
 
 /** Compact "Venue, City" from a CPG multiline address, for event cards. */

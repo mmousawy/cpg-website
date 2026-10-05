@@ -7,7 +7,6 @@ import Container from '@/components/layout/Container';
 import PageContainer from '@/components/layout/PageContainer';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import BlurImage from '@/components/shared/BlurImage';
-import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
 import { RichDescription } from '@/components/shared/RichDescription';
 import ShareButton from '@/components/shared/ShareButton';
@@ -30,12 +29,11 @@ import {
 import { getOrganizers } from '@/lib/data/profiles';
 import { formatEventDate, formatEventPageTitle, formatEventTime } from '@/lib/events/format';
 import { ensureStaticParams } from '@/lib/staticParams';
-import { getGoogleMapsSearchUrl } from '@/utils/formatLocation';
+import { getGoogleMapsEmbedUrl, getGoogleMapsSearchUrl } from '@/utils/formatLocation';
 import { createMetadata, getAbsoluteUrl, getSocialImageUrl, siteConfig } from '@/utils/metadata';
 import { stripHtml } from '@/utils/stripHtml';
 
 import CalendarSVG from 'public/icons/calendar2.svg';
-import LocationChipSVG from 'public/icons/location-chip.svg';
 import LocationSVG from 'public/icons/location.svg';
 import TimeSVG from 'public/icons/time.svg';
 
@@ -184,6 +182,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       : `${event.date}T00:00:00`
     : null;
 
+  const mapsEmbedUrl = event.location ? getGoogleMapsEmbedUrl(event.location) : null;
   const eventUrl = getAbsoluteUrl(`/events/${event.slug}`);
   const eventShareTitle = formatEventPageTitle({
     title: event.title,
@@ -446,6 +445,30 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
                 />
               </div>
             )}
+
+            {mapsEmbedUrl && (
+              <div
+                className="mb-8"
+              >
+                <h2
+                  className="mb-3 text-lg font-semibold"
+                >
+                  Location
+                </h2>
+                <div
+                  className="clear-both overflow-hidden rounded-lg border border-border-color"
+                >
+                  <iframe
+                    title={`Map of ${event.location?.replace(/\s+/g, ' ').trim() || 'this event'}`}
+                    src={mapsEmbedUrl}
+                    className="h-64 w-full sm:h-80"
+                    loading="lazy"
+                    allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Hosts Section */}
@@ -510,22 +533,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           <div
             className="flex flex-wrap items-center gap-4 mt-8"
           >
-            {event.location && (
-              <Button
-                href={getGoogleMapsSearchUrl(event.location)}
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="secondary"
-                size="sm"
-                className="inline-flex!"
-                icon={<LocationChipSVG
-                  className="size-4 shrink-0 fill-current"
-                />}
-              >
-                See location
-              </Button>
-            )}
-
             {/* Add to Calendar */}
             {!isPastEvent && (
               <AddToCalendar
