@@ -751,6 +751,12 @@ html.manage-page .app-footer {
   display: none;
 }
 
+/* Onboarding has its own header. Class is set by an inline script on first paint
+   and kept in sync on client navigations (DocumentRouteState). */
+html.onboarding-page .app-site-header {
+  display: none;
+}
+
 html.manage-page .app-header-inner {
   max-width: none;
 }
