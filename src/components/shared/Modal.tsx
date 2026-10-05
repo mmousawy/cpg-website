@@ -115,7 +115,7 @@ export default function Modal() {
           {/* Fixed header */}
           <div
             className={clsx(
-              'shrink-0 flex items-start gap-4 p-4 pb-0',
+              'shrink-0 flex items-start gap-4 p-4 sm:p-6 sm:pt-5 pb-0 sm:pb-0',
               title ? 'justify-between' : 'justify-end',
             )}
           >
@@ -137,14 +137,14 @@ export default function Modal() {
           </div>
           {/* Scrollable content */}
           <div
-            className={clsx('flex-1 min-h-0 overflow-y-auto p-4', flushContentTop && 'pt-0')}
+            className={clsx('flex-1 min-h-0 overflow-y-auto p-4 sm:p-6', flushContentTop && 'pt-0')}
           >
             {content}
           </div>
           {/* Fixed footer for actions */}
           {footer && (
             <div
-              className="relative shrink-0 border-t border-border-color-strong p-4"
+              className="relative shrink-0 border-t border-border-color-strong p-4 sm:p-6"
             >
               <div
                 className="absolute -top-4.25 left-0 right-0 bg-linear-to-b from-transparent to-background-light h-4 w-full pointer-events-none"
