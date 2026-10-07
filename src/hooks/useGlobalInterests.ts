@@ -1,3 +1,4 @@
+import { withPublicInterestCounts } from '@/lib/data/publicInterestCounts';
 import { supabase } from '@/utils/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { Interest } from '@/types/interests';
@@ -21,7 +22,9 @@ export function useGlobalInterests() {
         return [];
       }
 
-      return data || [];
+      const counted = await withPublicInterestCounts(supabase, data || []);
+      counted.sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.name.localeCompare(b.name));
+      return counted;
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });

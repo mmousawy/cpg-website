@@ -2,6 +2,7 @@ import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import type { Photo } from '@/types/photos';
 import { filterMemberNicknames, isPublicProfileAllowed } from '@/lib/auth/isTestProfile';
+import { withPublicInterestCounts } from '@/lib/data/publicInterestCounts';
 import { createPublicClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -126,7 +127,7 @@ export async function getProfileInterests(userId: string, nickname: string) {
     .select('id, name, count, created_at')
     .in('name', interestNames);
 
-  return (interests || []) as Interest[];
+  return withPublicInterestCounts(supabase, (interests || []) as Interest[]);
 }
 
 /**
