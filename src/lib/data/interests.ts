@@ -8,8 +8,8 @@ import { withPublicInterestCounts } from './publicInterestCounts';
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
 
 /**
- * Get popular interests ordered by usage count
- * Tagged with 'interests' for cache invalidation
+ * Popular interests with public member counts.
+ * Cached until a profile save expires the `interests` tag.
  */
 export async function getPopularInterests(limit = 20) {
   'use cache';
@@ -17,7 +17,6 @@ export async function getPopularInterests(limit = 20) {
   cacheTag('interests');
 
   const supabase = createPublicClient();
-
   const { data } = await supabase
     .from('interests')
     .select(INTEREST_LIST_COLUMNS);

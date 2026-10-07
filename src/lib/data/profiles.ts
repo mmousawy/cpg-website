@@ -107,6 +107,7 @@ export async function getProfileInterests(userId: string, nickname: string) {
   'use cache';
   cacheLife('tagged');
   cacheTag(`profile-${nickname}`);
+  cacheTag('interests');
 
   const supabase = createPublicClient();
 
@@ -121,7 +122,6 @@ export async function getProfileInterests(userId: string, nickname: string) {
 
   const interestNames = profileInterests.map((pi) => pi.interest);
 
-  // Fetch full interest data with counts
   const { data: interests } = await supabase
     .from('interests')
     .select('id, name, count, created_at')
