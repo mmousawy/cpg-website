@@ -5,6 +5,7 @@ import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import { getPopularTagsWithMemberCounts } from './gallery';
 import { getPopularInterests } from './interests';
+import { withPublicInterestCounts } from './publicInterestCounts';
 import { INTEREST_LIST_COLUMNS } from './columns';
 
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
@@ -257,7 +258,10 @@ export async function getRandomInterestsWithMembers(
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  const selectedInterests = shuffled.slice(0, interestLimit);
+  const selectedInterests = await withPublicInterestCounts(
+    supabase,
+    shuffled.slice(0, interestLimit) as Interest[],
+  );
 
   // Bulk fetch all profile_interests for selected interests (1 query instead of N)
   const interestNames = selectedInterests.map((i) => i.name);
