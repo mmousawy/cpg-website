@@ -35,10 +35,12 @@ function invalidateAlbumListingRoutes() {
   revalidatePath('/gallery/recent-likes');
 }
 
-/** Bust prerendered member listing pages. */
+/** Bust prerendered member listing pages, including per-interest counts. */
 function invalidateMemberListingRoutes() {
+  expireTag('interests');
   revalidatePath('/members');
   revalidatePath('/members/all');
+  revalidatePath('/members/interest/[interest]', 'page');
 }
 
 /** Bust prerendered challenge listings and optional challenge detail. */
