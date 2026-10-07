@@ -3,6 +3,7 @@ import { createPublicClient } from '@/utils/supabase/server';
 import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import { INTEREST_LIST_COLUMNS } from './columns';
+import { withPublicInterestCounts } from './publicInterestCounts';
 
 type Member = Pick<Tables<'profiles'>, 'id' | 'full_name' | 'nickname' | 'avatar_url'>;
 
@@ -19,12 +20,14 @@ export async function getPopularInterests(limit = 20) {
 
   const { data } = await supabase
     .from('interests')
-    .select(INTEREST_LIST_COLUMNS)
-    .order('count', { ascending: false })
-    .order('name', { ascending: true })
-    .limit(limit);
+    .select(INTEREST_LIST_COLUMNS);
 
-  return (data || []) as Interest[];
+  const counted = await withPublicInterestCounts(supabase, (data || []) as Interest[]);
+
+  return counted
+    .filter((interest) => (interest.count ?? 0) > 0)
+    .sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || a.name.localeCompare(b.name))
+    .slice(0, limit);
 }
 
 /**
@@ -75,7 +78,9 @@ async function getMembersByInterestCached(interest: string) {
 
   if (linkCount === 0) {
     return {
-      interest: interestData as Interest,
+      interest: interestData
+        ? { ...(interestData as Interest), count: 0 }
+        : null,
       members: [],
     };
   }
@@ -95,7 +100,9 @@ async function getMembersByInterestCached(interest: string) {
   const memberList = (members || []) as Member[];
 
   return {
-    interest: interestData as Interest,
+    interest: interestData
+      ? { ...(interestData as Interest), count: memberList.length }
+      : null,
     members: memberList,
   };
 }
@@ -125,8 +132,10 @@ async function loadMembersByInterestLive(interest: string, interestData: Interes
     .order('full_name', { ascending: true, nullsFirst: false })
     .order('nickname', { ascending: true });
 
+  const memberList = (members || []) as Member[];
+
   return {
-    interest: interestData,
-    members: (members || []) as Member[],
+    interest: { ...interestData, count: memberList.length },
+    members: memberList,
   };
 }

@@ -27,7 +27,7 @@ export default function InterestCloud({
 
   return (
     <div
-      className={clsx('flex flex-wrap items-baseline gap-y-1', className)}
+      className={clsx('flex flex-wrap items-baseline gap-2', className)}
     >
       {interests.map((interest, index) => {
         const isActive = activeInterest === interest.name;
@@ -37,29 +37,31 @@ export default function InterestCloud({
           <Fragment
             key={interest.id}
           >
-            {index > 0 && (
-              <span
-                className="mx-2 sm:mx-2.5 opacity-50"
-                aria-hidden
-              >
-                ·
-              </span>
-            )}
             <Link
               href={`/members/interest/${encodeURIComponent(interest.name)}`}
+              aria-label={`${interest.name}, ${count} ${count === 1 ? 'member' : 'members'}`}
+              aria-current={isActive ? 'page' : undefined}
               className={clsx(
-                'text-sm sm:text-base transition-colors',
+                'inline-flex items-center border text-sm sm:text-base transition-colors rounded-full px-2 pt-0 pb-0.5 pr-1 shadow-sm',
+                'transition-all translate-y-0 active:translate-y-0.5 active:inset-shadow-sm active:shadow-none',
                 isActive
-                  ? 'text-primary border-b border-primary'
-                  : 'text-foreground/80 hover:text-primary',
+                  ? 'bg-primary/80 text-white dark:bg-primary-dark border-primary'
+                  : 'bg-white hover:border-primary/50 dark:bg-white/15 text-foreground border-transparent',
               )}
             >
               {interest.name}
-              <sup
-                className="ml-1"
+              <span
+                aria-hidden
+                className={clsx(
+                  'font-medium ml-1.5 size-4 sm:size-5 inline-flex items-center justify-center rounded-full text-xs mt-px',
+                  'inset-shadow-[0_1px_1px_0px_rgba(0,0,0,0.15)]',
+                  isActive
+                    ? 'bg-black/30 dark:bg-black/50 text-white border-primary'
+                    : 'bg-black/10 dark:bg-background/50 dark:text-white',
+                )}
               >
                 {count}
-              </sup>
+              </span>
             </Link>
           </Fragment>
         );
