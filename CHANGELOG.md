@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.2](https://github.com/mmousawy/cpg-website/compare/v1.41.1...v1.41.2) (2026-10-05)
+
+
+### 🐛 Bug Fixes
+
+* implement onboarding page header visibility and class management ([74613cf](https://github.com/mmousawy/cpg-website/commit/74613cf1b553b20802dd0389aac9e0d12c0e3948))
+
 ## [1.41.1](https://github.com/mmousawy/cpg-website/compare/v1.41.0...v1.41.1) (2026-10-05)
 
 
