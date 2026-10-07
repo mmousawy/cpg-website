@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.3](https://github.com/mmousawy/cpg-website/compare/v1.41.2...v1.41.3) (2026-10-07)
+
+
+### ♻️ Refactoring
+
+* remove VSCode settings and enhance interest handling ([6534f59](https://github.com/mmousawy/cpg-website/commit/6534f59a70c7e061444b5247d9468fd7fd8485ca))
+
 ## [1.41.2](https://github.com/mmousawy/cpg-website/compare/v1.41.1...v1.41.2) (2026-10-05)
 
 
