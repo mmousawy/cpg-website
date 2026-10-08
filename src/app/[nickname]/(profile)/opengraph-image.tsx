@@ -3,7 +3,6 @@ import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { CHERIA_HEADING_FONT_NAME, loadOgFonts } from '@/lib/og/loadOgFonts';
 import { getSocialImageUrl } from '@/utils/metadata';
 import { getProfileBannerColors } from '@/utils/profileBannerColor';
-import { cacheLife, cacheTag } from 'next/cache';
 import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
 
@@ -37,6 +36,15 @@ const SCRIM_GRADIENT = [
   'transparent 100%)',
 ].join(' ');
 
+function decodeNicknameParam(value: string): string {
+  if (!value) return '';
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 function getProfileDisplayTitle(fullName: string | null, nickname: string | null): string {
   if (fullName) {
     return fullName;
@@ -65,21 +73,8 @@ function getInitials(fullName: string | null, nickname: string | null): string {
 
 export default async function Image({ params }: { params: Promise<{ nickname: string }> }) {
   const includeTestContent = await getIncludeTestContent();
-  return CachedProfileOgImage({ params, includeTestContent });
-}
-
-async function CachedProfileOgImage({
-  params,
-  includeTestContent,
-}: {
-  params: Promise<{ nickname: string }>;
-  includeTestContent: boolean;
-}) {
-  'use cache';
-  cacheLife('tagged');
-
   const resolvedParams = await params;
-  const rawNickname = decodeURIComponent(resolvedParams?.nickname || '');
+  const rawNickname = decodeNicknameParam(resolvedParams?.nickname || '');
 
   if (!rawNickname.startsWith('@')) {
     notFound();
@@ -89,8 +84,6 @@ async function CachedProfileOgImage({
   if (!nickname) {
     notFound();
   }
-
-  cacheTag(`profile-${nickname}`);
 
   const profile = await getProfileByNickname(nickname, includeTestContent);
   if (!profile) {

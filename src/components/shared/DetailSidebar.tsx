@@ -49,7 +49,7 @@ export default function DetailSidebar({
         </div>
       ) : null}
       <div
-        className="relative z-10"
+        className="relative z-10 flex min-h-0 flex-1 flex-col"
       >
         {children}
       </div>
@@ -111,8 +111,11 @@ export function DetailSidebarMeta({ children }: { children: ReactNode }) {
 export function DetailSidebarFooter({ children }: { children: ReactNode }) {
   return (
     <div
-      className="mt-5 space-y-3 border-t border-border-color pt-5"
+      className="space-y-3 pt-5"
     >
+      <div
+        className="mb-5 border-t border-border-color"
+      />
       {children}
     </div>
   );

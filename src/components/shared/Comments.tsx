@@ -1232,14 +1232,14 @@ export default function Comments({
         className="space-y-2"
       >
         <h3
-          className="text-lg m:text-xl font-semibold"
+          className="text-lg m:text-xl font-semibold font-heading"
         >
           Comments
         </h3>
         <p
           className="text-sm text-foreground/80 mb-4"
         >
-          Sign in to see comments.
+          Sign in to see comments
         </p>
         <Button
           size="sm"

@@ -3,6 +3,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getEventPhotoByShortId } from '@/lib/data/albums';
+import { getStandalonePhotoCanonicalPath } from '@/lib/photoCanonical';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
@@ -48,12 +49,13 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
   const photoDescription = result.photo.description || `Photo from event "${result.currentEvent.title || 'Event'}"`;
   const photoImage = getSocialImageUrl(result.photo.url);
+  const fallbackCanonical = `/events/${encodeURIComponent(eventSlug)}/photo/${encodeURIComponent(photoId)}`;
 
   return createMetadata({
     title: photoTitle,
     description: photoDescription,
     image: photoImage,
-    canonical: `/events/${encodeURIComponent(eventSlug)}/photo/${encodeURIComponent(photoId)}`,
+    canonical: getStandalonePhotoCanonicalPath(result.profile.nickname, result.photo, fallbackCanonical),
     type: 'article',
     keywords: ['photography', 'photo', result.photo.title || '', result.currentEvent.title || ''],
   });

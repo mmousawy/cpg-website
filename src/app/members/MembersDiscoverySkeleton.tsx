@@ -1,8 +1,7 @@
-import { Fragment } from 'react';
-
 import TagCloudSkeleton from '@/components/shared/TagCloudSkeleton';
 
 const PILL_WIDTHS = [80, 100, 68, 112, 76, 96, 88, 104, 72, 92, 84, 108, 76, 96, 80, 112, 68, 100, 88, 72];
+const INTEREST_LABEL_WIDTHS = [52, 72, 40, 84, 48, 68, 60, 76, 44, 64, 56, 80, 48, 68, 52, 84, 40, 72, 60, 44];
 export default function MembersDiscoverySkeleton() {
   return (
     <>
@@ -121,25 +120,24 @@ function MemberGridSkeleton({ count = 10 }: { count?: number }) {
 function InterestCloudSkeleton() {
   return (
     <div
-      className="flex flex-wrap items-center gap-y-1"
+      className="flex flex-wrap items-baseline gap-2"
+      aria-busy="true"
+      aria-label="Loading interests"
     >
-      {PILL_WIDTHS.map((w, i) => (
-        <Fragment
-          key={i}
+      {INTEREST_LABEL_WIDTHS.map((width, index) => (
+        <div
+          key={index}
+          className="inline-flex min-h-6 animate-pulse items-center rounded-full border border-transparent bg-white px-2 pb-0.5 pr-1 shadow-sm sm:min-h-7 dark:bg-white/15"
+          style={{ animationDelay: `${index * 50}ms` }}
         >
-          {i > 0 && (
-            <span
-              className="mx-2 sm:mx-2.5 text-sm sm:text-base opacity-50 select-none"
-              aria-hidden
-            >
-              ·
-            </span>
-          )}
           <div
-            className="h-4 sm:h-5 shrink-0 animate-pulse rounded bg-background-medium"
-            style={{ width: w, animationDelay: `${i * 50}ms` }}
+            className="h-3.5 shrink-0 rounded-full bg-foreground/15 sm:h-4"
+            style={{ width }}
           />
-        </Fragment>
+          <div
+            className="ml-1.5 mt-px size-4 shrink-0 rounded-full bg-black/10 sm:size-5 dark:bg-background/50"
+          />
+        </div>
       ))}
     </div>
   );
