@@ -1,0 +1,1629 @@
+﻿2026-10-08T01:08:03.1560329Z Current runner version: '2.337.0'
+2026-10-08T01:08:03.1588588Z ##[group]Runner Image Provisioner
+2026-10-08T01:08:03.1589553Z Hosted Compute Agent
+2026-10-08T01:08:03.1590171Z Version: 20260901.588
+2026-10-08T01:08:03.1590896Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-08T01:08:03.1591707Z Build Date: 2026-09-01T19:56:44Z
+2026-10-08T01:08:03.1592481Z Worker ID: {f75e41f3-476f-4e73-a832-e28cf32fd8ff}
+2026-10-08T01:08:03.1593447Z Azure Region: westus3
+2026-10-08T01:08:03.1594048Z ##[endgroup]
+2026-10-08T01:08:03.1595658Z ##[group]Operating System
+2026-10-08T01:08:03.1596349Z Ubuntu
+2026-10-08T01:08:03.1596890Z 24.04.5
+2026-10-08T01:08:03.1597533Z LTS
+2026-10-08T01:08:03.1598080Z ##[endgroup]
+2026-10-08T01:08:03.1598699Z ##[group]Runner Image
+2026-10-08T01:08:03.1599314Z Image: ubuntu-24.04
+2026-10-08T01:08:03.1599904Z Version: 20260927.320.1
+2026-10-08T01:08:03.1601311Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-08T01:08:03.1602961Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260927.320
+2026-10-08T01:08:03.1604217Z ##[endgroup]
+2026-10-08T01:08:03.1605468Z ##[group]GITHUB_TOKEN Permissions
+2026-10-08T01:08:03.1607488Z Contents: read
+2026-10-08T01:08:03.1608080Z Metadata: read
+2026-10-08T01:08:03.1608755Z ##[endgroup]
+2026-10-08T01:08:03.1611033Z Secret source: Actions
+2026-10-08T01:08:03.1612097Z Cache mode: write
+2026-10-08T01:08:03.1612829Z Prepare workflow directory
+2026-10-08T01:08:03.2089020Z Prepare all required actions
+2026-10-08T01:08:03.2139596Z Getting action download info
+2026-10-08T01:08:03.5454084Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-10-08T01:08:03.6416147Z Download action repository 'pnpm/action-setup@v5' (SHA:fc06bc1257f339d1d5d8b3a19a8cae5388b55320)
+2026-10-08T01:08:04.5729470Z Download action repository 'actions/setup-node@v6' (SHA:249970729cb0ef3589644e2896645e5dc5ba9c38)
+2026-10-08T01:08:04.8192570Z Complete job name: Lint, typecheck, and unit tests
+2026-10-08T01:08:04.9076055Z ##[group]Run actions/checkout@v5
+2026-10-08T01:08:04.9077089Z with:
+2026-10-08T01:08:04.9077617Z   repository: mmousawy/cpg-website
+2026-10-08T01:08:04.9081733Z   token: ***
+2026-10-08T01:08:04.9082232Z   ssh-strict: true
+2026-10-08T01:08:04.9082722Z   ssh-user: git
+2026-10-08T01:08:04.9083465Z   persist-credentials: true
+2026-10-08T01:08:04.9084044Z   clean: true
+2026-10-08T01:08:04.9084553Z   sparse-checkout-cone-mode: true
+2026-10-08T01:08:04.9085131Z   fetch-depth: 1
+2026-10-08T01:08:04.9085613Z   fetch-tags: false
+2026-10-08T01:08:04.9086118Z   show-progress: true
+2026-10-08T01:08:04.9086625Z   lfs: false
+2026-10-08T01:08:04.9087097Z   submodules: false
+2026-10-08T01:08:04.9087602Z   set-safe-directory: true
+2026-10-08T01:08:04.9088167Z   allow-unsafe-pr-checkout: false
+2026-10-08T01:08:04.9089071Z env:
+2026-10-08T01:08:04.9089582Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-10-08T01:08:04.9090205Z ##[endgroup]
+2026-10-08T01:08:05.0203545Z Syncing repository: mmousawy/cpg-website
+2026-10-08T01:08:05.0206425Z ##[group]Getting Git version info
+2026-10-08T01:08:05.0207511Z Working directory is '/home/runner/work/cpg-website/cpg-website'
+2026-10-08T01:08:05.0209163Z [command]/usr/bin/git version
+2026-10-08T01:08:05.0259353Z git version 2.55.0
+2026-10-08T01:08:05.0284172Z ##[endgroup]
+2026-10-08T01:08:05.0300316Z Temporarily overriding HOME='/home/runner/work/_temp/3903ed51-00d9-4df9-8837-7305279fc5a0' before making global git config changes
+2026-10-08T01:08:05.0303017Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-08T01:08:05.0306133Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/cpg-website/cpg-website
+2026-10-08T01:08:05.0364098Z Deleting the contents of '/home/runner/work/cpg-website/cpg-website'
+2026-10-08T01:08:05.0368021Z ##[group]Initializing the repository
+2026-10-08T01:08:05.0373532Z [command]/usr/bin/git init /home/runner/work/cpg-website/cpg-website
+2026-10-08T01:08:05.0484415Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-08T01:08:05.0488393Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-08T01:08:05.0491240Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-08T01:08:05.0493760Z hint: call:
+2026-10-08T01:08:05.0495440Z hint:
+2026-10-08T01:08:05.0496994Z hint: 	git config --global init.defaultBranch <name>
+2026-10-08T01:08:05.0499070Z hint:
+2026-10-08T01:08:05.0500849Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-08T01:08:05.0503193Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-08T01:08:05.0505390Z hint:
+2026-10-08T01:08:05.0506626Z hint: 	git branch -m <name>
+2026-10-08T01:08:05.0508328Z hint:
+2026-10-08T01:08:05.0509794Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-08T01:08:05.0511541Z Initialized empty Git repository in /home/runner/work/cpg-website/cpg-website/.git/
+2026-10-08T01:08:05.0515396Z [command]/usr/bin/git remote add origin https://github.com/mmousawy/cpg-website
+2026-10-08T01:08:05.0557682Z ##[endgroup]
+2026-10-08T01:08:05.0559563Z ##[group]Disabling automatic garbage collection
+2026-10-08T01:08:05.0562103Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-08T01:08:05.0602938Z ##[endgroup]
+2026-10-08T01:08:05.0605390Z ##[group]Setting up auth
+2026-10-08T01:08:05.0611959Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-08T01:08:05.0653153Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-08T01:08:05.1025783Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-08T01:08:05.1066052Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-08T01:08:05.1330893Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-08T01:08:05.1366950Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-08T01:08:05.1613748Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-08T01:08:05.1657803Z ##[endgroup]
+2026-10-08T01:08:05.1659053Z ##[group]Fetching the repository
+2026-10-08T01:08:05.1667945Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bc2ece5ea5925393bcc076a64e95aecd09436064:refs/remotes/pull/160/merge
+2026-10-08T01:08:06.7788060Z From https://github.com/mmousawy/cpg-website
+2026-10-08T01:08:06.7791576Z  * [new ref]         bc2ece5ea5925393bcc076a64e95aecd09436064 -> pull/160/merge
+2026-10-08T01:08:06.7797362Z ##[endgroup]
+2026-10-08T01:08:06.7799488Z ##[group]Determining the checkout info
+2026-10-08T01:08:06.7801324Z ##[endgroup]
+2026-10-08T01:08:06.7802329Z [command]/usr/bin/git sparse-checkout disable
+2026-10-08T01:08:06.7852549Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-08T01:08:06.7894848Z ##[group]Checking out the ref
+2026-10-08T01:08:06.7898335Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/160/merge
+2026-10-08T01:08:06.9232305Z Note: switching to 'refs/remotes/pull/160/merge'.
+2026-10-08T01:08:06.9234016Z 
+2026-10-08T01:08:06.9235786Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-08T01:08:06.9237918Z changes and commit them, and you can discard any commits you make in this
+2026-10-08T01:08:06.9240526Z state without impacting any branches by switching back to a branch.
+2026-10-08T01:08:06.9242121Z 
+2026-10-08T01:08:06.9243614Z If you want to create a new branch to retain commits you create, you may
+2026-10-08T01:08:06.9246417Z do so (now or later) by using -c with the switch command. Example:
+2026-10-08T01:08:06.9247489Z 
+2026-10-08T01:08:06.9247946Z   git switch -c <new-branch-name>
+2026-10-08T01:08:06.9248814Z 
+2026-10-08T01:08:06.9249354Z Or undo this operation with:
+2026-10-08T01:08:06.9250174Z 
+2026-10-08T01:08:06.9250763Z   git switch -
+2026-10-08T01:08:06.9251664Z 
+2026-10-08T01:08:06.9252916Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-08T01:08:06.9254584Z 
+2026-10-08T01:08:06.9256191Z HEAD is now at bc2ece5 Merge 8ebc729e96c07dce8113dc02593aa8d2d2843a4b into 0e2706b216e25ac093f82b845474d71707683eec
+2026-10-08T01:08:06.9261914Z ##[endgroup]
+2026-10-08T01:08:06.9294965Z [command]/usr/bin/git log -1 --format=%H
+2026-10-08T01:08:06.9322286Z bc2ece5ea5925393bcc076a64e95aecd09436064
+2026-10-08T01:08:06.9777346Z ##[group]Run pnpm/action-setup@v5
+2026-10-08T01:08:06.9778744Z with:
+2026-10-08T01:08:06.9779804Z   dest: ~/setup-pnpm
+2026-10-08T01:08:06.9780966Z   run_install: null
+2026-10-08T01:08:06.9782059Z   cache: false
+2026-10-08T01:08:06.9783370Z   cache_dependency_path: pnpm-lock.yaml
+2026-10-08T01:08:06.9784844Z   package_json_file: package.json
+2026-10-08T01:08:06.9786262Z   standalone: false
+2026-10-08T01:08:06.9787361Z env:
+2026-10-08T01:08:06.9788451Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-10-08T01:08:06.9789877Z ##[endgroup]
+2026-10-08T01:08:07.1375955Z ##[group]Running self-installer...
+2026-10-08T01:08:07.5899857Z (node:2284) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-08T01:08:07.5901892Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-08T01:08:07.7935028Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-10-08T01:08:07.8035671Z Packages: +1
+2026-10-08T01:08:07.8036186Z +
+2026-10-08T01:08:08.1740888Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+2026-10-08T01:08:08.2224307Z 
+2026-10-08T01:08:08.2224825Z dependencies:
+2026-10-08T01:08:08.2225223Z + pnpm 11.28.5 (12.10.1 is available)
+2026-10-08T01:08:08.2225533Z 
+2026-10-08T01:08:08.2252706Z Done in 902ms
+2026-10-08T01:08:08.4112260Z ##[endgroup]
+2026-10-08T01:08:08.4112526Z Installation Completed!
+2026-10-08T01:08:08.4334457Z ##[group]Run actions/setup-node@v6
+2026-10-08T01:08:08.4334767Z with:
+2026-10-08T01:08:08.4334964Z   node-version: 24
+2026-10-08T01:08:08.4335169Z   cache: pnpm
+2026-10-08T01:08:08.4335371Z   check-latest: false
+2026-10-08T01:08:08.4337885Z   token: ***
+2026-10-08T01:08:08.4338108Z   package-manager-cache: true
+2026-10-08T01:08:08.4338354Z env:
+2026-10-08T01:08:08.4338565Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-10-08T01:08:08.4338915Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-10-08T01:08:08.4339223Z ##[endgroup]
+2026-10-08T01:08:08.5846926Z Found in cache @ /opt/hostedtoolcache/node/24.21.0/x64
+2026-10-08T01:08:08.5850330Z ##[group]Environment details
+2026-10-08T01:08:08.9910454Z node: v24.21.0
+2026-10-08T01:08:08.9910979Z npm: 11.19.0
+2026-10-08T01:08:08.9911382Z yarn: 1.22.22
+2026-10-08T01:08:08.9912228Z ##[endgroup]
+2026-10-08T01:08:08.9932106Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+2026-10-08T01:08:09.7408835Z /home/runner/setup-pnpm/node_modules/.bin/store/v11
+2026-10-08T01:08:09.9759762Z pnpm cache is not found
+2026-10-08T01:08:09.9905349Z ##[group]Run pnpm install --frozen-lockfile
+2026-10-08T01:08:09.9905789Z [36;1mpnpm install --frozen-lockfile[0m
+2026-10-08T01:08:10.0181973Z shell: /usr/bin/bash -e {0}
+2026-10-08T01:08:10.0182364Z env:
+2026-10-08T01:08:10.0182652Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-10-08T01:08:10.0183110Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-10-08T01:08:10.0183772Z ##[endgroup]
+2026-10-08T01:08:10.7229283Z ? Verifying lockfile against supply-chain policies (1104 entries)...
+2026-10-08T01:08:10.7970996Z Lockfile is up to date, resolution step is skipped
+2026-10-08T01:08:10.9674617Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-10-08T01:08:11.0275988Z Packages: +963
+2026-10-08T01:08:11.0277298Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-10-08T01:08:11.9714021Z Progress: resolved 963, reused 0, downloaded 0, added 0
+2026-10-08T01:08:13.7839647Z Progress: resolved 963, reused 0, downloaded 1, added 0
+2026-10-08T01:08:14.7875679Z Progress: resolved 963, reused 0, downloaded 61, added 0
+2026-10-08T01:08:14.8255244Z Packages are hard linked from the content-addressable store to the virtual store.
+2026-10-08T01:08:14.8288297Z   Content-addressable store is at: /home/runner/setup-pnpm/node_modules/.bin/store/v11
+2026-10-08T01:08:14.8329082Z   Virtual store is at:             node_modules/.pnpm
+2026-10-08T01:08:15.8450224Z Progress: resolved 963, reused 0, downloaded 129, added 8
+2026-10-08T01:08:16.8523865Z Progress: resolved 963, reused 0, downloaded 194, added 12
+2026-10-08T01:08:17.8581538Z Progress: resolved 963, reused 0, downloaded 277, added 19
+2026-10-08T01:08:18.8589954Z Progress: resolved 963, reused 0, downloaded 378, added 25
+2026-10-08T01:08:19.8888920Z Progress: resolved 963, reused 0, downloaded 538, added 39
+2026-10-08T01:08:20.8964943Z Progress: resolved 963, reused 0, downloaded 730, added 55
+2026-10-08T01:08:22.0029321Z Progress: resolved 963, reused 0, downloaded 894, added 67
+2026-10-08T01:08:23.2176705Z Progress: resolved 963, reused 0, downloaded 963, added 203
+2026-10-08T01:08:23.6761907Z ✓ Lockfile passes supply-chain policies (1104 entries in 12.9s)
+2026-10-08T01:08:24.1522467Z Progress: resolved 963, reused 0, downloaded 963, added 963, done
+2026-10-08T01:08:24.4565031Z .../node_modules/unrs-resolver postinstall$ napi-postinstall unrs-resolver 1.11.1 check
+2026-10-08T01:08:24.5259638Z .../node_modules/unrs-resolver postinstall: Done
+2026-10-08T01:08:24.6836092Z 
+2026-10-08T01:08:24.6836954Z dependencies:
+2026-10-08T01:08:24.6837527Z + @dnd-kit/core 6.3.1
+2026-10-08T01:08:24.6838003Z + @dnd-kit/modifiers 9.0.0
+2026-10-08T01:08:24.6838599Z + @dnd-kit/sortable 10.0.0
+2026-10-08T01:08:24.6839092Z + @dnd-kit/utilities 3.2.2
+2026-10-08T01:08:24.6839537Z + @hookform/resolvers 5.9.1
+2026-10-08T01:08:24.6840109Z + @radix-ui/react-select 2.3.8
+2026-10-08T01:08:24.6840629Z + @react-email/components 1.0.12
+2026-10-08T01:08:24.6841245Z + @react-email/render 2.1.0
+2026-10-08T01:08:24.6841768Z + @supabase/ssr 0.12.7
+2026-10-08T01:08:24.6842295Z + @supabase/supabase-js 2.117.3
+2026-10-08T01:08:24.6842827Z + @tailwindcss/postcss 4.3.3
+2026-10-08T01:08:24.6843711Z + @tanstack/react-query 5.104.1
+2026-10-08T01:08:24.6844211Z + @vercel/analytics 2.0.1
+2026-10-08T01:08:24.6844656Z + @wrksz/themes 1.2.0
+2026-10-08T01:08:24.6845062Z + blurhash 2.0.5
+2026-10-08T01:08:24.6845443Z + clsx 2.1.1
+2026-10-08T01:08:24.6845805Z + dayjs 1.11.23
+2026-10-08T01:08:24.6846152Z + dotenv 17.4.2
+2026-10-08T01:08:24.6846531Z + driver.js 1.9.0
+2026-10-08T01:08:24.6846857Z + exifr 7.1.3
+2026-10-08T01:08:24.6847268Z + focus-trap-react 12.0.3
+2026-10-08T01:08:24.6847677Z + image-size 2.0.4
+2026-10-08T01:08:24.6848013Z + nanoid 6.0.2
+2026-10-08T01:08:24.6848373Z + next 16.4.0
+2026-10-08T01:08:24.6848742Z + photoswipe 5.4.4
+2026-10-08T01:08:24.6849115Z + piexifjs 1.0.6
+2026-10-08T01:08:24.6849470Z + react 19.3.0
+2026-10-08T01:08:24.6849805Z + react-dom 19.3.0
+2026-10-08T01:08:24.6850208Z + react-easy-crop 6.2.4
+2026-10-08T01:08:24.6850957Z + react-hook-form 7.89.0
+2026-10-08T01:08:24.6851360Z + react-markdown 10.1.0
+2026-10-08T01:08:24.6851769Z + react-quill-new 3.8.3
+2026-10-08T01:08:24.6852197Z + recharts 3.10.1
+2026-10-08T01:08:24.6852572Z + resend 6.32.1
+2026-10-08T01:08:24.6852958Z + sanitize-html 2.18.0
+2026-10-08T01:08:24.6853637Z + server-only 0.0.1
+2026-10-08T01:08:24.6854041Z + sharp 0.35.5
+2026-10-08T01:08:24.6854400Z + sonner 2.0.8
+2026-10-08T01:08:24.6854747Z + swiper 14.3.0
+2026-10-08T01:08:24.6855132Z + tailwind-merge 3.7.0
+2026-10-08T01:08:24.6855557Z + wawoff2 2.0.1
+2026-10-08T01:08:24.6856365Z + zod 4.6.5
+2026-10-08T01:08:24.6856490Z 
+2026-10-08T01:08:24.6856593Z devDependencies:
+2026-10-08T01:08:24.6856837Z + @eslint/eslintrc 3.3.5
+2026-10-08T01:08:24.6857128Z + @next/bundle-analyzer 16.4.0
+2026-10-08T01:08:24.6857418Z + @playwright/test 1.63.0
+2026-10-08T01:08:24.6857672Z + @svgr/webpack 8.1.0
+2026-10-08T01:08:24.6857947Z + @testing-library/jest-dom 7.0.1
+2026-10-08T01:08:24.6858252Z + @testing-library/react 16.3.3
+2026-10-08T01:08:24.6858527Z + @types/node 26.1.0
+2026-10-08T01:08:24.6858770Z + @types/react 19.2.14
+2026-10-08T01:08:24.6859009Z + @types/react-dom 19.2.3
+2026-10-08T01:08:24.6859270Z + @types/sanitize-html 2.16.2
+2026-10-08T01:08:24.6859605Z + @typescript/native <- typescript 7.0.2
+2026-10-08T01:08:24.6859921Z + @vitejs/plugin-react 6.1.2
+2026-10-08T01:08:24.6860173Z + critters 0.0.25
+2026-10-08T01:08:24.6860398Z + cross-env 10.1.0
+2026-10-08T01:08:24.6860603Z + eslint 10.12.0
+2026-10-08T01:08:24.6860835Z + eslint-config-next 16.4.0
+2026-10-08T01:08:24.6861083Z + husky 9.1.7
+2026-10-08T01:08:24.6861295Z + lint-staged 17.6.0
+2026-10-08T01:08:24.6861518Z + postcss 8.5.8
+2026-10-08T01:08:24.6861740Z + release-please 17.11.2
+2026-10-08T01:08:24.6861983Z + supabase 2.120.0
+2026-10-08T01:08:24.6862330Z + tailwindcss 4.3.3
+2026-10-08T01:08:24.6862674Z + typescript <- @typescript/typescript6 6.0.2
+2026-10-08T01:08:24.6862968Z + vitest 4.1.11
+2026-10-08T01:08:24.6863084Z 
+2026-10-08T01:08:24.7223079Z . prepare$ husky
+2026-10-08T01:08:24.7874321Z . prepare: Done
+2026-10-08T01:08:24.8095046Z Done in 14.7s using pnpm v11.28.5
+2026-10-08T01:08:24.9457104Z ##[group]Run pnpm run check
+2026-10-08T01:08:24.9457431Z [36;1mpnpm run check[0m
+2026-10-08T01:08:24.9521702Z shell: /usr/bin/bash -e {0}
+2026-10-08T01:08:24.9521988Z env:
+2026-10-08T01:08:24.9522226Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+2026-10-08T01:08:24.9522587Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-10-08T01:08:24.9522916Z ##[endgroup]
+2026-10-08T01:08:25.4830406Z $ npm run lint && npm run typecheck:clean && npm run test:run
+2026-10-08T01:08:25.6013412Z 
+2026-10-08T01:08:25.6014207Z > cpg-website@1.41.5 lint
+2026-10-08T01:08:25.6014852Z > eslint "src/**/*.{ts,tsx}"
+2026-10-08T01:08:25.6015121Z 
+2026-10-08T01:08:58.6766119Z 
+2026-10-08T01:08:58.6767524Z /home/runner/work/cpg-website/cpg-website/src/app/account/(manage)/albums/[slug]/AlbumDetailClient.tsx
+2026-10-08T01:08:58.6798334Z ##[warning]  106:9  warning  The 'photos' logical expression could make the dependencies of useMemo Hook (at line 466) change on every render. To fix this, wrap the initialization of 'photos' in its own useMemo() Hook  react-hooks/exhaustive-deps
+2026-10-08T01:08:58.6806081Z 
+2026-10-08T01:08:58.6806517Z /home/runner/work/cpg-website/cpg-website/src/app/account/(manage)/albums/page.tsx
+2026-10-08T01:08:58.6807295Z    91:5  warning  Compilation Skipped: Existing memoization could not be preserved
+2026-10-08T01:08:58.6807631Z 
+2026-10-08T01:08:58.6809446Z React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `user`, but the source dependencies were [user?.id, queryClient, router]. Inferred less specific property than source.
+2026-10-08T01:08:58.6810907Z 
+2026-10-08T01:08:58.6811278Z /home/runner/work/cpg-website/cpg-website/src/app/account/(manage)/albums/page.tsx:91:5
+2026-10-08T01:08:58.6811717Z    89 |
+2026-10-08T01:08:58.6811985Z    90 |   const navigateToAlbum = useCallback(
+2026-10-08T01:08:58.6812274Z >  91 |     (
+2026-10-08T01:08:58.6812464Z       |     ^
+2026-10-08T01:08:58.6812745Z >  92 |       album: { id: string; slug: string },
+2026-10-08T01:08:58.6813079Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.6813623Z >  93 |       href: string,
+2026-10-08T01:08:58.6814053Z       …
+2026-10-08T01:08:58.6814294Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.6814850Z > 108 |       });
+2026-10-08T01:08:58.6815123Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.6815401Z > 109 |     },
+2026-10-08T01:08:58.6815887Z       | ^^^^^^ Could not preserve existing manual memoization
+2026-10-08T01:08:58.6816315Z   110 |     [user?.id, queryClient, router],
+2026-10-08T01:08:58.6816592Z   111 |   );
+2026-10-08T01:08:58.6816865Z   112 |  react-hooks/preserve-manual-memoization
+2026-10-08T01:08:58.6817547Z   116:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6817951Z 
+2026-10-08T01:08:58.6818977Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6820044Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6820765Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6821222Z 
+2026-10-08T01:08:58.6822008Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6822692Z 
+2026-10-08T01:08:58.6823055Z /home/runner/work/cpg-website/cpg-website/src/app/account/(manage)/albums/page.tsx:116:7
+2026-10-08T01:08:58.6823731Z   114 |   useEffect(() => {
+2026-10-08T01:08:58.6824258Z   115 |     if (pathname === '/account/albums') {
+2026-10-08T01:08:58.6824672Z > 116 |       setOpeningAlbumId(null);
+2026-10-08T01:08:58.6847655Z       |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6848333Z   117 |     }
+2026-10-08T01:08:58.6848692Z   118 |   }, [pathname]);
+2026-10-08T01:08:58.6849144Z   119 |                               react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6849425Z 
+2026-10-08T01:08:58.6849749Z /home/runner/work/cpg-website/cpg-website/src/app/account/challenges/page.tsx
+2026-10-08T01:08:58.6852651Z ##[warning]  134:9  warning  The 'allSubmissions' logical expression could make the dependencies of useMemo Hook (at line 143) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'allSubmissions' in its own useMemo() Hook  react-hooks/exhaustive-deps
+2026-10-08T01:08:58.6854697Z 
+2026-10-08T01:08:58.6855021Z /home/runner/work/cpg-website/cpg-website/src/app/account/events/page.tsx
+2026-10-08T01:08:58.6855634Z   192:37  warning  Error: Cannot call impure function during render
+2026-10-08T01:08:58.6855914Z 
+2026-10-08T01:08:58.6857101Z `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+2026-10-08T01:08:58.6858098Z 
+2026-10-08T01:08:58.6858430Z /home/runner/work/cpg-website/cpg-website/src/app/account/events/page.tsx:192:37
+2026-10-08T01:08:58.6858890Z   190 |                   key={rsvp.id}
+2026-10-08T01:08:58.6859191Z   191 |                   rsvp={rsvp}
+2026-10-08T01:08:58.6859567Z > 192 |                   serverNow={now ?? Date.now()}
+2026-10-08T01:08:58.6859980Z       |                                     ^^^^^^^^^^ Cannot call impure function
+2026-10-08T01:08:58.6860381Z   193 |                   sevenDaysAgo={sevenDaysAgo}
+2026-10-08T01:08:58.6860697Z   194 |                 />
+2026-10-08T01:08:58.6860979Z   195 |               ))   react-hooks/purity
+2026-10-08T01:08:58.6861463Z   212:37  warning  Error: Cannot call impure function during render
+2026-10-08T01:08:58.6861727Z 
+2026-10-08T01:08:58.6862903Z `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+2026-10-08T01:08:58.6864445Z 
+2026-10-08T01:08:58.6864790Z /home/runner/work/cpg-website/cpg-website/src/app/account/events/page.tsx:212:37
+2026-10-08T01:08:58.6865259Z   210 |                   key={rsvp.id}
+2026-10-08T01:08:58.6865568Z   211 |                   rsvp={rsvp}
+2026-10-08T01:08:58.6865928Z > 212 |                   serverNow={now ?? Date.now()}
+2026-10-08T01:08:58.6866327Z       |                                     ^^^^^^^^^^ Cannot call impure function
+2026-10-08T01:08:58.6866728Z   213 |                   sevenDaysAgo={sevenDaysAgo}
+2026-10-08T01:08:58.6867027Z   214 |                 />
+2026-10-08T01:08:58.6867316Z   215 |               ))}  react-hooks/purity
+2026-10-08T01:08:58.6867512Z 
+2026-10-08T01:08:58.6867859Z /home/runner/work/cpg-website/cpg-website/src/app/account/stats/AccountStatsClient.tsx
+2026-10-08T01:08:58.6868663Z   70:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6869073Z 
+2026-10-08T01:08:58.6870051Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6871109Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6871835Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6872451Z 
+2026-10-08T01:08:58.6873469Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6874177Z 
+2026-10-08T01:08:58.6874567Z /home/runner/work/cpg-website/cpg-website/src/app/account/stats/AccountStatsClient.tsx:70:5
+2026-10-08T01:08:58.6875047Z   68 |
+2026-10-08T01:08:58.6875259Z   69 |   useEffect(() => {
+2026-10-08T01:08:58.6875519Z > 70 |     load();
+2026-10-08T01:08:58.6875838Z      |     ^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6876166Z   71 |   }, [load]);
+2026-10-08T01:08:58.6876381Z   72 |
+2026-10-08T01:08:58.6876719Z   73 |   if (isLoading && !lifetime) {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6876991Z 
+2026-10-08T01:08:58.6877325Z /home/runner/work/cpg-website/cpg-website/src/app/admin/challenges/[slug]/page.tsx
+2026-10-08T01:08:58.6878110Z   108:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6878513Z 
+2026-10-08T01:08:58.6879485Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6880540Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6881262Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6881708Z 
+2026-10-08T01:08:58.6882481Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6883165Z 
+2026-10-08T01:08:58.6883743Z /home/runner/work/cpg-website/cpg-website/src/app/admin/challenges/[slug]/page.tsx:108:5
+2026-10-08T01:08:58.6884309Z   106 |     if (isNewChallenge || !existingChallenge) return;
+2026-10-08T01:08:58.6884638Z   107 |
+2026-10-08T01:08:58.6884932Z > 108 |     setTitle(existingChallenge.title || '');
+2026-10-08T01:08:58.6885343Z       |     ^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6885741Z   109 |     setSlug(existingChallenge.slug || '');
+2026-10-08T01:08:58.6886125Z   110 |     setPrompt(existingChallenge.prompt || '');
+2026-10-08T01:08:58.6886860Z   111 |     setStartsAt(existingChallenge.starts_at?.split('T')[0] || '');  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6887256Z 
+2026-10-08T01:08:58.6887580Z /home/runner/work/cpg-website/cpg-website/src/app/admin/events/[eventId]/page.tsx
+2026-10-08T01:08:58.6888344Z   209:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6888736Z 
+2026-10-08T01:08:58.6889702Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6890745Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6891448Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6891897Z 
+2026-10-08T01:08:58.6892657Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6893600Z 
+2026-10-08T01:08:58.6893961Z /home/runner/work/cpg-website/cpg-website/src/app/admin/events/[eventId]/page.tsx:209:7
+2026-10-08T01:08:58.6894517Z   207 |     // Admin access is guaranteed by ProtectedRoute layout
+2026-10-08T01:08:58.6894870Z   208 |     if (isNewEvent) {
+2026-10-08T01:08:58.6895168Z > 209 |       setIsLoading(false);
+2026-10-08T01:08:58.6895679Z       |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6896033Z   210 |       return;
+2026-10-08T01:08:58.6896272Z   211 |     }
+2026-10-08T01:08:58.6896531Z   212 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6896724Z 
+2026-10-08T01:08:58.6897101Z /home/runner/work/cpg-website/cpg-website/src/app/admin/events/attendance/[eventId]/page.tsx
+2026-10-08T01:08:58.6899536Z ##[warning]  53:9  warning  The 'loadData' function makes the dependencies of useCallback Hook (at line 164) change on every render. To fix this, wrap the definition of 'loadData' in its own useCallback() Hook  react-hooks/exhaustive-deps
+2026-10-08T01:08:58.6900963Z 
+2026-10-08T01:08:58.6901268Z /home/runner/work/cpg-website/cpg-website/src/app/admin/members/page.tsx
+2026-10-08T01:08:58.6902022Z   78:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6902409Z 
+2026-10-08T01:08:58.6903700Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6904774Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6905500Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6905943Z 
+2026-10-08T01:08:58.6906725Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6907398Z 
+2026-10-08T01:08:58.6907723Z /home/runner/work/cpg-website/cpg-website/src/app/admin/members/page.tsx:78:5
+2026-10-08T01:08:58.6908142Z   76 |
+2026-10-08T01:08:58.6908351Z   77 |   useEffect(() => {
+2026-10-08T01:08:58.6908606Z > 78 |     fetchMembers();
+2026-10-08T01:08:58.6908962Z      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6909310Z   79 |   }, [fetchMembers]);
+2026-10-08T01:08:58.6909544Z   80 |
+2026-10-08T01:08:58.6909835Z   81 |   // Debounce search  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6910085Z 
+2026-10-08T01:08:58.6910411Z /home/runner/work/cpg-website/cpg-website/src/app/admin/stats/AdminStatsClient.tsx
+2026-10-08T01:08:58.6911193Z   59:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6911786Z 
+2026-10-08T01:08:58.6912765Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6914076Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6914792Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6915246Z 
+2026-10-08T01:08:58.6916024Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6916701Z 
+2026-10-08T01:08:58.6917054Z /home/runner/work/cpg-website/cpg-website/src/app/admin/stats/AdminStatsClient.tsx:59:5
+2026-10-08T01:08:58.6917485Z   57 |
+2026-10-08T01:08:58.6917682Z   58 |   useEffect(() => {
+2026-10-08T01:08:58.6917929Z > 59 |     load();
+2026-10-08T01:08:58.6918247Z      |     ^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6918571Z   60 |   }, [load]);
+2026-10-08T01:08:58.6918776Z   61 |
+2026-10-08T01:08:58.6919145Z   62 |   if (isLoading && !overview) {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6919421Z 
+2026-10-08T01:08:58.6919700Z /home/runner/work/cpg-website/cpg-website/src/app/login/LoginClient.tsx
+2026-10-08T01:08:58.6920633Z   38:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6921037Z 
+2026-10-08T01:08:58.6922006Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6923057Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6924032Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6924494Z 
+2026-10-08T01:08:58.6925272Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6925959Z 
+2026-10-08T01:08:58.6926273Z /home/runner/work/cpg-website/cpg-website/src/app/login/LoginClient.tsx:38:7
+2026-10-08T01:08:58.6926708Z   36 |   useEffect(() => {
+2026-10-08T01:08:58.6927017Z   37 |     if (queryError === 'staging_no_signup') {
+2026-10-08T01:08:58.6927609Z > 38 |       setError('Sign-up is invite-only on staging. Use a bypass link to create an account.');
+2026-10-08T01:08:58.6928182Z      |       ^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6928516Z   39 |     }
+2026-10-08T01:08:58.6928736Z   40 |   }, [queryError]);
+2026-10-08T01:08:58.6929014Z   41 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6929210Z 
+2026-10-08T01:08:58.6929541Z /home/runner/work/cpg-website/cpg-website/src/app/onboarding/OnboardingClient.tsx
+2026-10-08T01:08:58.6930160Z   234:27  warning  Compilation Skipped: Use of incompatible library
+2026-10-08T01:08:58.6930434Z 
+2026-10-08T01:08:58.6931560Z This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+2026-10-08T01:08:58.6932511Z 
+2026-10-08T01:08:58.6932878Z /home/runner/work/cpg-website/cpg-website/src/app/onboarding/OnboardingClient.tsx:234:27
+2026-10-08T01:08:58.6933841Z   232 |       (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode));
+2026-10-08T01:08:58.6934554Z   233 |   useOnboardingStepMinHeight(stepFrameRef, progressRef, isWizardVisible, step);
+2026-10-08T01:08:58.6935096Z > 234 |   const watchedNickname = watch('nickname');
+2026-10-08T01:08:58.6935877Z       |                           ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+2026-10-08T01:08:58.6936440Z   235 |   const watchedFullName = watch('fullName');
+2026-10-08T01:08:58.6936807Z   236 |   const watchedEmail = watch('email');
+2026-10-08T01:08:58.6937337Z   237 |   const watchedTermsAccepted = watch('termsAccepted');  react-hooks/incompatible-library
+2026-10-08T01:08:58.6937715Z 
+2026-10-08T01:08:58.6938090Z /home/runner/work/cpg-website/cpg-website/src/components/account/ProfileAvatarCropper.tsx
+2026-10-08T01:08:58.6938898Z   130:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6939286Z 
+2026-10-08T01:08:58.6940267Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6941323Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6942039Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6942484Z 
+2026-10-08T01:08:58.6943476Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6944191Z 
+2026-10-08T01:08:58.6944746Z /home/runner/work/cpg-website/cpg-website/src/components/account/ProfileAvatarCropper.tsx:130:5
+2026-10-08T01:08:58.6945309Z   128 |     hasInitializedZoom.current = false;
+2026-10-08T01:08:58.6945671Z   129 |     prevCropWidthRef.current = 0;
+2026-10-08T01:08:58.6946002Z > 130 |     setMediaSize(null);
+2026-10-08T01:08:58.6946365Z       |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6946748Z   131 |     setContainerWidth(0);
+2026-10-08T01:08:58.6947038Z   132 |     setCrop({ x: 0, y: 0 });
+2026-10-08T01:08:58.6947458Z   133 |     setZoom(1);                                              react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6948196Z   182:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6948580Z 
+2026-10-08T01:08:58.6949565Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6950615Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6951326Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6951774Z 
+2026-10-08T01:08:58.6952553Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6953507Z 
+2026-10-08T01:08:58.6953961Z /home/runner/work/cpg-website/cpg-website/src/components/account/ProfileAvatarCropper.tsx:182:5
+2026-10-08T01:08:58.6954602Z   180 |     const coverFitZoom = getCoverFitZoom(effectiveMedia, cropSize);
+2026-10-08T01:08:58.6954979Z   181 |
+2026-10-08T01:08:58.6955257Z > 182 |     setMinZoom((currentMinZoom) => (
+2026-10-08T01:08:58.6955656Z       |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6956272Z   183 |       Math.abs(currentMinZoom - coverFitZoom) <= CROPPER_ZOOM_EPSILON ? currentMinZoom : coverFitZoom
+2026-10-08T01:08:58.6956772Z   184 |     ));
+2026-10-08T01:08:58.6957025Z   185 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6957220Z 
+2026-10-08T01:08:58.6957588Z /home/runner/work/cpg-website/cpg-website/src/components/account/ProfileBannerCropper.tsx
+2026-10-08T01:08:58.6958399Z   137:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6958951Z 
+2026-10-08T01:08:58.6959927Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6960973Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6961687Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6962129Z 
+2026-10-08T01:08:58.6962905Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6963735Z 
+2026-10-08T01:08:58.6964132Z /home/runner/work/cpg-website/cpg-website/src/components/account/ProfileBannerCropper.tsx:137:5
+2026-10-08T01:08:58.6964679Z   135 |     hasInitializedZoom.current = false;
+2026-10-08T01:08:58.6965031Z   136 |     prevCropWidthRef.current = 0;
+2026-10-08T01:08:58.6965358Z > 137 |     setMediaSize(null);
+2026-10-08T01:08:58.6965727Z       |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6966100Z   138 |     setContainerWidth(0);
+2026-10-08T01:08:58.6966382Z   139 |     setCrop({ x: 0, y: 0 });
+2026-10-08T01:08:58.6966940Z   140 |     setZoom(1);                                              react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6967690Z   189:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6968072Z 
+2026-10-08T01:08:58.6969045Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6970097Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6970805Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6971243Z 
+2026-10-08T01:08:58.6972016Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6972694Z 
+2026-10-08T01:08:58.6973088Z /home/runner/work/cpg-website/cpg-website/src/components/account/ProfileBannerCropper.tsx:189:5
+2026-10-08T01:08:58.6973951Z   187 |     const widthFitZoom = getWidthFitZoom(effectiveMedia, cropSize);
+2026-10-08T01:08:58.6974338Z   188 |
+2026-10-08T01:08:58.6974606Z > 189 |     setMinZoom((currentMinZoom) => (
+2026-10-08T01:08:58.6974995Z       |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6975608Z   190 |       Math.abs(currentMinZoom - widthFitZoom) <= CROPPER_ZOOM_EPSILON ? currentMinZoom : widthFitZoom
+2026-10-08T01:08:58.6976098Z   191 |     ));
+2026-10-08T01:08:58.6976345Z   192 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6976541Z 
+2026-10-08T01:08:58.6976879Z /home/runner/work/cpg-website/cpg-website/src/components/account/SignOutButton.tsx
+2026-10-08T01:08:58.6979942Z ##[warning]  32:11  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+2026-10-08T01:08:58.6981942Z 
+2026-10-08T01:08:58.6982325Z /home/runner/work/cpg-website/cpg-website/src/components/account/ThemePreferencePicker.tsx
+2026-10-08T01:08:58.6983161Z   108:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6983719Z 
+2026-10-08T01:08:58.6984700Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6985933Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6986655Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6987105Z 
+2026-10-08T01:08:58.6987891Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6988568Z 
+2026-10-08T01:08:58.6988971Z /home/runner/work/cpg-website/cpg-website/src/components/account/ThemePreferencePicker.tsx:108:5
+2026-10-08T01:08:58.6989452Z   106 |
+2026-10-08T01:08:58.6989657Z   107 |   useEffect(() => {
+2026-10-08T01:08:58.6989952Z > 108 |     setThemeMounted(true);
+2026-10-08T01:08:58.6990341Z       |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.6990708Z   109 |   }, []);
+2026-10-08T01:08:58.6990914Z   110 |
+2026-10-08T01:08:58.6991335Z   111 |   const handleSelect = (theme: AppThemeSelection) => {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.6991706Z 
+2026-10-08T01:08:58.6992020Z /home/runner/work/cpg-website/cpg-website/src/components/admin/AddRsvpModal.tsx
+2026-10-08T01:08:58.6992920Z    45:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.6993461Z 
+2026-10-08T01:08:58.6994445Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.6995497Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.6996212Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.6996671Z 
+2026-10-08T01:08:58.6997461Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.6998139Z 
+2026-10-08T01:08:58.6998496Z /home/runner/work/cpg-website/cpg-website/src/components/admin/AddRsvpModal.tsx:45:7
+2026-10-08T01:08:58.6998929Z   43 |
+2026-10-08T01:08:58.6999158Z   44 |     if (!query.trim()) {
+2026-10-08T01:08:58.6999437Z > 45 |       setMembers([]);
+2026-10-08T01:08:58.6999799Z      |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7000140Z   46 |       return;
+2026-10-08T01:08:58.7000349Z   47 |     }
+2026-10-08T01:08:58.7000594Z   48 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7004794Z ##[warning]  136:5  warning  React Hook useMemo has a missing dependency: 'handleSubmit'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7006960Z 
+2026-10-08T01:08:58.7007325Z /home/runner/work/cpg-website/cpg-website/src/components/admin/AlbumModerationPanel.tsx
+2026-10-08T01:08:58.7010186Z ##[warning]  158:9  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+2026-10-08T01:08:58.7011869Z 
+2026-10-08T01:08:58.7012237Z /home/runner/work/cpg-website/cpg-website/src/components/admin/MemberStatsExplorer.tsx
+2026-10-08T01:08:58.7013045Z   95:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7013633Z 
+2026-10-08T01:08:58.7014620Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7015680Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7016403Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7016847Z 
+2026-10-08T01:08:58.7017628Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7018307Z 
+2026-10-08T01:08:58.7019004Z /home/runner/work/cpg-website/cpg-website/src/components/admin/MemberStatsExplorer.tsx:95:5
+2026-10-08T01:08:58.7019489Z   93 |
+2026-10-08T01:08:58.7019697Z   94 |   useEffect(() => {
+2026-10-08T01:08:58.7019963Z > 95 |     fetchMembers();
+2026-10-08T01:08:58.7020309Z      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7020660Z   96 |   }, [fetchMembers]);
+2026-10-08T01:08:58.7020892Z   97 |
+2026-10-08T01:08:58.7021173Z   98 |   useEffect(() => {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7021417Z 
+2026-10-08T01:08:58.7021779Z /home/runner/work/cpg-website/cpg-website/src/components/admin/SignupBypassGenerator.tsx
+2026-10-08T01:08:58.7022585Z   58:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7022972Z 
+2026-10-08T01:08:58.7024142Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7025193Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7025915Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7026358Z 
+2026-10-08T01:08:58.7027138Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7027832Z 
+2026-10-08T01:08:58.7028220Z /home/runner/work/cpg-website/cpg-website/src/components/admin/SignupBypassGenerator.tsx:58:5
+2026-10-08T01:08:58.7028690Z   56 |
+2026-10-08T01:08:58.7028893Z   57 |   useEffect(() => {
+2026-10-08T01:08:58.7029152Z > 58 |     loadTokens();
+2026-10-08T01:08:58.7029492Z      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7029839Z   59 |   }, [loadTokens]);
+2026-10-08T01:08:58.7030065Z   60 |
+2026-10-08T01:08:58.7030428Z   61 |   const handleGenerate = async () => {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7030740Z 
+2026-10-08T01:08:58.7031131Z /home/runner/work/cpg-website/cpg-website/src/components/albums/SubmitToSharedAlbumContent.tsx
+2026-10-08T01:08:58.7031968Z   110:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7032363Z 
+2026-10-08T01:08:58.7033603Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7034944Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7035675Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7036117Z 
+2026-10-08T01:08:58.7036903Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7037593Z 
+2026-10-08T01:08:58.7038015Z /home/runner/work/cpg-website/cpg-website/src/components/albums/SubmitToSharedAlbumContent.tsx:110:5
+2026-10-08T01:08:58.7038512Z   108 |
+2026-10-08T01:08:58.7038720Z   109 |   useEffect(() => {
+2026-10-08T01:08:58.7038976Z > 110 |     fetchPhotos();
+2026-10-08T01:08:58.7039323Z       |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7039670Z   111 |   }, [fetchPhotos]);
+2026-10-08T01:08:58.7039902Z   112 |
+2026-10-08T01:08:58.7040251Z   113 |   const privatePhotoIds = useMemo(  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7040553Z 
+2026-10-08T01:08:58.7040955Z /home/runner/work/cpg-website/cpg-website/src/components/challenges/ColorDraw/ColorDrawClient.tsx
+2026-10-08T01:08:58.7041905Z   38:17  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7042309Z 
+2026-10-08T01:08:58.7043400Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7044453Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7045166Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7045614Z 
+2026-10-08T01:08:58.7046393Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7047089Z 
+2026-10-08T01:08:58.7047521Z /home/runner/work/cpg-website/cpg-website/src/components/challenges/ColorDraw/ColorDrawClient.tsx:38:17
+2026-10-08T01:08:58.7048045Z   36 |   useEffect(() => {
+2026-10-08T01:08:58.7048474Z   37 |     const stored = localStorage.getItem(GUEST_NICKNAME_KEY(challengeId));
+2026-10-08T01:08:58.7048953Z > 38 |     if (stored) setGuestNickname(stored);
+2026-10-08T01:08:58.7049385Z      |                 ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7049753Z   39 |   }, [challengeId]);
+2026-10-08T01:08:58.7049980Z   40 |
+2026-10-08T01:08:58.7050303Z   41 |   const myDraw = draws.find(  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7050571Z 
+2026-10-08T01:08:58.7050968Z /home/runner/work/cpg-website/cpg-website/src/components/challenges/SubmitToChallengeContent.tsx
+2026-10-08T01:08:58.7051810Z   135:5   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7052204Z 
+2026-10-08T01:08:58.7053392Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7054470Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7055184Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7055625Z 
+2026-10-08T01:08:58.7056401Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7057227Z 
+2026-10-08T01:08:58.7057660Z /home/runner/work/cpg-website/cpg-website/src/components/challenges/SubmitToChallengeContent.tsx:135:5
+2026-10-08T01:08:58.7058170Z   133 |
+2026-10-08T01:08:58.7058374Z   134 |   useEffect(() => {
+2026-10-08T01:08:58.7058634Z > 135 |     fetchPhotos();
+2026-10-08T01:08:58.7058983Z       |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7059342Z   136 |   }, [fetchPhotos]);
+2026-10-08T01:08:58.7059582Z   137 |
+2026-10-08T01:08:58.7060036Z   138 |   // Get private photo IDs (these are disabled/non-selectable)  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7060639Z   348:20  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7060873Z 
+2026-10-08T01:08:58.7062109Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7063137Z 
+2026-10-08T01:08:58.7063700Z /home/runner/work/cpg-website/cpg-website/src/components/challenges/SubmitToChallengeContent.tsx:348:20
+2026-10-08T01:08:58.7064283Z   346 |         selectedPhotos={selectedPhotos}
+2026-10-08T01:08:58.7064645Z   347 |         onBack={() => setShowConfirm(false)}
+2026-10-08T01:08:58.7065022Z > 348 |         onSuccess={onSuccessRef.current}
+2026-10-08T01:08:58.7065548Z       |                    ^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+2026-10-08T01:08:58.7065892Z   349 |       />
+2026-10-08T01:08:58.7066099Z   350 |     );
+2026-10-08T01:08:58.7066857Z   351 |   }                                                                                                                                                                                                                                                                                                                             react-hooks/refs
+2026-10-08T01:08:58.7067447Z 
+2026-10-08T01:08:58.7067770Z /home/runner/work/cpg-website/cpg-website/src/components/events/EventMiniCard.tsx
+2026-10-08T01:08:58.7068384Z   32:80  warning  Error: Cannot call impure function during render
+2026-10-08T01:08:58.7068648Z 
+2026-10-08T01:08:58.7069826Z `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+2026-10-08T01:08:58.7070814Z 
+2026-10-08T01:08:58.7071162Z /home/runner/work/cpg-website/cpg-website/src/components/events/EventMiniCard.tsx:32:80
+2026-10-08T01:08:58.7071627Z   30 |   className = '',
+2026-10-08T01:08:58.7071898Z   31 | }: EventMiniCardProps) {
+2026-10-08T01:08:58.7072481Z > 32 |   const formattedDate = date ? formatEventDate(date, { includeYear: true, now: Date.now() }) : null;
+2026-10-08T01:08:58.7073143Z      |                                                                                ^^^^^^^^^^ Cannot call impure function
+2026-10-08T01:08:58.7073761Z   33 |   const openUrl = publicUrl ?? href;
+2026-10-08T01:08:58.7074041Z   34 |
+2026-10-08T01:08:58.7074277Z   35 |   return (  react-hooks/purity
+2026-10-08T01:08:58.7074460Z 
+2026-10-08T01:08:58.7074810Z /home/runner/work/cpg-website/cpg-website/src/components/events/PastEventsPaginated.tsx
+2026-10-08T01:08:58.7075614Z   48:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7076003Z 
+2026-10-08T01:08:58.7076998Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7078050Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7078900Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7079351Z 
+2026-10-08T01:08:58.7080119Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7080805Z 
+2026-10-08T01:08:58.7081183Z /home/runner/work/cpg-website/cpg-website/src/components/events/PastEventsPaginated.tsx:48:7
+2026-10-08T01:08:58.7081789Z   46 |       if (parsed.events.length <= initialEvents.length) return;
+2026-10-08T01:08:58.7082138Z   47 |
+2026-10-08T01:08:58.7082386Z > 48 |       setEvents(parsed.events);
+2026-10-08T01:08:58.7082756Z      |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7083186Z   49 |       setAttendeesByEvent(parsed.attendeesByEvent);
+2026-10-08T01:08:58.7083646Z   50 |     } catch {
+2026-10-08T01:08:58.7083976Z   51 |       // Ignore storage errors  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7084240Z 
+2026-10-08T01:08:58.7084576Z /home/runner/work/cpg-website/cpg-website/src/components/gallery/AlbumsPaginated.tsx
+2026-10-08T01:08:58.7085354Z   84:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7085745Z 
+2026-10-08T01:08:58.7086848Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7087923Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7088640Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7089089Z 
+2026-10-08T01:08:58.7089865Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7090557Z 
+2026-10-08T01:08:58.7090927Z /home/runner/work/cpg-website/cpg-website/src/components/gallery/AlbumsPaginated.tsx:84:7
+2026-10-08T01:08:58.7091476Z   82 |     // Only restore if we have more than initial albums
+2026-10-08T01:08:58.7091898Z   83 |     if (cachedAlbums.length > initialAlbums.length) {
+2026-10-08T01:08:58.7092285Z > 84 |       setAlbums(cachedAlbums);
+2026-10-08T01:08:58.7092665Z      |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7093050Z   85 |       setHasMore(cachedHasMore);
+2026-10-08T01:08:58.7093511Z   86 |     }
+2026-10-08T01:08:58.7093908Z   87 |   }, [getInitialState, initialAlbums.length]);  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7094246Z 
+2026-10-08T01:08:58.7094577Z /home/runner/work/cpg-website/cpg-website/src/components/gallery/PhotosPaginated.tsx
+2026-10-08T01:08:58.7095368Z   177:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7095771Z 
+2026-10-08T01:08:58.7096765Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7097819Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7098537Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7098987Z 
+2026-10-08T01:08:58.7099762Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7100453Z 
+2026-10-08T01:08:58.7100835Z /home/runner/work/cpg-website/cpg-website/src/components/gallery/PhotosPaginated.tsx:177:7
+2026-10-08T01:08:58.7101662Z   175 |     // Only restore if we have more than initial batch
+2026-10-08T01:08:58.7102038Z   176 |     if (cachedBatches.length > 1) {
+2026-10-08T01:08:58.7102387Z > 177 |       setBatches(cachedBatches);
+2026-10-08T01:08:58.7102775Z       |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7103153Z   178 |       setHasMore(cachedHasMore);
+2026-10-08T01:08:58.7103586Z   179 |       return;
+2026-10-08T01:08:58.7103866Z   180 |     }  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7104078Z 
+2026-10-08T01:08:58.7104420Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AccountMenuPanel.tsx
+2026-10-08T01:08:58.7105214Z   71:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7105599Z 
+2026-10-08T01:08:58.7106692Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7107757Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7108465Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7108915Z 
+2026-10-08T01:08:58.7109697Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7110501Z 
+2026-10-08T01:08:58.7110871Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AccountMenuPanel.tsx:71:5
+2026-10-08T01:08:58.7111321Z   69 |
+2026-10-08T01:08:58.7111523Z   70 |   useEffect(() => {
+2026-10-08T01:08:58.7111782Z > 71 |     setView('root');
+2026-10-08T01:08:58.7112192Z      |     ^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7112534Z   72 |   }, [pathname]);
+2026-10-08T01:08:58.7112761Z   73 |
+2026-10-08T01:08:58.7113150Z   74 |   const isActive = (href: string, exact = false) =>  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7113635Z 
+2026-10-08T01:08:58.7114007Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AccountMenuSignOutButton.tsx
+2026-10-08T01:08:58.7117184Z ##[warning]  42:13  warning  Do not use `window.location.href` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+2026-10-08T01:08:58.7119165Z 
+2026-10-08T01:08:58.7119546Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AccountMenuSlidingTrack.tsx
+2026-10-08T01:08:58.7120359Z   62:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7120753Z 
+2026-10-08T01:08:58.7121737Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7122793Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7123650Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7124105Z 
+2026-10-08T01:08:58.7124877Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7125562Z 
+2026-10-08T01:08:58.7125965Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AccountMenuSlidingTrack.tsx:62:5
+2026-10-08T01:08:58.7126651Z   60 |   // Initial height: root panel, no height transition when the popover first opens.
+2026-10-08T01:08:58.7127121Z   61 |   useLayoutEffect(() => {
+2026-10-08T01:08:58.7127648Z > 62 |     setHeightTransitionsEnabled(false);
+2026-10-08T01:08:58.7128086Z      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7128492Z   63 |     const next = measureView('root');
+2026-10-08T01:08:58.7128841Z   64 |     if (next !== null) setHeightPx(next);
+2026-10-08T01:08:58.7129313Z   65 |     const id = requestAnimationFrame(() => {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7129637Z 
+2026-10-08T01:08:58.7130002Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AnimatedStickyBarSlide.tsx
+2026-10-08T01:08:58.7130603Z   40:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7130833Z 
+2026-10-08T01:08:58.7132066Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7133095Z 
+2026-10-08T01:08:58.7133696Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AnimatedStickyBarSlide.tsx:40:3
+2026-10-08T01:08:58.7134233Z   38 |   const renderedRef = useRef(false);
+2026-10-08T01:08:58.7134627Z   39 |   const onExitedRef = useRef(onExited);
+2026-10-08T01:08:58.7134979Z > 40 |   onExitedRef.current = onExited;
+2026-10-08T01:08:58.7135322Z      |   ^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7135618Z   41 |
+2026-10-08T01:08:58.7135987Z   42 |   if (canReveal && !shouldRender) {
+2026-10-08T01:08:58.7137035Z   43 |     setShouldRender(true);                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/refs
+2026-10-08T01:08:58.7138211Z   61:9  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7138610Z 
+2026-10-08T01:08:58.7139588Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7140647Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7141357Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7141803Z 
+2026-10-08T01:08:58.7142578Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7143408Z 
+2026-10-08T01:08:58.7143803Z /home/runner/work/cpg-website/cpg-website/src/components/layout/AnimatedStickyBarSlide.tsx:61:9
+2026-10-08T01:08:58.7144293Z   59 |
+2026-10-08T01:08:58.7144516Z   60 |       if (skipAppear) {
+2026-10-08T01:08:58.7144814Z > 61 |         setIsVisible(true);
+2026-10-08T01:08:58.7145191Z      |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7145539Z   62 |       } else {
+2026-10-08T01:08:58.7145842Z   63 |         animFrame1 = requestAnimationFrame(() => {
+2026-10-08T01:08:58.7146438Z   64 |           animFrame2 = requestAnimationFrame(() => setIsVisible(true));  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7151105Z ##[warning]  83:6  warning  React Hook useEffect has a missing dependency: 'alwaysAnimate'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7154129Z 
+2026-10-08T01:08:58.7154489Z /home/runner/work/cpg-website/cpg-website/src/components/layout/MobileAccountMenu.tsx
+2026-10-08T01:08:58.7155960Z ##[warning]  53:6  warning  React Hook useLayoutEffect has a missing dependency: 'setOpen'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7158015Z ##[warning]  73:6  warning  React Hook useEffect has a missing dependency: 'setOpen'. Either include it or remove the dependency array        react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7159025Z 
+2026-10-08T01:08:58.7159412Z /home/runner/work/cpg-website/cpg-website/src/components/layout/MobileStickyChromeStack.tsx
+2026-10-08T01:08:58.7160026Z   39:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7160410Z 
+2026-10-08T01:08:58.7161687Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7162741Z 
+2026-10-08T01:08:58.7163156Z /home/runner/work/cpg-website/cpg-website/src/components/layout/MobileStickyChromeStack.tsx:39:3
+2026-10-08T01:08:58.7163852Z   37 |   const navOpenRef = useRef(navOpen);
+2026-10-08T01:08:58.7164215Z   38 |   const actionOpenRef = useRef(actionOpen);
+2026-10-08T01:08:58.7164577Z > 39 |   navOpenRef.current = navOpen;
+2026-10-08T01:08:58.7164923Z      |   ^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7165291Z   40 |   actionOpenRef.current = actionOpen;
+2026-10-08T01:08:58.7165581Z   41 |
+2026-10-08T01:08:58.7166010Z   42 |   const lastGridHeightRef = useRef(0);                                                 react-hooks/refs
+2026-10-08T01:08:58.7166585Z   40:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7166817Z 
+2026-10-08T01:08:58.7168034Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7169061Z 
+2026-10-08T01:08:58.7169464Z /home/runner/work/cpg-website/cpg-website/src/components/layout/MobileStickyChromeStack.tsx:40:3
+2026-10-08T01:08:58.7170013Z   38 |   const actionOpenRef = useRef(actionOpen);
+2026-10-08T01:08:58.7170352Z   39 |   navOpenRef.current = navOpen;
+2026-10-08T01:08:58.7170701Z > 40 |   actionOpenRef.current = actionOpen;
+2026-10-08T01:08:58.7171066Z      |   ^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7171364Z   41 |
+2026-10-08T01:08:58.7171613Z   42 |   const lastGridHeightRef = useRef(0);
+2026-10-08T01:08:58.7172212Z   43 |   const [handoffMinHeight, setHandoffMinHeight] = useState<number | undefined>();  react-hooks/refs
+2026-10-08T01:08:58.7172623Z 
+2026-10-08T01:08:58.7172938Z /home/runner/work/cpg-website/cpg-website/src/components/layout/MobileTabBar.tsx
+2026-10-08T01:08:58.7173906Z   175:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7174442Z 
+2026-10-08T01:08:58.7175433Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7176488Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7177201Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7177654Z 
+2026-10-08T01:08:58.7178443Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7179126Z 
+2026-10-08T01:08:58.7179477Z /home/runner/work/cpg-website/cpg-website/src/components/layout/MobileTabBar.tsx:175:5
+2026-10-08T01:08:58.7179915Z   173 |
+2026-10-08T01:08:58.7180119Z   174 |   useEffect(() => {
+2026-10-08T01:08:58.7180410Z > 175 |     setPendingTab(null);
+2026-10-08T01:08:58.7180786Z       |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7181133Z   176 |   }, [pathname]);
+2026-10-08T01:08:58.7181358Z   177 |
+2026-10-08T01:08:58.7181645Z   178 |   useEffect(() => {  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7181886Z 
+2026-10-08T01:08:58.7182177Z /home/runner/work/cpg-website/cpg-website/src/components/layout/UserMenu.tsx
+2026-10-08T01:08:58.7183052Z   48:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7183585Z 
+2026-10-08T01:08:58.7184574Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7185624Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7186342Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7186801Z 
+2026-10-08T01:08:58.7187615Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7188292Z 
+2026-10-08T01:08:58.7188628Z /home/runner/work/cpg-website/cpg-website/src/components/layout/UserMenu.tsx:48:5
+2026-10-08T01:08:58.7189043Z   46 |
+2026-10-08T01:08:58.7189252Z   47 |   useEffect(() => {
+2026-10-08T01:08:58.7189538Z > 48 |     setMenuOpen(false);
+2026-10-08T01:08:58.7189905Z      |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7190255Z   49 |   }, [pathname]);
+2026-10-08T01:08:58.7190480Z   50 |
+2026-10-08T01:08:58.7190736Z   51 |   return (  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7190960Z 
+2026-10-08T01:08:58.7191315Z /home/runner/work/cpg-website/cpg-website/src/components/manage/AddPhotosToAlbumModal.tsx
+2026-10-08T01:08:58.7192130Z   88:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7192514Z 
+2026-10-08T01:08:58.7193645Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7194702Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7195414Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7195871Z 
+2026-10-08T01:08:58.7196649Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7197335Z 
+2026-10-08T01:08:58.7197737Z /home/runner/work/cpg-website/cpg-website/src/components/manage/AddPhotosToAlbumModal.tsx:88:5
+2026-10-08T01:08:58.7198537Z   86 |   // Reset selection and refetch albums when modal opens with new photos
+2026-10-08T01:08:58.7198938Z   87 |   useEffect(() => {
+2026-10-08T01:08:58.7199247Z > 88 |     setSelectedAlbumIds(new Set());
+2026-10-08T01:08:58.7199643Z      |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7199989Z   89 |     setError(null);
+2026-10-08T01:08:58.7200228Z   90 |     if (!user) return;
+2026-10-08T01:08:58.7200516Z   91 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7200708Z 
+2026-10-08T01:08:58.7201047Z /home/runner/work/cpg-website/cpg-website/src/components/manage/AlbumSwitcher.tsx
+2026-10-08T01:08:58.7201729Z   51:38  warning  Compilation Skipped: Existing memoization could not be preserved
+2026-10-08T01:08:58.7202055Z 
+2026-10-08T01:08:58.7204074Z React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `user`, but the source dependencies were [slug, router, user?.id, queryClient]. Inferred less specific property than source.
+2026-10-08T01:08:58.7205565Z 
+2026-10-08T01:08:58.7205917Z /home/runner/work/cpg-website/cpg-website/src/components/manage/AlbumSwitcher.tsx:51:38
+2026-10-08T01:08:58.7206446Z   49 |   const [isOpen, setIsOpen] = useState(false);
+2026-10-08T01:08:58.7206874Z   50 |
+2026-10-08T01:08:58.7207247Z > 51 |   const handleNavigate = useCallback((album: SwitcherAlbum) => {
+2026-10-08T01:08:58.7207681Z      |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7208033Z > 52 |     if (album.slug === slug) {
+2026-10-08T01:08:58.7208328Z      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7208620Z > 53 |       setIsOpen(false);
+2026-10-08T01:08:58.7209101Z      …
+2026-10-08T01:08:58.7209323Z      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7209572Z > 72 |     });
+2026-10-08T01:08:58.7209800Z      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7210149Z > 73 |   }, [slug, router, user?.id, queryClient]);
+2026-10-08T01:08:58.7210532Z      | ^^^^ Could not preserve existing manual memoization
+2026-10-08T01:08:58.7210844Z   74 |
+2026-10-08T01:08:58.7211191Z   75 |   const handleBackToAlbums = useCallback((e: React.MouseEvent) => {
+2026-10-08T01:08:58.7211718Z   76 |     e.preventDefault();  react-hooks/preserve-manual-memoization
+2026-10-08T01:08:58.7212002Z 
+2026-10-08T01:08:58.7212351Z /home/runner/work/cpg-website/cpg-website/src/components/manage/BulkAlbumEditForm.tsx
+2026-10-08T01:08:58.7212979Z   165:9  error  Error: Cannot access variable before it is declared
+2026-10-08T01:08:58.7213409Z 
+2026-10-08T01:08:58.7213984Z `handleBulkDelete` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+2026-10-08T01:08:58.7214510Z 
+2026-10-08T01:08:58.7214881Z /home/runner/work/cpg-website/cpg-website/src/components/manage/BulkAlbumEditForm.tsx:165:9
+2026-10-08T01:08:58.7215498Z   163 |       if (e.key === 'Delete' && !isSaving && !isLoading && !isDeleting) {
+2026-10-08T01:08:58.7215902Z   164 |         e.preventDefault();
+2026-10-08T01:08:58.7216211Z > 165 |         handleBulkDelete();
+2026-10-08T01:08:58.7216586Z       |         ^^^^^^^^^^^^^^^^ `handleBulkDelete` accessed before it is declared
+2026-10-08T01:08:58.7216939Z   166 |       }
+2026-10-08T01:08:58.7217143Z   167 |     };
+2026-10-08T01:08:58.7217342Z   168 |
+2026-10-08T01:08:58.7217443Z 
+2026-10-08T01:08:58.7217819Z /home/runner/work/cpg-website/cpg-website/src/components/manage/BulkAlbumEditForm.tsx:207:3
+2026-10-08T01:08:58.7218274Z   205 |   };
+2026-10-08T01:08:58.7218469Z   206 |
+2026-10-08T01:08:58.7218742Z > 207 |   const handleBulkDelete = async () => {
+2026-10-08T01:08:58.7219073Z       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7219712Z > 208 |     const confirmed = await confirm(confirmDeleteAlbums(selectedAlbums));
+2026-10-08T01:08:58.7220191Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7220549Z > 209 |     if (!confirmed) return;
+2026-10-08T01:08:58.7220834Z       …
+2026-10-08T01:08:58.7221100Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7221409Z > 228 |     }
+2026-10-08T01:08:58.7221692Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7221993Z > 229 |   };
+2026-10-08T01:08:58.7222251Z       | ^^^^^ `handleBulkDelete` is declared here
+2026-10-08T01:08:58.7222533Z   230 |
+2026-10-08T01:08:58.7222754Z   231 |   const triggerSubmit = () => {
+2026-10-08T01:08:58.7223161Z   232 |     formRef.current?.requestSubmit();  react-hooks/immutability
+2026-10-08T01:08:58.7223561Z 
+2026-10-08T01:08:58.7223884Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx
+2026-10-08T01:08:58.7224667Z   213:7   warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7225067Z 
+2026-10-08T01:08:58.7226048Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7227120Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7227970Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7228421Z 
+2026-10-08T01:08:58.7229206Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7229898Z 
+2026-10-08T01:08:58.7230254Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:213:7
+2026-10-08T01:08:58.7230720Z   211 |   useEffect(() => {
+2026-10-08T01:08:58.7230972Z   212 |     if (!showExif) {
+2026-10-08T01:08:58.7231276Z > 213 |       setPopoverPosition(null);
+2026-10-08T01:08:58.7231677Z       |       ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7232029Z   214 |     }
+2026-10-08T01:08:58.7232237Z   215 |   }, [showExif]);
+2026-10-08T01:08:58.7232603Z   216 |                                                  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7233094Z   371:34  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7233472Z 
+2026-10-08T01:08:58.7234755Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7235793Z 
+2026-10-08T01:08:58.7236158Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:371:34
+2026-10-08T01:08:58.7236612Z   369 |             )
+2026-10-08T01:08:58.7236838Z   370 |           )}
+2026-10-08T01:08:58.7237341Z > 371 |           {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
+2026-10-08T01:08:58.7237929Z       |                                  ^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+2026-10-08T01:08:58.7238327Z   372 |             createPortal(
+2026-10-08T01:08:58.7238584Z   373 |               <div
+2026-10-08T01:08:58.7239650Z   374 |                 className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"                                                                                                                                                                        react-hooks/refs
+2026-10-08T01:08:58.7240862Z   371:34  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7241106Z 
+2026-10-08T01:08:58.7242335Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7243477Z 
+2026-10-08T01:08:58.7243841Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:371:34
+2026-10-08T01:08:58.7244290Z   369 |             )
+2026-10-08T01:08:58.7244505Z   370 |           )}
+2026-10-08T01:08:58.7244992Z > 371 |           {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
+2026-10-08T01:08:58.7245574Z       |                                  ^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+2026-10-08T01:08:58.7245955Z   372 |             createPortal(
+2026-10-08T01:08:58.7246209Z   373 |               <div
+2026-10-08T01:08:58.7247301Z   374 |                 className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"                                                                                                                                                                        react-hooks/refs
+2026-10-08T01:08:58.7248391Z   371:34  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7248621Z 
+2026-10-08T01:08:58.7250016Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7251093Z 
+2026-10-08T01:08:58.7251473Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:371:34
+2026-10-08T01:08:58.7251945Z   369 |             )
+2026-10-08T01:08:58.7252186Z   370 |           )}
+2026-10-08T01:08:58.7252678Z > 371 |           {showPrivateTooltip && privateLinkRef.current && typeof window !== 'undefined' &&
+2026-10-08T01:08:58.7253433Z       |                                  ^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+2026-10-08T01:08:58.7253824Z   372 |             createPortal(
+2026-10-08T01:08:58.7254089Z   373 |               <div
+2026-10-08T01:08:58.7255154Z   374 |                 className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"                                                                                                                                                                        react-hooks/refs
+2026-10-08T01:08:58.7256215Z   376:27  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7256454Z 
+2026-10-08T01:08:58.7257681Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7258713Z 
+2026-10-08T01:08:58.7259076Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:376:27
+2026-10-08T01:08:58.7259960Z   374 |                 className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"
+2026-10-08T01:08:58.7260613Z   375 |                 style={{
+2026-10-08T01:08:58.7261125Z > 376 |                   top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
+2026-10-08T01:08:58.7261763Z       |                           ^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+2026-10-08T01:08:58.7262456Z   377 |                   right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
+2026-10-08T01:08:58.7263084Z   378 |                 }}
+2026-10-08T01:08:58.7263625Z   379 |                 onClick={(e) => e.stopPropagation()}                        react-hooks/refs
+2026-10-08T01:08:58.7264184Z   376:27  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7264416Z 
+2026-10-08T01:08:58.7265656Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7266684Z 
+2026-10-08T01:08:58.7267039Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:376:27
+2026-10-08T01:08:58.7267946Z   374 |                 className="fixed z-100 w-52 bg-background-light border border-border-color rounded-lg shadow-lg p-2.5 text-xs text-foreground/80"
+2026-10-08T01:08:58.7268593Z   375 |                 style={{
+2026-10-08T01:08:58.7269094Z > 376 |                   top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
+2026-10-08T01:08:58.7269751Z       |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+2026-10-08T01:08:58.7270466Z   377 |                   right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
+2026-10-08T01:08:58.7270955Z   378 |                 }}
+2026-10-08T01:08:58.7271430Z   379 |                 onClick={(e) => e.stopPropagation()}  react-hooks/refs
+2026-10-08T01:08:58.7271931Z   377:49  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7272169Z 
+2026-10-08T01:08:58.7273528Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7274566Z 
+2026-10-08T01:08:58.7274933Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:377:49
+2026-10-08T01:08:58.7275404Z   375 |                 style={{
+2026-10-08T01:08:58.7275852Z   376 |                   top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
+2026-10-08T01:08:58.7276605Z > 377 |                   right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
+2026-10-08T01:08:58.7277333Z       |                                                 ^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+2026-10-08T01:08:58.7277770Z   378 |                 }}
+2026-10-08T01:08:58.7278074Z   379 |                 onClick={(e) => e.stopPropagation()}
+2026-10-08T01:08:58.7278630Z   380 |               >                                                                                                                                    react-hooks/refs
+2026-10-08T01:08:58.7279203Z   377:49  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7279436Z 
+2026-10-08T01:08:58.7280655Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7281680Z 
+2026-10-08T01:08:58.7282044Z /home/runner/work/cpg-website/cpg-website/src/components/manage/PhotoListItem.tsx:377:49
+2026-10-08T01:08:58.7282515Z   375 |                 style={{
+2026-10-08T01:08:58.7282966Z   376 |                   top: `${privateLinkRef.current.getBoundingClientRect().bottom + 4}px`,
+2026-10-08T01:08:58.7283847Z > 377 |                   right: `${window.innerWidth - privateLinkRef.current.getBoundingClientRect().right}px`,
+2026-10-08T01:08:58.7284609Z       |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render
+2026-10-08T01:08:58.7285246Z   378 |                 }}
+2026-10-08T01:08:58.7285551Z   379 |                 onClick={(e) => e.stopPropagation()}
+2026-10-08T01:08:58.7286076Z   380 |               >                                                                                                              react-hooks/refs
+2026-10-08T01:08:58.7286396Z 
+2026-10-08T01:08:58.7286753Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SharedAlbumEditForm.tsx
+2026-10-08T01:08:58.7287559Z   161:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7287960Z 
+2026-10-08T01:08:58.7288937Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7290015Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7291119Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7291647Z 
+2026-10-08T01:08:58.7292490Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7293400Z 
+2026-10-08T01:08:58.7294126Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SharedAlbumEditForm.tsx:161:7
+2026-10-08T01:08:58.7294772Z   159 |     if (!album || isNewAlbum) {
+2026-10-08T01:08:58.7295199Z   160 |       reset(formDefaultValues);
+2026-10-08T01:08:58.7295739Z > 161 |       setHasEditedSlug(false);
+2026-10-08T01:08:58.7296226Z       |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7296720Z   162 |       return;
+2026-10-08T01:08:58.7297068Z   163 |     }
+2026-10-08T01:08:58.7297442Z   164 |                   react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7298241Z   193:9  error    Error: Cannot access variable before it is declared
+2026-10-08T01:08:58.7298545Z 
+2026-10-08T01:08:58.7299146Z `handleDelete` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+2026-10-08T01:08:58.7299738Z 
+2026-10-08T01:08:58.7300174Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SharedAlbumEditForm.tsx:193:9
+2026-10-08T01:08:58.7300886Z   191 |       if (e.key === 'Delete' && !isSaving && !isDeleting) {
+2026-10-08T01:08:58.7301421Z   192 |         e.preventDefault();
+2026-10-08T01:08:58.7301845Z > 193 |         handleDelete();
+2026-10-08T01:08:58.7302296Z       |         ^^^^^^^^^^^^ `handleDelete` accessed before it is declared
+2026-10-08T01:08:58.7302768Z   194 |       }
+2026-10-08T01:08:58.7303096Z   195 |     };
+2026-10-08T01:08:58.7315807Z   196 |
+2026-10-08T01:08:58.7315961Z 
+2026-10-08T01:08:58.7316409Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SharedAlbumEditForm.tsx:257:3
+2026-10-08T01:08:58.7316913Z   255 |   };
+2026-10-08T01:08:58.7317124Z   256 |
+2026-10-08T01:08:58.7317396Z > 257 |   const handleDelete = async () => {
+2026-10-08T01:08:58.7317735Z       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7318048Z > 258 |     if (!album) return;
+2026-10-08T01:08:58.7318323Z       | ^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7318556Z > 259 |
+2026-10-08T01:08:58.7318986Z       …
+2026-10-08T01:08:58.7319212Z       | ^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7319453Z > 272 |     }
+2026-10-08T01:08:58.7319679Z       | ^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7319908Z > 273 |   };
+2026-10-08T01:08:58.7320155Z       | ^^^^^ `handleDelete` is declared here
+2026-10-08T01:08:58.7320435Z   274 |
+2026-10-08T01:08:58.7320713Z   275 |   const handleDisableSharing = async () => {
+2026-10-08T01:08:58.7321124Z   276 |     if (!album) return;  react-hooks/immutability
+2026-10-08T01:08:58.7321699Z 
+2026-10-08T01:08:58.7322097Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SinglePhotoEditForm.tsx
+2026-10-08T01:08:58.7322935Z   163:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7323560Z 
+2026-10-08T01:08:58.7324549Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7325607Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7326315Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7326767Z 
+2026-10-08T01:08:58.7327541Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7328226Z 
+2026-10-08T01:08:58.7328615Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SinglePhotoEditForm.tsx:163:5
+2026-10-08T01:08:58.7329166Z   161 |       tags: photo.tags?.map((t) => t.tag) || [],
+2026-10-08T01:08:58.7329470Z   162 |     });
+2026-10-08T01:08:58.7329720Z > 163 |     setLocalError(null);
+2026-10-08T01:08:58.7330087Z       |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7330463Z   164 |     setLocalSuccess(false);
+2026-10-08T01:08:58.7330868Z   165 |   }, [photo, reset]);
+2026-10-08T01:08:58.7331544Z   166 |                                                                                                                                                                                                                                react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7332367Z   176:9  error    Error: Cannot access variable before it is declared
+2026-10-08T01:08:58.7332644Z 
+2026-10-08T01:08:58.7333180Z `handleDelete` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+2026-10-08T01:08:58.7333880Z 
+2026-10-08T01:08:58.7334281Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SinglePhotoEditForm.tsx:176:9
+2026-10-08T01:08:58.7334928Z   174 |       if (e.key === 'Delete' && !isSaving && !isLoading && !readOnly) {
+2026-10-08T01:08:58.7335319Z   175 |         e.preventDefault();
+2026-10-08T01:08:58.7335617Z > 176 |         handleDelete();
+2026-10-08T01:08:58.7335963Z       |         ^^^^^^^^^^^^ `handleDelete` accessed before it is declared
+2026-10-08T01:08:58.7336288Z   177 |       }
+2026-10-08T01:08:58.7336487Z   178 |     };
+2026-10-08T01:08:58.7336681Z   179 |
+2026-10-08T01:08:58.7336788Z 
+2026-10-08T01:08:58.7337169Z /home/runner/work/cpg-website/cpg-website/src/components/manage/SinglePhotoEditForm.tsx:200:3
+2026-10-08T01:08:58.7337650Z   198 |   };
+2026-10-08T01:08:58.7337835Z   199 |
+2026-10-08T01:08:58.7338102Z > 200 |   const handleDelete = async () => {
+2026-10-08T01:08:58.7338408Z       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7338829Z > 201 |     const confirmed = await confirm(confirmDeletePhoto(photo));
+2026-10-08T01:08:58.7339251Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7339596Z > 202 |     if (!confirmed) return;
+2026-10-08T01:08:58.7339908Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7340257Z > 203 |     await onDelete(photo.id);
+2026-10-08T01:08:58.7340578Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7340861Z > 204 |   };
+2026-10-08T01:08:58.7341108Z       | ^^^^^ `handleDelete` is declared here
+2026-10-08T01:08:58.7341377Z   205 |
+2026-10-08T01:08:58.7341598Z   206 |   const triggerSubmit = () => {
+2026-10-08T01:08:58.7341980Z   207 |     formRef.current?.requestSubmit();  react-hooks/immutability
+2026-10-08T01:08:58.7342388Z 
+2026-10-08T01:08:58.7342759Z /home/runner/work/cpg-website/cpg-website/src/components/scene/PastSceneEventsPaginated.tsx
+2026-10-08T01:08:58.7343758Z   47:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7344145Z 
+2026-10-08T01:08:58.7345126Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7346178Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7346884Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7347339Z 
+2026-10-08T01:08:58.7348118Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7348801Z 
+2026-10-08T01:08:58.7349209Z /home/runner/work/cpg-website/cpg-website/src/components/scene/PastSceneEventsPaginated.tsx:47:5
+2026-10-08T01:08:58.7349680Z   45 |
+2026-10-08T01:08:58.7349882Z   46 |   useEffect(() => {
+2026-10-08T01:08:58.7350182Z > 47 |     setAllEvents(filteredInitial);
+2026-10-08T01:08:58.7350572Z      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7350937Z   48 |     setExhausted(false);
+2026-10-08T01:08:58.7351397Z   49 |     bootstrappedCategoryFetchRef.current = false;
+2026-10-08T01:08:58.7351862Z   50 |   }, [category, filteredInitial]);  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7352141Z 
+2026-10-08T01:08:58.7352451Z /home/runner/work/cpg-website/cpg-website/src/components/shared/BottomSheet.tsx
+2026-10-08T01:08:58.7353004Z    43:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7353344Z 
+2026-10-08T01:08:58.7354575Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7355604Z 
+2026-10-08T01:08:58.7355937Z /home/runner/work/cpg-website/cpg-website/src/components/shared/BottomSheet.tsx:43:3
+2026-10-08T01:08:58.7356408Z   41 |   const mounted = useMounted();
+2026-10-08T01:08:58.7356669Z   42 |
+2026-10-08T01:08:58.7356906Z > 43 |   onCloseRef.current = onClose;
+2026-10-08T01:08:58.7357243Z      |   ^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7357538Z   44 |
+2026-10-08T01:08:58.7358122Z   45 |   // Ignore backdrop dismissals right after open — the opening tap can land on the backdrop.
+2026-10-08T01:08:58.7359179Z   46 |   useEffect(() => {                                                                                                                                                                                                                                                                                                                              react-hooks/refs
+2026-10-08T01:08:58.7360221Z   127:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7360616Z 
+2026-10-08T01:08:58.7361590Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7362631Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7363542Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7363990Z 
+2026-10-08T01:08:58.7364761Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7365604Z 
+2026-10-08T01:08:58.7365953Z /home/runner/work/cpg-website/cpg-website/src/components/shared/BottomSheet.tsx:127:7
+2026-10-08T01:08:58.7366404Z   125 |   useEffect(() => {
+2026-10-08T01:08:58.7366649Z   126 |     if (!isOpen) {
+2026-10-08T01:08:58.7366920Z > 127 |       setStartY(null);
+2026-10-08T01:08:58.7367263Z       |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7367620Z   128 |       setCurrentY(null);
+2026-10-08T01:08:58.7367900Z   129 |       setIsDragging(false);
+2026-10-08T01:08:58.7368211Z   130 |     }  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7368417Z 
+2026-10-08T01:08:58.7368759Z /home/runner/work/cpg-website/cpg-website/src/components/shared/DetailLikesSection.tsx
+2026-10-08T01:08:58.7369629Z   114:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+2026-10-08T01:08:58.7370562Z   121:7  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+2026-10-08T01:08:58.7370999Z 
+2026-10-08T01:08:58.7371295Z /home/runner/work/cpg-website/cpg-website/src/components/shared/Popover.tsx
+2026-10-08T01:08:58.7371826Z   95:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7372046Z 
+2026-10-08T01:08:58.7373557Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7374604Z 
+2026-10-08T01:08:58.7374933Z /home/runner/work/cpg-website/cpg-website/src/components/shared/Popover.tsx:95:3
+2026-10-08T01:08:58.7375602Z   93 |   const [autoResolvedSide, setAutoResolvedSide] = useState<ResolvedPopoverSide>('bottom');
+2026-10-08T01:08:58.7376142Z   94 |   const onOpenChangeRef = useRef(onOpenChange);
+2026-10-08T01:08:58.7376544Z > 95 |   onOpenChangeRef.current = onOpenChange;
+2026-10-08T01:08:58.7376914Z      |   ^^^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7377214Z   96 |
+2026-10-08T01:08:58.7377460Z   97 |   const isOpen = open ?? internalOpen;
+2026-10-08T01:08:58.7378061Z   98 |   const resolvedAlign: ResolvedPopoverAlign = align === 'auto' ? autoResolvedAlign : align;  react-hooks/refs
+2026-10-08T01:08:58.7378486Z 
+2026-10-08T01:08:58.7378831Z /home/runner/work/cpg-website/cpg-website/src/components/shared/ProfileStatsBadges.tsx
+2026-10-08T01:08:58.7380754Z ##[warning]  325:6  warning  React Hook useEffect has a missing dependency: 'syncEdges'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7382171Z 
+2026-10-08T01:08:58.7382532Z /home/runner/work/cpg-website/cpg-website/src/components/shared/RichTextEditor.tsx
+2026-10-08T01:08:58.7383122Z   245:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7383558Z 
+2026-10-08T01:08:58.7384786Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7385814Z 
+2026-10-08T01:08:58.7386181Z /home/runner/work/cpg-website/cpg-website/src/components/shared/RichTextEditor.tsx:245:3
+2026-10-08T01:08:58.7386627Z   243 |
+2026-10-08T01:08:58.7386915Z   244 |   const onImageUploadRef = useRef(onImageUpload);
+2026-10-08T01:08:58.7387339Z > 245 |   onImageUploadRef.current = onImageUpload;
+2026-10-08T01:08:58.7387723Z       |   ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7388098Z   246 |   const onChangeRef = useRef(onChange);
+2026-10-08T01:08:58.7388437Z   247 |   onChangeRef.current = onChange;
+2026-10-08T01:08:58.7388861Z   248 |   const uploadingRef = useRef(new Set<string>());  react-hooks/refs
+2026-10-08T01:08:58.7389558Z   247:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7389798Z 
+2026-10-08T01:08:58.7391021Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7392040Z 
+2026-10-08T01:08:58.7392407Z /home/runner/work/cpg-website/cpg-website/src/components/shared/RichTextEditor.tsx:247:3
+2026-10-08T01:08:58.7392934Z   245 |   onImageUploadRef.current = onImageUpload;
+2026-10-08T01:08:58.7393431Z   246 |   const onChangeRef = useRef(onChange);
+2026-10-08T01:08:58.7393788Z > 247 |   onChangeRef.current = onChange;
+2026-10-08T01:08:58.7394143Z       |   ^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7394525Z   248 |   const uploadingRef = useRef(new Set<string>());
+2026-10-08T01:08:58.7394833Z   249 |
+2026-10-08T01:08:58.7395188Z   250 |   const uploadBase64Images = useCallback(() => {        react-hooks/refs
+2026-10-08T01:08:58.7395498Z 
+2026-10-08T01:08:58.7395791Z /home/runner/work/cpg-website/cpg-website/src/components/shared/Tooltip.tsx
+2026-10-08T01:08:58.7396325Z   131:46  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7396559Z 
+2026-10-08T01:08:58.7397914Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7398952Z 
+2026-10-08T01:08:58.7399283Z /home/runner/work/cpg-website/cpg-website/src/components/shared/Tooltip.tsx:131:46
+2026-10-08T01:08:58.7399877Z   129 |   const childRef = (childElement as { ref?: React.Ref<HTMLElement> }).ref;
+2026-10-08T01:08:58.7400267Z   130 |
+2026-10-08T01:08:58.7400568Z > 131 |   const trigger = cloneElement(childElement, {
+2026-10-08T01:08:58.7400920Z       |                                              ^
+2026-10-08T01:08:58.7401280Z > 132 |     ref: (node: HTMLElement | null) => {
+2026-10-08T01:08:58.7401602Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7401927Z > 133 |       triggerRef.current = node;
+2026-10-08T01:08:58.7402298Z       …
+2026-10-08T01:08:58.7402518Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7402782Z > 150 |     },
+2026-10-08T01:08:58.7403018Z       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-08T01:08:58.7403413Z > 151 |   });
+2026-10-08T01:08:58.7403745Z       | ^^^^ Passing a ref to a function may read its value during render
+2026-10-08T01:08:58.7404101Z   152 |
+2026-10-08T01:08:58.7404294Z   153 |   return (
+2026-10-08T01:08:58.7404537Z   154 |     <>  react-hooks/refs
+2026-10-08T01:08:58.7404709Z 
+2026-10-08T01:08:58.7405036Z /home/runner/work/cpg-website/cpg-website/src/components/stats/StatsDonutChart.tsx
+2026-10-08T01:08:58.7405609Z   81:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7405844Z 
+2026-10-08T01:08:58.7407078Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7408094Z 
+2026-10-08T01:08:58.7408451Z /home/runner/work/cpg-website/cpg-website/src/components/stats/StatsDonutChart.tsx:81:3
+2026-10-08T01:08:58.7409081Z   79 |   const sectorVisualsRef = useRef<Map<number, SectorVisual>>(new Map());
+2026-10-08T01:08:58.7409467Z   80 |
+2026-10-08T01:08:58.7409747Z > 81 |   activeIndexRef.current = activeIndex;
+2026-10-08T01:08:58.7410121Z      |   ^^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7410424Z   82 |
+2026-10-08T01:08:58.7410776Z   83 |   const clearHighlight = useCallback(() => setActiveIndex(null), []);
+2026-10-08T01:08:58.7411315Z   84 |  react-hooks/refs
+2026-10-08T01:08:58.7411471Z 
+2026-10-08T01:08:58.7411823Z /home/runner/work/cpg-website/cpg-website/src/components/stats/StatsTimeSeriesChart.tsx
+2026-10-08T01:08:58.7412627Z   97:5  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7413012Z 
+2026-10-08T01:08:58.7414160Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7415212Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7415924Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7416379Z 
+2026-10-08T01:08:58.7417156Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7417840Z 
+2026-10-08T01:08:58.7418221Z /home/runner/work/cpg-website/cpg-website/src/components/stats/StatsTimeSeriesChart.tsx:97:5
+2026-10-08T01:08:58.7418680Z    95 |
+2026-10-08T01:08:58.7418880Z    96 |   useEffect(() => {
+2026-10-08T01:08:58.7419171Z >  97 |     setZoomPoints(null);
+2026-10-08T01:08:58.7419533Z       |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7420039Z    98 |     setDisplayBucket(baseBucket);
+2026-10-08T01:08:58.7420364Z    99 |     setIndexZoom(null);
+2026-10-08T01:08:58.7420732Z   100 |     setZoomHistory([]);  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7420990Z 
+2026-10-08T01:08:58.7421261Z /home/runner/work/cpg-website/cpg-website/src/context/AuthContext.tsx
+2026-10-08T01:08:58.7421983Z   57:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7422375Z 
+2026-10-08T01:08:58.7423506Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7424562Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7425282Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7425729Z 
+2026-10-08T01:08:58.7426507Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7427195Z 
+2026-10-08T01:08:58.7427484Z /home/runner/work/cpg-website/cpg-website/src/context/AuthContext.tsx:57:7
+2026-10-08T01:08:58.7427893Z   55 |   useEffect(() => {
+2026-10-08T01:08:58.7428202Z   56 |     if (!shouldLoadBrowserSupabase()) {
+2026-10-08T01:08:58.7428548Z > 57 |       setIsLoading(false);
+2026-10-08T01:08:58.7428915Z      |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7429287Z   58 |       markSessionReady();
+2026-10-08T01:08:58.7429542Z   59 |       return;
+2026-10-08T01:08:58.7429814Z   60 |     }  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7434179Z ##[warning]  95:6  warning  React Hook useEffect has a missing dependency: 'initialAuth'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7437103Z 
+2026-10-08T01:08:58.7437420Z /home/runner/work/cpg-website/cpg-website/src/context/ManageContext.tsx
+2026-10-08T01:08:58.7438178Z   61:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7438579Z 
+2026-10-08T01:08:58.7439557Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7440618Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7441334Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7441786Z 
+2026-10-08T01:08:58.7442563Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7443399Z 
+2026-10-08T01:08:58.7443857Z /home/runner/work/cpg-website/cpg-website/src/context/ManageContext.tsx:61:7
+2026-10-08T01:08:58.7444291Z   59 |   useEffect(() => {
+2026-10-08T01:08:58.7444534Z   60 |     if (user) {
+2026-10-08T01:08:58.7444778Z > 61 |       refreshCounts();
+2026-10-08T01:08:58.7445148Z      |       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7445489Z   62 |     }
+2026-10-08T01:08:58.7445725Z   63 |   }, [user, refreshCounts]);
+2026-10-08T01:08:58.7446036Z   64 |  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7446226Z 
+2026-10-08T01:08:58.7446534Z /home/runner/work/cpg-website/cpg-website/src/emails/feedback-notification.tsx
+2026-10-08T01:08:58.7447066Z   45:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7447288Z 
+2026-10-08T01:08:58.7447704Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7448091Z 
+2026-10-08T01:08:58.7448437Z /home/runner/work/cpg-website/cpg-website/src/emails/feedback-notification.tsx:45:5
+2026-10-08T01:08:58.7448910Z   43 |     submitterName = 'John Smith';
+2026-10-08T01:08:58.7449251Z   44 |     submitterEmail = 'john@example.com';
+2026-10-08T01:08:58.7449584Z > 45 |     subject = 'general';
+2026-10-08T01:08:58.7449874Z      |     ^^^^^^^ `subject` cannot be modified
+2026-10-08T01:08:58.7450481Z   46 |     message = 'I really love the new gallery feature! It would be great if you could add dark mode support as well.';
+2026-10-08T01:08:58.7451109Z   47 |     reviewLink = 'https://example.com/admin/feedback';
+2026-10-08T01:08:58.7451478Z   48 |   }  react-hooks/immutability
+2026-10-08T01:08:58.7451662Z 
+2026-10-08T01:08:58.7451964Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx
+2026-10-08T01:08:58.7452490Z   68:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7452713Z 
+2026-10-08T01:08:58.7453118Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7453672Z 
+2026-10-08T01:08:58.7454015Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx:68:5
+2026-10-08T01:08:58.7454481Z   66 |     adminName = 'Admin User';
+2026-10-08T01:08:58.7454802Z   67 |     recipientEmail = 'admin@example.com';
+2026-10-08T01:08:58.7455157Z > 68 |     reporterName = 'John Smith';
+2026-10-08T01:08:58.7455502Z      |     ^^^^^^^^^^^^ `reporterName` cannot be modified
+2026-10-08T01:08:58.7455855Z   69 |     reporterNickname = 'johnsmith';
+2026-10-08T01:08:58.7456402Z   70 |     reporterEmail = 'john@example.com';
+2026-10-08T01:08:58.7457424Z   71 |     reporterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';                                                                                                                  react-hooks/immutability
+2026-10-08T01:08:58.7458390Z   71:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7458604Z 
+2026-10-08T01:08:58.7459002Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7459393Z 
+2026-10-08T01:08:58.7459719Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx:71:5
+2026-10-08T01:08:58.7460191Z   69 |     reporterNickname = 'johnsmith';
+2026-10-08T01:08:58.7460528Z   70 |     reporterEmail = 'john@example.com';
+2026-10-08T01:08:58.7461257Z > 71 |     reporterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
+2026-10-08T01:08:58.7461931Z      |     ^^^^^^^^^^^^^^^^^ `reporterAvatarUrl` cannot be modified
+2026-10-08T01:08:58.7462337Z   72 |     reporterProfileLink = `${baseUrl}/@johnsmith`;
+2026-10-08T01:08:58.7462687Z   73 |     entityType = 'photo';
+2026-10-08T01:08:58.7463412Z   74 |     entityTitle = 'Sunset Over Mountains';                                                                                         react-hooks/immutability
+2026-10-08T01:08:58.7464170Z   72:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7464390Z 
+2026-10-08T01:08:58.7464785Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7465175Z 
+2026-10-08T01:08:58.7465500Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx:72:5
+2026-10-08T01:08:58.7465980Z   70 |     reporterEmail = 'john@example.com';
+2026-10-08T01:08:58.7466656Z   71 |     reporterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
+2026-10-08T01:08:58.7467359Z > 72 |     reporterProfileLink = `${baseUrl}/@johnsmith`;
+2026-10-08T01:08:58.7467778Z      |     ^^^^^^^^^^^^^^^^^^^ `reporterProfileLink` cannot be modified
+2026-10-08T01:08:58.7468220Z   73 |     entityType = 'photo';
+2026-10-08T01:08:58.7468535Z   74 |     entityTitle = 'Sunset Over Mountains';
+2026-10-08T01:08:58.7469300Z   75 |     entityThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';  react-hooks/immutability
+2026-10-08T01:08:58.7470068Z   74:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7470283Z 
+2026-10-08T01:08:58.7470671Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7471058Z 
+2026-10-08T01:08:58.7471381Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx:74:5
+2026-10-08T01:08:58.7471893Z   72 |     reporterProfileLink = `${baseUrl}/@johnsmith`;
+2026-10-08T01:08:58.7472241Z   73 |     entityType = 'photo';
+2026-10-08T01:08:58.7472576Z > 74 |     entityTitle = 'Sunset Over Mountains';
+2026-10-08T01:08:58.7472926Z      |     ^^^^^^^^^^^ `entityTitle` cannot be modified
+2026-10-08T01:08:58.7473750Z   75 |     entityThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
+2026-10-08T01:08:58.7474425Z   76 |     entityLink = `${baseUrl}/@johnsmith/photo/abc123`;
+2026-10-08T01:08:58.7475079Z   77 |     reason = 'Inappropriate or explicit content';                                                                           react-hooks/immutability
+2026-10-08T01:08:58.7475699Z   75:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7475917Z 
+2026-10-08T01:08:58.7476306Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7476697Z 
+2026-10-08T01:08:58.7477026Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx:75:5
+2026-10-08T01:08:58.7477652Z   73 |     entityType = 'photo';
+2026-10-08T01:08:58.7477958Z   74 |     entityTitle = 'Sunset Over Mountains';
+2026-10-08T01:08:58.7478673Z > 75 |     entityThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
+2026-10-08T01:08:58.7479320Z      |     ^^^^^^^^^^^^^^^ `entityThumbnail` cannot be modified
+2026-10-08T01:08:58.7479726Z   76 |     entityLink = `${baseUrl}/@johnsmith/photo/abc123`;
+2026-10-08T01:08:58.7480133Z   77 |     reason = 'Inappropriate or explicit content';
+2026-10-08T01:08:58.7480861Z   78 |     details = 'This photo contains inappropriate content that violates community guidelines.';                       react-hooks/immutability
+2026-10-08T01:08:58.7481572Z   76:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7481794Z 
+2026-10-08T01:08:58.7482187Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7482574Z 
+2026-10-08T01:08:58.7482901Z /home/runner/work/cpg-website/cpg-website/src/emails/report-notification.tsx:76:5
+2026-10-08T01:08:58.7483529Z   74 |     entityTitle = 'Sunset Over Mountains';
+2026-10-08T01:08:58.7484188Z   75 |     entityThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
+2026-10-08T01:08:58.7484875Z > 76 |     entityLink = `${baseUrl}/@johnsmith/photo/abc123`;
+2026-10-08T01:08:58.7485264Z      |     ^^^^^^^^^^ `entityLink` cannot be modified
+2026-10-08T01:08:58.7485758Z   77 |     reason = 'Inappropriate or explicit content';
+2026-10-08T01:08:58.7486343Z   78 |     details = 'This photo contains inappropriate content that violates community guidelines.';
+2026-10-08T01:08:58.7486989Z   79 |     reviewLink = `${baseUrl}/admin/reports`;              react-hooks/immutability
+2026-10-08T01:08:58.7487328Z 
+2026-10-08T01:08:58.7487661Z /home/runner/work/cpg-website/cpg-website/src/emails/submission-notification.tsx
+2026-10-08T01:08:58.7488207Z   61:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7488423Z 
+2026-10-08T01:08:58.7489099Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7489708Z 
+2026-10-08T01:08:58.7490067Z /home/runner/work/cpg-website/cpg-website/src/emails/submission-notification.tsx:61:5
+2026-10-08T01:08:58.7490552Z   59 |     adminName = 'Admin User';
+2026-10-08T01:08:58.7490896Z   60 |     recipientEmail = 'admin@example.com';
+2026-10-08T01:08:58.7491278Z > 61 |     submitterName = 'John Smith';
+2026-10-08T01:08:58.7491626Z      |     ^^^^^^^^^^^^^ `submitterName` cannot be modified
+2026-10-08T01:08:58.7491987Z   62 |     submitterNickname = 'johnsmith';
+2026-10-08T01:08:58.7492666Z   63 |     submitterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
+2026-10-08T01:08:58.7493856Z   64 |     submitterProfileLink = `${baseUrl}/@johnsmith`;                                                   react-hooks/immutability
+2026-10-08T01:08:58.7494543Z   63:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7494771Z 
+2026-10-08T01:08:58.7495247Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7496093Z 
+2026-10-08T01:08:58.7496467Z /home/runner/work/cpg-website/cpg-website/src/emails/submission-notification.tsx:63:5
+2026-10-08T01:08:58.7496964Z   61 |     submitterName = 'John Smith';
+2026-10-08T01:08:58.7497313Z   62 |     submitterNickname = 'johnsmith';
+2026-10-08T01:08:58.7498060Z > 63 |     submitterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
+2026-10-08T01:08:58.7498746Z      |     ^^^^^^^^^^^^^^^^^^ `submitterAvatarUrl` cannot be modified
+2026-10-08T01:08:58.7499176Z   64 |     submitterProfileLink = `${baseUrl}/@johnsmith`;
+2026-10-08T01:08:58.7499514Z   65 |     photoCount = 3;
+2026-10-08T01:08:58.7500164Z   66 |     photoUrls = [                                                                           react-hooks/immutability
+2026-10-08T01:08:58.7500694Z   64:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7500916Z 
+2026-10-08T01:08:58.7501311Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7501703Z 
+2026-10-08T01:08:58.7502056Z /home/runner/work/cpg-website/cpg-website/src/emails/submission-notification.tsx:64:5
+2026-10-08T01:08:58.7502548Z   62 |     submitterNickname = 'johnsmith';
+2026-10-08T01:08:58.7503507Z   63 |     submitterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
+2026-10-08T01:08:58.7504260Z > 64 |     submitterProfileLink = `${baseUrl}/@johnsmith`;
+2026-10-08T01:08:58.7504682Z      |     ^^^^^^^^^^^^^^^^^^^^ `submitterProfileLink` cannot be modified
+2026-10-08T01:08:58.7505021Z   65 |     photoCount = 3;
+2026-10-08T01:08:58.7505269Z   66 |     photoUrls = [
+2026-10-08T01:08:58.7505896Z   67 |       'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',  react-hooks/immutability
+2026-10-08T01:08:58.7506412Z 
+2026-10-08T01:08:58.7506695Z /home/runner/work/cpg-website/cpg-website/src/emails/submission-result.tsx
+2026-10-08T01:08:58.7507207Z   46:5  error  Error: This value cannot be modified
+2026-10-08T01:08:58.7507420Z 
+2026-10-08T01:08:58.7507941Z Modifying component props or hook arguments is not allowed. Consider using a local variable instead.
+2026-10-08T01:08:58.7508334Z 
+2026-10-08T01:08:58.7508659Z /home/runner/work/cpg-website/cpg-website/src/emails/submission-result.tsx:46:5
+2026-10-08T01:08:58.7509072Z   44 |     ];
+2026-10-08T01:08:58.7509365Z   45 |     challengeTitle = 'Urban Photography Challenge';
+2026-10-08T01:08:58.7509849Z > 46 |     challengeLink = `${baseUrl}/challenges/urban-photography`;
+2026-10-08T01:08:58.7510271Z      |     ^^^^^^^^^^^^^ `challengeLink` cannot be modified
+2026-10-08T01:08:58.7510612Z   47 |     rejectionReason = null;
+2026-10-08T01:08:58.7510974Z   48 |     optOutLink = `${baseUrl}/unsubscribe/preview-token`;
+2026-10-08T01:08:58.7511343Z   49 |   }  react-hooks/immutability
+2026-10-08T01:08:58.7511523Z 
+2026-10-08T01:08:58.7511788Z /home/runner/work/cpg-website/cpg-website/src/hooks/useAccountForm.ts
+2026-10-08T01:08:58.7512348Z   235:25  warning  Compilation Skipped: Use of incompatible library
+2026-10-08T01:08:58.7512611Z 
+2026-10-08T01:08:58.7513860Z This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+2026-10-08T01:08:58.7514834Z 
+2026-10-08T01:08:58.7515138Z /home/runner/work/cpg-website/cpg-website/src/hooks/useAccountForm.ts:235:25
+2026-10-08T01:08:58.7515543Z   233 |
+2026-10-08T01:08:58.7515826Z   234 |   // Watch all form values for custom dirty tracking
+2026-10-08T01:08:58.7516211Z > 235 |   const currentValues = watch();
+2026-10-08T01:08:58.7516771Z       |                         ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+2026-10-08T01:08:58.7517248Z   236 |
+2026-10-08T01:08:58.7517503Z   237 |   // Check if avatar has pending changes
+2026-10-08T01:08:58.7518143Z   238 |   const hasAvatarChanges = pendingAvatarFile !== null || pendingAvatarRemove;  react-hooks/incompatible-library
+2026-10-08T01:08:58.7518595Z 
+2026-10-08T01:08:58.7518915Z /home/runner/work/cpg-website/cpg-website/src/hooks/useActiveSectionScroll.ts
+2026-10-08T01:08:58.7519462Z   44:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7519695Z 
+2026-10-08T01:08:58.7520932Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7522109Z 
+2026-10-08T01:08:58.7522459Z /home/runner/work/cpg-website/cpg-website/src/hooks/useActiveSectionScroll.ts:44:3
+2026-10-08T01:08:58.7523095Z   42 |   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+2026-10-08T01:08:58.7523722Z   43 |   const sectionIdsRef = useRef(sectionIds);
+2026-10-08T01:08:58.7524112Z > 44 |   sectionIdsRef.current = sectionIds;
+2026-10-08T01:08:58.7524484Z      |   ^^^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7524851Z   45 |   const sectionKey = sectionIds.join(',');
+2026-10-08T01:08:58.7525148Z   46 |
+2026-10-08T01:08:58.7525388Z   47 |   useEffect(() => {  react-hooks/refs
+2026-10-08T01:08:58.7525585Z 
+2026-10-08T01:08:58.7525877Z /home/runner/work/cpg-website/cpg-website/src/hooks/useCloseOnRouteChange.ts
+2026-10-08T01:08:58.7526419Z   15:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7526647Z 
+2026-10-08T01:08:58.7527876Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7528903Z 
+2026-10-08T01:08:58.7529230Z /home/runner/work/cpg-website/cpg-website/src/hooks/useCloseOnRouteChange.ts:15:3
+2026-10-08T01:08:58.7529705Z   13 |   const onCloseRef = useRef(onClose);
+2026-10-08T01:08:58.7530147Z   14 |   const openRef = useRef(open);
+2026-10-08T01:08:58.7530486Z > 15 |   onCloseRef.current = onClose;
+2026-10-08T01:08:58.7530829Z      |   ^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7531168Z   16 |   openRef.current = open;
+2026-10-08T01:08:58.7531416Z   17 |
+2026-10-08T01:08:58.7531675Z   18 |   useLayoutEffect(() => {  react-hooks/refs
+2026-10-08T01:08:58.7532105Z   16:3  warning  Error: Cannot access refs during render
+2026-10-08T01:08:58.7532330Z 
+2026-10-08T01:08:58.7533718Z React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+2026-10-08T01:08:58.7534786Z 
+2026-10-08T01:08:58.7535116Z /home/runner/work/cpg-website/cpg-website/src/hooks/useCloseOnRouteChange.ts:16:3
+2026-10-08T01:08:58.7535586Z   14 |   const openRef = useRef(open);
+2026-10-08T01:08:58.7535887Z   15 |   onCloseRef.current = onClose;
+2026-10-08T01:08:58.7536199Z > 16 |   openRef.current = open;
+2026-10-08T01:08:58.7536513Z      |   ^^^^^^^^^^^^^^^ Cannot update ref during render
+2026-10-08T01:08:58.7536802Z   17 |
+2026-10-08T01:08:58.7537017Z   18 |   useLayoutEffect(() => {
+2026-10-08T01:08:58.7537379Z   19 |     return subscribeRouteChange(() => {   react-hooks/refs
+2026-10-08T01:08:58.7537630Z 
+2026-10-08T01:08:58.7537899Z /home/runner/work/cpg-website/cpg-website/src/hooks/useFollowList.ts
+2026-10-08T01:08:58.7538623Z   137:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7539021Z 
+2026-10-08T01:08:58.7539995Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7541053Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7541765Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7542210Z 
+2026-10-08T01:08:58.7542989Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7543944Z 
+2026-10-08T01:08:58.7544246Z /home/runner/work/cpg-website/cpg-website/src/hooks/useFollowList.ts:137:7
+2026-10-08T01:08:58.7544676Z   135 |   useEffect(() => {
+2026-10-08T01:08:58.7544921Z   136 |     if (!enabled) {
+2026-10-08T01:08:58.7545166Z > 137 |       setQuery('');
+2026-10-08T01:08:58.7545373Z       |       ^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7545477Z   138 |       setMembers([]);
+2026-10-08T01:08:58.7545598Z   139 |       setTotalCount(0);
+2026-10-08T01:08:58.7545812Z   140 |       setHasMore(false);  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7545820Z 
+2026-10-08T01:08:58.7546085Z /home/runner/work/cpg-website/cpg-website/src/hooks/useFormChanges.ts
+2026-10-08T01:08:58.7547642Z ##[warning]  107:6  warning  React Hook useMemo has a missing dependency: 'extraChanges'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+2026-10-08T01:08:58.7548433Z 
+2026-10-08T01:08:58.7548726Z /home/runner/work/cpg-website/cpg-website/src/hooks/useNotifications.ts
+2026-10-08T01:08:58.7549186Z   68:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7549194Z 
+2026-10-08T01:08:58.7550170Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7550398Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7551008Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7551018Z 
+2026-10-08T01:08:58.7551803Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7551811Z 
+2026-10-08T01:08:58.7552115Z /home/runner/work/cpg-website/cpg-website/src/hooks/useNotifications.ts:68:7
+2026-10-08T01:08:58.7552228Z   66 |   useEffect(() => {
+2026-10-08T01:08:58.7552334Z   67 |     if (query.data) {
+2026-10-08T01:08:58.7552538Z > 68 |       setNotifications(query.data.notifications);
+2026-10-08T01:08:58.7552752Z      |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7552913Z   69 |       setUnseenCount(query.data.unseenCount);
+2026-10-08T01:08:58.7553075Z   70 |       setTotalCount(query.data.totalCount);
+2026-10-08T01:08:58.7553480Z   71 |       setHasMore(query.data.hasMore);  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7553491Z 
+2026-10-08T01:08:58.7553743Z /home/runner/work/cpg-website/cpg-website/src/hooks/useSearch.ts
+2026-10-08T01:08:58.7554179Z   33:7  warning  Error: Calling setState synchronously within an effect can trigger cascading renders
+2026-10-08T01:08:58.7554186Z 
+2026-10-08T01:08:58.7555161Z Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+2026-10-08T01:08:58.7555386Z * Update external systems with the latest state from React.
+2026-10-08T01:08:58.7555853Z * Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+2026-10-08T01:08:58.7555861Z 
+2026-10-08T01:08:58.7556633Z Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+2026-10-08T01:08:58.7556642Z 
+2026-10-08T01:08:58.7556914Z /home/runner/work/cpg-website/cpg-website/src/hooks/useSearch.ts:33:7
+2026-10-08T01:08:58.7557048Z   31 |     // Early exit for short queries
+2026-10-08T01:08:58.7557314Z   32 |     if (!debouncedQuery || debouncedQuery.trim().length < minQueryLength) {
+2026-10-08T01:08:58.7557433Z > 33 |       setResults([]);
+2026-10-08T01:08:58.7557760Z      |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+2026-10-08T01:08:58.7557898Z   34 |       setLastSearchedQuery('');
+2026-10-08T01:08:58.7557995Z   35 |       return;
+2026-10-08T01:08:58.7558136Z   36 |     }  react-hooks/set-state-in-effect
+2026-10-08T01:08:58.7558144Z 
+2026-10-08T01:08:58.7558532Z ✖ 94 problems (14 errors, 80 warnings)
+2026-10-08T01:08:58.7558789Z   0 errors and 2 warnings potentially fixable with the `--fix` option.
+2026-10-08T01:08:58.7558797Z 
+2026-10-08T01:08:59.0734472Z [ELIFECYCLE] Command failed with exit code 1.
+2026-10-08T01:08:59.1003110Z ##[error]Process completed with exit code 1.
+2026-10-08T01:08:59.1102330Z Post job cleanup.
+2026-10-08T01:08:59.2708475Z Pruning is unnecessary.
+2026-10-08T01:08:59.2874147Z Post job cleanup.
+2026-10-08T01:08:59.3818523Z [command]/usr/bin/git version
+2026-10-08T01:08:59.3862173Z git version 2.55.0
+2026-10-08T01:08:59.3903068Z Temporarily overriding HOME='/home/runner/work/_temp/7f2913c3-31d5-44f6-ae78-02b2397b68e0' before making global git config changes
+2026-10-08T01:08:59.3904529Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-08T01:08:59.3909574Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/cpg-website/cpg-website
+2026-10-08T01:08:59.3953408Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-08T01:08:59.3989568Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-08T01:08:59.4232171Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-08T01:08:59.4262165Z http.https://github.com/.extraheader
+2026-10-08T01:08:59.4273748Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-08T01:08:59.4308696Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-08T01:08:59.4554531Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-08T01:08:59.4590123Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-08T01:08:59.4973706Z Cleaning up orphan processes

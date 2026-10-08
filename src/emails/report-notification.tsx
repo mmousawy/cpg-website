@@ -62,51 +62,71 @@ export const ReportNotificationEmail = ({
   reviewLink: string;
   isAnonymous: boolean;
 }) => {
-  if (preview) {
-    adminName = 'Admin User';
-    recipientEmail = 'admin@example.com';
-    reporterName = 'John Smith';
-    reporterNickname = 'johnsmith';
-    reporterEmail = 'john@example.com';
-    reporterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
-    reporterProfileLink = `${baseUrl}/@johnsmith`;
-    entityType = 'photo';
-    entityTitle = 'Sunset Over Mountains';
-    entityThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
-    entityLink = `${baseUrl}/@johnsmith/photo/abc123`;
-    reason = 'Inappropriate or explicit content';
-    details = 'This photo contains inappropriate content that violates community guidelines.';
-    reviewLink = `${baseUrl}/admin/reports`;
-    isAnonymous = false;
-  }
+  const data = preview
+    ? {
+      adminName: 'Admin User',
+      recipientEmail: 'admin@example.com',
+      reporterName: 'John Smith',
+      reporterNickname: 'johnsmith' as string | null,
+      reporterEmail: 'john@example.com' as string | null,
+      reporterAvatarUrl:
+          'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg',
+      reporterProfileLink: `${baseUrl}/@johnsmith`,
+      entityType: 'photo' as const,
+      entityTitle: 'Sunset Over Mountains',
+      entityThumbnail:
+          'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+      entityLink: `${baseUrl}/@johnsmith/photo/abc123`,
+      reason: 'Inappropriate or explicit content',
+      details: 'This photo contains inappropriate content that violates community guidelines.',
+      reviewLink: `${baseUrl}/admin/reports`,
+      isAnonymous: false,
+    }
+    : {
+      adminName,
+      recipientEmail,
+      reporterName,
+      reporterNickname,
+      reporterEmail,
+      reporterAvatarUrl,
+      reporterProfileLink,
+      entityType,
+      entityTitle,
+      entityThumbnail,
+      entityLink,
+      reason,
+      details,
+      reviewLink,
+      isAnonymous,
+    };
 
-  const previewText = `${reporterName} reported ${entityTitle}`;
+  const previewText = `${data.reporterName} reported ${data.entityTitle}`;
 
   const entityTypeLabel = {
     photo: 'Photo',
     album: 'Album',
     profile: 'Profile',
     comment: 'Comment',
-  }[entityType];
+  }[data.entityType];
 
   const renderEntityRow = (wrapLink: boolean) => {
     const row = (
       <Row>
-        {entityThumbnail && (
+        {data.entityThumbnail && (
           <Column
             width="64"
           >
             <Img
-              src={entityThumbnail}
+              src={data.entityThumbnail}
               width="64"
               height="64"
-              alt={entityTitle}
+              alt={data.entityTitle}
               style={{ borderRadius: '6px', objectFit: 'cover' }}
             />
           </Column>
         )}
         <Column
-          style={{ verticalAlign: 'top', paddingLeft: entityThumbnail ? '16px' : 0 }}
+          style={{ verticalAlign: 'top', paddingLeft: data.entityThumbnail ? '16px' : 0 }}
         >
           <Text
             style={{ ...emailMutedTextStyle, margin: 0, lineHeight: '16px' }}
@@ -116,15 +136,15 @@ export const ReportNotificationEmail = ({
           <Text
             style={{ ...emailCalloutTitleStyle, fontSize: '15px', lineHeight: '24px', margin: 0 }}
           >
-            {entityTitle}
+            {data.entityTitle}
           </Text>
         </Column>
       </Row>
     );
-    if (wrapLink && entityLink) {
+    if (wrapLink && data.entityLink) {
       return (
         <Link
-          href={entityLink}
+          href={data.entityLink}
         >
           {row}
         </Link>
@@ -134,36 +154,36 @@ export const ReportNotificationEmail = ({
   };
 
   const renderReporterAvatar = () => {
-    if (reporterProfileLink) {
+    if (data.reporterProfileLink) {
       return (
         <Link
-          href={reporterProfileLink}
+          href={data.reporterProfileLink}
         >
-          {reporterAvatarUrl ? (
+          {data.reporterAvatarUrl ? (
             <Img
-              src={reporterAvatarUrl}
+              src={data.reporterAvatarUrl}
               width="40"
               height="40"
-              alt={reporterName}
+              alt={data.reporterName}
               style={{ borderRadius: '50%', objectFit: 'cover' }}
             />
           ) : (
             <div
               style={avatarPlaceholderStyle}
             >
-              {reporterName.charAt(0).toUpperCase()}
+              {data.reporterName.charAt(0).toUpperCase()}
             </div>
           )}
         </Link>
       );
     }
-    if (reporterAvatarUrl) {
+    if (data.reporterAvatarUrl) {
       return (
         <Img
-          src={reporterAvatarUrl}
+          src={data.reporterAvatarUrl}
           width="40"
           height="40"
-          alt={reporterName}
+          alt={data.reporterName}
           style={{ borderRadius: '50%', objectFit: 'cover' }}
         />
       );
@@ -172,7 +192,7 @@ export const ReportNotificationEmail = ({
       <div
         style={avatarPlaceholderStyle}
       >
-        {reporterName.charAt(0).toUpperCase()}
+        {data.reporterName.charAt(0).toUpperCase()}
       </div>
     );
   };
@@ -180,8 +200,8 @@ export const ReportNotificationEmail = ({
   return (
     <EmailLayout
       previewText={previewText}
-      fullName={adminName}
-      recipientEmail={recipientEmail}
+      fullName={data.adminName}
+      recipientEmail={data.recipientEmail}
     >
       <EmailHeading>
         New content report
@@ -190,7 +210,7 @@ export const ReportNotificationEmail = ({
       <EmailText>
         Hi
         {' '}
-        {adminName}
+        {data.adminName}
         ,
       </EmailText>
       <br />
@@ -201,7 +221,7 @@ export const ReportNotificationEmail = ({
       <Section
         style={{ margin: '20px 0' }}
       >
-        {renderEntityRow(!!entityLink)}
+        {renderEntityRow(!!data.entityLink)}
       </Section>
 
       <Section
@@ -217,42 +237,42 @@ export const ReportNotificationEmail = ({
           <Column
             style={{ verticalAlign: 'top', paddingLeft: '12px' }}
           >
-            {reporterProfileLink ? (
+            {data.reporterProfileLink ? (
               <Link
-                href={reporterProfileLink}
+                href={data.reporterProfileLink}
                 style={{ textDecoration: 'none', color: emailTextStyle.color }}
               >
                 <Text
                   style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
                 >
-                  {reporterName}
+                  {data.reporterName}
                 </Text>
               </Link>
             ) : (
               <Text
                 style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
               >
-                {reporterName}
+                {data.reporterName}
               </Text>
             )}
-            {isAnonymous && (
+            {data.isAnonymous && (
               <Text
                 style={{ ...emailMutedTextStyle, marginBottom: '4px', lineHeight: '16px' }}
               >
                 Anonymous reporter
               </Text>
             )}
-            {reporterNickname && !isAnonymous && (
-              reporterProfileLink ? (
+            {data.reporterNickname && !data.isAnonymous && (
+              data.reporterProfileLink ? (
                 <Link
-                  href={reporterProfileLink}
+                  href={data.reporterProfileLink}
                   style={{ textDecoration: 'none' }}
                 >
                   <Text
                     style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
                   >
                     @
-                    {reporterNickname}
+                    {data.reporterNickname}
                   </Text>
                 </Link>
               ) : (
@@ -260,15 +280,15 @@ export const ReportNotificationEmail = ({
                   style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
                 >
                   @
-                  {reporterNickname}
+                  {data.reporterNickname}
                 </Text>
               )
             )}
-            {reporterEmail && isAnonymous && (
+            {data.reporterEmail && data.isAnonymous && (
               <Text
                 style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
               >
-                {reporterEmail}
+                {data.reporterEmail}
               </Text>
             )}
           </Column>
@@ -289,9 +309,9 @@ export const ReportNotificationEmail = ({
         <Text
           style={{ ...emailTextStyle, lineHeight: '20px' }}
         >
-          {reason}
+          {data.reason}
         </Text>
-        {details && (
+        {data.details && (
           <>
             <Text
               style={{ ...emailCalloutLabelStyle, marginTop: '16px', marginBottom: '8px' }}
@@ -301,7 +321,7 @@ export const ReportNotificationEmail = ({
             <Text
               style={{ ...emailTextStyle, lineHeight: '20px' }}
             >
-              {details}
+              {data.details}
             </Text>
           </>
         )}
@@ -311,7 +331,7 @@ export const ReportNotificationEmail = ({
         style={{ margin: '20px 0' }}
       >
         <EmailButton
-          href={reviewLink}
+          href={data.reviewLink}
           variant="primary"
           style={{ marginTop: 0 }}
         >

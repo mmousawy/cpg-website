@@ -55,61 +55,78 @@ export const SubmissionNotificationEmail = ({
   challengeLink: string;
   reviewLink: string;
 }) => {
-  if (preview) {
-    adminName = 'Admin User';
-    recipientEmail = 'admin@example.com';
-    submitterName = 'John Smith';
-    submitterNickname = 'johnsmith';
-    submitterAvatarUrl = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg';
-    submitterProfileLink = `${baseUrl}/@johnsmith`;
-    photoCount = 3;
-    photoUrls = [
-      'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
-      'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
-      'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
-    ];
-    challengeTitle = 'Urban Photography Challenge';
-    challengeThumbnail = 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg';
-    challengeLink = `${baseUrl}/challenges/urban-photography`;
-    reviewLink = `${baseUrl}/admin/challenges/urban-photography/submissions`;
-  }
+  const data = preview
+    ? {
+      adminName: 'Admin User',
+      recipientEmail: 'admin@example.com',
+      submitterName: 'John Smith',
+      submitterNickname: 'johnsmith' as string | null,
+      submitterAvatarUrl:
+          'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-avatar.jpg',
+      submitterProfileLink: `${baseUrl}/@johnsmith`,
+      photoCount: 3,
+      photoUrls: [
+        'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+        'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+        'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+      ],
+      challengeTitle: 'Urban Photography Challenge',
+      challengeThumbnail:
+          'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+      challengeLink: `${baseUrl}/challenges/urban-photography`,
+      reviewLink: `${baseUrl}/admin/challenges/urban-photography/submissions`,
+    }
+    : {
+      adminName,
+      recipientEmail,
+      submitterName,
+      submitterNickname,
+      submitterAvatarUrl,
+      submitterProfileLink,
+      photoCount,
+      photoUrls,
+      challengeTitle,
+      challengeThumbnail,
+      challengeLink,
+      reviewLink,
+    };
 
-  const displayPhotos = (photoUrls || []).slice(0, 6);
-  const remainingPhotos = photoCount - displayPhotos.length;
+  const displayPhotos = (data.photoUrls || []).slice(0, 6);
+  const remainingPhotos = data.photoCount - displayPhotos.length;
 
-  const previewText = `${submitterName} submitted ${photoCount} photo${photoCount !== 1 ? 's' : ''} to "${challengeTitle}"`;
+  const previewText = `${data.submitterName} submitted ${data.photoCount} photo${data.photoCount !== 1 ? 's' : ''} to "${data.challengeTitle}"`;
 
   const renderAvatar = () => {
-    if (submitterProfileLink) {
+    if (data.submitterProfileLink) {
       return (
         <Link
-          href={submitterProfileLink}
+          href={data.submitterProfileLink}
         >
-          {submitterAvatarUrl ? (
+          {data.submitterAvatarUrl ? (
             <Img
-              src={submitterAvatarUrl}
+              src={data.submitterAvatarUrl}
               width="40"
               height="40"
-              alt={submitterName}
+              alt={data.submitterName}
               style={{ borderRadius: '50%', objectFit: 'cover' }}
             />
           ) : (
             <div
               style={avatarPlaceholderStyle}
             >
-              {submitterName.charAt(0).toUpperCase()}
+              {data.submitterName.charAt(0).toUpperCase()}
             </div>
           )}
         </Link>
       );
     }
-    if (submitterAvatarUrl) {
+    if (data.submitterAvatarUrl) {
       return (
         <Img
-          src={submitterAvatarUrl}
+          src={data.submitterAvatarUrl}
           width="40"
           height="40"
-          alt={submitterName}
+          alt={data.submitterName}
           style={{ borderRadius: '50%', objectFit: 'cover' }}
         />
       );
@@ -118,7 +135,7 @@ export const SubmissionNotificationEmail = ({
       <div
         style={avatarPlaceholderStyle}
       >
-        {submitterName.charAt(0).toUpperCase()}
+        {data.submitterName.charAt(0).toUpperCase()}
       </div>
     );
   };
@@ -126,8 +143,8 @@ export const SubmissionNotificationEmail = ({
   return (
     <EmailLayout
       previewText={previewText}
-      fullName={adminName}
-      recipientEmail={recipientEmail}
+      fullName={data.adminName}
+      recipientEmail={data.recipientEmail}
     >
       <EmailHeading>
         New challenge submission
@@ -136,7 +153,7 @@ export const SubmissionNotificationEmail = ({
       <EmailText>
         Hi
         {' '}
-        {adminName}
+        {data.adminName}
         ,
       </EmailText>
       <br />
@@ -148,29 +165,29 @@ export const SubmissionNotificationEmail = ({
         style={{ margin: '20px 0' }}
       >
         <Link
-          href={challengeLink}
+          href={data.challengeLink}
         >
           <Row>
-            {challengeThumbnail && (
+            {data.challengeThumbnail && (
               <Column
                 width="64"
               >
                 <Img
-                  src={challengeThumbnail}
+                  src={data.challengeThumbnail}
                   width="64"
                   height="64"
-                  alt={challengeTitle}
+                  alt={data.challengeTitle}
                   style={{ borderRadius: '6px', objectFit: 'cover' }}
                 />
               </Column>
             )}
             <Column
-              style={{ verticalAlign: 'top', paddingLeft: challengeThumbnail ? '16px' : 0 }}
+              style={{ verticalAlign: 'top', paddingLeft: data.challengeThumbnail ? '16px' : 0 }}
             >
               <Text
                 style={{ ...emailCalloutTitleStyle, fontSize: '15px', lineHeight: '24px', margin: 0 }}
               >
-                {challengeTitle}
+                {data.challengeTitle}
               </Text>
             </Column>
           </Row>
@@ -190,35 +207,35 @@ export const SubmissionNotificationEmail = ({
           <Column
             style={{ verticalAlign: 'top', paddingLeft: '12px' }}
           >
-            {submitterProfileLink ? (
+            {data.submitterProfileLink ? (
               <Link
-                href={submitterProfileLink}
+                href={data.submitterProfileLink}
                 style={{ color: emailTextStyle.color, textDecoration: 'none' }}
               >
                 <Text
                   style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
                 >
-                  {submitterName}
+                  {data.submitterName}
                 </Text>
               </Link>
             ) : (
               <Text
                 style={{ ...emailCalloutTitleStyle, marginBottom: '4px' }}
               >
-                {submitterName}
+                {data.submitterName}
               </Text>
             )}
-            {submitterNickname && (
-              submitterProfileLink ? (
+            {data.submitterNickname && (
+              data.submitterProfileLink ? (
                 <Link
-                  href={submitterProfileLink}
+                  href={data.submitterProfileLink}
                   style={{ textDecoration: 'none' }}
                 >
                   <Text
                     style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
                   >
                     @
-                    {submitterNickname}
+                    {data.submitterNickname}
                   </Text>
                 </Link>
               ) : (
@@ -226,7 +243,7 @@ export const SubmissionNotificationEmail = ({
                   style={{ ...emailMutedTextStyle, marginBottom: '8px', lineHeight: '16px' }}
                 >
                   @
-                  {submitterNickname}
+                  {data.submitterNickname}
                 </Text>
               )
             )}
@@ -235,10 +252,10 @@ export const SubmissionNotificationEmail = ({
             >
               Submitted
               {' '}
-              {photoCount}
+              {data.photoCount}
               {' '}
               photo
-              {photoCount !== 1 ? 's' : ''}
+              {data.photoCount !== 1 ? 's' : ''}
             </Text>
           </Column>
         </Row>
@@ -316,7 +333,7 @@ export const SubmissionNotificationEmail = ({
         style={{ margin: '20px 0' }}
       >
         <EmailButton
-          href={reviewLink}
+          href={data.reviewLink}
           variant="primary"
           style={{ marginTop: 0 }}
         >

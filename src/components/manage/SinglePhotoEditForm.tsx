@@ -164,6 +164,12 @@ export default function SinglePhotoEditForm({
     setLocalSuccess(false);
   }, [photo, reset]);
 
+  const handleDelete = async () => {
+    const confirmed = await confirm(confirmDeletePhoto(photo));
+    if (!confirmed) return;
+    await onDelete(photo.id);
+  };
+
   // Handle Delete key for single photo deletion
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -195,12 +201,6 @@ export default function SinglePhotoEditForm({
       const message = err instanceof Error ? err.message : 'Failed to save photo';
       setLocalError(message);
     }
-  };
-
-  const handleDelete = async () => {
-    const confirmed = await confirm(confirmDeletePhoto(photo));
-    if (!confirmed) return;
-    await onDelete(photo.id);
   };
 
   const triggerSubmit = () => {
