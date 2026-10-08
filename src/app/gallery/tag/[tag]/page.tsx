@@ -2,16 +2,14 @@ import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 
 import JustifiedPhotoGrid from '@/components/photo/JustifiedPhotoGrid';
-import EmptyState from '@/components/shared/EmptyState';
 import PopularTagsSection from '@/components/shared/PopularTagsSection';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
-import ImageSVG from 'public/icons/image.svg';
-
 // Cached data functions
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { ensureStaticParams } from '@/lib/staticParams';
 import { getAllTagNames, getPhotosByTag } from '@/lib/data/gallery';
+import { MIN_INDEXABLE_TAG_PHOTOS } from '@/lib/seoThresholds';
 
 type Params = Promise<{ tag: string }>;
 
@@ -33,11 +31,15 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
+  const includeTestContent = await getIncludeTestContent();
+  const photos = await getPhotosByTag(tagName, 100, includeTestContent);
+
   return createMetadata({
     title: `Photos tagged with "${tagName}"`,
     description: `Browse community photos tagged with "${tagName}". Discover photography from our community members.`,
     canonical: `/gallery/tag/${encodeURIComponent(tagName)}`,
     keywords: ['photography', 'photo gallery', tagName, 'community photos'],
+    noindex: photos.length < MIN_INDEXABLE_TAG_PHOTOS,
   });
 }
 
@@ -54,6 +56,10 @@ export default async function TagPage({ params }: { params: Params }) {
 
   const includeTestContent = await getIncludeTestContent();
   const photos = await getPhotosByTag(tagName, 100, includeTestContent);
+
+  if (photos.length === 0) {
+    notFound();
+  }
 
   return (
     <PageContainer
@@ -76,19 +82,10 @@ export default async function TagPage({ params }: { params: Params }) {
         activeTag={tagName}
       />
 
-      {photos.length === 0 ? (
-        <EmptyState
-          icon={<ImageSVG
-            className="size-10 inline-block"
-          />}
-          title="No photos found with this tag."
-        />
-      ) : (
-        <JustifiedPhotoGrid
-          photos={photos}
-          showAttribution
-        />
-      )}
+      <JustifiedPhotoGrid
+        photos={photos}
+        showAttribution
+      />
     </PageContainer>
   );
 }
