@@ -9,11 +9,10 @@ FROM base AS deps
 ENV CI=true
 RUN corepack enable pnpm
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
-FROM base AS builder
-RUN corepack enable pnpm
-COPY --from=deps /app/node_modules ./node_modules
+FROM deps AS builder
 COPY . .
 # NEXT_PUBLIC_* must be passed as build args or env at image build time (Coolify: "Available at Buildtime")
 ARG NEXT_PUBLIC_SUPABASE_URL
@@ -24,7 +23,7 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
-RUN pnpm build
+RUN ./node_modules/.bin/next build
 
 FROM base AS runner
 ENV NODE_ENV=production

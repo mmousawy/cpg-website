@@ -4,6 +4,7 @@ import { GalleryRecentAlbumsSection } from '@/app/gallery/GalleryRecentAlbumsSec
 import { GalleryRecentPhotosSection } from '@/app/gallery/GalleryRecentPhotosSection';
 import { GalleryTagsSection } from '@/app/gallery/GalleryTagsSection';
 import { GalleryTrendingAlbumsSection } from '@/app/gallery/GalleryTrendingAlbumsSection';
+import { HomeBelowFoldE2ESwap } from '@/components/home/HomeBelowFoldE2ESwap';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import SignUpCTA from '@/components/shared/SignUpCTA';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -22,21 +23,39 @@ export const metadata = createMetadata({
 
 export default function GalleryPage() {
   return (
-    <Suspense
-      fallback={<CachedGalleryPage
-        includeTestContent={false}
-      />}
-    >
-      <GalleryPageWithE2EFlag />
-    </Suspense>
+    <>
+      <div
+        id="gallery-page"
+      >
+        <CachedGalleryPage
+          includeTestContent={false}
+        />
+      </div>
+      {/* Header read stays outside the cached shell so `/gallery` can prerender.
+          Replacing the shell for every visitor remounted the grids and replayed
+          the photo fade. */}
+      <Suspense
+        fallback={null}
+      >
+        <GalleryPageE2E />
+      </Suspense>
+    </>
   );
 }
 
-async function GalleryPageWithE2EFlag() {
+async function GalleryPageE2E() {
   const includeTestContent = await getIncludeTestContent();
-  return <CachedGalleryPage
-    includeTestContent={includeTestContent}
-  />;
+  if (!includeTestContent) return null;
+
+  return (
+    <HomeBelowFoldE2ESwap
+      targetId="gallery-page"
+    >
+      <CachedGalleryPage
+        includeTestContent
+      />
+    </HomeBelowFoldE2ESwap>
+  );
 }
 
 async function CachedGalleryPage({ includeTestContent }: { includeTestContent: boolean }) {

@@ -137,8 +137,10 @@ export function calculateJustifiedLayout(
 
     const isLastRow = i === n;
     const minJ = Math.max(0, i - maxPhotosPerRow);
-    // Last row can have fewer photos (down to 1); other rows respect minPhotosPerRow
-    const maxJ = isLastRow ? i - 1 : Math.max(0, i - minPhotosPerRow);
+    // Last row can have fewer photos (down to 1). Earlier rows must keep
+    // minPhotosPerRow — clamping this up to 0 lets a 1-photo row into the DP,
+    // and that row then flexes to the full container (one huge image).
+    const maxJ = isLastRow ? i - 1 : i - minPhotosPerRow;
 
     for (let j = minJ; j <= maxJ; j++) {
       const rowPhotos = photoData.slice(j, i);
@@ -184,8 +186,9 @@ export function calculateJustifiedLayout(
       }
     }
 
-    // Fallback if no valid configuration found
-    if (dp[i].cost === Infinity && i > 0) {
+    // Prefixes shorter than minPhotosPerRow stay unreachable (cost Infinity).
+    // A fallback there would still describe a 1-photo row.
+    if (dp[i].cost === Infinity && i > 0 && (isLastRow || i >= minPhotosPerRow)) {
       const fallbackStart = Math.max(0, i - minPhotosPerRow);
       const fallbackPhotos = photoData.slice(fallbackStart, i);
       dp[i] = {
