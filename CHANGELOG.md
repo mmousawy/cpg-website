@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.41.5](https://github.com/mmousawy/cpg-website/compare/v1.41.4...v1.41.5) (2026-10-08)
+
+
+### ♻️ Refactoring
+
+* enhance sitemap generation and metadata handling ([bbe2672](https://github.com/mmousawy/cpg-website/commit/bbe2672e0ea1a2bd6d599c2cf3433c9d597a49f9))
+* streamline email templates and improve bulk delete functionality ([c364cbc](https://github.com/mmousawy/cpg-website/commit/c364cbcea7e1c123b7fc78774bdb3849eec5fb31))
+
+
+### 🔧 Maintenance
+
+* update dependencies and improve Dockerfile caching ([b73260d](https://github.com/mmousawy/cpg-website/commit/b73260db39d68161aa1dac329a8df811386b4631))
+
 ## [1.41.4](https://github.com/mmousawy/cpg-website/compare/v1.41.3...v1.41.4) (2026-10-07)
 
 
