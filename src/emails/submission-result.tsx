@@ -34,38 +34,55 @@ export const SubmissionResultEmail = ({
   rejectionReason?: string | null;
   optOutLink?: string;
 }) => {
-  if (preview) {
-    userName = 'John Smith';
-    recipientEmail = 'john.smith@example.com';
-    status = 'accepted';
-    photos = [
-      { url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg', title: 'Golden Hour' },
-      { url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg', title: 'City Lights' },
-    ];
-    challengeTitle = 'Urban Photography Challenge';
-    challengeLink = `${baseUrl}/challenges/urban-photography`;
-    rejectionReason = null;
-    optOutLink = `${baseUrl}/unsubscribe/preview-token`;
-  }
+  const data = preview
+    ? {
+      userName: 'John Smith',
+      recipientEmail: 'john.smith@example.com',
+      status: 'accepted' as const,
+      photos: [
+        {
+          url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+          title: 'Golden Hour',
+        },
+        {
+          url: 'https://lpdjlhlslqtdswhnchmv.supabase.co/storage/v1/object/public/cpg-bucket/sample-image.jpg',
+          title: 'City Lights',
+        },
+      ],
+      challengeTitle: 'Urban Photography Challenge',
+      challengeLink: `${baseUrl}/challenges/urban-photography`,
+      rejectionReason: null as string | null | undefined,
+      optOutLink: `${baseUrl}/unsubscribe/preview-token`,
+    }
+    : {
+      userName,
+      recipientEmail,
+      status,
+      photos,
+      challengeTitle,
+      challengeLink,
+      rejectionReason,
+      optOutLink,
+    };
 
-  const isAccepted = status === 'accepted';
-  const photoCount = photos.length;
+  const isAccepted = data.status === 'accepted';
+  const photoCount = data.photos.length;
   const isSingle = photoCount === 1;
 
   const previewText = isAccepted
     ? isSingle
-      ? `Your photo was accepted for "${challengeTitle}"!`
-      : `${photoCount} photos were accepted for "${challengeTitle}"!`
+      ? `Your photo was accepted for "${data.challengeTitle}"!`
+      : `${photoCount} photos were accepted for "${data.challengeTitle}"!`
     : isSingle
-      ? `Update on your submission to "${challengeTitle}"`
-      : `Update on your submissions to "${challengeTitle}"`;
+      ? `Update on your submission to "${data.challengeTitle}"`
+      : `Update on your submissions to "${data.challengeTitle}"`;
 
   return (
     <EmailLayout
       previewText={previewText}
-      fullName={userName}
-      recipientEmail={recipientEmail}
-      optOutLink={optOutLink}
+      fullName={data.userName}
+      recipientEmail={data.recipientEmail}
+      optOutLink={data.optOutLink}
       emailType="photo_challenges"
     >
       <EmailHeading>
@@ -81,7 +98,7 @@ export const SubmissionResultEmail = ({
       <EmailText>
         Hi
         {' '}
-        {userName}
+        {data.userName}
         ,
       </EmailText>
       <br />
@@ -91,12 +108,12 @@ export const SubmissionResultEmail = ({
           isSingle ? (
             <>
               Great news! Your photo
-              {photos[0].title ? ` "${photos[0].title}"` : ''}
+              {data.photos[0].title ? ` "${data.photos[0].title}"` : ''}
               {' '}
               has been accepted for the
               {' '}
               <strong>
-                {challengeTitle}
+                {data.challengeTitle}
               </strong>
               {' '}
               challenge and is now visible in the challenge gallery.
@@ -110,7 +127,7 @@ export const SubmissionResultEmail = ({
               of your photos have been accepted for the
               {' '}
               <strong>
-                {challengeTitle}
+                {data.challengeTitle}
               </strong>
               {' '}
               challenge and are now visible in the challenge gallery.
@@ -120,12 +137,12 @@ export const SubmissionResultEmail = ({
           isSingle ? (
             <>
               Your photo
-              {photos[0].title ? ` "${photos[0].title}"` : ''}
+              {data.photos[0].title ? ` "${data.photos[0].title}"` : ''}
               {' '}
               was not accepted for the
               {' '}
               <strong>
-                {challengeTitle}
+                {data.challengeTitle}
               </strong>
               {' '}
               challenge.
@@ -137,7 +154,7 @@ export const SubmissionResultEmail = ({
               of your photos were not accepted for the
               {' '}
               <strong>
-                {challengeTitle}
+                {data.challengeTitle}
               </strong>
               {' '}
               challenge.
@@ -156,13 +173,13 @@ export const SubmissionResultEmail = ({
         >
           <tbody>
             <tr>
-              {photos.slice(0, 3).map((photo, index) => (
+              {data.photos.slice(0, 3).map((photo, index) => (
                 <td
                   key={index}
                   style={{ padding: '2px' }}
                 >
                   <Link
-                    href={challengeLink}
+                    href={data.challengeLink}
                   >
                     <Img
                       src={photo.url}
@@ -179,15 +196,15 @@ export const SubmissionResultEmail = ({
                 </td>
               ))}
             </tr>
-            {photos.length > 3 && (
+            {data.photos.length > 3 && (
               <tr>
-                {photos.slice(3, 6).map((photo, index) => (
+                {data.photos.slice(3, 6).map((photo, index) => (
                   <td
                     key={index}
                     style={{ padding: '2px' }}
                   >
                     <Link
-                      href={challengeLink}
+                      href={data.challengeLink}
                     >
                       <Img
                         src={photo.url}
@@ -207,20 +224,20 @@ export const SubmissionResultEmail = ({
             )}
           </tbody>
         </table>
-        {photos.length > 6 && (
+        {data.photos.length > 6 && (
           <Text
             style={{ ...emailMutedTextStyle, marginTop: '8px' }}
           >
             +
-            {photos.length - 6}
+            {data.photos.length - 6}
             {' '}
             more photo
-            {photos.length - 6 !== 1 ? 's' : ''}
+            {data.photos.length - 6 !== 1 ? 's' : ''}
           </Text>
         )}
       </Section>
 
-      {!isAccepted && rejectionReason && (
+      {!isAccepted && data.rejectionReason && (
         <Section
           style={{
             margin: '24px 0',
@@ -236,7 +253,7 @@ export const SubmissionResultEmail = ({
               Reason:
             </strong>
             {' '}
-            {rejectionReason}
+            {data.rejectionReason}
           </Text>
         </Section>
       )}
@@ -245,7 +262,7 @@ export const SubmissionResultEmail = ({
         style={{ margin: '32px 0' }}
       >
         <EmailButton
-          href={challengeLink}
+          href={data.challengeLink}
           variant="primary"
           style={{ marginTop: 0 }}
         >

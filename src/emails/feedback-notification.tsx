@@ -37,24 +37,36 @@ export const FeedbackNotificationEmail = ({
   screenshots?: string[] | null;
   reviewLink: string;
 }) => {
-  if (preview) {
-    adminName = 'Admin User';
-    recipientEmail = 'admin@example.com';
-    submitterName = 'John Smith';
-    submitterEmail = 'john@example.com';
-    subject = 'general';
-    message = 'I really love the new gallery feature! It would be great if you could add dark mode support as well.';
-    reviewLink = 'https://example.com/admin/feedback';
-  }
+  const content = preview
+    ? {
+      adminName: 'Admin User',
+      recipientEmail: 'admin@example.com',
+      submitterName: 'John Smith',
+      submitterEmail: 'john@example.com' as string | null,
+      subject: 'general',
+      message:
+          'I really love the new gallery feature! It would be great if you could add dark mode support as well.',
+      reviewLink: 'https://example.com/admin/feedback',
+    }
+    : {
+      adminName,
+      recipientEmail,
+      submitterName,
+      submitterEmail,
+      subject,
+      message,
+      reviewLink,
+    };
 
-  const subjectLabel = FEEDBACK_SUBJECTS.find((s) => s.value === subject)?.label ?? subject;
-  const previewText = `New feedback from ${submitterName}: ${subjectLabel}`;
+  const subjectLabel =
+    FEEDBACK_SUBJECTS.find((s) => s.value === content.subject)?.label ?? content.subject;
+  const previewText = `New feedback from ${content.submitterName}: ${subjectLabel}`;
 
   return (
     <EmailLayout
       previewText={previewText}
-      fullName={adminName}
-      recipientEmail={recipientEmail}
+      fullName={content.adminName}
+      recipientEmail={content.recipientEmail}
     >
       <EmailHeading>
         New feedback received
@@ -63,7 +75,7 @@ export const FeedbackNotificationEmail = ({
       <EmailText>
         Hi
         {' '}
-        {adminName}
+        {content.adminName}
         ,
       </EmailText>
       <br />
@@ -82,13 +94,13 @@ export const FeedbackNotificationEmail = ({
         <Text
           style={emailCalloutTitleStyle}
         >
-          {submitterName}
+          {content.submitterName}
         </Text>
-        {submitterEmail && (
+        {content.submitterEmail && (
           <Text
             style={{ ...emailMutedTextStyle, lineHeight: '16px' }}
           >
-            {submitterEmail}
+            {content.submitterEmail}
           </Text>
         )}
       </Section>
@@ -114,7 +126,7 @@ export const FeedbackNotificationEmail = ({
         <Text
           style={{ ...emailTextStyle, lineHeight: '20px', whiteSpace: 'pre-wrap' }}
         >
-          {message}
+          {content.message}
         </Text>
         {screenshots && screenshots.length > 0 && (
           <div
@@ -144,7 +156,7 @@ export const FeedbackNotificationEmail = ({
         style={{ margin: '20px 0' }}
       >
         <EmailButton
-          href={reviewLink}
+          href={content.reviewLink}
           variant="primary"
           style={{ marginTop: 0 }}
         >
