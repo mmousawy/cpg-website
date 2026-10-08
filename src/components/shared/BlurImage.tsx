@@ -9,9 +9,9 @@ import { getBlurPlaceholderUrl, getRawObjectUrl, isSupabaseUrl } from '@/utils/s
 // SPA-level cache: tracks image src strings that have been fully loaded during
 // this JS context. Once an image loads, subsequent renders (e.g. navigating back)
 // can skip the fade because the browser will serve it from memory/disk cache.
-// Entries are recorded after paint. Writing them in useLayoutEffect lets a
-// same-frame remount (grid breakpoint swap, Strict Mode's second layout pass)
-// treat the first appearance as already shown and skip the fade.
+// Recorded in useLayoutEffect, before paint, so a same-frame remount (Strict
+// Mode's second pass, or a grid that swaps layout before paint) initializes
+// as already visible and does not replay the fade.
 const loadedImages = typeof window !== 'undefined' ? new Set<string>() : null;
 
 type BlurImageCacheOptions = {
@@ -171,14 +171,12 @@ export default function BlurImage({
     hasCalledOnLoad.current = false;
   }, [currentSrc, cacheKey, fadeIn]);
 
-  // Remember loaded images for later navigations, but only once this instance
-  // has survived the pre-paint remounts that would otherwise skip the fade.
-  useEffect(() => {
+  // Remember loaded images before the next paint. A deferred write (rAF /
+  // useEffect) is cancelled when Strict Mode or a parent remounts this image
+  // in the same turn, so the replacement starts the fade over.
+  useIsomorphicLayoutEffect(() => {
     if (loadState === 'loading' || !cacheKey) return;
-    const frame = requestAnimationFrame(() => {
-      loadedImages?.add(cacheKey);
-    });
-    return () => cancelAnimationFrame(frame);
+    loadedImages?.add(cacheKey);
   }, [loadState, cacheKey]);
 
   // Handler for image load - fires when the <img> element actually finishes loading.

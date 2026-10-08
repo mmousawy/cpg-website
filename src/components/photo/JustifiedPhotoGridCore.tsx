@@ -1,11 +1,10 @@
 'use client';
 
 import { useHasHover } from '@/hooks/useHasHover';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import type { Photo } from '@/types/photos';
 import { calculateJustifiedLayout, type PhotoRow } from '@/utils/justifiedLayout';
-import { GRID_THUMBNAIL_QUALITY, THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
+import { THUMBNAIL_IMAGE_QUALITY } from '@/utils/supabaseImageLoader';
 import EmptyState from '../shared/EmptyState';
 import PhotoGridTile, { buildPhotoHref } from './PhotoGridTile';
 import type { JustifiedPhotoGridCoreProps } from './justifiedPhotoGridTypes';
@@ -18,18 +17,21 @@ const DESKTOP_WIDTH = 960;
 
 type GridBreakpoint = 'mobile' | 'tablet' | 'desktop';
 
-function widthToBreakpoint(width: number): GridBreakpoint | null {
-  if (width <= 0) return null;
-  if (width >= DESKTOP_WIDTH) return 'desktop';
-  if (width >= TABLET_WIDTH) return 'tablet';
-  return 'mobile';
-}
+/** Show the layout that matches the container. All three are in the DOM so the
+ * first paint is already the right grid — measuring in JS flashed the mobile
+ * rows (including a full-width single photo) until hydration. */
+const BREAKPOINT_VISIBILITY: Record<GridBreakpoint, string> = {
+  // `hidden` is on every pane so the preload scanner does not fetch the
+  // layouts that container queries keep at display:none.
+  mobile: 'hidden @max-[599px]:block',
+  tablet: 'hidden @min-[600px]:block @min-[960px]:hidden',
+  desktop: 'hidden @min-[960px]:block',
+};
 
 type GridLayoutConfig = {
   rows: PhotoRow[];
   layoutWidth: number;
   maxCssWidth: number;
-  quality: number;
   gapClass: string;
 };
 
@@ -43,24 +45,49 @@ function getLayoutConfigs(
       rows: mobileRows,
       layoutWidth: MOBILE_WIDTH,
       maxCssWidth: MOBILE_MAX_CSS_WIDTH,
-      quality: GRID_THUMBNAIL_QUALITY,
       gapClass: 'gap-1 mb-1',
     },
     tablet: {
       rows: tabletRows,
       layoutWidth: TABLET_WIDTH,
       maxCssWidth: TABLET_MAX_CSS_WIDTH,
-      quality: THUMBNAIL_IMAGE_QUALITY,
       gapClass: 'gap-2 mb-2',
     },
     desktop: {
       rows: desktopRows,
       layoutWidth: DESKTOP_WIDTH,
       maxCssWidth: DESKTOP_MAX_CSS_WIDTH,
-      quality: THUMBNAIL_IMAGE_QUALITY,
       gapClass: 'gap-2 mb-2',
     },
   };
+}
+
+/** One sizes value per photo so each breakpoint's <img> requests the same file. */
+function getSharedPhotoSizes(
+  layouts: Record<GridBreakpoint, GridLayoutConfig>,
+): Map<string, string> {
+  const sizes = new Map<string, number>();
+
+  for (const layout of Object.values(layouts)) {
+    for (const row of layout.rows) {
+      const isConstrained = row.width !== undefined;
+      for (const item of row.items) {
+        const value = Number.parseInt(
+          getThumbnailSizes(
+            item.displayWidth,
+            layout.layoutWidth,
+            layout.maxCssWidth,
+            isConstrained,
+          ),
+          10,
+        );
+        const current = sizes.get(item.photo.id) ?? 0;
+        if (value > current) sizes.set(item.photo.id, value);
+      }
+    }
+  }
+
+  return new Map([...sizes].map(([id, value]) => [id, `${value}px`]));
 }
 
 /** Max CSS width of the grid at each breakpoint. Browser then applies DPR to sizes=. */
@@ -138,44 +165,6 @@ export default function JustifiedPhotoGridCore({
   });
 
   const hasHover = useHasHover();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<'css' | 'js'>('css');
-  const [breakpoint, setBreakpoint] = useState<GridBreakpoint>('mobile');
-  const [containerWidth, setContainerWidth] = useState(0);
-
-  const measureBreakpoint = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const width = el.clientWidth;
-    setContainerWidth((current) => (current === width ? current : width));
-    const next = widthToBreakpoint(width);
-    if (!next) return;
-    setBreakpoint((current) => (current === next ? current : next));
-  }, []);
-
-  const setContainerRef = useCallback((node: HTMLDivElement | null) => {
-    containerRef.current = node;
-    if (node) {
-      const width = node.clientWidth;
-      setContainerWidth((current) => (current === width ? current : width));
-      const next = widthToBreakpoint(width);
-      if (next) {
-        setBreakpoint((current) => (current === next ? current : next));
-      }
-    }
-  }, []);
-
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    measureBreakpoint();
-    setPhase('js');
-
-    const observer = new ResizeObserver(measureBreakpoint);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [measureBreakpoint]);
 
   if (photos.length === 0) {
     return (
@@ -191,6 +180,8 @@ export default function JustifiedPhotoGridCore({
   const photoMap = new Map(photos.map((p) => [p.short_id || p.id, p]));
   const layouts = getLayoutConfigs(mobileRows, tabletRows, desktopRows);
 
+  const sharedPhotoSizes = getSharedPhotoSizes(layouts);
+
   const sharedPhotoRowsProps = {
     photoMap,
     batchLikesMap,
@@ -203,35 +194,30 @@ export default function JustifiedPhotoGridCore({
     gridDensity,
     canHover: hasHover,
     header,
-    containerWidth,
+    sharedPhotoSizes,
   };
-
-  const activeLayout = layouts[breakpoint];
 
   return (
     <div
-      ref={setContainerRef}
       className="@container w-full"
     >
-      {phase === 'css' ? (
-        <PhotoRows
-          {...sharedPhotoRowsProps}
-          rows={layouts.mobile.rows}
-          layoutWidth={layouts.mobile.layoutWidth}
-          maxCssWidth={layouts.mobile.maxCssWidth}
-          quality={layouts.mobile.quality}
-          gapClass={layouts.mobile.gapClass}
-        />
-      ) : (
-        <PhotoRows
-          {...sharedPhotoRowsProps}
-          rows={activeLayout.rows}
-          layoutWidth={activeLayout.layoutWidth}
-          maxCssWidth={activeLayout.maxCssWidth}
-          quality={activeLayout.quality}
-          gapClass={activeLayout.gapClass}
-        />
-      )}
+      {(Object.keys(layouts) as GridBreakpoint[]).map((breakpoint) => {
+        const layout = layouts[breakpoint];
+        return (
+          <div
+            key={breakpoint}
+            className={BREAKPOINT_VISIBILITY[breakpoint]}
+          >
+            <PhotoRows
+              {...sharedPhotoRowsProps}
+              rows={layout.rows}
+              layoutWidth={layout.layoutWidth}
+              maxCssWidth={layout.maxCssWidth}
+              gapClass={layout.gapClass}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -250,10 +236,9 @@ function PhotoRows({
   canHover,
   layoutWidth,
   maxCssWidth,
-  quality,
   header,
   gapClass = 'gap-1 mb-1',
-  containerWidth = 0,
+  sharedPhotoSizes,
 }: {
   rows: PhotoRow[];
   photoMap: Map<string, Photo | StreamPhoto>;
@@ -268,10 +253,9 @@ function PhotoRows({
   canHover: boolean;
   layoutWidth: number;
   maxCssWidth: number;
-  quality: number;
   header?: React.ReactNode;
   gapClass?: string;
-  containerWidth?: number;
+  sharedPhotoSizes: Map<string, string>;
 }) {
   const firstRow = rows[0];
   const firstRowConstrained = firstRow?.width !== undefined;
@@ -292,10 +276,9 @@ function PhotoRows({
       )}
       {rows.map((row, rowIndex) => {
         const isConstrained = row.width !== undefined;
-        const cssWidth = containerWidth > 0 ? containerWidth : maxCssWidth;
         const scaledHeight = isConstrained
           ? row.height
-          : row.height * (cssWidth / layoutWidth);
+          : row.height * (maxCssWidth / layoutWidth);
         const isHeightCapped = !isConstrained && scaledHeight > MAX_ROW_DISPLAY_HEIGHT;
 
         return (
@@ -335,8 +318,11 @@ function PhotoRows({
                   gridDensity={gridDensity}
                   canHover={canHover}
                   imageSrc={thumbnailUrl}
-                  sizes={getThumbnailSizes(item.displayWidth, layoutWidth, maxCssWidth, isConstrained)}
-                  quality={quality}
+                  sizes={
+                    sharedPhotoSizes.get(item.photo.id)
+                    ?? getThumbnailSizes(item.displayWidth, layoutWidth, maxCssWidth, isConstrained)
+                  }
+                  quality={THUMBNAIL_IMAGE_QUALITY}
                   style={isConstrained ? {
                     width: item.displayWidth,
                     height: item.displayHeight,

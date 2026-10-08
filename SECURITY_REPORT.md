@@ -22,7 +22,7 @@ Critical and high-severity issues from the pentest plan were remediated in appli
 |----|-------|-------------|
 | H1/H2 | Open redirects | `safeInternalPath` + `getPostLoginRedirect` used in auth flows; OAuth `redirectTo` encoded |
 | H3 | SSRF in OG fetch | `isSafeFetchUrl` blocks private/link-local/metadata targets |
-| H4/M5 | Test/debug APIs | Dev/CI only + `INTERNAL_API_SECRET`; `/api/test-supabase` disabled |
+| H4/M5 | Test/debug APIs | Dev/CI only + `INTERNAL_API_SECRET`; `/api/test/*` gated in production |
 | H6 | Suspended users keep access | Proxy blocks suspended users from account/admin/API; login rejects suspension |
 | H7 | Album unsuspend bypass | DB trigger locks suspension + counter columns for non-admins |
 | H8 | Draft events public | RLS policy filters `is_draft = false` for public SELECT |

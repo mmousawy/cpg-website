@@ -40,11 +40,6 @@ export default function PhotoActionBar({
     <div
       className={clsx('flex items-center gap-3 mb-4', className)}
     >
-      <DetailLikesSection
-        entityType={entityType}
-        entityId={entityId}
-        initialCount={initialLikesCount}
-      />
       {share && (
         <ShareButton
           url={share.url}
@@ -52,6 +47,11 @@ export default function PhotoActionBar({
           image={share.image}
         />
       )}
+      <DetailLikesSection
+        entityType={entityType}
+        entityId={entityId}
+        initialCount={initialLikesCount}
+      />
       {viewCount > 0 && (
         <ViewCount
           count={viewCount}
