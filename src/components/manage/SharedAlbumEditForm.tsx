@@ -182,6 +182,24 @@ export default function SharedAlbumEditForm({
     setHasEditedSlug(false);
   }, [album, isNewAlbum, reset]);
 
+  const handleDelete = async () => {
+    if (!album) return;
+
+    const confirmed = await confirm(confirmDeleteAlbum(album));
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setLocalError(null);
+
+    try {
+      await onDelete(album.id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete album';
+      setLocalError(message);
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -251,24 +269,6 @@ export default function SharedAlbumEditForm({
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save album';
       setLocalError(message);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!album) return;
-
-    const confirmed = await confirm(confirmDeleteAlbum(album));
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    setLocalError(null);
-
-    try {
-      await onDelete(album.id);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete album';
-      setLocalError(message);
-      setIsDeleting(false);
     }
   };
 

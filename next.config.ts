@@ -17,8 +17,11 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
     NEXT_PUBLIC_COPYRIGHT_YEAR: String(new Date().getFullYear()),
   },
-  // Enable 'use cache' directive for data layer caching
+  // Enable 'use cache' directive for data layer caching.
+  // This app adopted Cache Components before Partial Prefetching existed.
+  // Keep the previous per-link prefetch until that migration is done.
   cacheComponents: true,
+  partialPrefetching: false,
   cacheLife: {
     // Tag-invalidated content: no client stale window (avoids hard-refresh requirement)
     tagged: {

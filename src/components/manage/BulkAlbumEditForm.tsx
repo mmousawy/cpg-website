@@ -154,6 +154,30 @@ export default function BulkAlbumEditForm({
     onDirtyChange?.(isDirty);
   }, [isDirty, isDirtyRef, onDirtyChange]);
 
+  const handleBulkDelete = async () => {
+    const confirmed = await confirm(confirmDeleteAlbums(selectedAlbums));
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setLocalError(null);
+
+    try {
+      if (onBulkDelete) {
+        const albumIds = selectedAlbums.map((a) => a.id);
+        await onBulkDelete(albumIds);
+      } else {
+        for (const album of selectedAlbums) {
+          await onDelete(album.id);
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete albums';
+      setLocalError(message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Handle Delete key for bulk deletion
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -201,30 +225,6 @@ export default function BulkAlbumEditForm({
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save albums';
       setLocalError(message);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    const confirmed = await confirm(confirmDeleteAlbums(selectedAlbums));
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    setLocalError(null);
-
-    try {
-      if (onBulkDelete) {
-        const albumIds = selectedAlbums.map((a) => a.id);
-        await onBulkDelete(albumIds);
-      } else {
-        for (const album of selectedAlbums) {
-          await onDelete(album.id);
-        }
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete albums';
-      setLocalError(message);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
