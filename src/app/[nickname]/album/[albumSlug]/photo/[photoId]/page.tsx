@@ -2,6 +2,7 @@ import { PhotoLightboxColumn } from '@/components/photo/PhotoPageContent';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { getAlbumPhotoByShortId } from '@/lib/data/profiles';
+import { getStandalonePhotoCanonicalPath } from '@/lib/photoCanonical';
 import { createMetadata, formatPhotoPageTitle, formatProfileDisplayName, getSocialImageUrl } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
 
@@ -49,12 +50,13 @@ export async function generateMetadata({ params }: { params: Params }) {
   });
   const photoDescription = result.photo.description || `Photo from album "${result.currentAlbum.title}" by @${nickname}`;
   const photoImage = getSocialImageUrl(result.photo.url);
+  const fallbackCanonical = `/@${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}/photo/${encodeURIComponent(photoId)}`;
 
   return createMetadata({
     title: photoTitle,
     description: photoDescription,
     image: photoImage,
-    canonical: `/@${encodeURIComponent(nickname)}/album/${encodeURIComponent(albumSlug)}/photo/${encodeURIComponent(photoId)}`,
+    canonical: getStandalonePhotoCanonicalPath(result.profile.nickname, result.photo, fallbackCanonical),
     type: 'article',
     keywords: ['photography', 'photo', result.photo.title || '', result.currentAlbum.title, nickname],
   });

@@ -1,0 +1,3 @@
+export const MIN_INDEXABLE_TAG_PHOTOS = 3;
+export const MIN_INDEXABLE_TAG_MEMBERS = 2;
+export const MIN_INDEXABLE_INTEREST_MEMBERS = 2;

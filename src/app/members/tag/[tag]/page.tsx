@@ -1,19 +1,17 @@
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 
-import EmptyState from '@/components/shared/EmptyState';
 import MemberCard from '@/components/shared/MemberCard';
 import Tag from '@/components/shared/Tag';
 import { createMetadata } from '@/utils/metadata';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
-
 // Cached data functions
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getPopularTagsWithMemberCounts } from '@/lib/data/gallery';
 import { getMembersByTag } from '@/lib/data/members';
 import { ensureStaticParams } from '@/lib/staticParams';
+import { MIN_INDEXABLE_TAG_MEMBERS } from '@/lib/seoThresholds';
 
 type Params = Promise<{ tag: string }>;
 
@@ -35,11 +33,15 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
+  const includeTestContent = await getIncludeTestContent();
+  const { members } = await getMembersByTag(tagName, includeTestContent);
+
   return createMetadata({
     title: `Members tagged with "${tagName}"`,
     description: `Discover community members who frequently use the "${tagName}" tag in their photos. Connect with photographers who share your photo style.`,
     canonical: `/members/tag/${encodeURIComponent(tagName)}`,
     keywords: ['photography community', 'photographers', tagName, 'photo tags', 'member discovery'],
+    noindex: members.length < MIN_INDEXABLE_TAG_MEMBERS,
   });
 }
 
@@ -59,6 +61,10 @@ export default async function TagMembersPage({ params }: { params: Params }) {
     getMembersByTag(tagName, includeTestContent),
     getPopularTagsWithMemberCounts(20),
   ]);
+
+  if (members.length === 0) {
+    notFound();
+  }
 
   // Calculate size based on memberCount relative to max (same logic as members page)
   const maxCount = Math.max(...popularTags.map((t) => t.memberCount || 0));
@@ -130,25 +136,16 @@ export default async function TagMembersPage({ params }: { params: Params }) {
           </div>
         )}
 
-        {members.length === 0 ? (
-          <EmptyState
-            icon={<HeroCommunitiesSVG
-              className="size-10 inline-block"
-            />}
-            title="No members found using this tag yet."
-          />
-        ) : (
-          <div
-            className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-          >
-            {members.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-              />
-            ))}
-          </div>
-        )}
+        <div
+          className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        >
+          {members.map((member) => (
+            <MemberCard
+              key={member.id}
+              member={member}
+            />
+          ))}
+        </div>
       </PageContainer>
     </>
   );

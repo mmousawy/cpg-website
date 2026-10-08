@@ -1,16 +1,14 @@
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 
-import EmptyState from '@/components/shared/EmptyState';
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
 import { createMetadata } from '@/utils/metadata';
 import { notFound } from 'next/navigation';
-import HeroCommunitiesSVG from 'public/icons/hero-communities.svg';
-
 // Cached data functions
 import { getMembersByInterest, getPopularInterests } from '@/lib/data/interests';
 import { ensureStaticParams } from '@/lib/staticParams';
+import { MIN_INDEXABLE_INTEREST_MEMBERS } from '@/lib/seoThresholds';
 
 type Params = Promise<{ interest: string }>;
 
@@ -34,11 +32,14 @@ export async function generateMetadata({ params }: { params: Params }) {
     });
   }
 
+  const { interest, members } = await getMembersByInterest(interestName);
+
   return createMetadata({
     title: `Members interested in "${interestName}"`,
     description: `Discover community members who share an interest in "${interestName}". Connect with photographers who have similar interests.`,
     canonical: `/members/interest/${encodeURIComponent(interestName)}`,
     keywords: ['photography community', 'photographers', interestName, 'member discovery'],
+    noindex: !interest || members.length < MIN_INDEXABLE_INTEREST_MEMBERS,
   });
 }
 
@@ -59,6 +60,10 @@ export default async function InterestMembersPage({ params }: { params: Params }
   ]);
 
   if (!interest) {
+    notFound();
+  }
+
+  if (members.length === 0) {
     notFound();
   }
 
@@ -95,25 +100,16 @@ export default async function InterestMembersPage({ params }: { params: Params }
           </div>
         )}
 
-        {members.length === 0 ? (
-          <EmptyState
-            icon={<HeroCommunitiesSVG
-              className="size-10 inline-block"
-            />}
-            title="No members found with this interest yet."
-          />
-        ) : (
-          <div
-            className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-          >
-            {members.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-              />
-            ))}
-          </div>
-        )}
+        <div
+          className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        >
+          {members.map((member) => (
+            <MemberCard
+              key={member.id}
+              member={member}
+            />
+          ))}
+        </div>
       </PageContainer>
     </>
   );

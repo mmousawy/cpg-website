@@ -174,7 +174,11 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
     robots: {
       index: !noindex,
       follow: !nofollow,
-      ...(noindex && { 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 }),
+      ...(!noindex && {
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      }),
     },
     ...(canonical && {
       alternates: {
