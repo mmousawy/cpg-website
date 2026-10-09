@@ -8,7 +8,7 @@ import type { HomePageData } from '@/lib/data/home';
 
 type HomeExploreSectionProps = Pick<
   HomePageData,
-  'events' | 'attendeesByEvent' | 'challenges' | 'serverNow'
+  'events' | 'attendeesByEvent' | 'photoCountsByEvent' | 'challenges' | 'serverNow'
 > & {
   showEventDescriptions?: boolean;
 };
@@ -16,6 +16,7 @@ type HomeExploreSectionProps = Pick<
 export function HomeExploreSection({
   events,
   attendeesByEvent,
+  photoCountsByEvent,
   challenges,
   serverNow,
   showEventDescriptions = true,
@@ -44,6 +45,7 @@ export function HomeExploreSection({
         <EventsList
           events={events}
           attendeesByEvent={attendeesByEvent}
+          photoCountsByEvent={photoCountsByEvent}
           variant="compact"
           max={3}
           disableAttendeesPopover

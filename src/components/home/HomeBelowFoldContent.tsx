@@ -23,6 +23,7 @@ export function HomeBelowFoldContent({
   serverNow,
   events,
   attendeesByEvent,
+  photoCountsByEvent,
   challenges,
   albums,
   photos,
@@ -36,6 +37,7 @@ export function HomeBelowFoldContent({
       <HomeExploreSection
         events={events}
         attendeesByEvent={attendeesByEvent}
+        photoCountsByEvent={photoCountsByEvent}
         challenges={challenges}
         serverNow={serverNow}
       />

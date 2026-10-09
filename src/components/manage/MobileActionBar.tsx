@@ -28,6 +28,13 @@ interface MobileActionBarProps {
   visible?: boolean;
   /** Hide the Edit button (e.g. when selection includes non-owned photos) */
   hideEdit?: boolean;
+  /**
+   * Keep the bar open with this label when nothing is selected.
+   * Used for the album detail bar.
+   */
+  persistentLabel?: string;
+  /** Label for the persistent bar's action. Defaults to "Edit album". */
+  persistentActionLabel?: string;
 }
 
 export default function MobileActionBar({
@@ -37,9 +44,12 @@ export default function MobileActionBar({
   actions,
   visible = true,
   hideEdit = false,
+  persistentLabel,
+  persistentActionLabel = 'Edit album',
 }: MobileActionBarProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const isOpen = visible && selectedCount > 0;
+  const isPersistent = !!persistentLabel && selectedCount === 0;
+  const isOpen = visible && (selectedCount > 0 || isPersistent);
 
   useReportMobileStickyChromeHeight(rootRef, isOpen, true);
 
@@ -66,24 +76,34 @@ export default function MobileActionBar({
             <div
               className="flex min-w-0 items-center gap-2"
             >
-              <span
-                className="truncate text-sm font-medium text-foreground/80"
-              >
-                {selectedCount}
-                {' '}
-                {selectedCount === 1 ? 'item' : 'items'}
-                {' '}
-                selected
-              </span>
-              <button
-                onClick={onClearSelection}
-                className="flex shrink-0 items-center justify-center rounded-full border border-border-color p-1 hover:bg-background transition-colors"
-                aria-label="Clear selection"
-              >
-                <CloseMiniSVG
-                  className="size-4 fill-foreground"
-                />
-              </button>
+              {isPersistent ? (
+                <span
+                  className="truncate text-sm font-medium text-foreground/80"
+                >
+                  {persistentLabel}
+                </span>
+              ) : (
+                <>
+                  <span
+                    className="truncate text-sm font-medium text-foreground/80"
+                  >
+                    {selectedCount}
+                    {' '}
+                    {selectedCount === 1 ? 'item' : 'items'}
+                    {' '}
+                    selected
+                  </span>
+                  <button
+                    onClick={onClearSelection}
+                    className="flex shrink-0 items-center justify-center rounded-full border border-border-color p-1 hover:bg-background transition-colors"
+                    aria-label="Clear selection"
+                  >
+                    <CloseMiniSVG
+                      className="size-4 fill-foreground"
+                    />
+                  </button>
+                </>
+              )}
             </div>
 
             <div
@@ -96,13 +116,17 @@ export default function MobileActionBar({
                   onClick={onEdit}
                   variant="primary"
                   size="sm"
-                  icon={<EditMiniSVG
-                    className="size-5 -ml-0.5"
-                  />}
+                  icon={persistentActionLabel === 'Edit album' || !isPersistent ? (
+                    <EditMiniSVG
+                      className="size-5 -ml-0.5"
+                    />
+                  ) : undefined}
                 >
                   <span
-                    className="hidden md:inline-block"
-                  >Edit</span>
+                    className={isPersistent ? undefined : 'hidden md:inline-block'}
+                  >
+                    {isPersistent ? persistentActionLabel : 'Edit'}
+                  </span>
                 </Button>
               )}
             </div>

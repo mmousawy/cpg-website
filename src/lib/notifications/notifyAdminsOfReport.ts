@@ -1,12 +1,8 @@
-import { render } from '@react-email/render';
-import { Resend } from 'resend';
-
-import { ReportNotificationEmail } from '@/emails/report-notification';
 import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { createNotification } from '@/lib/notifications/create';
+import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function notifyAdminsOfReport(reportId: string): Promise<void> {
   const { data: report, error: reportError } = await adminSupabase
@@ -109,6 +105,24 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   const reviewLinkRelative = '/admin/reports';
   const reviewLinkFull = `${baseUrl}/admin/reports`;
+  const reporterProfileLinkFull = reporterProfileLink ? `${baseUrl}${reporterProfileLink}` : null;
+  const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
+
+  const queueItem = {
+    reporterName,
+    reporterNickname,
+    reporterEmail: report.reporter_email,
+    reporterAvatarUrl,
+    reporterProfileLink: reporterProfileLinkFull,
+    entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
+    entityTitle,
+    entityThumbnail,
+    entityLink: entityLinkFull,
+    reason: report.reason,
+    details: report.details,
+    reviewLink: reviewLinkFull,
+    isAnonymous: !report.reporter_id,
+  };
 
   const { data: admins, error: adminsError } = await adminSupabase
     .from('profiles')
@@ -121,75 +135,36 @@ export async function notifyAdminsOfReport(reportId: string): Promise<void> {
     return;
   }
 
-  await Promise.all(
-    admins.map((admin) =>
-      createNotification({
-        userId: admin.id,
-        actorId: report.reporter_id || null,
-        type: 'report_submitted',
-        entityType: 'report',
-        entityId: report.id,
-        data: {
-          title: `Report: ${entityTitle}`,
-          thumbnail: entityThumbnail,
-          link: reviewLinkRelative,
-          actorName: reporterName,
-          actorNickname: reporterNickname,
-          actorAvatar: reporterAvatarUrl,
-          entityType: report.entity_type,
-          reason: report.reason,
-          isAnonymous: !report.reporter_id,
-        },
-      }),
-    ),
-  );
+  for (const admin of admins) {
+    const { notificationId } = await createNotification({
+      userId: admin.id,
+      actorId: report.reporter_id || null,
+      type: 'report_submitted',
+      entityType: 'report',
+      entityId: report.id,
+      data: {
+        title: `Report: ${entityTitle}`,
+        thumbnail: entityThumbnail,
+        link: reviewLinkRelative,
+        actorName: reporterName,
+        actorNickname: reporterNickname,
+        actorAvatar: reporterAvatarUrl,
+        entityType: report.entity_type,
+        reason: report.reason,
+        isAnonymous: !report.reporter_id,
+      },
+    });
 
-  const adminsToEmail = admins.filter((admin) => Boolean(admin.email));
-
-  if (adminsToEmail.length === 0) {
-    return;
-  }
-
-  const reporterProfileLinkFull = reporterProfileLink ? `${baseUrl}${reporterProfileLink}` : null;
-  const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
-
-  try {
-    const emails = await Promise.all(
-      adminsToEmail.map(async (admin) => {
-        const html = await render(
-          ReportNotificationEmail({
-            adminName: admin.full_name || 'Admin',
-            recipientEmail: admin.email || undefined,
-            reporterName,
-            reporterNickname,
-            reporterEmail: report.reporter_email,
-            reporterAvatarUrl,
-            reporterProfileLink: reporterProfileLinkFull,
-            entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
-            entityTitle,
-            entityThumbnail,
-            entityLink: entityLinkFull,
-            reason: report.reason,
-            details: report.details,
-            reviewLink: reviewLinkFull,
-            isAnonymous: !report.reporter_id,
-          }),
-        );
-
-        return {
-          from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-          replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-          to: admin.email!,
-          subject: `New Report: ${reporterName} reported ${entityTitle}`,
-          html,
-        };
-      }),
-    );
-
-    if (emails.length > 0) {
-      await resend.batch.send(emails);
+    if (!admin.email || isTestEmail(admin.email)) {
+      continue;
     }
-  } catch (emailError) {
-    console.error('Error sending report notification emails:', emailError);
+
+    await enqueueDebouncedNotificationEmail({
+      recipientUserId: admin.id,
+      batchKey: 'admin_reports',
+      templateKey: EMAIL_TEMPLATE_KEYS.reportNotification,
+      notificationId,
+      item: queueItem,
+    });
   }
 }

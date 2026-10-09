@@ -62,10 +62,10 @@ export default function AlbumMiniCard({
     >
       <Link
         href={href}
-        className="inline-flex items-center gap-2.5 pr-2.5"
+        className="inline-flex items-center gap-3 pr-3"
       >
         <div
-          className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
+          className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background"
         >
           {coverImageUrl ? (
             <BlurImage
@@ -82,10 +82,13 @@ export default function AlbumMiniCard({
           )}
         </div>
         <div
-          className="min-w-0 flex-1 flex-col gap-0.5"
+          className="flex flex-col gap-0.5"
         >
           <span
-            className="text-sm font-medium line-clamp-2 leading-none pr-6"
+            className={clsx(
+              'text-sm font-medium line-clamp-2 leading-none',
+              publicUrl && 'pr-4',
+            )}
           >
             {title}
           </span>

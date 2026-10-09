@@ -1,13 +1,9 @@
-import { render } from '@react-email/render';
-import { Resend } from 'resend';
-
-import { FeedbackNotificationEmail } from '@/emails/feedback-notification';
 import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { createNotification } from '@/lib/notifications/create';
+import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
 import { FEEDBACK_SUBJECTS } from '@/types/feedback';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> {
   const { data: feedback, error: feedbackError } = await adminSupabase
@@ -46,6 +42,16 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
   const reviewLinkRelative = '/admin/feedback';
   const reviewLinkFull = `${baseUrl}/admin/feedback`;
 
+  const queueItem = {
+    submitterName,
+    submitterEmail: feedback.email,
+    subject: feedback.subject,
+    subjectLabel,
+    message: feedback.message,
+    screenshots: feedback.screenshots ?? null,
+    reviewLink: reviewLinkFull,
+  };
+
   const { data: admins, error: adminsError } = await adminSupabase
     .from('profiles')
     .select('id, full_name, email')
@@ -57,60 +63,31 @@ export async function notifyAdminsOfFeedback(feedbackId: string): Promise<void> 
     return;
   }
 
-  await Promise.all(
-    admins.map((admin) =>
-      createNotification({
-        userId: admin.id,
-        actorId: feedback.user_id || null,
-        type: 'feedback_submitted',
-        entityType: 'feedback',
-        entityId: feedback.id,
-        data: {
-          title: subjectLabel,
-          thumbnail: submitterAvatarUrl,
-          link: reviewLinkRelative,
-          actorName: submitterName,
-        },
-      }),
-    ),
-  );
+  for (const admin of admins) {
+    const { notificationId } = await createNotification({
+      userId: admin.id,
+      actorId: feedback.user_id || null,
+      type: 'feedback_submitted',
+      entityType: 'feedback',
+      entityId: feedback.id,
+      data: {
+        title: subjectLabel,
+        thumbnail: submitterAvatarUrl,
+        link: reviewLinkRelative,
+        actorName: submitterName,
+      },
+    });
 
-  const adminsToEmail = admins.filter((admin) => Boolean(admin.email));
-
-  if (adminsToEmail.length === 0) {
-    return;
-  }
-
-  try {
-    const emails = await Promise.all(
-      adminsToEmail.map(async (admin) => {
-        const html = await render(
-          FeedbackNotificationEmail({
-            adminName: admin.full_name || 'Admin',
-            recipientEmail: admin.email || undefined,
-            submitterName,
-            submitterEmail: feedback.email,
-            subject: feedback.subject,
-            message: feedback.message,
-            screenshots: feedback.screenshots ?? null,
-            reviewLink: reviewLinkFull,
-          }),
-        );
-
-        return {
-          from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-          replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-          to: admin.email!,
-          subject: `New Feedback: ${submitterName} - ${subjectLabel}`,
-          html,
-        };
-      }),
-    );
-
-    if (emails.length > 0) {
-      await resend.batch.send(emails);
+    if (!admin.email || isTestEmail(admin.email)) {
+      continue;
     }
-  } catch (emailError) {
-    console.error('Error sending feedback notification emails:', emailError);
+
+    await enqueueDebouncedNotificationEmail({
+      recipientUserId: admin.id,
+      batchKey: 'admin_feedback',
+      templateKey: EMAIL_TEMPLATE_KEYS.feedbackNotification,
+      notificationId,
+      item: queueItem,
+    });
   }
 }

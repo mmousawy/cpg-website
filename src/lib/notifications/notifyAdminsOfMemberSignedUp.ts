@@ -1,7 +1,5 @@
-import { render } from '@react-email/render';
-
-import { MemberNotificationEmail } from '@/emails/member-notification';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { notifyAdmins } from '@/lib/notifications/notifyAdmins';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -52,24 +50,17 @@ export async function notifyAdminsOfMemberSignedUp(userId: string): Promise<void
         actorAvatar: profile.avatar_url,
       },
     },
-    buildEmail: async (admin) => {
-      const html = await render(
-        MemberNotificationEmail({
-          kind: 'signed_up',
-          adminName: admin.full_name || 'Admin',
-          recipientEmail: admin.email,
-          memberName,
-          memberNickname: profile.nickname,
-          memberEmail: profile.email,
-          profileLink: null,
-          membersLink: `${baseUrl}/admin/members`,
-        }),
-      );
-
-      return {
-        subject: `New signup: ${memberName}`,
-        html,
-      };
+    debouncedEmail: {
+      batchKey: 'member_signed_up',
+      templateKey: EMAIL_TEMPLATE_KEYS.memberNotification,
+      buildItem: () => ({
+        kind: 'signed_up',
+        memberName,
+        memberNickname: profile.nickname,
+        memberEmail: profile.email,
+        profileLink: null,
+        membersLink: `${baseUrl}/admin/members`,
+      }),
     },
   });
 }

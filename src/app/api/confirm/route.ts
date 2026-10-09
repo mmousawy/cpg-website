@@ -1,13 +1,11 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
 import { ConfirmEmail } from '../../../emails/confirm';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
   const adminClient = createAdminClient();
@@ -57,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   // Send the confirmation email
   if (!shouldSkipNotificationsAndEmails(recipientEmail)) {
-    const emailResult = await resend.emails.send({
+    const emailResult = await sendAppEmail({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: recipientEmail,
       replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

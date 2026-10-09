@@ -7,7 +7,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { PHOTO_LIST_COLUMNS } from './columns';
 
 /** Resolve blurhash for an album's cover image from its photos */
-function resolveCoverBlurhash(
+export function resolveCoverBlurhash(
   coverImageUrl: string | null,
   photos: Array<{ photo_url: string | null; photo: { blurhash: string | null } | null }> | null,
 ): string | null {
@@ -148,14 +148,15 @@ export async function getPublicAlbums(
         photo_url,
         photo:photos!album_photos_photo_id_fkey(blurhash)
       ),
-      event:events!albums_event_id_fkey(slug, cover_image)
+      event:events!albums_event_id_fkey(slug, cover_image, is_draft)
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
     .order(orderColumn, { ascending: false })
     .limit(limit);
 
-  // Filter out albums with no photos and albums from suspended users
+  // Filter out albums with no photos and albums from suspended users.
+  // Event albums have no owner, so keep them when the linked event is published.
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
   type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url' | 'suspended_at' | 'deletion_scheduled_at'>;
   type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'> & {
@@ -164,12 +165,14 @@ export async function getPublicAlbums(
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
-    event: { slug: string | null; cover_image: string | null } | null;
+    event: { slug: string | null; cover_image: string | null; is_draft: boolean } | null;
   };
 
   const albumsWithPhotos = (albums || [])
-    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { profile: ProfileRow; photos: Array<AlbumPhotoActive> } => {
-      return !!album.photos && album.photos.length > 0 && !!album.profile && !album.profile.suspended_at && !album.profile.deletion_scheduled_at;
+    .filter((album: AlbumQueryResult): album is AlbumQueryResult & { photos: Array<AlbumPhotoActive> } => {
+      if (!album.photos || album.photos.length === 0) return false;
+      if (album.event?.slug && !album.event.is_draft) return true;
+      return !!album.profile && !album.profile.suspended_at && !album.profile.deletion_scheduled_at;
     })
     .map((album) => ({
       ...album,

@@ -1200,6 +1200,85 @@ $$;
 ALTER FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer) OWNER TO "supabase_admin";
 
 
+CREATE OR REPLACE FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text" DEFAULT 'notifications'::"text", "p_notification_id" "uuid" DEFAULT NULL::"uuid", "p_debounce_minutes" integer DEFAULT 15, "p_template_key" "text" DEFAULT 'comment_notification'::"text") RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_batch_id uuid;
+  v_send_after timestamptz := now() + make_interval(mins => p_debounce_minutes);
+BEGIN
+  IF auth.role() <> 'service_role' THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  UPDATE public.notification_email_batches
+  SET
+    items = items || jsonb_build_array(p_item),
+    notification_ids = CASE
+      WHEN p_notification_id IS NOT NULL THEN notification_ids || p_notification_id
+      ELSE notification_ids
+    END,
+    send_after = v_send_after,
+    updated_at = now()
+  WHERE recipient_user_id = p_recipient_user_id
+    AND batch_key = p_batch_key
+    AND status = 'pending'
+  RETURNING id INTO v_batch_id;
+
+  IF v_batch_id IS NOT NULL THEN
+    RETURN v_batch_id;
+  END IF;
+
+  BEGIN
+    INSERT INTO public.notification_email_batches (
+      recipient_user_id,
+      batch_key,
+      email_type,
+      template_key,
+      items,
+      notification_ids,
+      send_after
+    ) VALUES (
+      p_recipient_user_id,
+      p_batch_key,
+      p_email_type,
+      p_template_key,
+      jsonb_build_array(p_item),
+      CASE
+        WHEN p_notification_id IS NOT NULL THEN ARRAY[p_notification_id]
+        ELSE ARRAY[]::uuid[]
+      END,
+      v_send_after
+    )
+    RETURNING id INTO v_batch_id;
+
+    RETURN v_batch_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      UPDATE public.notification_email_batches
+      SET
+        items = items || jsonb_build_array(p_item),
+        notification_ids = CASE
+          WHEN p_notification_id IS NOT NULL THEN notification_ids || p_notification_id
+          ELSE notification_ids
+        END,
+        send_after = v_send_after,
+        updated_at = now()
+      WHERE recipient_user_id = p_recipient_user_id
+        AND batch_key = p_batch_key
+        AND status = 'pending'
+      RETURNING id INTO v_batch_id;
+
+      RETURN v_batch_id;
+  END;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer, "p_template_key" "text") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."generate_short_id"("size" integer DEFAULT 5) RETURNS "text"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -2800,6 +2879,19 @@ COMMENT ON FUNCTION "public"."prevent_private_challenge_photo"() IS 'Prevents ph
 
 
 
+CREATE OR REPLACE FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) RETURNS boolean
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO ''
+    AS $$
+  SELECT p_nickname IS NOT NULL
+    AND p_suspended_at IS NULL
+    AND p_deletion_scheduled_at IS NULL;
+$$;
+
+
+ALTER FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."protect_albums_moderation_columns"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -3463,6 +3555,43 @@ COMMENT ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_p
 
 
 
+CREATE OR REPLACE FUNCTION "public"."sync_public_interest_counts"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  was_public boolean;
+  is_public boolean;
+BEGIN
+  was_public := public.profile_is_public_member(OLD.nickname, OLD.suspended_at, OLD.deletion_scheduled_at);
+  is_public := public.profile_is_public_member(NEW.nickname, NEW.suspended_at, NEW.deletion_scheduled_at);
+
+  IF was_public = is_public THEN
+    RETURN NEW;
+  END IF;
+
+  IF is_public THEN
+    UPDATE public.interests AS i
+    SET count = i.count + 1
+    FROM public.profile_interests AS pi
+    WHERE pi.profile_id = NEW.id
+      AND i.name = pi.interest;
+  ELSE
+    UPDATE public.interests AS i
+    SET count = GREATEST(i.count - 1, 0)
+    FROM public.profile_interests AS pi
+    WHERE pi.profile_id = NEW.id
+      AND i.name = pi.interest;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."sync_public_interest_counts"() OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."trigger_add_shared_album_owner"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -3603,16 +3732,36 @@ CREATE OR REPLACE FUNCTION "public"."update_interest_count"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
+DECLARE
+  member_is_public boolean;
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    -- Insert interest if it doesn't exist, or increment count
-    INSERT INTO interests (name, count)
-    VALUES (NEW.interest, 1)
-    ON CONFLICT (name) DO UPDATE SET count = interests.count + 1;
+    SELECT public.profile_is_public_member(p.nickname, p.suspended_at, p.deletion_scheduled_at)
+    INTO member_is_public
+    FROM public.profiles p
+    WHERE p.id = NEW.profile_id;
+
+    IF COALESCE(member_is_public, false) THEN
+      INSERT INTO public.interests (name, count)
+      VALUES (NEW.interest, 1)
+      ON CONFLICT (name) DO UPDATE SET count = public.interests.count + 1;
+    ELSE
+      INSERT INTO public.interests (name, count)
+      VALUES (NEW.interest, 0)
+      ON CONFLICT (name) DO NOTHING;
+    END IF;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    -- Decrement count (don't delete interest even if count reaches 0, for history)
-    UPDATE interests SET count = GREATEST(count - 1, 0) WHERE name = OLD.interest;
+    SELECT public.profile_is_public_member(p.nickname, p.suspended_at, p.deletion_scheduled_at)
+    INTO member_is_public
+    FROM public.profiles p
+    WHERE p.id = OLD.profile_id;
+
+    IF COALESCE(member_is_public, false) THEN
+      UPDATE public.interests
+      SET count = GREATEST(count - 1, 0)
+      WHERE name = OLD.interest;
+    END IF;
     RETURN OLD;
   END IF;
   RETURN NULL;
@@ -4306,6 +4455,7 @@ CREATE TABLE IF NOT EXISTS "public"."notification_email_batches" (
     "sent_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "template_key" "text" DEFAULT 'comment_notification'::"text" NOT NULL,
     CONSTRAINT "notification_email_batches_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'sent'::"text", 'cancelled'::"text"])))
 );
 
@@ -5464,6 +5614,10 @@ CREATE OR REPLACE TRIGGER "trigger_photo_tags_count" AFTER INSERT OR DELETE ON "
 
 
 CREATE OR REPLACE TRIGGER "trigger_profile_interests_count" AFTER INSERT OR DELETE ON "public"."profile_interests" FOR EACH ROW EXECUTE FUNCTION "public"."update_interest_count"();
+
+
+
+CREATE OR REPLACE TRIGGER "trigger_sync_public_interest_counts" AFTER UPDATE OF "nickname", "suspended_at", "deletion_scheduled_at" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."sync_public_interest_counts"();
 
 
 
@@ -6920,6 +7074,13 @@ GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_u
 
 
 
+GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer, "p_template_key" "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer, "p_template_key" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer, "p_template_key" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."enqueue_notification_email_batch"("p_recipient_user_id" "uuid", "p_batch_key" "text", "p_item" "jsonb", "p_email_type" "text", "p_notification_id" "uuid", "p_debounce_minutes" integer, "p_template_key" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "postgres";
 GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."generate_short_id"("size" integer) TO "authenticated";
@@ -7075,6 +7236,13 @@ GRANT ALL ON FUNCTION "public"."prevent_private_challenge_photo"() TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "postgres";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "anon";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."profile_is_public_member"("p_nickname" "text", "p_suspended_at" timestamp with time zone, "p_deletion_scheduled_at" timestamp with time zone) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "anon";
 GRANT ALL ON FUNCTION "public"."protect_albums_moderation_columns"() TO "authenticated";
@@ -7190,6 +7358,13 @@ GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "postgres";
 GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."submit_to_challenge"("p_challenge_id" "uuid", "p_photo_ids" "uuid"[]) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."sync_public_interest_counts"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."sync_public_interest_counts"() TO "anon";
+GRANT ALL ON FUNCTION "public"."sync_public_interest_counts"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."sync_public_interest_counts"() TO "service_role";
 
 
 

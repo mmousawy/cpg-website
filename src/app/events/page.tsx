@@ -27,6 +27,7 @@ export default async function EventsPage() {
     pastEventsCount,
     serverNow,
     attendeesByEvent,
+    photoCountsByEvent,
   } = await getEventsPageData();
 
   return (
@@ -46,6 +47,7 @@ export default async function EventsPage() {
             <EventsList
               events={upcomingEvents}
               attendeesByEvent={attendeesByEvent}
+              photoCountsByEvent={photoCountsByEvent}
               emptyMessage="No upcoming events scheduled. Check back soon!"
               serverNow={serverNow}
             />
@@ -62,6 +64,7 @@ export default async function EventsPage() {
             <PastEventsPaginated
               initialEvents={initialPast}
               initialAttendees={attendeesByEvent}
+              initialPhotoCounts={photoCountsByEvent}
               totalCount={pastEventsCount}
               perPage={PAST_EVENTS_PER_PAGE}
               serverNow={serverNow}

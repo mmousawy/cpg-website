@@ -43,7 +43,7 @@ export default function HeaderSiteSearch() {
         <span
           className="inline in-data-[platform=mac]:hidden"
         >Ctrl</span>
-        {' + '}
+        {'+'}
         K
       </kbd>
     </button>
