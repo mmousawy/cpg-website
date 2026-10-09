@@ -1,5 +1,5 @@
+import { sendAppEmailBatch } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { getWeeklyDigestSubject, WeeklyDigestEmail } from '@/emails/weekly-digest';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
@@ -8,7 +8,6 @@ import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
 const BATCH_SIZE = 100;
 
 type UserDigest = {
@@ -214,7 +213,7 @@ export async function GET(request: NextRequest) {
     );
 
     try {
-      const result = await resend.batch.send(emails);
+      const result = await sendAppEmailBatch(emails);
 
       if (result.error) {
         console.error('Error sending weekly digest batch:', result.error);

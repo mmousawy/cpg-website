@@ -1,3 +1,4 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { revalidateAll } from '@/app/actions/revalidate';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
@@ -6,9 +7,6 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
 import { NextResponse, after } from 'next/server';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST() {
   try {
@@ -88,7 +86,7 @@ export async function POST() {
           }),
         );
 
-        await resend.emails.send({
+        await sendAppEmail({
           from: 'Creative Photography Group <noreply@creativephotography.group>',
           to: email,
           subject: 'Your account is scheduled for deletion',

@@ -1,5 +1,5 @@
+import { sendAppEmail, sendAppEmailBatch } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { NewsletterEmail } from '@/emails/newsletter';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
@@ -8,8 +8,6 @@ import { encrypt } from '@/utils/encrypt';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -78,7 +76,7 @@ export async function POST(request: NextRequest) {
         }),
       );
 
-      const { error } = await resend.emails.send({
+      const { error } = await sendAppEmail({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: adminEmail,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
@@ -233,7 +231,7 @@ export async function POST(request: NextRequest) {
     );
 
     try {
-      const batchResult = await resend.batch.send(batchEmails);
+      const batchResult = await sendAppEmailBatch(batchEmails);
 
       if (batchResult.error) {
         type ResendError = string | { message?: string } | Error;

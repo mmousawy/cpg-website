@@ -1,6 +1,6 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
 
-import { getEventAttendees, getPastEvents, getUpcomingEvents } from './events';
+import { getEventAttendees, getEventPhotoCounts, getPastEvents, getUpcomingEvents } from './events';
 
 const PAST_EVENTS_PER_PAGE = 5;
 
@@ -10,6 +10,7 @@ export type EventsPageData = {
   pastEventsCount: number;
   serverNow: number;
   attendeesByEvent: Record<number, EventAttendee[]>;
+  photoCountsByEvent: Record<number, number>;
 };
 
 export async function getEventsPageData(): Promise<EventsPageData> {
@@ -26,9 +27,12 @@ export async function getEventsPageData(): Promise<EventsPageData> {
     ...initialPast.map((event) => event.id),
   ];
 
-  const attendeesByEvent = displayedEventIds.length > 0
-    ? await getEventAttendees(displayedEventIds)
-    : ({} as Record<number, EventAttendee[]>);
+  const [attendeesByEvent, photoCountsByEvent] = displayedEventIds.length > 0
+    ? await Promise.all([
+      getEventAttendees(displayedEventIds),
+      getEventPhotoCounts(displayedEventIds),
+    ])
+    : [{} as Record<number, EventAttendee[]>, {} as Record<number, number>];
 
   return {
     upcomingEvents,
@@ -36,5 +40,6 @@ export async function getEventsPageData(): Promise<EventsPageData> {
     pastEventsCount,
     serverNow,
     attendeesByEvent,
+    photoCountsByEvent,
   };
 }

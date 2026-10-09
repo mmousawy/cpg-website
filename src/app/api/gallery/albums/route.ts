@@ -3,6 +3,7 @@ import { filterAlbumProfiles } from '@/lib/auth/isTestProfile';
 import { getIncludeTestContentFromRequest } from '@/lib/auth/includeTestContent';
 import type { AlbumWithPhotos } from '@/types/albums';
 import type { Tables } from '@/database.types';
+import { resolveCoverBlurhash } from '@/lib/data/albums';
 import { createPublicClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
@@ -41,9 +42,10 @@ export async function GET(request: NextRequest) {
       profile:profiles!albums_user_id_fkey(full_name, nickname, avatar_url),
       photos:album_photos_active!inner(
         id,
-        photo_url
+        photo_url,
+        photo:photos!album_photos_photo_id_fkey(blurhash)
       ),
-      event:events!albums_event_id_fkey(slug, cover_image)
+      event:events!albums_event_id_fkey(slug, cover_image, is_draft)
     `)
     .eq('is_public', true)
     .is('deleted_at', null)
@@ -68,19 +70,24 @@ export async function GET(request: NextRequest) {
   // Filter out albums with no photos
   type AlbumRow = Pick<Tables<'albums'>, 'id' | 'title' | 'description' | 'slug' | 'cover_image_url' | 'is_public' | 'created_at' | 'likes_count' | 'view_count'>;
   type ProfileRow = Pick<Tables<'profiles'>, 'full_name' | 'nickname' | 'avatar_url'>;
-  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'>;
+  type AlbumPhotoActive = Pick<Tables<'album_photos_active'>, 'id' | 'photo_url'> & {
+    photo: Pick<Tables<'photos'>, 'blurhash'> | null;
+  };
   type AlbumQueryResult = AlbumRow & {
     profile: ProfileRow | null;
     photos: Array<AlbumPhotoActive> | null;
-    event: { slug: string | null; cover_image: string | null } | null;
+    event: { slug: string | null; cover_image: string | null; is_draft: boolean } | null;
   };
 
   const albumsWithPhotos = (albums || [])
     .filter((album: AlbumQueryResult): album is AlbumQueryResult & { photos: Array<AlbumPhotoActive> } => {
-      return !!album.photos && album.photos.length > 0;
+      if (!album.photos || album.photos.length === 0) return false;
+      if (album.event?.is_draft) return false;
+      return true;
     })
     .map((album) => ({
       ...album,
+      cover_image_blurhash: resolveCoverBlurhash(album.cover_image_url, album.photos),
       event_slug: album.event?.slug || null,
       event_cover_image: album.event?.cover_image || null,
     }));

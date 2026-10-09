@@ -1,7 +1,5 @@
-import { render } from '@react-email/render';
-
-import { SubmissionNotificationEmail } from '@/emails/submission-notification';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { notifyAdmins } from '@/lib/notifications/notifyAdmins';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -93,28 +91,21 @@ export async function notifyAdminsOfChallengeSubmission(params: {
         photoCount,
       },
     },
-    buildEmail: async (admin) => {
-      const html = await render(
-        SubmissionNotificationEmail({
-          adminName: admin.full_name || 'Admin',
-          recipientEmail: admin.email,
-          submitterName,
-          submitterNickname,
-          submitterAvatarUrl,
-          submitterProfileLink,
-          photoCount,
-          photoUrls,
-          challengeTitle: challenge.title,
-          challengeThumbnail: challenge.cover_image_url,
-          challengeLink,
-          reviewLink: reviewLinkFull,
-        }),
-      );
-
-      return {
-        subject: `New submission: ${submitterName} submitted to "${challenge.title}"`,
-        html,
-      };
+    debouncedEmail: {
+      batchKey: `new_submission:${challengeId}`,
+      templateKey: EMAIL_TEMPLATE_KEYS.submissionNotification,
+      buildItem: () => ({
+        submitterName,
+        submitterNickname,
+        submitterAvatarUrl,
+        submitterProfileLink,
+        photoCount,
+        photoUrls,
+        challengeTitle: challenge.title,
+        challengeThumbnail: challenge.cover_image_url,
+        challengeLink,
+        reviewLink: reviewLinkFull,
+      }),
     },
   });
 }

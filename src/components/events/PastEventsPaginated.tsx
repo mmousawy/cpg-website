@@ -8,6 +8,7 @@ import EventsList from './EventsList';
 type PastEventsPaginatedProps = {
   initialEvents: CPGEvent[];
   initialAttendees: Record<number, EventAttendee[]>;
+  initialPhotoCounts?: Record<number, number>;
   totalCount: number;
   perPage: number;
   serverNow: number;
@@ -18,6 +19,7 @@ const STORAGE_KEY = 'past-events-paginated-/events';
 type CachedState = {
   events: CPGEvent[];
   attendeesByEvent: Record<number, EventAttendee[]>;
+  photoCountsByEvent?: Record<number, number>;
   timestamp: number;
 };
 
@@ -27,12 +29,14 @@ const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 export default function PastEventsPaginated({
   initialEvents,
   initialAttendees,
+  initialPhotoCounts = {},
   totalCount,
   perPage,
   serverNow,
 }: PastEventsPaginatedProps) {
   const [events, setEvents] = useState<CPGEvent[]>(initialEvents);
   const [attendeesByEvent, setAttendeesByEvent] = useState<Record<number, EventAttendee[]>>(initialAttendees);
+  const [photoCountsByEvent, setPhotoCountsByEvent] = useState<Record<number, number>>(initialPhotoCounts);
   const [isPending, startLoadMore] = useTransition();
 
   // Restore extra loaded pages from sessionStorage after mount
@@ -47,6 +51,9 @@ export default function PastEventsPaginated({
 
       setEvents(parsed.events);
       setAttendeesByEvent(parsed.attendeesByEvent);
+      if (parsed.photoCountsByEvent) {
+        setPhotoCountsByEvent(parsed.photoCountsByEvent);
+      }
     } catch {
       // Ignore storage errors
     }
@@ -60,6 +67,7 @@ export default function PastEventsPaginated({
         const state: CachedState = {
           events,
           attendeesByEvent,
+          photoCountsByEvent,
           timestamp: Date.now(),
         };
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -67,7 +75,7 @@ export default function PastEventsPaginated({
         // Ignore storage errors (quota exceeded, etc.)
       }
     }
-  }, [events, attendeesByEvent, initialEvents.length]);
+  }, [events, attendeesByEvent, photoCountsByEvent, initialEvents.length]);
 
   const hasMore = events.length < totalCount;
   const remainingCount = totalCount - events.length;
@@ -85,6 +93,7 @@ export default function PastEventsPaginated({
 
         setEvents(prev => [...prev, ...data.events]);
         setAttendeesByEvent(prev => ({ ...prev, ...data.attendeesByEvent }));
+        setPhotoCountsByEvent(prev => ({ ...prev, ...data.photoCountsByEvent }));
       } catch (error) {
         console.error('Error loading more events:', error);
       }
@@ -107,6 +116,7 @@ export default function PastEventsPaginated({
       <EventsList
         events={events}
         attendeesByEvent={attendeesByEvent}
+        photoCountsByEvent={photoCountsByEvent}
         serverNow={serverNow}
       />
 

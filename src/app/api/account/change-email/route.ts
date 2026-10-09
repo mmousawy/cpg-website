@@ -1,14 +1,12 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import ChangeEmailTemplate from '@/emails/auth/change-email';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Generate a secure random token
 function generateToken(): string {
@@ -129,7 +127,7 @@ export async function POST(request: NextRequest) {
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-email-change?token=${token}&email=${encodeURIComponent(newEmail)}`;
 
     if (!shouldSkipNotificationsAndEmails(currentEmail) && currentEmail) {
-      const emailResult = await resend.emails.send({
+      const emailResult = await sendAppEmail({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: currentEmail,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

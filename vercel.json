@@ -36,15 +36,15 @@
     },
     {
       "path": "/api/cron/revalidate-events",
-      "schedule": "1 13 * * *"
-    },
-    {
-      "path": "/api/cron/revalidate-events",
-      "schedule": "1 17 * * *"
+      "schedule": "1 * * * *"
     },
     {
       "path": "/api/cron/cleanup-deleted-content",
       "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/cron/send-pending-notification-emails",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -12,7 +12,7 @@ interface EventMiniCardProps {
   href: string;
   /** Event date shown as a subtitle */
   date?: string | null;
-  /** URL opened in a new tab via the link icon (defaults to href) */
+  /** Public event URL opened in a new tab. Only pass this from manage views. */
   publicUrl?: string;
   className?: string;
 }
@@ -30,7 +30,6 @@ export default function EventMiniCard({
   className = '',
 }: EventMiniCardProps) {
   const formattedDate = date ? formatEventDate(date, { includeYear: true, now: Date.now() }) : null;
-  const openUrl = publicUrl ?? href;
 
   return (
     <div
@@ -44,10 +43,10 @@ export default function EventMiniCard({
     >
       <Link
         href={href}
-        className="inline-flex items-center gap-2.5 pr-2.5"
+        className="inline-flex items-center gap-3 pr-3"
       >
         <div
-          className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden bg-background"
+          className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-background"
         >
           {coverImageUrl ? (
             <BlurImage
@@ -64,10 +63,13 @@ export default function EventMiniCard({
           )}
         </div>
         <div
-          className="min-w-0 flex flex-1 flex-col gap-0.5"
+          className="flex flex-col gap-0.5"
         >
           <span
-            className="text-sm font-medium line-clamp-2 leading-none pr-6"
+            className={clsx(
+              'text-sm font-medium line-clamp-2 leading-none',
+              publicUrl && 'pr-4',
+            )}
           >
             {title}
           </span>
@@ -80,9 +82,9 @@ export default function EventMiniCard({
           )}
         </div>
       </Link>
-      {openUrl && (
+      {publicUrl && (
         <Link
-          href={openUrl}
+          href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="absolute top-0.5 right-0.5 p-0.5 rounded hover:bg-foreground/10 transition-colors text-foreground/60 hover:text-foreground"

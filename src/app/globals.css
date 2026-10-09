@@ -911,6 +911,15 @@ html.reduce-motion *::after {
   html.manage-page .app-shell-main {
     padding-bottom: 0;
   }
+
+  /* Action bar is fixed above the tab bar, so clearance is both, not the taller of the two. */
+  html.manage-page {
+    --mobile-shell-padding-bottom: calc(
+      var(--mobile-nav-offset, 4.5rem)
+      + var(--mobile-overlay-chrome-height, 0px)
+      + var(--mobile-content-bottom-gap)
+    );
+  }
 }
 
 /* Toast container positioning - below header */

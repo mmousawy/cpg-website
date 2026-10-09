@@ -17,11 +17,13 @@ import SadSVG from 'public/icons/sad.svg';
 import TimeSVG from 'public/icons/time.svg';
 import { SIZE_MAP } from '../auth/Avatar';
 import EventCard from './EventCard';
+import EventPhotoCount from './EventPhotoCount';
 type EventsListVariant = 'full' | 'compact';
 
 type EventsListProps = {
   events: CPGEvent[]
   attendeesByEvent?: Record<number, EventAttendee[]>
+  photoCountsByEvent?: Record<number, number>
   emptyMessage?: string
   /**
    * Visual variant
@@ -94,6 +96,7 @@ function AttendeesDisplay({ attendees, isPastEvent, avatarSize }: { attendees: E
 export default function EventsList({
   events,
   attendeesByEvent = {},
+  photoCountsByEvent = {},
   emptyMessage,
   variant = 'full',
   max,
@@ -159,6 +162,7 @@ export default function EventsList({
               description={showDescriptions ? event.description : null}
               showDescription={showDescriptions}
               attendees={attendees}
+              photoCount={photoCountsByEvent[event.id] ?? 0}
               disableAttendeesPopover={disableAttendeesPopover}
               serverNow={serverNow}
               prefetch={prefetchLinks}
@@ -176,6 +180,7 @@ export default function EventsList({
         const status = getEventStatus(event.date, event.time, serverNow);
         const isPast = status === 'past';
         const attendees = attendeesByEvent[event.id] || [];
+        const photoCount = photoCountsByEvent[event.id] ?? 0;
 
         return (
           <div
@@ -215,6 +220,10 @@ export default function EventsList({
                 >
                   {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming'}
                 </span>
+                <EventPhotoCount
+                  count={photoCount}
+                  onCover="md"
+                />
               </Link>
             )}
             <div
@@ -287,11 +296,20 @@ export default function EventsList({
                 <div
                   className='mt-5 sm:mt-8 flex items-end justify-between gap-5 sm:gap-4'
                 >
-                  <AttendeesDisplay
-                    attendees={attendees}
-                    isPastEvent={isPast}
-                    avatarSize="xs"
-                  />
+                  <div
+                    className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2"
+                  >
+                    <AttendeesDisplay
+                      attendees={attendees}
+                      isPastEvent={isPast}
+                      avatarSize="xs"
+                    />
+                    {!event.cover_image && (
+                      <EventPhotoCount
+                        count={photoCount}
+                      />
+                    )}
+                  </div>
                   <Button
                     href={`/events/${event.slug}`}
                     prefetch={prefetchLinks}
@@ -335,6 +353,10 @@ export default function EventsList({
                   >
                     {status === 'past' ? 'Past event' : status === 'now' ? 'Happening now' : 'Upcoming'}
                   </span>
+                  <EventPhotoCount
+                    count={photoCount}
+                    onCover="md"
+                  />
                 </Link>
               )}
             </div>

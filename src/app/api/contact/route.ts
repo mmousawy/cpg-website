@@ -1,11 +1,9 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import ContactEmail from '@/emails/contact';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 const CONTACT_EMAIL = 'murtada.al.mousawy@gmail.com';
 
@@ -58,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send the email
-    const emailResult = await resend.emails.send({
+    const emailResult = await sendAppEmail({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: CONTACT_EMAIL,
       replyTo: email,

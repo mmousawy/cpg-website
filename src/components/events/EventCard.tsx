@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 
 import BlurImage from '@/components/shared/BlurImage';
+import EventPhotoCount from '@/components/events/EventPhotoCount';
 import { formatEventDate, formatEventTime } from '@/lib/events/format';
 import { getEventStatus, type EventStatus } from '@/lib/events/status';
 import { formatEventLocation } from '@/utils/formatLocation';
@@ -48,6 +49,7 @@ type EventCardProps = {
   asLink?: boolean;
   description?: string | null;
   attendees?: EventAttendee[];
+  photoCount?: number;
   disableAttendeesPopover?: boolean;
   serverNow?: number;
   /** Prioritize loading for LCP (first visible event card on homepage) */
@@ -98,6 +100,7 @@ export default function EventCard({
   className,
   asLink = true,
   attendees = [],
+  photoCount = 0,
   disableAttendeesPopover = false,
   serverNow,
   priority = false,
@@ -152,6 +155,10 @@ export default function EventCard({
               status={status}
             />
           )}
+          <EventPhotoCount
+            count={photoCount}
+            onCover="sm"
+          />
         </div>
       )}
 
@@ -231,19 +238,26 @@ export default function EventCard({
           />
         )}
 
-        {attendees.length > 0 && (
+        {(attendees.length > 0 || (!coverSrc && photoCount > 0)) && (
           <div
-            className="mt-4"
+            className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5"
           >
-            <StackedAvatarsPopover
-              people={attendeePeople}
-              singularLabel="attendee"
-              pluralLabel="attendees"
-              showInlineCount={true}
-              maxVisibleAvatarsMobile={8}
-              showCountOnMobile={true}
-              disablePopover={disableAttendeesPopover}
-            />
+            {attendees.length > 0 && (
+              <StackedAvatarsPopover
+                people={attendeePeople}
+                singularLabel="attendee"
+                pluralLabel="attendees"
+                showInlineCount={true}
+                maxVisibleAvatarsMobile={8}
+                showCountOnMobile={true}
+                disablePopover={disableAttendeesPopover}
+              />
+            )}
+            {!coverSrc && (
+              <EventPhotoCount
+                count={photoCount}
+              />
+            )}
           </div>
         )}
       </div>
