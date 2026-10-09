@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.6](https://github.com/mmousawy/cpg-website/compare/v1.41.5...v1.41.6) (2026-10-09)
+
+
+### ♻️ Refactoring
+
+* update cron job schedules and enhance email notification documentation ([5ea7091](https://github.com/mmousawy/cpg-website/commit/5ea709113f45731b4dd7c442047f96326a6e4881))
+
 ## [1.41.5](https://github.com/mmousawy/cpg-website/compare/v1.41.4...v1.41.5) (2026-10-08)
 
 
