@@ -1,11 +1,10 @@
-import { Resend } from 'resend';
-
-import { isTestEmail, userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
+import type { Json } from '@/database.types';
+import { userIdsIncludeTestUser } from '@/lib/auth/isTestEmail';
+import type { EmailTemplateKey } from '@/lib/email/templateKeys';
 import { createNotification } from '@/lib/notifications/create';
+import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
 import type { CreateNotificationParams } from '@/types/notifications';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export type AdminRecipient = {
   id: string;
@@ -13,19 +12,23 @@ export type AdminRecipient = {
   email: string;
 };
 
+type NotifyAdminsDebouncedEmail = {
+  batchKey: string;
+  templateKey: EmailTemplateKey;
+  emailType?: string;
+  buildItem: () => Json;
+};
+
 type NotifyAdminsOptions = {
   notification: Omit<CreateNotificationParams, 'userId'>;
   excludeUserIds?: string[];
-  buildEmail: (admin: AdminRecipient) => Promise<{
-    subject: string;
-    html: string;
-  }>;
+  debouncedEmail: NotifyAdminsDebouncedEmail;
 };
 
 export async function notifyAdmins({
   notification,
   excludeUserIds,
-  buildEmail,
+  debouncedEmail,
 }: NotifyAdminsOptions): Promise<void> {
   if (await userIdsIncludeTestUser(notification.actorId)) {
     return;
@@ -49,42 +52,25 @@ export async function notifyAdmins({
     return;
   }
 
-  await Promise.all(
-    recipients.map((admin) =>
-      createNotification({
-        ...notification,
-        userId: admin.id,
-      }),
-    ),
-  );
+  const item = debouncedEmail.buildItem();
 
-  const adminsToEmail = recipients.filter(
-    (admin): admin is AdminRecipient => Boolean(admin.email) && !isTestEmail(admin.email),
-  );
+  for (const admin of recipients) {
+    const { notificationId } = await createNotification({
+      ...notification,
+      userId: admin.id,
+    });
 
-  if (adminsToEmail.length === 0) {
-    return;
-  }
-
-  try {
-    const emails = await Promise.all(
-      adminsToEmail.map(async (admin) => {
-        const { subject, html } = await buildEmail(admin);
-
-        return {
-          from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-          replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-          to: admin.email,
-          subject,
-          html,
-        };
-      }),
-    );
-
-    if (emails.length > 0) {
-      await resend.batch.send(emails);
+    if (!admin.email) {
+      continue;
     }
-  } catch (emailError) {
-    console.error('Error sending admin notification emails:', emailError);
+
+    await enqueueDebouncedNotificationEmail({
+      recipientUserId: admin.id,
+      batchKey: debouncedEmail.batchKey,
+      templateKey: debouncedEmail.templateKey,
+      emailType: debouncedEmail.emailType ?? 'notifications',
+      notificationId,
+      item,
+    });
   }
 }

@@ -517,69 +517,73 @@ export default function AlbumDetailClient() {
     return null;
   }
 
-  // Shared-with-me: read-only sidebar showing album info
-  const sharedAlbumSidebar = album && isSharedWithMe ? (
+  // Shared-with-me: read-only album info (desktop sidebar and mobile sheet)
+  const sharedAlbumDetails = album && isSharedWithMe ? (
+    <div
+      className="space-y-4"
+    >
+      <div>
+        <h3
+          className="text-lg font-semibold font-heading"
+        >
+          {album.title}
+        </h3>
+        {album.description && (
+          <p
+            className="mt-1 text-sm text-foreground/80"
+          >
+            {album.description}
+          </p>
+        )}
+      </div>
+      <div
+        className="text-sm text-foreground/60 space-y-2"
+      >
+        {ownerNickname && (
+          <div
+            className="flex items-center gap-1.5"
+          >
+            <Avatar
+              avatarUrl={(album as SharedWithMeAlbum).owner_profile?.avatar_url}
+              fullName={(album as SharedWithMeAlbum).owner_profile?.full_name}
+              size="xxs"
+            />
+            <span
+              className="text-foreground/80 font-medium"
+            >
+              @
+              {ownerNickname}
+            </span>
+          </div>
+        )}
+        <p>
+          {photos.length}
+          {' '}
+          {photos.length === 1 ? 'photo' : 'photos'}
+        </p>
+      </div>
+      {sharedMembers.length > 0 && (
+        <SharedAlbumMemberList
+          members={sharedMembers}
+          albumOwnerId={album.user_id ?? ''}
+          currentUserId={user?.id}
+          isOwner={false}
+          onInviteClick={() => {}}
+        />
+      )}
+      <div
+        className="pt-2 border-t border-border-color text-xs text-foreground/50"
+      >
+        You are a member of this shared album. You can view the photos but cannot edit the album settings.
+      </div>
+    </div>
+  ) : null;
+
+  const sharedAlbumSidebar = sharedAlbumDetails ? (
     <SidebarPanel
       title="Album details"
     >
-      <div
-        className="space-y-4"
-      >
-        <div>
-          <h3
-            className="text-lg font-semibold font-heading"
-          >
-            {album.title}
-          </h3>
-          {album.description && (
-            <p
-              className="mt-1 text-sm text-foreground/80"
-            >
-              {album.description}
-            </p>
-          )}
-        </div>
-        <div
-          className="text-sm text-foreground/60 space-y-2"
-        >
-          {ownerNickname && (
-            <div
-              className="flex items-center gap-1.5"
-            >
-              <Avatar
-                avatarUrl={(album as SharedWithMeAlbum).owner_profile?.avatar_url}
-                fullName={(album as SharedWithMeAlbum).owner_profile?.full_name}
-                size="xxs"
-              />
-              <span
-                className="text-foreground/80 font-medium"
-              >
-                @
-                {ownerNickname}
-              </span>
-            </div>
-          )}
-          <p>
-            {photos.length}
-            {' '}
-            {photos.length === 1 ? 'photo' : 'photos'}
-          </p>
-        </div>
-        {sharedMembers.length > 0 && (
-          <SharedAlbumMemberList
-            members={sharedMembers}
-            albumOwnerId={album.user_id ?? ''}
-            currentUserId={user?.id}
-            isOwner={false}
-            onInviteClick={() => {}}
-          />
-        )}
-        <div
-          className="pt-2 border-t border-border-color text-xs text-foreground/50"
-        >
-          You are a member of this shared album. You can view the photos but cannot edit the album settings.
-        </div>
-      </div>
+      {sharedAlbumDetails}
     </SidebarPanel>
   ) : null;
 
@@ -665,13 +669,15 @@ export default function AlbumDetailClient() {
             />
         )}
         mobileActionBar={
-          selectedCount > 0 ? (
-            <MobileActionBar
-              selectedCount={selectedCount}
-              onEdit={handleMobileEdit}
-              onClearSelection={handleClearSelection}
-              hideEdit={hasNonOwnedSelected}
-              actions={
+          <MobileActionBar
+            selectedCount={selectedCount}
+            persistentLabel={selectedCount === 0 ? (album?.title || 'Album') : undefined}
+            persistentActionLabel={isSharedWithMe ? 'Details' : undefined}
+            onEdit={handleMobileEdit}
+            onClearSelection={handleClearSelection}
+            hideEdit={hasNonOwnedSelected}
+            actions={
+              selectedCount > 0 ? (
                 <Button
                   onClick={handleMobileRemoveFromAlbum}
                   variant="secondary"
@@ -686,22 +692,9 @@ export default function AlbumDetailClient() {
                     Remove
                   </span>
                 </Button>
-              }
-            />
-          ) : !isSharedWithMe ? (
-            // Show edit album button when no photos selected on mobile (owned albums only)
-            <div
-              className="md:hidden border-t border-border-color-strong bg-background-light px-2 py-3"
-            >
-              <Button
-                onClick={handleMobileEdit}
-                variant="secondary"
-                className="w-full"
-              >
-                Edit Album
-              </Button>
-            </div>
-          ) : undefined
+              ) : undefined
+            }
+          />
         }
       >
         {isSharedWithMe ? (
@@ -735,7 +728,7 @@ export default function AlbumDetailClient() {
           <DropZone
             onDrop={handleFileDrop}
             disabled={isUploading}
-            className="flex-1 flex flex-col min-h-0"
+            className="flex min-h-0 flex-1 flex-col max-sm:pb-16"
             overlayMessage="Drop to add to album"
           >
             {photosLoading && photos.length === 0 ? (
@@ -782,34 +775,42 @@ export default function AlbumDetailClient() {
         )}
       </ManageLayout>
 
-      {/* Mobile Edit Sheet — only for owned albums */}
-      {!isSharedWithMe && (
-        <BottomSheet
-          isOpen={isMobileEditSheetOpen}
-          onClose={handleMobileEditClose}
-          title={deferredSelectedPhotos.length > 0
-            ? (deferredSelectedPhotos.length === 1 ? 'Edit photo' : `Edit ${deferredSelectedPhotos.length} photos`)
-            : 'Edit album'
-          }
-        >
-          {selectedCount > 0 ? (
-            <PhotoEditSidebar
-              selectedPhotos={deferredSelectedPhotos}
-              onSave={handleSavePhoto}
-              onBulkSave={handleBulkSavePhotos}
-              onDelete={handleDeletePhoto}
-              onRemoveFromAlbum={handleRemoveFromAlbum}
-              onSetAsCover={handleSetAsCover}
-              currentAlbum={album ? {
+      {/* Mobile sheet — album settings for owned albums, details for shared albums */}
+      <BottomSheet
+        isOpen={isMobileEditSheetOpen}
+        onClose={handleMobileEditClose}
+        title={
+          isSharedWithMe && deferredSelectedPhotos.length === 0
+            ? 'Album details'
+            : deferredSelectedPhotos.length > 0
+              ? (deferredSelectedPhotos.length === 1 ? 'Edit photo' : `Edit ${deferredSelectedPhotos.length} photos`)
+              : 'Edit album'
+        }
+      >
+        {isSharedWithMe && selectedCount === 0 ? (
+          <SidebarPanel
+            hideTitle
+          >
+            {sharedAlbumDetails}
+          </SidebarPanel>
+        ) : selectedCount > 0 ? (
+          <PhotoEditSidebar
+            selectedPhotos={deferredSelectedPhotos}
+            onSave={handleSavePhoto}
+            onBulkSave={handleBulkSavePhotos}
+            onDelete={handleDeletePhoto}
+            onRemoveFromAlbum={handleRemoveFromAlbum}
+            onSetAsCover={handleSetAsCover}
+            currentAlbum={album ? {
                 id: album.id,
                 slug: album.slug,
                 cover_image_url: album.cover_image_url,
                 eventSlug: album.event_slug,
               } : null}
-              isLoading={photosLoading}
-              onDirtyChange={handlePhotoDirtyChange}
-              hideTitle
-            />
+            isLoading={photosLoading}
+            onDirtyChange={handlePhotoDirtyChange}
+            hideTitle
+          />
           ) : (
             <AlbumEditSidebar
               selectedAlbums={album ? [album] : []}
@@ -823,8 +824,7 @@ export default function AlbumDetailClient() {
               hideTitle
             />
           )}
-        </BottomSheet>
-      )}
+      </BottomSheet>
     </>
   );
 }

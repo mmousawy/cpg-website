@@ -1,4 +1,5 @@
 import type { CPGEvent, EventAttendee } from '@/types/events';
+import { getEventPhotoCounts } from '@/lib/data/events';
 import { getEventQueryContext } from '@/lib/events/status';
 import { withSanitizedDescriptions } from '@/utils/sanitizeRichHtml';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -47,20 +48,23 @@ export async function GET(request: NextRequest) {
   // Fetch attendees for these events
   const eventIds = pastEvents.map(e => e.id);
 
-  const { data: attendees } = await createAdminClient()
-    .from('events_rsvps')
-    .select(`
-      id,
-      event_id,
-      user_id,
-      confirmed_at,
-      profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
-    `)
-    .in('event_id', eventIds)
-    .not('confirmed_at', 'is', null)
-    .is('canceled_at', null)
-    .order('confirmed_at', { ascending: true })
-    .limit(500);
+  const [{ data: attendees }, photoCountsByEvent] = await Promise.all([
+    createAdminClient()
+      .from('events_rsvps')
+      .select(`
+        id,
+        event_id,
+        user_id,
+        confirmed_at,
+        profiles (avatar_url, full_name, nickname, suspended_at, deletion_scheduled_at)
+      `)
+      .in('event_id', eventIds)
+      .not('confirmed_at', 'is', null)
+      .is('canceled_at', null)
+      .order('confirmed_at', { ascending: true })
+      .limit(500),
+    getEventPhotoCounts(eventIds),
+  ]);
 
   // Filter out attendees whose profiles are suspended or pending deletion
   const activeAttendees = (attendees || []).filter((a) => {
@@ -87,5 +91,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     events: pastEvents,
     attendeesByEvent,
+    photoCountsByEvent,
   });
 }

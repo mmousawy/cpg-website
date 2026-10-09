@@ -76,7 +76,7 @@
 
 | Endpoint | When |
 |----------|------|
-| `GET /api/cron/revalidate-events` | Vercel Cron (2×/day) — `events`, `event-attendees`, `challenges`, `home` |
+| `GET /api/cron/revalidate-events` | Coolify scheduled task (hourly) — `events`, `event-attendees`, `challenges`, `home` |
 | `GET /api/revalidate-changelog?secret=…` | After changelog filesystem updates |
 | `GET /api/revalidate-all?secret=…` | Full public cache bust (scraper, manual) |
 

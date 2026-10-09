@@ -49,7 +49,7 @@ export default function DetailSidebar({
         </div>
       ) : null}
       <div
-        className="relative z-10 flex min-h-0 flex-1 flex-col"
+        className="relative z-5 flex min-h-0 flex-1 flex-col"
       >
         {children}
       </div>

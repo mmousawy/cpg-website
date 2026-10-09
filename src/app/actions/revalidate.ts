@@ -155,6 +155,8 @@ export async function revalidateEventBySlug(slug: string) {
 export async function revalidateEventAlbum(eventId: number, eventSlug?: string | null) {
   expireTag(`event-album-${eventId}`);
   expireTag('events');
+  expireTag('events-page');
+  revalidatePath('/events');
   invalidateAlbumListingRoutes();
   if (eventSlug) {
     expireTag(`event-${eventSlug}`);
@@ -267,6 +269,11 @@ export async function revalidateAfterPhotoUpload({
       expireTag(`album-${nickname}-${slug}`);
       revalidatePath(`/@${nickname}/album/${slug}`);
     }
+  }
+
+  if (eventIds.length > 0) {
+    expireTag('events-page');
+    revalidatePath('/events');
   }
 
   for (const [index, eventId] of eventIds.entries()) {

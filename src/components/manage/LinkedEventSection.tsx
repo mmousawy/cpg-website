@@ -33,6 +33,7 @@ export default function LinkedEventSection({ album }: LinkedEventSectionProps) {
           coverImageUrl={album.event_cover_image}
           href={eventHref}
           date={album.event_date}
+          publicUrl={eventHref}
         />
       </div>
     </>

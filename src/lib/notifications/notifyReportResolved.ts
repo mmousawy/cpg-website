@@ -1,12 +1,12 @@
 import { render } from '@react-email/render';
-import { Resend } from 'resend';
 
 import { ReportResolvedEmail } from '@/emails/report-resolved';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { createNotification } from '@/lib/notifications/create';
+import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function notifyReportResolved(
   reportId: string,
@@ -129,8 +129,26 @@ export async function notifyReportResolved(
     }
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+  const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
+  const queueItem = {
+    entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
+    entityTitle,
+    entityThumbnail,
+    entityLink: entityLinkFull,
+    entityOwnerNickname,
+    entityShortId,
+    entityCreatedAt,
+    entityPhotoCount,
+    reason: report.reason,
+    resolutionType: resolutionType || 'Resolved',
+    message,
+    isAnonymous: !reporterId,
+  };
+
+  let notificationId: string | undefined;
   if (reporterId) {
-    await createNotification({
+    const created = await createNotification({
       userId: reporterId,
       actorId: report.reviewed_by || null,
       type: 'report_resolved',
@@ -145,43 +163,41 @@ export async function notifyReportResolved(
         entityType: report.entity_type,
       },
     });
+    notificationId = created.notificationId;
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
-  const entityLinkFull = entityLink ? `${baseUrl}${entityLink}` : null;
   let emailSent = false;
 
   if (reporterEmail && !isTestEmail(reporterEmail)) {
     try {
-      const html = await render(
-        ReportResolvedEmail({
-          reporterName: reporterName || 'User',
-          recipientEmail: reporterEmail,
-          reporterNickname,
-          reporterAvatarUrl,
-          entityType: report.entity_type as 'photo' | 'album' | 'profile' | 'comment',
-          entityTitle,
-          entityThumbnail,
-          entityLink: entityLinkFull,
-          entityOwnerNickname,
-          entityShortId,
-          entityCreatedAt,
-          entityPhotoCount,
-          reason: report.reason,
-          resolutionType: resolutionType || 'Resolved',
-          message,
-          isAnonymous: !reporterId,
-        }),
-      );
+      if (reporterId) {
+        await enqueueDebouncedNotificationEmail({
+          recipientUserId: reporterId,
+          batchKey: 'report_resolved',
+          templateKey: EMAIL_TEMPLATE_KEYS.reportResolved,
+          emailType: 'notifications',
+          notificationId,
+          item: queueItem,
+        });
+        emailSent = true;
+      } else {
+        const html = await render(
+          ReportResolvedEmail({
+            reporterName: reporterName || 'User',
+            recipientEmail: reporterEmail,
+            reporterNickname,
+            reporterAvatarUrl,
+            ...queueItem,
+          }),
+        );
 
-      await resend.emails.send({
-        from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-        replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-        to: reporterEmail,
-        subject: 'Your report has been resolved',
-        html,
-      });
-      emailSent = true;
+        await sendAppEmail({
+          to: reporterEmail,
+          subject: 'Your report has been resolved',
+          html,
+        });
+        emailSent = true;
+      }
     } catch (emailError) {
       console.error('Error sending report resolved email:', emailError);
     }

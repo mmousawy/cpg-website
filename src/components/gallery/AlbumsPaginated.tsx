@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useState, useTransition, useEffect, useCallback } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Button from '../shared/Button';
 import EmptyState from '../shared/EmptyState';
 import AlbumGrid from '../album/AlbumGrid';
@@ -32,6 +32,20 @@ type CachedState = {
 // Cache expires after 5 minutes
 const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 
+function readCachedAlbums(pathname: string, sort: string): CachedState | null {
+  try {
+    const cached = sessionStorage.getItem(getStorageKey(pathname, sort));
+    if (!cached) return null;
+    const parsed: CachedState = JSON.parse(cached);
+    if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS && parsed.albums.length > 0) {
+      return parsed;
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return null;
+}
+
 export default function AlbumsPaginated({
   initialAlbums,
   perPage = 20,
@@ -42,49 +56,24 @@ export default function AlbumsPaginated({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Initialize state from sessionStorage if available
-  const getInitialState = useCallback((): { albums: AlbumWithPhotos[]; hasMore: boolean } => {
-    if (typeof window === 'undefined') {
-      return {
-        albums: initialAlbums,
-        hasMore: initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage,
-      };
-    }
-
-    try {
-      const key = getStorageKey(pathname, initialSort);
-      const cached = sessionStorage.getItem(key);
-      if (cached) {
-        const parsed: CachedState = JSON.parse(cached);
-        // Check if cache is still valid
-        if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS && parsed.albums.length > 0) {
-          return { albums: parsed.albums, hasMore: parsed.hasMore };
-        }
-      }
-    } catch {
-      // Ignore storage errors
-    }
-
-    return {
-      albums: initialAlbums,
-      hasMore: initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage,
-    };
-  }, [pathname, initialSort, initialAlbums, initialHasMore, perPage]);
-
-  const [albums, setAlbums] = useState<AlbumWithPhotos[]>(() => getInitialState().albums);
+  // Always start from the server payload. Reading sessionStorage here mismatches
+  // the SSR HTML (cached pages omit cover blurhashes the server already rendered).
+  const [albums, setAlbums] = useState<AlbumWithPhotos[]>(initialAlbums);
   const [sortBy, setSortBy] = useState<'recent' | 'popular'>(initialSort);
-  const [hasMore, setHasMore] = useState(() => getInitialState().hasMore);
+  const [hasMore, setHasMore] = useState(
+    initialHasMore !== undefined ? initialHasMore : initialAlbums.length >= perPage,
+  );
   const [isPending, startTransition] = useTransition();
 
-  // Restore state from sessionStorage on mount (client-side only)
+  // Restore extra pages after hydration so the first paint matches the server.
   useEffect(() => {
-    const { albums: cachedAlbums, hasMore: cachedHasMore } = getInitialState();
-    // Only restore if we have more than initial albums
-    if (cachedAlbums.length > initialAlbums.length) {
-      setAlbums(cachedAlbums);
-      setHasMore(cachedHasMore);
-    }
-  }, [getInitialState, initialAlbums.length]);
+    const cached = readCachedAlbums(pathname, initialSort);
+    if (!cached || cached.albums.length <= initialAlbums.length) return;
+
+    const initialById = new Map(initialAlbums.map((album) => [album.id, album]));
+    setAlbums(cached.albums.map((album) => initialById.get(album.id) ?? album));
+    setHasMore(cached.hasMore);
+  }, [pathname, initialSort, initialAlbums]);
 
   // Persist state to sessionStorage when albums change
   useEffect(() => {

@@ -1,13 +1,8 @@
-import { render } from '@react-email/render';
-import { Resend } from 'resend';
-
-import SubmissionResultEmail from '@/emails/submission-result';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { createNotification } from '@/lib/notifications/create';
-import { encrypt } from '@/utils/encrypt';
+import { enqueueDebouncedNotificationEmail } from '@/lib/notifications/emailQueue';
 import { adminSupabase } from '@/utils/supabase/admin';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function notifyChallengeSubmissionResult(params: {
   actorId: string;
@@ -65,6 +60,7 @@ export async function notifyChallengeSubmissionResult(params: {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   const challengeLinkFull = `${baseUrl}/challenges/${challenge.slug}`;
   const challengeLinkRelative = `/challenges/${challenge.slug}`;
+  const batchKey = `submission_${status}:${challenge.id}`;
 
   const submissionsByUser = new Map<
     string,
@@ -112,11 +108,11 @@ export async function notifyChallengeSubmissionResult(params: {
   }
 
   const notificationsCreated: string[] = [];
-  const emailsSent: string[] = [];
+  const emailsQueued: string[] = [];
 
   for (const [userId, { user: submissionUser, photos }] of submissionsByUser) {
     try {
-      await createNotification({
+      const { notificationId } = await createNotification({
         userId: submissionUser.id,
         actorId,
         type: status === 'accepted' ? 'submission_accepted' : 'submission_rejected',
@@ -133,62 +129,35 @@ export async function notifyChallengeSubmissionResult(params: {
         },
       });
       notificationsCreated.push(userId);
-    } catch (err) {
-      console.error('Failed to create notification:', err);
-    }
 
-    if (
-      submissionUser.email
-      && !isTestEmail(submissionUser.email)
-      && !optedOutUserIds.has(submissionUser.id)
-    ) {
-      try {
-        const optOutToken = encrypt(
-          JSON.stringify({
-            userId: submissionUser.id,
-            emailType: 'photo_challenges',
-          }),
-        );
-        const optOutLink = `${baseUrl}/unsubscribe/${encodeURIComponent(optOutToken)}`;
-
-        const emailHtml = await render(
-          SubmissionResultEmail({
-            userName: submissionUser.full_name || submissionUser.nickname || 'there',
-            recipientEmail: submissionUser.email || undefined,
+      if (
+        submissionUser.email
+        && !isTestEmail(submissionUser.email)
+        && !optedOutUserIds.has(submissionUser.id)
+      ) {
+        await enqueueDebouncedNotificationEmail({
+          recipientUserId: submissionUser.id,
+          batchKey,
+          templateKey: EMAIL_TEMPLATE_KEYS.submissionResult,
+          emailType: 'photo_challenges',
+          notificationId,
+          item: {
             status,
             photos: photos.map((p) => ({ url: p.url, title: p.title })),
             challengeTitle: challenge.title,
             challengeLink: challengeLinkFull,
             rejectionReason: status === 'rejected' ? rejectionReason : undefined,
-            optOutLink,
-          }),
-        );
-
-        const isSingle = photos.length === 1;
-        await resend.emails.send({
-          from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
-          replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,
-          to: submissionUser.email,
-          subject:
-            status === 'accepted'
-              ? isSingle
-                ? `Your photo was accepted for "${challenge.title}"!`
-                : `${photos.length} photos accepted for "${challenge.title}"!`
-              : isSingle
-                ? `Update on your submission to "${challenge.title}"`
-                : `Update on your submissions to "${challenge.title}"`,
-          html: emailHtml,
+          },
         });
-
-        emailsSent.push(submissionUser.email);
-      } catch (err) {
-        console.error('Failed to send email:', err);
+        emailsQueued.push(submissionUser.email);
       }
+    } catch (err) {
+      console.error('Failed to create notification or queue email:', err);
     }
   }
 
   return {
     notificationsCreated: notificationsCreated.length,
-    emailsSent: emailsSent.length,
+    emailsSent: emailsQueued.length,
   };
 }

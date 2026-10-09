@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import CalendarSVG from 'public/icons/calendar2.svg';
 import FolderSVG from 'public/icons/folder.svg';
 
 import type { AlbumWithPhotos } from '@/types/albums';
@@ -25,6 +26,51 @@ type AlbumCardProps = {
 }
 
 const DEFAULT_COVER_IMAGE_SIZES = '(max-width: 640px) 256px, (max-width: 1024px) 480px, 384px';
+
+function AlbumAttribution({
+  album,
+  overlay = false,
+}: {
+  album: AlbumWithPhotos
+  overlay?: boolean
+}) {
+  const isEventAlbum = Boolean(album.event_slug);
+
+  if (!isEventAlbum && !album.profile) return null;
+
+  return (
+    <div
+      className={`flex items-center text-xs ${overlay ? 'gap-1 text-white drop-shadow-md' : 'gap-1.5 text-foreground/80'}`}
+    >
+      {isEventAlbum ? (
+        <>
+          <span
+            className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#2d6b55] text-white"
+          >
+            <CalendarSVG
+              className="size-3.5 fill-current"
+            />
+          </span>
+          <span>
+            Event album
+          </span>
+        </>
+      ) : (
+        <>
+          <Avatar
+            avatarUrl={album.profile?.avatar_url}
+            fullName={album.profile?.full_name}
+            size="xxs"
+          />
+          <span>
+            @
+            {album.profile?.nickname}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function AlbumCard({
   album,
@@ -131,22 +177,10 @@ export default function AlbumCard({
             <div
               className="absolute bottom-0 left-0 right-12 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus:opacity-100"
             >
-              {/* Nickname - bottom left */}
-              {album.profile && (
-                <div
-                  className="flex items-center gap-1 text-xs text-white drop-shadow-md"
-                >
-                  <Avatar
-                    avatarUrl={album.profile.avatar_url}
-                    fullName={album.profile.full_name}
-                    size="xxs"
-                  />
-                  <span>
-                    @
-                    {album.profile.nickname}
-                  </span>
-                </div>
-              )}
+              <AlbumAttribution
+                album={album}
+                overlay
+              />
             </div>
           </>
         )}
@@ -172,21 +206,9 @@ export default function AlbumCard({
           <div
             className="flex items-center justify-between mt-2"
           >
-            {album.profile && (
-              <div
-                className="flex items-center gap-1.5 text-xs text-foreground/80"
-              >
-                <Avatar
-                  avatarUrl={album.profile.avatar_url}
-                  fullName={album.profile.full_name}
-                  size="xxs"
-                />
-                <span>
-                  @
-                  {album.profile.nickname}
-                </span>
-              </div>
-            )}
+            <AlbumAttribution
+              album={album}
+            />
             {photoCount > 0 && (
               <div
                 className="text-xs text-foreground/50"

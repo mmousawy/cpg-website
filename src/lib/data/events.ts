@@ -216,3 +216,41 @@ export async function getEventAttendees(eventIds: number[]) {
 
   return attendeesByEvent;
 }
+
+/**
+ * Active photo counts for event albums, keyed by event id.
+ * Uses album_photos_active so deleted photos are excluded.
+ * Tagged with album caches so uploads refresh listing cards.
+ */
+export async function getEventPhotoCounts(eventIds: number[]) {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag('albums');
+
+  if (eventIds.length === 0) {
+    return {} as Record<number, number>;
+  }
+
+  for (const id of eventIds) {
+    cacheTag(`event-album-${id}`);
+  }
+
+  const supabase = createPublicClient();
+
+  const { data } = await supabase
+    .from('albums')
+    .select('event_id, album_photos_active(count)')
+    .in('event_id', eventIds)
+    .is('deleted_at', null);
+
+  const counts: Record<number, number> = {};
+
+  for (const album of data || []) {
+    if (album.event_id == null) continue;
+    const count = (album.album_photos_active as Array<{ count: number }>)?.[0]?.count ?? 0;
+    if (count <= 0) continue;
+    counts[album.event_id] = (counts[album.event_id] ?? 0) + count;
+  }
+
+  return counts;
+}

@@ -1,5 +1,5 @@
+import { sendAppEmailBatch } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { AttendeeReminderEmail } from '@/emails/attendee-reminder';
 import { RsvpReminderEmail } from '@/emails/rsvp-reminder';
@@ -11,8 +11,6 @@ import { sendOnboardingReminders } from '@/lib/onboarding/sendOnboardingReminder
 import { encrypt } from '@/utils/encrypt';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function GET(request: NextRequest) {
   // Verify cron secret from Authorization header
@@ -206,7 +204,7 @@ export async function GET(request: NextRequest) {
             );
 
             try {
-              const batchResult = await resend.batch.send(batchEmails);
+              const batchResult = await sendAppEmailBatch(batchEmails);
 
               if (batchResult.error) {
                 console.error(`Failed to send RSVP reminder batch for event ${event.id}:`, batchResult.error);
@@ -365,7 +363,7 @@ export async function GET(request: NextRequest) {
             );
 
             try {
-              const batchResult = await resend.batch.send(batchEmails);
+              const batchResult = await sendAppEmailBatch(batchEmails);
 
               if (batchResult.error) {
                 console.error(`Failed to send attendee reminder batch for event ${event.id}:`, batchResult.error);

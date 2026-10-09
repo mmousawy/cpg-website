@@ -1,13 +1,11 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import ResetPasswordTemplate from '@/emails/auth/reset-password';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Generate a secure random token
 function generateToken(): string {
@@ -88,7 +86,7 @@ export async function POST(request: NextRequest) {
     const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     if (!shouldSkipNotificationsAndEmails(email)) {
-      const emailResult = await resend.emails.send({
+      const emailResult = await sendAppEmail({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: email,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

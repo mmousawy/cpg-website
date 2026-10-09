@@ -100,6 +100,19 @@ Sent when someone comments on a user's album or photo.
 
 Comment emails are enqueued when the in-app notification is delivered (after the 30-second delay), then batched with a 15-minute debounce per entity.
 
+### Debounced activity email (unified queue)
+
+Bursty notification emails use the same pipeline as comments:
+
+- **Enqueue:** `enqueueDebouncedNotificationEmail` in [`src/lib/notifications/emailQueue.ts`](src/lib/notifications/emailQueue.ts) (backed by `notification_email_batches` and `enqueue_notification_email_batch` in Postgres).
+- **Send:** `flushPendingNotificationEmails` renders by `template_key` and sends via [`src/lib/email/sendAppEmail.ts`](src/lib/email/sendAppEmail.ts).
+- **Debounce:** 15 minutes per recipient and batch key; new items of the same kind reset the timer.
+- **Flush schedule:** Coolify task **Flush notification emails** every 5 minutes (`/api/cron/send-pending-notification-emails`), plus `after()` on enqueue and backup flushes from event-reminders / revalidate-events.
+
+**Debounced email kinds:** comment notifications, admin alerts (submissions, members, reports, feedback), challenge submission results, report resolved (members with accounts). Each kind stays separate; there is no generic “you have N notifications” email.
+
+**Immediate email (not debounced):** auth, RSVP confirm/cancel, contact, admin broadcasts (newsletter, announcements, attendee messages), cron reminders, weekly digest.
+
 ### Social Activity Notifications (In-App)
 
 All user-triggered social notifications use a unified **30-second delay** before appearing in-app. This prevents spam from rapid toggles (like/unlike, follow/unfollow) and coalesces burst activity.
@@ -158,24 +171,11 @@ const html = await render(
 
 ## Cron Job Configuration
 
-The reminder system uses Vercel Cron for scheduled execution.
+Production uses Coolify scheduled tasks (see [`infra/coolify/scheduled-tasks.md`](../infra/coolify/scheduled-tasks.md)). `vercel.json` lists the same schedules for reference.
 
-**Configuration:** `vercel.json`
+**Authentication:** `Authorization: Bearer <CRON_SECRET>` on every cron route.
 
-```json
-{
-  "crons": [{
-    "path": "/api/cron/event-reminders",
-    "schedule": "0 8 * * *"
-  }]
-}
-```
-
-**Schedule:** Daily at 8:00 AM UTC
-
-**Authentication:** Protected by `CRON_SECRET` environment variable. Vercel automatically sends this in the `Authorization` header.
-
-**Endpoint:** `GET /api/cron/event-reminders`
+Notable schedules: event reminders daily 08:00, weekly digest Sunday 08:00, revalidate events hourly, cleanup Sunday 03:00, **flush notification emails every 5 minutes**.
 
 ## Email Preferences
 
