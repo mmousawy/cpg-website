@@ -35,16 +35,19 @@ export default function HeaderSiteSearch() {
         className="hidden lg:inline text-foreground/60"
       >Search</span>
       <kbd
-        className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50 [word-spacing:-0.25em]"
+        className="hidden lg:inline-flex h-5 select-none items-center rounded border border-border-color bg-background px-1.5 font-mono text-xs font-medium text-foreground/50"
       >
         <span
           className="hidden in-data-[platform=mac]:inline"
-        >⌘</span>
+        >
+          ⌘
+        </span>
         <span
           className="inline in-data-[platform=mac]:hidden"
-        >Ctrl</span>
-        {'+'}
-        K
+        >
+          Ctrl
+        </span>
+        +K
       </kbd>
     </button>
   );
