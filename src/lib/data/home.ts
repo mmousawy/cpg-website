@@ -8,7 +8,7 @@ import type { CPGEvent, EventAttendee } from '@/types/events';
 import { PHOTO_SECTION_FETCH_LIMIT } from '@/utils/displayPreferences';
 import { getRecentAlbums } from './albums';
 import { getPublishedChallengesWithStats } from './challenges';
-import { getEventAttendees, getPublishedEvents } from './events';
+import { getEventAttendees, getEventPhotoCounts, getPublishedEvents } from './events';
 
 import { getPublicPhotostream, type StreamPhoto } from './gallery';
 import { getOrganizers, getRecentMembers } from './profiles';
@@ -17,6 +17,7 @@ export type HomePageData = {
   serverNow: number;
   events: CPGEvent[];
   attendeesByEvent: Record<number, EventAttendee[]>;
+  photoCountsByEvent: Record<number, number>;
   challenges: ChallengeWithStats[];
   albums: AlbumWithPhotos[];
   photos: StreamPhoto[];
@@ -52,14 +53,19 @@ export async function getHomePageData(includeTestContent = false): Promise<HomeP
 
   const events = filterUpcomingEvents(publishedEvents, serverNow).slice(0, 3);
   const challenges = filterActiveChallenges(publishedChallenges, serverNow).slice(0, 4);
-  const attendeesByEvent = events.length > 0
-    ? await getEventAttendees(events.map((event) => event.id))
-    : ({} as Record<number, EventAttendee[]>);
+  const eventIds = events.map((event) => event.id);
+  const [attendeesByEvent, photoCountsByEvent] = eventIds.length > 0
+    ? await Promise.all([
+      getEventAttendees(eventIds),
+      getEventPhotoCounts(eventIds),
+    ])
+    : [{} as Record<number, EventAttendee[]>, {} as Record<number, number>];
 
   return {
     serverNow,
     events,
     attendeesByEvent,
+    photoCountsByEvent,
     challenges,
     albums,
     photos,

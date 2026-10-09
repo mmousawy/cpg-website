@@ -135,7 +135,7 @@ These helpers also invalidate `home` so homepage sections stay in sync:
 | `revalidateChallenges()` / `revalidateChallenge()` | Active challenges |
 | `revalidateHome()` | Direct homepage bust (also called from photo upload hooks) |
 
-The events cron (`/api/cron/revalidate-events`, twice daily) also revalidates `home`, `event-attendees`, and `challenges` alongside `events`.
+The events cron (`/api/cron/revalidate-events`, hourly) also revalidates `home`, `event-attendees`, and `challenges` alongside `events`.
 
 ## Changelog revalidation
 
@@ -155,7 +155,7 @@ New `/changelog/[slug]` routes are created at deploy time via `generateStaticPar
 
 | Endpoint | Auth | Invalidates |
 |----------|------|-------------|
-| `GET /api/cron/revalidate-events` | `CRON_SECRET` (Vercel Cron, 2×/day) | `events`, `home` |
+| `GET /api/cron/revalidate-events` | `CRON_SECRET` (Coolify scheduled task, hourly) | `events`, `home` |
 | `GET /api/revalidate-changelog?secret=…` | `REVALIDATION_SECRET` | `changelog` (+ changelog paths) |
 | `GET /api/revalidate-all?secret=…` | `REVALIDATION_SECRET` | All public tags |
 
@@ -195,7 +195,7 @@ Public RSVP counts and “spots left” on the event detail page use **`attendee
 | Admin event announce | `src/app/api/admin/events/announce/route.ts` | `revalidateEvents()` |
 | Event album photo changes | hooks, `AlbumDetailClient`, `revalidateEventAlbum` | `revalidateEventAlbum(eventId)` |
 | Admin event album delete/suspend | `src/app/api/admin/albums/delete|suspend|unsuspend` | `revalidateEventAlbum()` + `albums` tag |
-| Events cron (2×/day) | `src/app/api/cron/revalidate-events/route.ts` | `events`, `home` |
+| Events cron (hourly) | `src/app/api/cron/revalidate-events/route.ts` | `events`, `home` |
 
 **Do not use** the deprecated `revalidateEvent()` helper — it misses `home` and `search`. The admin event editor was migrated to `revalidateEvents()`.
 

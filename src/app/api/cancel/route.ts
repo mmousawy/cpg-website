@@ -1,5 +1,5 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
@@ -7,8 +7,6 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
 import { CancelEmail } from '../../../emails/cancel';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -48,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   if (recipientEmail && !shouldSkipNotificationsAndEmails(recipientEmail)) {
     // Send the cancellation confirmation email
-    const emailResult = await resend.emails.send({
+    const emailResult = await sendAppEmail({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: recipientEmail,
       replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

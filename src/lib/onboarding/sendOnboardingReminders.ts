@@ -1,12 +1,11 @@
+import { sendAppEmailBatch } from '@/lib/email/sendAppEmail';
 import { render } from '@react-email/render';
-import { Resend } from 'resend';
 
 import { OnboardingReminderEmail } from '@/emails/onboarding-reminder';
 import { getEmailSiteUrl } from '@/emails/utils/siteUrl';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { adminSupabase } from '@/utils/supabase/admin';
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
 const ONBOARDING_REMINDER_DAYS = 7;
 const BATCH_SIZE = 100;
 
@@ -87,7 +86,7 @@ export async function sendOnboardingReminders(): Promise<OnboardingReminderResul
     const batch = toSend.slice(i, i + BATCH_SIZE);
 
     try {
-      const sendResult = await resend.batch.send(batch.map((item) => item.payload));
+      const sendResult = await sendAppEmailBatch(batch.map((item) => item.payload));
 
       if (sendResult.error) {
         console.error('Error sending onboarding reminder batch:', sendResult.error);

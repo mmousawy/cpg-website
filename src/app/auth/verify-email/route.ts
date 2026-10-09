@@ -1,14 +1,12 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import WelcomeTemplate from '@/emails/auth/welcome';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { getRequestSiteUrl } from '@/utils/requestSiteUrl';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Hash token for comparison
 function hashToken(token: string): string {
@@ -84,7 +82,7 @@ export async function GET(request: NextRequest) {
   const fullName = profile?.full_name || userEmail.split('@')[0];
 
   if (!shouldSkipNotificationsAndEmails(userEmail)) {
-    const emailResult = await resend.emails.send({
+    const emailResult = await sendAppEmail({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: userEmail,
       replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

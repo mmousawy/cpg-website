@@ -1,7 +1,5 @@
-import { render } from '@react-email/render';
-
-import { MemberNotificationEmail } from '@/emails/member-notification';
 import { isTestEmail } from '@/lib/auth/isTestEmail';
+import { EMAIL_TEMPLATE_KEYS } from '@/lib/email/templateKeys';
 import { notifyAdmins } from '@/lib/notifications/notifyAdmins';
 import { adminSupabase } from '@/utils/supabase/admin';
 
@@ -73,29 +71,20 @@ export async function notifyAdminsOfAccountDeletion(
         deletionDate,
       },
     },
-    buildEmail: async (admin) => {
-      const html = await render(
-        MemberNotificationEmail({
-          kind: 'deleted',
-          adminName: admin.full_name || 'Admin',
-          recipientEmail: admin.email,
-          memberName,
-          memberNickname: profile.nickname,
-          memberEmail: profile.email,
-          profileLink: profileLinkRelative ? `${baseUrl}${profileLinkRelative}` : null,
-          membersLink: `${baseUrl}${membersLinkRelative}`,
-          deletionDate,
-          initiatedByAdmin,
-          initiatedByName,
-        }),
-      );
-
-      return {
-        subject: initiatedByAdmin
-          ? `Account deletion scheduled: ${memberName}`
-          : `${memberName} scheduled their account for deletion`,
-        html,
-      };
+    debouncedEmail: {
+      batchKey: 'member_deleted',
+      templateKey: EMAIL_TEMPLATE_KEYS.memberNotification,
+      buildItem: () => ({
+        kind: 'deleted',
+        memberName,
+        memberNickname: profile.nickname,
+        memberEmail: profile.email,
+        profileLink: profileLinkRelative ? `${baseUrl}${profileLinkRelative}` : null,
+        membersLink: `${baseUrl}${membersLinkRelative}`,
+        deletionDate,
+        initiatedByAdmin,
+        initiatedByName,
+      }),
     },
   });
 }

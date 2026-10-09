@@ -1,6 +1,6 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import crypto from 'crypto';
 import { NextRequest, NextResponse, after } from 'next/server';
-import { Resend } from 'resend';
 
 import { revalidateProfiles } from '@/app/actions/revalidate';
 import VerifyEmailTemplate from '@/emails/auth/verify-email';
@@ -9,8 +9,6 @@ import { notifyAdminsOfMemberSignedUp } from '@/lib/notifications/notifyAdminsOf
 import { isStagingDeployment } from '@/utils/siteEnvironment';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { render } from '@react-email/render';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 // Generate a secure random token
 function generateToken(): string {
@@ -165,7 +163,7 @@ export async function POST(request: NextRequest) {
     const skipNotificationsAndEmails = shouldSkipNotificationsAndEmails(email);
 
     if (!skipNotificationsAndEmails) {
-      const emailResult = await resend.emails.send({
+      const emailResult = await sendAppEmail({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: email,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

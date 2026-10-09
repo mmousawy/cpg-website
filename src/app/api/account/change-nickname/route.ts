@@ -1,7 +1,7 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { render } from '@react-email/render';
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import ChangeNicknameTemplate from '@/emails/auth/change-nickname';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
@@ -13,8 +13,6 @@ import {
 } from '@/utils/nickname';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 function generateToken(): string {
   return crypto.randomBytes(32).toString('hex');
@@ -154,7 +152,7 @@ export async function POST(request: NextRequest) {
     const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/verify-nickname-change?token=${token}`;
 
     if (!shouldSkipNotificationsAndEmails(currentEmail)) {
-      const emailResult = await resend.emails.send({
+      const emailResult = await sendAppEmail({
         from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
         to: currentEmail,
         replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

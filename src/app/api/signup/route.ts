@@ -1,5 +1,5 @@
+import { sendAppEmail } from '@/lib/email/sendAppEmail';
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { revalidateEventAttendees } from '@/app/actions/revalidate';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
@@ -7,8 +7,6 @@ import { isProfileComplete } from '@/utils/profileCompletion';
 import { createClient } from '@/utils/supabase/server';
 import { render } from '@react-email/render';
 import { ConfirmEmail } from '../../../emails/confirm';
-
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -89,7 +87,7 @@ export async function POST(request: NextRequest) {
 
   // Send the confirmation email
   if (!shouldSkipNotificationsAndEmails(user.email)) {
-    const emailResult = await resend.emails.send({
+    const emailResult = await sendAppEmail({
       from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: user.email!,
       replyTo: `${process.env.EMAIL_REPLY_TO_NAME} <${process.env.EMAIL_REPLY_TO_ADDRESS}>`,

@@ -15,9 +15,9 @@ Use `http://127.0.0.1:3000` — the **container** port (always 3000), not the ho
 | --- | --- | --- |
 | Event reminders | `0 8 * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/event-reminders` |
 | Weekly digest | `0 8 * * 0` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/weekly-digest` |
-| Revalidate events (afternoon) | `1 13 * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/revalidate-events` |
-| Revalidate events (evening) | `1 17 * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/revalidate-events` |
+| Revalidate events | `1 * * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/revalidate-events` |
 | Cleanup deleted content | `0 3 * * 0` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/cleanup-deleted-content` |
+| Flush notification emails | `*/5 * * * *` | `curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" http://127.0.0.1:3000/api/cron/send-pending-notification-emails` |
 
 Set **Timeout** to at least `600` seconds for event-reminders and weekly-digest (they send email).
 
@@ -29,4 +29,4 @@ After deploy, open each task and click **Execute now**. Check:
 - Application logs show the cron handler completing
 - No `401 Unauthorized` (wrong `CRON_SECRET`)
 
-`/api/cron/send-pending-notification-emails` is not scheduled separately; pending emails are flushed from event-reminders and revalidate-events.
+The **Flush notification emails** task runs every 5 minutes so debounced activity mail sends soon after the 15-minute quiet window. Event-reminders and revalidate-events still flush pending batches as a backup.

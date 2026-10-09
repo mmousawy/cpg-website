@@ -534,7 +534,8 @@ export default function AlbumsPage() {
         }
         mobileActionBar={
           <MobileActionBar
-            selectedCount={selectedCount}
+            selectedCount={selectedSharedAlbum ? 1 : selectedCount}
+            hideEdit={!!selectedSharedAlbum}
             onEdit={handleMobileEdit}
             onClearSelection={handleClearSelection}
             actions={
@@ -619,7 +620,7 @@ export default function AlbumsPage() {
           />
         ) : (
           <div
-            className="flex flex-col min-h-0 flex-1 overflow-y-auto"
+            className="flex flex-col"
           >
             <AlbumSection
               title="Your albums"

@@ -371,14 +371,14 @@ function JoinedChallengeCard({
   return (
     <article
       className={clsx(
-        'flex flex-col overflow-hidden rounded-2xl transition-all sm:flex-row',
+        'flex flex-col rounded-2xl transition-all sm:flex-row',
         'bg-background-light border border-border-color',
         'hover:border-border-color-strong hover:shadow-lg',
       )}
     >
       <Link
         href={challengeLink}
-        className="relative min-h-28 w-full shrink-0 bg-background-medium sm:aspect-square sm:w-48 "
+        className="relative min-h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-background-medium sm:aspect-square sm:w-48 sm:rounded-none sm:rounded-l-2xl"
       >
         {challenge.cover_image_url ? (
           <BlurImage
@@ -445,10 +445,19 @@ function JoinedChallengeCard({
         className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:px-5 sm:py-4"
       >
         {promptHtml ? (
-          <ExpandableChallengePrompt
-            html={promptHtml}
-            expandable={expandablePrompt}
-          />
+          <div
+            className="flex flex-col gap-2"
+          >
+            <h3
+              className="text-sm font-semibold text-foreground/90"
+            >
+              Description
+            </h3>
+            <ExpandableChallengePrompt
+              html={promptHtml}
+              expandable={expandablePrompt}
+            />
+          </div>
         ) : null}
 
         <div
