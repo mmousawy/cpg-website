@@ -169,7 +169,6 @@ export default function AddRsvpModal({ eventId, onAdded, onClose }: AddRsvpModal
             }}
             suggestions={suggestions}
             disableFilter
-            inlineSuggestions
             fullWidth
             containerClassName="flex-1"
             placeholder="Search by name, nickname, or email…"

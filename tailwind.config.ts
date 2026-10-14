@@ -8,6 +8,7 @@ export default {
   ],
   theme: {
     screens: {
+      '2xs': '375px',
       xs: '500px',
       sm: '640px',
       md: '768px',
@@ -17,8 +18,14 @@ export default {
     },
     extend: {
       fontFamily: {
-        geist: ['var(--font-geist-sans)', 'sans-serif'],
-        heading: ['var(--font-cheria-heading)', 'sans-serif'],
+        geist: ['var(--font-geist-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: [
+          'var(--font-cheria-heading)',
+          'var(--font-geist-sans)',
+          'ui-sans-serif',
+          'system-ui',
+          'sans-serif',
+        ],
       },
       colors: {
         primary: 'var(--primary)',

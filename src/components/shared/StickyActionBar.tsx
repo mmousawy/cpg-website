@@ -8,6 +8,7 @@ import {
   mobileFloatingPillClassName,
   mobileFloatingPillInsetClassName,
   mobileStickyBarSettleGapClassName,
+  mobileStickyBarTerminalSettleGapClassName,
   mobileStickyBottomWithGapClassName,
   mobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
@@ -27,6 +28,8 @@ type StickyActionBarProps = {
   overlaysContent?: boolean
   /** `flush` is a square bar with only a top border (bottom sheets, sidebars). */
   edges?: 'pill' | 'flush'
+  /** Page content ends at this bar, so mobile settle spacing matches the tab bar. */
+  terminal?: boolean
 }
 
 export default function StickyActionBar({
@@ -38,6 +41,7 @@ export default function StickyActionBar({
   sticky = true,
   overlaysContent = false,
   edges = 'pill',
+  terminal = false,
 }: StickyActionBarProps) {
   const isBottomSticky = sticky && position === 'bottom';
   const rootRef = useRef<HTMLDivElement>(null);
@@ -99,7 +103,7 @@ export default function StickyActionBar({
           {inner}
         </AnimatedStickyBarSlide>
         <div
-          className={mobileStickyBarSettleGapClassName}
+          className={terminal ? mobileStickyBarTerminalSettleGapClassName : mobileStickyBarSettleGapClassName}
           aria-hidden
         />
       </>
