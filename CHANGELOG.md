@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.42.0](https://github.com/mmousawy/cpg-website/compare/v1.41.6...v1.42.0) (2026-10-14)
+
+
+### ✨ Features
+
+* enhance gear catalog management and user profile integration ([c0e6e5b](https://github.com/mmousawy/cpg-website/commit/c0e6e5bc48a06dcf4334ebfc1eb669a7e1804f5a))
+* enhance user gear management and onboarding experience ([2e7ba9d](https://github.com/mmousawy/cpg-website/commit/2e7ba9d8a0c4e963510244eeb9b4f9cbc087eb83))
+* update database type generation and improve user gear profile handling ([00b9ce9](https://github.com/mmousawy/cpg-website/commit/00b9ce98bf0869542eabafaada0522b2d632048c))
+
+
+### 🐛 Bug Fixes
+
+* adjust keyboard shortcut display in HeaderSiteSearch component ([fefda0e](https://github.com/mmousawy/cpg-website/commit/fefda0ed278fa195ceeaa8b02b461ceeb50e36a8))
+
 ## [1.41.6](https://github.com/mmousawy/cpg-website/compare/v1.41.5...v1.41.6) (2026-10-09)
 
 

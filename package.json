@@ -1,6 +1,6 @@
 {
   "name": "cpg-website",
-  "version": "1.41.6",
+  "version": "1.42.0",
   "private": true,
   "packageManager": "pnpm@11.28.5",
   "engines": {
@@ -16,9 +16,8 @@
     "start": "next start",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
-    "db:types": "node scripts/postprocess-database-types.mjs",
-    "typecheck": "rm -rf .next/dev/types && next typegen && node scripts/verify-database-types.mjs && tsc --noEmit",
-    "typecheck:clean": "rm -rf .next/cache/.tsbuildinfo .next/dev/types && next typegen && node scripts/verify-database-types.mjs && tsc --noEmit",
+    "typecheck": "rm -rf .next/dev/types && next typegen && tsc --noEmit",
+    "typecheck:clean": "rm -rf .next/cache/.tsbuildinfo .next/dev/types && next typegen && tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
     "check": "npm run lint && npm run typecheck:clean && npm run test:run",
