@@ -1,6 +1,7 @@
 import { HomeBelowFoldContent } from '@/components/home/HomeBelowFoldContent';
 import { HomeBelowFoldE2ESwap } from '@/components/home/HomeBelowFoldE2ESwap';
 import { HomeHeroSection } from '@/components/home/HomeHeroSection';
+import HomeModalKeyboardTest from '@/components/home/HomeModalKeyboardTest';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getHomePageData } from '@/lib/data/home';
 import { createMetadata } from '@/utils/metadata';
@@ -22,6 +23,7 @@ export const metadata = {
 export default function Home() {
   return (
     <>
+      <HomeModalKeyboardTest />
       <HomeHeroSection />
       <div
         id="home-below-fold"

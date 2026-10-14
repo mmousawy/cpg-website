@@ -1,6 +1,7 @@
 'use client';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useDialogVisualViewport } from '@/hooks/useDialogVisualViewport';
 import { useSearch } from '@/hooks/useSearch';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
 import clsx from 'clsx';
@@ -34,6 +35,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   // Handle modal open/close
   useBodyScrollLock(isOpen);
+  useDialogVisualViewport(modalRef, isOpen);
 
   useLayoutEffect(() => {
     if (!isOpen) return;
@@ -117,8 +119,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-50 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-3 max-sm:p-2',
-        'bg-black/40',
-        'transition-[visibility,opacity] duration-300',
+        'bg-black/60',
+        'transition-[visibility,opacity,top,height] duration-200 ease-out',
       ])}
       onClick={(e) => {
         // Close when clicking backdrop
@@ -142,10 +144,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
             'w-full max-w-xl',
             'relative m-auto',
-            'max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)]',
+            'max-h-[calc(var(--vv-height,100vh)-1rem)] sm:max-h-[calc(var(--vv-height,100vh)-2rem)]',
             'flex flex-col',
             'rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
-            'transition-transform duration-300',
+            'transition-[scale,max-height] duration-200 ease-out',
           ])}
           onClick={(e) => e.stopPropagation()}
         >
