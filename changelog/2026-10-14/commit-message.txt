@@ -1,0 +1,131 @@
+feat: add member gear profiles and a searchable catalog
+
+Gear:
+- Members set shooting formats and a daily-driver body/lens, then keep an inventory at /account/gear
+- Public profile shows a short summary; the full list is at /@nickname/gear
+- Inventory grouped by type gets an "Add …" button that opens the form with that type already selected
+- Sort by type, name, recently added, or a custom drag order
+- Achievement carousel hides the previous/next buttons when that direction cannot scroll
+
+Catalog:
+- gear_catalog is filled from Lensfun, Wikidata, a small curated phone list, and photo EXIF
+- Weekly cron refreshes Lensfun/Wikidata; photo upload also ingests camera and lens names
+- Name search uses aliases and a fuzzy ilike helper (admin member search uses the same helper)
+
+UI:
+- Autocomplete suggestions portal out of the modal so they are not clipped
+- Select, sticky save bar, and font fallbacks updated for the gear page
+- Dark noise overlay is slightly quieter
+
+Files changed (107):
+
+New (79):
+- changelog/2026-10-14/sha.txt
+- changelog/2026-10-14/commit-message.txt
+- changelog/2026-10-14/files-changed.md
+- public/icons/drag-handle.svg
+- public/icons/gear/format-analog.svg
+- public/icons/gear/format-digital.svg
+- public/icons/gear/format-drone.svg
+- public/icons/gear/format-instant.svg
+- public/icons/gear/format-lighting.svg
+- public/icons/gear/format-lofi.svg
+- public/icons/gear/format-other.svg
+- public/icons/gear/format-phone.svg
+- public/icons/gear/format-support.svg
+- public/icons/gear/format-video.svg
+- public/icons/gear/micro/category-accessories.svg
+- public/icons/gear/micro/category-lens.svg
+- public/icons/gear/micro/category-lighting.svg
+- public/icons/gear/micro/category-support.svg
+- public/icons/gear/micro/format-analog.svg
+- public/icons/gear/micro/format-digital.svg
+- public/icons/gear/micro/format-drone.svg
+- public/icons/gear/micro/format-instant.svg
+- public/icons/gear/micro/format-lofi.svg
+- public/icons/gear/micro/format-other.svg
+- public/icons/gear/micro/format-phone.svg
+- public/icons/gear/micro/format-video.svg
+- scripts/count-lensfun-parse.ts
+- scripts/gear-catalog-stats.ts
+- scripts/refresh-gear-catalog.ts
+- src/app/[nickname]/gear/page.tsx
+- src/app/account/gear/AccountGearClient.tsx
+- src/app/account/gear/layout.tsx
+- src/app/account/gear/page.tsx
+- src/app/api/account/gear/route.ts
+- src/app/api/cron/backfill-gear-from-exif/route.ts
+- src/app/api/cron/refresh-gear-catalog/route.ts
+- src/app/api/gear/ingest/route.ts
+- src/app/api/gear/search/route.ts
+- src/app/api/profiles/[nickname]/gear/route.ts
+- src/components/gear/GearAccountPanel.tsx
+- src/components/gear/GearAddEditForm.tsx
+- src/components/gear/GearItemRow.tsx
+- src/components/gear/GearPageClient.tsx
+- src/components/gear/GearShootingPreferences.tsx
+- src/components/gear/GearSortableList.tsx
+- src/components/gear/sortGearItems.test.ts
+- src/components/gear/sortGearItems.ts
+- src/components/profile/ProfileGearSummary.tsx
+- src/hooks/useGearAccountForm.ts
+- src/hooks/useGearCatalogSearch.ts
+- src/hooks/useGearProfile.ts
+- src/lib/data/gear.ts
+- src/lib/focusTrapPortals.ts
+- src/lib/gear/__tests__/validateUserGearProfile.test.ts
+- src/lib/gear/buildSearchText.ts
+- src/lib/gear/catalogDb.ts
+- src/lib/gear/curatedPhones.ts
+- src/lib/gear/fetchUserGearProfile.ts
+- src/lib/gear/gearAliasKey.test.ts
+- src/lib/gear/gearAliasKey.ts
+- src/lib/gear/gearCategoryIcons.tsx
+- src/lib/gear/gearProfileEqual.ts
+- src/lib/gear/gearProfileSchema.ts
+- src/lib/gear/ingestFromExif.ts
+- src/lib/gear/mapGearProfile.ts
+- src/lib/gear/normalizeExifBrand.ts
+- src/lib/gear/parseLensfunXml.ts
+- src/lib/gear/refreshGearCatalog.ts
+- src/lib/gear/sampleKit.ts
+- src/lib/gear/saveUserGearProfile.ts
+- src/lib/gear/searchCatalog.ts
+- src/lib/gear/shootingFormatIcons.ts
+- src/lib/gear/storage.ts
+- src/lib/gear/triggerIngest.ts
+- src/lib/gear/types.ts
+- src/lib/gear/validateUserGearProfile.ts
+- src/lib/gear/wikidataCatalog.test.ts
+- src/lib/gear/wikidataCatalog.ts
+- src/lib/search/fuzzyQuery.test.ts
+- src/lib/search/fuzzyQuery.ts
+
+Modified (28):
+- README.md
+- infra/coolify/scheduled-tasks.md
+- public/noise-dark.svg
+- src/app/[nickname]/(profile)/page.tsx
+- src/app/api/admin/members/route.ts
+- src/app/api/admin/search-members/route.ts
+- src/app/globals.css
+- src/app/layout.tsx
+- src/app/members/page.tsx
+- src/components/admin/AddRsvpModal.tsx
+- src/components/layout/AccountMenuPanel.tsx
+- src/components/layout/mobileChrome.ts
+- src/components/shared/AutocompleteInput.tsx
+- src/components/shared/Modal.tsx
+- src/components/shared/ProfileActionsMenu.tsx
+- src/components/shared/ProfileStatsBadges.tsx
+- src/components/shared/Select.tsx
+- src/components/shared/StickyActionBar.tsx
+- src/components/shared/SuccessMessage.tsx
+- src/config/routes.ts
+- src/database.types.ts
+- src/hooks/usePhotoUpload.ts
+- src/utils/mobileTerminalStickySettle.ts
+- src/utils/uploadPhoto.ts
+- supabase/migrations/00000000000000_baseline.sql
+- tailwind.config.ts
+- vercel.json

@@ -115,6 +115,8 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
         profile={profile}
         followerCount={followCounts.followerCount}
         followingCount={followCounts.followingCount}
+        variant="subpage"
+        profileTitleAsSpan
       />
 
       <ProfileBackToProfileLink
@@ -135,13 +137,13 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
             <div
               className="mb-6"
             >
-              <h2
+              <h1
                 className="text-xl font-semibold font-heading"
               >
                 All photos by
                 {' '}
                 {profile.full_name || `@${profile.nickname}`}
-              </h2>
+              </h1>
               <p
                 className="text-sm text-foreground/80 leading-snug"
               >

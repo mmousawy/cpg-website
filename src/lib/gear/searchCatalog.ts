@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/database.types';
 import { gearAliasKey } from '@/lib/gear/gearAliasKey';
 import { CURATED_GEAR } from '@/lib/gear/curatedPhones';
+import { formatCatalogDisplayName } from '@/lib/gear/formatCatalogDisplayName';
 import type { GearCategory } from '@/lib/gear/types';
 import {
   buildFuzzyIlikePattern,
@@ -17,6 +18,13 @@ export type GearSearchResult = {
   category: GearCategory;
 };
 
+function withCatalogDisplayName(row: GearSearchResult): GearSearchResult {
+  return {
+    ...row,
+    name: formatCatalogDisplayName(row.brand, row.name),
+  };
+}
+
 function searchCuratedFallback(
   query: string,
   category?: GearCategory | null,
@@ -27,16 +35,14 @@ function searchCuratedFallback(
   return CURATED_GEAR
     .filter((entry) => {
       if (category && entry.category !== category) return false;
-      const label = entry.name.startsWith(entry.brand)
-        ? entry.name
-        : `${entry.brand} ${entry.name}`;
+      const label = formatCatalogDisplayName(entry.brand, entry.name);
       return matchesFuzzyTokens(label, query);
     })
     .slice(0, limit)
     .map((entry) => ({
       id: `curated:${entry.sourceKey}`,
       brand: entry.brand,
-      name: entry.name.startsWith(entry.brand) ? entry.name : `${entry.brand} ${entry.name}`,
+      name: formatCatalogDisplayName(entry.brand, entry.name),
       category: entry.category,
     }));
 }
@@ -70,7 +76,7 @@ export async function searchGearCatalog(
       }
       const { data: exactRow } = await exactQuery.maybeSingle();
       if (exactRow) {
-        return [exactRow as GearSearchResult];
+        return [withCatalogDisplayName(exactRow as GearSearchResult)];
       }
     }
   }
@@ -135,7 +141,7 @@ export async function searchGearCatalog(
   }
 
   if (rows.length > 0) {
-    return rows.slice(0, limit);
+    return rows.slice(0, limit).map(withCatalogDisplayName);
   }
 
   return searchCuratedFallback(trimmed, category, limit);

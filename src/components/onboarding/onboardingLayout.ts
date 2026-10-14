@@ -13,36 +13,55 @@ function ancestorPaddingBottom(from: HTMLElement, stopAtId = 'main-content'): nu
 /** Shared content width for the onboarding header, form, and progress chrome. */
 export const onboardingChromeInnerClassName = 'mx-auto w-full max-w-xl';
 
+type OnboardingStepLayoutOptions = {
+  formRef: RefObject<HTMLElement | null>;
+  contentRef: RefObject<HTMLElement | null>;
+  progressRef: RefObject<HTMLElement | null>;
+  enabled: boolean;
+  /** Intro step: min-height on `contentRef` + `justify-center` for vertical balance. */
+  centerContentInViewport: boolean;
+};
+
 /**
- * Sets min-height on the step element to the remaining viewport after:
- * - its offset from the top of the document (outer PageContainer top padding included)
- * - ancestor padding below it (PageContainer bottom padding)
- * - the measured progress footer height
- *
- * Does not pad the step for centering. Adds margin-bottom equal to the progress
- * footer so tall steps can scroll clear of it.
+ * Reserves space above the fixed progress footer (`margin-bottom` on the form).
+ * On the intro step only, sets min-height on the content wrapper (not the whole form).
  */
-export function useOnboardingStepMinHeight(
-  stepRef: RefObject<HTMLElement | null>,
-  progressRef: RefObject<HTMLElement | null>,
-  enabled: boolean,
-  step: number,
-) {
+export function useOnboardingStepLayout({
+  formRef,
+  contentRef,
+  progressRef,
+  enabled,
+  centerContentInViewport,
+}: OnboardingStepLayoutOptions) {
   useLayoutEffect(() => {
     if (!enabled) return;
 
-    const stepEl = stepRef.current;
+    const formEl = formRef.current;
+    const contentEl = contentRef.current;
     const progress = progressRef.current;
-    if (!stepEl || !progress) return;
+    if (!formEl || !contentEl || !progress) return;
 
     const update = () => {
-      const offsetTop = stepEl.getBoundingClientRect().top + window.scrollY;
       const progressHeight = progress.offsetHeight;
-      const outerBottomPadding = ancestorPaddingBottom(stepEl);
+      const formPaddingBottom =
+        parseFloat(getComputedStyle(formEl).paddingBottom) || 0;
+      // `py-8` on the form supplies content breathing room; margin only clears the fixed bar.
+      formEl.style.marginBottom = `${progressHeight}px`;
+
+      if (!centerContentInViewport) {
+        contentEl.style.minHeight = '';
+        return;
+      }
+
+      const offsetTop = contentEl.getBoundingClientRect().top + window.scrollY;
+      const outerBottomPadding = ancestorPaddingBottom(formEl);
       const available =
-        window.innerHeight - offsetTop - progressHeight - outerBottomPadding;
-      stepEl.style.minHeight = `${Math.max(0, available)}px`;
-      stepEl.style.marginBottom = `${progressHeight}px`;
+        window.innerHeight -
+        offsetTop -
+        progressHeight -
+        formPaddingBottom -
+        outerBottomPadding;
+      contentEl.style.minHeight = `${Math.max(0, available)}px`;
     };
 
     update();
@@ -53,8 +72,8 @@ export function useOnboardingStepMinHeight(
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
-      stepEl.style.minHeight = '';
-      stepEl.style.marginBottom = '';
+      formEl.style.marginBottom = '';
+      contentEl.style.minHeight = '';
     };
-  }, [enabled, progressRef, step, stepRef]);
+  }, [centerContentInViewport, contentRef, enabled, formRef, progressRef]);
 }

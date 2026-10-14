@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/database.types';
 import { upsertCatalogEntry } from '@/lib/gear/catalogDb';
+import { formatCatalogDisplayName } from '@/lib/gear/formatCatalogDisplayName';
 import type { GearCategory } from '@/lib/gear/types';
 
 const WIKIDATA_SPARQL = 'https://query.wikidata.org/sparql';
@@ -56,22 +57,8 @@ export function isAcceptableWikidataGearLabel(label: string): boolean {
   return !LABEL_BLOCKLIST.some((re) => re.test(trimmed));
 }
 
-function brandAlreadyInLabel(brand: string, label: string): boolean {
-  const b = brand.trim().toLowerCase();
-  const l = label.trim().toLowerCase();
-  if (!b) return true;
-  if (l.startsWith(b)) return true;
-  const firstToken = b.split(/\s+/)[0];
-  return firstToken.length >= 2 && l.startsWith(firstToken);
-}
-
 export function formatWikidataGearName(brand: string, itemLabel: string): string {
-  const label = itemLabel.trim();
-  const b = brand.trim();
-  if (!b || brandAlreadyInLabel(b, label)) {
-    return label;
-  }
-  return `${b} ${label}`;
+  return formatCatalogDisplayName(brand, itemLabel);
 }
 
 function buildSparql(

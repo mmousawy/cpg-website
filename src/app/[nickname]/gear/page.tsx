@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ nickname:
   const profileTitle = formatProfileDisplayName(profile.full_name, profile.nickname);
 
   return createMetadata({
-    title: `Gear — ${profileTitle}`,
+    title: `${profileTitle}'s gear list`,
     description: `Cameras and gear used by ${profileTitle}`,
     canonical: `/@${encodeURIComponent(nickname)}/gear`,
   });
@@ -76,6 +76,7 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
     getUserGearByNickname(nickname, includeTestContent),
   ]);
   const profileNickname = profile.nickname || nickname;
+  const profileTitle = formatProfileDisplayName(profile.full_name, profile.nickname);
 
   return (
     <>
@@ -83,6 +84,8 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
         profile={profile}
         followerCount={followCounts.followerCount}
         followingCount={followCounts.followingCount}
+        variant="subpage"
+        profileTitleAsSpan
       />
 
       <ProfileBackToProfileLink
@@ -92,6 +95,12 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
       <PageContainer
         className="pt-0!"
       >
+        <h1
+          className="mb-6 text-xl font-semibold font-heading"
+        >
+          {profileTitle}
+          &apos;s gear list
+        </h1>
         <ProfileGearSummary
           profileNickname={profileNickname}
           profile={gearProfile ?? { ...EMPTY_GEAR_PROFILE }}

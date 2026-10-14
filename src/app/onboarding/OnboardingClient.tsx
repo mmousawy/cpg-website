@@ -4,6 +4,7 @@ import ProfileAvatarCropper from '@/components/account/ProfileAvatarCropper';
 import ProfileBannerCropper from '@/components/account/ProfileBannerCropper';
 import PageContainer from '@/components/layout/PageContainer';
 import OnboardingAboutYouSection from '@/components/onboarding/OnboardingAboutYouSection';
+import OnboardingShootingSection from '@/components/onboarding/OnboardingShootingSection';
 import OnboardingEmailPreferencesSection from '@/components/onboarding/OnboardingEmailPreferencesSection';
 import OnboardingFinishSection from '@/components/onboarding/OnboardingFinishSection';
 import OnboardingHeader from '@/components/onboarding/OnboardingHeader';
@@ -12,7 +13,7 @@ import OnboardingNicknameSection from '@/components/onboarding/OnboardingNicknam
 import OnboardingPageHeader from '@/components/onboarding/OnboardingPageHeader';
 import OnboardingProgress from '@/components/onboarding/OnboardingProgress';
 import OnboardingStyleSection from '@/components/onboarding/OnboardingStyleSection';
-import { onboardingChromeInnerClassName, useOnboardingStepMinHeight } from '@/components/onboarding/onboardingLayout';
+import { onboardingChromeInnerClassName, useOnboardingStepLayout } from '@/components/onboarding/onboardingLayout';
 import type { OnboardingStepIndex } from '@/components/onboarding/onboardingSteps';
 import { LAST_ONBOARDING_STEP } from '@/components/onboarding/onboardingSteps';
 import Button from '@/components/shared/Button';
@@ -37,6 +38,8 @@ import {
   submitFields,
   type OnboardingFormData,
 } from '@/app/onboarding/onboardingSchema';
+import { saveUserGearProfile } from '@/lib/gear/saveUserGearProfile';
+import { EMPTY_GEAR_PROFILE } from '@/lib/gear/types';
 import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { uploadUserStorageFile } from '@/utils/supabaseStorage';
@@ -95,6 +98,7 @@ export default function OnboardingClient() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const stepFrameRef = useRef<HTMLFormElement>(null);
+  const stepContentRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
@@ -161,6 +165,8 @@ export default function OnboardingClient() {
       email: isOAuthUser ? (profile?.email || user?.email || '') : '',
       bio: profile?.bio || '',
       interests: [],
+      shootingFormats: [],
+      formatsOther: '',
       emailPreferences: {},
       termsAccepted: false,
     },
@@ -230,7 +236,14 @@ export default function OnboardingClient() {
     !isLoading &&
     !((!user && !isPreviewMode) ||
       (isProfileComplete(profile, { fallbackEmail: user?.email ?? null }) && !isPreviewMode));
-  useOnboardingStepMinHeight(stepFrameRef, progressRef, isWizardVisible, step);
+  const centerStepInViewport = step === 0;
+  useOnboardingStepLayout({
+    formRef: stepFrameRef,
+    contentRef: stepContentRef,
+    progressRef,
+    enabled: isWizardVisible,
+    centerContentInViewport: centerStepInViewport,
+  });
   const watchedNickname = watch('nickname');
   const watchedFullName = watch('fullName');
   const watchedEmail = watch('email');
@@ -661,6 +674,18 @@ export default function OnboardingClient() {
           }
         }
       }
+      const shootingFormats = data.shootingFormats ?? [];
+      if (shootingFormats.length > 0 && data.nickname) {
+        try {
+          await saveUserGearProfile(data.nickname, {
+            ...EMPTY_GEAR_PROFILE,
+            formats: shootingFormats,
+            formatsOther: data.formatsOther?.trim() ?? '',
+          });
+        } catch (gearErr) {
+          console.error('Error saving shooting formats during onboarding:', gearErr);
+        }
+      }
       // Notify admins of the new member before navigating
       try {
         await fetch('/api/onboarding/notify', {
@@ -824,14 +849,19 @@ export default function OnboardingClient() {
             className="flex flex-col py-8 text-sm sm:py-0 sm:text-base"
           >
             <div
-              className="flex flex-1 flex-col justify-center"
+              ref={stepContentRef}
+              className={
+                centerStepInViewport
+                  ? 'flex flex-col justify-center'
+                  : 'flex flex-col'
+              }
             >
               {step === 0 ? (
                 <OnboardingPageHeader
                   titleLine1="Welcome to"
                   titleLine2="Creative Photography Group!"
                 />
-            ) : null}
+              ) : null}
               {isPreviewMode && !previewNoticeDismissed && (
                 <div
                   className="onboarding-rise-in mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-700 dark:text-yellow-400"
@@ -856,7 +886,7 @@ export default function OnboardingClient() {
                     Got it
                   </Button>
                 </div>
-            )}
+              )}
               <div
                 key={step}
                 className="space-y-8"
@@ -871,13 +901,13 @@ export default function OnboardingClient() {
                       isCheckingNickname={isCheckingNickname}
                       nicknameAvailable={nicknameAvailable}
                       onNicknameChange={(value) => {
-                    setNicknameAvailable(null);
-                    if (nicknameCheckTimeoutRef.current) {
-                      clearTimeout(nicknameCheckTimeoutRef.current);
-                    }
-                    nicknameCheckTimeoutRef.current = setTimeout(() => {
-                      checkNicknameAvailability(value);
-                    }, 500);
+                        setNicknameAvailable(null);
+                        if (nicknameCheckTimeoutRef.current) {
+                          clearTimeout(nicknameCheckTimeoutRef.current);
+                        }
+                        nicknameCheckTimeoutRef.current = setTimeout(() => {
+                          checkNicknameAvailability(value);
+                        }, 500);
                       }}
                     />
                     <OnboardingAboutYouSection
@@ -888,8 +918,12 @@ export default function OnboardingClient() {
                       setValue={setValue}
                       isSaving={isSaving}
                     />
+                    <OnboardingShootingSection
+                      watch={watch}
+                      setValue={setValue}
+                    />
                   </>
-            )}
+                )}
                 {step === 2 && (
                   <OnboardingStyleSection
                     profileId={profile?.id ?? user?.id ?? ''}
@@ -921,11 +955,11 @@ export default function OnboardingClient() {
                     onThemeChange={setThemeSelection}
                     motion={motionPreference}
                     onMotionChange={(motion) => {
-                  setMotionPreference(motion);
-                  applyMotionPreference(motion);
+                      setMotionPreference(motion);
+                      applyMotionPreference(motion);
                     }}
                   />
-            )}
+                )}
                 {step === 3 && (
                   <OnboardingEmailPreferencesSection
                     control={control}
@@ -934,7 +968,7 @@ export default function OnboardingClient() {
                     emailTypes={emailTypes}
                     isLoadingEmailTypes={isLoadingEmailTypes}
                   />
-            )}
+                )}
                 {step === 4 && (
                   <OnboardingFinishSection
                     register={register}
@@ -942,7 +976,7 @@ export default function OnboardingClient() {
                     submitError={submitError}
                     isPreviewMode={isPreviewMode}
                   />
-            )}
+                )}
               </div>
             </div>
             <OnboardingProgress

@@ -180,6 +180,8 @@ export default function AccountGearClient({
     return <GearPageLoading />;
   }
 
+  const publicGearHref = `/@${encodeURIComponent(nickname)}/gear`;
+
   return (
     <FormProvider
       {...form}
@@ -190,8 +192,27 @@ export default function AccountGearClient({
       >
         <PageContainer>
           <PageHeading
-            title="Gear"
+            title="My gear"
             description="Manage your shooting preferences and gear inventory."
+            mobileHeaderActions={(
+              <Button
+                href={publicGearHref}
+                variant="secondary"
+                size="sm"
+              >
+                View public page
+              </Button>
+            )}
+            actions={(
+              <Button
+                href={publicGearHref}
+                variant="secondary"
+                size="sm"
+                className="max-sm:hidden"
+              >
+                View public page
+              </Button>
+            )}
           />
 
           {loadError && (
