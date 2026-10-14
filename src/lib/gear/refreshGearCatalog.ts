@@ -5,6 +5,7 @@ import { upsertCatalogEntry } from '@/lib/gear/catalogDb';
 import { CURATED_GEAR } from '@/lib/gear/curatedPhones';
 import { formatCatalogDisplayName } from '@/lib/gear/formatCatalogDisplayName';
 import { parseLensfunXml } from '@/lib/gear/parseLensfunXml';
+import { refreshCameraWikiCatalog } from '@/lib/gear/camerawikiCatalog';
 import { refreshWikidataCatalog } from '@/lib/gear/wikidataCatalog';
 
 const LENSFUN_DB_API =
@@ -64,14 +65,24 @@ async function refreshCurated(supabase: AdminClient): Promise<number> {
   return count;
 }
 
-export async function refreshGearCatalog(supabase: AdminClient): Promise<{
+export type RefreshGearCatalogOptions = {
+  /** Camera-wiki crawl is slow; enabled for local script, off for Vercel cron. */
+  includeCameraWiki?: boolean;
+};
+
+export async function refreshGearCatalog(
+  supabase: AdminClient,
+  options: RefreshGearCatalogOptions = {},
+): Promise<{
   lensfun: number;
   wikidata: number;
   curated: number;
+  camerawiki: number;
 }> {
   const curated = await refreshCurated(supabase);
   let lensfun = 0;
   let wikidata = 0;
+  let camerawiki = 0;
   try {
     lensfun = await refreshLensfun(supabase);
   } catch (err) {
@@ -82,5 +93,12 @@ export async function refreshGearCatalog(supabase: AdminClient): Promise<{
   } catch (err) {
     console.error('Wikidata refresh failed', err);
   }
-  return { lensfun, wikidata, curated };
+  if (options.includeCameraWiki) {
+    try {
+      camerawiki = await refreshCameraWikiCatalog(supabase);
+    } catch (err) {
+      console.error('Camera-wiki refresh failed', err);
+    }
+  }
+  return { lensfun, wikidata, curated, camerawiki };
 }

@@ -70,7 +70,7 @@ export function shootingFormatDisplayLabel(
   return SHOOTING_FORMAT_LABELS[format];
 }
 
-export type GearCatalogSource = 'lensfun' | 'wikidata' | 'curated' | 'exif';
+export type GearCatalogSource = 'lensfun' | 'wikidata' | 'curated' | 'exif' | 'camerawiki';
 
 export type UserGearItem = {
   id: string;

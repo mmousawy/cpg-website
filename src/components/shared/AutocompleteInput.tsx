@@ -213,8 +213,7 @@ export default function AutocompleteInput({
           >
             <button
               type="button"
-              className={`w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-background-light ${
-                index === highlightedIndex ? 'bg-background-light' : ''
+              className={`w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-background-light ${index === highlightedIndex ? 'bg-background-light' : ''
               }`}
               onClick={() => handleSelect(suggestion)}
               onMouseEnter={() => setHighlightedIndex(index)}
@@ -241,7 +240,6 @@ export default function AutocompleteInput({
           setShowSuggestions(true);
           setHighlightedIndex(-1);
         }}
-        onFocus={() => setShowSuggestions(true)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         autoComplete="off"

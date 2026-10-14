@@ -20,6 +20,7 @@ type WikidataQuerySpec = {
   id: string;
   category: GearCategory;
   typeQid: string;
+  /** Soft cap; paging continues until a short page or this many distinct items. */
   limit: number;
   /** Most gear types need P176; tripods often do not. */
   requireManufacturer?: boolean;
@@ -27,14 +28,15 @@ type WikidataQuerySpec = {
 
 /** Verified Wikidata classes (see wikidata.org SPARQL for P31/P176 coverage). */
 const WIKIDATA_QUERY_SPECS: WikidataQuerySpec[] = [
-  { id: 'camera-model', category: 'camera_body', typeQid: 'Q20888659', limit: 2500 },
-  { id: 'digital-camera-model', category: 'camera_body', typeQid: 'Q20741022', limit: 2000 },
-  { id: 'lens-model', category: 'lens', typeQid: 'Q109672300', limit: 1000 },
-  { id: 'smartphone', category: 'phone', typeQid: 'Q19723451', limit: 2000 },
-  { id: 'tripod', category: 'support', typeQid: 'Q683906', limit: 50, requireManufacturer: false },
+  { id: 'camera-model', category: 'camera_body', typeQid: 'Q20888659', limit: 15000 },
+  { id: 'digital-camera-model', category: 'camera_body', typeQid: 'Q20741022', limit: 12000 },
+  { id: 'lens-model', category: 'lens', typeQid: 'Q109672300', limit: 8000 },
+  { id: 'smartphone', category: 'phone', typeQid: 'Q19723451', limit: 5000 },
+  { id: 'tripod', category: 'support', typeQid: 'Q683906', limit: 200, requireManufacturer: false },
 ];
 
 const PAGE_SIZE = 500;
+const MAX_QUERY_RETRIES = 5;
 
 const LABEL_BLOCKLIST = [
   /scientific article/i,
@@ -61,24 +63,28 @@ export function formatWikidataGearName(brand: string, itemLabel: string): string
   return formatCatalogDisplayName(brand, itemLabel);
 }
 
-function buildSparql(
+/** Build SPARQL for one keyset page (direct P31, ordered by item URI). */
+export function buildWikidataSparql(
   typeQid: string,
-  offset: number,
   pageSize: number,
   requireManufacturer: boolean,
+  afterItemUri?: string,
 ): string {
   const manufacturerClause = requireManufacturer
     ? '?item wdt:P176 ?brand .'
     : 'OPTIONAL { ?item wdt:P176 ?brand . }';
+  const keysetFilter = afterItemUri
+    ? `FILTER(STR(?item) > "${afterItemUri.replace(/"/g, '\\"')}")`
+    : '';
   return `
 SELECT DISTINCT ?item ?itemLabel ?brandLabel WHERE {
-  ?item wdt:P31/wdt:P279* wd:${typeQid} .
+  ?item wdt:P31 wd:${typeQid} .
   ${manufacturerClause}
+  ${keysetFilter}
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }
 ORDER BY ?item
-LIMIT ${pageSize}
-OFFSET ${offset}`;
+LIMIT ${pageSize}`;
 }
 
 async function sleep(ms: number) {
@@ -87,33 +93,54 @@ async function sleep(ms: number) {
 
 export async function runWikidataQuery(query: string): Promise<WikidataRow[]> {
   const url = `${WIKIDATA_SPARQL}?format=json&query=${encodeURIComponent(query)}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': USER_AGENT, Accept: 'application/sparql-results+json' },
-    next: { revalidate: 0 },
-  });
-  if (!res.ok) {
-    console.warn('Wikidata query failed', res.status);
-    return [];
+
+  for (let attempt = 0; attempt < MAX_QUERY_RETRIES; attempt += 1) {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/sparql-results+json' },
+      next: { revalidate: 0 },
+    });
+
+    if (res.ok) {
+      const json = (await res.json()) as {
+        results: { bindings: Array<Record<string, { value: string }>> };
+      };
+      return json.results.bindings.map((b) => ({
+        item: b.item?.value ?? '',
+        itemLabel: b.itemLabel?.value ?? '',
+        brandLabel: b.brandLabel?.value,
+      }));
+    }
+
+    const retryable = res.status === 429 || res.status >= 500;
+    if (!retryable || attempt === MAX_QUERY_RETRIES - 1) {
+      console.warn('Wikidata query failed', res.status);
+      throw new Error(`Wikidata query failed: ${res.status}`);
+    }
+
+    const backoffMs = 1000 * 2 ** attempt;
+    console.warn(`Wikidata query ${res.status}, retry in ${backoffMs}ms`);
+    await sleep(backoffMs);
   }
-  const json = (await res.json()) as {
-    results: { bindings: Array<Record<string, { value: string }>> };
-  };
-  return json.results.bindings.map((b) => ({
-    item: b.item?.value ?? '',
-    itemLabel: b.itemLabel?.value ?? '',
-    brandLabel: b.brandLabel?.value,
-  }));
+
+  return [];
 }
 
 async function fetchWikidataTypeRows(spec: WikidataQuerySpec): Promise<WikidataRow[]> {
   const rows: WikidataRow[] = [];
   const seenItems = new Set<string>();
+  let afterItemUri: string | undefined;
 
-  for (let offset = 0; offset < spec.limit; offset += PAGE_SIZE) {
-    const pageSize = Math.min(PAGE_SIZE, spec.limit - offset);
+  while (rows.length < spec.limit) {
+    const pageSize = Math.min(PAGE_SIZE, spec.limit - rows.length);
     const batch = await runWikidataQuery(
-      buildSparql(spec.typeQid, offset, pageSize, spec.requireManufacturer !== false),
+      buildWikidataSparql(
+        spec.typeQid,
+        pageSize,
+        spec.requireManufacturer !== false,
+        afterItemUri,
+      ),
     );
+
     if (batch.length === 0) {
       break;
     }
@@ -124,7 +151,8 @@ async function fetchWikidataTypeRows(spec: WikidataQuerySpec): Promise<WikidataR
       rows.push(row);
     }
 
-    if (batch.length < pageSize) {
+    afterItemUri = batch[batch.length - 1]?.item;
+    if (!afterItemUri || batch.length < pageSize) {
       break;
     }
 

@@ -135,7 +135,7 @@ function GearPageClientCore({
   const modalContext = useContext(ModalContext);
   const confirm = useConfirm();
   const gearModalInstanceRef = useRef(0);
-  const [sortMode, setSortMode] = useState<GearSortMode>(mode === 'public' ? 'custom' : 'type');
+  const [sortMode, setSortMode] = useState<GearSortMode>('type');
 
   const sorted = useMemo(
     () => sortGearItems(profile.items, sortMode),

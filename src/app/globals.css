@@ -309,11 +309,19 @@ html[data-overlay-scroll-lock]:not(.manage-page) body[data-scroll-locked] {
 }
 
 .modal-overlay-in {
-  animation: modal-overlay-in 300ms ease-out backwards;
+  animation: modal-overlay-in 200ms cubic-bezier(0, 0, 0.2, 1) backwards;
 }
 
 .modal-panel-in {
-  animation: modal-panel-in 300ms ease-out backwards;
+  animation: modal-panel-in 200ms cubic-bezier(0, 0, 0.2, 1) backwards;
+}
+
+/* While the on-screen keyboard is open, scroll inside the panel — not the dialog.
+   The card stays centered in the visible area via its own auto margins. */
+@media (max-width: 767px) {
+  dialog[data-keyboard-inset] {
+    overflow: hidden;
+  }
 }
 
 @keyframes onboarding-rise-in {
