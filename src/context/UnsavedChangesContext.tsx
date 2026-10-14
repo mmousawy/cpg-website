@@ -1,18 +1,14 @@
 'use client';
 
-import { useConfirm } from '@/app/providers/ConfirmProvider';
-import { confirmUnsavedChanges } from '@/utils/confirmHelpers';
-import { useRouter } from 'next/navigation';
+import {
+  triggerNavigationProgress,
+  triggerNavigationProgressComplete,
+} from '@/lib/navigationProgressEvents';
+import {
+  confirmLeaveWithUnsavedChanges,
+  unsavedChangesLeaveMessage,
+} from '@/utils/confirmHelpers';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-
-// Declare Window interface extension for unsaved changes context
-declare global {
-  interface Window {
-    __unsavedChangesContext?: {
-      setHasUnsavedChanges: (value: boolean) => void;
-    };
-  }
-}
 
 interface UnsavedChangesContextType {
   hasUnsavedChanges: boolean;
@@ -23,8 +19,6 @@ const UnsavedChangesContext = createContext<UnsavedChangesContextType | null>(nu
 
 export function UnsavedChangesProvider({ children }: { children: React.ReactNode }) {
   const [hasUnsavedChanges, setHasUnsavedChangesState] = useState(false);
-  const router = useRouter();
-  const confirm = useConfirm();
 
   // Use ref for synchronous checks in event handlers
   const hasUnsavedChangesRef = useRef(false);
@@ -37,7 +31,10 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
   // Expose setter on window for useFormChanges hook
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      window.__unsavedChangesContext = { setHasUnsavedChanges };
+      window.__unsavedChangesContext = {
+        setHasUnsavedChanges,
+        hasUnsavedChanges: () => hasUnsavedChangesRef.current,
+      };
     }
     return () => {
       if (typeof window !== 'undefined') {
@@ -51,7 +48,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChangesRef.current) {
         e.preventDefault();
-        e.returnValue = 'You have unsaved changes.';
+        e.returnValue = unsavedChangesLeaveMessage;
         return e.returnValue;
       }
     };
@@ -60,20 +57,44 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // Intercept link clicks
+  // Browser back/forward while dirty
   useEffect(() => {
-    const handleClick = async (e: MouseEvent) => {
-      // Skip if no unsaved changes
+    if (!hasUnsavedChanges) return;
+
+    const pushHistoryTrap = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    pushHistoryTrap();
+
+    const handlePopState = () => {
       if (!hasUnsavedChangesRef.current) return;
 
-      // Find anchor element
+      if (!confirmLeaveWithUnsavedChanges()) {
+        pushHistoryTrap();
+        return;
+      }
+
+      hasUnsavedChangesRef.current = false;
+      setHasUnsavedChangesState(false);
+      window.history.back();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [hasUnsavedChanges]);
+
+  // In-app link clicks: native confirm, then let Next.js handle navigation
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (!hasUnsavedChangesRef.current) return;
+
       const anchor = (e.target as HTMLElement).closest('a');
       if (!anchor) return;
 
       const href = anchor.getAttribute('href');
       if (!href) return;
 
-      // Skip external/special links
       if (
         href.startsWith('http') ||
         href.startsWith('//') ||
@@ -86,26 +107,21 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
         return;
       }
 
-      // Block navigation and show confirmation
-      e.preventDefault();
-      e.stopPropagation();
-
-      const confirmed = await confirm(confirmUnsavedChanges());
-
-      if (confirmed) {
-        // Clear state before navigation
-        hasUnsavedChangesRef.current = false;
-        setHasUnsavedChangesState(false);
-
-        // Use router.push directly - programmatic anchor.click() is ignored by Next.js
-        await router.push(href);
+      if (!confirmLeaveWithUnsavedChanges()) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerNavigationProgressComplete();
+        return;
       }
+
+      hasUnsavedChangesRef.current = false;
+      setHasUnsavedChangesState(false);
+      triggerNavigationProgress();
     };
 
-    // Capture phase to intercept before Next.js
     document.addEventListener('click', handleClick, true);
     return () => document.removeEventListener('click', handleClick, true);
-  }, [confirm, router]);
+  }, []);
 
   return (
     <UnsavedChangesContext.Provider
@@ -122,4 +138,23 @@ export function useUnsavedChanges() {
     throw new Error('useUnsavedChanges must be used within UnsavedChangesProvider');
   }
   return context;
+}
+
+/** For Next.js `<Link onNavigate>` — same native confirm as document click interception. */
+export function useUnsavedChangesOnNavigate() {
+  const { hasUnsavedChanges, setHasUnsavedChanges } = useUnsavedChanges();
+
+  return useCallback(
+    (e: { preventDefault: () => void }) => {
+      if (!hasUnsavedChanges) return;
+      if (!confirmLeaveWithUnsavedChanges()) {
+        e.preventDefault();
+        triggerNavigationProgressComplete();
+        return;
+      }
+      setHasUnsavedChanges(false);
+      triggerNavigationProgress();
+    },
+    [hasUnsavedChanges, setHasUnsavedChanges],
+  );
 }

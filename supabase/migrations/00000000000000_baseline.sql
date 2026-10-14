@@ -87,6 +87,32 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
 
 
+CREATE TYPE "public"."gear_catalog_category" AS ENUM (
+    'camera_body',
+    'lens',
+    'film',
+    'phone',
+    'lighting',
+    'support',
+    'accessories',
+    'other'
+);
+
+
+ALTER TYPE "public"."gear_catalog_category" OWNER TO "supabase_admin";
+
+
+CREATE TYPE "public"."gear_catalog_source" AS ENUM (
+    'lensfun',
+    'wikidata',
+    'curated',
+    'exif'
+);
+
+
+ALTER TYPE "public"."gear_catalog_source" OWNER TO "supabase_admin";
+
+
 CREATE TYPE "public"."license_type" AS ENUM (
     'all-rights-reserved',
     'cc-by-nc-nd-4.0',
@@ -97,6 +123,21 @@ CREATE TYPE "public"."license_type" AS ENUM (
 
 
 ALTER TYPE "public"."license_type" OWNER TO "supabase_admin";
+
+
+CREATE TYPE "public"."shooting_format" AS ENUM (
+    'digital',
+    'analog',
+    'phone',
+    'instant',
+    'drone',
+    'video',
+    'lofi',
+    'other'
+);
+
+
+ALTER TYPE "public"."shooting_format" OWNER TO "supabase_admin";
 
 
 CREATE OR REPLACE FUNCTION "public"."add_challenge_comment"("p_challenge_id" "uuid", "p_comment_text" "text", "p_parent_comment_id" "uuid" DEFAULT NULL::"uuid") RETURNS "uuid"
@@ -3473,6 +3514,110 @@ COMMENT ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "uu
 
 
 
+CREATE OR REPLACE FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  item jsonb;
+  idx integer := 0;
+  v_added_ms bigint;
+  v_formats_other text;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'not authenticated' USING ERRCODE = '28000';
+  END IF;
+
+  IF char_length(COALESCE(p_daily_driver_body, '')) > 500 THEN
+    RAISE EXCEPTION 'daily_driver_body too long' USING ERRCODE = '22001';
+  END IF;
+
+  IF char_length(COALESCE(p_daily_driver_lens, '')) > 500 THEN
+    RAISE EXCEPTION 'daily_driver_lens too long' USING ERRCODE = '22001';
+  END IF;
+
+  IF jsonb_array_length(COALESCE(p_items, '[]'::jsonb)) > 500 THEN
+    RAISE EXCEPTION 'too many gear items' USING ERRCODE = '22001';
+  END IF;
+
+  v_formats_other := left(trim(COALESCE(p_formats_other, '')), 80);
+  IF NOT ('other' = ANY (COALESCE(p_formats, '{}'))) THEN
+    v_formats_other := '';
+  END IF;
+
+  INSERT INTO public.user_gear_profiles (
+    user_id,
+    formats,
+    formats_other,
+    daily_driver_body,
+    daily_driver_body_catalog_id,
+    daily_driver_lens,
+    daily_driver_lens_catalog_id,
+    updated_at
+  )
+  VALUES (
+    v_user_id,
+    COALESCE(p_formats, '{}'),
+    v_formats_other,
+    COALESCE(p_daily_driver_body, ''),
+    p_daily_driver_body_catalog_id,
+    COALESCE(p_daily_driver_lens, ''),
+    p_daily_driver_lens_catalog_id,
+    now()
+  )
+  ON CONFLICT (user_id) DO UPDATE
+  SET
+    formats = EXCLUDED.formats,
+    formats_other = EXCLUDED.formats_other,
+    daily_driver_body = EXCLUDED.daily_driver_body,
+    daily_driver_body_catalog_id = EXCLUDED.daily_driver_body_catalog_id,
+    daily_driver_lens = EXCLUDED.daily_driver_lens,
+    daily_driver_lens_catalog_id = EXCLUDED.daily_driver_lens_catalog_id,
+    updated_at = now();
+
+  DELETE FROM public.user_gear_items
+  WHERE user_id = v_user_id;
+
+  FOR item IN
+    SELECT value
+    FROM jsonb_array_elements(COALESCE(p_items, '[]'::jsonb))
+  LOOP
+    v_added_ms := NULLIF(item ->> 'addedAt', '')::bigint;
+    IF v_added_ms IS NULL OR v_added_ms < 0 THEN
+      v_added_ms := (extract(epoch FROM now()) * 1000)::bigint;
+    END IF;
+
+    INSERT INTO public.user_gear_items (
+      id,
+      user_id,
+      catalog_id,
+      name,
+      category,
+      note,
+      sort_index,
+      added_at
+    )
+    VALUES (
+      (item ->> 'id')::uuid,
+      v_user_id,
+      NULLIF(item ->> 'catalogId', '')::uuid,
+      trim(item ->> 'name'),
+      (item ->> 'category')::public.gear_catalog_category,
+      left(COALESCE(item ->> 'note', ''), 2000),
+      idx,
+      to_timestamp(v_added_ms / 1000.0)
+    );
+
+    idx := idx + 1;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") OWNER TO "supabase_admin";
+
+
 CREATE OR REPLACE FUNCTION "public"."set_photo_sort_order"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''
@@ -4419,6 +4564,31 @@ CREATE TABLE IF NOT EXISTS "public"."follows" (
 ALTER TABLE "public"."follows" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."gear_catalog" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "source" "public"."gear_catalog_source" NOT NULL,
+    "source_key" "text" NOT NULL,
+    "category" "public"."gear_catalog_category" NOT NULL,
+    "brand" "text" DEFAULT ''::"text" NOT NULL,
+    "name" "text" NOT NULL,
+    "search_text" "text" DEFAULT ''::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."gear_catalog" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."gear_catalog_aliases" (
+    "alias_key" "text" NOT NULL,
+    "catalog_id" "uuid" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."gear_catalog_aliases" OWNER TO "supabase_admin";
+
+
 CREATE TABLE IF NOT EXISTS "public"."interests" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "name" "text" NOT NULL,
@@ -4723,6 +4893,37 @@ CREATE TABLE IF NOT EXISTS "public"."tags" (
 ALTER TABLE "public"."tags" OWNER TO "supabase_admin";
 
 
+CREATE TABLE IF NOT EXISTS "public"."user_gear_items" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "catalog_id" "uuid",
+    "name" "text" NOT NULL,
+    "category" "public"."gear_catalog_category" NOT NULL,
+    "note" "text" DEFAULT ''::"text" NOT NULL,
+    "sort_index" integer DEFAULT 0 NOT NULL,
+    "added_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "user_gear_items_name_not_blank" CHECK (("char_length"(TRIM(BOTH FROM "name")) > 0))
+);
+
+
+ALTER TABLE "public"."user_gear_items" OWNER TO "supabase_admin";
+
+
+CREATE TABLE IF NOT EXISTS "public"."user_gear_profiles" (
+    "user_id" "uuid" NOT NULL,
+    "formats" "public"."shooting_format"[] DEFAULT '{}'::"public"."shooting_format"[] NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "formats_other" "text" DEFAULT ''::"text" NOT NULL,
+    "daily_driver_body" "text" DEFAULT ''::"text" NOT NULL,
+    "daily_driver_body_catalog_id" "uuid",
+    "daily_driver_lens" "text" DEFAULT ''::"text" NOT NULL,
+    "daily_driver_lens_catalog_id" "uuid"
+);
+
+
+ALTER TABLE "public"."user_gear_profiles" OWNER TO "supabase_admin";
+
+
 ALTER TABLE ONLY "public"."email_types" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."email_types_id_seq"'::"regclass");
 
 
@@ -4893,6 +5094,21 @@ ALTER TABLE ONLY "public"."follows"
 
 
 
+ALTER TABLE ONLY "public"."gear_catalog_aliases"
+    ADD CONSTRAINT "gear_catalog_aliases_pkey" PRIMARY KEY ("alias_key");
+
+
+
+ALTER TABLE ONLY "public"."gear_catalog"
+    ADD CONSTRAINT "gear_catalog_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."gear_catalog"
+    ADD CONSTRAINT "gear_catalog_source_key_unique" UNIQUE ("source", "source_key");
+
+
+
 ALTER TABLE ONLY "public"."photos"
     ADD CONSTRAINT "images_pkey" PRIMARY KEY ("id");
 
@@ -5033,6 +5249,16 @@ ALTER TABLE ONLY "public"."tags"
 
 
 
+ALTER TABLE ONLY "public"."user_gear_items"
+    ADD CONSTRAINT "user_gear_items_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."user_gear_profiles"
+    ADD CONSTRAINT "user_gear_profiles_pkey" PRIMARY KEY ("user_id");
+
+
+
 CREATE INDEX "albums_created_at_idx" ON "public"."albums" USING "btree" ("created_at");
 
 
@@ -5090,6 +5316,18 @@ CREATE INDEX "events_rsvps_uuid_idx" ON "public"."events_rsvps" USING "btree" ("
 
 
 CREATE INDEX "events_slug_idx" ON "public"."events" USING "btree" ("slug");
+
+
+
+CREATE INDEX "gear_catalog_aliases_catalog_id_idx" ON "public"."gear_catalog_aliases" USING "btree" ("catalog_id");
+
+
+
+CREATE INDEX "gear_catalog_category_idx" ON "public"."gear_catalog" USING "btree" ("category");
+
+
+
+CREATE INDEX "gear_catalog_search_text_idx" ON "public"."gear_catalog" USING "btree" ("lower"("search_text") "text_pattern_ops");
 
 
 
@@ -5549,6 +5787,10 @@ CREATE UNIQUE INDEX "uq_shared_album_requests_pending" ON "public"."shared_album
 
 
 
+CREATE INDEX "user_gear_items_user_id_sort_idx" ON "public"."user_gear_items" USING "btree" ("user_id", "sort_index");
+
+
+
 CREATE OR REPLACE TRIGGER "handle_profile_nickname_change_trigger" BEFORE UPDATE OF "nickname" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."handle_profile_nickname_change"();
 
 
@@ -5844,6 +6086,11 @@ ALTER TABLE ONLY "public"."follows"
 
 
 
+ALTER TABLE ONLY "public"."gear_catalog_aliases"
+    ADD CONSTRAINT "gear_catalog_aliases_catalog_id_fkey" FOREIGN KEY ("catalog_id") REFERENCES "public"."gear_catalog"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."nickname_redirects"
     ADD CONSTRAINT "nickname_redirects_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
@@ -5976,6 +6223,31 @@ ALTER TABLE ONLY "public"."shared_album_requests"
 
 ALTER TABLE ONLY "public"."shared_album_requests"
     ADD CONSTRAINT "shared_album_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_gear_items"
+    ADD CONSTRAINT "user_gear_items_catalog_id_fkey" FOREIGN KEY ("catalog_id") REFERENCES "public"."gear_catalog"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."user_gear_items"
+    ADD CONSTRAINT "user_gear_items_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_gear_profiles"
+    ADD CONSTRAINT "user_gear_profiles_daily_driver_body_catalog_id_fkey" FOREIGN KEY ("daily_driver_body_catalog_id") REFERENCES "public"."gear_catalog"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."user_gear_profiles"
+    ADD CONSTRAINT "user_gear_profiles_daily_driver_lens_catalog_id_fkey" FOREIGN KEY ("daily_driver_lens_catalog_id") REFERENCES "public"."gear_catalog"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."user_gear_profiles"
+    ADD CONSTRAINT "user_gear_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -6561,6 +6833,20 @@ ALTER TABLE "public"."feedback" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."follows" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."gear_catalog" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."gear_catalog_aliases" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "gear_catalog_aliases_select_public" ON "public"."gear_catalog_aliases" FOR SELECT TO "authenticated", "anon" USING (true);
+
+
+
+CREATE POLICY "gear_catalog_select_public" ON "public"."gear_catalog" FOR SELECT TO "authenticated", "anon" USING (true);
+
+
+
 ALTER TABLE "public"."interests" ENABLE ROW LEVEL SECURITY;
 
 
@@ -6616,6 +6902,44 @@ ALTER TABLE "public"."shared_album_requests" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."tags" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."user_gear_items" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "user_gear_items_delete_own" ON "public"."user_gear_items" FOR DELETE TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "user_gear_items_insert_own" ON "public"."user_gear_items" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "user_gear_items_select_public" ON "public"."user_gear_items" FOR SELECT TO "authenticated", "anon" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles" "p"
+  WHERE (("p"."id" = "user_gear_items"."user_id") AND ("p"."suspended_at" IS NULL) AND ("p"."deletion_scheduled_at" IS NULL)))));
+
+
+
+CREATE POLICY "user_gear_items_update_own" ON "public"."user_gear_items" FOR UPDATE TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid"))) WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+ALTER TABLE "public"."user_gear_profiles" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "user_gear_profiles_insert_own" ON "public"."user_gear_profiles" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
+
+
+CREATE POLICY "user_gear_profiles_select_public" ON "public"."user_gear_profiles" FOR SELECT TO "authenticated", "anon" USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles" "p"
+  WHERE (("p"."id" = "user_gear_profiles"."user_id") AND ("p"."suspended_at" IS NULL) AND ("p"."deletion_scheduled_at" IS NULL)))));
+
+
+
+CREATE POLICY "user_gear_profiles_update_own" ON "public"."user_gear_profiles" FOR UPDATE TO "authenticated" USING (("user_id" = ( SELECT "auth"."uid"() AS "uid"))) WITH CHECK (("user_id" = ( SELECT "auth"."uid"() AS "uid")));
+
 
 
 
@@ -7348,6 +7672,14 @@ GRANT ALL ON FUNCTION "public"."review_challenge_submission"("p_submission_id" "
 
 
 
+REVOKE ALL ON FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") TO "postgres";
+GRANT ALL ON FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_user_gear_profile"("p_formats" "public"."shooting_format"[], "p_formats_other" "text", "p_daily_driver_body" "text", "p_daily_driver_body_catalog_id" "uuid", "p_daily_driver_lens" "text", "p_daily_driver_lens_catalog_id" "uuid", "p_items" "jsonb") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "postgres";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_photo_sort_order"() TO "authenticated";
@@ -7737,6 +8069,20 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 
 
 
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog_aliases" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog_aliases" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog_aliases" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."gear_catalog_aliases" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "postgres";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."interests" TO "authenticated";
@@ -7863,6 +8209,20 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public".
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "anon";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "authenticated";
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."tags" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_items" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_items" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_items" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_items" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_profiles" TO "postgres";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_profiles" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_profiles" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE "public"."user_gear_profiles" TO "service_role";
 
 
 

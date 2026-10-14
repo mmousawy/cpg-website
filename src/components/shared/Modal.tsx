@@ -9,6 +9,7 @@ import CloseSVG from 'public/icons/close.svg';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { showDialogWithoutScrolling } from '@/lib/bodyScrollLock';
+import { isPortalOverlayClick } from '@/lib/focusTrapPortals';
 
 export default function Modal() {
   const { isOpen, setIsOpen, requestClose, title, content, footer, size, flushContentTop } = useContext(ModalContext);
@@ -94,6 +95,7 @@ export default function Modal() {
         active={isTrapped}
         focusTrapOptions={{
           clickOutsideDeactivates: false,
+          allowOutsideClick: isPortalOverlayClick,
           escapeDeactivates: true,
           preventScroll: true,
           onDeactivate: closeModal,
@@ -108,14 +110,14 @@ export default function Modal() {
             'relative m-auto',
             'max-h-[calc(100vh-3rem)] max-sm:max-h-[calc(100vh-2rem)]',
             'flex flex-col',
-            'rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
+            'rounded-2xl border border-border-color-strong bg-background-medium shadow-xl shadow-black/20',
             'transition-transform duration-300',
           ])}
         >
           {/* Fixed header */}
           <div
             className={clsx(
-              'shrink-0 flex items-start gap-4 p-4 sm:p-6 sm:pt-5 pb-0 sm:pb-0',
+              'shrink-0 flex items-start gap-4 border-b border-border-color p-4 sm:p-6 sm:pt-5 pb-4 sm:pb-4',
               title ? 'justify-between' : 'justify-end',
             )}
           >
@@ -137,14 +139,17 @@ export default function Modal() {
           </div>
           {/* Scrollable content */}
           <div
-            className={clsx('flex-1 min-h-0 overflow-y-auto p-4 sm:p-6', flushContentTop && 'pt-0')}
+            className={clsx(
+              'flex-1 min-h-0 overflow-y-auto bg-background-light p-4 sm:p-6',
+              flushContentTop && 'pt-0',
+            )}
           >
             {content}
           </div>
           {/* Fixed footer for actions */}
           {footer && (
             <div
-              className="relative shrink-0 border-t border-border-color-strong p-4 sm:p-6"
+              className="relative shrink-0 border-t border-border-color rounded-b-2xl bg-background-light p-4 sm:px-6"
             >
               <div
                 className="absolute -top-4.25 left-0 right-0 bg-linear-to-b from-transparent to-background-light h-4 w-full pointer-events-none"

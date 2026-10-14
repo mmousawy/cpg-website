@@ -1,3 +1,4 @@
+// @postprocessed-database-types — applied by scripts/postprocess-database-types.mjs after supabase gen types
 export type Json =
   | string
   | number
@@ -989,6 +990,65 @@ export type Database = {
           },
         ]
       }
+      gear_catalog: {
+        Row: {
+          brand: string
+          category: Database['public']['Enums']['gear_catalog_category']
+          created_at: string
+          id: string
+          name: string
+          search_text: string
+          source: Database['public']['Enums']['gear_catalog_source']
+          source_key: string
+        }
+        Insert: {
+          brand?: string
+          category: Database['public']['Enums']['gear_catalog_category']
+          created_at?: string
+          id?: string
+          name: string
+          search_text?: string
+          source: Database['public']['Enums']['gear_catalog_source']
+          source_key: string
+        }
+        Update: {
+          brand?: string
+          category?: Database['public']['Enums']['gear_catalog_category']
+          created_at?: string
+          id?: string
+          name?: string
+          search_text?: string
+          source?: Database['public']['Enums']['gear_catalog_source']
+          source_key?: string
+        }
+        Relationships: []
+      }
+      gear_catalog_aliases: {
+        Row: {
+          alias_key: string
+          catalog_id: string
+          created_at: string
+        }
+        Insert: {
+          alias_key: string
+          catalog_id: string
+          created_at?: string
+        }
+        Update: {
+          alias_key?: string
+          catalog_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'gear_catalog_aliases_catalog_id_fkey'
+            columns: ['catalog_id']
+            isOneToOne: false
+            referencedRelation: 'gear_catalog'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       interests: {
         Row: {
           count: number | null
@@ -1889,6 +1949,109 @@ export type Database = {
         }
         Relationships: []
       }
+      user_gear_items: {
+        Row: {
+          added_at: string
+          catalog_id: string | null
+          category: Database['public']['Enums']['gear_catalog_category']
+          id: string
+          name: string
+          note: string
+          sort_index: number
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          catalog_id?: string | null
+          category: Database['public']['Enums']['gear_catalog_category']
+          id: string
+          name: string
+          note?: string
+          sort_index?: number
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          catalog_id?: string | null
+          category?: Database['public']['Enums']['gear_catalog_category']
+          id?: string
+          name?: string
+          note?: string
+          sort_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'user_gear_items_catalog_id_fkey'
+            columns: ['catalog_id']
+            isOneToOne: false
+            referencedRelation: 'gear_catalog'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'user_gear_items_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      user_gear_profiles: {
+        Row: {
+          daily_driver_body: string
+          daily_driver_body_catalog_id: string | null
+          daily_driver_lens: string
+          daily_driver_lens_catalog_id: string | null
+          formats: Database['public']['Enums']['shooting_format'][]
+          formats_other: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          daily_driver_body?: string
+          daily_driver_body_catalog_id?: string | null
+          daily_driver_lens?: string
+          daily_driver_lens_catalog_id?: string | null
+          formats?: Database['public']['Enums']['shooting_format'][]
+          formats_other?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          daily_driver_body?: string
+          daily_driver_body_catalog_id?: string | null
+          daily_driver_lens?: string
+          daily_driver_lens_catalog_id?: string | null
+          formats?: Database['public']['Enums']['shooting_format'][]
+          formats_other?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'user_gear_profiles_daily_driver_body_catalog_id_fkey'
+            columns: ['daily_driver_body_catalog_id']
+            isOneToOne: false
+            referencedRelation: 'gear_catalog'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'user_gear_profiles_daily_driver_lens_catalog_id_fkey'
+            columns: ['daily_driver_lens_catalog_id']
+            isOneToOne: false
+            referencedRelation: 'gear_catalog'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'user_gear_profiles_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: true
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       album_photos_active: {
@@ -2167,18 +2330,49 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_user_gear_profile: {
+        Args: {
+          p_daily_driver_body: string
+          p_daily_driver_body_catalog_id: string | null
+          p_daily_driver_lens: string
+          p_daily_driver_lens_catalog_id: string | null
+          p_formats: Database['public']['Enums']['shooting_format'][]
+          p_formats_other: string
+          p_items: Json
+        }
+        Returns: undefined
+      }
       submit_to_challenge: {
         Args: { p_challenge_id: string; p_photo_ids: string[] }
         Returns: number
       }
     }
     Enums: {
+      gear_catalog_category:
+        | 'camera_body'
+        | 'lens'
+        | 'film'
+        | 'phone'
+        | 'lighting'
+        | 'support'
+        | 'accessories'
+        | 'other'
+      gear_catalog_source: 'lensfun' | 'wikidata' | 'curated' | 'exif'
       license_type:
         | 'all-rights-reserved'
         | 'cc-by-nc-nd-4.0'
         | 'cc-by-nc-4.0'
         | 'cc-by-4.0'
         | 'cc0'
+      shooting_format:
+        | 'digital'
+        | 'analog'
+        | 'phone'
+        | 'instant'
+        | 'drone'
+        | 'video'
+        | 'lofi'
+        | 'other'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2306,12 +2500,33 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      gear_catalog_category: [
+        'camera_body',
+        'lens',
+        'film',
+        'phone',
+        'lighting',
+        'support',
+        'accessories',
+        'other',
+      ],
+      gear_catalog_source: ['lensfun', 'wikidata', 'curated', 'exif'],
       license_type: [
         'all-rights-reserved',
         'cc-by-nc-nd-4.0',
         'cc-by-nc-4.0',
         'cc-by-4.0',
         'cc0',
+      ],
+      shooting_format: [
+        'digital',
+        'analog',
+        'phone',
+        'instant',
+        'drone',
+        'video',
+        'lofi',
+        'other',
       ],
     },
   },
