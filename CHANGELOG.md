@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.42.1](https://github.com/mmousawy/cpg-website/compare/v1.42.0...v1.42.1) (2026-10-14)
+
+
+### 🐛 Bug Fixes
+
+* enhance gear catalog refresh and improve modal animations ([b4ddaad](https://github.com/mmousawy/cpg-website/commit/b4ddaad8f98df8e72fe0cd9225cd3200a7cc696e))
+
 ## [1.42.0](https://github.com/mmousawy/cpg-website/compare/v1.41.6...v1.42.0) (2026-10-14)
 
 

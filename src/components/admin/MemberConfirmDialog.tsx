@@ -69,7 +69,7 @@ export default function MemberConfirmDialog({
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-3',
         'bg-black/40',
-        'transition-[visibility,opacity] duration-300',
+        'transition-[visibility,opacity] duration-200 ease-out',
       ])}
     >
       <FocusTrap
@@ -84,7 +84,7 @@ export default function MemberConfirmDialog({
       >
         <div
           className={clsx(
-            'w-full max-w-md relative m-auto rounded-2xl border border-border-color bg-background-light p-6 shadow-xl shadow-black/25 transition-transform duration-300',
+            'w-full max-w-md relative m-auto rounded-2xl border border-border-color bg-background-light p-6 shadow-xl shadow-black/25 transition-[scale] duration-200 ease-out',
             isVisible ? 'scale-100' : 'scale-95',
           )}
         >
@@ -110,7 +110,7 @@ export default function MemberConfirmDialog({
                 {' '}
                 for deletion? Their account and all content will be permanently removed after 30 days.
               </>
-          )}
+            )}
             {type === 'suspend' && (
               <>
                 Are you sure you want to suspend
@@ -121,7 +121,7 @@ export default function MemberConfirmDialog({
                 ?
                 They will not be able to access their account.
               </>
-          )}
+            )}
             {type === 'unsuspend' && (
               <>
                 Are you sure you want to unsuspend
@@ -132,7 +132,7 @@ export default function MemberConfirmDialog({
                 ?
                 They will regain access to their account.
               </>
-          )}
+            )}
             {type === 'cancel-deletion' && (
               <>
                 Are you sure you want to cancel the scheduled deletion for
@@ -143,7 +143,7 @@ export default function MemberConfirmDialog({
                 ?
                 They will regain access to their account.
               </>
-          )}
+            )}
           </p>
 
           {type === 'suspend' && (
@@ -162,7 +162,7 @@ export default function MemberConfirmDialog({
                 rows={3}
               />
             </div>
-        )}
+          )}
 
           <div
             className="flex justify-end gap-3"

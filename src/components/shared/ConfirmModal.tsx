@@ -60,8 +60,8 @@ export default function ConfirmModal() {
         isOpen ? 'pointer-events-auto visible opacity-100 modal-overlay-in' : 'pointer-events-none invisible opacity-0',
         'fixed inset-0 z-60 overflow-auto overscroll-contain',
         'flex size-full max-h-none max-w-none p-3 max-sm:p-4',
-        'bg-black/40',
-        'transition-[visibility,opacity] duration-300',
+        'bg-black/60',
+        'transition-[visibility,opacity] duration-200 ease-out',
       ])}
     >
       <FocusTrap
@@ -80,7 +80,7 @@ export default function ConfirmModal() {
             'w-full max-w-md',
             'relative m-auto',
             'rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
-            'transition-transform duration-300',
+            'transition-[scale] duration-200 ease-out',
           ])}
         >
           <h2
