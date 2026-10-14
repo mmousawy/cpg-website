@@ -41,7 +41,7 @@ export const profileHeroBannerPreviewHeightClassName =
 
 /** Shorter hero on /@nickname subpages (gear, albums, photos, …) */
 export const profileHeroBannerSubpageHeightClassName =
-  'aspect-[3.2/1] w-full min-h-[7rem] max-h-[11rem] sm:max-h-[12rem]';
+  'w-full min-h-[7rem] sm:min-h-[10rem] max-h-[10rem] sm:max-h-[16rem]';
 
 /** Extra top spacing below the profile hero on mobile */
 export const profileHeroMobileGapClassName = 'max-sm:pt-4!';

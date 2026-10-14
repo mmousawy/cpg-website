@@ -325,15 +325,23 @@ supabase/
 
 ## Generate Supabase Types
 
+From your **local machine** (repo root), pull types over SSH, then post-process (nullable RPC `uuid` patches + ESLint format):
+
+```bash
+ssh ubuntu@57.129.6.153 "npx supabase gen types typescript --db-url 'postgresql://postgres.<tenant-ref>:<password>@localhost:5432/postgres' --schema public" > ./src/database.types.ts
+pnpm db:types
+```
+
+The CLI runs on the VPS via SSH; `localhost` in the URL is Postgres on that host. The output file is written locally.
+
+**Supabase Cloud** (no SSH):
+
 ```bash
 npx supabase gen types typescript --project-id "your-project-id" > ./src/database.types.ts
+pnpm db:types
 ```
 
-Or via SSH:
-
-```bash
-ssh user@domain "npx supabase gen types typescript --db-url 'postgresql://postgres.[tenant-id]:[password]@localhost:5432/postgres' --schema public" > ./src/database.types.ts
-```
+`pnpm typecheck` fails if you skip `pnpm db:types` after regenerating `src/database.types.ts`.
 
 ## Performance
 

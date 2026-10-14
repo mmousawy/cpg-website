@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { expireTags } from '@/lib/cache/expireTag';
 import { fetchUserGearProfileForUser } from '@/lib/data/gear';
+import { persistUserGearProfileServer } from '@/lib/gear/persistUserGearProfileServer';
 import { parseUserGearProfileBody } from '@/lib/gear/validateUserGearProfile';
-import type { Json } from '@/database.types';
 import { createClient } from '@/utils/supabase/server';
 
 export async function GET() {
@@ -41,15 +41,7 @@ export async function PUT(request: NextRequest) {
 
   const { profile } = parsed;
 
-  const { error: saveError } = await supabase.rpc('save_user_gear_profile', {
-    p_formats: profile.formats,
-    p_formats_other: profile.formatsOther,
-    p_daily_driver_body: profile.dailyDriverBody,
-    p_daily_driver_body_catalog_id: profile.dailyDriverBodyCatalogId,
-    p_daily_driver_lens: profile.dailyDriverLens,
-    p_daily_driver_lens_catalog_id: profile.dailyDriverLensCatalogId,
-    p_items: profile.items as unknown as Json,
-  });
+  const { error: saveError } = await persistUserGearProfileServer(supabase, profile);
 
   if (saveError) {
     console.error('save_user_gear_profile:', saveError);
