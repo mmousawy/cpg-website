@@ -1,7 +1,9 @@
 'use client';
 
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { getOverlayPortalRoot, PORTAL_OVERLAY_ATTR } from '@/lib/focusTrapPortals';
 import Input from './Input';
 
 interface AutocompleteInputProps {
@@ -16,7 +18,7 @@ interface AutocompleteInputProps {
   onSubmit?: (value: string) => void;
   /** Skip internal filtering — parent provides a pre-filtered list. */
   disableFilter?: boolean;
-  /** Render suggestions in normal flow so parent containers can grow in height. */
+  /** Render suggestions in normal flow (grows parent). Default: floating overlay. */
   inlineSuggestions?: boolean;
   id?: string;
   placeholder?: string;
@@ -24,7 +26,17 @@ interface AutocompleteInputProps {
   fullWidth?: boolean;
   containerClassName?: string;
   className?: string;
+  /** Show a loading row while the parent fetches suggestions */
+  loading?: boolean;
+  /** Error state — forwarded to the underlying input */
+  error?: boolean;
 }
+
+type DropdownPosition = {
+  top: number;
+  left: number;
+  width: number;
+};
 
 export default function AutocompleteInput({
   value,
@@ -41,9 +53,13 @@ export default function AutocompleteInput({
   fullWidth = true,
   containerClassName,
   className,
+  loading = false,
+  error = false,
 }: AutocompleteInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition | null>(null);
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +68,57 @@ export default function AutocompleteInput({
     : suggestions.filter(
       (s) => s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase(),
     );
+
+  const updateDropdownPosition = useCallback(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    const rect = input.getBoundingClientRect();
+    setDropdownPosition({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!showSuggestions || inlineSuggestions) {
+      setPortalRoot(null);
+      return;
+    }
+    setPortalRoot(getOverlayPortalRoot(inputRef.current) ?? document.body);
+    updateDropdownPosition();
+    const onLayoutChange = () => updateDropdownPosition();
+    window.addEventListener('resize', onLayoutChange);
+    window.addEventListener('scroll', onLayoutChange, true);
+    return () => {
+      window.removeEventListener('resize', onLayoutChange);
+      window.removeEventListener('scroll', onLayoutChange, true);
+    };
+  }, [showSuggestions, inlineSuggestions, updateDropdownPosition, filtered.length, loading]);
+
+  useEffect(() => {
+    if (inlineSuggestions || !showSuggestions) {
+      return;
+    }
+    const dialog = inputRef.current?.closest('dialog');
+    if (!(dialog instanceof HTMLDialogElement) || !dialog.open) {
+      return;
+    }
+
+    const dismiss = () => setShowSuggestions(false);
+    dialog.addEventListener('close', dismiss);
+    const observer = new MutationObserver(() => {
+      if (!dialog.open) {
+        dismiss();
+      }
+    });
+    observer.observe(dialog, { attributes: true, attributeFilter: ['open'] });
+
+    return () => {
+      dialog.removeEventListener('close', dismiss);
+      observer.disconnect();
+    };
+  }, [showSuggestions, inlineSuggestions]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -107,6 +174,59 @@ export default function AutocompleteInput({
     }
   };
 
+  const showDropdown =
+    showSuggestions
+    && (loading || filtered.length > 0)
+    && (inlineSuggestions || dropdownPosition !== null);
+
+  const dropdown = showDropdown ? (
+    <div
+      ref={dropdownRef}
+      {...{ [PORTAL_OVERLAY_ATTR]: '' }}
+      className={clsx(
+        'rounded-md border border-border-color-strong bg-background-medium bg-no-noise shadow-lg shadow-black/15 ring-1 ring-black/5 dark:shadow-black/35 dark:ring-white/10',
+        inlineSuggestions ? 'relative mt-1 w-full' : 'fixed z-[100]',
+      )}
+      style={
+        inlineSuggestions || !dropdownPosition
+          ? undefined
+          : {
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+      }
+      }
+    >
+      <ul
+        className="max-h-48 overflow-y-auto p-1"
+      >
+        {loading && filtered.length === 0 && (
+          <li
+            className="px-3 py-2 text-sm text-foreground/60"
+          >
+            Searching…
+          </li>
+        )}
+        {filtered.map((suggestion, index) => (
+          <li
+            key={`${suggestion}-${index}`}
+          >
+            <button
+              type="button"
+              className={`w-full rounded-sm px-3 py-2 text-left text-sm hover:bg-background-light ${
+                index === highlightedIndex ? 'bg-background-light' : ''
+              }`}
+              onClick={() => handleSelect(suggestion)}
+              onMouseEnter={() => setHighlightedIndex(index)}
+            >
+              {renderSuggestion ? renderSuggestion(suggestion, index === highlightedIndex) : suggestion}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : null;
+
   return (
     <div
       className={clsx('relative', containerClassName)}
@@ -127,39 +247,13 @@ export default function AutocompleteInput({
         autoComplete="off"
         disabled={disabled}
         fullWidth={fullWidth}
+        error={error}
         className={className}
       />
 
-      {showSuggestions && filtered.length > 0 && (
-        <div
-          ref={dropdownRef}
-          className={clsx(
-            'mt-1 w-full rounded-md border border-border-color bg-background shadow-lg',
-            inlineSuggestions ? 'relative' : 'absolute z-30',
-          )}
-        >
-          <ul
-            className="max-h-48 overflow-y-auto p-1"
-          >
-            {filtered.map((suggestion, index) => (
-              <li
-                key={suggestion}
-              >
-                <button
-                  type="button"
-                  className={`w-full px-3 py-2 text-left text-sm hover:bg-foreground/5 ${
-                    index === highlightedIndex ? 'bg-foreground/10' : ''
-                  }`}
-                  onClick={() => handleSelect(suggestion)}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
-                  {renderSuggestion ? renderSuggestion(suggestion, index === highlightedIndex) : suggestion}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {inlineSuggestions
+        ? dropdown
+        : dropdown && portalRoot && createPortal(dropdown, portalRoot)}
     </div>
   );
 }

@@ -17,14 +17,17 @@ export const mobileFixedBottomChromeClassName =
 
 /**
  * In-flow spacer below a settled sticky bar. Must be a sibling (not a wrapper)
- * so sticky containing-block height is unchanged (`mb-3.5` minus the bar's `pb-1`).
+ * so the sticky containing block is unchanged.
  */
 export const mobileStickyBarSettleGapClassName =
   'mobile-sticky-bar-settle-gap pointer-events-none max-sm:h-[calc(0.875rem-0.25rem)] sm:hidden';
 
-/** Settle gap at the end of scroll content — suppresses duplicate `#main-content` bottom gap. */
+/**
+ * End-of-page settle gap. Matches the 0.25rem pin above the tab bar so the
+ * bar does not jump up when it leaves sticky positioning.
+ */
 export const mobileStickyBarTerminalSettleGapClassName =
-  `${mobileStickyBarSettleGapClassName} mobile-sticky-bar-settle-gap--terminal`;
+  'mobile-sticky-bar-settle-gap mobile-sticky-bar-settle-gap--terminal pointer-events-none max-sm:h-1 sm:hidden';
 
 /** Bottom sticky chrome flush with the tab bar's screen inset. */
 export const mobileStickyBottomClassName =

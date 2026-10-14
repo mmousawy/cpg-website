@@ -55,6 +55,10 @@ export const routes = {
     label: 'My stats',
     url: '/account/stats',
   },
+  accountGear: {
+    label: 'My gear',
+    url: '/account/gear',
+  },
   accountEvents: {
     label: 'My Events',
     url: '/account/events',

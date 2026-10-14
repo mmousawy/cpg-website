@@ -45,6 +45,10 @@
     {
       "path": "/api/cron/send-pending-notification-emails",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/refresh-gear-catalog",
+      "schedule": "0 4 * * 1"
     }
   ]
 }

@@ -5,32 +5,16 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 import { setAppNavigationBusy } from '@/lib/appNavigation';
+import {
+  NAVIGATION_COMPLETE_EVENT,
+  NAVIGATION_START_EVENT,
+  triggerNavigationProgress,
+  triggerNavigationProgressComplete,
+} from '@/lib/navigationProgressEvents';
+
+export { triggerNavigationProgress, triggerNavigationProgressComplete };
 
 const OVERLAY_FADE_MS = 200;
-
-// Custom event names for triggering navigation progress
-const NAVIGATION_START_EVENT = 'navigation:start';
-const NAVIGATION_COMPLETE_EVENT = 'navigation:complete';
-
-/**
- * Trigger the navigation progress bar manually.
- * Usually not needed - use useProgressRouter() instead.
- */
-export function triggerNavigationProgress() {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(NAVIGATION_START_EVENT));
-  }
-}
-
-/**
- * Complete an in-flight navigation progress bar without a pathname change.
- * Use for things like `router.refresh()` where the URL stays the same.
- */
-export function triggerNavigationProgressComplete() {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(NAVIGATION_COMPLETE_EVENT));
-  }
-}
 
 /**
  * A drop-in replacement for useRouter() that automatically triggers
@@ -218,6 +202,10 @@ export default function NavigationProgress() {
           const hrefAttr = link.getAttribute('href') ?? '';
           if (hrefAttr === '#' || hrefAttr === '') return;
 
+          if (window.__unsavedChangesContext?.hasUnsavedChanges()) {
+            return;
+          }
+
           const url = new URL(link.href);
 
           if (
@@ -305,8 +293,7 @@ export default function NavigationProgress() {
         />
       </div>
       <div
-        className={`pointer-events-none fixed inset-x-0 top-0 z-34 bg-background/40 transition-opacity duration-200 ease-out sm:hidden ${
-          overlayOpaque ? 'opacity-100' : 'opacity-0'
+        className={`pointer-events-none fixed inset-x-0 top-0 z-34 bg-background/40 transition-opacity duration-200 ease-out sm:hidden ${overlayOpaque ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ bottom: 'var(--mobile-nav-offset, 0px)' }}
         aria-hidden

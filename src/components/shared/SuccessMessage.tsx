@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import CheckAddSVG from 'public/icons/check-add.svg';
+import CheckSVG from 'public/icons/check.svg';
 
 interface Props {
   children: React.ReactNode
@@ -18,7 +18,7 @@ export default function SuccessMessage({ children, className = '', variant = 'de
         className,
       )}
     >
-      <CheckAddSVG
+      <CheckSVG
         className={clsx(
           'shrink-0 fill-foreground',
           variant === 'default' && 'size-6',

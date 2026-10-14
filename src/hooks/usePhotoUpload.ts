@@ -227,6 +227,9 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
             throw new Error(`Failed to save photo: ${insertError.message}`);
           }
 
+          const { triggerGearIngest } = await import('@/lib/gear/triggerIngest');
+          triggerGearIngest(photoData.id);
+
           // Trigger server-side processing (watermark, EXIF) if user has it enabled
           if (watermarkEnabled || embedCopyrightExif) {
             fetch('/api/photos/process', {
