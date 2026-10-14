@@ -1,5 +1,8 @@
+import { MAX_FORMATS_OTHER_LENGTH, SHOOTING_FORMATS } from '@/lib/gear/types';
 import { nicknameSchema } from '@/utils/nickname';
 import { z } from 'zod';
+
+const shootingFormatSchema = z.enum(SHOOTING_FORMATS);
 
 export const screenNameSchema = z
   .string()
@@ -24,6 +27,8 @@ export function createOnboardingSchema(requireEmail: boolean) {
     email: emailFieldSchema(requireEmail),
     bio: z.string().optional(),
     interests: z.array(z.string()),
+    shootingFormats: z.array(shootingFormatSchema),
+    formatsOther: z.string().max(MAX_FORMATS_OTHER_LENGTH),
     emailPreferences: z.record(z.string(), z.boolean()),
     termsAccepted: z.boolean().refine((val) => val === true, {
       message: 'You must agree to the Terms of Service to continue',

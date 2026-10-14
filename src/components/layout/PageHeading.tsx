@@ -14,6 +14,8 @@ type PageHeadingProps = {
   aside?: ReactNode;
   /** Primary actions (e.g. Create) — below the sticky title, not inside it */
   actions?: ReactNode;
+  /** Shown in the sticky header row on mobile (e.g. shortcut next to search). */
+  mobileHeaderActions?: ReactNode;
   /** Segmented section links (e.g. Events | Scene) — mobile sticky row only; desktop uses main nav */
   subnav?: ReactNode;
   /** Standalone pages (login, etc.) center the title; listing pages stay start-aligned */
@@ -26,6 +28,7 @@ export default function PageHeading({
   description,
   aside,
   actions,
+  mobileHeaderActions,
   subnav,
   align = 'start',
   className,
@@ -77,14 +80,15 @@ export default function PageHeading({
               >{subnav}</div>
             ) : null}
           </div>
-          {showMobileSearch ? (
+          {(showMobileSearch || mobileHeaderActions) ? (
             <div
               className={clsx(
-                'hidden shrink-0 max-sm:block',
+                'hidden shrink-0 max-sm:flex max-sm:items-center max-sm:gap-2',
                 center && 'max-sm:col-start-3 max-sm:justify-self-end',
               )}
             >
-              <PageHeadingMobileSearch />
+              {mobileHeaderActions}
+              {showMobileSearch ? <PageHeadingMobileSearch /> : null}
             </div>
           ) : null}
         </div>

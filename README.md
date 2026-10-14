@@ -69,6 +69,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - Bio, website, social links (with auto-detected icons)
 - Interests (up to 10 per profile)
 - Activity stats
+- Gear: shooting formats, daily driver, and an inventory at `/account/gear`, shown on the profile and at `/@username/gear`
 - Self-service account deletion (30-day retention with admin revert)
 
 ### Authentication
@@ -104,7 +105,7 @@ Community platform for photographers built with Next.js and Supabase. Features e
 - In-app notifications with real-time toast notifications (Supabase Realtime)
 - Activity feed page with notification management
 - Weekly notification digest emails
-- Automated cron jobs (Vercel Cron): reminders, digest, hourly events revalidation, weekly content cleanup
+- Automated cron jobs (Vercel Cron): reminders, digest, hourly events revalidation, weekly content cleanup, weekly gear catalog refresh
 - Changelog page with version history
 
 ## Tech Stack
@@ -310,6 +311,10 @@ supabase/
 | `scene_events` | Community-curated photography events (exhibitions, photowalks, talks, etc.) |
 | `scene_event_comments` | Links comments to scene events |
 | `scene_event_interests` | Users who marked interest in scene events |
+| `gear_catalog` | Camera and lens names (Lensfun, Wikidata, curated phones, EXIF) |
+| `gear_catalog_aliases` | Alternate names used when searching the catalog |
+| `user_gear_profiles` | Shooting formats and daily-driver camera/lens |
+| `user_gear_items` | A member's gear inventory |
 
 ### Storage Buckets
 
@@ -460,6 +465,11 @@ Leave the **staging** Coolify app on git branch **`staging`** (auto-deploy on). 
   - Random interests with member samples
 - [x] Search (albums, photos, members, events, tags)
 - [x] Featured/trending galleries (Most viewed this week)
+
+### Gear
+
+- [x] Shooting formats and daily driver on the profile
+- [x] Gear inventory with catalog search (`/account/gear`, `/@username/gear`)
 
 ### Sharing
 

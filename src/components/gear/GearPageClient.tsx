@@ -50,13 +50,23 @@ type GearPageClientCoreProps = GearPageClientProps & {
   updateProfile: (next: UserGearProfile) => void;
 };
 
+function gearItemCountLabel(count: number): string {
+  if (count === 0) {
+    return 'No gear listed yet';
+  }
+
+  return `${count} ${count === 1 ? 'Item' : 'Items total'}`;
+}
+
 function CategoryHeading({
   category,
   label,
+  itemCount,
   onAdd,
 }: {
   category: GearCategory;
   label: string;
+  itemCount: number;
   onAdd?: () => void;
 }) {
   const Icon = GEAR_CATEGORY_ICONS[category];
@@ -75,25 +85,32 @@ function CategoryHeading({
             aria-hidden
           />
         </span>
-        {label}
+        <span
+          className="min-w-0"
+        >
+          {label}
+          {' '}
+          &mdash;
+          {' '}
+          {itemCount}
+        </span>
       </h3>
       {onAdd && (
         <Button
           type="button"
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           className="shrink-0"
           onClick={onAdd}
+          aria-label={`Add ${GEAR_CATEGORY_LABELS[category].toLowerCase()}`}
           icon={(
             <PlusSVG
-              className="size-4"
+              className="size-4 -ml-1"
               aria-hidden
             />
           )}
         >
-          <span
-            className='max-xs:hidden'
-          >Add </span>{GEAR_CATEGORY_LABELS[category].toLowerCase()}
+          {GEAR_CATEGORY_LABELS[category]}
         </Button>
       )}
     </div>
@@ -211,41 +228,39 @@ function GearPageClientCore({
   const empty = items.length === 0;
 
   const inventoryPanelListClass = 'rounded-lg bg-white border border-border-color dark:bg-background space-y-0';
+  /** Collapsed list on public gear — same surface as standalone `GearItemRow` cards. */
+  const publicGearPanelListClass =
+    'rounded-lg border border-border-color bg-white dark:bg-white/5 space-y-0';
   const itemListClass = accountLayout ? inventoryPanelListClass : 'space-y-2';
 
   return (
     <div
       className="space-y-6"
     >
-      {mode === 'public' && (
+      {mode === 'public' && !empty && (
         <div
           className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-3"
         >
-          <h2
-            className="text-xl font-semibold font-heading"
+          <p
+            className="text-sm text-foreground/70 tabular-nums"
           >
-            @
-            {profileNickname}&apos;s gear list
-          </h2>
+            {gearItemCountLabel(items.length)}
+          </p>
           <div
             className="flex flex-wrap items-center gap-3"
           >
-            {!empty && (
-              <>
-                <span
-                  className="text-sm text-foreground/70 shrink-0"
-                >
-                  Sort by
-                </span>
-                <Select
-                  value={sortMode}
-                  onValueChange={(v) => setSortMode(v as GearSortMode)}
-                  options={GEAR_SORT_OPTIONS}
-                  fullWidth={false}
-                  className="min-w-40"
-                />
-              </>
-            )}
+            <span
+              className="text-sm text-foreground/70 shrink-0"
+            >
+              Sort by
+            </span>
+            <Select
+              value={sortMode}
+              onValueChange={(v) => setSortMode(v as GearSortMode)}
+              options={GEAR_SORT_OPTIONS}
+              fullWidth={false}
+              className="min-w-40"
+            />
             {isProfileOwner && (
               <Button
                 href="/account/gear"
@@ -285,27 +300,36 @@ function GearPageClientCore({
 
       {!empty && mode === 'account' && (
         <div
-          className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+          className="flex flex-col gap-1"
         >
           <div
-            className="flex items-center gap-3"
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3"
           >
-            <span
-              className="text-sm text-foreground/70 shrink-0"
+            <p
+              className="text-sm text-foreground/70 tabular-nums"
             >
-              Sort by
-            </span>
-            <Select
-              value={sortMode}
-              onValueChange={(v) => setSortMode(v as GearSortMode)}
-              options={GEAR_SORT_OPTIONS}
-              fullWidth={false}
-              className="min-w-[10rem]"
-            />
+              {gearItemCountLabel(items.length)}
+            </p>
+            <div
+              className="flex items-center gap-3"
+            >
+              <span
+                className="text-sm text-foreground/70 shrink-0"
+              >
+                Sort by
+              </span>
+              <Select
+                value={sortMode}
+                onValueChange={(v) => setSortMode(v as GearSortMode)}
+                options={GEAR_SORT_OPTIONS}
+                fullWidth={false}
+                className="min-w-[10rem]"
+              />
+            </div>
           </div>
           {sortMode === 'custom' && isOwner && (
             <p
-              className="text-foreground/60 text-xs sm:text-sm"
+              className="text-foreground/60 text-xs sm:text-sm sm:text-end"
             >
               Drag the handle to set your order. Visitors see this list on your gear page.
             </p>
@@ -364,17 +388,18 @@ function GearPageClientCore({
               <CategoryHeading
                 category={group.category}
                 label={group.label}
+                itemCount={group.items.length}
                 onAdd={editable ? () => openAddModal(undefined, group.category) : undefined}
               />
               <div
-                className={accountLayout ? inventoryPanelListClass : 'space-y-2'}
+                className={accountLayout ? inventoryPanelListClass : publicGearPanelListClass}
               >
                 {group.items.map((item) => (
                   <GearItemRow
                     key={item.id}
                     item={item}
                     isOwner={isOwner}
-                    embedded={accountLayout}
+                    embedded
                     onEdit={() => openAddModal(item)}
                     onRemove={() => handleRemove(item)}
                   />
@@ -385,19 +410,37 @@ function GearPageClientCore({
         </div>
       )}
 
-      {!empty && sortMode === 'custom' && (
+      {!empty && sortMode === 'custom' && accountLayout && (
         <GearSortableList
           items={sorted}
           isOwner={isOwner}
           embedded={accountLayout}
           showCategory
-          listClassName={accountLayout ? itemListClass : 'space-y-2'}
+          listClassName={itemListClass}
           onReorder={(nextItems) => {
             updateProfile({ ...profile, items: nextItems });
           }}
           onEdit={openAddModal}
           onRemove={handleRemove}
         />
+      )}
+
+      {!empty && sortMode === 'custom' && !accountLayout && (
+        <div
+          className={publicGearPanelListClass}
+        >
+          {sorted.map((item) => (
+            <GearItemRow
+              key={item.id}
+              item={item}
+              isOwner={isOwner}
+              embedded
+              showCategory
+              onEdit={() => openAddModal(item)}
+              onRemove={() => handleRemove(item)}
+            />
+          ))}
+        </div>
       )}
 
       {!empty && sortMode !== 'type' && sortMode !== 'custom' && (

@@ -92,13 +92,22 @@ export function confirmDeleteAlbum(album: AlbumWithPhotos): ConfirmOptions {
   };
 }
 
+/** Plain-text copy for `window.confirm` / `beforeunload` (no custom modal). */
+export const unsavedChangesLeaveMessage =
+  'You have unsaved changes. Are you sure you want to leave without saving?';
+
 export function confirmUnsavedChanges(): ConfirmOptions {
   return {
     title: 'Unsaved changes',
-    message: 'You have unsaved changes. Are you sure you want to leave without saving?',
+    message: unsavedChangesLeaveMessage,
     confirmLabel: 'Leave',
     variant: 'danger',
   };
+}
+
+/** Returns true if the user chose to leave; false to stay on the page. */
+export function confirmLeaveWithUnsavedChanges(): boolean {
+  return window.confirm(unsavedChangesLeaveMessage);
 }
 
 export function confirmRemoveFromAlbum(

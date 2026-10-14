@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/database.types';
 import { upsertCatalogEntry } from '@/lib/gear/catalogDb';
 import { CURATED_GEAR } from '@/lib/gear/curatedPhones';
+import { formatCatalogDisplayName } from '@/lib/gear/formatCatalogDisplayName';
 import { parseLensfunXml } from '@/lib/gear/parseLensfunXml';
 import { refreshWikidataCatalog } from '@/lib/gear/wikidataCatalog';
 
@@ -49,13 +50,14 @@ async function refreshLensfun(supabase: AdminClient): Promise<number> {
 async function refreshCurated(supabase: AdminClient): Promise<number> {
   let count = 0;
   for (const entry of CURATED_GEAR) {
+    const displayName = formatCatalogDisplayName(entry.brand, entry.name);
     const id = await upsertCatalogEntry(supabase, {
       source: 'curated',
       sourceKey: entry.sourceKey,
       category: entry.category,
       brand: entry.brand,
-      name: entry.name,
-      aliasStrings: [entry.name, `${entry.brand} ${entry.name}`],
+      name: displayName,
+      aliasStrings: [entry.name, displayName],
     });
     if (id) count += 1;
   }

@@ -13,6 +13,8 @@ type GearItemRowProps = {
   showCategory?: boolean;
   /** Lighter row inside a nested inventory panel (account page). */
   embedded?: boolean;
+  /** When `embedded`, show a bottom divider (off when the parent list draws separators). */
+  embeddedDivider?: boolean;
   onEdit?: () => void;
   onRemove?: () => void;
 };
@@ -22,6 +24,7 @@ export default function GearItemRow({
   isOwner,
   showCategory = false,
   embedded = false,
+  embeddedDivider = true,
   onEdit,
   onRemove,
 }: GearItemRowProps) {
@@ -34,7 +37,7 @@ export default function GearItemRow({
         embedded && 'pr-2',
         multiLine ? 'items-start' : 'items-center',
         embedded
-          ? 'border-b border-border-color last:border-b-0'
+          ? embeddedDivider && 'border-b border-border-color last:border-b-0'
           : 'border-border-color rounded-lg border bg-white dark:bg-white/5',
       )}
     >

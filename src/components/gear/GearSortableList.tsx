@@ -68,7 +68,10 @@ function SortableGearRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={clsx(isDragging && 'relative z-10 bg-background-light/80 bg-no-noise rounded-lg shadow-md/10')}
+      className={clsx(
+        isDragging && 'relative z-10 bg-background-light/80 bg-no-noise rounded-lg shadow-md/10',
+        embedded && 'border-b border-border-color last:border-b-0',
+      )}
     >
       <div
         className={clsx('flex items-start gap-1 py-0.5', isOwner && 'px-3')}
@@ -100,6 +103,7 @@ function SortableGearRow({
             item={item}
             isOwner={isOwner}
             embedded={embedded}
+            embeddedDivider={!embedded}
             showCategory={showCategory}
             onEdit={onEdit}
             onRemove={onRemove}

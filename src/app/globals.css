@@ -761,6 +761,11 @@ html.onboarding-page .app-site-header {
   display: none;
 }
 
+/* Onboarding uses its own fixed progress footer; do not also reserve tab-bar clearance. */
+html.onboarding-page .mobile-main-bottom-spacer {
+  display: none;
+}
+
 html.manage-page .app-header-inner {
   max-width: none;
 }

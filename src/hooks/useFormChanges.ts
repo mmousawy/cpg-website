@@ -1,15 +1,6 @@
 import { useMemo, useEffect, useContext } from 'react';
 import { createContext } from 'react';
 
-// Declare Window interface extension for unsaved changes context
-declare global {
-  interface Window {
-    __unsavedChangesContext?: {
-      setHasUnsavedChanges: (value: boolean) => void;
-    };
-  }
-}
-
 // Import the context type - we'll check if context exists at runtime
 // This is a lightweight way to get the setter without a hard dependency
 const UnsavedChangesContext = createContext<{ setHasUnsavedChanges?: (value: boolean) => void } | null>(null);

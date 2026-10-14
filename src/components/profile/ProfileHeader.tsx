@@ -39,6 +39,10 @@ export const profileHeroBannerHeightClassName =
 export const profileHeroBannerPreviewHeightClassName =
   'h-32 min-h-32 sm:h-40 sm:min-h-40';
 
+/** Shorter hero on /@nickname subpages (gear, albums, photos, …) */
+export const profileHeroBannerSubpageHeightClassName =
+  'aspect-[3.2/1] w-full min-h-[7rem] max-h-[11rem] sm:max-h-[12rem]';
+
 /** Extra top spacing below the profile hero on mobile */
 export const profileHeroMobileGapClassName = 'max-sm:pt-4!';
 
@@ -61,12 +65,15 @@ function ProfileHeaderRow({
   followerCount = 0,
   followingCount = 0,
   variant = 'default',
+  profileTitleAsSpan = false,
 }: {
   profile: ProfileHeaderProfile;
   hideFollowStats?: boolean;
   followerCount?: number;
   followingCount?: number;
   variant?: 'default' | 'preview';
+  /** Use on subpages that define their own document `<h1>`. */
+  profileTitleAsSpan?: boolean;
 }) {
   const isPreview = variant === 'preview';
 
@@ -99,16 +106,29 @@ function ProfileHeaderRow({
       <div
         className="min-w-0 flex-1"
       >
-        <h1
-          className={clsx(
-            'leading-none font-bold line-clamp-2 font-heading',
-            isPreview
-              ? 'text-xl sm:text-2xl'
-              : 'text-[clamp(1.65rem,4.5svw,2rem)]',
-          )}
-        >
-          {getProfileDisplayTitle(profile)}
-        </h1>
+        {profileTitleAsSpan ? (
+          <span
+            className={clsx(
+              'block leading-none font-bold line-clamp-2 font-heading',
+              isPreview
+                ? 'text-xl sm:text-2xl'
+                : 'text-[clamp(1.65rem,4.5svw,2rem)]',
+            )}
+          >
+            {getProfileDisplayTitle(profile)}
+          </span>
+        ) : (
+          <h1
+            className={clsx(
+              'leading-none font-bold line-clamp-2 font-heading',
+              isPreview
+                ? 'text-xl sm:text-2xl'
+                : 'text-[clamp(1.65rem,4.5svw,2rem)]',
+            )}
+          >
+            {getProfileDisplayTitle(profile)}
+          </h1>
+        )}
         {profile.full_name && profile.nickname && (
           <p
             className={clsx(
@@ -148,13 +168,18 @@ export function ProfileHeroBanner({
   followerCount = 0,
   followingCount = 0,
   variant = 'default',
+  profileTitleAsSpan = false,
 }: ProfileHeaderProps & {
   hideFollowStats?: boolean;
   followerCount?: number;
   followingCount?: number;
-  variant?: 'default' | 'preview';
+  /** Same hero as `default`, with a shorter banner (`profileHeroBannerSubpageHeightClassName`). */
+  variant?: 'default' | 'preview' | 'subpage';
+  profileTitleAsSpan?: boolean;
 }) {
   const isPreview = variant === 'preview';
+  const isSubpage = variant === 'subpage';
+
   const hasBannerImage = !!profile.banner_url;
   const isLocalBanner = profile.banner_url?.startsWith('blob:') || profile.banner_url?.startsWith('data:');
   const solidBannerColors = profile.nickname
@@ -165,7 +190,11 @@ export function ProfileHeroBanner({
     <div
       className={clsx(
         'relative w-full shrink-0',
-        isPreview ? profileHeroBannerPreviewHeightClassName : profileHeroBannerHeightClassName,
+        isPreview
+          ? profileHeroBannerPreviewHeightClassName
+          : isSubpage
+            ? profileHeroBannerSubpageHeightClassName
+            : profileHeroBannerHeightClassName,
       )}
     >
       <div
@@ -222,7 +251,8 @@ export function ProfileHeroBanner({
             hideFollowStats={hideFollowStats}
             followerCount={followerCount}
             followingCount={followingCount}
-            variant={variant}
+            variant={isPreview ? 'preview' : 'default'}
+            profileTitleAsSpan={profileTitleAsSpan}
           />
         </div>
       </div>

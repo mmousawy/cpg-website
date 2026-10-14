@@ -27,7 +27,7 @@ function LoadingSpinner() {
   );
 }
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'custom';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'tertiary' | 'custom';
 type ButtonSize = 'sm' | 'md';
 
 type BaseButtonProps = {
@@ -87,6 +87,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     'btn-skeuo btn-skeuo-danger bg-background border-red-500/50 dark:border-red-500/70 text-red-500 hover:border-red-500 hover:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))] focus-visible:border-red-500 focus-visible:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))]',
   ghost:
     'btn-skeuo btn-skeuo-ghost bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background',
+  tertiary:
+    'btn-skeuo btn-skeuo-outline bg-background/50 border-border-color text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)]',
   custom:
     '',
 };
