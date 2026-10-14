@@ -5,6 +5,7 @@ import ReportModal from '@/components/shared/ReportModal';
 import { useAuthPrompt } from '@/hooks/useAuthPrompt';
 import { useSession } from '@/hooks/useSession';
 import Link from 'next/link';
+import CameraLensSVG from 'public/icons/camera-lens.svg';
 import EditMiniSVG from 'public/icons/edit-mini.svg';
 import WarningMicroSVG from 'public/icons/warning-micro.svg';
 import { useContext } from 'react';
@@ -27,18 +28,32 @@ export default function ProfileActionsMenu({ profileId, profileNickname, onActio
 
   if (isOwnProfile) {
     return (
-      <Link
-        href="/account"
-        className={menuItemClass}
-        onClick={() => onActionClick?.()}
-      >
-        <EditMiniSVG
-          className="size-4 shrink-0"
-        />
-        <span>
-          Edit profile
-        </span>
-      </Link>
+      <div>
+        <Link
+          href="/account"
+          className={menuItemClass}
+          onClick={() => onActionClick?.()}
+        >
+          <EditMiniSVG
+            className="size-4 shrink-0"
+          />
+          <span>
+            Edit profile
+          </span>
+        </Link>
+        <Link
+          href="/account/gear"
+          className={menuItemClass}
+          onClick={() => onActionClick?.()}
+        >
+          <CameraLensSVG
+            className="size-4 shrink-0"
+          />
+          <span>
+            Edit your gear
+          </span>
+        </Link>
+      </div>
     );
   }
 

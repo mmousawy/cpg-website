@@ -22,6 +22,7 @@ const geistSans = Geist({
   subsets: ['latin'],
   display: 'swap',
   preload: false,
+  adjustFontFallback: true,
 });
 
 const geistMono = Geist_Mono({
@@ -116,7 +117,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cheriaHeading.variable} h-full overflow-x-clip bg-background font-(family-name:--font-geist-sans) text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cheriaHeading.variable} h-full overflow-x-clip bg-background font-geist text-foreground antialiased`}
       >
         <DocumentBootScripts />
         <JsonLd

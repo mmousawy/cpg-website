@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { buildPostgrestIlikeOr } from '@/lib/search/fuzzyQuery';
 
 /** GET — search members by name/nickname/email, excluding those already RSVP'd to an event */
 export async function GET(request: NextRequest) {
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
   const { data: members, error } = await adminSupabase
     .from('profiles')
     .select('id, full_name, nickname, email, avatar_url')
-    .or(`email.ilike.%${q}%,full_name.ilike.%${q}%,nickname.ilike.%${q}%`)
+    .or(buildPostgrestIlikeOr(['email', 'full_name', 'nickname'], q))
     .is('suspended_at', null)
     .order('full_name', { ascending: true })
     .limit(20);

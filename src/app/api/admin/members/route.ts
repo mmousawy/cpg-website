@@ -3,6 +3,7 @@ import { revalidateAll } from '@/app/actions/revalidate';
 import type { Tables } from '@/database.types';
 import { AccountDeletionEmail } from '@/emails/account-deletion';
 import { checkIsAdmin } from '@/lib/auth/checkIsAdmin';
+import { buildPostgrestIlikeOr } from '@/lib/search/fuzzyQuery';
 import { shouldSkipNotificationsAndEmails } from '@/lib/auth/isTestEmail';
 import { notifyAdminsOfAccountDeletion } from '@/lib/notifications/notifyAdminsOfAccountDeletion';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     // Apply search filter
     if (search) {
-      query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,nickname.ilike.%${search}%`);
+      query = query.or(buildPostgrestIlikeOr(['email', 'full_name', 'nickname'], search));
     }
 
     // Apply status filter

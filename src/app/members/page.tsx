@@ -91,7 +91,7 @@ function UnauthenticatedMembersPage() {
       />
 
       <div
-        className="rounded-xl border border-border-color bg-background-light p-4 sm:p-8 text-center"
+        className="rounded-xl border border-border-color bg-background-light p-4 sm:p-6 text-center"
       >
         <div
           className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10"

@@ -6,6 +6,7 @@ import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import { ProfileBelowHeroSection, ProfileHeroBanner, profileHeroPageClassName } from '@/components/profile/ProfileHeader';
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialLinks';
 import Button from '@/components/shared/Button';
+import ProfileGearSummary from '@/components/profile/ProfileGearSummary';
 import InterestCloud from '@/components/shared/InterestCloud';
 import ProfileStatsBadges from '@/components/shared/ProfileStatsBadgesWrapper';
 import { notFound } from 'next/navigation';
@@ -14,7 +15,9 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/components/shared/JsonLd';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserPublicAlbums } from '@/lib/data/albums';
+import { getUserGearByNickname } from '@/lib/data/gear';
 import { getProfileFollowCounts } from '@/lib/data/follows';
+import { EMPTY_GEAR_PROFILE } from '@/lib/gear/types';
 import type { StreamPhoto } from '@/lib/data/gallery';
 import {
   getAllProfileNicknames,
@@ -113,11 +116,12 @@ async function ProfileContent({ nickname }: { nickname: string }) {
     notFound();
   }
 
-  const [albums, publicPhotos, totalPhotos, followCounts] = await Promise.all([
+  const [albums, publicPhotos, totalPhotos, followCounts, gearProfile] = await Promise.all([
     getUserPublicAlbums(profile.id, nickname),
     getUserPublicPhotos(profile.id, nickname, PROFILE_PHOTOSTREAM_FETCH_LIMIT),
     getUserPublicPhotoCount(profile.id, nickname),
     getProfileFollowCounts(profile.id),
+    getUserGearByNickname(nickname, includeTestContent),
   ]);
 
   // Fetch stats using cached data function
@@ -169,6 +173,11 @@ async function ProfileContent({ nickname }: { nickname: string }) {
               {profile.bio}
             </div>
           )}
+
+          <ProfileGearSummary
+            profileNickname={profile.nickname || nickname}
+            profile={gearProfile ?? { ...EMPTY_GEAR_PROFILE }}
+          />
 
           {profile.interests && profile.interests.length > 0 && (
             <div

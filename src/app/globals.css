@@ -142,6 +142,9 @@
 
 html {
   scroll-padding-top: 1rem;
+  /* UA default is often serif; keep first paint sans until webfonts load. */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
 }
 
 @media (min-width: 640px) {
@@ -152,6 +155,7 @@ html {
 
 body {
   text-rendering: optimizeLegibility;
+  font-family: var(--font-geist-sans, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Overlay lock keeps window.scrollY and the scrollbar. Do not use

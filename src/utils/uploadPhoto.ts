@@ -125,6 +125,9 @@ export async function uploadPhoto(
     throw new Error(`Failed to save photo metadata: ${insertError.message}`);
   }
 
+  const { triggerGearIngest } = await import('@/lib/gear/triggerIngest');
+  triggerGearIngest(photoData.id);
+
   // 11. If albumIds provided, insert into album_photos for each
   // Note: width/height are no longer written - they're read from photos table via view
   if (albumIds.length > 0 && photoData) {
