@@ -1,5 +1,5 @@
 /**
- * One-off / local refresh of gear_catalog from Lensfun, Wikidata, and curated lists.
+ * One-off / local refresh of gear_catalog from Lensfun, Wikidata, Camera-wiki, and curated lists.
  *
  * Usage:
  *   npx tsx scripts/refresh-gear-catalog.ts
@@ -8,7 +8,7 @@
  *   - NEXT_PUBLIC_SUPABASE_URL
  *   - SUPABASE_SERVICE_ROLE_KEY
  *
- * Apply supabase/migrations/20260314120000_gear_catalog.sql first if tables are missing.
+ * Apply gear_catalog migrations first if tables or the camerawiki source enum are missing.
  */
 
 import { config } from 'dotenv';
@@ -34,7 +34,7 @@ const supabase = createClient<Database>(supabaseUrl, serviceKey, {
 async function main() {
   console.log('Refreshing gear catalog (Lensfun + Wikidata + curated)…');
   const started = Date.now();
-  const counts = await refreshGearCatalog(supabase);
+  const counts = await refreshGearCatalog(supabase, { includeCameraWiki: true });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   console.log('Done in', seconds, 's:', counts);
 }

@@ -82,7 +82,7 @@ export default function BottomSheet({
       // First trigger close animation (use microtask to satisfy linter)
       closeAnimTimer = setTimeout(() => setIsAnimatedOpen(false), 0);
       // Then unmount after animation completes
-      unmountTimer = setTimeout(() => setShouldRender(false), motionDuration(300));
+      unmountTimer = setTimeout(() => setShouldRender(false), motionDuration(200));
     }
 
     return () => {
@@ -203,7 +203,7 @@ export default function BottomSheet({
       <div
         className={clsx(
           'absolute inset-0 bg-black/40',
-          !isDragging && 'transition-opacity duration-300',
+          !isDragging && 'transition-opacity duration-200 ease-out',
         )}
         style={{ opacity: getBackdropOpacity() }}
         onPointerUp={handleBackdropDismiss}
@@ -225,7 +225,7 @@ export default function BottomSheet({
           className={clsx(
             'absolute bottom-0 left-0 right-0 flex flex-col',
             'bg-background-light rounded-t-2xl border-t border-border-color-strong shadow-xl',
-            !isDragging && 'transition-transform duration-300 ease-out',
+            !isDragging && 'transition-transform duration-200 ease-out',
           )}
           style={{
             maxHeight: `${maxHeight}vh`,
