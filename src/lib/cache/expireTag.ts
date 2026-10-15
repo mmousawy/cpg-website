@@ -21,6 +21,19 @@ export function expireTags(tags: string[]): void {
   }
 }
 
+/**
+ * Member discovery by shooting format and daily driver (`getGroupedMemberGearDiscovery`).
+ * Pair with `user-gear` on gear profile saves; also called from member listing revalidation.
+ */
+export function expireMemberGearDiscoveryCaches(): void {
+  expireTag('user-gear');
+  revalidatePath('/members');
+  revalidatePath('/members/all');
+  revalidatePath('/members/format/[format]', 'page');
+  revalidatePath('/members/camera/[name]', 'page');
+  revalidatePath('/members/lens/[name]', 'page');
+}
+
 /** Expire caches that include the homepage / members listings. */
 export function expireMemberListCaches(nickname?: string | null): void {
   expireTag('profiles');
@@ -28,6 +41,7 @@ export function expireMemberListCaches(nickname?: string | null): void {
   expireTag('home');
   revalidatePath('/');
   expireTag('interests');
+  expireMemberGearDiscoveryCaches();
   if (nickname) {
     expireTag(`profile-${nickname}`);
     revalidatePath(`/@${nickname}`);

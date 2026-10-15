@@ -30,14 +30,14 @@ export async function GET(request: NextRequest) {
   try {
     expireTags([
       'events', 'event-attendees', 'albums', 'gallery', 'profiles',
-      'interests', 'challenges', 'challenge-photos', 'search', 'scene', 'home', 'changelog',
+      'interests', 'user-gear', 'challenges', 'challenge-photos', 'search', 'scene', 'home', 'changelog',
     ]);
 
     return NextResponse.json({
       success: true,
       revalidated: [
         'events', 'event-attendees', 'albums', 'gallery', 'profiles',
-        'interests', 'challenges', 'challenge-photos', 'search', 'scene', 'home', 'changelog',
+        'interests', 'user-gear', 'challenges', 'challenge-photos', 'search', 'scene', 'home', 'changelog',
       ],
       timestamp: new Date().toISOString(),
     });
