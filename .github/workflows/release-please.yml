@@ -44,6 +44,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
         run: node scripts/prepare-release-branch.mjs
 
+      - name: Refuse a version bump that drifts from the lockfile
+        if: steps.prepare.outputs.has_release == 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
       - name: Commit version bump on promote branch
         if: steps.prepare.outputs.has_release == 'true'
         run: |
