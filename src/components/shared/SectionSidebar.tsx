@@ -54,9 +54,8 @@ export default function SectionSidebar({ sections, ariaLabel = 'Page sections' }
                       href={`#${section.id}`}
                       data-smooth-scroll="self-managed"
                       onClick={(event) => handleSectionClick(event, section.id)}
-                      className={`block rounded-md px-2 py-1.5 font-medium ${
-                        isActive
-                          ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]'
+                      className={`block rounded-md px-2 py-1.5 font-medium ${isActive
+                          ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_var(--selection-ring)]'
                           : 'text-foreground/80 hover:bg-background-medium hover:text-foreground'
                       }`}
                     >
