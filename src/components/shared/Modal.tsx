@@ -142,7 +142,7 @@ export default function Modal() {
           {/* Scrollable content */}
           <div
             className={clsx(
-              'flex-1 min-h-0 overflow-y-auto bg-background-light p-4 sm:p-6',
+              'flex-1 min-h-0 overflow-y-auto bg-background-light p-4 sm:p-6 rounded-b-2xl',
               flushContentTop && 'pt-0',
             )}
           >

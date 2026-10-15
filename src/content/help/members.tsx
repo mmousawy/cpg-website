@@ -24,6 +24,13 @@ export const membersFAQ: FAQSection = {
             </li>
             <li>
               <strong>
+                Shooting format &amp; gear
+              </strong>
+              {' '}
+              — See who shoots digital, film, phone, and more, and browse members by their daily driver camera or lens.
+            </li>
+            <li>
+              <strong>
                 Photo style
               </strong>
               {' '}
@@ -62,6 +69,15 @@ export const membersFAQ: FAQSection = {
       content: (
         <p>
           Interests are tags like &quot;street photography&quot; or &quot;landscape&quot; that members add to their profile during onboarding or from account settings. They help you find like-minded photographers. The Members page shows popular interests and groups members by shared interests so you can discover like-minded photographers.
+        </p>
+      ),
+    },
+    {
+      id: 'gear-discovery',
+      title: 'Exploring by gear',
+      content: (
+        <p>
+          Members can share shooting formats and daily driver gear on their profile. On the Members page, use &quot;Shoots on&quot; to find people who shoot the same way you do, and &quot;Daily drivers&quot; to see who uses the same camera bodies or lenses. Click a format or gear name on someone&apos;s profile to open the full member list for that choice.
         </p>
       ),
     },

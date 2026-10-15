@@ -1,12 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { expireTag, revalidatePath, refresh } = vi.hoisted(() => ({
-  expireTag: vi.fn(),
-  revalidatePath: vi.fn(),
-  refresh: vi.fn(),
-}));
+const { expireTag, expireMemberGearDiscoveryCaches, revalidatePath, refresh } = vi.hoisted(() => {
+  const revalidatePathFn = vi.fn();
+  const expireTagFn = vi.fn();
+  const expireMemberGearDiscoveryCachesFn = vi.fn(() => {
+    expireTagFn('user-gear');
+    revalidatePathFn('/members');
+    revalidatePathFn('/members/all');
+    revalidatePathFn('/members/format/[format]', 'page');
+    revalidatePathFn('/members/camera/[name]', 'page');
+    revalidatePathFn('/members/lens/[name]', 'page');
+  });
+  return {
+    expireTag: expireTagFn,
+    expireMemberGearDiscoveryCaches: expireMemberGearDiscoveryCachesFn,
+    revalidatePath: revalidatePathFn,
+    refresh: vi.fn(),
+  };
+});
 
-vi.mock('@/lib/cache/expireTag', () => ({ expireTag }));
+vi.mock('@/lib/cache/expireTag', () => ({
+  expireTag,
+  expireMemberGearDiscoveryCaches,
+}));
 vi.mock('next/cache', () => ({ revalidatePath, refresh }));
 
 import * as R from '@/app/actions/revalidate';

@@ -38,7 +38,7 @@ function CategoryPill(props: {
         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary
         ${isActive
           ? 'border'
-          : 'border border-transparent bg-neutral-300/70 dark:bg-[#252628] text-foreground hover:bg-neutral-300 dark:hover:bg-[#2e3032]'}
+          : 'border border-transparent bg-background-chip text-foreground hover:bg-neutral-300 dark:hover:bg-background-raised'}
       `}
     >
       {icon && (

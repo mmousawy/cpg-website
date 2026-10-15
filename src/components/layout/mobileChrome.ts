@@ -45,7 +45,7 @@ export const mobileScrimZClassName = 'max-sm:z-[25]';
 
 /** Sliding active-tab pill — fill + inset highlight. */
 export const mobileTabActivePillClassName =
-  'bg-foreground/[0.14] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.55),inset_0_0_0_1px_rgba(0,0,0,0.07)] dark:bg-foreground/[0.12] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),inset_0_0_0_1px_#ededed1c]';
+  'bg-foreground/[0.14] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.55),inset_0_0_0_1px_rgba(0,0,0,0.07)] dark:bg-foreground/[0.12] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),inset_0_0_0_1px_var(--selection-ring)]';
 
 /** Active tab label (background lives on the sliding pill). */
 export const mobileTabActiveClassName =

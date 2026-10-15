@@ -187,7 +187,7 @@ function ComposerCard({
 
   return (
     <div
-      className="dark:bg-[#303033] bg-white rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
+      className="bg-background-float rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
     >
       {profile?.nickname ? (
         <Link
@@ -441,7 +441,7 @@ const CommentItem = memo(function CommentItem({
       id={`comment-${comment.id}`}
     >
       <div
-        className="dark:bg-[#303033] bg-[#fff] rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
+        className="bg-background-float rounded-md max-w-160 shadow-[1px_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[1px_1px_1px_rgba(0,0,0,0.2)] border border-border-color sm:p-4 p-3 relative overflow-visible"
       >
         <div
           className="flex items-start justify-between gap-2 mb-2"
@@ -479,7 +479,7 @@ const CommentItem = memo(function CommentItem({
               <button
                 type="button"
                 onClick={handleReplyClickLocal}
-                className="flex text-xs items-center justify-center rounded-full border border-border-color-strong bg-background-medium dark:bg-[#2e3032] h-6 gap-1 px-2 text-foreground/60 hover:border-primary hover:bg-primary/5 hover:text-foreground transition-colors"
+                className="flex text-xs items-center justify-center rounded-full border border-border-color-strong bg-background-raised h-6 gap-1 px-2 text-foreground/60 hover:border-primary hover:bg-primary/5 hover:text-foreground transition-colors"
                 aria-label="Reply"
                 title="Reply"
               >
@@ -1214,7 +1214,7 @@ export default function Comments({
   // Stable reference for showAuthPrompt to pass to CommentItem
   const stableShowAuthPrompt = useCallback((opts: { feature: string }) => {
     showAuthPrompt(opts);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- showAuthPrompt is stable from the hook
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- showAuthPrompt is stable from the hook
   }, []);
 
   const currentUserProfile: UserProfileSummary | null = profile

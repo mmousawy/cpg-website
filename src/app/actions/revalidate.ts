@@ -1,6 +1,6 @@
 'use server';
 
-import { expireTag } from '@/lib/cache/expireTag';
+import { expireMemberGearDiscoveryCaches, expireTag } from '@/lib/cache/expireTag';
 import { refresh, revalidatePath } from 'next/cache';
 
 /**
@@ -35,11 +35,10 @@ function invalidateAlbumListingRoutes() {
   revalidatePath('/gallery/recent-likes');
 }
 
-/** Bust prerendered member listing pages, including per-interest counts. */
+/** Bust prerendered member listing pages, including per-interest and gear discovery. */
 function invalidateMemberListingRoutes() {
   expireTag('interests');
-  revalidatePath('/members');
-  revalidatePath('/members/all');
+  expireMemberGearDiscoveryCaches();
   revalidatePath('/members/interest/[interest]', 'page');
 }
 
@@ -441,6 +440,7 @@ export async function revalidateAll() {
   expireTag('gallery');
   expireTag('profiles');
   expireTag('interests');
+  expireMemberGearDiscoveryCaches();
   expireTag('challenges');
   expireTag('challenge-photos');
   expireTag('search');
