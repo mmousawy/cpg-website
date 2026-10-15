@@ -84,7 +84,7 @@ export default function MemberConfirmDialog({
       >
         <div
           className={clsx(
-            'w-full max-w-md relative m-auto rounded-2xl border border-border-color bg-background-light p-6 shadow-xl shadow-black/25 transition-[scale] duration-200 ease-out',
+            'w-full max-w-md relative m-auto rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-6 shadow-xl shadow-black/25 transition-[scale] duration-200 ease-out',
             isVisible ? 'scale-100' : 'scale-95',
           )}
         >

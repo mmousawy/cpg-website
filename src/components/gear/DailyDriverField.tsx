@@ -48,7 +48,7 @@ export default function DailyDriverField({
       className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4"
     >
       <label
-        className="flex shrink-0 items-center gap-2 text-sm font-medium md:w-40 lg:w-44"
+        className="flex shrink-0 items-center gap-2 text-sm font-medium md:w-34"
         htmlFor={id}
       >
         <GearCategoryIconBadge
