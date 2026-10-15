@@ -182,7 +182,7 @@ const Select = forwardRef<HTMLButtonElement, SelectProps>(
                     'relative flex w-full cursor-pointer select-none items-center gap-2 rounded-xs px-2 py-1.5 text-left text-sm outline-none transition-colors',
                     'hover:bg-background-light',
                     isSelected && 'bg-primary/10 text-primary dark:bg-foreground/5',
-                    isSelected && 'shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]',
+                    isSelected && 'shadow-[inset_0_0_0_1px_var(--selection-ring)]',
                   )}
                   onClick={() => handleSelect(option.value)}
                 >

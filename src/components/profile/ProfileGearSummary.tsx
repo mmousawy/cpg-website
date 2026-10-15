@@ -1,9 +1,15 @@
+import {
+  membersDailyDriverCameraPath,
+  membersDailyDriverLensPath,
+  membersShootingFormatPath,
+} from '@/lib/gear/memberGearPaths';
 import { SHOOTING_FORMAT_MICRO_ICONS } from '@/lib/gear/shootingFormatIcons';
 import {
   hasDailyDriver,
   shootingFormatDisplayLabel,
   type UserGearProfile,
 } from '@/lib/gear/types';
+import Link from 'next/link';
 
 import ArrowLink from '../shared/ArrowLink';
 
@@ -60,7 +66,12 @@ export default function ProfileGearSummary({
                     className="size-4 shrink-0 text-foreground/80"
                     aria-hidden
                   />
-                  {shootingFormatDisplayLabel(format, profile.formatsOther)}
+                  <Link
+                    href={membersShootingFormatPath(format)}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {shootingFormatDisplayLabel(format, profile.formatsOther)}
+                  </Link>
                 </li>
               );
             })}
@@ -81,9 +92,12 @@ export default function ProfileGearSummary({
             className="min-w-0"
           >
             {dailyDriverBody.length > 0 && (
-              <span>
+              <Link
+                href={membersDailyDriverCameraPath(dailyDriverBody)}
+                className="hover:text-primary transition-colors"
+              >
                 {dailyDriverBody}
-              </span>
+              </Link>
             )}
             {dailyDriverBody.length > 0 && dailyDriverLens.length > 0 && (
               <span
@@ -96,9 +110,12 @@ export default function ProfileGearSummary({
               </span>
             )}
             {dailyDriverLens.length > 0 && (
-              <span>
+              <Link
+                href={membersDailyDriverLensPath(dailyDriverLens)}
+                className="hover:text-primary transition-colors"
+              >
                 {dailyDriverLens}
-              </span>
+              </Link>
             )}
           </p>
         </div>

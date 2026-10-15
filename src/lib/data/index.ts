@@ -14,6 +14,7 @@
  * - 'tag-[tagname]' - Photos with a specific tag
  * - 'interests' - All interests data
  * - 'interest-[name]' - Members with a specific interest
+ * - 'user-gear' - Gear profiles and member discovery by format / daily driver
  * - 'challenges' - All challenge data
  * - 'challenge-photos' - Accepted photos in challenges
  * - 'search' - Search results cache

@@ -9,6 +9,16 @@
   --background: #ecedf0;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
+  /* Raised control fill (buttons, chips). Light matches --background. */
+  --background-raised: #ecedf0;
+  /* Comment cards. Light is white; dark sits just above --background-raised. */
+  --background-float: #ffffff;
+  /* Inactive scene-category pills. */
+  --background-chip: #d9dadd;
+  /* Person-icon avatar when there is no photo. */
+  --avatar-fallback: #b9c1ca;
+  /* Selected-row inset ring. Light is primary; dark themes use foreground. */
+  --selection-ring: #38786052;
   --background-special: #bba5fa;
   --foreground: #171717;
   --text-muted: #6e7277;
@@ -44,6 +54,11 @@
     --background: #171718;
     --background-medium: hsl(240, 3%, 12%);
     --background-light: #252527;
+    --background-raised: #2e3032;
+    --background-float: #303033;
+    --background-chip: #252628;
+    --avatar-fallback: #6e7277;
+    --selection-ring: #ededed1c;
     --background-special: #412988;
     --foreground: #ededed;
     --text-muted: #a3a3a3;
@@ -72,6 +87,11 @@
   --background: #ecedf0;
   --background-medium: #f5f6f8;
   --background-light: #ffffff;
+  --background-raised: #ecedf0;
+  --background-float: #ffffff;
+  --background-chip: #d9dadd;
+  --avatar-fallback: #b9c1ca;
+  --selection-ring: #38786052;
   --foreground: #171717;
   --text-muted: #6e7277;
   --text-muted-light: #8f98a3;
@@ -98,6 +118,11 @@
   --background: #131314;
   --background-medium: hsl(240, 3%, 12%);
   --background-light: #252527;
+  --background-raised: #2e3032;
+  --background-float: #303033;
+  --background-chip: #252628;
+  --avatar-fallback: #6e7277;
+  --selection-ring: #ededed1c;
   --foreground: #ededed;
   --text-muted: #a3a3a3;
   --text-muted-light: #737373;
@@ -117,11 +142,21 @@
 }
 
 :root.midnight {
+  /* @wrksz/themes only writes color-scheme for the names "light" and "dark".
+     Without this, dialog CanvasText and form FieldText stay black on midnight.
+     !important beats a stale inline color-scheme left behind when leaving light. */
+  color-scheme: dark !important;
   --primary: hsl(157, 36%, 42%);
   --primary-light: rgb(95, 160, 135);
   --primary-alt: #58c287;
   --background: #0d0d0e;
+  --background-medium: #121014;
   --background-light: #1b1c1f;
+  --background-raised: #24272a;
+  --background-float: #26292b;
+  --background-chip: #1b1d20;
+  --avatar-fallback: #5a6168;
+  --selection-ring: #dce4e91c;
   --foreground: #dce4e9;
   --text-muted: #888888;
   --text-muted-light: #737373;
@@ -156,6 +191,16 @@ html {
 body {
   text-rendering: optimizeLegibility;
   font-family: var(--font-geist-sans, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* UA styles set color: CanvasText on dialog and color: FieldText on form
+   controls. Those follow color-scheme, not --foreground, so titles, labels,
+   and field text inside every dialog ignore the theme unless overridden. */
+dialog,
+input,
+textarea,
+select {
+  color: var(--foreground);
 }
 
 /* Overlay lock keeps window.scrollY and the scrollbar. Do not use

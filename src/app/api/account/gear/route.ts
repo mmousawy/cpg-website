@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { expireTags } from '@/lib/cache/expireTag';
+import { expireMemberGearDiscoveryCaches, expireTags } from '@/lib/cache/expireTag';
 import { fetchUserGearProfileForUser } from '@/lib/data/gear';
 import { normalizeGearProfileServer } from '@/lib/gear/normalizeGearProfileServer';
 import { persistUserGearProfileServer } from '@/lib/gear/persistUserGearProfileServer';
@@ -60,7 +60,8 @@ export async function PUT(request: NextRequest) {
 
   if (nicknameRow?.nickname) {
     const nick = nicknameRow.nickname;
-    expireTags([`profile-${nick}`, 'user-gear']);
+    expireTags([`profile-${nick}`]);
+    expireMemberGearDiscoveryCaches();
     revalidatePath(`/@${nick}/gear`);
     revalidatePath(`/@${nick}`);
   }

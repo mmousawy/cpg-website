@@ -116,7 +116,7 @@ export default function PhotoExifDetails({
         <button
           type="button"
           onClick={openDetails}
-          className="inline-flex h-5 shrink-0 items-center justify-center rounded-full border border-border-color-strong bg-background-medium px-2 text-xs text-foreground/60 transition-colors hover:border-primary hover:bg-primary/5 hover:text-foreground dark:bg-[#2e3032]"
+          className="inline-flex h-5 shrink-0 items-center justify-center rounded-full border border-border-color-strong bg-background-raised px-2 text-xs text-foreground/60 transition-colors hover:border-primary hover:bg-primary/5 hover:text-foreground"
           aria-label="Photo details"
         >
           See more

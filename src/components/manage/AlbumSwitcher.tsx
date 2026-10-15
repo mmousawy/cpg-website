@@ -266,7 +266,7 @@ export default function AlbumSwitcher({ title, slug, compact = false }: AlbumSwi
                         className={clsx(
                           'flex w-full items-center gap-2.5 pl-1.5 pr-2.5 py-1.5 text-sm transition-colors rounded-sm',
                           isCurrent
-                            ? 'bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_#38786052] dark:shadow-[inset_0_0_0_1px_#ededed1c]'
+                            ? 'bg-primary/10 dark:bg-foreground/5 text-primary shadow-[inset_0_0_0_1px_var(--selection-ring)]'
                             : 'hover:bg-background',
                         )}
                       >

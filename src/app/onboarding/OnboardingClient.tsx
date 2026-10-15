@@ -39,7 +39,7 @@ import {
   type OnboardingFormData,
 } from '@/app/onboarding/onboardingSchema';
 import { saveUserGearProfile } from '@/lib/gear/saveUserGearProfile';
-import { EMPTY_GEAR_PROFILE } from '@/lib/gear/types';
+import { EMPTY_GEAR_PROFILE, hasDailyDriver } from '@/lib/gear/types';
 import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
 import { isProfileComplete } from '@/utils/profileCompletion';
 import { uploadUserStorageFile } from '@/utils/supabaseStorage';
@@ -167,6 +167,10 @@ export default function OnboardingClient() {
       interests: [],
       shootingFormats: [],
       formatsOther: '',
+      dailyDriverBody: '',
+      dailyDriverBodyCatalogId: null,
+      dailyDriverLens: '',
+      dailyDriverLensCatalogId: null,
       emailPreferences: {},
       termsAccepted: false,
     },
@@ -675,15 +679,23 @@ export default function OnboardingClient() {
         }
       }
       const shootingFormats = data.shootingFormats ?? [];
-      if (shootingFormats.length > 0 && data.nickname) {
+      const gearDraft = {
+        ...EMPTY_GEAR_PROFILE,
+        formats: shootingFormats,
+        formatsOther: data.formatsOther?.trim() ?? '',
+        dailyDriverBody: data.dailyDriverBody?.trim() ?? '',
+        dailyDriverBodyCatalogId: data.dailyDriverBodyCatalogId ?? null,
+        dailyDriverLens: data.dailyDriverLens?.trim() ?? '',
+        dailyDriverLensCatalogId: data.dailyDriverLensCatalogId ?? null,
+      };
+      if (
+        data.nickname
+        && (shootingFormats.length > 0 || hasDailyDriver(gearDraft))
+      ) {
         try {
-          await saveUserGearProfile(data.nickname, {
-            ...EMPTY_GEAR_PROFILE,
-            formats: shootingFormats,
-            formatsOther: data.formatsOther?.trim() ?? '',
-          });
+          await saveUserGearProfile(data.nickname, gearDraft);
         } catch (gearErr) {
-          console.error('Error saving shooting formats during onboarding:', gearErr);
+          console.error('Error saving gear profile during onboarding:', gearErr);
         }
       }
       // Notify admins of the new member before navigating

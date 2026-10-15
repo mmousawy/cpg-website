@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.42.3](https://github.com/mmousawy/cpg-website/compare/v1.42.2...v1.42.3) (2026-10-15)
+
+
+### 🐛 Bug Fixes
+
+* enhance member discovery features and caching ([cb01b33](https://github.com/mmousawy/cpg-website/commit/cb01b338cf4382d19f69e7a793887091eed8bc27))
+* enhance onboarding process with daily driver fields and styling updates ([426f16b](https://github.com/mmousawy/cpg-website/commit/426f16bdd3343143a17109114e285f715821475a))
+* update member discovery skeleton and data fetching parameters ([d8f8fdc](https://github.com/mmousawy/cpg-website/commit/d8f8fdc78d41c35ad36593e960158709031f1b7c))
+
 ## [1.42.2](https://github.com/mmousawy/cpg-website/compare/v1.42.1...v1.42.2) (2026-10-15)
 
 
