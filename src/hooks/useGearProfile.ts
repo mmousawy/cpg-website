@@ -3,9 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
-import { isGearProfileEmpty } from '@/lib/gear/types';
 import { fetchUserGearProfile } from '@/lib/gear/fetchUserGearProfile';
-import { getGearProfile } from '@/lib/gear/storage';
 import { saveUserGearProfile } from '@/lib/gear/saveUserGearProfile';
 import { EMPTY_GEAR_PROFILE, type UserGearProfile } from '@/lib/gear/types';
 
@@ -49,17 +47,9 @@ export function useGearProfile(nickname: string, options?: UseGearProfileOptions
 
     void (async () => {
       try {
-        const fromApi = await fetchUserGearProfile(nickname, {
+        const next = await fetchUserGearProfile(nickname, {
           useAccountApi: isOwner,
         });
-
-        let next = fromApi;
-        if (isOwner) {
-          const fromLocal = getGearProfile(nickname);
-          if (isGearProfileEmpty(fromApi) && !isGearProfileEmpty(fromLocal)) {
-            next = fromLocal;
-          }
-        }
 
         if (!cancelled) {
           setProfile(next);

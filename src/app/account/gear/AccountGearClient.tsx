@@ -89,7 +89,6 @@ export default function AccountGearClient({
     hydrated,
     persist: persistForForm,
     serverSaved: serverPrefetched ? serverSaved : undefined,
-    nicknameForLocalDraft: nickname ?? undefined,
   });
 
   useEffect(() => {

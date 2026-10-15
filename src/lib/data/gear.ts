@@ -31,18 +31,10 @@ export async function fetchUserGearProfileForUser(
   return gearProfileFromRows(profileRow, itemRows);
 }
 
-/**
- * Public gear profile by member nickname (RLS: active profiles only).
- */
-export async function getUserGearByNickname(
+async function loadUserGearByNickname(
   nickname: string,
-  includeTestContent = false,
+  includeTestContent: boolean,
 ): Promise<UserGearProfile | null> {
-  'use cache';
-  cacheLife('tagged');
-  cacheTag(`profile-${nickname}`);
-  cacheTag('user-gear');
-
   if (!isPublicProfileAllowed(nickname, includeTestContent)) {
     return null;
   }
@@ -62,6 +54,32 @@ export async function getUserGearByNickname(
   }
 
   return fetchUserGearProfileForUser(supabase, profile.id);
+}
+
+async function getUserGearByNicknameCached(
+  nickname: string,
+  includeTestContent: boolean,
+): Promise<UserGearProfile | null> {
+  'use cache';
+  cacheLife('tagged');
+  cacheTag(`profile-${nickname}`);
+  cacheTag('user-gear');
+  return loadUserGearByNickname(nickname, includeTestContent);
+}
+
+/**
+ * Public gear profile by member nickname (RLS: active profiles only).
+ * In development, always reads Supabase (no cache) so local dev stays in sync
+ * when data changes on production or another session.
+ */
+export async function getUserGearByNickname(
+  nickname: string,
+  includeTestContent = false,
+): Promise<UserGearProfile | null> {
+  if (process.env.NODE_ENV === 'development') {
+    return loadUserGearByNickname(nickname, includeTestContent);
+  }
+  return getUserGearByNicknameCached(nickname, includeTestContent);
 }
 
 export { isGearProfileEmpty } from '@/lib/gear/types';

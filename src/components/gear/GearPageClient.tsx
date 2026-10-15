@@ -6,6 +6,7 @@ import { useFormContext } from 'react-hook-form';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import GearAddEditForm from '@/components/gear/GearAddEditForm';
+import GearCategoryIconBadge from '@/components/gear/GearCategoryIconBadge';
 import GearItemRow from '@/components/gear/GearItemRow';
 import GearSortableList from '@/components/gear/GearSortableList';
 import { groupGearByCategory, sortGearItems, type GearSortMode } from '@/components/gear/sortGearItems';
@@ -13,7 +14,6 @@ import Button from '@/components/shared/Button';
 import Select from '@/components/shared/Select';
 import { useAuth } from '@/context/AuthContext';
 import { useGearProfile } from '@/hooks/useGearProfile';
-import { GEAR_CATEGORY_ICONS } from '@/lib/gear/gearCategoryIcons';
 import { SAMPLE_GEAR_ITEMS, useShowGearSampleKit } from '@/lib/gear/sampleKit';
 import { upsertGearInventoryItem } from '@/lib/gear/canonicalGearItem';
 import { GEAR_CATEGORY_LABELS, type GearCategory, type UserGearItem, type UserGearProfile } from '@/lib/gear/types';
@@ -70,7 +70,6 @@ function CategoryHeading({
   itemCount: number;
   onAdd?: () => void;
 }) {
-  const Icon = GEAR_CATEGORY_ICONS[category];
   return (
     <div
       className="mb-3 flex items-center justify-between gap-3"
@@ -78,14 +77,9 @@ function CategoryHeading({
       <h3
         className="flex min-w-0 items-center gap-2 text-lg font-semibold font-heading text-foreground"
       >
-        <span
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/8 text-foreground"
-        >
-          <Icon
-            className="size-4"
-            aria-hidden
-          />
-        </span>
+        <GearCategoryIconBadge
+          category={category}
+        />
         <span
           className="min-w-0"
         >
@@ -491,6 +485,7 @@ function GearPageClientFromForm(props: GearPageClientProps) {
 function GearPageClientFromStorage({
   profileNickname,
   initialProfile,
+  mode = 'public',
   ...rest
 }: GearPageClientProps) {
   const { profile, hydrated, persist } = useGearProfile(profileNickname, {
@@ -499,9 +494,13 @@ function GearPageClientFromStorage({
   });
   const updateProfile = useCallback(
     (next: UserGearProfile) => {
+      // Public /@nickname/gear is read-only; only /account/gear saves (via the form).
+      if (mode === 'public') {
+        return;
+      }
       void persist(next);
     },
-    [persist],
+    [mode, persist],
   );
 
   const resolvedProfile = initialProfile ?? profile;
@@ -513,6 +512,7 @@ function GearPageClientFromStorage({
   return (
     <GearPageClientCore
       {...rest}
+      mode={mode}
       profileNickname={profileNickname}
       profile={resolvedProfile}
       hydrated={initialProfile !== undefined ? true : hydrated}

@@ -6,8 +6,7 @@ import { useForm } from 'react-hook-form';
 
 import { cloneGearProfile, gearProfilesEqual } from '@/lib/gear/gearProfileEqual';
 import { userGearProfileSchema } from '@/lib/gear/gearProfileSchema';
-import { getGearProfile } from '@/lib/gear/storage';
-import { EMPTY_GEAR_PROFILE, isGearProfileEmpty, type UserGearProfile } from '@/lib/gear/types';
+import { EMPTY_GEAR_PROFILE, type UserGearProfile } from '@/lib/gear/types';
 
 type UseGearAccountFormOptions = {
   saved: UserGearProfile | null;
@@ -15,7 +14,6 @@ type UseGearAccountFormOptions = {
   persist: (profile: UserGearProfile) => Promise<void>;
   /** Gear loaded on the server for first paint. */
   serverSaved?: UserGearProfile | null;
-  nicknameForLocalDraft?: string;
 };
 
 export function useGearAccountForm({
@@ -23,7 +21,6 @@ export function useGearAccountForm({
   hydrated,
   persist,
   serverSaved,
-  nicknameForLocalDraft,
 }: UseGearAccountFormOptions) {
   const savedBaselineRef = useRef<UserGearProfile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,13 +41,7 @@ export function useGearAccountForm({
 
   useEffect(() => {
     if (seededFromServer) {
-      let baseline = cloneGearProfile(serverSaved);
-      if (nicknameForLocalDraft) {
-        const fromLocal = getGearProfile(nicknameForLocalDraft);
-        if (isGearProfileEmpty(serverSaved) && !isGearProfileEmpty(fromLocal)) {
-          baseline = cloneGearProfile(fromLocal);
-        }
-      }
+      const baseline = cloneGearProfile(serverSaved);
       savedBaselineRef.current = baseline;
       reset(baseline);
       setBaselineLoaded(true);
@@ -65,7 +56,7 @@ export function useGearAccountForm({
     savedBaselineRef.current = baseline;
     reset(baseline);
     setBaselineLoaded(true);
-  }, [seededFromServer, serverSaved, nicknameForLocalDraft, hydrated, saved, reset]);
+  }, [seededFromServer, serverSaved, hydrated, saved, reset]);
 
   const isDirty = savedBaselineRef.current
     ? !gearProfilesEqual(values, savedBaselineRef.current)
