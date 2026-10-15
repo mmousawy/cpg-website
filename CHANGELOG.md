@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.42.2](https://github.com/mmousawy/cpg-website/compare/v1.42.1...v1.42.2) (2026-10-15)
+
+
+### 🐛 Bug Fixes
+
+* enhance gear management and database integration ([0bfebe4](https://github.com/mmousawy/cpg-website/commit/0bfebe4505908a56ab1be55352c04cf2eef9bafc))
+
+
+### 🔧 Maintenance
+
+* enforce lockfile consistency during release preparation ([17287cb](https://github.com/mmousawy/cpg-website/commit/17287cb5a1c53ac4dcae65b9de381ee58bf5b0a1))
+* update pnpm workspace configuration ([2a52f5b](https://github.com/mmousawy/cpg-website/commit/2a52f5bc269c118975de1ab313362c09916e7959))
+
 ## [1.42.1](https://github.com/mmousawy/cpg-website/compare/v1.42.0...v1.42.1) (2026-10-14)
 
 

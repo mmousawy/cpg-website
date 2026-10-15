@@ -106,7 +106,8 @@ CREATE TYPE "public"."gear_catalog_source" AS ENUM (
     'lensfun',
     'wikidata',
     'curated',
-    'exif'
+    'exif',
+    'camerawiki'
 );
 
 

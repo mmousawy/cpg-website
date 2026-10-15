@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { expireTags } from '@/lib/cache/expireTag';
 import { fetchUserGearProfileForUser } from '@/lib/data/gear';
+import { normalizeGearProfileServer } from '@/lib/gear/normalizeGearProfileServer';
 import { persistUserGearProfileServer } from '@/lib/gear/persistUserGearProfileServer';
 import { parseUserGearProfileBody } from '@/lib/gear/validateUserGearProfile';
 import { createClient } from '@/utils/supabase/server';
@@ -39,7 +40,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: parsed.message }, { status: 400 });
   }
 
-  const { profile } = parsed;
+  const profile = await normalizeGearProfileServer(supabase, parsed.profile);
 
   const { error: saveError } = await persistUserGearProfileServer(supabase, profile);
 
