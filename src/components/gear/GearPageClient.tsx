@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useGearProfile } from '@/hooks/useGearProfile';
 import { GEAR_CATEGORY_ICONS } from '@/lib/gear/gearCategoryIcons';
 import { SAMPLE_GEAR_ITEMS, useShowGearSampleKit } from '@/lib/gear/sampleKit';
+import { upsertGearInventoryItem } from '@/lib/gear/canonicalGearItem';
 import { GEAR_CATEGORY_LABELS, type GearCategory, type UserGearItem, type UserGearProfile } from '@/lib/gear/types';
 import FormatDigitalSVG from 'public/icons/gear/format-digital.svg';
 import CameraLensSVG from 'public/icons/camera-lens.svg';
@@ -156,10 +157,13 @@ function GearPageClientCore({
         key={modalKey}
         initial={existing ?? null}
         defaultCategory={existing ? undefined : presetCategory}
+        existingItems={profile.items}
         onSave={(item) => {
-          const nextItems = existing
-            ? profile.items.map((i) => (i.id === item.id ? item : i))
-            : [...profile.items, item];
+          const nextItems = upsertGearInventoryItem(
+            profile.items,
+            item,
+            existing?.id,
+          );
           updateProfile({ ...profile, items: nextItems });
           modalContext.setIsOpen(false);
         }}

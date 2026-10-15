@@ -18,11 +18,98 @@ export type GearSearchResult = {
   category: GearCategory;
 };
 
+const PREFIX_CANDIDATE_LIMIT = 50;
+const FUZZY_CANDIDATE_LIMIT = 50;
+
 function withCatalogDisplayName(row: GearSearchResult): GearSearchResult {
   return {
     ...row,
     name: formatCatalogDisplayName(row.brand, row.name),
   };
+}
+
+/** Higher = better match for autocomplete ordering. */
+export function rankGearSearchResult(name: string, query: string): number {
+  const q = query.trim().toLowerCase();
+  const n = name.toLowerCase();
+  if (!q || !matchesFuzzyTokens(name, query)) {
+    return -1;
+  }
+  if (n === q) {
+    return 10_000;
+  }
+  if (n.startsWith(q)) {
+    const rest = n.slice(q.length).trim();
+    let score = 5_000 - (n.length - q.length);
+    if (rest.length > 0 && rest.length <= 3 && /^[a-z0-9./-]+$/i.test(rest)) {
+      score += 200 - rest.length * 10;
+      if (/^[a-z]+$/i.test(rest)) {
+        score += 60;
+      }
+    }
+    return score;
+  }
+  let score = 1_000;
+  const tokens = tokenizeSearchQuery(query);
+  for (const token of tokens) {
+    if (n.startsWith(token) || n.includes(` ${token}`)) {
+      score += 100;
+    }
+  }
+  score -= n.length * 0.5;
+  return score;
+}
+
+export function rankAndLimitGearSearchResults(
+  rows: GearSearchResult[],
+  query: string,
+  limit: number,
+): GearSearchResult[] {
+  const seenNames = new Set<string>();
+  const ranked = rows
+    .map((row) => ({
+      row: withCatalogDisplayName(row),
+      score: rankGearSearchResult(formatCatalogDisplayName(row.brand, row.name), query),
+    }))
+    .filter((entry) => entry.score >= 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      return a.row.name.localeCompare(b.row.name);
+    });
+
+  const out: GearSearchResult[] = [];
+  for (const { row } of ranked) {
+    const key = row.name.toLowerCase();
+    if (seenNames.has(key)) {
+      continue;
+    }
+    seenNames.add(key);
+    out.push(row);
+    if (out.length >= limit) {
+      break;
+    }
+  }
+  return out;
+}
+
+function escapeIlikeLiteral(value: string): string {
+  return value.replace(/[%_\\]/g, '\\$&');
+}
+
+function mergeCandidates(
+  ...groups: Array<GearSearchResult[] | undefined | null>
+): GearSearchResult[] {
+  const byId = new Map<string, GearSearchResult>();
+  for (const group of groups) {
+    for (const row of group ?? []) {
+      if (!byId.has(row.id)) {
+        byId.set(row.id, row);
+      }
+    }
+  }
+  return [...byId.values()];
 }
 
 function searchCuratedFallback(
@@ -47,6 +134,36 @@ function searchCuratedFallback(
     }));
 }
 
+/** ILIKE on alias_key (punctuation-stripped, no spaces). */
+function buildFuzzyAliasIlikePattern(query: string): string {
+  const tokens = tokenizeSearchQuery(query)
+    .map((t) => gearAliasKey(t))
+    .filter(Boolean);
+  if (tokens.length === 0) {
+    return '%';
+  }
+  return `%${tokens.join('%')}%`;
+}
+
+async function fetchCatalogRowsByIds(
+  supabase: SupabaseClient<Database>,
+  ids: string[],
+  category?: GearCategory | null,
+): Promise<GearSearchResult[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+  let query = supabase
+    .from('gear_catalog')
+    .select('id, name, brand, category')
+    .in('id', ids);
+  if (category) {
+    query = query.eq('category', category);
+  }
+  const { data } = await query;
+  return (data ?? []) as GearSearchResult[];
+}
+
 export async function searchGearCatalog(
   supabase: SupabaseClient<Database>,
   query: string,
@@ -58,102 +175,76 @@ export async function searchGearCatalog(
     return [];
   }
 
-  const aliasKey = gearAliasKey(trimmed);
-  if (aliasKey) {
-    const { data: aliasHit } = await supabase
-      .from('gear_catalog_aliases')
-      .select('catalog_id')
-      .eq('alias_key', aliasKey)
-      .maybeSingle();
-
-    if (aliasHit?.catalog_id) {
-      let exactQuery = supabase
-        .from('gear_catalog')
-        .select('id, name, brand, category')
-        .eq('id', aliasHit.catalog_id);
-      if (category) {
-        exactQuery = exactQuery.eq('category', category);
-      }
-      const { data: exactRow } = await exactQuery.maybeSingle();
-      if (exactRow) {
-        return [withCatalogDisplayName(exactRow as GearSearchResult)];
-      }
-    }
-  }
-
-  const pattern = buildFuzzyIlikePattern(trimmed);
+  const prefixPattern = `${escapeIlikeLiteral(trimmed)}%`;
+  const fuzzyPattern = buildFuzzyIlikePattern(trimmed);
   const aliasPattern = buildFuzzyAliasIlikePattern(trimmed);
 
-  let dbQuery = supabase
+  let prefixQuery = supabase
     .from('gear_catalog')
     .select('id, name, brand, category')
-    .ilike('search_text', pattern)
-    .order('name', { ascending: true })
-    .limit(limit);
+    .ilike('name', prefixPattern)
+    .limit(PREFIX_CANDIDATE_LIMIT);
 
-  if (category) {
-    dbQuery = dbQuery.eq('category', category);
-  }
+  let fuzzyQuery = supabase
+    .from('gear_catalog')
+    .select('id, name, brand, category')
+    .ilike('search_text', fuzzyPattern)
+    .limit(FUZZY_CANDIDATE_LIMIT);
 
   const aliasQuery = supabase
     .from('gear_catalog_aliases')
     .select('catalog_id')
     .ilike('alias_key', aliasPattern)
-    .limit(limit);
+    .limit(PREFIX_CANDIDATE_LIMIT);
 
-  const [{ data, error }, { data: aliasHits, error: aliasError }] = await Promise.all([
-    dbQuery,
-    aliasQuery,
-  ]);
+  if (category) {
+    prefixQuery = prefixQuery.eq('category', category);
+    fuzzyQuery = fuzzyQuery.eq('category', category);
+  }
 
-  if (error) {
-    console.error('gear search failed', error);
+  const [
+    { data: prefixRows, error: prefixError },
+    { data: fuzzyRows, error: fuzzyError },
+    { data: aliasHits, error: aliasError },
+  ] = await Promise.all([prefixQuery, fuzzyQuery, aliasQuery]);
+
+  if (prefixError || fuzzyError) {
+    console.error('gear search failed', prefixError ?? fuzzyError);
     return searchCuratedFallback(trimmed, category, limit);
   }
   if (aliasError) {
     console.error('gear alias search failed', aliasError);
   }
 
-  const rows = (data ?? []) as GearSearchResult[];
-  const seen = new Set(rows.map((r) => r.id));
+  const aliasIds = (aliasHits ?? [])
+    .map((hit) => hit.catalog_id)
+    .filter((id): id is string => Boolean(id));
 
-  const extraIds = (aliasHits ?? [])
-    .map((h) => h.catalog_id)
-    .filter((id): id is string => Boolean(id) && !seen.has(id));
+  const aliasRows = await fetchCatalogRowsByIds(supabase, aliasIds, category);
 
-  if (extraIds.length > 0) {
-    let extraQuery = supabase
-      .from('gear_catalog')
-      .select('id, name, brand, category')
-      .in('id', extraIds.slice(0, limit));
-    if (category) {
-      extraQuery = extraQuery.eq('category', category);
+  const aliasKey = gearAliasKey(trimmed);
+  let exactAliasRows: GearSearchResult[] = [];
+  if (aliasKey) {
+    const { data: aliasHit } = await supabase
+      .from('gear_catalog_aliases')
+      .select('catalog_id')
+      .eq('alias_key', aliasKey)
+      .maybeSingle();
+    if (aliasHit?.catalog_id) {
+      exactAliasRows = await fetchCatalogRowsByIds(supabase, [aliasHit.catalog_id], category);
     }
-    const { data: extraRows } = await extraQuery;
-    for (const row of (extraRows ?? []) as GearSearchResult[]) {
-      if (rows.length >= limit) break;
-      if (!seen.has(row.id)) {
-        seen.add(row.id);
-        rows.push(row);
-      }
-    }
-    rows.sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  if (rows.length > 0) {
-    return rows.slice(0, limit).map(withCatalogDisplayName);
+  const candidates = mergeCandidates(
+    prefixRows as GearSearchResult[],
+    fuzzyRows as GearSearchResult[],
+    aliasRows,
+    exactAliasRows,
+  );
+
+  if (candidates.length > 0) {
+    return rankAndLimitGearSearchResults(candidates, trimmed, limit);
   }
 
   return searchCuratedFallback(trimmed, category, limit);
-}
-
-/** ILIKE on alias_key (punctuation-stripped, no spaces). */
-function buildFuzzyAliasIlikePattern(query: string): string {
-  const tokens = tokenizeSearchQuery(query)
-    .map((t) => gearAliasKey(t))
-    .filter(Boolean);
-  if (tokens.length === 0) {
-    return '%';
-  }
-  return `%${tokens.join('%')}%`;
 }
