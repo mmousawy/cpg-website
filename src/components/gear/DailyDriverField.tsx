@@ -64,7 +64,7 @@ export default function DailyDriverField({
         id={id}
         value={value}
         onChange={(v) => {
-          commitValue(v, null);
+          onCommit(v, null);
         }}
         suggestions={suggestions}
         disableFilter

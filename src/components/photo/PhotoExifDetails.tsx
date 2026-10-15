@@ -1,11 +1,12 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
+import ScrappyCameraIllustration from '@/components/gear/ScrappyCameraIllustration';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
 import CameraLensIcon from 'public/icons/camera-lens.svg';
 import ImageFrameIcon from 'public/icons/image-frame.svg';
 import PhotoCameraIcon from 'public/icons/photo-camera.svg';
-import { useContext, type FC, type SVGProps } from 'react';
+import { useContext, type FC, type ReactNode, type SVGProps } from 'react';
 
 type IconComponent = FC<SVGProps<SVGSVGElement>>;
 
@@ -23,6 +24,7 @@ type DetailSection = {
   title: string;
   icon: IconComponent;
   value: string;
+  sectionAside?: ReactNode;
 };
 
 function PhotoDetailsModalBody({ sections }: { sections: DetailSection[] }) {
@@ -42,7 +44,7 @@ function PhotoDetailsModalBody({ sections }: { sections: DetailSection[] }) {
               aria-hidden
             />
             <div
-              className="min-w-0"
+              className="min-w-0 flex-1"
             >
               <dt
                 className="text-xs font-bold text-foreground/60 mt-0.5"
@@ -50,11 +52,12 @@ function PhotoDetailsModalBody({ sections }: { sections: DetailSection[] }) {
                 {section.title}
               </dt>
               <dd
-                className="text-sm text-foreground mt-1"
+                className="mt-1 text-sm text-foreground"
               >
                 {section.value}
               </dd>
             </div>
+            {section.sectionAside}
           </div>
         );
       })}
@@ -74,7 +77,20 @@ export default function PhotoExifDetails({
   const modalContext = useContext(ModalContext);
 
   const sections: DetailSection[] = [];
-  if (camera) sections.push({ key: 'camera', title: 'Camera', icon: PhotoCameraIcon, value: camera });
+  if (camera) {
+    sections.push({
+      key: 'camera',
+      title: 'Camera',
+      icon: PhotoCameraIcon,
+      value: camera,
+      sectionAside: (
+        <ScrappyCameraIllustration
+          camera={camera}
+          className="h-10 w-auto max-w-14 shrink-0 object-contain"
+        />
+      ),
+    });
+  }
   if (lens) sections.push({ key: 'lens', title: 'Lens', icon: CameraLensIcon, value: lens });
   if (settings) sections.push({ key: 'settings', title: 'Settings', icon: CameraApertureIcon, value: settings });
   if (fileInfo) sections.push({ key: 'file', title: 'File', icon: ImageFrameIcon, value: fileInfo });
@@ -102,6 +118,7 @@ export default function PhotoExifDetails({
     <div
       className="flex items-center gap-1.5"
     >
+
       <CompactIcon
         className="size-4 shrink-0 text-foreground/70"
         aria-hidden

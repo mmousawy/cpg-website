@@ -1,3 +1,4 @@
+import ScrappyCameraIllustration from '@/components/gear/ScrappyCameraIllustration';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import DailyDriverDiscoveryCloud from '@/components/members/DailyDriverDiscoveryCloud';
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   return createMetadata({
-    title: `Members whose daily driver is ${label}`,
+    title: `Members whose daily driver is "${label}"`,
     description: `Discover community members whose daily driver camera is ${label}.`,
     canonical: membersDailyDriverCameraPath(label),
     keywords: ['photography community', 'photographers', label, 'camera', 'daily driver', 'member discovery'],
@@ -65,20 +66,62 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
     notFound();
   }
 
+  const memberCountLine = (
+    <>
+      {members.length}
+      {' '}
+      {members.length === 1 ? 'member' : 'members'}
+      {' '}
+      with this camera body
+    </>
+  );
+
   return (
     <PageContainer>
-      <PageHeading
-        title={`Members whose daily driver is ${label}`}
-        description={
-          <>
-            {members.length}
-            {' '}
-            {members.length === 1 ? 'member' : 'members'}
-            {' '}
-            with this camera body
-          </>
-        }
-      />
+      <div
+        className="mb-8 flex items-start gap-3 sm:mb-10 sm:gap-5"
+      >
+        <PageHeading
+          className="mb-0! min-w-0 flex-1"
+          title={(
+            <>
+              <span
+                className="sm:hidden"
+              >
+                Daily driver
+              </span>
+              <span
+                className="hidden sm:inline"
+              >
+                Members whose daily driver is &ldquo;
+                {label}
+                &rdquo;
+              </span>
+            </>
+          )}
+          description={(
+            <div
+              className="min-w-0 space-y-1"
+            >
+              <span
+                className="block truncate font-medium text-foreground sm:hidden"
+                title={label}
+              >
+                {label}
+              </span>
+              <span
+                className="block text-foreground/80"
+              >
+                {memberCountLine}
+              </span>
+            </div>
+          )}
+        />
+        <ScrappyCameraIllustration
+          camera={label}
+          className="mt-0.5 h-16 w-auto max-w-[5.75rem] shrink-0 object-contain opacity-90 sm:mt-1 sm:h-24 sm:max-w-36"
+        />
+      </div>
 
       {popularCameras.length > 0 && (
         <div

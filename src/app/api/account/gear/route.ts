@@ -5,7 +5,9 @@ import { expireMemberGearDiscoveryCaches, expireTags } from '@/lib/cache/expireT
 import { fetchUserGearProfileForUser } from '@/lib/data/gear';
 import { normalizeGearProfileServer } from '@/lib/gear/normalizeGearProfileServer';
 import { persistUserGearProfileServer } from '@/lib/gear/persistUserGearProfileServer';
+import { ensureScrappyCameraMatchesForProfile } from '@/lib/gear/scrappyCameraMatch';
 import { parseUserGearProfileBody } from '@/lib/gear/validateUserGearProfile';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 
 export async function GET() {
@@ -55,6 +57,9 @@ export async function PUT(request: NextRequest) {
   }
 
   const profile = await normalizeGearProfileServer(supabase, parsed.profile);
+
+  const admin = createAdminClient();
+  await ensureScrappyCameraMatchesForProfile(admin, profile);
 
   const { error: saveError } = await persistUserGearProfileServer(supabase, profile);
 

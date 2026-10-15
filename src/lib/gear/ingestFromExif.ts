@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/database.types';
 import { ensureExifCatalogEntry, findCatalogIdByAlias } from '@/lib/gear/catalogDb';
+import { ensureScrappyCameraMatch } from '@/lib/gear/scrappyCameraMatch';
 import { normalizeExifBrand } from '@/lib/gear/normalizeExifBrand';
 import type { GearCategory } from '@/lib/gear/types';
 import { formatExifData, parseExifData } from '@/utils/exif';
@@ -45,6 +46,7 @@ export async function ingestGearFromExifData(
       });
       if (id) ingested += 1;
     }
+    await ensureScrappyCameraMatch(supabase, name);
   }
 
   if (formatted?.lens && parsed?.lensModel) {
