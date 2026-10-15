@@ -97,7 +97,7 @@ export default function Avatar({ avatarUrl: staticAvatarUrl, fullName: staticFul
     if (usePersonIconFallback) {
       return (
         <div
-          className="flex w-full h-full items-center justify-center bg-[#b9c1ca] dark:bg-[#6e7277]"
+          className="flex w-full h-full items-center justify-center bg-avatar-fallback"
         >
           <svg
             className={clsx('fill-white/90', sizeConfig.icon)}

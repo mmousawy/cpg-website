@@ -1,4 +1,8 @@
-import { MAX_FORMATS_OTHER_LENGTH, SHOOTING_FORMATS } from '@/lib/gear/types';
+import {
+  MAX_DAILY_DRIVER_FIELD_LENGTH,
+  MAX_FORMATS_OTHER_LENGTH,
+  SHOOTING_FORMATS,
+} from '@/lib/gear/types';
 import { nicknameSchema } from '@/utils/nickname';
 import { z } from 'zod';
 
@@ -29,6 +33,10 @@ export function createOnboardingSchema(requireEmail: boolean) {
     interests: z.array(z.string()),
     shootingFormats: z.array(shootingFormatSchema),
     formatsOther: z.string().max(MAX_FORMATS_OTHER_LENGTH),
+    dailyDriverBody: z.string().max(MAX_DAILY_DRIVER_FIELD_LENGTH),
+    dailyDriverBodyCatalogId: z.string().uuid().nullable(),
+    dailyDriverLens: z.string().max(MAX_DAILY_DRIVER_FIELD_LENGTH),
+    dailyDriverLensCatalogId: z.string().uuid().nullable(),
     emailPreferences: z.record(z.string(), z.boolean()),
     termsAccepted: z.boolean().refine((val) => val === true, {
       message: 'You must agree to the Terms of Service to continue',

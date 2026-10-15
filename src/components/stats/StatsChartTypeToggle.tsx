@@ -24,7 +24,7 @@ export default function StatsChartTypeToggle({ value, onChange, className }: Sta
       <span
         aria-hidden="true"
         className={clsx(
-          'stats-chart-type-toggle__thumb btn-skeuo btn-skeuo-secondary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md border border-border-color-strong bg-background bg-no-noise dark:bg-[#2e3032]',
+          'stats-chart-type-toggle__thumb btn-skeuo btn-skeuo-secondary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md border border-border-color-strong bg-background-raised bg-no-noise',
           value === 'bar' ? 'left-1' : 'left-1/2',
         )}
       />

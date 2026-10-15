@@ -32,7 +32,7 @@ export default function AlbumActionsPopover({ albumId, albumTitle, albumUserId }
       trigger={
         <button
           type="button"
-          className="flex items-center justify-center rounded-full border border-border-color-strong bg-background-medium dark:bg-[#2e3032] size-6 text-foreground/60 hover:border-primary hover:bg-primary/5 hover:text-foreground transition-colors"
+          className="flex items-center justify-center rounded-full border border-border-color-strong bg-background-raised size-6 text-foreground/60 hover:border-primary hover:bg-primary/5 hover:text-foreground transition-colors"
           aria-label="More actions"
         >
           <svg

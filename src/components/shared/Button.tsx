@@ -82,13 +82,13 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     'btn-skeuo btn-skeuo-primary bg-primary text-white border-primary hover:bg-primary-alt hover:text-slate-950 hover:border-primary focus-visible:bg-primary-alt focus-visible:text-slate-950 focus-visible:border-primary-alt disabled:bg-foreground/10 disabled:text-foreground/40 disabled:border-transparent disabled:hover:bg-foreground/10 disabled:hover:text-foreground/40 disabled:hover:border-transparent data-[disabled=true]:bg-foreground/10 data-[disabled=true]:text-foreground/40 data-[disabled=true]:border-transparent',
   secondary:
-    'btn-skeuo btn-skeuo-secondary bg-background dark:bg-[#2e3032] border-border-color-strong text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)]',
+    'btn-skeuo btn-skeuo-secondary bg-background-raised border-border-color-strong text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))]',
   danger:
     'btn-skeuo btn-skeuo-danger bg-background border-red-500/50 dark:border-red-500/70 text-red-500 hover:border-red-500 hover:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))] focus-visible:border-red-500 focus-visible:bg-[color-mix(in_srgb,var(--error-red)_10%,var(--background))]',
   ghost:
     'btn-skeuo btn-skeuo-ghost bg-transparent border-transparent text-foreground hover:bg-background focus-visible:bg-background',
   tertiary:
-    'btn-skeuo btn-skeuo-outline bg-background/50 border-border-color text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,#2e3032)]',
+    'btn-skeuo btn-skeuo-outline bg-background/50 border-border-color text-foreground hover:border-primary hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] focus-visible:border-primary focus-visible:bg-[color-mix(in_srgb,var(--primary)_5%,var(--background))] dark:hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))] dark:focus-visible:bg-[color-mix(in_srgb,var(--primary)_8%,var(--background-raised))]',
   custom:
     '',
 };
