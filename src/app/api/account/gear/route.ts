@@ -40,6 +40,20 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: parsed.message }, { status: 400 });
   }
 
+  const existing = await fetchUserGearProfileForUser(supabase, user.id);
+  const incomingCount = parsed.profile.items.length;
+  const existingCount = existing.items.length;
+
+  if (existingCount > 0 && incomingCount === 0) {
+    return NextResponse.json(
+      {
+        message:
+          'This save would clear your entire gear list. Reload My gear and try again if that was not intended.',
+      },
+      { status: 409 },
+    );
+  }
+
   const profile = await normalizeGearProfileServer(supabase, parsed.profile);
 
   const { error: saveError } = await persistUserGearProfileServer(supabase, profile);

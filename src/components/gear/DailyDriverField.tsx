@@ -5,7 +5,7 @@ import { useCallback, useMemo } from 'react';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import { useGearCatalogSearch } from '@/hooks/useGearCatalogSearch';
 import { resolveGearLabelCasing } from '@/lib/gear/canonicalGearItem';
-import { GEAR_CATEGORY_ICONS } from '@/lib/gear/gearCategoryIcons';
+import GearCategoryIconBadge from '@/components/gear/GearCategoryIconBadge';
 import type { GearCategory } from '@/lib/gear/types';
 
 export type DailyDriverFieldProps = {
@@ -29,8 +29,6 @@ export default function DailyDriverField({
 }: DailyDriverFieldProps) {
   const { results, loading } = useGearCatalogSearch(value, category);
   const suggestions = useMemo(() => results.map((r) => r.name), [results]);
-  const Icon = GEAR_CATEGORY_ICONS[category];
-
   const commitValue = useCallback(
     (text: string, catalogId: string | null, catalogLabel?: string | null) => {
       const resolved = resolveGearLabelCasing({
@@ -53,14 +51,9 @@ export default function DailyDriverField({
         className="flex shrink-0 items-center gap-2 text-sm font-medium md:w-40 lg:w-44"
         htmlFor={id}
       >
-        <span
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground/8 text-foreground"
-        >
-          <Icon
-            className="size-4"
-            aria-hidden
-          />
-        </span>
+        <GearCategoryIconBadge
+          category={category}
+        />
         <span
           className="min-w-0"
         >

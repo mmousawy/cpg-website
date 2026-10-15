@@ -185,6 +185,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
             >
               <InterestCloud
                 interests={profile.interests}
+                size="sm"
               />
             </div>
           )}
