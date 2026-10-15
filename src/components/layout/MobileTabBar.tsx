@@ -322,17 +322,17 @@ export default function MobileTabBar() {
                   <div
                     aria-hidden
                     className={clsx(
-                  'mobile-tab-indicator pointer-events-none absolute top-0 left-0 z-0 rounded-xl',
-                  mobileTabActivePillClassName,
-                  indicatorReady && 'is-ready',
+                      'mobile-tab-indicator pointer-events-none absolute top-0 left-0 z-0 rounded-xl',
+                      mobileTabActivePillClassName,
+                      indicatorReady && 'is-ready',
                     )}
                     style={{
-                  width: indicator.w,
-                  height: indicator.h,
-                  transform: `translate(${indicator.x}px, ${indicator.y}px)`,
+                      width: indicator.w,
+                      height: indicator.h,
+                      transform: `translate(${indicator.x}px, ${indicator.y}px)`,
                     }}
                   />
-            )}
+                )}
                 <ul
                   className="relative z-10 grid grid-cols-5 gap-1.5 p-1.5"
                 >

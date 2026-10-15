@@ -15,7 +15,7 @@ export default function GearAccountPanel({
 }: GearAccountPanelProps) {
   return (
     <section
-      className="rounded-2xl border border-border-color bg-background-light p-4 sm:p-6"
+      className="rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4 sm:p-6"
     >
       <div
         className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"

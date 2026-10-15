@@ -202,7 +202,7 @@ export default function AdminEventAttendancePage() {
       />
       {event && (
         <div
-          className="mb-6 rounded-2xl border border-border-color bg-background-light p-4"
+          className="mb-6 rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4"
         >
           <h2
             className="mb-3 text-xl font-semibold font-heading"
@@ -262,7 +262,7 @@ export default function AdminEventAttendancePage() {
                 {' '}
                 no-show
               </span>
-              )}
+            )}
           </div>
         </div>
       )}

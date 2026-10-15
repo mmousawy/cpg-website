@@ -7,6 +7,10 @@ export const mobileFloatingPillClassName =
 /** Horizontal inset + gap above the tab bar for stacked floating pills. */
 export const mobileFloatingPillInsetClassName = 'max-sm:px-3';
 
+/** Page cards: cancel PageContainer px-3 gutter and square off sides on mobile. */
+export const mobileBleedCardClassName =
+  'max-sm:-mx-3 max-sm:rounded-none max-sm:border-x-0';
+
 /** Bottom sticky chrome: pin 0.25rem above the tab bar (or next chrome bar). */
 export const mobileStickyBottomWithGapClassName =
   'sticky max-sm:bottom-[calc(var(--mobile-nav-offset,4.5rem)+0.25rem)] sm:bottom-0';
