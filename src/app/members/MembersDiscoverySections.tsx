@@ -4,6 +4,8 @@ import Avatar from '@/components/auth/Avatar';
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
 import Tag from '@/components/shared/Tag';
+import DailyDriverDiscoveryCloud from '@/components/members/DailyDriverDiscoveryCloud';
+import ShootingFormatDiscoveryCloud from '@/components/members/ShootingFormatDiscoveryCloud';
 import type { MembersDiscoveryData } from '@/lib/data/members';
 import { formatJoinedDate } from '@/utils/utils';
 import Link from 'next/link';
@@ -37,6 +39,41 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
         </h2>
         <RandomInterestsSection
           randomInterests={data.randomInterests}
+        />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
+          Shoots on
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Find members by how they shoot — digital, film, phone, and more
+        </p>
+        <ShootingFormatsSection
+          groups={data.gearDiscovery.popularFormats}
+        />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
+          Daily drivers
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Popular camera bodies and lenses members reach for most often
+        </p>
+        <DailyDriversSection
+          cameras={data.gearDiscovery.popularCameras}
+          lenses={data.gearDiscovery.popularLenses}
         />
       </div>
       <div
@@ -99,6 +136,63 @@ function PopularInterestsSection({ popularInterests }: { popularInterests: Membe
     <InterestCloud
       interests={popularInterests}
     />
+  );
+}
+
+function ShootingFormatsSection({
+  groups,
+}: {
+  groups: MembersDiscoveryData['gearDiscovery']['popularFormats'];
+}) {
+  return (
+    <ShootingFormatDiscoveryCloud
+      groups={groups}
+    />
+  );
+}
+
+function DailyDriversSection({
+  cameras,
+  lenses,
+}: {
+  cameras: MembersDiscoveryData['gearDiscovery']['popularCameras'];
+  lenses: MembersDiscoveryData['gearDiscovery']['popularLenses'];
+}) {
+  if (cameras.length === 0 && lenses.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className="flex flex-col gap-6"
+    >
+      {cameras.length > 0 && (
+        <div>
+          <h3
+            className="mb-3 text-sm font-medium text-foreground/70"
+          >
+            Camera bodies
+          </h3>
+          <DailyDriverDiscoveryCloud
+            groups={cameras}
+            kind="camera"
+          />
+        </div>
+      )}
+      {lenses.length > 0 && (
+        <div>
+          <h3
+            className="mb-3 text-sm font-medium text-foreground/70"
+          >
+            Lenses
+          </h3>
+          <DailyDriverDiscoveryCloud
+            groups={lenses}
+            kind="lens"
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

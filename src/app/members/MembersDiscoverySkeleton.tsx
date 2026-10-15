@@ -31,6 +31,36 @@ export default function MembersDiscoverySkeleton() {
         <h2
           className="mb-1 text-xl font-semibold font-heading opacity-80"
         >
+          Shoots on
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Find members by how they shoot — digital, film, phone, and more
+        </p>
+        <InterestCloudSkeleton />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
+          Daily drivers
+        </h2>
+        <p
+          className="mb-6 text-sm text-foreground/60"
+        >
+          Popular camera bodies and lenses members reach for most often
+        </p>
+        <InterestCloudSkeleton />
+      </div>
+      <div
+        className="mb-10"
+      >
+        <h2
+          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        >
           Recently active
         </h2>
         <p

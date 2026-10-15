@@ -5,6 +5,7 @@ import type { Tables } from '@/database.types';
 import type { Interest } from '@/types/interests';
 import { getPopularTagsWithMemberCounts } from './gallery';
 import { getPopularInterests } from './interests';
+import { getMemberGearDiscoverySummary, type MemberGearDiscoverySummary } from './memberGear';
 import { withPublicInterestCounts } from './publicInterestCounts';
 import { INTEREST_LIST_COLUMNS } from './columns';
 
@@ -446,6 +447,7 @@ export async function getMembersByTag(tagName: string, includeTestContent = fals
 export type MembersDiscoveryData = {
   popularInterests: Awaited<ReturnType<typeof getPopularInterests>>;
   randomInterests: Awaited<ReturnType<typeof getRandomInterestsWithMembers>>;
+  gearDiscovery: MemberGearDiscoverySummary;
   recentlyActive: Awaited<ReturnType<typeof getRecentlyActiveMembers>>;
   popularTags: Awaited<ReturnType<typeof getPopularTagsWithMemberCounts>>;
   newMembers: Awaited<ReturnType<typeof getNewMembers>>;
@@ -455,9 +457,17 @@ export type MembersDiscoveryData = {
  * Aggregated discovery data for the /members page.
  */
 export async function getMembersDiscoveryData(includeTestContent = false): Promise<MembersDiscoveryData> {
-  const [popularInterestsResult, randomInterestsResult, recentlyActiveResult, popularTagsResult, newMembersResult] = await Promise.allSettled([
+  const [
+    popularInterestsResult,
+    randomInterestsResult,
+    gearDiscoveryResult,
+    recentlyActiveResult,
+    popularTagsResult,
+    newMembersResult,
+  ] = await Promise.allSettled([
     getPopularInterests(20),
     getRandomInterestsWithMembers(6, 10, includeTestContent),
+    getMemberGearDiscoverySummary(includeTestContent),
     getRecentlyActiveMembers(12, includeTestContent),
     getPopularTagsWithMemberCounts(20),
     getNewMembers(12, includeTestContent),
@@ -465,6 +475,9 @@ export async function getMembersDiscoveryData(includeTestContent = false): Promi
 
   const popularInterests = popularInterestsResult.status === 'fulfilled' ? popularInterestsResult.value : [];
   const randomInterests = randomInterestsResult.status === 'fulfilled' ? randomInterestsResult.value : [];
+  const gearDiscovery = gearDiscoveryResult.status === 'fulfilled'
+    ? gearDiscoveryResult.value
+    : { popularFormats: [], popularCameras: [], popularLenses: [] };
   const recentlyActive = recentlyActiveResult.status === 'fulfilled' ? recentlyActiveResult.value : [];
   const popularTags = popularTagsResult.status === 'fulfilled' ? popularTagsResult.value : [];
   const newMembers = newMembersResult.status === 'fulfilled' ? newMembersResult.value : [];
@@ -472,6 +485,7 @@ export async function getMembersDiscoveryData(includeTestContent = false): Promi
   if (
     popularInterestsResult.status === 'rejected'
     || randomInterestsResult.status === 'rejected'
+    || gearDiscoveryResult.status === 'rejected'
     || recentlyActiveResult.status === 'rejected'
     || popularTagsResult.status === 'rejected'
     || newMembersResult.status === 'rejected'
@@ -479,6 +493,7 @@ export async function getMembersDiscoveryData(includeTestContent = false): Promi
     console.error('Members discovery: one or more section queries failed', {
       popularInterestsError: popularInterestsResult.status === 'rejected' ? popularInterestsResult.reason : null,
       randomInterestsError: randomInterestsResult.status === 'rejected' ? randomInterestsResult.reason : null,
+      gearDiscoveryError: gearDiscoveryResult.status === 'rejected' ? gearDiscoveryResult.reason : null,
       recentlyActiveError: recentlyActiveResult.status === 'rejected' ? recentlyActiveResult.reason : null,
       popularTagsError: popularTagsResult.status === 'rejected' ? popularTagsResult.reason : null,
       newMembersError: newMembersResult.status === 'rejected' ? newMembersResult.reason : null,
@@ -488,6 +503,7 @@ export async function getMembersDiscoveryData(includeTestContent = false): Promi
   return {
     popularInterests,
     randomInterests,
+    gearDiscovery,
     recentlyActive,
     popularTags,
     newMembers,

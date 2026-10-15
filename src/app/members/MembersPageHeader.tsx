@@ -6,7 +6,7 @@ type MembersPageHeaderProps = {
 };
 
 export default function MembersPageHeader({
-  description = 'Explore members by interests, recent activity, and photo styles',
+  description = 'Explore members by interests, gear, recent activity, and photo styles',
 }: MembersPageHeaderProps) {
   return (
     <PageHeading

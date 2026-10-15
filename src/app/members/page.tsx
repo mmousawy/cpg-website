@@ -14,7 +14,7 @@ import { routes } from '@/config/routes';
 
 export const metadata = createMetadata({
   title: 'Meet our photographers',
-  description: 'Explore and connect with our community members. Find photographers by interests, recent activity, and photo styles.',
+  description: 'Explore and connect with our community members. Find photographers by interests, shooting format, daily driver gear, recent activity, and photo styles.',
   canonical: '/members',
   keywords: ['photography community', 'photographers', 'member discovery', 'community members'],
 });
@@ -118,7 +118,7 @@ function UnauthenticatedMembersPage() {
         <p
           className="mb-6 text-foreground/80"
         >
-          Sign in to explore members by interests, discover photographers by their photo styles, and connect with recently active community members.
+          Sign in to explore members by interests and gear, discover photographers by their photo styles, and connect with recently active community members.
         </p>
         <div
           className="flex flex-wrap justify-center gap-3"
