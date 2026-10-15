@@ -5,6 +5,9 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
   esbuild: true
+  # Optional native addons for the local SSH sync script. The JS fallback works without them.
+  ssh2: false
+  cpu-features: false
 
 minimumReleaseAgeExclude:
   - '@hookform/resolvers@5.5.7 || 5.9.0'

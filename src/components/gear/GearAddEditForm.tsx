@@ -14,6 +14,7 @@ import {
   userGearItemFormSchema,
   type UserGearItemFormValues,
 } from '@/lib/gear/gearProfileSchema';
+import { prepareGearItemForInventory } from '@/lib/gear/canonicalGearItem';
 import {
   GEAR_CATEGORIES,
   GEAR_CATEGORY_LABELS,
@@ -26,10 +27,16 @@ export const GEAR_ADD_EDIT_FORM_ID = 'gear-add-edit-form';
 type GearAddEditFormProps = {
   initial?: UserGearItem | null;
   defaultCategory?: GearCategory;
+  existingItems: UserGearItem[];
   onSave: (item: UserGearItem) => void;
 };
 
-export default function GearAddEditForm({ initial, defaultCategory, onSave }: GearAddEditFormProps) {
+export default function GearAddEditForm({
+  initial,
+  defaultCategory,
+  existingItems,
+  onSave,
+}: GearAddEditFormProps) {
   const modalContext = useContext(ModalContext);
   const isEditing = Boolean(initial);
   const onSaveRef = useRef(onSave);
@@ -67,14 +74,17 @@ export default function GearAddEditForm({ initial, defaultCategory, onSave }: Ge
 
   const onSubmit = handleSubmit((data) => {
     const match = results.find((r) => r.name.toLowerCase() === data.name.toLowerCase());
-    onSaveRef.current({
+    const draft: UserGearItem = {
       id: initial?.id ?? crypto.randomUUID(),
       catalogId: match?.id ?? data.catalogId ?? catalogId,
-      name: match?.name ?? data.name,
+      name: data.name,
       category: data.category,
       note: data.note.trim(),
       addedAt: initial?.addedAt ?? Date.now(),
-    });
+    };
+    onSaveRef.current(
+      prepareGearItemForInventory(draft, existingItems, match?.name),
+    );
   });
 
   const handleClose = useCallback(() => {
@@ -161,8 +171,9 @@ export default function GearAddEditForm({ initial, defaultCategory, onSave }: Ge
           loading={loading}
           placeholder="Search or type gear name"
           onSelect={(s) => {
-            const hit = results.find((r) => r.name === s);
-            setValue('name', s, { shouldValidate: true });
+            const hit = results.find((r) => r.name === s)
+              ?? results.find((r) => r.name.toLowerCase() === s.toLowerCase());
+            setValue('name', hit?.name ?? s, { shouldValidate: true });
             setValue('catalogId', hit?.id ?? null);
           }}
         />

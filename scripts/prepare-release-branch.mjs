@@ -1,7 +1,12 @@
 /**
  * Build version/changelog from commits on staging; apply bumps against main's version files.
- * Writes package.json, CHANGELOG.md, and .release-please-manifest.json in the
- * working tree. Does not push or open PRs — the workflow does that.
+ * Writes CHANGELOG.md and .release-please-manifest.json, and bumps the version field
+ * in the working tree's package.json. Does not push or open PRs — the workflow does that.
+ *
+ * release-please's changeset is a full copy of package.json from main. Writing that
+ * file onto the promote branch (a snapshot of staging) deletes any dependency or
+ * script that exists on staging but not yet on main, and CI then fails
+ * `pnpm install --frozen-lockfile`. Only the version string is taken from that file.
  */
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -75,9 +80,24 @@ async function main() {
   }
 
   const releasePr = pullRequests[0];
+  const packageJsonPath = path.join(ROOT, 'package.json');
+  // buildChangeSet writes main's package.json. The promote branch is staging,
+  // so keep staging's scripts and dependencies and only take the new version.
+  const stagingPackageJson = fs.readFileSync(packageJsonPath, 'utf8');
   await applyUpdates(github, releasePr.updates, RELEASE_BASE_BRANCH);
 
-  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const releasedVersion = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')).version;
+  const versionPattern = /("version"\s*:\s*")[^"]+(")/;
+  if (!versionPattern.test(stagingPackageJson)) {
+    throw new Error('Could not find version in staging package.json');
+  }
+  fs.writeFileSync(
+    packageJsonPath,
+    stagingPackageJson.replace(versionPattern, `$1${releasedVersion}$2`),
+    'utf8',
+  );
+
+  const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
   const version = pkg.version;
   const title = releasePr.title.toString();
   const body = releasePr.body.toString();
