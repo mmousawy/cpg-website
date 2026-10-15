@@ -1,7 +1,7 @@
 import TagCloudSkeleton from '@/components/shared/TagCloudSkeleton';
 
-const PILL_WIDTHS = [80, 100, 68, 112, 76, 96, 88, 104, 72, 92, 84, 108, 76, 96, 80, 112, 68, 100, 88, 72];
-const INTEREST_LABEL_WIDTHS = [52, 72, 40, 84, 48, 68, 60, 76, 44, 64, 56, 80, 48, 68, 52, 84, 40, 72, 60, 44];
+const PILL_WIDTHS = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const INTEREST_LABEL_WIDTHS = [52, 90, 64, 84, 70, 50, 50, 56, 44, 64, 56, 70, 48, 68, 52, 84];
 export default function MembersDiscoverySkeleton() {
   return (
     <>
@@ -69,7 +69,7 @@ export default function MembersDiscoverySkeleton() {
           Members who have shared photos or albums recently
         </p>
         <MemberGridSkeleton
-          count={12}
+          count={8}
         />
       </div>
       <div
@@ -99,7 +99,7 @@ export default function MembersDiscoverySkeleton() {
           Welcome our newest community members
         </p>
         <MemberGridSkeleton
-          count={12}
+          count={8}
         />
       </div>
     </>

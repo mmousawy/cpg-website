@@ -465,12 +465,12 @@ export async function getMembersDiscoveryData(includeTestContent = false): Promi
     popularTagsResult,
     newMembersResult,
   ] = await Promise.allSettled([
-    getPopularInterests(20),
+    getPopularInterests(16),
     getRandomInterestsWithMembers(6, 10, includeTestContent),
     getMemberGearDiscoverySummary(includeTestContent),
-    getRecentlyActiveMembers(12, includeTestContent),
+    getRecentlyActiveMembers(8, includeTestContent),
     getPopularTagsWithMemberCounts(20),
-    getNewMembers(12, includeTestContent),
+    getNewMembers(8, includeTestContent),
   ]);
 
   const popularInterests = popularInterestsResult.status === 'fulfilled' ? popularInterestsResult.value : [];
