@@ -105,6 +105,7 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
           profileNickname={profileNickname}
           profile={gearProfile ?? { ...EMPTY_GEAR_PROFILE }}
           showGearListLink={false}
+          separatorBeforeList
         />
         <GearPageClient
           profileNickname={profileNickname}

@@ -118,7 +118,7 @@ function Header({ photoCount, album, albumSlug, ownerNickname, eventId }: { phot
           eventId={eventId}
           inline
         />
-        )}
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
-import Container from '@/components/layout/Container';
+import clsx from 'clsx';
 
+import Container from '@/components/layout/Container';
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
@@ -100,10 +102,13 @@ const markdownComponents: Components = {
   ),
   pre: ({ children }) => (
     <div
-      className="mb-6 overflow-hidden rounded-xl border border-border-color bg-background-medium"
+      className={clsx(
+        'mb-6 overflow-hidden rounded-xl border border-border-color bg-background-medium',
+        mobileBleedCardClassName,
+      )}
     >
       <pre
-        className="overflow-x-auto p-4 font-mono leading-relaxed sm:p-5 text-xs sm:text-sm"
+        className="overflow-x-auto px-3 py-4 font-mono leading-relaxed sm:p-5 text-xs sm:text-sm"
       >
         {children}
       </pre>

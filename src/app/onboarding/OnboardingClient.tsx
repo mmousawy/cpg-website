@@ -38,6 +38,7 @@ import {
   submitFields,
   type OnboardingFormData,
 } from '@/app/onboarding/onboardingSchema';
+import { fetchUserGearProfile } from '@/lib/gear/fetchUserGearProfile';
 import { saveUserGearProfile } from '@/lib/gear/saveUserGearProfile';
 import { EMPTY_GEAR_PROFILE, hasDailyDriver } from '@/lib/gear/types';
 import { isOnboardingPreviewMode } from '@/utils/onboardingPreview';
@@ -679,8 +680,7 @@ export default function OnboardingClient() {
         }
       }
       const shootingFormats = data.shootingFormats ?? [];
-      const gearDraft = {
-        ...EMPTY_GEAR_PROFILE,
+      const shootingPrefs = {
         formats: shootingFormats,
         formatsOther: data.formatsOther?.trim() ?? '',
         dailyDriverBody: data.dailyDriverBody?.trim() ?? '',
@@ -688,12 +688,24 @@ export default function OnboardingClient() {
         dailyDriverLens: data.dailyDriverLens?.trim() ?? '',
         dailyDriverLensCatalogId: data.dailyDriverLensCatalogId ?? null,
       };
+      const gearDraft = { ...EMPTY_GEAR_PROFILE, ...shootingPrefs };
       if (
         data.nickname
         && (shootingFormats.length > 0 || hasDailyDriver(gearDraft))
       ) {
         try {
-          await saveUserGearProfile(data.nickname, gearDraft);
+          let existingGear = { ...EMPTY_GEAR_PROFILE };
+          try {
+            existingGear = await fetchUserGearProfile(data.nickname, {
+              useAccountApi: true,
+            });
+          } catch {
+            // New member — no gear row yet.
+          }
+          await saveUserGearProfile(data.nickname, {
+            ...existingGear,
+            ...shootingPrefs,
+          });
         } catch (gearErr) {
           console.error('Error saving gear profile during onboarding:', gearErr);
         }

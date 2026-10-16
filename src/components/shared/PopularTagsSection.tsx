@@ -1,3 +1,4 @@
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import { getPopularTags } from '@/lib/data/gallery';
 import TagCloud from './TagCloud';
 
@@ -22,7 +23,7 @@ export default async function PopularTagsSection({ activeTag }: PopularTagsSecti
       className="mb-10 md:mb-12"
     >
       <h2
-        className="mb-3 text-xl font-semibold font-heading opacity-80"
+        className="text-xl"
       >
         Browse by tag
       </h2>

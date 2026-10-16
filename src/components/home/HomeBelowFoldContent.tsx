@@ -32,7 +32,7 @@ export function HomeBelowFoldContent({
 }: HomePageData) {
   return (
     <div
-      className="grid min-w-0 gap-10 md:gap-12 pt-10 pb-0 sm:pt-12 *:min-w-0 sm:pb-12"
+      className="grid min-w-0 gap-8 md:gap-10 pt-10 pb-0 sm:pt-12 *:min-w-0 sm:pb-12"
     >
       <HomeExploreSection
         events={events}

@@ -1,3 +1,4 @@
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -187,6 +188,7 @@ export default function EventsList({
             key={event.id}
             className={clsx(
               'rounded-xl border bg-background-light border-border-color',
+              mobileBleedCardClassName,
             )}
           >
             {/* Mobile image - flush to top edges with status tag overlay */}
@@ -199,12 +201,12 @@ export default function EventsList({
               >
                 <BlurImage
                   fill
-                  sizes="calc(100vw - 1.5rem)"
+                  sizes="100vw"
                   loading='eager'
                   quality={THUMBNAIL_IMAGE_QUALITY}
                   alt={event.title || 'Event cover image'}
                   className={clsx(
-                    'object-cover rounded-t-xl hover:brightness-90 transition-all duration-200',
+                    'object-cover max-sm:rounded-none rounded-t-xl hover:brightness-90 transition-all duration-200',
                     isPast && '',
                   )}
                   src={getCroppedThumbnailUrl(event.cover_image, 640, 360) || event.cover_image}
@@ -231,7 +233,7 @@ export default function EventsList({
             >
               {/* Content side */}
               <div
-                className="flex-1 min-w-0 p-4 sm:p-6"
+                className="flex-1 min-w-0 px-3 py-4 sm:p-6"
               >
                 <div
                   className='mb-5 sm:mb-6'

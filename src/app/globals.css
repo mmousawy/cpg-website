@@ -230,6 +230,14 @@ html[data-overlay-scroll-lock]:not(.manage-page) body[data-scroll-locked] {
   background: var(--background-light);
 }
 
+@media (max-width: 639px) {
+  .container-gradient {
+    border-left-width: 0;
+    border-right-width: 0;
+    border-radius: 0;
+  }
+}
+
 :root.dark .container-gradient,
 :root.midnight .container-gradient {
   border: 1px solid transparent;

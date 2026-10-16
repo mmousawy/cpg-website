@@ -163,7 +163,7 @@ export default function FollowListModal({
             'relative m-auto',
             'max-h-[calc(var(--vv-height,100vh)-1rem)] sm:max-h-[calc(var(--vv-height,100vh)-2rem)]',
             'flex flex-col',
-            'rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
+            'rounded-xl sm:rounded-2xl border border-border-color bg-background-light shadow-xl shadow-black/25',
             'transition-[scale,max-height] duration-200 ease-out',
           ])}
           onClick={(e) => e.stopPropagation()}

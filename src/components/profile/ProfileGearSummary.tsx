@@ -9,6 +9,7 @@ import {
   shootingFormatDisplayLabel,
   type UserGearProfile,
 } from '@/lib/gear/types';
+import clsx from 'clsx';
 import Link from 'next/link';
 
 import ArrowLink from '../shared/ArrowLink';
@@ -18,6 +19,8 @@ type ProfileGearSummaryProps = {
   profile: UserGearProfile;
   /** Hide on /@nickname/gear where the full list is already on the page. */
   showGearListLink?: boolean;
+  /** Rule between intro lines and the full gear list on /@nickname/gear. */
+  separatorBeforeList?: boolean;
 };
 
 /** Gear highlights on public profile when the member has shared gear info. */
@@ -25,6 +28,7 @@ export default function ProfileGearSummary({
   profileNickname,
   profile,
   showGearListLink = true,
+  separatorBeforeList = false,
 }: ProfileGearSummaryProps) {
   const hasFormats = profile.formats.length > 0;
   const hasDailyDriverInfo = hasDailyDriver(profile);
@@ -41,7 +45,12 @@ export default function ProfileGearSummary({
 
   return (
     <div
-      className="mb-4 flex flex-col gap-2 text-sm sm:text-base leading-snug"
+      className={clsx(
+        'flex flex-col gap-2 text-sm sm:text-base leading-snug',
+        separatorBeforeList
+          ? 'mb-4 sm:mb-6 border-b border-border-color pb-4 sm:pb-6'
+          : 'mb-4',
+      )}
     >
       {hasFormats && (
         <div
@@ -125,7 +134,12 @@ export default function ProfileGearSummary({
         <ArrowLink
           href={gearUrl}
           direction="right"
+          className="self-start sm:text-base!"
         >
+          {profile.items.length}
+          {' '}
+          {profile.items.length === 1 ? 'item' : 'items'}
+          {' · '}
           View full gear list
         </ArrowLink>
       )}

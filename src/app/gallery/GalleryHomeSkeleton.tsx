@@ -148,7 +148,7 @@ function GalleryHomeContentSkeleton() {
         className="pt-0!"
       >
         <h2
-          className="mb-3 font-heading text-xl font-semibold opacity-80"
+          className="mb-3 font-heading text-xl font-semibold"
         >
           Browse by tag
         </h2>

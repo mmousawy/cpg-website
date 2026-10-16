@@ -4,11 +4,11 @@ import { useCallback } from 'react';
 import type { UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
 import type { OnboardingFormData } from '@/app/onboarding/onboardingSchema';
-import DailyDriverField from '@/components/gear/DailyDriverField';
+import DailyDriverFieldsGroup from '@/components/gear/DailyDriverFieldsGroup';
 import ShootingFormatTiles from '@/components/gear/ShootingFormatTiles';
 import Container from '@/components/layout/Container';
 import OnboardingSectionTitle from '@/components/onboarding/OnboardingSectionTitle';
-import { GEAR_CATEGORY_LABELS, type ShootingFormat } from '@/lib/gear/types';
+import type { ShootingFormat } from '@/lib/gear/types';
 import CameraLensSVG from 'public/icons/camera-lens.svg';
 import PhotoCameraSVG from 'public/icons/photo-camera.svg';
 
@@ -94,28 +94,15 @@ export default function OnboardingShootingSection({
             >
               What do you reach for most often? These show on your profile when filled in.
             </p>
-            <div
-              className="flex flex-col gap-4"
-            >
-              <DailyDriverField
-                id="onboarding-daily-driver-body"
-                label={GEAR_CATEGORY_LABELS.camera_body}
-                placeholder="e.g. Fujifilm X-T5"
-                category="camera_body"
-                value={dailyDriverBody}
-                peerItems={[]}
-                onCommit={commitBody}
-              />
-              <DailyDriverField
-                id="onboarding-daily-driver-lens"
-                label={GEAR_CATEGORY_LABELS.lens}
-                placeholder="e.g. XF 35mm F1.4"
-                category="lens"
-                value={dailyDriverLens}
-                peerItems={[]}
-                onCommit={commitLens}
-              />
-            </div>
+            <DailyDriverFieldsGroup
+              bodyId="onboarding-daily-driver-body"
+              lensId="onboarding-daily-driver-lens"
+              bodyValue={dailyDriverBody}
+              lensValue={dailyDriverLens}
+              peerItems={[]}
+              onCommitBody={commitBody}
+              onCommitLens={commitLens}
+            />
           </div>
         </Container>
       </div>
