@@ -10,6 +10,8 @@ interface InterestCloudProps {
   /** Currently active interest (if on an interest page) */
   activeInterest?: string;
   className?: string;
+  /** `sm` keeps pill text at text-sm on desktop (e.g. profile header). */
+  size?: 'default' | 'sm';
 }
 
 /**
@@ -20,6 +22,7 @@ export default function InterestCloud({
   interests,
   activeInterest,
   className,
+  size = 'default',
 }: InterestCloudProps) {
   if (interests.length === 0) {
     return null;
@@ -42,7 +45,8 @@ export default function InterestCloud({
               aria-label={`${interest.name}, ${count} ${count === 1 ? 'member' : 'members'}`}
               aria-current={isActive ? 'page' : undefined}
               className={clsx(
-                'inline-flex items-center border text-sm sm:text-base transition-colors rounded-full px-2 pt-0 pb-0.5 pr-1 shadow-sm',
+                'inline-flex items-center border transition-colors rounded-full px-2 pt-0 pb-0.5 pr-1 shadow-sm',
+                size === 'sm' ? 'text-sm' : 'text-sm sm:text-base',
                 'transition-all translate-y-0 active:translate-y-0.5 active:inset-shadow-sm active:shadow-none',
                 isActive
                   ? 'bg-primary/80 text-white dark:bg-primary-dark border-primary'
@@ -53,7 +57,8 @@ export default function InterestCloud({
               <span
                 aria-hidden
                 className={clsx(
-                  'font-medium ml-1.5 size-4 sm:size-5 inline-flex items-center justify-center rounded-full text-xs mt-px',
+                  'font-medium ml-1.5 inline-flex items-center justify-center rounded-full text-xs mt-px',
+                  size === 'sm' ? 'size-4' : 'size-4 sm:size-5',
                   'inset-shadow-[0_1px_1px_0px_rgba(0,0,0,0.15)]',
                   isActive
                     ? 'bg-black/30 dark:bg-black/50 text-white border-primary'

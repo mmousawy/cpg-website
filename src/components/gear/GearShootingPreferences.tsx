@@ -3,12 +3,9 @@
 import { useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import DailyDriverField from '@/components/gear/DailyDriverField';
+import DailyDriverFieldsGroup from '@/components/gear/DailyDriverFieldsGroup';
 import ShootingFormatTiles from '@/components/gear/ShootingFormatTiles';
-import {
-  GEAR_CATEGORY_LABELS,
-  type UserGearProfile,
-} from '@/lib/gear/types';
+import type { UserGearProfile } from '@/lib/gear/types';
 
 export default function GearShootingPreferences() {
   const { setValue, watch } = useFormContext<UserGearProfile>();
@@ -66,28 +63,16 @@ export default function GearShootingPreferences() {
             What do you reach for most often?
           </p>
         </div>
-        <div
-          className="flex flex-col gap-4 md:max-w-lg"
-        >
-          <DailyDriverField
-            id="account-daily-driver-body"
-            label={GEAR_CATEGORY_LABELS.camera_body}
-            placeholder="e.g. Fujifilm X-T5"
-            category="camera_body"
-            value={dailyDriverBody}
-            peerItems={inventoryItems}
-            onCommit={commitBody}
-          />
-          <DailyDriverField
-            id="account-daily-driver-lens"
-            label={GEAR_CATEGORY_LABELS.lens}
-            placeholder="e.g. XF 35mm F1.4"
-            category="lens"
-            value={dailyDriverLens}
-            peerItems={inventoryItems}
-            onCommit={commitLens}
-          />
-        </div>
+        <DailyDriverFieldsGroup
+          bodyId="account-daily-driver-body"
+          lensId="account-daily-driver-lens"
+          bodyValue={dailyDriverBody}
+          lensValue={dailyDriverLens}
+          peerItems={inventoryItems}
+          onCommitBody={commitBody}
+          onCommitLens={commitLens}
+          fieldsClassName="md:max-w-lg"
+        />
       </div>
     </div>
   );

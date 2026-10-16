@@ -8,7 +8,7 @@ import PageHeadingMobileSearch from '@/components/layout/PageHeadingMobileSearch
 import StickyScrollHeader from '@/components/layout/StickyScrollHeader';
 import { isOnboardingPath } from '@/utils/onboardingPath';
 type PageHeadingProps = {
-  title: string;
+  title: ReactNode;
   description?: ReactNode;
   /** Help link, draft badge, etc. — shown beside the title in the sticky row */
   aside?: ReactNode;

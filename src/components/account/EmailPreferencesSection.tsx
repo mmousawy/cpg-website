@@ -3,6 +3,7 @@
 import { Control, Controller, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import Checkbox from '@/components/shared/Checkbox';
 import type { AccountFormData } from '@/hooks/useAccountForm';
 import type { EmailTypeData } from '@/utils/emailPreferencesClient';
@@ -22,11 +23,11 @@ export default function EmailPreferencesSection({
 }: EmailPreferencesSectionProps) {
   return (
     <div>
-      <h2
-        className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
+      <StickySectionHeading
+        className="sm:text-lg"
       >
         Email preferences
-      </h2>
+      </StickySectionHeading>
       <Container>
         <div
           className="flex flex-col gap-4"

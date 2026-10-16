@@ -1,5 +1,6 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
 import { HOME_ALBUM_COVER_SIZES } from '@/config/homeImageSizes';
 import { routes } from '@/config/routes';

@@ -5,7 +5,9 @@ import { expireMemberGearDiscoveryCaches, expireTags } from '@/lib/cache/expireT
 import { fetchUserGearProfileForUser } from '@/lib/data/gear';
 import { normalizeGearProfileServer } from '@/lib/gear/normalizeGearProfileServer';
 import { persistUserGearProfileServer } from '@/lib/gear/persistUserGearProfileServer';
+import { ensureScrappyCameraMatchesForProfile } from '@/lib/gear/scrappyCameraMatch';
 import { parseUserGearProfileBody } from '@/lib/gear/validateUserGearProfile';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 
 export async function GET() {
@@ -40,7 +42,24 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: parsed.message }, { status: 400 });
   }
 
+  const existing = await fetchUserGearProfileForUser(supabase, user.id);
+  const incomingCount = parsed.profile.items.length;
+  const existingCount = existing.items.length;
+
+  if (existingCount > 0 && incomingCount === 0) {
+    return NextResponse.json(
+      {
+        message:
+          'This save would clear your entire gear list. Reload My gear and try again if that was not intended.',
+      },
+      { status: 409 },
+    );
+  }
+
   const profile = await normalizeGearProfileServer(supabase, parsed.profile);
+
+  const admin = createAdminClient();
+  await ensureScrappyCameraMatchesForProfile(admin, profile);
 
   const { error: saveError } = await persistUserGearProfileServer(supabase, profile);
 

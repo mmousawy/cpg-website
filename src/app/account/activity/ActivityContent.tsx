@@ -1,7 +1,11 @@
 'use client';
 
+import clsx from 'clsx';
+
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import NotificationItem from '@/components/notifications/NotificationItem';
 import Button from '@/components/shared/Button';
 import HelpLink from '@/components/shared/HelpLink';
@@ -18,6 +22,11 @@ import { useCallback, useState } from 'react';
 dayjs.extend(relativeTime);
 
 const PAGE_SIZE = 40;
+
+const activityPanelClassName = clsx(
+  'rounded-xl border border-border-color bg-background-light',
+  mobileBleedCardClassName,
+);
 
 function groupNotificationsByDate(notifications: NotificationWithActor[]) {
   const groups: Record<string, NotificationWithActor[]> = {
@@ -152,7 +161,7 @@ export default function ActivityContent() {
           aside={activityHelpLink}
         />
         <div
-          className="rounded-xl border border-border-color bg-background-light p-8 text-center"
+          className={clsx(activityPanelClassName, 'px-3 py-8 sm:p-8 text-center')}
         >
           <div
             className="animate-pulse text-foreground/40"
@@ -175,7 +184,7 @@ export default function ActivityContent() {
 
       {!hasNotifications ? (
         <div
-          className="rounded-xl border border-border-color bg-background-light p-8 text-center"
+          className={clsx(activityPanelClassName, 'px-3 py-8 sm:p-8 text-center')}
         >
           <div
             className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10"
@@ -211,13 +220,16 @@ export default function ActivityContent() {
           >
             {groups.today.length > 0 && (
               <section>
-                <h2
-                  className="mb-3 text-lg font-semibold font-heading"
+                <StickySectionHeading
+                  className="sm:text-lg"
                 >
                   Today
-                </h2>
+                </StickySectionHeading>
                 <div
-                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                  className={clsx(
+                    activityPanelClassName,
+                    'overflow-hidden divide-y divide-border-color',
+                  )}
                 >
                   {groups.today.map((notification) => (
                     <NotificationItem
@@ -235,13 +247,16 @@ export default function ActivityContent() {
 
             {groups.yesterday.length > 0 && (
               <section>
-                <h2
-                  className="mb-3 text-lg font-semibold font-heading"
+                <StickySectionHeading
+                  className="sm:text-lg"
                 >
                   Yesterday
-                </h2>
+                </StickySectionHeading>
                 <div
-                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                  className={clsx(
+                    activityPanelClassName,
+                    'overflow-hidden divide-y divide-border-color',
+                  )}
                 >
                   {groups.yesterday.map((notification) => (
                     <NotificationItem
@@ -259,13 +274,16 @@ export default function ActivityContent() {
 
             {groups.thisWeek.length > 0 && (
               <section>
-                <h2
-                  className="mb-3 text-lg font-semibold font-heading"
+                <StickySectionHeading
+                  className="sm:text-lg"
                 >
                   This week
-                </h2>
+                </StickySectionHeading>
                 <div
-                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                  className={clsx(
+                    activityPanelClassName,
+                    'overflow-hidden divide-y divide-border-color',
+                  )}
                 >
                   {groups.thisWeek.map((notification) => (
                     <NotificationItem
@@ -283,13 +301,16 @@ export default function ActivityContent() {
 
             {groups.earlier.length > 0 && (
               <section>
-                <h2
-                  className="mb-3 text-lg font-semibold font-heading"
+                <StickySectionHeading
+                  className="sm:text-lg"
                 >
                   Earlier
-                </h2>
+                </StickySectionHeading>
                 <div
-                  className="rounded-xl border border-border-color bg-background-light overflow-hidden divide-y divide-border-color"
+                  className={clsx(
+                    activityPanelClassName,
+                    'overflow-hidden divide-y divide-border-color',
+                  )}
                 >
                   {groups.earlier.map((notification) => (
                     <NotificationItem
@@ -308,7 +329,7 @@ export default function ActivityContent() {
           {/* Load more button */}
           {hasMore && (
             <div
-              className="text-center mb-2"
+              className="text-center mt-4"
             >
               <Button
                 onClick={loadMore}

@@ -1,3 +1,6 @@
+import clsx from 'clsx';
+
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
@@ -32,7 +35,10 @@ export default async function AllMembersPage() {
         />
 
         <div
-          className="rounded-xl border border-border-color bg-background-light p-8 text-center"
+          className={clsx(
+            'rounded-xl border border-border-color bg-background-light px-3 py-8 sm:p-8 text-center',
+            mobileBleedCardClassName,
+          )}
         >
           <h2
             className="mb-4 text-2xl font-semibold font-heading"

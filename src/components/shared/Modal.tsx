@@ -112,7 +112,7 @@ export default function Modal() {
             'relative m-auto',
             'max-h-[calc(var(--vv-height,100vh)-3rem)] max-sm:max-h-[calc(var(--vv-height,100vh)-2rem)]',
             'flex flex-col',
-            'rounded-2xl border border-border-color-strong bg-background-medium shadow-xl shadow-black/20',
+            'rounded-xl sm:rounded-2xl border border-border-color-strong bg-background-medium shadow-xl shadow-black/20',
             'transition-[scale,max-height] duration-200 ease-out',
           ])}
         >

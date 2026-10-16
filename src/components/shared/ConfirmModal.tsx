@@ -79,7 +79,7 @@ export default function ConfirmModal() {
             isOpen ? 'scale-100 modal-panel-in' : 'scale-95',
             'w-full max-w-md',
             'relative m-auto',
-            'rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
+            'rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4 shadow-xl shadow-black/25',
             'transition-[scale] duration-200 ease-out',
           ])}
         >

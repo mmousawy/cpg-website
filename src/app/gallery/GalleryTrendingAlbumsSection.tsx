@@ -1,9 +1,9 @@
-import Link from 'next/link';
-
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import type { AlbumWithPhotos } from '@/types/albums';
+
+import { GalleryLinkedSectionHeading } from '@/app/gallery/GalleryLinkedSectionHeading';
 
 export function GalleryTrendingAlbumsSection({ albums }: { albums: AlbumWithPhotos[] }) {
   if (albums.length === 0) {
@@ -12,25 +12,11 @@ export function GalleryTrendingAlbumsSection({ albums }: { albums: AlbumWithPhot
 
   return (
     <div>
-      <div
-        className="mb-6"
-      >
-        <Link
-          href={`${routes.galleryAlbums.url}?sort=popular`}
-          className="group"
-        >
-          <h2
-            className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
-          >
-            Trending albums
-          </h2>
-        </Link>
-        <p
-          className="text-sm text-foreground/80 leading-snug"
-        >
-          Most viewed albums from the last 7 days
-        </p>
-      </div>
+      <GalleryLinkedSectionHeading
+        href={`${routes.galleryAlbums.url}?sort=popular`}
+        title="Trending albums"
+        description="Most viewed albums from the last 7 days"
+      />
       <AlbumGrid
         albums={albums}
         liveLikeCounts={false}

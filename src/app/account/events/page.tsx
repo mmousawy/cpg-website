@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { startTransition, useEffect, useState } from 'react';
 
 import EventsSectionHeading from '@/components/events/EventsSectionHeading';
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import BlurImage from '@/components/shared/BlurImage';
@@ -341,7 +342,10 @@ function RsvpEventCard({
 
   return (
     <div
-      className="rounded-xl border bg-background-light border-border-color overflow-hidden"
+      className={clsx(
+        'rounded-xl border bg-background-light border-border-color overflow-hidden',
+        mobileBleedCardClassName,
+      )}
     >
       {coverSrc && (
         <Link
@@ -351,11 +355,11 @@ function RsvpEventCard({
         >
           <BlurImage
             fill
-            sizes="calc(100vw - 1.5rem)"
+            sizes="100vw"
             loading="lazy"
             quality={THUMBNAIL_IMAGE_QUALITY}
             alt={event.title || 'Event cover image'}
-            className="object-cover rounded-t-xl hover:brightness-90 transition-all duration-200"
+            className="object-cover max-sm:rounded-none rounded-t-xl hover:brightness-90 transition-all duration-200"
             src={coverSrc}
           />
           <RsvpStatusBadge
@@ -369,7 +373,7 @@ function RsvpEventCard({
         className="flex sm:flex-row flex-col"
       >
         <div
-          className="flex-1 min-w-0 p-4 sm:p-6"
+          className="flex-1 min-w-0 px-3 py-4 sm:p-6"
         >
           {!coverSrc && (
             <RsvpStatusBadge

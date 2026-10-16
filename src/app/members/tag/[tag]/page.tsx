@@ -1,4 +1,5 @@
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import PageHeading from '@/components/layout/PageHeading';
 
 import MemberCard from '@/components/shared/MemberCard';
@@ -101,11 +102,11 @@ export default async function TagMembersPage({ params }: { params: Params }) {
           <div
             className="mb-8 sm:mb-10"
           >
-            <h2
-              className="mb-1 text-lg font-semibold font-heading"
+            <StickySectionHeading
+              stickyClassName="mb-1 sm:mb-1"
             >
               Explore by photo style
-            </h2>
+            </StickySectionHeading>
             <p
               className="mb-6 text-sm text-foreground/60"
             >

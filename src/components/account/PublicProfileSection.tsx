@@ -6,6 +6,7 @@ import ProfileImageUploadSections, {
   type ProfileImageUploadSectionsProps,
 } from '@/components/account/ProfileImageUploadSections';
 import Container from '@/components/layout/Container';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import AutocompleteInput from '@/components/shared/AutocompleteInput';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
@@ -51,11 +52,11 @@ export default function PublicProfileSection({
 
   return (
     <div>
-      <h2
-        className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
+      <StickySectionHeading
+        className="sm:text-lg"
       >
         Your public profile
-      </h2>
+      </StickySectionHeading>
       <Container>
         <ProfileImageUploadSections
           {...imageProps}

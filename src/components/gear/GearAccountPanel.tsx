@@ -1,4 +1,7 @@
+import clsx from 'clsx';
 import type { ReactNode } from 'react';
+
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 
 type GearAccountPanelProps = {
   title: string;
@@ -15,7 +18,10 @@ export default function GearAccountPanel({
 }: GearAccountPanelProps) {
   return (
     <section
-      className="rounded-2xl border border-border-color bg-background-light p-4 sm:p-6"
+      className={clsx(
+        'rounded-xl sm:rounded-2xl border border-border-color bg-background-light px-3 py-4 sm:p-6',
+        mobileBleedCardClassName,
+      )}
     >
       <div
         className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"

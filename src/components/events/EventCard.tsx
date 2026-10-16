@@ -1,3 +1,4 @@
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import { RichDescriptionView } from '@/components/shared/RichDescriptionView';
 import StackedAvatarsPopover, { type AvatarPerson } from '@/components/shared/StackedAvatarsPopover';
 import type { EventAttendee } from '@/types/events';
@@ -123,6 +124,7 @@ export default function EventCard({
   const wrapperClasses = clsx(
     'block transition-colors group overflow-hidden',
     'rounded-xl border border-border-color bg-background-light',
+    mobileBleedCardClassName,
     asLink && 'hover:border-primary cursor-pointer',
     className,
   );
@@ -144,7 +146,7 @@ export default function EventCard({
             quality={imageQuality}
             alt={event.title || 'Event cover image'}
             className={clsx(
-              'object-cover rounded-t-xl sm:rounded-t-none sm:rounded-r-xl',
+              'object-cover max-sm:rounded-none rounded-t-xl sm:rounded-t-none sm:rounded-r-xl',
               isPast && '',
             )}
             src={coverSrc}
@@ -163,7 +165,7 @@ export default function EventCard({
       )}
 
       <div
-        className="flex-1 min-w-0 p-4 sm:order-1 sm:p-6"
+        className="flex-1 min-w-0 px-3 py-4 sm:order-1 sm:p-6"
       >
         {!imageSrc && showBadge && (
           <div

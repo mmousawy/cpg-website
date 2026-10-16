@@ -6,6 +6,8 @@ import type { SceneEventInterested } from '@/lib/data/scene';
 import type { SceneEvent } from '@/types/scene';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
+
 import SceneEventCard from './SceneEventCard';
 
 type PastSceneEventsPaginatedProps = {
@@ -138,6 +140,7 @@ export default function PastSceneEventsPaginated({
             event={event}
             interested={interestedByEvent[event.id] ?? []}
             now={now}
+            className={mobileBleedCardClassName}
           />
         ))}
       </div>

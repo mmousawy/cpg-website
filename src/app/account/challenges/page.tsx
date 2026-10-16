@@ -7,8 +7,10 @@ import { startTransition, useEffect, useMemo, useState } from 'react';
 import { useConfirm } from '@/app/providers/ConfirmProvider';
 import ChallengesList from '@/components/challenges/ChallengesList';
 import ExpandableChallengePrompt from '@/components/challenges/ExpandableChallengePrompt';
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import BlurImage from '@/components/shared/BlurImage';
 import Button from '@/components/shared/Button';
 import CardBadges from '@/components/shared/CardBadges';
@@ -219,11 +221,9 @@ export default function MyChallengesPage() {
           <>
             {pendingGroups.length > 0 && (
               <section>
-                <h2
-                  className="mb-2 sm:mb-4 text-xl font-semibold opacity-80 font-heading"
-                >
+                <StickySectionHeading>
                   Pending review
-                </h2>
+                </StickySectionHeading>
                 <div
                   className={JOINED_CARD_GRID}
                 >
@@ -242,11 +242,9 @@ export default function MyChallengesPage() {
 
             {yourGroups.length > 0 && (
               <section>
-                <h2
-                  className="mb-2 sm:mb-4 text-xl font-semibold opacity-80 font-heading"
-                >
+                <StickySectionHeading>
                   Your challenges
-                </h2>
+                </StickySectionHeading>
                 <div
                   className={JOINED_CARD_GRID}
                 >
@@ -266,11 +264,9 @@ export default function MyChallengesPage() {
 
             {openChallenges.length > 0 && (
               <section>
-                <h2
-                  className="mb-2 sm:mb-4 text-xl font-semibold opacity-80 font-heading"
-                >
+                <StickySectionHeading>
                   Open challenges
-                </h2>
+                </StickySectionHeading>
                 {now != null ? (
                   <ChallengesList
                     challenges={openChallenges}
@@ -373,12 +369,12 @@ function JoinedChallengeCard({
       className={clsx(
         'flex flex-col rounded-2xl transition-all sm:flex-row',
         'bg-background-light border border-border-color',
-        'hover:border-border-color-strong hover:shadow-lg',
+        mobileBleedCardClassName,
       )}
     >
       <Link
         href={challengeLink}
-        className="relative min-h-28 w-full shrink-0 overflow-hidden rounded-t-2xl bg-background-medium sm:aspect-square sm:w-48 sm:rounded-none sm:rounded-l-2xl"
+        className="relative min-h-28 w-full shrink-0 overflow-hidden max-sm:rounded-none rounded-t-2xl bg-background-medium sm:aspect-square sm:w-48 sm:rounded-none sm:rounded-l-2xl"
       >
         {challenge.cover_image_url ? (
           <BlurImage
@@ -442,7 +438,7 @@ function JoinedChallengeCard({
       </Link>
 
       <div
-        className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:px-5 sm:py-4"
+        className="flex min-w-0 flex-1 flex-col gap-4 px-3 py-4 sm:px-5 sm:py-4"
       >
         {promptHtml ? (
           <div
@@ -461,7 +457,7 @@ function JoinedChallengeCard({
         ) : null}
 
         <div
-          className="-mx-4 flex flex-col gap-3 border-t border-b border-border-color-strong dark:border-border-color bg-black/15 p-4 dark:bg-black/20 sm:-mx-5 sm:gap-4 sm:p-5 inset-shadow-[0px_2px_10px_rgba(0,0,0,0.1)]"
+          className="max-sm:-mx-3 flex flex-col gap-3 border-t border-b border-border-color-strong dark:border-border-color bg-black/15 px-3 py-4 dark:bg-black/20 sm:-mx-5 sm:gap-4 sm:p-5 inset-shadow-[0px_2px_10px_rgba(0,0,0,0.1)]"
         >
           <div
             className="flex items-center gap-2"
@@ -484,83 +480,83 @@ function JoinedChallengeCard({
             className="flex flex-wrap gap-4 sm:gap-5"
           >
             {sortedSubmissions.map((submission) => {
-            const photo = submission.photo;
-            const photoHref = submission.user?.nickname && photo?.short_id
-              ? `/@${submission.user.nickname}/photo/${photo.short_id}`
-              : null;
-            const status = submission.status as ChallengeStatus;
-            const accent = statusAccent[status] ?? statusAccent.pending;
+              const photo = submission.photo;
+              const photoHref = submission.user?.nickname && photo?.short_id
+                ? `/@${submission.user.nickname}/photo/${photo.short_id}`
+                : null;
+              const status = submission.status as ChallengeStatus;
+              const accent = statusAccent[status] ?? statusAccent.pending;
 
-            return (
-              <div
-                key={submission.id}
-                className="flex w-24 flex-col gap-2 sm:w-28"
-              >
+              return (
                 <div
-                  className={clsx(
-                    'aspect-square border-2 bg-background-light p-0.5',
-                    accent,
-                  )}
+                  key={submission.id}
+                  className="flex w-24 flex-col gap-2 sm:w-28"
                 >
                   <div
-                    className="relative size-full overflow-hidden"
-                  >
-                    {photo?.url ? (
-                      <>
-                        <BlurImage
-                          src={getSquareThumbnailUrl(photo.url, 512, DEFAULT_SUPABASE_IMAGE_QUALITY) || photo.url}
-                          alt={photo.title || 'Submitted photo'}
-                          fill
-                          className="object-cover"
-                          sizes="256px"
-                          quality={DEFAULT_SUPABASE_IMAGE_QUALITY}
-                          blurhash={photo.blurhash}
-                        />
-                        {photoHref && (
-                          <Link
-                            href={photoHref}
-                            className="absolute inset-0 z-10"
-                            aria-label={photo.title || 'View submitted photo'}
-                          />
-                        )}
-                      </>
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center bg-background-medium text-foreground/30"
-                      >
-                        ?
-                      </div>
+                    className={clsx(
+                      'aspect-square border-2 bg-background-light p-0.5',
+                      accent,
                     )}
-                    <CardBadges
-                      badges={[submissionStatusBadge(status)]}
-                    />
+                  >
+                    <div
+                      className="relative size-full overflow-hidden"
+                    >
+                      {photo?.url ? (
+                        <>
+                          <BlurImage
+                            src={getSquareThumbnailUrl(photo.url, 512, DEFAULT_SUPABASE_IMAGE_QUALITY) || photo.url}
+                            alt={photo.title || 'Submitted photo'}
+                            fill
+                            className="object-cover"
+                            sizes="256px"
+                            quality={DEFAULT_SUPABASE_IMAGE_QUALITY}
+                            blurhash={photo.blurhash}
+                          />
+                          {photoHref && (
+                            <Link
+                              href={photoHref}
+                              className="absolute inset-0 z-10"
+                              aria-label={photo.title || 'View submitted photo'}
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <div
+                          className="flex h-full w-full items-center justify-center bg-background-medium text-foreground/30"
+                        >
+                          ?
+                        </div>
+                      )}
+                      <CardBadges
+                        badges={[submissionStatusBadge(status)]}
+                      />
+                    </div>
                   </div>
+
+                  {status === 'pending' && (
+                    <button
+                      type="button"
+                      onClick={() => onWithdraw(submission)}
+                      disabled={isWithdrawing}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground disabled:opacity-50"
+                    >
+                      <UndoSVG
+                        className="size-3.5 shrink-0"
+                      />
+                      Withdraw
+                    </button>
+                  )}
+
+                  {status === 'rejected' && submission.rejection_reason && (
+                    <p
+                      className="text-xs leading-snug text-red-500/80 line-clamp-3"
+                    >
+                      {submission.rejection_reason}
+                    </p>
+                  )}
                 </div>
-
-                {status === 'pending' && (
-                  <button
-                    type="button"
-                    onClick={() => onWithdraw(submission)}
-                    disabled={isWithdrawing}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground disabled:opacity-50"
-                  >
-                    <UndoSVG
-                      className="size-3.5 shrink-0"
-                    />
-                    Withdraw
-                  </button>
-                )}
-
-                {status === 'rejected' && submission.rejection_reason && (
-                  <p
-                    className="text-xs leading-snug text-red-500/80 line-clamp-3"
-                  >
-                    {submission.rejection_reason}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
           </div>
         </div>
 

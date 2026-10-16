@@ -5,6 +5,7 @@ import type { SceneEvent } from '@/types/scene';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
@@ -336,7 +337,7 @@ export default function ScenePageContent({
 
   const tabFromUrl =
     periodParam &&
-    availableTabs.some((t) => t.id === periodParam)
+      availableTabs.some((t) => t.id === periodParam)
       ? periodParam
       : null;
   const activeTab =
@@ -403,7 +404,7 @@ export default function ScenePageContent({
         }
         setFetchedInterests((prev) => ({ ...prev, ...merged }));
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => { cancelled = true; };
   }, [visibleEventIds, interestedByEvent]);
@@ -452,16 +453,14 @@ export default function ScenePageContent({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabChange(tab.id)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
-                  activeTab === tab.id
+                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${activeTab === tab.id
                     ? 'border-primary border-2 bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary-alt'
                     : 'border-transparent border-2 text-foreground/80 hover:text-foreground hover:bg-foreground/5 dark:text-foreground/90 dark:hover:text-foreground dark:hover:bg-foreground/10'
                 }`}
               >
                 {tab.label}
                 <span
-                  className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold leading-none ${
-                    activeTab === tab.id
+                  className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold leading-none ${activeTab === tab.id
                       ? 'bg-primary/15 text-primary dark:bg-primary/40 dark:text-primary-alt'
                       : 'bg-foreground/10 text-foreground/60 dark:bg-foreground/15 dark:text-foreground/80'
                   }`}
@@ -493,6 +492,7 @@ export default function ScenePageContent({
                       event={event}
                       interested={mergedInterests[event.id] ?? []}
                       now={now}
+                      className={mobileBleedCardClassName}
                     />
                   ))}
                 </div>

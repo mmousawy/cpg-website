@@ -1,4 +1,5 @@
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import TagCloud from '@/components/shared/TagCloud';
 import type { Tag } from '@/types/photos';
 
@@ -11,14 +12,16 @@ export function GalleryTagsSection({ tags }: { tags: Tag[] }) {
     <PageContainer
       className="py-0!"
     >
-      <h2
-        className="mb-3 text-xl font-semibold font-heading opacity-80"
-      >
-        Browse by tag
-      </h2>
-      <TagCloud
-        tags={tags}
-      />
+      <div>
+        <StickySectionHeading
+          stickyClassName="mb-3 sm:mb-3"
+        >
+          Browse by tag
+        </StickySectionHeading>
+        <TagCloud
+          tags={tags}
+        />
+      </div>
     </PageContainer>
   );
 }
