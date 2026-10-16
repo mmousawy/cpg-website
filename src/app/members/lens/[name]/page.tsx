@@ -38,8 +38,8 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   return createMetadata({
-    title: `Members whose daily driver lens is ${label}`,
-    description: `Discover community members whose daily driver lens is ${label}.`,
+    title: `Members with daily driver lens "${label}"`,
+    description: `Discover community members with daily driver lens "${label}".`,
     canonical: membersDailyDriverLensPath(label),
     keywords: ['photography community', 'photographers', label, 'lens', 'daily driver', 'member discovery'],
     noindex: members.length < MIN_INDEXABLE_INTEREST_MEMBERS,
@@ -69,7 +69,7 @@ export default async function LensMembersPage({ params }: { params: Params }) {
   return (
     <PageContainer>
       <PageHeading
-        title={`Members whose daily driver lens is ${label}`}
+        title={`Members with daily driver lens "${label}"`}
         description={
           <>
             {members.length}
