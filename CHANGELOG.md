@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.43.0](https://github.com/mmousawy/cpg-website/compare/v1.42.3...v1.43.0) (2026-10-16)
+
+
+### ✨ Features
+
+* introduce scrappy camera matches and enhance gear components ([9e067c7](https://github.com/mmousawy/cpg-website/commit/9e067c7561f29f45d8dfd688870388ee7f565b7c))
+
+
+### 🐛 Bug Fixes
+
+* enhance layout and structure with StickySectionHeading component ([f5336c4](https://github.com/mmousawy/cpg-website/commit/f5336c4a24056427fadd594b8417c1c6aad442fd))
+* improve profile and gear components with new features and optimizations ([d06fc2e](https://github.com/mmousawy/cpg-website/commit/d06fc2e1738cdcab29eda32178ed591a8f2ef642))
+
 ## [1.42.3](https://github.com/mmousawy/cpg-website/compare/v1.42.2...v1.42.3) (2026-10-15)
 
 
