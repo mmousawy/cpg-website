@@ -9,6 +9,8 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 
 import 'swiper/swiper.css';
 
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
+
 import SceneEventCard from './SceneEventCard';
 
 function NavButton({
@@ -79,7 +81,7 @@ export default function RelatedEventsSlider({
       className="mt-8 min-w-0 sm:-mx-16 sm:px-16 sm:mt-12"
     >
       <h2
-        className="text-lg font-semibold mb-4 opacity-80 font-heading"
+        className="text-lg"
       >
         More events in
         {' '}

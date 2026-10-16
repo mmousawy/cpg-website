@@ -78,7 +78,7 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
       <GalleryPageHeader />
 
       <div
-        className="-mx-3 grid min-w-0 gap-10 md:-mx-12 md:gap-12 md:pb-12 [&>*]:min-w-0"
+        className="-mx-3 grid min-w-0 gap-8 md:-mx-12 md:gap-10 md:pb-12 [&>*]:min-w-0"
       >
         <GalleryTagsSection
           tags={popularTags}
@@ -88,7 +88,7 @@ async function CachedGalleryPage({ includeTestContent }: { includeTestContent: b
           className="py-0!"
         >
           <div
-            className="grid min-w-0 gap-10 md:gap-12 *:min-w-0"
+            className="grid min-w-0 gap-8 md:gap-10 *:min-w-0"
           >
             <GalleryMostViewedPhotosSection
               photos={mostViewedPhotos}

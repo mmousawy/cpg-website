@@ -1,4 +1,5 @@
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import PageHeading from '@/components/layout/PageHeading';
 import ShootingFormatDiscoveryCloud from '@/components/members/ShootingFormatDiscoveryCloud';
 import MemberCard from '@/components/shared/MemberCard';
@@ -83,11 +84,11 @@ export default async function FormatMembersPage({ params }: { params: Params }) 
         <div
           className="mb-8 sm:mb-10"
         >
-          <h2
-            className="mb-3 text-xl font-semibold font-heading"
+          <StickySectionHeading
+            stickyClassName="mb-3 sm:mb-3"
           >
             Browse by format
-          </h2>
+          </StickySectionHeading>
           <ShootingFormatDiscoveryCloud
             groups={popularFormats}
             activeFormat={format}

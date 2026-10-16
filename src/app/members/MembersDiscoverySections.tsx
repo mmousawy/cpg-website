@@ -1,5 +1,6 @@
 'use client';
 
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import Avatar from '@/components/auth/Avatar';
 import InterestCloud from '@/components/shared/InterestCloud';
 import MemberCard from '@/components/shared/MemberCard';
@@ -20,11 +21,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-3 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-3 sm:mb-3"
         >
           Popular interests
-        </h2>
+        </StickySectionHeading>
         <PopularInterestsSection
           popularInterests={data.popularInterests}
         />
@@ -32,11 +33,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-4 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-4 sm:mb-4"
         >
           Explore by interests
-        </h2>
+        </StickySectionHeading>
         <RandomInterestsSection
           randomInterests={data.randomInterests}
         />
@@ -44,11 +45,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Shoots on
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -61,11 +62,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Daily drivers
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -79,11 +80,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Recently active
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -96,11 +97,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Explore by photo style
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -111,11 +112,11 @@ export default function MembersDiscoverySections({ data }: MembersDiscoverySecti
         />
       </div>
       <div>
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           New members
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >

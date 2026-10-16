@@ -4,6 +4,7 @@ import { startTransition, useEffect, useState } from 'react';
 
 import ChallengeCard from '@/components/challenges/ChallengeCard';
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -68,11 +69,9 @@ export default function AdminChallengesPage() {
           {/* Active Challenges */}
           {activeChallenges.length > 0 && (
             <section>
-              <h2
-                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-              >
+              <StickySectionHeading>
                 Active challenges
-              </h2>
+              </StickySectionHeading>
               <div
                 className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
               >
@@ -91,11 +90,9 @@ export default function AdminChallengesPage() {
           {/* Inactive Challenges */}
           {inactiveChallenges.length > 0 && (
             <section>
-              <h2
-                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-              >
+              <StickySectionHeading>
                 Inactive challenges
-              </h2>
+              </StickySectionHeading>
               <div
                 className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 opacity-60"
               >

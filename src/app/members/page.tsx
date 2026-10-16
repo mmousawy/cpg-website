@@ -1,5 +1,7 @@
+import clsx from 'clsx';
 import { Suspense } from 'react';
 
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import Button from '@/components/shared/Button';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
@@ -91,7 +93,10 @@ function UnauthenticatedMembersPage() {
       />
 
       <div
-        className="rounded-xl border border-border-color bg-background-light p-4 sm:p-6 text-center"
+        className={clsx(
+          'rounded-xl border border-border-color bg-background-light px-3 py-4 sm:p-6 text-center',
+          mobileBleedCardClassName,
+        )}
       >
         <div
           className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10"

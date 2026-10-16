@@ -1,6 +1,7 @@
 import ChallengesPageHeader from '@/app/challenges/ChallengesPageHeader';
 import ChallengesList from '@/components/challenges/ChallengesList';
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import { getChallengesPageData } from '@/lib/data/challengesPage';
 import { createMetadata } from '@/utils/metadata';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -27,11 +28,9 @@ export default async function ChallengesPage() {
         className="space-y-10"
       >
         <section>
-          <h2
-            className="text-xl font-semibold mb-4 font-heading opacity-80"
-          >
+          <StickySectionHeading>
             Active challenges
-          </h2>
+          </StickySectionHeading>
           <ChallengesList
             challenges={activeChallenges}
             emptyMessage="No active challenges right now. Check back soon!"
@@ -41,11 +40,9 @@ export default async function ChallengesPage() {
 
         {pastChallenges.length > 0 && (
           <section>
-            <h2
-              className="text-xl font-semibold mb-4 font-heading opacity-80"
-            >
+            <StickySectionHeading>
               Past challenges
-            </h2>
+            </StickySectionHeading>
             <ChallengesList
               challenges={pastChallenges}
               emptyMessage="No past challenges yet."

@@ -9,6 +9,7 @@ import PhotoGridDensityPicker from '@/components/account/PhotoGridDensityPicker'
 import PhotoGridStylePicker from '@/components/account/PhotoGridStylePicker';
 import ThemePreferencePicker from '@/components/account/ThemePreferencePicker';
 import Container from '@/components/layout/Container';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import type { AccountFormData } from '@/hooks/useAccountForm';
 
 interface PreferencesSectionProps {
@@ -22,11 +23,11 @@ export default function PreferencesSection({
 }: PreferencesSectionProps) {
   return (
     <div>
-      <h2
-        className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
+      <StickySectionHeading
+        className="sm:text-lg"
       >
         Appearance
-      </h2>
+      </StickySectionHeading>
       <Container>
         <div
           className="space-y-6"

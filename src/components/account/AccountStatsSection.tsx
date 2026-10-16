@@ -1,6 +1,7 @@
 'use client';
 
 import Container from '@/components/layout/Container';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import ArrowLink from '@/components/shared/ArrowLink';
 import { routes } from '@/config/routes';
 import type { AccountStats, Profile } from '@/hooks/useAccountForm';
@@ -18,20 +19,18 @@ interface AccountStatsSectionProps {
 export default function AccountStatsSection({ profile, stats }: AccountStatsSectionProps) {
   return (
     <div>
-      <div
-        className="mb-2 flex items-center justify-between gap-3 sm:mb-4"
+      <StickySectionHeading
+        className="sm:text-lg"
+        accessory={(
+          <ArrowLink
+            href={routes.accountStats.url}
+          >
+            View full stats
+          </ArrowLink>
+        )}
       >
-        <h2
-          className="text-lg font-semibold opacity-80 font-heading"
-        >
-          Account info
-        </h2>
-        <ArrowLink
-          href={routes.accountStats.url}
-        >
-          View full stats
-        </ArrowLink>
-      </div>
+        Account info
+      </StickySectionHeading>
       <Container>
         <div
           className="space-y-3 sm:space-y-4"

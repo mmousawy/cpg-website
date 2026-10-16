@@ -1,9 +1,9 @@
-import Link from 'next/link';
-
 import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import type { StreamPhoto } from '@/lib/data/gallery';
+
+import { GalleryLinkedSectionHeading } from '@/app/gallery/GalleryLinkedSectionHeading';
 
 export function GalleryRecentPhotosSection({ photos }: { photos: StreamPhoto[] }) {
   if (photos.length === 0) {
@@ -12,31 +12,15 @@ export function GalleryRecentPhotosSection({ photos }: { photos: StreamPhoto[] }
 
   return (
     <div>
+      <GalleryLinkedSectionHeading
+        href={routes.galleryPhotos.url}
+        title="Recent photos"
+        description="Latest uploads from the community"
+      />
       <DensityAwarePhotoGrid
         photos={photos}
         showAttribution
         liveLikeCounts={false}
-        header={
-          <div
-            className="mb-6"
-          >
-            <Link
-              href={routes.galleryPhotos.url}
-              className="group"
-            >
-              <h2
-                className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
-              >
-                Recent photos
-              </h2>
-            </Link>
-            <p
-              className="text-sm text-foreground/80 leading-snug"
-            >
-              Latest uploads from the community
-            </p>
-          </div>
-        }
       />
       <div
         className="mt-4 sm:mt-6 flex justify-center "

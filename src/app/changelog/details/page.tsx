@@ -111,7 +111,7 @@ export default async function ChangelogDetailsPage({ searchParams }: PageProps) 
                           >
                             Read all changes
                           </Link>
-                        )}
+                          )}
                         {entry.compareUrl && (
                           <a
                             href={entry.compareUrl}
@@ -125,7 +125,7 @@ export default async function ChangelogDetailsPage({ searchParams }: PageProps) 
                               className="w-4 h-4 fill-current"
                             />
                           </a>
-                        )}
+                          )}
                       </span>
                     </div>
 

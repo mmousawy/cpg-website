@@ -56,7 +56,7 @@ async function ConfirmContent({
   return (
     <PageContainer>
       <h2
-        className="mb-4 text-lg font-bold leading-tight opacity-70"
+        className="mb-4 text-lg font-bold leading-tight"
       >
         Confirm your sign up
       </h2>
@@ -66,7 +66,7 @@ async function ConfirmContent({
             Something went wrong with retrieving your RSVP details. Please contact us for assistance.
           </ErrorMessage>
         )}
-        { event && rsvp?.email && (
+        {event && rsvp?.email && (
           <ConfirmBlock
             event={event}
             rsvp={rsvp}

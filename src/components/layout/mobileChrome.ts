@@ -1,8 +1,8 @@
 import { prefersReducedMotion } from '@/utils/reduceMotion';
 
-/** Shared frosted pill styling for mobile bottom chrome (tab bar, action bars). */
+/** Shared pill styling for mobile bottom chrome (tab bar, action bars). */
 export const mobileFloatingPillClassName =
-  'bg-noise max-sm:rounded-2xl max-sm:border max-sm:border-border-color-strong max-sm:bg-background-light/85 max-sm:shadow-lg max-sm:backdrop-blur-xl';
+  'bg-noise max-sm:rounded-2xl max-sm:border max-sm:border-border-color-strong max-sm:bg-background-light max-sm:shadow-lg';
 
 /** Horizontal inset + gap above the tab bar for stacked floating pills. */
 export const mobileFloatingPillInsetClassName = 'max-sm:px-3';
