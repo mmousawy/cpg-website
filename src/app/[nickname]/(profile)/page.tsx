@@ -1,6 +1,7 @@
 import AlbumGrid from '@/components/album/AlbumGrid';
 
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import { ProfileBelowHeroSection, ProfileHeroBanner, profileHeroPageClassName } from '@/components/profile/ProfileHeader';
@@ -218,8 +219,9 @@ async function ProfileContent({ nickname }: { nickname: string }) {
             profileNickname={profile.nickname || nickname}
             showAttribution
             header={
-              <div
-                className="mb-6"
+              <StickySectionHeading
+                as="div"
+                stickyClassName="mb-6 sm:mb-6"
               >
                 <h2
                   className="text-xl font-semibold font-heading"
@@ -232,7 +234,7 @@ async function ProfileContent({ nickname }: { nickname: string }) {
                   Latest photos by @
                   {profile.nickname}
                 </p>
-              </div>
+              </StickySectionHeading>
             }
           />
           {totalPhotos > PROFILE_PHOTOSTREAM_LIMIT_COMFORTABLE && (
@@ -259,23 +261,22 @@ async function ProfileContent({ nickname }: { nickname: string }) {
         <WidePageContainer
           className={publicPhotos.length > 0 ? 'pt-0!' : ''}
         >
-          <div
-            className="mb-6 flex items-start justify-between gap-4"
+          <StickySectionHeading
+            as="div"
+            stickyClassName="mb-6 sm:mb-6"
           >
-            <div>
-              <h2
-                className="text-xl font-semibold font-heading"
-              >
-                Albums
-              </h2>
-              <p
-                className="text-sm text-foreground/80 leading-snug"
-              >
-                Photo collections by @
-                {profile.nickname}
-              </p>
-            </div>
-          </div>
+            <h2
+              className="text-xl font-semibold font-heading"
+            >
+              Albums
+            </h2>
+            <p
+              className="text-sm text-foreground/80 leading-snug"
+            >
+              Photo collections by @
+              {profile.nickname}
+            </p>
+          </StickySectionHeading>
           <AlbumGrid
             albums={albums}
           />

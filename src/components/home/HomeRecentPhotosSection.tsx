@@ -1,3 +1,4 @@
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import WidePageContainer from '@/components/layout/WidePageContainer';
 import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import ArrowLink from '@/components/shared/ArrowLink';
@@ -14,21 +15,20 @@ export function HomeRecentPhotosSection({ photos }: HomeRecentPhotosSectionProps
     <WidePageContainer
       className="py-0!"
     >
-      <div
-        className="mb-4 flex items-center justify-between"
+      <StickySectionHeading
+        as="h3"
+        stickyClassName="mb-4 sm:mb-4"
+        accessory={(
+          <ArrowLink
+            href="/gallery/photos"
+            prefetch={false}
+          >
+            View all photos
+          </ArrowLink>
+        )}
       >
-        <h3
-          className="text-xl font-semibold font-heading"
-        >
-          Recent photos
-        </h3>
-        <ArrowLink
-          href="/gallery/photos"
-          prefetch={false}
-        >
-          View all photos
-        </ArrowLink>
-      </div>
+        Recent photos
+      </StickySectionHeading>
       <DensityAwarePhotoGrid
         photos={photos}
         showAttribution

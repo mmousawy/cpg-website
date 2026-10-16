@@ -1,3 +1,4 @@
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import TagCloudSkeleton from '@/components/shared/TagCloudSkeleton';
 
 const PILL_WIDTHS = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -8,31 +9,31 @@ export default function MembersDiscoverySkeleton() {
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-3 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-3 sm:mb-3"
         >
           Popular interests
-        </h2>
+        </StickySectionHeading>
         <InterestCloudSkeleton />
       </div>
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-4 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-4 sm:mb-4"
         >
           Explore by interests
-        </h2>
+        </StickySectionHeading>
         <InterestCardsSkeleton />
       </div>
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Shoots on
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -43,11 +44,11 @@ export default function MembersDiscoverySkeleton() {
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Daily drivers
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -58,11 +59,11 @@ export default function MembersDiscoverySkeleton() {
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Recently active
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -75,11 +76,11 @@ export default function MembersDiscoverySkeleton() {
       <div
         className="mb-10"
       >
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           Explore by photo style
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >
@@ -88,11 +89,11 @@ export default function MembersDiscoverySkeleton() {
         <TagCloudSkeleton />
       </div>
       <div>
-        <h2
-          className="mb-1 text-xl font-semibold font-heading opacity-80"
+        <StickySectionHeading
+          stickyClassName="mb-1 sm:mb-1"
         >
           New members
-        </h2>
+        </StickySectionHeading>
         <p
           className="mb-6 text-sm text-foreground/60"
         >

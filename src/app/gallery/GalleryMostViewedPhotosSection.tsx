@@ -1,9 +1,9 @@
-import Link from 'next/link';
-
 import DensityAwarePhotoGrid from '@/components/photo/DensityAwarePhotoGrid';
 import Button from '@/components/shared/Button';
 import { routes } from '@/config/routes';
 import type { StreamPhoto } from '@/lib/data/gallery';
+
+import { GalleryLinkedSectionHeading } from '@/app/gallery/GalleryLinkedSectionHeading';
 
 export function GalleryMostViewedPhotosSection({ photos }: { photos: StreamPhoto[] }) {
   if (photos.length === 0) {
@@ -12,31 +12,15 @@ export function GalleryMostViewedPhotosSection({ photos }: { photos: StreamPhoto
 
   return (
     <div>
+      <GalleryLinkedSectionHeading
+        href={`${routes.galleryPhotos.url}?sort=popular`}
+        title="Most viewed this week"
+        description="Popular photos from the last 7 days"
+      />
       <DensityAwarePhotoGrid
         photos={photos}
         showAttribution
         liveLikeCounts={false}
-        header={
-          <div
-            className="mb-6"
-          >
-            <Link
-              href={`${routes.galleryPhotos.url}?sort=popular`}
-              className="group"
-            >
-              <h2
-                className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
-              >
-                Most viewed this week
-              </h2>
-            </Link>
-            <p
-              className="text-sm text-foreground/80 leading-snug"
-            >
-              Popular photos from the last 7 days
-            </p>
-          </div>
-        }
       />
       <div
         className="mt-4 sm:mt-6 flex justify-center "

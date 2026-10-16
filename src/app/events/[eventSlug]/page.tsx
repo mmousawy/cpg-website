@@ -551,7 +551,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         </Container>
 
         {/* Empty state for Event Photos - separate section */}
-        {!hasEventPhotos(eventAlbum) &&  (
+        {!hasEventPhotos(eventAlbum) && (
           <div
             className="mt-4 sm:mt-8 empty:hidden"
           >
@@ -587,7 +587,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       )}
 
       <div
-        className="relative"
+        className="relative mt-2 sm:mt-0"
       >
         <PageContainer
           variant="alt"

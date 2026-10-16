@@ -6,6 +6,7 @@ import Link from 'next/link';
 import BlurImage from '@/components/shared/BlurImage';
 import { useState } from 'react';
 
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import { SceneCategoryIcon } from '@/components/scene/SceneCategoryIcon';
@@ -266,7 +267,7 @@ function AdminSceneEventCard({
 
   return (
     <div
-      className="block rounded-xl border border-border-color bg-background-light p-3 sm:p-4"
+      className={`block rounded-xl border border-border-color bg-background-light p-3 sm:p-4 ${mobileBleedCardClassName}`}
     >
       <div
         className="flex items-start gap-3 sm:gap-4"

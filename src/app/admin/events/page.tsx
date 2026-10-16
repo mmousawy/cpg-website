@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -105,11 +107,9 @@ export default function AdminEventsPage() {
           {/* Upcoming Events */}
           {upcomingEvents.length > 0 && (
             <section>
-              <h2
-                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-              >
+              <StickySectionHeading>
                 Upcoming events
-              </h2>
+              </StickySectionHeading>
               <div
                 className="space-y-3"
               >
@@ -126,11 +126,9 @@ export default function AdminEventsPage() {
           {/* Past Events */}
           {pastEvents.length > 0 && (
             <section>
-              <h2
-                className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
-              >
+              <StickySectionHeading>
                 Past events
-              </h2>
+              </StickySectionHeading>
               <div
                 className="space-y-3"
               >
@@ -159,7 +157,7 @@ function AdminEventCard({ event }: { event: Event }) {
       tabIndex={0}
       onClick={() => router.push(`/admin/events/${event.slug || event.id}`)}
       onKeyDown={(e) => e.key === 'Enter' && router.push(`/admin/events/${event.slug || event.id}`)}
-      className="block cursor-pointer rounded-xl border border-border-color bg-background-light p-3 sm:p-4 transition-colors hover:border-primary"
+      className={`block cursor-pointer rounded-xl border border-border-color bg-background-light p-3 sm:p-4 transition-colors hover:border-primary ${mobileBleedCardClassName}`}
     >
       <div
         className="flex items-start gap-3 sm:gap-4"

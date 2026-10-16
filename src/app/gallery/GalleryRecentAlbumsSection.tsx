@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import AlbumGrid from '@/components/album/AlbumGrid';
 import Button from '@/components/shared/Button';
 import EmptyState from '@/components/shared/EmptyState';
@@ -7,28 +5,16 @@ import { routes } from '@/config/routes';
 import type { AlbumWithPhotos } from '@/types/albums';
 import FolderSVG from 'public/icons/folder.svg';
 
+import { GalleryLinkedSectionHeading } from '@/app/gallery/GalleryLinkedSectionHeading';
+
 export function GalleryRecentAlbumsSection({ albums }: { albums: AlbumWithPhotos[] }) {
   return (
     <div>
-      <div
-        className="mb-6"
-      >
-        <Link
-          href={routes.galleryAlbums.url}
-          className="group"
-        >
-          <h2
-            className="inline-block text-xl font-semibold group-hover:text-primary transition-colors font-heading"
-          >
-            Recent albums
-          </h2>
-        </Link>
-        <p
-          className="text-sm text-foreground/80 leading-snug"
-        >
-          Photo collections from community members
-        </p>
-      </div>
+      <GalleryLinkedSectionHeading
+        href={routes.galleryAlbums.url}
+        title="Recent albums"
+        description="Photo collections from community members"
+      />
 
       {albums.length === 0 ? (
         <EmptyState

@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { useLayoutEffect, useRef } from 'react';
 
-import { getScrollContainer, getScrollTop, subscribeScrollContainer } from '@/utils/scrollContainer';
+import { getScrollTop, subscribeScrollContainer } from '@/utils/scrollContainer';
 
 /** Mobile-only sticky page title chrome (`max-sm`). */
 const MOBILE_STICKY_MEDIA = '(max-width: 639px)';
@@ -11,174 +11,116 @@ const MOBILE_STICKY_MEDIA = '(max-width: 639px)';
 /** Visible height of the mobile sticky page title; used by other sticky rows (e.g. section headings). */
 export const STICKY_PAGE_HEADING_HEIGHT_VAR = '--sticky-page-heading-height';
 
+/** Full title height. */
+const STICKY_PAGE_HEADING_SIZE_VAR = '--sticky-page-heading-size';
+
 type StickyScrollHeaderProps = {
   children: React.ReactNode;
   className?: string;
 };
 
 export default function StickyScrollHeader({ children, className }: StickyScrollHeaderProps) {
-  const flowRef = useRef<HTMLDivElement>(null);
-  const stickyRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const hideOffsetRef = useRef(0);
-  const lastScrollYRef = useRef(0);
   const heightRef = useRef(0);
-  const borderBrightRef = useRef(false);
 
   useLayoutEffect(() => {
-    const flow = flowRef.current;
-    const sticky = stickyRef.current;
     const inner = innerRef.current;
-    if (!flow || !sticky || !inner) return;
+    if (!inner) return;
 
     const mediaQuery = window.matchMedia(MOBILE_STICKY_MEDIA);
+    const root = document.documentElement;
+    let lastInset = '';
+    let borderSettled = true;
+    let hiddenPx = 0;
+    let lastScrollY = getScrollTop();
 
-    const scrollPortTop = () => {
-      const container = getScrollContainer();
-      return container ? container.getBoundingClientRect().top : 0;
+    const setInset = (px: number) => {
+      const next = `${px}px`;
+      if (next === lastInset) return;
+      lastInset = next;
+      root.style.setProperty(STICKY_PAGE_HEADING_HEIGHT_VAR, next);
     };
 
-    const updateBorder = () => {
-      const headerHeight = inner.offsetHeight;
-      const atTop = getScrollTop() <= 0.5;
-      const scrolledPastHeader =
-        headerHeight > 0 && flow.getBoundingClientRect().top <= scrollPortTop() - headerHeight;
-
-      if (atTop) {
-        borderBrightRef.current = false;
-      } else if (scrolledPastHeader) {
-        borderBrightRef.current = true;
-      }
-
-      if (borderBrightRef.current) {
-        delete inner.dataset.settled;
-      } else {
-        inner.dataset.settled = '';
-      }
+    const setHidden = (px: number) => {
+      hiddenPx = px;
+      inner.style.transform = px === 0 ? 'translateY(0)' : `translateY(-${px}px)`;
     };
 
-    const syncStickyPageHeadingInset = () => {
+    const applyChrome = () => {
+      const height = heightRef.current;
+
       if (!mediaQuery.matches) {
-        document.documentElement.style.setProperty(STICKY_PAGE_HEADING_HEIGHT_VAR, '0px');
+        hiddenPx = 0;
+        inner.style.transform = '';
+        setInset(0);
+        root.style.setProperty(STICKY_PAGE_HEADING_SIZE_VAR, '0px');
+        if (!borderSettled) {
+          borderSettled = true;
+          inner.dataset.settled = '';
+        }
         return;
       }
 
+      root.style.setProperty(STICKY_PAGE_HEADING_SIZE_VAR, `${height}px`);
+
       const scrollY = Math.max(0, getScrollTop());
-      const isStuck = sticky.getBoundingClientRect().top <= scrollPortTop() + 0.5;
-      const visibleChrome =
-        isStuck && scrollY > 0
-          ? Math.max(0, heightRef.current - hideOffsetRef.current)
-          : 0;
+      const delta = scrollY - lastScrollY;
+      lastScrollY = scrollY;
 
-      document.documentElement.style.setProperty(
-        STICKY_PAGE_HEADING_HEIGHT_VAR,
-        `${visibleChrome}px`,
-      );
-    };
+      if (scrollY <= 0 || height <= 0) {
+        setHidden(0);
+        setInset(0);
+      } else {
+        const nextHidden = Math.min(height, Math.max(0, hiddenPx + delta));
+        const clamped = Math.min(nextHidden, scrollY);
+        setHidden(clamped);
+        setInset(height - clamped);
+      }
 
-    const reset = () => {
-      hideOffsetRef.current = 0;
-      borderBrightRef.current = false;
-      inner.style.transform = '';
-      document.documentElement.style.setProperty(STICKY_PAGE_HEADING_HEIGHT_VAR, '0px');
-      updateBorder();
+      const settled = scrollY <= 0.5;
+      if (settled === borderSettled) return;
+      borderSettled = settled;
+      if (settled) {
+        inner.dataset.settled = '';
+      } else {
+        delete inner.dataset.settled;
+      }
     };
 
     const updateHeight = () => {
       heightRef.current = inner.offsetHeight;
-      syncStickyPageHeadingInset();
+      lastInset = '';
+      hiddenPx = Math.min(hiddenPx, heightRef.current);
+      root.style.setProperty(
+        STICKY_PAGE_HEADING_SIZE_VAR,
+        mediaQuery.matches ? `${heightRef.current}px` : '0px',
+      );
+      applyChrome();
     };
 
-    const applyTransform = () => {
-      inner.style.transform = hideOffsetRef.current > 0
-        ? `translateY(-${hideOffsetRef.current}px)`
-        : '';
-    };
-
-    const onScroll = () => {
-      if (!mediaQuery.matches) {
-        reset();
-        return;
-      }
-
-      const scrollY = Math.max(0, getScrollTop());
-      const delta = scrollY - lastScrollYRef.current;
-      lastScrollYRef.current = scrollY;
-
-      if (scrollY <= 0) {
-        hideOffsetRef.current = 0;
-        applyTransform();
-        updateBorder();
-        syncStickyPageHeadingInset();
-        return;
-      }
-
-      const isStuck = sticky.getBoundingClientRect().top <= scrollPortTop() + 0.5;
-
-      if (!isStuck) {
-        hideOffsetRef.current = 0;
-      } else {
-        const maxHide = heightRef.current;
-        hideOffsetRef.current = Math.min(maxHide, Math.max(0, hideOffsetRef.current + delta));
-      }
-
-      applyTransform();
-      updateBorder();
-      syncStickyPageHeadingInset();
-    };
-
-    const onLayoutChange = () => {
-      if (!mediaQuery.matches) {
-        reset();
-        return;
-      }
-      updateHeight();
-      onScroll();
-    };
-
-    const resizeObserver = new ResizeObserver(onLayoutChange);
+    const resizeObserver = new ResizeObserver(updateHeight);
     resizeObserver.observe(inner);
 
-    const onMediaChange = () => {
-      if (!mediaQuery.matches) {
-        reset();
-        return;
-      }
-      updateHeight();
-      lastScrollYRef.current = getScrollTop();
-      onScroll();
-    };
+    if (mediaQuery.matches) updateHeight();
 
-    if (mediaQuery.matches) {
-      updateHeight();
-      lastScrollYRef.current = getScrollTop();
-      onScroll();
-    }
-
-    const unsubscribeScroll = subscribeScrollContainer(onScroll);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onLayoutChange, { passive: true });
-    mediaQuery.addEventListener('change', onMediaChange);
+    const unsubscribeScroll = subscribeScrollContainer(applyChrome);
+    window.addEventListener('resize', updateHeight, { passive: true });
+    mediaQuery.addEventListener('change', updateHeight);
 
     return () => {
       resizeObserver.disconnect();
       unsubscribeScroll();
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onLayoutChange);
-      mediaQuery.removeEventListener('change', onMediaChange);
-      reset();
+      window.removeEventListener('resize', updateHeight);
+      mediaQuery.removeEventListener('change', updateHeight);
+      inner.style.transform = '';
+      root.style.setProperty(STICKY_PAGE_HEADING_HEIGHT_VAR, '0px');
+      root.style.setProperty(STICKY_PAGE_HEADING_SIZE_VAR, '0px');
     };
   }, []);
 
   return (
     <>
       <div
-        ref={flowRef}
-        className="max-sm:h-0"
-        aria-hidden
-      />
-      <div
-        ref={stickyRef}
         className={clsx(
           'max-sm:sticky max-sm:top-0 max-sm:z-30 max-sm:pointer-events-none',
           className,
@@ -187,7 +129,7 @@ export default function StickyScrollHeader({ children, className }: StickyScroll
         <div
           ref={innerRef}
           data-sticky-page-heading=""
-          className="max-sm:pointer-events-auto max-sm:-mx-3 max-sm:border-b max-sm:border-border-color max-sm:bg-background max-sm:px-3 max-sm:py-2.5 max-sm:transition-[border-color] max-sm:data-settled:border-background"
+          className="max-sm:pointer-events-auto max-sm:-mx-3 max-sm:border-b max-sm:border-border-color max-sm:bg-background max-sm:px-3 max-sm:py-2.5 max-sm:transition-[border-color] max-sm:duration-200 max-sm:data-settled:border-background"
           data-settled=""
         >
           {children}

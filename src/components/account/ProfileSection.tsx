@@ -3,6 +3,7 @@
 import { UseFormRegister } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 import SuccessMessage from '@/components/shared/SuccessMessage';
@@ -37,11 +38,11 @@ export default function ProfileSection({
 
   return (
     <div>
-      <h2
-        className="mb-2 sm:mb-4 text-lg font-semibold font-heading opacity-70"
+      <StickySectionHeading
+        className="sm:text-lg"
       >
         Basic info
-      </h2>
+      </StickySectionHeading>
       <Container>
         <div
           className="space-y-4"

@@ -1,6 +1,8 @@
 import clsx from 'clsx';
 import { ReactNode } from 'react';
 
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
+
 type ContainerProps = {
   children: ReactNode
   className?: string
@@ -19,9 +21,9 @@ export default function Container({
   const baseStyles = 'rounded-xl md:rounded-2xl fill-foreground text-foreground shadow-lg shadow-[#00000007]';
 
   const paddingStyles = {
-    sm: 'p-4',
-    md: 'p-6 max-sm:p-4',
-    lg: 'p-8 max-sm:p-6',
+    sm: 'max-sm:px-3 max-sm:py-4 sm:p-4',
+    md: 'p-6 max-sm:px-3 max-sm:py-4',
+    lg: 'p-8 max-sm:px-3 max-sm:py-6',
   };
 
   const variantStyles = {
@@ -36,6 +38,7 @@ export default function Container({
       id={id}
       className={clsx(
         baseStyles,
+        mobileBleedCardClassName,
         paddingStyles[padding],
         variantStyles[variant],
         className,

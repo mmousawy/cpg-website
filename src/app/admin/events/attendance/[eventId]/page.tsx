@@ -7,7 +7,9 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { ModalContext } from '@/app/providers/ModalProvider';
 import AddRsvpModal from '@/components/admin/AddRsvpModal';
 import Container from '@/components/layout/Container';
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import PageHeading from '@/components/layout/PageHeading';
 import Button from '@/components/shared/Button';
 import type { Tables } from '@/database.types';
@@ -202,7 +204,10 @@ export default function AdminEventAttendancePage() {
       />
       {event && (
         <div
-          className="mb-6 rounded-xl sm:rounded-2xl border border-border-color bg-background-light p-4"
+          className={clsx(
+            'mb-6 rounded-xl sm:rounded-2xl border border-border-color bg-background-light px-3 py-4 sm:p-4',
+            mobileBleedCardClassName,
+          )}
         >
           <h2
             className="mb-3 text-xl font-semibold font-heading"
@@ -268,25 +273,23 @@ export default function AdminEventAttendancePage() {
       )}
 
       <div>
-        <div
-          className="mb-4 flex items-center justify-between"
+        <StickySectionHeading
+          stickyClassName="mb-4 sm:mb-4"
+          accessory={(
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleAddRsvp}
+              icon={<PlusSVG
+                className="size-4"
+              />}
+            >
+              Add member
+            </Button>
+          )}
         >
-          <h2
-            className="text-lg font-semibold opacity-70 font-heading"
-          >
-            RSVPs
-          </h2>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleAddRsvp}
-            icon={<PlusSVG
-              className="size-4"
-            />}
-          >
-            Add member
-          </Button>
-        </div>
+          RSVPs
+        </StickySectionHeading>
         <Container>
           <div
             className="space-y-2"

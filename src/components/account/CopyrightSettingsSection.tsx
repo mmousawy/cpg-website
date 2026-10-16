@@ -3,6 +3,7 @@
 import { Control, Controller, useWatch } from 'react-hook-form';
 
 import Container from '@/components/layout/Container';
+import StickySectionHeading from '@/components/layout/StickySectionHeading';
 import HelpLink from '@/components/shared/HelpLink';
 import Input from '@/components/shared/Input';
 import Select from '@/components/shared/Select';
@@ -40,11 +41,11 @@ export default function CopyrightSettingsSection({
 
   return (
     <div>
-      <h2
-        className="mb-2 sm:mb-4 text-lg font-semibold opacity-80 font-heading"
+      <StickySectionHeading
+        className="sm:text-lg"
       >
         Copyright & licensing
-      </h2>
+      </StickySectionHeading>
       <Container>
         <div
           className="space-y-6"

@@ -10,6 +10,7 @@ import DeleteAccountSection from '@/components/account/DeleteAccountSection';
 import PreferencesSection from '@/components/account/PreferencesSection';
 import ProfileSection from '@/components/account/ProfileSection';
 import PublicProfileSection from '@/components/account/PublicProfileSection';
+import { mobileBleedCardClassName } from '@/components/layout/mobileChrome';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeading from '@/components/layout/PageHeading';
 import MobileStickyChromeStack from '@/components/layout/MobileStickyChromeStack';
@@ -103,7 +104,7 @@ function AccountPageContent() {
       <ChangeEmailModal
         key={Date.now()}
         currentEmail={profile?.email || user?.email || ''}
-        onSuccess={() => {}}
+        onSuccess={() => { }}
       />,
     );
     modalContext.setIsOpen(true);
@@ -121,7 +122,7 @@ function AccountPageContent() {
         currentNickname={nickname}
         currentEmail={profile?.email || user?.email || ''}
         userId={user.id}
-        onSuccess={() => {}}
+        onSuccess={() => { }}
       />,
     );
     modalContext.setIsOpen(true);
@@ -187,7 +188,7 @@ function AccountPageContent() {
             {'.js-loading { display: none !important; }'}
           </style>
           <div
-            className="border-border-color bg-background-light rounded-xl border p-6 text-center"
+            className={`border-border-color bg-background-light rounded-xl border px-3 py-6 sm:p-6 text-center ${mobileBleedCardClassName}`}
           >
             <p
               className="mb-2 text-lg font-medium"

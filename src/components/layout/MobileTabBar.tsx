@@ -312,7 +312,7 @@ export default function MobileTabBar() {
               ref={navRef}
               aria-label="Main"
               onPointerDownCapture={handleNavPointerDown}
-              className="pointer-events-auto relative z-10 mx-3 overflow-visible rounded-2xl border border-border-color-strong bg-background-light/85 bg-noise shadow-lg backdrop-blur-sm"
+              className="pointer-events-auto relative z-10 mx-3 overflow-visible rounded-2xl border border-border-color-strong bg-background-light bg-noise shadow-lg"
             >
               <div
                 ref={tabListRef}
