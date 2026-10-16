@@ -39,8 +39,8 @@ export async function generateMetadata({ params }: { params: Params }) {
   }
 
   return createMetadata({
-    title: `Members whose daily driver is "${label}"`,
-    description: `Discover community members whose daily driver camera is ${label}.`,
+    title: `Members with daily driver "${label}"`,
+    description: `Discover community members with daily driver "${label}".`,
     canonical: membersDailyDriverCameraPath(label),
     keywords: ['photography community', 'photographers', label, 'camera', 'daily driver', 'member discovery'],
     noindex: members.length < MIN_INDEXABLE_INTEREST_MEMBERS,
@@ -67,11 +67,14 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
     notFound();
   }
 
+  // Temporary layout mock: repeat the real results so the grid can be reviewed.
+  const listedMembers = Array.from({ length: 20 }, () => members).flat();
+
   const memberCountLine = (
     <>
-      {members.length}
+      {listedMembers.length}
       {' '}
-      {members.length === 1 ? 'member' : 'members'}
+      {listedMembers.length === 1 ? 'member' : 'members'}
       {' '}
       with this camera body
     </>
@@ -80,21 +83,23 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
   return (
     <PageContainer>
       <div
-        className="mb-8 flex items-start gap-3 sm:mb-10 sm:gap-5"
+        className="relative"
       >
         <PageHeading
-          className="mb-0! min-w-0 flex-1"
+          className="sm:pr-40"
           title={(
             <>
               <span
-                className="sm:hidden"
+                className="sm:hidden text-xl"
               >
-                Daily driver
+                Daily driver &ldquo;
+                {label}
+                &rdquo;
               </span>
               <span
                 className="hidden sm:inline"
               >
-                Members whose daily driver is &ldquo;
+                Members with daily driver &ldquo;
                 {label}
                 &rdquo;
               </span>
@@ -102,54 +107,66 @@ export default async function CameraMembersPage({ params }: { params: Params }) 
           )}
           description={(
             <div
-              className="min-w-0 space-y-1"
+              className="flex items-start gap-3 sm:block"
             >
-              <span
-                className="block truncate font-medium text-foreground sm:hidden"
-                title={label}
+              <div
+                className="min-w-0 flex-1 space-y-1"
               >
-                {label}
-              </span>
-              <span
-                className="block text-foreground/80"
-              >
-                {memberCountLine}
-              </span>
+                <span
+                  className="block truncate font-medium text-foreground sm:hidden"
+                  title={label}
+                >
+                  {label}
+                </span>
+                <span
+                  className="block text-foreground/80"
+                >
+                  {memberCountLine}
+                </span>
+              </div>
+              <ScrappyCameraIllustration
+                camera={label}
+                className="h-16 w-auto max-w-[5.75rem] shrink-0 object-contain opacity-90 sm:hidden"
+              />
             </div>
           )}
         />
         <ScrappyCameraIllustration
           camera={label}
-          className="mt-0.5 h-16 w-auto max-w-[5.75rem] shrink-0 object-contain opacity-90 sm:mt-1 sm:h-24 sm:max-w-36"
+          className="pointer-events-none absolute top-1 right-0 hidden h-24 w-auto max-w-36 object-contain opacity-90 sm:block"
         />
-      </div>
 
-      {popularCameras.length > 0 && (
-        <div
-          className="mb-8 sm:mb-10"
-        >
-          <StickySectionHeading
-            stickyClassName="mb-3 sm:mb-3"
+        {popularCameras.length > 0 && (
+          <div
+            className="mb-8 sm:mb-10"
           >
-            Browse by camera body
-          </StickySectionHeading>
-          <DailyDriverDiscoveryCloud
-            groups={popularCameras}
-            kind="camera"
-            activeLabel={label}
-          />
-        </div>
-      )}
+            <div
+              className="max-sm:sticky max-sm:z-20 max-sm:-mx-3 max-sm:px-3 max-sm:py-2 max-sm:top-[calc(var(--sticky-page-heading-height,0px)-1px)] max-sm:backdrop-blur-sm max-sm:bg-background/80 max-sm:border-b max-sm:transition-[border-color] max-sm:border-transparent mb-2 sm:mb-4 mb-3 sm:mb-3"
+            >
+              <h2
+                className="min-w-0 text-xl font-semibold font-heading"
+              >
+                Browse by camera body
+              </h2>
+            </div>
+            <DailyDriverDiscoveryCloud
+              groups={popularCameras}
+              kind="camera"
+              activeLabel={label}
+            />
+          </div>
+        )}
 
-      <div
-        className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-      >
-        {members.map((member) => (
-          <MemberCard
-            key={member.id}
-            member={member}
-          />
-        ))}
+        <div
+          className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        >
+          {listedMembers.map((member, index) => (
+            <MemberCard
+              key={`${member.id}-${index}`}
+              member={member}
+            />
+          ))}
+        </div>
       </div>
     </PageContainer>
   );
