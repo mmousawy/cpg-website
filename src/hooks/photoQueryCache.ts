@@ -61,11 +61,13 @@ export function rebuildPagesFromFlat(
     });
   }
 
+  // Dropping pages only re-slices photos we already loaded. Whether the server
+  // has more is decided by the last page we fetched, not an earlier one.
   if (pages.length > 0 && old.pages.length > pages.length) {
     const lastIndex = pages.length - 1;
     pages[lastIndex] = {
       ...pages[lastIndex],
-      hasMore: old.pages[lastIndex]?.hasMore ?? false,
+      hasMore: old.pages[old.pages.length - 1]?.hasMore ?? false,
     };
   }
 

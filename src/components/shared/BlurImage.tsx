@@ -46,6 +46,8 @@ type BlurImageProps = Omit<ImageProps, 'onLoad'> & {
   contain?: boolean;
   /** Callback when image finishes loading */
   onLoad?: () => void;
+  /** Callback once the image is fully opaque, after the fade finishes. */
+  onFadeComplete?: () => void;
   /** When false, SSR and first paint use opacity-100 (LCP heroes). Default true. */
   fadeIn?: boolean;
   /** Lightweight fill thumbnails: blurhash bg + single image, no fade state machine */
@@ -71,6 +73,7 @@ export default function BlurImage({
   fill,
   contain = false,
   onLoad: onLoadProp,
+  onFadeComplete,
   fadeIn = true,
   lite = false,
   preload,
@@ -111,7 +114,14 @@ export default function BlurImage({
   const hasCalledOnLoad = useRef(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const onLoadPropRef = useRef(onLoadProp);
+  const onFadeCompleteRef = useRef(onFadeComplete);
   useEffect(() => { onLoadPropRef.current = onLoadProp; }, [onLoadProp]);
+  useEffect(() => { onFadeCompleteRef.current = onFadeComplete; }, [onFadeComplete]);
+
+  useEffect(() => {
+    if (loadState !== 'visible') return;
+    onFadeCompleteRef.current?.();
+  }, [loadState]);
 
   // Reset state when src changes (during render, not in effect)
   if (srcString !== currentSrc) {

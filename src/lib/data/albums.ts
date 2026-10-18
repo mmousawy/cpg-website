@@ -492,7 +492,7 @@ export type EventPhotoPageResult = {
   photo: Photo;
   profile: { id: string; full_name: string | null; nickname: string; avatar_url: string | null };
   currentEvent: { id: number; title: string | null; slug: string; cover_image: string | null };
-  albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null }>;
+  albums: Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug?: string | null; event_title?: string | null }>;
   challenges: Array<{ id: string; title: string; slug: string; cover_image_url: string | null }>;
   siblingPhotos: Array<{ shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number }>;
 };
@@ -700,7 +700,7 @@ export async function getEventPhotoByShortId(
   // Get all albums this photo is in (same pattern as challenges)
   const { data: albumPhotosData } = await supabase
     .from('album_photos')
-    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, cover_image))')
+    .select('album_id, albums(id, title, slug, cover_image_url, deleted_at, album_photos_active(count), profile:profiles!albums_user_id_fkey(nickname), event:events!albums_event_id_fkey(slug, title, cover_image))')
     .eq('photo_id', photo.id);
 
   type AlbumPhotoWithAlbum = {
@@ -713,7 +713,7 @@ export async function getEventPhotoByShortId(
       deleted_at: string | null;
       album_photos_active: Array<{ count: number }>;
       profile: { nickname: string | null } | null;
-      event: { slug: string | null; cover_image: string | null } | null;
+      event: { slug: string | null; title: string | null; cover_image: string | null } | null;
     } | null;
   };
 
@@ -729,9 +729,10 @@ export async function getEventPhotoByShortId(
         photo_count: albumRow.album_photos_active?.[0]?.count ?? 0,
         profile_nickname: albumRow.profile?.nickname || null,
         event_slug: albumRow.event?.slug || null,
+        event_title: albumRow.event?.title || null,
       };
     })
-    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null }>;
+    .filter(Boolean) as Array<{ id: string; title: string; slug: string; cover_image_url: string | null; photo_count: number; profile_nickname: string | null; event_slug: string | null; event_title: string | null }>;
 
   // Get challenges this photo was accepted in (for "Featured in" section)
   const { data: challengeSubmissions } = await supabase
