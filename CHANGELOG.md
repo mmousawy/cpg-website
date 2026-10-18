@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.43.1](https://github.com/mmousawy/cpg-website/compare/v1.43.0...v1.43.1) (2026-10-16)
+
+
+### 🐛 Bug Fixes
+
+* update metadata and layout for camera and lens member pages ([c7e25e6](https://github.com/mmousawy/cpg-website/commit/c7e25e620ad873a683ba93670ab301373e019e45))
+
 ## [1.43.0](https://github.com/mmousawy/cpg-website/compare/v1.42.3...v1.43.0) (2026-10-16)
 
 
