@@ -3,6 +3,8 @@
  * Unified utilities for parsing and formatting EXIF metadata from photos.
  */
 
+import { EVENT_TIMEZONE } from '@/lib/events/status';
+
 export interface ExifData {
   // Camera info
   make?: string;
@@ -37,6 +39,7 @@ export interface FormattedExif {
   focalLength?: string;
   dateTaken?: string;
   location?: { lat: number; lng: number };
+  locationLabel?: string;
   dimensions?: string;
 
   // Combined strings for display
@@ -78,21 +81,15 @@ export function parseExifData(exif: Record<string, unknown> | null | undefined):
     data.focalLength = Number(exif.FocalLength);
   }
 
-  // Date
-  if (exif.DateTimeOriginal && typeof exif.DateTimeOriginal === 'string') {
-    try {
-      data.dateTaken = new Date(exif.DateTimeOriginal);
-    } catch {
-      // Invalid date, skip
-    }
+  const dateTaken = parseExifDate(exif.DateTimeOriginal);
+  if (dateTaken) {
+    data.dateTaken = dateTaken;
   }
 
-  // GPS
-  if (exif.GPSLatitude != null) {
-    data.latitude = Number(exif.GPSLatitude);
-  }
-  if (exif.GPSLongitude != null) {
-    data.longitude = Number(exif.GPSLongitude);
+  const coordinates = readGpsCoordinates(exif);
+  if (coordinates) {
+    data.latitude = coordinates.latitude;
+    data.longitude = coordinates.longitude;
   }
 
   // Dimensions
@@ -154,6 +151,103 @@ export function formatFocalLength(focalLength: number): string {
  */
 export function formatISO(iso: number): string {
   return `ISO ${Math.round(iso)}`;
+}
+
+/**
+ * Camera clock time, shown in the group's timezone.
+ * EXIF dates are stored as UTC after the uploader's browser reads the camera clock as local time.
+ */
+export function formatCaptureTime(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: EVENT_TIMEZONE,
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function parseExifDate(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value !== 'string') return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const exifMatch = trimmed.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (exifMatch) {
+    const year = Number(exifMatch[1]);
+    const month = Number(exifMatch[2]);
+    const day = Number(exifMatch[3]);
+    const hour = Number(exifMatch[4]);
+    const minute = Number(exifMatch[5]);
+    const second = Number(exifMatch[6] ?? 0);
+    const parsed = new Date(year, month - 1, day, hour, minute, second);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function readCoordinate(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  if (!Array.isArray(value) || value.length === 0) return null;
+  if (value.some((part) => part == null || part === '')) return null;
+
+  const parts = value.slice(0, 3).map((part) => Number(part));
+  if (parts.some((part) => !Number.isFinite(part))) return null;
+
+  const [degrees = 0, minutes = 0, seconds = 0] = parts;
+  const sign = degrees < 0 ? -1 : 1;
+  return sign * (Math.abs(degrees) + Math.abs(minutes) / 60 + Math.abs(seconds) / 3600);
+}
+
+function applyHemisphere(value: number, ref: unknown, negativeRef: string): number {
+  if (typeof ref === 'string' && ref.trim().toUpperCase() === negativeRef && value > 0) {
+    return -value;
+  }
+  return value;
+}
+
+function readGpsCoordinates(exif: Record<string, unknown>): { latitude: number; longitude: number } | null {
+  let latitude = readCoordinate(exif.latitude);
+  let longitude = readCoordinate(exif.longitude);
+
+  if (latitude == null) {
+    const fromGps = readCoordinate(exif.GPSLatitude);
+    latitude = fromGps == null ? null : applyHemisphere(fromGps, exif.GPSLatitudeRef, 'S');
+  }
+  if (longitude == null) {
+    const fromGps = readCoordinate(exif.GPSLongitude);
+    longitude = fromGps == null ? null : applyHemisphere(fromGps, exif.GPSLongitudeRef, 'W');
+  }
+
+  if (
+    latitude == null
+    || longitude == null
+    || Math.abs(latitude) > 90
+    || Math.abs(longitude) > 180
+  ) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
+function formatGpsLabel(latitude: number, longitude: number): string {
+  const latitudeHemisphere = latitude >= 0 ? 'N' : 'S';
+  const longitudeHemisphere = longitude >= 0 ? 'E' : 'W';
+  return `${Math.abs(latitude).toFixed(5)}° ${latitudeHemisphere}, ${Math.abs(longitude).toFixed(5)}° ${longitudeHemisphere}`;
 }
 
 /**
@@ -228,14 +322,18 @@ export function formatExifData(data: ExifData | null): FormattedExif | null {
     formatted.focalLength = formatFocalLength(data.focalLength);
   }
 
-  // Date taken
   if (data.dateTaken) {
-    formatted.dateTaken = data.dateTaken.toLocaleString();
+    formatted.dateTaken = formatCaptureTime(data.dateTaken);
   }
 
-  // Location
-  if (data.latitude != null && data.longitude != null) {
+  if (
+    data.latitude != null
+    && data.longitude != null
+    && Number.isFinite(data.latitude)
+    && Number.isFinite(data.longitude)
+  ) {
     formatted.location = { lat: data.latitude, lng: data.longitude };
+    formatted.locationLabel = formatGpsLabel(data.latitude, data.longitude);
   }
 
   // Dimensions

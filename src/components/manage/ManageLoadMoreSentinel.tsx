@@ -12,6 +12,12 @@ type ManageLoadMoreSentinelProps = {
   onLoadMore: () => void;
   /** Changing this reconnects the observer (e.g. photo filter). */
   resetKey?: string;
+  /**
+   * Number of items currently rendered. When this shrinks (a delete) and the
+   * sentinel is already in view, load the next page — the user can no longer
+   * scroll far enough to trip the observer.
+   */
+  itemCount?: number;
 };
 
 function isSentinelInLoadZone(root: HTMLElement, sentinel: HTMLElement): boolean {
@@ -33,6 +39,7 @@ export default function ManageLoadMoreSentinel({
   isFetchingNextPage,
   onLoadMore,
   resetKey,
+  itemCount,
 }: ManageLoadMoreSentinelProps) {
   const scrollContainerRef = useManageScrollContainer();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -40,6 +47,11 @@ export default function ManageLoadMoreSentinel({
   const hasNextPageRef = useRef(hasNextPage);
   const onLoadMoreRef = useRef(onLoadMore);
   const wasIntersectingRef = useRef(false);
+  const prevItemCountRef = useRef(itemCount);
+  /** Keep fetching after a shrink until the list is tall enough to scroll again. */
+  const fillingAfterShrinkRef = useRef(false);
+  /** itemCount we already requested a refill for, so a replayed effect does not double-fetch. */
+  const filledForCountRef = useRef<number | null>(null);
 
   useEffect(() => {
     isFetchingRef.current = isFetchingNextPage;
@@ -52,6 +64,42 @@ export default function ManageLoadMoreSentinel({
   useEffect(() => {
     onLoadMoreRef.current = onLoadMore;
   }, [onLoadMore]);
+
+  useEffect(() => {
+    if (itemCount == null) return;
+    const previous = prevItemCountRef.current;
+    prevItemCountRef.current = itemCount;
+    if (previous != null && itemCount < previous) {
+      fillingAfterShrinkRef.current = true;
+    }
+  }, [itemCount]);
+
+  // A delete can pull the sentinel into view, or make the list shorter than the
+  // scroller, so the usual "user scrolled onto the sentinel" edge never fires.
+  useEffect(() => {
+    if (!fillingAfterShrinkRef.current) return;
+    if (!hasNextPage) {
+      fillingAfterShrinkRef.current = false;
+      return;
+    }
+    if (isFetchingNextPage || isFetchingRef.current) return;
+
+    const sentinel = sentinelRef.current;
+    const root = scrollContainerRef?.current;
+    if (!sentinel || !root) return;
+
+    const needsMore = isSentinelInLoadZone(root, sentinel)
+      || root.scrollHeight <= root.clientHeight + 1;
+    if (!needsMore) {
+      fillingAfterShrinkRef.current = false;
+      return;
+    }
+
+    if (itemCount != null && filledForCountRef.current === itemCount) return;
+    filledForCountRef.current = itemCount ?? null;
+    isFetchingRef.current = true;
+    onLoadMoreRef.current();
+  }, [itemCount, hasNextPage, isFetchingNextPage, scrollContainerRef]);
 
   // After a batch lands, treat an in-view sentinel as already seen so we don't chain-load.
   useEffect(() => {

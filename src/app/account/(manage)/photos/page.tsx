@@ -41,7 +41,6 @@ import {
 } from '@/tours/photosFirstRunTour.constants';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhotos, confirmUnsavedChanges } from '@/utils/confirmHelpers';
-import { preloadImages } from '@/utils/preloadImages';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -113,7 +112,7 @@ function PhotosPageContent() {
   const reorderPhotosMutation = useReorderPhotos(user?.id, photoFilter, profile?.nickname);
 
   // Upload hook with progress tracking
-  const { uploadingPhotos, uploadFiles, clearCompleted, dismissUpload } = usePhotoUpload();
+  const { uploadingPhotos, localPreviewUrls, uploadFiles, clearCompleted, dismissUpload, releaseLocalPreview } = usePhotoUpload();
   const isUploading = uploadingPhotos.some(
     (p) => p.status === 'uploading' || p.status === 'processing' || p.status === 'pending',
   );
@@ -271,19 +270,15 @@ function PhotosPageContent() {
       const uploadedPhotos = await uploadFiles(files, user.id, supabase, {
         isPublic: false,
         sortOrderStart: photos.length,
+        retainLocalPreviews: true,
       });
 
-      // Preload images before refreshing the list to prevent layout shift
       if (uploadedPhotos.length > 0) {
-        const photoUrls = uploadedPhotos.map((p) => p.url);
-        await preloadImages(photoUrls);
+        await queryClient.refetchQueries({ queryKey: photosQueryFilterKey(user.id, photoFilter) });
+        queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
       }
 
-      // Refresh the list and wait for it to refetch
-      await queryClient.refetchQueries({ queryKey: photosQueryFilterKey(user.id, photoFilter) });
-      queryClient.invalidateQueries({ queryKey: photoCountQueryKey(user.id) });
-
-      // Clear completed uploads after query has refetched and images are preloaded
+      // Drop the upload cards. Their file previews stay on the new grid items.
       clearCompleted();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to upload photos';
@@ -305,6 +300,11 @@ function PhotosPageContent() {
     () => photos.filter((p) => selectedPhotoIds.has(p.id)),
     [photos, selectedPhotoIds],
   );
+  const photoIds = useMemo(() => new Set(photos.map((photo) => photo.id)), [photos]);
+  const visibleUploadingPhotos = useMemo(
+    () => uploadingPhotos.filter((upload) => !upload.photo || !photoIds.has(upload.photo.id)),
+    [uploadingPhotos, photoIds],
+  );
   const deferredSelectedPhotos = useDeferredValue(selectedPhotos);
   const selectedCount = selectedPhotoIds.size;
 
@@ -312,7 +312,11 @@ function PhotosPageContent() {
     photos.length === 0 && (photosPending || photosFetching);
 
   const showRealEmptyState =
-    !isPhotosGridInitiallyLoading && photos.length === 0 && uploadingPhotos.length === 0;
+    !isPhotosGridInitiallyLoading
+    && photos.length === 0
+    && uploadingPhotos.length === 0
+    && !hasNextPage
+    && !isFetchingNextPage;
   const showEmptyState =
     isPhotosUploadTourMock || (!isPhotosManageTourMock && showRealEmptyState);
   const manageTourActive =
@@ -516,10 +520,12 @@ function PhotosPageContent() {
                 onSelectMultiple={handleSelectMultiple}
                 onReorder={handleReorderPhotos}
                 sortable
+                localPreviewUrls={localPreviewUrls}
+                onLocalPreviewReleased={releaseLocalPreview}
                 leadingContent={
-                  uploadingPhotos.length > 0 ? (
+                  visibleUploadingPhotos.length > 0 ? (
                     <>
-                      {uploadingPhotos.map((upload) => (
+                      {visibleUploadingPhotos.map((upload) => (
                         <UploadingPhotoCard
                           key={upload.id}
                           upload={upload}
@@ -535,6 +541,7 @@ function PhotosPageContent() {
                 isFetchingNextPage={isFetchingNextPage}
                 onLoadMore={() => fetchNextPage()}
                 resetKey={photoFilter}
+                itemCount={photos.length}
               />
             </>
           )}
