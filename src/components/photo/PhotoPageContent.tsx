@@ -34,7 +34,9 @@ export interface PhotoPageAlbum {
   cover_image_url?: string | null;
   photo_count?: number;
   profile_nickname?: string | null;
+  /** Set when this row is an event's backing album. Those albums are internal and are shown as the event. */
   event_slug?: string | null;
+  event_title?: string | null;
 }
 
 export interface PhotoPageProfile {
@@ -154,11 +156,33 @@ export function PhotoMetadataColumn({
   });
   const albumNickname = albumOwnerNickname || nickname;
 
+  // Event albums are the internal store for an event. Show the event, not the album.
+  const memberAlbums = albums.filter((album) => !album.event_slug);
   const otherAlbums = currentAlbum
-    ? albums.filter((a) => a.id !== currentAlbum.id)
-    : currentEvent
-      ? albums.filter((a) => a.event_slug !== currentEvent.slug)
-      : albums;
+    ? memberAlbums.filter((a) => a.id !== currentAlbum.id)
+    : memberAlbums;
+
+  const seenEvents: Array<{ slug: string; title: string; coverImageUrl: string | null }> = [];
+  const seenEventSlugs = new Set<string>();
+  if (currentEvent) {
+    seenEventSlugs.add(currentEvent.slug);
+    seenEvents.push({
+      slug: currentEvent.slug,
+      title: currentEvent.title || 'Event',
+      coverImageUrl: currentEvent.cover_image ?? null,
+    });
+  }
+  for (const album of albums) {
+    if (!album.event_slug || seenEventSlugs.has(album.event_slug)) continue;
+    seenEventSlugs.add(album.event_slug);
+    seenEvents.push({
+      slug: album.event_slug,
+      title: album.event_title || album.title,
+      coverImageUrl: album.cover_image_url ?? null,
+    });
+  }
+
+  const showCurrentAlbum = !!currentAlbum && !currentAlbum.event_slug;
 
   const sharePath = getPhotoSharePath({
     nickname,
@@ -228,7 +252,7 @@ export function PhotoMetadataColumn({
           </div>
         )}
 
-        {(currentAlbum || currentEvent || otherAlbums.length > 0) && (
+        {(showCurrentAlbum || seenEvents.length > 0 || otherAlbums.length > 0) && (
           <div
             className="mb-4"
           >
@@ -240,48 +264,32 @@ export function PhotoMetadataColumn({
             <div
               className="flex flex-wrap gap-2"
             >
-              {currentEvent && (
+              {seenEvents.map((event) => (
                 <EventMiniCard
-                  title={currentEvent.title || 'Event'}
-                  coverImageUrl={currentEvent.cover_image}
-                  href={`/events/${currentEvent.slug}`}
+                  key={event.slug}
+                  title={event.title}
+                  coverImageUrl={event.coverImageUrl}
+                  href={`/events/${event.slug}`}
                 />
-              )}
-              {currentAlbum && (
+              ))}
+              {showCurrentAlbum && currentAlbum && (
                 <AlbumMiniCard
                   title={currentAlbum.title}
                   slug={currentAlbum.slug}
                   coverImageUrl={currentAlbum.cover_image_url}
-                  href={currentAlbum.event_slug
-                    ? `/events/${currentAlbum.event_slug}#photos`
-                    : `/@${currentAlbum.profile_nickname || albumNickname}/album/${currentAlbum.slug}`}
+                  href={`/@${currentAlbum.profile_nickname || albumNickname}/album/${currentAlbum.slug}`}
                   photoCount={currentAlbum.photo_count}
                   highlighted
                   ownerNickname={albumNickname !== nickname ? albumNickname : undefined}
                 />
               )}
-              {currentEvent && !currentAlbum && (() => {
-                const eventAlbum = albums.find((a) => a.event_slug === currentEvent.slug);
-                return eventAlbum ? (
-                  <AlbumMiniCard
-                    title={eventAlbum.title}
-                    slug={eventAlbum.slug}
-                    coverImageUrl={eventAlbum.cover_image_url}
-                    href={`/events/${eventAlbum.event_slug!}#photos`}
-                    photoCount={eventAlbum.photo_count}
-                    highlighted
-                  />
-                ) : null;
-              })()}
               {otherAlbums.map((album) => (
                 <AlbumMiniCard
                   key={album.id}
                   title={album.title}
                   slug={album.slug}
                   coverImageUrl={album.cover_image_url}
-                  href={album.event_slug
-                    ? `/events/${album.event_slug}#photos`
-                    : `/@${album.profile_nickname || nickname}/album/${album.slug}`}
+                  href={`/@${album.profile_nickname || nickname}/album/${album.slug}`}
                   photoCount={album.photo_count}
                   ownerNickname={album.profile_nickname && album.profile_nickname !== nickname ? album.profile_nickname : undefined}
                 />
@@ -316,6 +324,9 @@ export function PhotoMetadataColumn({
           camera={exif?.camera}
           lens={exif?.lens}
           settings={exif?.settingsLine}
+          captureTime={exif?.dateTaken}
+          location={exif?.location}
+          locationLabel={exif?.locationLabel}
           fileInfo={fileInfo}
         />
 

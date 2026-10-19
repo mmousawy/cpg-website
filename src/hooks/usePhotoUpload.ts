@@ -4,7 +4,7 @@ import type { Photo } from '@/types/photos';
 import { validateImageFile, validateImageResolution } from '@/utils/imageValidation';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UploadingPhoto {
   id: string; // Temporary ID for tracking
@@ -22,14 +22,20 @@ export interface UploadPhotoOptions {
   bucketName?: string;
   pathPrefix?: string;
   sortOrderStart?: number;
+  /** Keep the local file preview URL, keyed by photo id, after the upload card is removed. */
+  retainLocalPreviews?: boolean;
 }
 
 interface UsePhotoUploadReturn {
   uploadingPhotos: UploadingPhoto[];
+  /** Object URLs for photos uploaded with `retainLocalPreviews`, keyed by photo id. */
+  localPreviewUrls: ReadonlyMap<string, string>;
   uploadFiles: (files: File[], userId: string, supabase: SupabaseClient, options?: UploadPhotoOptions) => Promise<Photo[]>;
   clearCompleted: () => void;
   clearAll: () => void;
   dismissUpload: (id: string) => void;
+  /** Drop a retained local preview once the remote thumbnail has replaced it. */
+  releaseLocalPreview: (photoId: string) => void;
 }
 
 /**
@@ -37,6 +43,8 @@ interface UsePhotoUploadReturn {
  */
 export function usePhotoUpload(): UsePhotoUploadReturn {
   const [uploadingPhotos, setUploadingPhotos] = useState<UploadingPhoto[]>([]);
+  const [localPreviewUrls, setLocalPreviewUrls] = useState<ReadonlyMap<string, string>>(() => new Map());
+  const retainedPreviewUrls = useRef(new Map<string, string>());
 
   const updateUploadingPhoto = useCallback((id: string, updates: Partial<UploadingPhoto>) => {
     setUploadingPhotos((prev) =>
@@ -57,6 +65,7 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
         bucketName = 'user-photos',
         pathPrefix,
         sortOrderStart = 0,
+        retainLocalPreviews = false,
       } = options;
 
       // Create initial upload entries with previews
@@ -282,13 +291,20 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
             }
           }
 
+          const photo = photoData as Photo;
+
           // Mark as complete
           updateUploadingPhoto(upload.id, {
             status: 'complete',
-            photo: photoData as Photo,
+            photo,
           });
 
-          results.push(photoData as Photo);
+          if (retainLocalPreviews) {
+            retainedPreviewUrls.current.set(photo.id, upload.previewUrl);
+            setLocalPreviewUrls(new Map(retainedPreviewUrls.current));
+          }
+
+          results.push(photo);
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Upload failed';
           console.error('Upload error:', err);
@@ -302,6 +318,25 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
       const publicPhotoIds = results.filter((photo) => photo.is_public).map((photo) => photo.id);
       if (publicPhotoIds.length > 0) {
         await notifyFollowersOfUpload(publicPhotoIds);
+      }
+
+      // The insert trigger puts each new photo at sort_order 0 and shifts the
+      // rest back, so a batch ends up reversed (last file first). Rewrite the
+      // batch to upload order while it is still at the front of the library.
+      if (results.length > 1) {
+        const { error: orderError } = await supabase.rpc('batch_update_photos', {
+          photo_updates: results.map((photo, index) => ({
+            id: photo.id,
+            sort_order: index,
+          })),
+        });
+        if (orderError) {
+          console.error('Failed to preserve upload order:', orderError);
+        } else {
+          results.forEach((photo, index) => {
+            photo.sort_order = index;
+          });
+        }
       }
 
       if (results.length > 0) {
@@ -322,20 +357,43 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 
   const clearCompleted = useCallback(() => {
     setUploadingPhotos((prev) => {
-      // Revoke object URLs for completed uploads
       prev
         .filter((p) => p.status === 'complete')
-        .forEach((p) => URL.revokeObjectURL(p.previewUrl));
+        .forEach((p) => {
+          const retained = p.photo != null && retainedPreviewUrls.current.get(p.photo.id) === p.previewUrl;
+          if (!retained) URL.revokeObjectURL(p.previewUrl);
+        });
       return prev.filter((p) => p.status !== 'complete');
     });
   }, []);
 
   const clearAll = useCallback(() => {
     setUploadingPhotos((prev) => {
-      // Revoke all object URLs
-      prev.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      prev.forEach((p) => {
+        const retained = p.photo != null && retainedPreviewUrls.current.get(p.photo.id) === p.previewUrl;
+        if (!retained) URL.revokeObjectURL(p.previewUrl);
+      });
       return [];
     });
+    retainedPreviewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+    retainedPreviewUrls.current.clear();
+    setLocalPreviewUrls(new Map());
+  }, []);
+
+  useEffect(() => {
+    const previews = retainedPreviewUrls.current;
+    return () => {
+      previews.forEach((url) => URL.revokeObjectURL(url));
+      previews.clear();
+    };
+  }, []);
+
+  const releaseLocalPreview = useCallback((photoId: string) => {
+    const url = retainedPreviewUrls.current.get(photoId);
+    if (!url) return;
+    retainedPreviewUrls.current.delete(photoId);
+    URL.revokeObjectURL(url);
+    setLocalPreviewUrls(new Map(retainedPreviewUrls.current));
   }, []);
 
   const dismissUpload = useCallback((id: string) => {
@@ -350,10 +408,12 @@ export function usePhotoUpload(): UsePhotoUploadReturn {
 
   return {
     uploadingPhotos,
+    localPreviewUrls,
     uploadFiles,
     clearCompleted,
     clearAll,
     dismissUpload,
+    releaseLocalPreview,
   };
 }
 

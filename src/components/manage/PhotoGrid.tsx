@@ -42,6 +42,10 @@ interface PhotoGridProps {
   notOwnedProfiles?: Map<string, PhotoOwnerProfile | null>;
   /** When true, show the grid skeleton instead of the empty state while data loads */
   isLoading?: boolean;
+  /** Local file previews for photos that just finished uploading, keyed by photo id */
+  localPreviewUrls?: ReadonlyMap<string, string>;
+  /** Drop a local preview after its remote thumbnail has faded in */
+  onLocalPreviewReleased?: (photoId: string) => void;
 }
 
 function PhotoGrid({
@@ -66,6 +70,8 @@ function PhotoGrid({
   acceptedIds,
   notOwnedProfiles,
   isLoading = false,
+  localPreviewUrls,
+  onLocalPreviewReleased,
 }: PhotoGridProps) {
   const mounted = useMounted();
 
@@ -127,6 +133,8 @@ function PhotoGrid({
           pending={isPending}
           accepted={isAccepted}
           notOwnedProfile={notOwnedProfiles?.has(photo.id) ? (notOwnedProfiles.get(photo.id) ?? null) : undefined}
+          localPreviewUrl={localPreviewUrls?.get(photo.id)}
+          onLocalPreviewReleased={onLocalPreviewReleased}
         />
       );
     },
@@ -141,6 +149,8 @@ function PhotoGrid({
       disabledMessage,
       notOwnedProfiles,
       firstPhotoId,
+      localPreviewUrls,
+      onLocalPreviewReleased,
     ],
   );
 
