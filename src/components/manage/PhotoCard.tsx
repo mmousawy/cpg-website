@@ -6,6 +6,7 @@ import CardBadges from '@/components/shared/CardBadges';
 import type { Photo, PhotoOwnerProfile, PhotoWithAlbums } from '@/types/photos';
 import { getSquareThumbnailUrl } from '@/utils/supabaseImageLoader';
 import clsx from 'clsx';
+import Image from 'next/image';
 import AwardStarMiniSVG from 'public/icons/award-star-mini.svg';
 import CancelSVG from 'public/icons/cancel.svg';
 import CheckSVG from 'public/icons/check.svg';
@@ -13,7 +14,7 @@ import ClockMiniSVG from 'public/icons/clock-mini.svg';
 import FolderInAlbumSVG from 'public/icons/folder-in-album.svg';
 import PrivateMicroSVG from 'public/icons/private-micro.svg';
 import WallArtSVG from 'public/icons/wall-art.svg';
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useRef } from 'react';
 
 interface PhotoCardProps {
   photo: (Photo | PhotoWithAlbums) & { isExiting?: boolean };
@@ -38,6 +39,10 @@ interface PhotoCardProps {
   accepted?: boolean;
   /** Profile of the photo owner if not owned by the current user (shows avatar badge) */
   notOwnedProfile?: PhotoOwnerProfile | null;
+  /** Local file preview to keep visible until the remote thumbnail has faded in. */
+  localPreviewUrl?: string;
+  /** Called after the remote thumbnail has finished fading in over the local preview. */
+  onLocalPreviewReleased?: (photoId: string) => void;
 }
 
 function PhotoCard({
@@ -53,9 +58,16 @@ function PhotoCard({
   accepted = false,
   notOwnedProfile,
   tourAnchorId,
+  localPreviewUrl,
+  onLocalPreviewReleased,
 }: PhotoCardProps) {
   // Generate square cropped thumbnail URL (256x256px, center-cropped)
   const thumbnailUrl = getSquareThumbnailUrl(photo.url, 256, 85) || photo.url;
+  // Keep the remote image on the no-placeholder path after the local file is
+  // removed, so the loaded thumbnail is not remounted behind a blurhash.
+  const crossfadingRef = useRef(Boolean(localPreviewUrl));
+  if (localPreviewUrl) crossfadingRef.current = true;
+  const crossfading = crossfadingRef.current;
   const isAlbumCover = albumCoverUrl === photo.url;
 
   const photoWithAlbums = photo as PhotoWithAlbums;
@@ -178,18 +190,36 @@ function PhotoCard({
       <div
         className="relative aspect-square overflow-hidden bg-background-light"
       >
+        {localPreviewUrl && (
+          <Image
+            src={localPreviewUrl}
+            alt=""
+            aria-hidden
+            fill
+            unoptimized
+            sizes="200px"
+            draggable={false}
+            className={clsx(
+              'object-cover',
+              disabled && 'grayscale opacity-70',
+            )}
+          />
+        )}
         <BlurImage
           src={thumbnailUrl}
           alt={photo.title || 'Photo'}
-          blurhash={photo.blurhash}
+          blurhash={crossfading ? undefined : photo.blurhash}
+          noBlur={crossfading}
           fill
           sizes="200px"
           quality={92}
           className={clsx(
             'object-cover transition-transform',
+            localPreviewUrl && 'z-[1]',
             disabled && 'grayscale opacity-70!',
           )}
           draggable={false}
+          onFadeComplete={localPreviewUrl ? () => onLocalPreviewReleased?.(photo.id) : undefined}
         />
         {/* Badges */}
         <CardBadges
@@ -242,6 +272,8 @@ export default memo(PhotoCard, (prevProps, nextProps) => {
     prevProps.disabledMessage === nextProps.disabledMessage &&
     prevProps.rejected === nextProps.rejected &&
     prevProps.notOwnedProfile === nextProps.notOwnedProfile &&
-    prevProps.tourAnchorId === nextProps.tourAnchorId
+    prevProps.tourAnchorId === nextProps.tourAnchorId &&
+    prevProps.localPreviewUrl === nextProps.localPreviewUrl &&
+    prevProps.onLocalPreviewReleased === nextProps.onLocalPreviewReleased
   );
 });
