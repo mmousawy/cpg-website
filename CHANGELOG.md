@@ -1,10 +1,11 @@
 # Changelog
 
-## [1.43.1](https://github.com/mmousawy/cpg-website/compare/v1.43.0...v1.43.1) (2026-10-16)
+## [1.43.1](https://github.com/mmousawy/cpg-website/compare/v1.43.0...v1.43.1) (2026-10-18)
 
 
 ### 🐛 Bug Fixes
 
+* enhance photo upload and management features ([8cf0cc8](https://github.com/mmousawy/cpg-website/commit/8cf0cc893526e863599b0dfa967f3bd20a74abae))
 * update metadata and layout for camera and lens member pages ([c7e25e6](https://github.com/mmousawy/cpg-website/commit/c7e25e620ad873a683ba93670ab301373e019e45))
 
 ## [1.43.0](https://github.com/mmousawy/cpg-website/compare/v1.42.3...v1.43.0) (2026-10-16)
