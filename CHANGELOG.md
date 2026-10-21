@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.44.0](https://github.com/mmousawy/cpg-website/compare/v1.43.1...v1.44.0) (2026-10-21)
+
+
+### ✨ Features
+
+* enhance profile view tracking and statistics ([1394c9d](https://github.com/mmousawy/cpg-website/commit/1394c9da3b2a9e6bdadea52bc864a20328b95260))
+
+
+### 🐛 Bug Fixes
+
+* enhance photo upload and management features ([8cf0cc8](https://github.com/mmousawy/cpg-website/commit/8cf0cc893526e863599b0dfa967f3bd20a74abae))
+* initialize view count in profile object ([f67152a](https://github.com/mmousawy/cpg-website/commit/f67152af635a9d6148c46ae88015a72b14d0d8c0))
+
+
+### 🔧 Maintenance
+
+* **main:** release 1.43.1 ([da08e1c](https://github.com/mmousawy/cpg-website/commit/da08e1cb0e40c4ed0108d39babc2fd18c5638ac7))
+* **staging:** release 1.43.1 ([75b0fae](https://github.com/mmousawy/cpg-website/commit/75b0faeb23d365970da5b0f5ec9c8fa3fe791b38))
+
 ## [1.43.1](https://github.com/mmousawy/cpg-website/compare/v1.43.0...v1.43.1) (2026-10-18)
 
 
