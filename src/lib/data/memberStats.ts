@@ -67,7 +67,7 @@ export async function getMemberTimeSeries(
   allTimeStart?: Date,
 ) {
   const supabase = await createClient();
-  const metrics = ['uploads', 'views', 'likes', 'storage_added', 'followers_gained'] as const;
+  const metrics = ['uploads', 'views', 'profile_views', 'likes', 'storage_added', 'followers_gained'] as const;
   const { bucket } = getRangeConfig(range, { allTimeStart });
 
   const series = await Promise.all(

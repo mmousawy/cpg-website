@@ -1,10 +1,11 @@
 'use client';
 
+import { recordView, type ViewEntityType } from '@/utils/recordView';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
- * Hook for tracking views on photos and albums.
+ * Hook for tracking views on photos, albums, and profiles.
  * Fires an API call to increment view count on each page visit.
  *
  * Uses pathname as an effect dependency so that client-side navigations
@@ -12,7 +13,7 @@ import { usePathname } from 'next/navigation';
  * necessary because the component may live inside a 'use cache' boundary
  * where React reuses the component instance without remounting.
  */
-export function useViewTracker(type: 'photo' | 'album', id: string) {
+export function useViewTracker(type: ViewEntityType, id: string) {
   const [viewCount, setViewCount] = useState<number | null>(null);
   const pathname = usePathname();
   const trackedKey = useRef<string | null>(null);
@@ -24,34 +25,11 @@ export function useViewTracker(type: 'photo' | 'album', id: string) {
     if (trackedKey.current === trackKey) return;
     trackedKey.current = trackKey;
 
-    const isDev = process.env.NODE_ENV === 'development';
-
-    // In dev, just fetch the current count without incrementing
-    if (isDev) {
-      const table = type === 'photo' ? 'photos' : 'albums';
-      fetch(`/api/views?table=${table}&id=${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.view_count != null) {
-            setViewCount(data.view_count);
-          }
-        })
-        .catch(() => {});
-    } else {
-      fetch('/api/views', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, id }),
-        keepalive: true,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.view_count != null) {
-            setViewCount(data.view_count);
-          }
-        })
-        .catch(() => {});
-    }
+    recordView(type, id).then((count) => {
+      if (count != null) {
+        setViewCount(count);
+      }
+    });
 
     return () => {
       trackedKey.current = null;

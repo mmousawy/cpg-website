@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 
 import { routes } from '@/config/routes';
 import { getServerAuth } from '@/utils/supabase/getServerAuth';
@@ -25,6 +26,7 @@ function QuickLinkItem({ href, label }: QuickLink) {
 }
 
 export default async function NotFoundQuickLinks() {
+  await connection();
   const { user, profile } = await getServerAuth();
 
   const shared: QuickLink[] = [
@@ -37,8 +39,8 @@ export default async function NotFoundQuickLinks() {
   const authSpecific: QuickLink[] = user
     ? [
       ...(profile?.nickname
-          ? [{ href: `/@${profile.nickname}`, label: 'My profile' }]
-          : []),
+        ? [{ href: `/@${profile.nickname}`, label: 'My profile' }]
+        : []),
       { href: routes.accountPhotos.url, label: routes.accountPhotos.label },
       { href: routes.accountEvents.url, label: routes.accountEvents.label },
     ]

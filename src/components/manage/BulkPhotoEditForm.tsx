@@ -7,8 +7,11 @@ import Select from '@/components/shared/Select';
 import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
+import type { PhotoFilter } from '@/hooks/photoQueryCache';
+import { useOpenPhotoExifModal } from '@/hooks/useOpenPhotoExifModal';
 import { useAuth } from '@/hooks/useAuth';
 import type { PhotoWithAlbums } from '@/types/photos';
+import { getBulkExifSummaryLabel } from '@/utils/exif';
 import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
 import HelpLink from '@/components/shared/HelpLink';
 import { routes } from '@/config/routes';
@@ -102,6 +105,7 @@ interface BulkPhotoEditFormProps {
   hideTitle?: boolean;
   /** When true, only "Remove from album" is available — editing/deleting is disabled */
   readOnly?: boolean;
+  photoFilter?: PhotoFilter;
 }
 
 export default function BulkPhotoEditForm({
@@ -120,8 +124,17 @@ export default function BulkPhotoEditForm({
   externalSuccess = false,
   hideTitle = false,
   readOnly = false,
+  photoFilter = 'all',
 }: BulkPhotoEditFormProps) {
   const { profile: currentProfile } = useAuth();
+  const openPhotoExifModal = useOpenPhotoExifModal({
+    photoFilter,
+    albumId: currentAlbum?.id ?? null,
+  });
+  const exifSummaryLabel = useMemo(
+    () => getBulkExifSummaryLabel(selectedPhotos),
+    [selectedPhotos],
+  );
   const confirm = useConfirm();
   const formRef = useRef<HTMLFormElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -522,6 +535,31 @@ export default function BulkPhotoEditForm({
               )}
             />
           </div>
+
+          {!readOnly && (
+            <div
+              className="flex flex-col gap-2"
+            >
+              <span
+                className="text-sm font-medium"
+              >
+                Capture details (EXIF data)
+              </span>
+              <p
+                className="text-xs text-foreground/60"
+              >
+                {exifSummaryLabel}
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => openPhotoExifModal(selectedPhotos)}
+                className="self-start"
+              >
+                Edit capture details
+              </Button>
+            </div>
+          )}
 
           {error && (
             <div

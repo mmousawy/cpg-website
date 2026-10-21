@@ -11,12 +11,15 @@ import TagInput from '@/components/shared/TagInput';
 import Textarea from '@/components/shared/Textarea';
 import Toggle from '@/components/shared/Toggle';
 import { routes } from '@/config/routes';
+import type { PhotoFilter } from '@/hooks/photoQueryCache';
+import { useOpenPhotoExifModal } from '@/hooks/useOpenPhotoExifModal';
 import { useAuth } from '@/hooks/useAuth';
 import type { PhotoWithAlbums } from '@/types/photos';
 import { confirmDeletePhoto } from '@/utils/confirmHelpers';
+import { getExifSummary } from '@/utils/exif';
 import { LICENSE_ORDER, LICENSE_TYPES } from '@/utils/licenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import PhotoListItem from './PhotoListItem';
@@ -67,6 +70,8 @@ interface SinglePhotoEditFormProps {
   hideTitle?: boolean;
   /** When true, only "Remove from album" is available — editing/deleting is disabled */
   readOnly?: boolean;
+  /** Library filter for EXIF save cache updates */
+  photoFilter?: PhotoFilter;
 }
 
 export default function SinglePhotoEditForm({
@@ -85,6 +90,7 @@ export default function SinglePhotoEditForm({
   externalSuccess = false,
   hideTitle = false,
   readOnly = false,
+  photoFilter = 'all',
 }: SinglePhotoEditFormProps) {
   const confirm = useConfirm();
   const { profile: currentProfile } = useAuth();
@@ -97,7 +103,15 @@ export default function SinglePhotoEditForm({
 
   // Check if this photo is already the cover of the current album
   const isCurrentCover = currentAlbum?.cover_image_url === photo.url;
-
+  const openPhotoExifModal = useOpenPhotoExifModal({
+    photoFilter,
+    albumId: currentAlbum?.id ?? null,
+  });
+  const handleCaptureDetailsClick = useCallback(() => {
+    openPhotoExifModal(photo, readOnly);
+  }, [openPhotoExifModal, photo, readOnly]);
+  const captureDetailsActionLabel = readOnly ? 'View capture details' : 'Edit capture details';
+  const exifSummary = getExifSummary(photo.exif_data as Record<string, unknown> | null | undefined);
   const {
     register,
     handleSubmit,
@@ -279,6 +293,9 @@ export default function SinglePhotoEditForm({
         <PhotoListItem
           photo={photo}
           variant="detailed"
+          onCaptureDetailsClick={handleCaptureDetailsClick}
+          showCaptureDetailsAction
+          captureDetailsActionLabel={captureDetailsActionLabel}
           photoPageUrl={(() => {
             const nickname = photo.owner_profile?.nickname || currentProfile?.nickname;
             if (!nickname) return undefined;
@@ -301,6 +318,29 @@ export default function SinglePhotoEditForm({
           >
             This photo belongs to another user. You can only remove it from this album.
           </p>
+
+          <div
+            className="flex flex-col gap-2"
+          >
+            <span
+              className="text-sm font-medium"
+            >
+              Capture details (EXIF data)
+            </span>
+            <p
+              className="text-xs text-foreground/60"
+            >
+              {exifSummary || 'No capture details'}
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCaptureDetailsClick}
+              className="self-start"
+            >
+              View capture details
+            </Button>
+          </div>
 
           {/* Album cover section - available even in readOnly mode since it's an album-level action */}
           {currentAlbum && onSetAsCover && (
@@ -443,6 +483,29 @@ export default function SinglePhotoEditForm({
                 </p>
               )}
             />
+          </div>
+
+          <div
+            className="flex flex-col gap-2"
+          >
+            <span
+              className="text-sm font-medium"
+            >
+              Capture details (EXIF data)
+            </span>
+            <p
+              className="text-xs text-foreground/60"
+            >
+              {exifSummary || 'No capture details'}
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCaptureDetailsClick}
+              className="self-start"
+            >
+              Edit capture details
+            </Button>
           </div>
 
           {/* Album cover section - only show when in album context */}

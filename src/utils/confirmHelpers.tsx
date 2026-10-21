@@ -96,6 +96,18 @@ export function confirmDeleteAlbum(album: AlbumWithPhotos): ConfirmOptions {
 export const unsavedChangesLeaveMessage =
   'You have unsaved changes. Are you sure you want to leave without saving?';
 
+export function confirmClearPhotoCaptureDetails(photoCount = 1): ConfirmOptions {
+  const plural = photoCount !== 1;
+  return {
+    title: plural ? `Remove all capture details from ${photoCount} photos?` : 'Remove all capture details?',
+    message: plural
+      ? `This removes camera, lens, exposure, location, and other metadata from ${photoCount} photos. Image files are not changed.`
+      : 'This removes camera, lens, exposure, location, and other metadata shown on your photo page. The image file itself is not changed.',
+    confirmLabel: 'Remove all',
+    variant: 'danger',
+  };
+}
+
 export function confirmUnsavedChanges(): ConfirmOptions {
   return {
     title: 'Unsaved changes',

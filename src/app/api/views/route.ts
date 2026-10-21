@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * View Tracking API
  *
- * Tracks views on photos and albums by incrementing view_count in the database.
+ * Tracks views on photos, albums, and profiles by incrementing view_count in the database.
  *
  * Caching Strategy:
  * - View counts are intentionally NOT invalidated on each view for performance
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const table = searchParams.get('table');
     const id = searchParams.get('id');
 
-    if (!table || !id || (table !== 'photos' && table !== 'albums')) {
+    if (!table || !id || (table !== 'photos' && table !== 'albums' && table !== 'profiles')) {
       return NextResponse.json({ error: 'Invalid params' }, { status: 400 });
     }
 
@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (type !== 'photo' && type !== 'album') {
+    if (type !== 'photo' && type !== 'album' && type !== 'profile') {
       return NextResponse.json(
-        { error: "Type must be 'photo' or 'album'" },
+        { error: "Type must be 'photo', 'album', or 'profile'" },
         { status: 400 },
       );
     }
@@ -86,18 +86,32 @@ export async function POST(request: NextRequest) {
       const authClient = await createClient();
       const viewer = await getUserFromClaims(authClient);
       if (viewer) {
-        const table = type === 'photo' ? 'photos' : 'albums';
-        const { data: entity } = await supabase
-          .from(table)
-          .select('user_id, view_count')
-          .eq('id', id)
-          .single();
+        if (type === 'profile') {
+          if (id === viewer.id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('view_count')
+              .eq('id', id)
+              .single();
+            return NextResponse.json(
+              { ok: true, skipped: 'self', view_count: profile?.view_count ?? null },
+              { status: 200 },
+            );
+          }
+        } else {
+          const table = type === 'photo' ? 'photos' : 'albums';
+          const { data: entity } = await supabase
+            .from(table)
+            .select('user_id, view_count')
+            .eq('id', id)
+            .single();
 
-        if (entity?.user_id === viewer.id) {
-          return NextResponse.json(
-            { ok: true, skipped: 'self', view_count: entity.view_count ?? null },
-            { status: 200 },
-          );
+          if (entity?.user_id === viewer.id) {
+            return NextResponse.json(
+              { ok: true, skipped: 'self', view_count: entity.view_count ?? null },
+              { status: 200 },
+            );
+          }
         }
       }
     } catch {
@@ -117,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch the updated view count so the client can display it immediately
-    const table = type === 'photo' ? 'photos' : 'albums';
+    const table = type === 'photo' ? 'photos' : type === 'album' ? 'albums' : 'profiles';
     const { data: entity } = await supabase
       .from(table)
       .select('view_count')

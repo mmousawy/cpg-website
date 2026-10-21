@@ -1,17 +1,17 @@
 'use client';
 
 import { ModalContext } from '@/app/providers/ModalProvider';
-import ScrappyCameraIllustration from '@/components/gear/ScrappyCameraIllustration';
-import { getGoogleMapsEmbedUrl, getGoogleMapsSearchUrl } from '@/utils/formatLocation';
+import {
+  buildPhotoExifDetailSections,
+  PhotoExifDetailSectionsBody,
+} from '@/components/photo/photoExifDetailSections';
 import CameraApertureIcon from 'public/icons/camera-aperture.svg';
 import CameraLensIcon from 'public/icons/camera-lens.svg';
 import ImageFrameIcon from 'public/icons/image-frame.svg';
 import LocationIcon from 'public/icons/location.svg';
 import PhotoCameraIcon from 'public/icons/photo-camera.svg';
 import TimeIcon from 'public/icons/time.svg';
-import { useContext, type FC, type ReactNode, type SVGProps } from 'react';
-
-type IconComponent = FC<SVGProps<SVGSVGElement>>;
+import { useContext } from 'react';
 
 export interface PhotoExifDetailsProps {
   camera?: string | null;
@@ -28,54 +28,6 @@ export interface PhotoExifDetailsProps {
   fileInfo?: string | null;
 }
 
-type DetailSection = {
-  key: string;
-  title: string;
-  icon: IconComponent;
-  value: string;
-  body?: ReactNode;
-  sectionAside?: ReactNode;
-};
-
-function PhotoDetailsModalBody({ sections }: { sections: DetailSection[] }) {
-  return (
-    <dl
-      className="divide-y divide-border-color"
-    >
-      {sections.map((section) => {
-        const Icon = section.icon;
-        return (
-          <div
-            key={section.key}
-            className="flex items-start gap-2.5 py-3 first:pt-0 last:pb-0"
-          >
-            <Icon
-              className="size-5 shrink-0 fill-current text-foreground/50"
-              aria-hidden
-            />
-            <div
-              className="min-w-0 flex-1"
-            >
-              <dt
-                className="text-xs font-bold text-foreground/60 mt-0.5"
-              >
-                {section.title}
-              </dt>
-              <dd
-                className="mt-1 text-sm text-foreground"
-              >
-                {section.value}
-                {section.body}
-              </dd>
-            </div>
-            {section.sectionAside}
-          </div>
-        );
-      })}
-    </dl>
-  );
-}
-
 /**
  * Compact capture line. "See more" opens camera, lens, settings, capture time, location, and file info.
  */
@@ -90,64 +42,15 @@ export default function PhotoExifDetails({
 }: PhotoExifDetailsProps) {
   const modalContext = useContext(ModalContext);
 
-  const sections: DetailSection[] = [];
-  if (camera) {
-    sections.push({
-      key: 'camera',
-      title: 'Camera',
-      icon: PhotoCameraIcon,
-      value: camera,
-      sectionAside: (
-        <ScrappyCameraIllustration
-          camera={camera}
-          className="h-10 w-auto shrink-0 object-contain"
-        />
-      ),
-    });
-  }
-  if (lens) sections.push({ key: 'lens', title: 'Lens', icon: CameraLensIcon, value: lens });
-  if (settings) sections.push({ key: 'settings', title: 'Settings', icon: CameraApertureIcon, value: settings });
-  if (captureTime) sections.push({ key: 'captured', title: 'Capture time', icon: TimeIcon, value: captureTime });
-  if (location) {
-    const query = `${location.lat},${location.lng}`;
-    const embedUrl = getGoogleMapsEmbedUrl(query);
-    const mapsUrl = getGoogleMapsSearchUrl(query);
-    sections.push({
-      key: 'location',
-      title: 'Location',
-      icon: LocationIcon,
-      value: locationLabel || query,
-      body: (
-        <div
-          className="mt-2"
-        >
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-foreground/70 hover:text-primary hover:underline underline-offset-2"
-          >
-            Open in Google Maps
-          </a>
-          {embedUrl && (
-            <div
-              className="mt-2 overflow-hidden border border-border-color"
-            >
-              <iframe
-                title="Map of where this photo was taken"
-                src={embedUrl}
-                className="h-52 w-full"
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
-            </div>
-          )}
-        </div>
-      ),
-    });
-  }
-  if (fileInfo) sections.push({ key: 'file', title: 'File', icon: ImageFrameIcon, value: fileInfo });
+  const sections = buildPhotoExifDetailSections({
+    camera,
+    lens,
+    settings,
+    captureTime,
+    location,
+    locationLabel,
+    fileInfo,
+  });
 
   if (sections.length === 0) return null;
 
@@ -172,7 +75,7 @@ export default function PhotoExifDetails({
     modalContext.setFlushContentTop(false);
     modalContext.setTitle('Photo details');
     modalContext.setContent(
-      <PhotoDetailsModalBody
+      <PhotoExifDetailSectionsBody
         sections={sections}
       />,
     );
@@ -181,7 +84,7 @@ export default function PhotoExifDetails({
 
   return (
     <div
-      className="flex items-center gap-1.5"
+      className="flex min-w-0 items-center gap-1.5"
     >
 
       <CompactIcon
@@ -189,7 +92,7 @@ export default function PhotoExifDetails({
         aria-hidden
       />
       <p
-        className="min-w-0 flex-1 truncate text-xs text-foreground/70"
+        className="min-w-0 truncate text-xs text-foreground/70"
         title={summary}
       >
         {summary}

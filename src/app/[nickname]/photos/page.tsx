@@ -8,6 +8,7 @@ import {
 import type { StreamPhoto } from '@/lib/data/gallery';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getProfileFollowCounts } from '@/lib/data/follows';
+import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import {
   getProfileByNickname,
   getUserPublicPhotoCount,
@@ -111,6 +112,9 @@ async function CachedPhotosContent({ nickname }: { nickname: string }) {
 
   return (
     <>
+      <ProfileViewTracker
+        profileId={profile.id}
+      />
       <ProfileHeroBanner
         profile={profile}
         followerCount={followCounts.followerCount}

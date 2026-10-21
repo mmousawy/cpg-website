@@ -7,7 +7,7 @@ const HEIGHT_VAR = '--mobile-sticky-bar-height';
 const OVERLAY_HEIGHT_VAR = '--mobile-overlay-chrome-height';
 const EXPANDED_ATTR = 'data-mobile-sticky-chrome-sticky';
 const SETTLE_GAP_CLASS = 'mobile-sticky-bar-settle-gap';
-const MOBILE_MEDIA = '(max-width: 639px)';
+const DEFAULT_MOBILE_MEDIA = '(max-width: 639px)';
 
 /** Bar bottom within this distance of the pin line = currently stuck. */
 const PIN_TOLERANCE_PX = 12;
@@ -84,8 +84,8 @@ function measureBarHeight(el: HTMLElement) {
   return el.getBoundingClientRect().height;
 }
 
-function isStickyChromeExpanded(el: HTMLElement): boolean {
-  if (!window.matchMedia(MOBILE_MEDIA).matches) return false;
+function isStickyChromeExpanded(el: HTMLElement, mobileMedia: string): boolean {
+  if (!window.matchMedia(mobileMedia).matches) return false;
 
   const style = window.getComputedStyle(el);
   if (style.display === 'none' || el.hidden) return false;
@@ -113,6 +113,7 @@ function isStickyChromeExpanded(el: HTMLElement): boolean {
 function setupReporter(
   el: HTMLElement,
   overlaysContent: boolean,
+  mobileMedia: string,
 ) {
   const root = document.documentElement;
   const token = {};
@@ -144,7 +145,7 @@ function setupReporter(
   const publishStuck = () => {
     if (!isLaidOut(el)) return;
 
-    if (!window.matchMedia(MOBILE_MEDIA).matches) {
+    if (!window.matchMedia(mobileMedia).matches) {
       if (chromePublisher !== token) return;
       lastStuck = false;
       root.removeAttribute(EXPANDED_ATTR);
@@ -152,7 +153,7 @@ function setupReporter(
     }
 
     chromePublisher = token;
-    let stuck = isStickyChromeExpanded(el);
+    let stuck = isStickyChromeExpanded(el, mobileMedia);
     if (hasStackedSlides(el)) {
       if (isSlideChromeVisible(el)) {
         scrimHoldUntil = Date.now() + getStickyBarSlideDurationMs() * 2;
@@ -242,6 +243,7 @@ export function useReportMobileStickyChromeHeight(
   ref: RefObject<HTMLElement | null>,
   enabled = true,
   overlaysContent = false,
+  mobileMedia = DEFAULT_MOBILE_MEDIA,
 ) {
   useLayoutEffect(() => {
     if (!enabled) return;
@@ -257,7 +259,7 @@ export function useReportMobileStickyChromeHeight(
         rafId = requestAnimationFrame(attach);
         return;
       }
-      teardown = setupReporter(el, overlaysContent);
+      teardown = setupReporter(el, overlaysContent, mobileMedia);
     };
 
     attach();
@@ -267,5 +269,5 @@ export function useReportMobileStickyChromeHeight(
       cancelAnimationFrame(rafId);
       teardown?.();
     };
-  }, [enabled, overlaysContent, ref]);
+  }, [enabled, mobileMedia, overlaysContent, ref]);
 }
