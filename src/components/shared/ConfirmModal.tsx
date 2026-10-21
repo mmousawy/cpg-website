@@ -105,12 +105,14 @@ export default function ConfirmModal() {
           <div
             className={clsx('flex justify-end gap-3', !options?.content && 'mt-6')}
           >
-            <Button
-              variant="secondary"
-              onClick={handleCancel}
-            >
-              {options?.cancelLabel || 'Cancel'}
-            </Button>
+            {!options?.hideCancel && (
+              <Button
+                variant="secondary"
+                onClick={handleCancel}
+              >
+                {options?.cancelLabel || 'Cancel'}
+              </Button>
+            )}
             <Button
               variant={isDanger ? 'danger' : 'primary'}
               onClick={handleConfirm}

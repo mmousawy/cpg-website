@@ -1,11 +1,13 @@
 'use client';
 
 import Button from '@/components/shared/Button';
+import { recordView } from '@/utils/recordView';
 import { initPhotoSwipe, type PhotoSwipeLightboxInstance } from '@/utils/photoswipe';
 import ExpandSVG from 'public/icons/expand.svg';
 import { useEffect, useRef } from 'react';
 
 interface PhotoItem {
+  id: string;
   url: string;
   width: number | null;
   height: number | null;
@@ -41,13 +43,23 @@ export default function FullSizeGalleryButton({
         height: photo.height || 800,
       }));
 
-      lightboxRef.current = new PhotoSwipeLightbox({
+      const lightbox = new PhotoSwipeLightbox({
         dataSource,
         pswpModule: () => import('photoswipe'),
         showHideAnimationType: 'fade',
       });
 
-      lightboxRef.current.init();
+      lightbox.on('change', () => {
+        const pswp = lightbox.pswp;
+        if (!pswp) return;
+        const photo = photos[pswp.currIndex];
+        if (photo?.id) {
+          recordView('photo', photo.id);
+        }
+      });
+
+      lightbox.init();
+      lightboxRef.current = lightbox;
     });
 
     return () => {

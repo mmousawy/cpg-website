@@ -992,6 +992,24 @@ html.reduce-motion *::after {
   }
 }
 
+/* Manage shell: sidebar hidden below `md`; top header replaces tab bar from `sm` up. */
+@media (min-width: 640px) and (max-width: 767px) {
+  html.manage-page .mobile-main-bottom-spacer {
+    display: none;
+  }
+
+  html.manage-page .app-shell-main {
+    padding-bottom: 0;
+  }
+
+  html.manage-page {
+    --mobile-shell-padding-bottom: calc(
+      var(--mobile-overlay-chrome-height, 0px)
+      + var(--mobile-content-bottom-gap)
+    );
+  }
+}
+
 /* Toast container positioning - below header */
 .toast-container {
   /* Behind header (header is z-40) */

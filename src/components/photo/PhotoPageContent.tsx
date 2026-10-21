@@ -61,6 +61,7 @@ export interface PhotoPageEvent {
 }
 
 export interface SiblingPhoto {
+  id: string;
   shortId: string;
   url: string;
   blurhash: string | null;
@@ -110,6 +111,7 @@ export function PhotoLightboxColumn({
   basePath,
 }: PhotoLightboxColumnProps) {
   const galleryPhotos = siblingPhotos?.map((sp) => ({
+    id: sp.id,
     shortId: sp.shortId,
     url: sp.url,
     width: sp.width,

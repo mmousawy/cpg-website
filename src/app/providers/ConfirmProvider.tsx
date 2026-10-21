@@ -14,6 +14,8 @@ export interface ConfirmOptions {
   variant?: 'danger' | 'default';
   /** Confirm button icon. `false` hides it; default for `danger` is the delete (trash) icon. */
   confirmIcon?: React.ReactNode | false;
+  /** When true, only the confirm button is shown (e.g. informational alerts). */
+  hideCancel?: boolean;
 }
 
 interface ConfirmContextValue {

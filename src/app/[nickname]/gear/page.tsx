@@ -5,6 +5,7 @@ import {
   ProfileHeroBanner,
 } from '@/components/profile/ProfileHeader';
 import ProfileGearSummary from '@/components/profile/ProfileGearSummary';
+import ProfileViewTracker from '@/components/shared/ProfileViewTracker';
 import { getIncludeTestContent } from '@/lib/auth/includeTestContent';
 import { getUserGearByNickname } from '@/lib/data/gear';
 import { getProfileFollowCounts } from '@/lib/data/follows';
@@ -80,6 +81,9 @@ export default async function UserGearPage({ params }: { params: Promise<{ nickn
 
   return (
     <>
+      <ProfileViewTracker
+        profileId={profile.id}
+      />
       <ProfileHeroBanner
         profile={profile}
         followerCount={followCounts.followerCount}

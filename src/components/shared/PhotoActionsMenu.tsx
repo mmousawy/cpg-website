@@ -33,7 +33,7 @@ export default function PhotoActionsMenu({ photoId, photoTitle, photoUserId, sto
 
   const handleEditClick = () => {
     onActionClick?.();
-    router.push('/account/photos');
+    router.push(`/account/photos?photo=${encodeURIComponent(photoId)}`);
   };
 
   const handleDeleteClick = async () => {
@@ -106,7 +106,7 @@ export default function PhotoActionsMenu({ photoId, photoTitle, photoUserId, sto
             className="size-4 shrink-0"
           />
           <span>
-            My photos
+            Edit photo
           </span>
         </button>
         <button

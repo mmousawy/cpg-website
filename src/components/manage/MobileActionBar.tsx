@@ -2,10 +2,11 @@
 
 import AnimatedStickyBarSlide from '@/components/layout/AnimatedStickyBarSlide';
 import {
-  mobileFixedBottomChromeClassName,
-  mobileFloatingPillClassName,
-  mobileFloatingPillInsetClassName,
-  mobileStickyChromeZClassName,
+  manageMobileChromeMediaQuery,
+  manageMobileFixedBottomChromeClassName,
+  manageMobileFloatingPillClassName,
+  manageMobileFloatingPillInsetClassName,
+  manageMobileStickyChromeZClassName,
 } from '@/components/layout/mobileChrome';
 import Button from '@/components/shared/Button';
 import { useReportMobileStickyChromeHeight } from '@/hooks/useReportMobileStickyChromeHeight';
@@ -51,7 +52,7 @@ export default function MobileActionBar({
   const isPersistent = !!persistentLabel && selectedCount === 0;
   const isOpen = visible && (selectedCount > 0 || isPersistent);
 
-  useReportMobileStickyChromeHeight(rootRef, isOpen, true);
+  useReportMobileStickyChromeHeight(rootRef, isOpen, true, manageMobileChromeMediaQuery);
 
   return (
     <AnimatedStickyBarSlide
@@ -59,13 +60,13 @@ export default function MobileActionBar({
       innerRef={rootRef}
       className={clsx(
         'md:hidden pointer-events-none',
-        mobileFixedBottomChromeClassName,
-        mobileFloatingPillInsetClassName,
-        mobileStickyChromeZClassName,
+        manageMobileFixedBottomChromeClassName,
+        manageMobileFloatingPillInsetClassName,
+        manageMobileStickyChromeZClassName,
       )}
     >
       <div
-        className={clsx(mobileFloatingPillClassName, 'pointer-events-auto overflow-hidden')}
+        className={clsx(manageMobileFloatingPillClassName, 'pointer-events-auto overflow-hidden')}
       >
         <div
           className="px-3 py-2.5"

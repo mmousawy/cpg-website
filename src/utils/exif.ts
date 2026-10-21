@@ -29,6 +29,44 @@ export interface ExifData {
   height?: number;
 }
 
+/** Values for the capture-details edit modal (all strings for form inputs). */
+export interface ExifEditFormValues {
+  make: string;
+  model: string;
+  lensModel: string;
+  iso: string;
+  aperture: string;
+  exposureTime: string;
+  focalLength: string;
+  captureTime: string;
+  latitude: string;
+  longitude: string;
+}
+
+export function emptyExifEditFormValues(): ExifEditFormValues {
+  return {
+    make: '',
+    model: '',
+    lensModel: '',
+    iso: '',
+    aperture: '',
+    exposureTime: '',
+    focalLength: '',
+    captureTime: '',
+    latitude: '',
+    longitude: '',
+  };
+}
+
+const EXIF_GPS_KEYS = [
+  'latitude',
+  'longitude',
+  'GPSLatitude',
+  'GPSLongitude',
+  'GPSLatitudeRef',
+  'GPSLongitudeRef',
+] as const;
+
 export interface FormattedExif {
   // Individual formatted values
   camera?: string;
@@ -185,7 +223,15 @@ function parseExifDate(value: unknown): Date | null {
     const hour = Number(exifMatch[4]);
     const minute = Number(exifMatch[5]);
     const second = Number(exifMatch[6] ?? 0);
-    const parsed = new Date(year, month - 1, day, hour, minute, second);
+    const parsed = wallClockInTimeZoneToUtc(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+      EVENT_TIMEZONE,
+    );
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
@@ -400,4 +446,368 @@ export function getFormattedExif(rawExif: Record<string, unknown> | null | undef
 export function getExifSummary(rawExif: Record<string, unknown> | null | undefined): string | null {
   const formatted = getFormattedExif(rawExif);
   return formatted?.summary || null;
+}
+
+/** Summary line for bulk edit when multiple photos are selected. */
+export function getBulkExifSummaryLabel(photos: Array<{ exif_data?: unknown }>): string {
+  if (photos.length === 0) return 'No capture details';
+
+  const summaries = photos.map((p) =>
+    getExifSummary(p.exif_data as Record<string, unknown> | null | undefined),
+  );
+  const anyData = summaries.some((s) => s != null && s.length > 0);
+  if (!anyData) return 'No capture details';
+
+  const first = summaries.find((s) => s != null && s.length > 0) ?? null;
+  const allMatch = summaries.every((s) => s === first);
+  if (allMatch && first) return first;
+
+  return 'Mixed capture details';
+}
+
+function getZonedDateParts(
+  date: Date,
+  timeZone: string,
+): { year: number; month: number; day: number; hour: number; minute: number; second: number } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+
+  const read = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value ?? '0');
+
+  return {
+    year: read('year'),
+    month: read('month'),
+    day: read('day'),
+    hour: read('hour'),
+    minute: read('minute'),
+    second: read('second'),
+  };
+}
+
+/** Wall clock in `timeZone` → UTC instant (iterative; handles DST). */
+export function wallClockInTimeZoneToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  timeZone: string,
+): Date {
+  let utcMs = Date.UTC(year, month - 1, day, hour, minute, second);
+  for (let i = 0; i < 4; i++) {
+    const zoned = getZonedDateParts(new Date(utcMs), timeZone);
+    const zonedAsUtc = Date.UTC(
+      zoned.year,
+      zoned.month - 1,
+      zoned.day,
+      zoned.hour,
+      zoned.minute,
+      zoned.second,
+    );
+    const desiredAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+    utcMs += desiredAsUtc - zonedAsUtc;
+  }
+  return new Date(utcMs);
+}
+
+/** `datetime-local` value for a UTC instant, shown in the group timezone. */
+export function formatDateForDatetimeLocal(date: Date, timeZone: string = EVENT_TIMEZONE): string {
+  const p = getZonedDateParts(date, timeZone);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}`;
+}
+
+/** Parse `datetime-local` as wall clock in the group timezone. */
+export function parseDatetimeLocalInTimeZone(
+  value: string,
+  timeZone: string = EVENT_TIMEZONE,
+): Date | null {
+  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  if (
+    !Number.isFinite(year)
+    || !Number.isFinite(month)
+    || !Number.isFinite(day)
+    || !Number.isFinite(hour)
+    || !Number.isFinite(minute)
+  ) {
+    return null;
+  }
+  const parsed = wallClockInTimeZoneToUtc(year, month, day, hour, minute, 0, timeZone);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/** Shutter speed text → seconds (e.g. `1/250`, `2s`). */
+export function parseExposureTimeInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const fraction = trimmed.match(/^1\s*\/\s*(\d+(?:\.\d+)?)\s*s?$/i);
+  if (fraction) {
+    const denom = Number(fraction[1]);
+    return denom > 0 ? 1 / denom : null;
+  }
+
+  const seconds = trimmed.match(/^(\d+(?:\.\d+)?)\s*s?$/i);
+  if (seconds) {
+    const n = Number(seconds[1]);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  return null;
+}
+
+export function formatExposureTimeInput(exposureTime: number): string {
+  return formatExposure(exposureTime);
+}
+
+function trimToString(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'string') return value.trim();
+  return '';
+}
+
+export function exifToFormValues(
+  rawExif: Record<string, unknown> | null | undefined,
+): ExifEditFormValues {
+  const empty = emptyExifEditFormValues();
+  if (!rawExif) return empty;
+
+  const parsed = parseExifData(rawExif);
+  if (!parsed) {
+    return {
+      ...empty,
+      make: trimToString(rawExif.Make),
+      model: trimToString(rawExif.Model),
+      lensModel: trimToString(rawExif.LensModel),
+    };
+  }
+
+  return {
+    make: parsed.make ?? '',
+    model: parsed.model ?? '',
+    lensModel: parsed.lensModel ?? '',
+    iso: parsed.iso != null && Number.isFinite(parsed.iso) ? String(Math.round(parsed.iso)) : '',
+    aperture: parsed.aperture != null && Number.isFinite(parsed.aperture)
+      ? String(parsed.aperture)
+      : '',
+    exposureTime: parsed.exposureTime != null && Number.isFinite(parsed.exposureTime)
+      ? formatExposureTimeInput(parsed.exposureTime)
+      : '',
+    focalLength: parsed.focalLength != null && Number.isFinite(parsed.focalLength)
+      ? String(parsed.focalLength)
+      : '',
+    captureTime: parsed.dateTaken ? formatDateForDatetimeLocal(parsed.dateTaken) : '',
+    latitude: parsed.latitude != null ? String(parsed.latitude) : '',
+    longitude: parsed.longitude != null ? String(parsed.longitude) : '',
+  };
+}
+
+function setOrDeleteString(target: Record<string, unknown>, key: string, value: string) {
+  const trimmed = value.trim();
+  if (trimmed) {
+    target[key] = trimmed;
+  } else {
+    delete target[key];
+  }
+}
+
+function setOrDeleteNumber(target: Record<string, unknown>, key: string, value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    delete target[key];
+    return;
+  }
+  const n = Number(trimmed);
+  if (!Number.isFinite(n)) return;
+  target[key] = n;
+}
+
+function clearGpsKeys(target: Record<string, unknown>) {
+  for (const key of EXIF_GPS_KEYS) {
+    delete target[key];
+  }
+}
+
+/**
+ * Merge modal form values into existing EXIF JSON. Unknown keys are preserved.
+ * Returns null when no keys remain.
+ */
+/** Per-field form values shared by every photo; mixed fields are empty strings. */
+export function getCommonExifFormValues(
+  photos: Array<{ exif_data?: unknown }>,
+): ExifEditFormValues {
+  const empty = emptyExifEditFormValues();
+  if (photos.length === 0) return empty;
+
+  const allValues = photos.map((p) =>
+    exifToFormValues(p.exif_data as Record<string, unknown> | null | undefined),
+  );
+
+  const result = { ...empty };
+  for (const key of Object.keys(empty) as (keyof ExifEditFormValues)[]) {
+    const first = allValues[0][key];
+    if (allValues.every((v) => v[key] === first)) {
+      result[key] = first;
+    }
+  }
+  return result;
+}
+
+export type MergeExifEditsPartialOptions = {
+  /** When true, remove GPS from every photo (bulk “Remove location”). */
+  clearGps?: boolean;
+};
+
+/**
+ * Bulk merge: only non-empty form fields overwrite existing EXIF. Empty fields are left unchanged.
+ */
+export function mergeExifEditsPartial(
+  existing: Record<string, unknown> | null | undefined,
+  form: ExifEditFormValues,
+  options: MergeExifEditsPartialOptions = {},
+): Record<string, unknown> | null {
+  const merged: Record<string, unknown> =
+    existing && typeof existing === 'object' ? { ...existing } : {};
+
+  const applyString = (key: string, value: string) => {
+    const trimmed = value.trim();
+    if (trimmed) merged[key] = trimmed;
+  };
+
+  const applyNumber = (key: string, value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const n = Number(trimmed);
+    if (Number.isFinite(n)) merged[key] = n;
+  };
+
+  applyString('Make', form.make);
+  applyString('Model', form.model);
+  applyString('LensModel', form.lensModel);
+  applyNumber('ISO', form.iso);
+  applyNumber('FNumber', form.aperture);
+
+  const exposureTrimmed = form.exposureTime.trim();
+  if (exposureTrimmed) {
+    const exposureSeconds = parseExposureTimeInput(exposureTrimmed);
+    if (exposureSeconds != null) {
+      merged.ExposureTime = exposureSeconds;
+    }
+  }
+
+  applyNumber('FocalLength', form.focalLength);
+
+  const captureTrimmed = form.captureTime.trim();
+  if (captureTrimmed) {
+    const captureDate = parseDatetimeLocalInTimeZone(captureTrimmed);
+    if (captureDate) {
+      merged.DateTimeOriginal = captureDate.toISOString();
+    }
+  }
+
+  if (options.clearGps) {
+    clearGpsKeys(merged);
+  } else {
+    const latTrimmed = form.latitude.trim();
+    const lngTrimmed = form.longitude.trim();
+    if (latTrimmed && lngTrimmed) {
+      const lat = Number(latTrimmed);
+      const lng = Number(lngTrimmed);
+      if (
+        Number.isFinite(lat)
+        && Number.isFinite(lng)
+        && Math.abs(lat) <= 90
+        && Math.abs(lng) <= 180
+      ) {
+        clearGpsKeys(merged);
+        merged.latitude = lat;
+        merged.longitude = lng;
+      }
+    }
+  }
+
+  return Object.keys(merged).length > 0 ? merged : null;
+}
+
+export function mergeExifEdits(
+  existing: Record<string, unknown> | null | undefined,
+  form: ExifEditFormValues,
+): Record<string, unknown> | null {
+  const merged: Record<string, unknown> =
+    existing && typeof existing === 'object' ? { ...existing } : {};
+
+  setOrDeleteString(merged, 'Make', form.make);
+  setOrDeleteString(merged, 'Model', form.model);
+  setOrDeleteString(merged, 'LensModel', form.lensModel);
+  setOrDeleteNumber(merged, 'ISO', form.iso);
+  setOrDeleteNumber(merged, 'FNumber', form.aperture);
+
+  const exposureTrimmed = form.exposureTime.trim();
+  if (!exposureTrimmed) {
+    delete merged.ExposureTime;
+  } else {
+    const exposureSeconds = parseExposureTimeInput(exposureTrimmed);
+    if (exposureSeconds != null) {
+      merged.ExposureTime = exposureSeconds;
+    }
+  }
+
+  setOrDeleteNumber(merged, 'FocalLength', form.focalLength);
+
+  const captureTrimmed = form.captureTime.trim();
+  if (!captureTrimmed) {
+    delete merged.DateTimeOriginal;
+  } else {
+    const captureDate = parseDatetimeLocalInTimeZone(captureTrimmed);
+    if (captureDate) {
+      merged.DateTimeOriginal = captureDate.toISOString();
+    }
+  }
+
+  const latTrimmed = form.latitude.trim();
+  const lngTrimmed = form.longitude.trim();
+  if (latTrimmed && lngTrimmed) {
+    const lat = Number(latTrimmed);
+    const lng = Number(lngTrimmed);
+    if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+      clearGpsKeys(merged);
+      merged.latitude = lat;
+      merged.longitude = lng;
+    }
+  } else if (!latTrimmed && !lngTrimmed) {
+    clearGpsKeys(merged);
+  }
+
+  return Object.keys(merged).length > 0 ? merged : null;
+}
+
+/** True when make, model, or lens changed in a way that affects gear catalog ingest. */
+export function exifGearFieldsChanged(
+  before: Record<string, unknown> | null | undefined,
+  after: Record<string, unknown> | null | undefined,
+): boolean {
+  const keys = ['Make', 'Model', 'LensModel'] as const;
+  for (const key of keys) {
+    const a = trimToString(before?.[key]).toLowerCase();
+    const b = trimToString(after?.[key]).toLowerCase();
+    if (a !== b) return true;
+  }
+  return false;
 }

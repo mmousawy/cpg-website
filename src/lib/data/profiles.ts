@@ -322,7 +322,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
 
   const { data: siblingPhotosData } = await supabase
     .from('album_photos_active')
-    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height)')
+    .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, width, height)')
     .eq('album_id', albumData.id)
     .order('sort_order', { ascending: true });
 
@@ -330,6 +330,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
     photo_url: string | null;
     sort_order: number | null;
     photo: {
+      id: string;
       short_id: string;
       url: string;
       blurhash: string | null;
@@ -342,6 +343,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
     .map((sp: SiblingPhotoData) => {
       if (!sp.photo) return null;
       return {
+        id: sp.photo.id,
         shortId: sp.photo.short_id,
         url: sp.photo.url,
         blurhash: sp.photo.blurhash,
@@ -350,7 +352,7 @@ export async function getAlbumSiblingPhotos(nickname: string, albumSlug: string)
         height: sp.photo.height ?? 800,
       };
     })
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
 }
 
 /**
@@ -436,7 +438,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
   ] = await Promise.all([
     supabase
       .from('album_photos_active')
-      .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(short_id, url, blurhash, width, height)')
+      .select('photo_url, sort_order, photo:photos!album_photos_photo_id_fkey(id, short_id, url, blurhash, width, height)')
       .eq('album_id', album.id)
       .order('sort_order', { ascending: true }),
     supabase
@@ -463,6 +465,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     photo_url: string | null;
     sort_order: number | null;
     photo: {
+      id: string;
       short_id: string;
       url: string;
       blurhash: string | null;
@@ -475,6 +478,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
     .map((sp: SiblingPhotoData) => {
       if (!sp.photo) return null;
       return {
+        id: sp.photo.id,
         shortId: sp.photo.short_id,
         url: sp.photo.url,
         blurhash: sp.photo.blurhash,
@@ -483,7 +487,7 @@ export async function getAlbumPhotoByShortId(nickname: string, albumSlug: string
         height: sp.photo.height ?? 800,
       };
     })
-    .filter((p): p is { shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
+    .filter((p): p is { id: string; shortId: string; url: string; blurhash: string | null; sortOrder: number; width: number; height: number } => p !== null);
 
   type AlbumPhotoWithAlbum = {
     album_id: string;

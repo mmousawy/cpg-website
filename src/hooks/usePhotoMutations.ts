@@ -1,4 +1,4 @@
-import { revalidateAlbum, revalidateGalleryData, revalidateProfile } from '@/app/actions/revalidate';
+import { revalidateAlbum, revalidateGalleryData, revalidatePhoto, revalidateProfile } from '@/app/actions/revalidate';
 import type { BulkPhotoFormData, PhotoFormData } from '@/components/manage';
 import {
   getFlatPhotosFromCache,
@@ -10,7 +10,15 @@ import {
   updateAllPhotosQueries,
 } from '@/hooks/photoQueryCache';
 import { photoCountQueryKey } from '@/hooks/usePhotoCounts';
+import type { Json } from '@/database.types';
 import type { PhotoWithAlbums } from '@/types/photos';
+import type { ExifEditFormValues } from '@/utils/exif';
+import {
+  exifGearFieldsChanged,
+  mergeExifEdits,
+  mergeExifEditsPartial,
+  type MergeExifEditsPartialOptions,
+} from '@/utils/exif';
 import { notifyFollowersOfUpload } from '@/utils/notifyFollowersOfUpload';
 import { supabase } from '@/utils/supabase/client';
 import { deleteUserStorageFiles } from '@/utils/supabaseStorage';
@@ -143,15 +151,15 @@ export function useUpdatePhoto(
   const queryClient = useQueryClient();
 
   return useMutation<
-  {
-    photoId: string;
-    data: PhotoFormData;
-    previousPhotos: PhotoWithAlbums[] | undefined;
-    affectedAlbums: string[];
-  },
-  Error,
-  { photoId: string; data: PhotoFormData },
-  { previousData: PhotosInfiniteData | undefined }
+    {
+      photoId: string;
+      data: PhotoFormData;
+      previousPhotos: PhotoWithAlbums[] | undefined;
+      affectedAlbums: string[];
+    },
+    Error,
+    { photoId: string; data: PhotoFormData },
+    { previousData: PhotosInfiniteData | undefined }
   >({
     onMutate: () => {
       if (!userId) return { previousData: undefined };
@@ -256,15 +264,15 @@ export function useBulkUpdatePhotos(
   const queryClient = useQueryClient();
 
   return useMutation<
-  {
-    photoIds: string[];
-    data: BulkPhotoFormData;
-    previousPhotos: PhotoWithAlbums[] | undefined;
-    affectedAlbums: string[];
-  },
-  Error,
-  { photoIds: string[]; data: BulkPhotoFormData },
-  { previousData: PhotosInfiniteData | undefined }
+    {
+      photoIds: string[];
+      data: BulkPhotoFormData;
+      previousPhotos: PhotoWithAlbums[] | undefined;
+      affectedAlbums: string[];
+    },
+    Error,
+    { photoIds: string[]; data: BulkPhotoFormData },
+    { previousData: PhotosInfiniteData | undefined }
   >({
     onMutate: () => {
       if (!userId) return { previousData: undefined };
@@ -500,6 +508,315 @@ export function useReorderPhotos(
       if (nickname) {
         await revalidateProfile(nickname);
       }
+    },
+  });
+}
+
+function patchPhotoExifInAlbumCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  albumId: string,
+  photoId: string,
+  exifData: Record<string, unknown> | null,
+) {
+  const jsonExif = exifData as Json;
+  queryClient.setQueryData<PhotoWithAlbums[]>(['album-photos', albumId], (old) => {
+    if (!old) return old;
+    return old.map((p) => (p.id === photoId ? { ...p, exif_data: jsonExif } : p));
+  });
+}
+
+export type UpdatePhotoExifInput =
+  | { photoId: string; clearAll: true }
+  | { photoId: string; form: ExifEditFormValues; existingExif?: Record<string, unknown> | null };
+
+export function useUpdatePhotoExif(
+  userId: string | undefined,
+  filter: PhotoFilter = 'all',
+  nickname?: string | null,
+  albumId?: string | null,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    {
+      photoId: string;
+      exifData: Record<string, unknown> | null;
+      shortId: string | null;
+      gearChanged: boolean;
+    },
+    Error,
+    UpdatePhotoExifInput,
+    { previousData: PhotosInfiniteData | undefined; previousAlbumPhotos: PhotoWithAlbums[] | undefined }
+  >({
+    onMutate: (variables) => {
+      const { photoId } = variables;
+      const merged = 'clearAll' in variables
+        ? null
+        : mergeExifEdits(variables.existingExif, variables.form);
+      if (userId) {
+        updateAllPhotosQueries(queryClient, userId, filter, (photos) =>
+          photos.map((p) => (p.id === photoId ? { ...p, exif_data: merged as Json } : p)),
+        );
+      }
+      if (albumId) {
+        patchPhotoExifInAlbumCache(queryClient, albumId, photoId, merged);
+      }
+      return {
+        previousData: userId ? getPhotosInfiniteData(queryClient, userId, filter) : undefined,
+        previousAlbumPhotos: albumId
+          ? queryClient.getQueryData<PhotoWithAlbums[]>(['album-photos', albumId])
+          : undefined,
+      };
+    },
+    mutationFn: async (variables) => {
+      if (!userId) throw new Error('User not authenticated');
+
+      const { photoId } = variables;
+      const cached = getFlatPhotosFromCache(queryClient, userId, filter).find((p) => p.id === photoId);
+      const existingExif = 'clearAll' in variables
+        ? undefined
+        : variables.existingExif;
+      let baseExif = (existingExif ?? cached?.exif_data) as Record<string, unknown> | null | undefined;
+      let shortId = cached?.short_id ?? null;
+
+      if (baseExif == null && !('clearAll' in variables)) {
+        const { data: row, error: fetchError } = await supabase
+          .from('photos')
+          .select('exif_data, short_id')
+          .eq('id', photoId)
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .maybeSingle();
+
+        if (fetchError) {
+          throw new Error(fetchError.message || 'Failed to load photo metadata');
+        }
+        if (!row) {
+          throw new Error('Photo not found');
+        }
+        baseExif = row.exif_data as Record<string, unknown> | null;
+        shortId = row.short_id ?? shortId;
+      }
+
+      if ('clearAll' in variables) {
+        if (baseExif == null && cached?.exif_data == null) {
+          const { data: row } = await supabase
+            .from('photos')
+            .select('exif_data, short_id')
+            .eq('id', photoId)
+            .eq('user_id', userId)
+            .is('deleted_at', null)
+            .maybeSingle();
+          baseExif = row?.exif_data as Record<string, unknown> | null;
+          shortId = row?.short_id ?? shortId;
+        } else if (shortId == null) {
+          const { data: row } = await supabase
+            .from('photos')
+            .select('short_id')
+            .eq('id', photoId)
+            .eq('user_id', userId)
+            .is('deleted_at', null)
+            .maybeSingle();
+          shortId = row?.short_id ?? null;
+        }
+      }
+
+      const merged = 'clearAll' in variables
+        ? null
+        : mergeExifEdits(baseExif, variables.form);
+      const gearChanged = exifGearFieldsChanged(baseExif, merged);
+
+      const { error } = await supabase
+        .from('photos')
+        .update({ exif_data: merged as Json })
+        .eq('id', photoId)
+        .eq('user_id', userId)
+        .is('deleted_at', null);
+
+      if (error) {
+        throw new Error(error.message || 'Failed to update capture details');
+      }
+
+      if (albumId) {
+        patchPhotoExifInAlbumCache(queryClient, albumId, photoId, merged);
+      }
+
+      return {
+        photoId,
+        exifData: merged,
+        shortId,
+        gearChanged,
+      };
+    },
+    onError: (_err, _variables, context) => {
+      if (userId && context?.previousData) {
+        queryClient.setQueriesData<PhotosInfiniteData>(
+          { queryKey: photosQueryFilterKey(userId, filter) },
+          context.previousData,
+        );
+      }
+      if (albumId && context?.previousAlbumPhotos) {
+        queryClient.setQueryData(['album-photos', albumId], context.previousAlbumPhotos);
+      }
+    },
+    onSuccess: async (data) => {
+      if (data.shortId) {
+        await revalidatePhoto(data.shortId, nickname);
+      }
+      if (data.gearChanged) {
+        const { triggerGearIngest } = await import('@/lib/gear/triggerIngest');
+        triggerGearIngest(data.photoId);
+      }
+    },
+  });
+}
+
+export type BulkUpdatePhotoExifInput =
+  | { photoIds: string[]; clearAll: true }
+  | {
+    photoIds: string[];
+    form: ExifEditFormValues;
+    mergeOptions?: MergeExifEditsPartialOptions;
+  };
+
+export function useBulkUpdatePhotoExif(
+  userId: string | undefined,
+  filter: PhotoFilter = 'all',
+  nickname?: string | null,
+  albumId?: string | null,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    {
+      results: Array<{
+        photoId: string;
+        exifData: Record<string, unknown> | null;
+        shortId: string | null;
+        gearChanged: boolean;
+      }>;
+    },
+    Error,
+    BulkUpdatePhotoExifInput,
+    { previousData: PhotosInfiniteData | undefined; previousAlbumPhotos: PhotoWithAlbums[] | undefined }
+  >({
+    onMutate: (variables) => {
+      const { photoIds } = variables;
+      const flat = userId ? getFlatPhotosFromCache(queryClient, userId, filter) : [];
+      const mergeOptions = 'clearAll' in variables ? undefined : variables.mergeOptions;
+      const form = 'clearAll' in variables ? undefined : variables.form;
+
+      const patchMap = new Map<string, Record<string, unknown> | null>();
+      for (const photoId of photoIds) {
+        const cached = flat.find((p) => p.id === photoId);
+        const baseExif = cached?.exif_data as Record<string, unknown> | null | undefined;
+        const merged = 'clearAll' in variables
+          ? null
+          : mergeExifEditsPartial(baseExif, form!, mergeOptions);
+        patchMap.set(photoId, merged);
+      }
+
+      if (userId) {
+        updateAllPhotosQueries(queryClient, userId, filter, (photos) =>
+          photos.map((p) => {
+            const next = patchMap.get(p.id);
+            if (next === undefined) return p;
+            return { ...p, exif_data: next as Json };
+          }),
+        );
+      }
+      if (albumId) {
+        for (const [photoId, exifData] of patchMap) {
+          patchPhotoExifInAlbumCache(queryClient, albumId, photoId, exifData);
+        }
+      }
+
+      return {
+        previousData: userId ? getPhotosInfiniteData(queryClient, userId, filter) : undefined,
+        previousAlbumPhotos: albumId
+          ? queryClient.getQueryData<PhotoWithAlbums[]>(['album-photos', albumId])
+          : undefined,
+      };
+    },
+    mutationFn: async (variables) => {
+      if (!userId) throw new Error('User not authenticated');
+
+      const { photoIds } = variables;
+      const flat = getFlatPhotosFromCache(queryClient, userId, filter);
+      const mergeOptions = 'clearAll' in variables ? undefined : variables.mergeOptions;
+      const form = 'clearAll' in variables ? undefined : variables.form;
+
+      const results: Array<{
+        photoId: string;
+        exifData: Record<string, unknown> | null;
+        shortId: string | null;
+        gearChanged: boolean;
+      }> = [];
+
+      const rpcUpdates: { id: string; exif_data: Json }[] = [];
+
+      for (const photoId of photoIds) {
+        const cached = flat.find((p) => p.id === photoId);
+        let baseExif = cached?.exif_data as Record<string, unknown> | null | undefined;
+        let shortId = cached?.short_id ?? null;
+
+        if (!cached) {
+          const { data: row, error: fetchError } = await supabase
+            .from('photos')
+            .select('exif_data, short_id')
+            .eq('id', photoId)
+            .eq('user_id', userId)
+            .is('deleted_at', null)
+            .maybeSingle();
+
+          if (fetchError) {
+            throw new Error(fetchError.message || 'Failed to load photo metadata');
+          }
+          if (!row) {
+            throw new Error('Photo not found');
+          }
+          baseExif = row.exif_data as Record<string, unknown> | null;
+          shortId = row.short_id ?? shortId;
+        }
+
+        const merged = 'clearAll' in variables
+          ? null
+          : mergeExifEditsPartial(baseExif, form!, mergeOptions);
+        const gearChanged = exifGearFieldsChanged(baseExif, merged);
+
+        results.push({ photoId, exifData: merged, shortId, gearChanged });
+        rpcUpdates.push({ id: photoId, exif_data: merged as Json });
+      }
+
+      const { error } = await supabase.rpc('batch_update_photo_exif', {
+        photo_updates: rpcUpdates,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to update capture details');
+      }
+
+      return { results };
+    },
+    onError: (_err, _variables, context) => {
+      if (userId && context?.previousData) {
+        queryClient.setQueriesData<PhotosInfiniteData>(
+          { queryKey: photosQueryFilterKey(userId, filter) },
+          context.previousData,
+        );
+      }
+      if (albumId && context?.previousAlbumPhotos) {
+        queryClient.setQueryData(['album-photos', albumId], context.previousAlbumPhotos);
+      }
+    },
+    onSuccess: async (data) => {
+      const { triggerGearIngest } = await import('@/lib/gear/triggerIngest');
+      const shortIds = new Set<string>();
+      for (const row of data.results) {
+        if (row.shortId) shortIds.add(row.shortId);
+        if (row.gearChanged) triggerGearIngest(row.photoId);
+      }
+      await Promise.all([...shortIds].map((shortId) => revalidatePhoto(shortId, nickname)));
     },
   });
 }
